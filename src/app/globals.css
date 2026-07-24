@@ -65,7 +65,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .ob { justify-content: flex-end; background: var(--ink); color: #fff; }
 .ob .pad { padding: 28px 24px 40px; }
 .ob .mark { position: fixed; top: 24px; left: 24px; }
-.ob .mark svg { height: 20px; width: auto; display: block; }
+.ob .mark svg { height: 32px; width: auto; display: block; }
 .ob h1 { font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 10px; }
 .ob p { font-size: 14.5px; color: #c9c3ae; line-height: 1.5; margin-bottom: 22px; }
 .ob p b { color: #fff; }
@@ -143,7 +143,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .pub { background: var(--cl); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
-.pub .pubhero .big { font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: -.02em; line-height: 1; }
+.pub .pubhero .big { font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: -.02em; line-height: 1; text-transform: uppercase; }
 .pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
@@ -164,12 +164,13 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   display: flex; align-items: flex-end;
 }
 .sheet {
-  background: var(--card); width: 100%; border-radius: 22px 22px 0 0;
+  background: var(--card); color: var(--ink); width: 100%; border-radius: 22px 22px 0 0;
   padding: 14px 20px 26px; animation: up .22s ease; max-height: 94%; overflow-y: auto;
 }
 @keyframes up { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
-.grab { width: 38px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 16px; }
+.sheet { position: relative; }
+.sheetclose { position: absolute; top: 14px; right: 16px; z-index: 2; background: var(--card); }
 .sheet h2 { font-family: 'Archivo Black', sans-serif; font-size: 22px; margin-bottom: 4px; }
 .sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }

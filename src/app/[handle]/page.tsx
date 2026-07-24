@@ -60,18 +60,13 @@ export default async function PublicPage({ params }: Props) {
       .filter((c) => c.dayOfWeek === di)
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)),
   );
-  const gymNames = [...new Set(classRows.map((c) => studioById.get(c.studioId)?.name).filter(Boolean))];
 
   return (
     <div className="pub screen">
       <div className="pubhero">
         <div className="eyebrow">Coaching schedule · this week</div>
         <div className="big">{user.name}</div>
-        <div className="gyms">
-          {gymNames.length
-            ? gymNames.join(" + ")
-            : "Schedules for every studio they coach at, in one place."}
-        </div>
+        <div className="gyms">Every studio they coach at, one page.</div>
         <NotifyCta trainerName={user.name} handle={handle} />
       </div>
       <div className="pubbody">

@@ -93,8 +93,9 @@ const dupName = await page.getByPlaceholder("Type it once — it's remembered").
 if (dupName !== "Barbell Strength") fail("duplicate not prefilled");
 const dupLabel = await page.locator(".publishwrap .btn").textContent();
 if (!dupLabel.includes("Pick at least one day")) fail("duplicate days not empty: " + dupLabel);
-await page.locator(".sheet-scrim").click({ position: { x: 5, y: 5 } });
-console.log("duplicate ok");
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+console.log("duplicate ok (closed via X)");
 
 // ---- My page tab
 await page.locator(".tabbar").getByText("My page").click();
@@ -283,8 +284,11 @@ const imgSrc = await page.locator(".storyimg").getAttribute("src");
 if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
 const dl = await page.locator("a", { hasText: "Save image" }).getAttribute("download");
 if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
+await expect(page.locator(".btn.ghost", { hasText: "Share image" }).isVisible(), "share image button present");
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
-console.log("share sheet ok");
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+console.log("share sheet ok (save + share + X close)");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");
