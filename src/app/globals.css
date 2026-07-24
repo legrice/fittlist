@@ -96,6 +96,8 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;
   margin-bottom: 8px; width: 100%; text-align: left;
 }
+.class-card.editable { cursor: pointer; }
+.class-card.editable:hover { border-color: var(--ink); }
 .class-card .rail { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
 .class-card .time { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
 .class-card .body { flex: 1; min-width: 0; }
@@ -180,7 +182,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .flabel span { color: var(--ol); font-weight: 400; }
 .adder input[type=text], .adder input[type=url] {
   width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 11px;
-  font-family: inherit; font-size: 15px; background: var(--card); color: var(--ink);
+  font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .adder input:focus { outline: none; border-color: var(--si); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -206,7 +208,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .timegrid .chip { font-family: 'Space Mono', monospace; }
 .timegrid input[type=time] {
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
-  font-family: 'Space Mono', monospace; font-size: 12.5px; background: var(--card); color: var(--ink);
+  font-family: 'Space Mono', monospace; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .studio-sel {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
@@ -224,7 +226,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .searchbox { position: relative; margin: 4px 0 8px; }
 .searchbox input {
   width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--line);
-  border-radius: 12px; font-family: inherit; font-size: 15px; background: var(--card); color: var(--ink);
+  border-radius: 12px; font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .searchbox input:focus { outline: none; border-color: var(--si); }
 .searchbox .mag { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ol); font-size: 15px; }
@@ -326,11 +328,14 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .linkrow { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
 .linkrow select {
   padding: 11px 8px; border: 1.5px solid var(--line); border-radius: 10px;
-  font-family: inherit; font-size: 13px; background: var(--card); color: var(--ink);
+  font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .linkrow input {
   flex: 1; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px;
-  font-family: inherit; font-size: 13.5px; min-width: 0; background: var(--card); color: var(--ink);
+  font-family: inherit; font-size: 16px; min-width: 0; background: var(--card); color: var(--ink);
 }
 .linkrow input:focus, .linkrow select:focus { outline: none; border-color: var(--si); }
 .linkrow .iconbtn { flex-shrink: 0; }
+
+/* iOS Safari zooms into any focused form control under 16px — never go below. */
+input, select, textarea { font-size: max(1em, 16px); }

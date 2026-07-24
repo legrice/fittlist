@@ -66,6 +66,21 @@ export function ScheduleScreen({
     });
   };
 
+  const edit = (c: ClassDto) => {
+    setAdder({
+      open: true,
+      prefill: {
+        name: c.name,
+        startTime: c.startTime,
+        durationMin: c.durationMin,
+        studioId: c.studioId,
+        links: c.links.map((l) => ({ ...l })),
+        days: [c.dayOfWeek],
+        classId: c.id,
+      },
+    });
+  };
+
   return (
     <section className="screen">
       <div className="appbar">
@@ -95,7 +110,14 @@ export function ScheduleScreen({
                   const studio = studioById.get(c.studioId);
                   const p = palForSeq(studio?.seq ?? 1);
                   return (
-                    <div key={c.id} className="class-card">
+                    <div
+                      key={c.id}
+                      className="class-card editable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => edit(c)}
+                      onKeyDown={(e) => e.key === "Enter" && edit(c)}
+                    >
                       <div className="rail" style={{ background: p.rail }} />
                       <div className="time">{fmtTime(c.startTime)}</div>
                       <div className="body">
@@ -116,9 +138,23 @@ export function ScheduleScreen({
                       <div className="editrow">
                         <button
                           className="iconbtn"
+                          aria-label="Edit class"
+                          title="Edit"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            edit(c);
+                          }}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          className="iconbtn"
                           aria-label="Duplicate class"
                           title="Duplicate"
-                          onClick={() => duplicate(c)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            duplicate(c);
+                          }}
                         >
                           ⧉
                         </button>
@@ -126,7 +162,10 @@ export function ScheduleScreen({
                           className="iconbtn"
                           aria-label="Delete class"
                           title="Delete"
-                          onClick={() => remove(c.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            remove(c.id);
+                          }}
                         >
                           ✕
                         </button>

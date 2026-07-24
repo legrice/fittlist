@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { publishClasses } from "@/app/actions/classes";
+import { publishClasses, updateClass } from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import { DAYS, DUR_PRESETS, LINK_LABELS, TIME_PRESETS, fmtTime, palForSeq } from "@/lib/format";
@@ -13,6 +13,8 @@ export type AdderPrefill = {
   durationMin: number;
   studioId: string;
   links: BookingLink[];
+  days?: number[]; // preselected (edit); empty for duplicate
+  classId?: string; // set = edit this class in place
 };
 
 type Stage = "start" | "form" | "pick" | "new";
@@ -38,18 +40,21 @@ export function Adder({
   onToast: (msg: string) => void;
   onPublished: (msg: string) => void;
 }) {
+  const isEdit = Boolean(prefill?.classId);
   const [studios, setStudios] = useState(studiosProp);
   const [stage, setStage] = useState<Stage>(prefill ? "form" : templates.length ? "start" : "form");
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
-    prefill
-      ? { title: "Duplicate class", lead: "Same class — pick the new days." }
-      : {
-          title: "New class",
-          lead: "Type it once — fittlist remembers the whole class. Pick days; one publish covers them all.",
-        },
+    isEdit
+      ? { title: "Edit class", lead: "Change anything — one save updates your page." }
+      : prefill
+        ? { title: "Duplicate class", lead: "Same class — pick the new days." }
+        : {
+            title: "New class",
+            lead: "Type it once — fittlist remembers the whole class. Pick days; one publish covers them all.",
+          },
   );
   const [name, setName] = useState(prefill?.name ?? "");
-  const [days, setDays] = useState<Set<number>>(new Set());
+  const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [time, setTime] = useState(prefill?.startTime ?? lastUsed.startTime);
   const [dur, setDur] = useState(prefill?.durationMin ?? lastUsed.durationMin);
   const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? lastUsed.studioId);
@@ -108,31 +113,39 @@ export function Adder({
       ? "Pick at least one day"
       : !selectedStudio
         ? "Pick a studio"
-        : `Publish ${n > 1 ? `${n} classes` : ""} · ${dayList.join(", ")} · ${fmtTime(time)}` +
+        : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}` +
           (subsCount ? ` · emails ${subsCount}` : "");
 
   const publish = () => {
     if (n === 0 || !studioId) return;
     startTransition(async () => {
-      const res = await publishClasses({
+      const input = {
         name,
         days: [...days],
         startTime: time,
         durationMin: dur,
         studioId,
         links,
-      });
+      };
+      const res = isEdit
+        ? await updateClass(prefill!.classId!, input)
+        : await publishClasses(input);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
       }
       const emailed = res.notified ?? 0;
+      const emailedSuffix = emailed
+        ? ` · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
+        : "";
       onPublished(
-        firstPublish
-          ? "Your page is live"
-          : emailed
-            ? `Published · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
-            : `Published${n > 1 ? ` ${n} classes` : ""}`,
+        isEdit
+          ? `Saved${emailedSuffix}`
+          : firstPublish
+            ? "Your page is live"
+            : emailed
+              ? `Published${emailedSuffix}`
+              : `Published${n > 1 ? ` ${n} classes` : ""}`,
       );
     });
   };
@@ -207,7 +220,7 @@ export function Adder({
 
         {stage === "form" && (
           <div>
-            {templates.length > 0 && (
+            {templates.length > 0 && !prefill && (
               <button className="backbtn" onClick={() => setStage("start")}>
                 &larr; Saved classes
               </button>
