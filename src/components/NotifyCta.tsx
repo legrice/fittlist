@@ -15,7 +15,7 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
   const [pending, startTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const label = subscribed ? "You're on the list ✓" : "Email me when this changes";
+  const label = subscribed ? "You're on the list ✓" : "Get email updates";
   const onCta = () => {
     if (subscribed) {
       toast("You're already on the list");
@@ -58,11 +58,10 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
           }}
         >
           <div className="sheet">
-            <div className="grab" />
-            <div className="eyebrow" style={{ marginBottom: 6 }}>
-              {trainerName}&rsquo;s list
-            </div>
-            <h2>Get an email when the schedule changes</h2>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
+              ✕
+            </button>
+            <h2 style={{ marginTop: 10 }}>Get an email when the schedule changes</h2>
             <p className="lead">
               New classes, time changes, cancellations. Nothing else, ever. Unsubscribe anytime.
             </p>

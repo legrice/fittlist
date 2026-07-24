@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -18,7 +18,53 @@ export function MyPageScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
+  const [canShareFiles, setCanShareFiles] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const url = `fittlist.co/${handle}`;
+  const storyUrl = `/api/story/${handle}?span=${shareSpan}`;
+  const storyFileName = `fittlist-${handle}-${shareSpan}.png`;
+
+  // File-sharing support (the native share sheet is the only route into
+  // the iOS photo library from the web) is detectable only client-side.
+  useEffect(() => {
+    setCanShareFiles(
+      typeof navigator !== "undefined" &&
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function",
+    );
+  }, []);
+
+  const fetchStoryFile = async () => {
+    const res = await fetch(storyUrl);
+    if (!res.ok) throw new Error("story fetch failed");
+    const blob = await res.blob();
+    return new File([blob], storyFileName, { type: "image/png" });
+  };
+
+  // Opens the native share sheet with the PNG attached. On iPhone,
+  // "Save Image" there writes it to Photos; it's also the path to an
+  // Instagram story. Fallback: plain download.
+  const shareStory = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      if (canShareFiles) {
+        const file = await fetchStoryFile();
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file] });
+          return;
+        }
+      }
+      const a = document.createElement("a");
+      a.href = storyUrl;
+      a.download = storyFileName;
+      a.click();
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") toast("Couldn't share the image");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const copy = async () => {
     // Copy the real deployed origin — before the fittlist.co domain is
@@ -94,7 +140,13 @@ export function MyPageScreen({
           }}
         >
           <div className="sheet">
-            <div className="grab" />
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setShareOpen(false)}
+            >
+              ✕
+            </button>
             <h2>Your story image</h2>
             <div className="share-toggles">
               <div className="seg">
@@ -119,13 +171,23 @@ export function MyPageScreen({
               alt={`Story image of ${shareSpan === "week" ? "this week's" : "today's"} classes`}
             />
             <div className="publishwrap">
-              <a
-                className="btn"
-                href={`/api/story/${handle}?span=${shareSpan}`}
-                download={`fittlist-${handle}-${shareSpan}.png`}
+              {canShareFiles ? (
+                <button className="btn" disabled={sharing} onClick={shareStory}>
+                  {sharing ? "Opening…" : "Save image"}
+                </button>
+              ) : (
+                <a className="btn" href={storyUrl} download={storyFileName}>
+                  Save image
+                </a>
+              )}
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={sharing}
+                onClick={shareStory}
               >
-                Save image
-              </a>
+                Share image
+              </button>
             </div>
           </div>
         </div>

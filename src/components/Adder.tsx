@@ -166,7 +166,9 @@ export function Adder({
       }}
     >
       <div className="sheet adder">
-        <div className="grab" />
+        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+          ✕
+        </button>
 
         {stage === "start" && (
           <div>
