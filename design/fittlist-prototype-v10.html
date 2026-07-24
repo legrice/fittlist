@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fittlist — v10 · saved classes, multi booking links</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%20120%22%20role%3D%22img%22%20aria-label%3D%22Rollcall%20icon%20week%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20rx%3D%2227%22%20fill%3D%22%23191502%22/%3E%3Cg%20transform%3D%22translate%2860%2060%29%20scale%280.72%29%20translate%28-60%20-60%29%22%3E%3Crect%20x%3D%2218%22%20y%3D%2220%22%20width%3D%2236%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23F7F2E8%22/%3E%3Crect%20x%3D%2262%22%20y%3D%2220%22%20width%3D%2240%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23F7F2E8%22/%3E%3Crect%20x%3D%2218%22%20y%3D%2249%22%20width%3D%2266%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23DD583A%22/%3E%3Crect%20x%3D%2218%22%20y%3D%2278%22%20width%3D%2228%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23F7F2E8%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cl:#F7F2E8;--card:#FFFFFF;--ink:#191502;--ol:#4E4B3B;--line:#E2DCC9;
+    --si:#DD583A;--si-soft:#F9E4DD;--sa:#D6D1B3;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Archivo',system-ui,sans-serif;background:var(--cl);color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px 12px 40px;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  button:focus-visible,input:focus-visible{outline:3px solid var(--si);outline-offset:2px;border-radius:6px}
+
+  .proto-head{width:100%;max-width:400px;margin-bottom:14px}
+  .proto-title{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ol);text-align:center;margin-bottom:10px}
+  .proto-title button{text-decoration:underline;color:var(--ol);font-size:11px;letter-spacing:inherit;text-transform:inherit;font-family:inherit}
+  .role-switch{display:flex;background:#E7E1CE;border-radius:999px;padding:4px;gap:4px}
+  .role-switch button{flex:1;padding:10px 0;border-radius:999px;font-weight:600;font-size:13px;color:var(--ol);transition:background .15s,color .15s}
+  .role-switch button.active{background:var(--ink);color:#fff}
+
+  .phone{
+    width:100%;max-width:400px;background:var(--card);border-radius:28px;border:1px solid var(--line);
+    box-shadow:0 20px 50px rgba(25,21,2,.12);overflow:hidden;display:flex;flex-direction:column;
+    height:780px;max-height:calc(100vh - 140px);min-height:560px;position:relative;
+  }
+  .screen{flex:1;overflow-y:auto;display:none;flex-direction:column}
+  .screen.on{display:flex}
+  .pad{padding:20px 18px}
+
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px;position:sticky;top:0;background:var(--card);z-index:5}
+  .wordmark svg{height:20px;width:auto;display:block}
+  .appbar .sub{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ol)}
+
+  .tabbar{display:flex;border-top:1px solid var(--line);background:var(--card);flex-shrink:0}
+  .tabbar button{flex:1;padding:13px 0 15px;font-size:12px;font-weight:600;color:var(--ol);display:flex;flex-direction:column;gap:3px;align-items:center}
+  .tabbar button.active{color:var(--ink)}
+  .tabbar button .ico{font-size:16px;line-height:1}
+  .tabbar button.active .ico{color:var(--si)}
+
+  h1.screen-title{font-family:'Archivo Black',sans-serif;font-size:26px;letter-spacing:-.02em;line-height:1.05}
+  .daylabel{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:16px 0 8px}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ol)}
+
+  /* auth */
+  .ob{justify-content:flex-end;background:var(--ink);color:#fff}
+  .ob .pad{padding:28px 24px 40px}
+  .ob .mark{position:absolute;top:24px;left:24px}
+  .ob .mark svg{height:20px;width:auto;display:block}
+  .ob h1{font-family:'Archivo Black',sans-serif;font-size:30px;letter-spacing:-.02em;line-height:1.1;margin-bottom:10px}
+  .ob p{font-size:14.5px;color:#C9C3AE;line-height:1.5;margin-bottom:22px}
+  .ob p b{color:#fff}
+  .ob input{
+    width:100%;padding:15px 16px;border-radius:13px;border:1.5px solid #3A3526;background:#26200F;
+    color:#fff;font-family:inherit;font-size:17px;margin-bottom:14px;
+  }
+  .ob input.code{font-family:'Space Mono',monospace;letter-spacing:.5em;text-align:center;font-size:20px}
+  .ob input:focus{outline:none;border-color:var(--si)}
+  .ob .btn{background:var(--si)}
+  .ob .microcopy{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;color:#8A8570;margin-top:12px;text-align:center}
+  .ob .handlepreview{font-family:'Space Mono',monospace;font-size:13px;color:#C9C3AE;margin:-6px 0 16px;padding-left:4px}
+  .ob .handlepreview b{color:var(--si);font-weight:400}
+  .ob .backlink{color:#C9C3AE;font-size:13px;text-decoration:underline;margin-top:14px;display:inline-block}
+
+  .empty-block{margin-top:22px;border:1.5px dashed var(--line);border-radius:18px;padding:28px 22px;text-align:center}
+  .empty-block .glyph{font-family:'Space Mono',monospace;font-size:20px;color:var(--ol);margin-bottom:12px;letter-spacing:.2em}
+  .empty-block h2{font-family:'Archivo Black',sans-serif;font-size:19px;margin-bottom:8px}
+  .empty-block p{font-size:13.5px;color:var(--ol);line-height:1.45;margin-bottom:18px}
+  .empty-block .btn{width:auto;padding:12px 22px}
+
+  .class-card{
+    display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;width:100%;text-align:left;
+  }
+  .class-card .rail{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch}
+  .class-card .time{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;white-space:nowrap;min-width:60px}
+  .class-card .body{flex:1;min-width:0}
+  .class-card .name{font-weight:700;font-size:15px;margin-bottom:2px}
+  .class-card .meta{font-size:12.5px;color:var(--ol)}
+  .loctag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;margin-top:6px}
+  .loctag .swd{width:7px;height:7px;border-radius:2px}
+  .editrow{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+  .iconbtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ol)}
+  .iconbtn:hover{border-color:var(--ink);color:var(--ink)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:13px 18px;border-radius:12px;width:100%;transition:transform .08s}
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+  .btn.si{background:var(--si)}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+
+  .statgrid{display:flex;gap:8px;margin:14px 0 4px}
+  .stat{flex:1;background:var(--cl);border-radius:12px;padding:12px;text-align:center}
+  .stat .n{font-family:'Archivo Black',sans-serif;font-size:20px}
+  .stat .l{font-size:10.5px;color:var(--ol);margin-top:2px}
+  .stat .d{font-family:'Space Mono',monospace;font-size:9px;color:var(--si);margin-top:2px}
+  .linkcard{background:var(--ink);color:#fff;border-radius:16px;padding:16px;margin-top:14px}
+  .linkcard .url{font-family:'Space Mono',monospace;font-size:14px;word-break:break-all;margin:5px 0 12px}
+  .linkcard .hint{font-size:12px;color:#C9C3AE;margin-top:10px;line-height:1.5}
+  .linkcard .eyebrow{color:#C9C3AE}
+  .rowcta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:12px;border:1.5px solid var(--ink);border-radius:16px;padding:14px 16px}
+  .rowcta .ig{font-size:22px}
+  .rowcta .t{font-weight:700;font-size:14.5px}
+  .rowcta .s{font-size:12px;color:var(--ol);margin-top:2px}
+
+  /* public */
+  .pub{background:var(--cl)}
+  .pub .pubhero{padding:26px 20px 18px;background:var(--ink);color:#fff}
+  .pub .pubhero .eyebrow{color:#C9C3AE;margin-bottom:8px}
+  .pub .pubhero .big{font-family:'Archivo Black',sans-serif;font-size:34px;letter-spacing:-.02em;line-height:1}
+  .pub .pubhero .gyms{font-size:13.5px;color:#C9C3AE;margin-top:10px;line-height:1.5}
+  .pub .pubbody{padding:6px 18px 120px}
+  .booklink{display:inline-block;font-size:12.5px;font-weight:700;color:var(--si);margin-top:7px;text-decoration:none}
+  .notifybar{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:none;z-index:15}
+  .notifybar.on{display:block}
+  .notifybar .btn{margin:0}
+  .madewith{text-align:center;font-size:12px;color:var(--ol);padding:26px 0 8px}
+  .madewith .mw-logo svg{height:12px;width:auto;display:inline-block;vertical-align:-2px}
+  .madewith button{color:var(--si);font-weight:700;font-size:12px;text-decoration:underline}
+
+  /* sheets */
+  .sheet-scrim{position:absolute;inset:0;background:rgba(25,21,2,.45);z-index:20;display:none;align-items:flex-end}
+  .sheet-scrim.on{display:flex}
+  .sheet{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:14px 20px 26px;animation:up .22s ease;max-height:94%;overflow-y:auto}
+  @keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 16px}
+  .sheet h2{font-family:'Archivo Black',sans-serif;font-size:22px;margin-bottom:4px}
+  .sheet p.lead{font-size:13.5px;color:var(--ol);line-height:1.5;margin-bottom:14px}
+  .sheet .backbtn{font-weight:600;font-size:14px;color:var(--si);padding:2px 0 10px;display:inline-block}
+
+  /* THE ADDER */
+  .flabel{display:block;font-size:12px;font-weight:700;margin:16px 0 7px}
+  .flabel span{color:var(--ol);font-weight:400}
+  .adder input[type=text],.adder input[type=url]{
+    width:100%;padding:13px;border:1.5px solid var(--line);border-radius:11px;
+    font-family:inherit;font-size:15px;background:var(--card);color:var(--ink);
+  }
+  .adder input:focus{outline:none;border-color:var(--si)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{
+    font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:999px;
+    border:1.5px solid var(--line);color:var(--ink);
+  }
+  .chip:hover{border-color:var(--ink)}
+  .chip.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .namesug{border:1.5px solid var(--line);border-radius:11px;margin-top:6px;overflow:hidden;display:none}
+  .namesug.on{display:block}
+  .namesug button{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;padding:11px 13px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line)}
+  .namesug button:last-child{border-bottom:none}
+  .namesug button:hover{background:var(--cl)}
+  .namesug .sub{font-size:11.5px;color:var(--ol);font-weight:400;white-space:nowrap}
+  .daypick{display:flex;gap:5px}
+  .daypick button{
+    flex:1;padding:11px 0;border:1.5px solid var(--line);border-radius:10px;
+    font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  }
+  .daypick button.sel{background:var(--si);color:#fff;border-color:var(--si)}
+  .timegrid{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .timegrid .chip{font-family:'Space Mono',monospace}
+  .timegrid input[type=time]{
+    padding:8px 10px;border:1.5px solid var(--line);border-radius:999px;font-family:'Space Mono',monospace;
+    font-size:12.5px;background:var(--card);color:var(--ink);
+  }
+  .studio-sel{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;
+  }
+  .studio-sel:hover{border-color:var(--ink)}
+  .studio-sel .swd{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+  .studio-sel .nm{font-weight:700;font-size:14.5px}
+  .studio-sel .ad{font-size:12px;color:var(--ol);margin-top:1px}
+  .studio-sel .chev{margin-left:auto;color:var(--ol)}
+  .linktoggle{font-size:13px;font-weight:700;color:var(--si);margin-top:14px;display:inline-block}
+  .publishwrap{position:sticky;bottom:-26px;background:var(--card);padding:14px 0 4px;margin-top:18px}
+
+  /* studio picker */
+  .searchbox{position:relative;margin:4px 0 8px}
+  .searchbox input{width:100%;padding:13px 14px 13px 40px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;background:var(--card);color:var(--ink)}
+  .searchbox input:focus{outline:none;border-color:var(--si)}
+  .searchbox .mag{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ol);font-size:15px}
+  .studio-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px 2px;border-bottom:1px solid var(--line)}
+  .studio-row .swd{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+  .studio-row .nm{font-weight:700;font-size:14.5px}
+  .studio-row .ad{font-size:12px;color:var(--ol);margin-top:1px}
+  .studio-row .tick{margin-left:auto;color:var(--si);font-weight:700}
+  .addnew{color:var(--si);font-weight:700;font-size:14px;padding:14px 2px;display:inline-block}
+  .dirnote{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--ol);margin-top:10px;line-height:1.6}
+
+  /* share story */
+  .share-toggles{display:flex;gap:8px;margin:12px 0}
+  .seg{display:flex;background:var(--cl);border-radius:11px;padding:3px;gap:3px;flex:1}
+  .seg button{flex:1;padding:9px 0;border-radius:9px;font-weight:700;font-size:13px;color:var(--ol)}
+  .seg button.sel{background:var(--ink);color:#fff}
+  .story{background:var(--ink);color:#fff;border-radius:18px;margin:12px auto 4px;width:250px;aspect-ratio:9/16;padding:24px 20px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .story .accent{position:absolute;top:0;left:0;right:0;height:6px;background:var(--si)}
+  .story .kicker{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:#C9C3AE;margin-bottom:8px}
+  .story .headline{font-family:'Archivo Black',sans-serif;font-size:26px;line-height:.95;letter-spacing:-.02em;text-transform:uppercase;margin-bottom:18px}
+  .story .headline em{font-style:normal;color:var(--si)}
+  .story .sday{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.18em;color:#8A8570;margin:8px 0 4px}
+  .story .sline{display:flex;gap:8px;font-size:11px;margin-bottom:5px;align-items:baseline}
+  .story .sline .st{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;min-width:44px;color:#DAD4BE}
+  .story .sline .sn{font-weight:700}
+  .story .sline .sl{color:#8A8570;font-size:9.5px}
+  .story .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center}
+  .story .foot .hd{font-family:'Space Mono',monospace;font-size:10px}
+  .story .foot .rc svg{height:12px;width:auto;display:block}
+  .story .none{color:#8A8570;font-size:11px}
+
+  .fab{
+    position:absolute;right:18px;bottom:76px;z-index:10;background:var(--si);color:#fff;font-weight:700;
+    font-size:14px;padding:14px 20px;border-radius:999px;box-shadow:0 8px 22px rgba(221,88,58,.35);
+    display:none;align-items:center;gap:8px;
+  }
+  .toast{
+    position:absolute;left:50%;bottom:88px;transform:translateX(-50%) translateY(8px);
+    background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:11px 16px;border-radius:11px;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;white-space:nowrap;
+  }
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .empty{color:var(--ol);font-size:13.5px;padding:14px 0}
+
+  /* v9 additions — mobile untouched, desktop only */
+  .sidenav{display:none}
+  .stage{flex:1;display:flex;flex-direction:column;min-height:0}
+  .stage .screen{min-height:0}
+  .heronotify{display:none}
+  .weekgrid{display:block}
+  .daycol.nix{display:none}
+  .btn.cloudghost{background:transparent;color:#fff;border:1.5px solid #C9C3AE}
+
+  @media(min-width:940px){
+    body{padding:32px 28px 60px}
+    .proto-head{max-width:1140px}
+    .role-switch{max-width:420px;margin:0 auto}
+    .phone{max-width:1140px;height:auto;min-height:660px;max-height:none;border-radius:24px;flex-direction:row}
+    body.authed:not(.pubview) .sidenav{
+      display:flex;flex-direction:column;gap:4px;width:216px;flex-shrink:0;
+      border-right:1px solid var(--line);padding:26px 16px;
+    }
+    .sidenav .wordmark{padding:0 10px 22px}
+    .sidenav .wordmark svg{height:20px;width:auto;display:block}
+    .sidenav button{
+      display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;
+      font-size:14px;font-weight:600;color:var(--ol);text-align:left;
+    }
+    .sidenav button .ico{font-size:15px}
+    .sidenav button.active{background:var(--cl);color:var(--ink)}
+    .sidenav button.active .ico{color:var(--si)}
+    .sideuser{margin-top:auto;font-family:'Space Mono',monospace;font-size:11px;color:var(--ol);padding:0 10px;word-break:break-all}
+    .tabbar{display:none !important}
+    .appbar .wordmark{visibility:hidden}
+    body:not(.authed) .appbar .wordmark{visibility:visible}
+    body.pubview .appbar .wordmark{visibility:visible}
+    .pad{padding:30px 38px;max-width:1000px}
+
+    /* auth centered */
+    .ob{justify-content:center}
+    .ob .pad{max-width:440px;width:100%;margin:0 auto}
+    .ob .mark{top:28px;left:28px}
+
+    /* week grid */
+    .weekgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:start}
+    .daycol.nix{display:block}
+    .weekgrid .daylabel{padding:6px 0 8px}
+    .weekgrid .class-card{flex-direction:column;align-items:stretch;gap:7px;padding:11px 12px}
+    .weekgrid .class-card .rail{width:100%;height:4px;align-self:auto}
+    .weekgrid .class-card .time{min-width:0}
+    .weekgrid .class-card .name{font-size:13.5px}
+    .weekgrid .class-card .meta{font-size:11.5px}
+    .weekgrid .loctag{font-size:10.5px;padding:2px 6px}
+    .weekgrid .editrow{margin-left:0;gap:5px}
+    .weekgrid .iconbtn{width:26px;height:26px;font-size:11px}
+    .fab{right:34px;bottom:30px}
+
+    /* public page: sticky identity + schedule column */
+    #public{flex-direction:row}
+    .pub .pubhero{
+      width:340px;flex-shrink:0;display:flex;flex-direction:column;
+      padding:38px 30px;position:sticky;top:0;align-self:stretch;
+    }
+    .pub .pubhero .big{font-size:44px}
+    .heronotify{display:inline-flex;margin-top:22px;width:auto}
+    .notifybar{display:none !important}
+    .pub .pubbody{flex:1;max-width:640px;margin:0 auto;padding:26px 30px 60px}
+
+    /* sheets become centered modals */
+    .sheet-scrim{align-items:center;justify-content:center;padding:24px}
+    .sheet{max-width:480px;border-radius:22px}
+    .publishwrap{bottom:-26px}
+  }
+
+  /* v10: saved classes + multi links */
+  .linkrow{display:flex;gap:6px;margin-top:8px;align-items:center}
+  .linkrow select{padding:11px 8px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px;background:var(--card);color:var(--ink)}
+  .linkrow input{flex:1;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;min-width:0;background:var(--card);color:var(--ink)}
+  .linkrow input:focus,.linkrow select:focus{outline:none;border-color:var(--si)}
+  .linkrow .iconbtn{flex-shrink:0}
+  .booklink{margin-right:12px}
+</style>
+</head>
+<body>
+
+<div class="proto-head">
+  <div class="proto-title">fittlist v10 · saved classes · resize me &nbsp;·&nbsp; <button onclick="location.reload()">Reset</button></div>
+  <div class="role-switch" role="tablist" aria-label="Prototype view">
+    <button id="vwApp" class="active" onclick="setView('app')">Trainer app</button>
+    <button id="vwPub" onclick="setView('pub')">Public page · no app, no account</button>
+  </div>
+</div>
+
+<div class="phone">
+
+  <nav class="sidenav" aria-label="Main">
+    <div class="wordmark" aria-label="fittlist"></div>
+    <button class="active" data-s="tr-schedule" onclick="go('tr-schedule')"><span class="ico">▦</span>Schedule</button>
+    <button data-s="tr-page" onclick="go('tr-page')"><span class="ico">↗</span>My page</button>
+    <div class="sideuser" id="sideUser"></div>
+  </nav>
+  <div class="stage">
+
+  <!-- AUTH 1: phone -->
+  <section class="screen ob on" id="auth-1">
+    <div class="mark" aria-label="fittlist"></div>
+    <div class="pad">
+      <h1>Never answer<br>"what's your<br>schedule?" again.</h1>
+      <p>One link in your bio, every gym you coach at. Log in with your email. We send a code — no passwords.</p>
+      <input id="authPhone" type="email" placeholder="you@example.com" autocomplete="off">
+      <button class="btn" onclick="authNext()">Email me a code</button>
+      <div class="microcopy">Email login. No passwords to forget.</div>
+    </div>
+  </section>
+
+  <!-- AUTH 2: code -->
+  <section class="screen ob" id="auth-2">
+    <div class="mark" aria-label="fittlist"></div>
+    <div class="pad">
+      <h1>Check your inbox.</h1>
+      <p>We sent a 6-digit code to <b id="authPhoneEcho"></b>.</p>
+      <input id="authCode" class="code" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off" oninput="codeInput()">
+      <button class="btn" id="codeBtn" onclick="verify()" disabled>Verify</button>
+      <button class="backlink" onclick="showScreen('auth-1')">Wrong email?</button>
+      <div class="microcopy">Prototype: any 6 digits work.</div>
+    </div>
+  </section>
+
+  <!-- AUTH 3: claim -->
+  <section class="screen ob" id="auth-3">
+    <div class="mark" aria-label="fittlist"></div>
+    <div class="pad">
+      <h1>Claim your page.</h1>
+      <p>Your name becomes your link. That's the whole signup.</p>
+      <input id="authName" placeholder="Matt" autocomplete="off" maxlength="24" oninput="handlePreview()">
+      <div class="handlepreview">fittlist.co/<b id="handleEcho">…</b></div>
+      <button class="btn" onclick="enterApp()">Claim it</button>
+    </div>
+  </section>
+
+  <!-- TRAINER: SCHEDULE -->
+  <section class="screen" id="tr-schedule">
+    <div class="appbar">
+      <div class="wordmark" aria-label="fittlist"></div>
+      <div class="sub">My schedule</div>
+    </div>
+    <div class="pad" style="padding-top:4px;padding-bottom:110px">
+      <h1 class="screen-title">This week</h1>
+      <div id="trBody"></div>
+    </div>
+  </section>
+
+  <!-- TRAINER: PAGE -->
+  <section class="screen" id="tr-page">
+    <div class="appbar">
+      <div class="wordmark" aria-label="fittlist"></div>
+      <div class="sub">My page</div>
+    </div>
+    <div class="pad" style="padding-top:4px">
+      <h1 class="screen-title" id="pgTitle">fittlist.co/matt</h1>
+      <div class="statgrid">
+        <div class="stat"><div class="n" id="stVisits">0</div><div class="l">visits</div><div class="d" id="stVisitsD"></div></div>
+        <div class="stat"><div class="n" id="stSubs">0</div><div class="l">on your list</div><div class="d" id="stSubsD"></div></div>
+        <div class="stat"><div class="n" id="stClasses">0</div><div class="l">classes</div><div class="d"></div></div>
+      </div>
+      <div class="linkcard">
+        <div class="eyebrow">Your link</div>
+        <div class="url" id="pgUrl">fittlist.co/matt</div>
+        <button class="btn si" onclick="toast('Link copied')">Copy link</button>
+        <div class="hint" id="pgHint"></div>
+      </div>
+      <button class="rowcta" onclick="setView('pub')">
+        <span class="ig">👁</span>
+        <span><span class="t">Preview your page</span><br><span class="s">Exactly what someone sees when they tap your bio</span></span>
+      </button>
+      <button class="rowcta" onclick="openShare()">
+        <span class="ig">◫</span>
+        <span><span class="t">Share your week</span><br><span class="s">A story image with your link on it</span></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- PUBLIC PAGE -->
+  <section class="screen pub" id="public">
+    <div class="pubhero">
+      <div class="eyebrow">Coaching schedule · this week</div>
+      <div class="big" id="pubName">Matt</div>
+      <div class="gyms" id="pubGyms"></div>
+      <button class="btn si heronotify" id="notifyBtnD" onclick="openNotify()">Email me when this changes</button>
+    </div>
+    <div class="pubbody" id="pubBody"></div>
+    <div class="notifybar" id="notifyBar">
+      <button class="btn si" id="notifyBtn" onclick="openNotify()">Email me when this changes</button>
+    </div>
+  </section>
+
+  <!-- THE ADDER -->
+  <div class="sheet-scrim" id="sheetAdd" onclick="if(event.target===this)closeAdder()">
+    <div class="sheet adder">
+      <div class="grab"></div>
+
+      <!-- stage: start (saved classes) -->
+      <div id="stageStart" style="display:none">
+        <h2>Add to your week</h2>
+        <p class="lead">Slot in a saved class — everything's already filled — or make a new one.</p>
+        <div id="savedList"></div>
+        <button class="btn si" style="margin-top:16px" onclick="newClassForm()">+ New class</button>
+      </div>
+
+      <!-- stage: form -->
+      <div id="stageForm">
+        <button class="backbtn" id="formBack" onclick="stage('start')" style="display:none">&larr; Saved classes</button>
+        <h2 id="addTitle">Add classes</h2>
+        <p class="lead" id="addLead">Pick days — one publish covers them all. Past class names autofill as you type.</p>
+
+        <label class="flabel" for="fName">Class name</label>
+        <input type="text" id="fName" placeholder="Type it once — it's remembered" autocomplete="off" oninput="nameInput()">
+        <div class="namesug" id="nameSug"></div>
+
+        <label class="flabel">Days <span>· tap all that apply</span></label>
+        <div class="daypick" id="fDays"></div>
+
+        <label class="flabel">Start</label>
+        <div class="timegrid" id="fTimes"></div>
+
+        <label class="flabel">Length</label>
+        <div class="chips" id="fDur"></div>
+
+        <label class="flabel">Studio</label>
+        <button class="studio-sel" id="fStudio" onclick="stage('pick')"></button>
+
+        <label class="flabel">Booking links <span>· website, Mindbody, ClassPass…</span></label>
+        <div id="linkRows"></div>
+        <button class="linktoggle" onclick="addLinkRow()">+ Add booking link</button>
+
+        <div class="publishwrap">
+          <button class="btn si" id="publishBtn" onclick="saveClasses()">Publish</button>
+        </div>
+      </div>
+
+      <!-- stage: studio picker -->
+      <div id="stagePick" style="display:none">
+        <button class="backbtn" onclick="stage('form')">&larr; Back</button>
+        <h2>Choose a studio</h2>
+        <div class="searchbox">
+          <span class="mag">⌕</span>
+          <input type="text" id="studioSearch" placeholder="Name or street" autocomplete="off" oninput="renderStudioList()">
+        </div>
+        <div id="studioList"></div>
+        <button class="addnew" onclick="stage('new')">+ New studio</button>
+        <div class="dirnote">Studios are shared. Add one once and every trainer can use it.</div>
+      </div>
+
+      <!-- stage: new studio -->
+      <div id="stageNew" style="display:none">
+        <button class="backbtn" onclick="stage('pick')">&larr; Back</button>
+        <h2>New studio</h2>
+        <p class="lead">Name and address. That's the whole listing.</p>
+        <label class="flabel" for="nsName">Studio name</label>
+        <input type="text" id="nsName" placeholder="e.g. Palisade Barbell" autocomplete="off">
+        <label class="flabel" for="nsAddr">Address</label>
+        <input type="text" id="nsAddr" placeholder="e.g. 501 Palisade Ave, Jersey City" autocomplete="off">
+        <div class="publishwrap">
+          <button class="btn si" onclick="saveStudio()">Add studio</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NOTIFY SHEET -->
+  <div class="sheet-scrim" id="sheetNotify" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="eyebrow" id="ntName" style="margin-bottom:6px">Matt's list</div>
+      <h2>Get an email when the schedule changes</h2>
+      <p class="lead">New classes, time changes, cancellations. Nothing else, ever. Unsubscribe anytime.</p>
+      <label class="flabel" for="ntPhone">Your email</label>
+      <input type="text" id="ntPhone" style="width:100%;padding:13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:15px" placeholder="you@example.com">
+      <div class="publishwrap">
+        <button class="btn si" onclick="subscribe()">Add me to the list</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARE SHEET -->
+  <div class="sheet-scrim" id="sheetShare" onclick="if(event.target===this)closeSheets()">
+    <div class="sheet">
+      <div class="grab"></div>
+      <h2>Your story image</h2>
+      <div class="share-toggles">
+        <div class="seg" id="shareSpan">
+          <button class="sel" onclick="shareSpan='week';renderStory()">My week</button>
+          <button onclick="shareSpan='day';renderStory()">Today</button>
+        </div>
+      </div>
+      <div class="story" id="storyCard"></div>
+      <div class="publishwrap">
+        <button class="btn" onclick="toast('Saved to Photos')">Save image</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /stage -->
+
+  <button class="fab" id="fabAdd" onclick="openAdd()">+ Add class</button>
+  <div class="toast" id="toast"></div>
+
+  <nav class="tabbar" id="mainTabs" style="display:none">
+    <button class="active" data-s="tr-schedule" onclick="go('tr-schedule',this)"><span class="ico">▦</span>Schedule</button>
+    <button data-s="tr-page" onclick="go('tr-page',this)"><span class="ico">↗</span>My page</button>
+  </nav>
+</div>
+
+<script>
+const BRAND_INK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5036 1164" role="img" aria-label="Fittlist"><g transform="scale(9.7)"><rect x="18" y="20" width="36" height="22" rx="11" fill="#191502"/><rect x="62" y="20" width="40" height="22" rx="11" fill="#191502"/><rect x="18" y="49" width="66" height="22" rx="11" fill="#DD583A"/><rect x="18" y="78" width="28" height="22" rx="11" fill="#191502"/></g><g transform="translate(1404.0,168)"><g transform="translate(40,0)">
+<path transform="translate(0,777) scale(1,-1)" fill="#191502" d="M383 719V602H337Q305 602 293.0 590.0Q281 578 281 549V528H383V393H281V0H82V393H8V528H82V550Q82 652 132.0 694.5Q182 737 275 737Q297 737 330.0 731.5Q363 726 383 719Z"/>
+<path transform="translate(375,777) scale(1,-1)" fill="#191502" d="M67 590V725H266V590ZM67 0V528H266V0Z"/>
+<path transform="translate(694,777) scale(1,-1)" fill="#191502" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(1124,777) scale(1,-1)" fill="#191502" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(1554,777) scale(1,-1)" fill="#191502" d="M67 0V725H266V0Z"/>
+<path transform="translate(1873,777) scale(1,-1)" fill="#191502" d="M67 590V725H266V590ZM67 0V528H266V0Z"/>
+<path transform="translate(2192,777) scale(1,-1)" fill="#191502" d="M564 370H379Q379 399 353 411Q335 421 308 421Q236 421 236 387Q236 368 261.0 360.0Q286 352 343 343Q413 333 460.0 319.5Q507 306 542.0 271.5Q577 237 577 175Q577 74 501.5 31.0Q426 -12 304 -12Q234 -12 172.0 7.5Q110 27 71.0 68.0Q32 109 32 172H217V168Q218 134 245.5 120.5Q273 107 304 107Q387 107 387 146Q387 166 361.0 175.0Q335 184 276 194Q205 206 159.5 220.0Q114 234 80.0 267.5Q46 301 46 361Q46 458 119.5 499.0Q193 540 311 540Q417 540 490.5 498.5Q564 457 564 370Z"/>
+<path transform="translate(2789,777) scale(1,-1)" fill="#191502" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(3219,777) scale(1,-1)" fill="#DD583A" d="M61 0V199H273V0Z"/>
+</g>
+</g></svg>`;
+const BRAND_CLOUD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5036 1164" role="img" aria-label="Fittlist"><g transform="scale(9.7)"><rect x="18" y="20" width="36" height="22" rx="11" fill="#F7F2E8"/><rect x="62" y="20" width="40" height="22" rx="11" fill="#F7F2E8"/><rect x="18" y="49" width="66" height="22" rx="11" fill="#DD583A"/><rect x="18" y="78" width="28" height="22" rx="11" fill="#F7F2E8"/></g><g transform="translate(1404.0,168)"><g transform="translate(40,0)">
+<path transform="translate(0,777) scale(1,-1)" fill="#F7F2E8" d="M383 719V602H337Q305 602 293.0 590.0Q281 578 281 549V528H383V393H281V0H82V393H8V528H82V550Q82 652 132.0 694.5Q182 737 275 737Q297 737 330.0 731.5Q363 726 383 719Z"/>
+<path transform="translate(375,777) scale(1,-1)" fill="#F7F2E8" d="M67 590V725H266V590ZM67 0V528H266V0Z"/>
+<path transform="translate(694,777) scale(1,-1)" fill="#F7F2E8" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(1124,777) scale(1,-1)" fill="#F7F2E8" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(1554,777) scale(1,-1)" fill="#F7F2E8" d="M67 0V725H266V0Z"/>
+<path transform="translate(1873,777) scale(1,-1)" fill="#F7F2E8" d="M67 590V725H266V590ZM67 0V528H266V0Z"/>
+<path transform="translate(2192,777) scale(1,-1)" fill="#F7F2E8" d="M564 370H379Q379 399 353 411Q335 421 308 421Q236 421 236 387Q236 368 261.0 360.0Q286 352 343 343Q413 333 460.0 319.5Q507 306 542.0 271.5Q577 237 577 175Q577 74 501.5 31.0Q426 -12 304 -12Q234 -12 172.0 7.5Q110 27 71.0 68.0Q32 109 32 172H217V168Q218 134 245.5 120.5Q273 107 304 107Q387 107 387 146Q387 166 361.0 175.0Q335 184 276 194Q205 206 159.5 220.0Q114 234 80.0 267.5Q46 301 46 361Q46 458 119.5 499.0Q193 540 311 540Q417 540 490.5 498.5Q564 457 564 370Z"/>
+<path transform="translate(2789,777) scale(1,-1)" fill="#F7F2E8" d="M412 528V393H300V192Q300 156 312.0 139.5Q324 123 356 123H412V6Q388 -2 350.0 -7.0Q312 -12 284 -12Q196 -12 148.5 20.0Q101 52 101 129V393H27V528H109L152 688H300V528Z"/>
+<path transform="translate(3219,777) scale(1,-1)" fill="#DD583A" d="M61 0V199H273V0Z"/>
+</g>
+</g></svg>`;
+
+/* ---------------- data ---------------- */
+const DAYS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const TODAY = 'MON';
+const PALETTES = [
+  {rail:'#92A6A7',bg:'#E4EAEA',tx:'#4C6768'},   /* sky */
+  {rail:'#CBD665',bg:'#EEF2D2',tx:'#6A7226'},   /* tacha */
+  {rail:'#C4B98E',bg:'#EFEBD8',tx:'#6E6547'},   /* sand */
+  {rail:'#4E4B3B',bg:'#E6E3D6',tx:'#4E4B3B'},   /* olive */
+];
+let studios = [
+  {id:'s1',name:'Ironbound Strength',addr:'143 Newark Ave, Jersey City'},
+  {id:'s2',name:'Hudson Athletic Club',addr:'88 Hudson St, Hoboken'},
+  {id:'s3',name:'Root Yoga',addr:'310 Grove St, Jersey City'},
+  {id:'s4',name:'Palisade Barbell',addr:'501 Palisade Ave, Jersey City'},
+];
+/* per-account class memory: name -> template of how you last ran it */
+let classMemory = {};
+const TIME_PRESETS = ['06:00','09:00','12:00','17:30','18:30'];
+const DUR_PRESETS = [30,45,50,60,75];
+
+let me = {name:'Matt', handle:'matt', phone:''};
+let classes = [];
+let nextId = 1;
+let stats = {visits:0, subs:0};
+let subscribed = false;
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const studio = id => studios.find(s=>s.id===id);
+function pal(sid){return PALETTES[Math.max(0,studios.findIndex(s=>s.id===sid))%PALETTES.length]}
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'')||'you'}
+function groupByDay(list){const g={};DAYS.forEach(d=>g[d]=[]);list.forEach(c=>g[c.day].push(c));return g}
+function sortTime(a,b){
+  const v=t=>{let[h,m]=t.slice(0,-1).split(':').map(Number);if(t.endsWith('p')&&h!==12)h+=12;if(t.endsWith('a')&&h===12)h=0;return h*60+m};
+  return v(a.time)-v(b.time);
+}
+function fmtTime(v){let[h,m]=v.split(':').map(Number);const ap=h>=12?'p':'a';h=h%12||12;return `${h}:${String(m).padStart(2,'0')}${ap}`}
+function locTag(sid){const s=studio(sid),p=pal(sid);return `<span class="loctag" style="background:${p.bg};color:${p.tx}"><span class="swd" style="background:${p.rail}"></span>${s.name}</span>`}
+
+/* ---------------- auth ---------------- */
+function authNext(){
+  const p=$('authPhone').value.trim();
+  if(!p){$('authPhone').focus();return}
+  me.phone=p;
+  $('authPhoneEcho').textContent=p;
+  showScreen('auth-2');
+  setTimeout(()=>$('authCode').focus(),100);
+}
+function codeInput(){
+  $('codeBtn').disabled = $('authCode').value.replace(/\D/g,'').length<6;
+}
+function verify(){
+  showScreen('auth-3');
+  setTimeout(()=>$('authName').focus(),100);
+}
+function handlePreview(){
+  $('handleEcho').textContent = slug($('authName').value.trim()||'');
+  if(!$('authName').value.trim())$('handleEcho').textContent='…';
+}
+function enterApp(){
+  const n=$('authName').value.trim();
+  if(!n){$('authName').focus();return}
+  me.name=n;me.handle=slug(n);
+  $('pgTitle').textContent='fittlist.co/'+me.handle;
+  $('pgUrl').textContent='fittlist.co/'+me.handle;
+  $('pubName').textContent=me.name;
+  $('ntName').textContent=me.name+"'s list";
+  $('mainTabs').style.display='flex';
+  document.body.classList.add('authed');
+  $('sideUser').textContent='fittlist.co/'+me.handle;
+  renderAll();
+  go('tr-schedule');
+  openAdd();
+}
+
+/* ---------------- schedule ---------------- */
+function renderSchedule(){
+  if(!classes.length){
+    $('trBody').innerHTML=`
+      <div class="empty-block">
+        <div class="glyph">MON–SUN</div>
+        <h2>Your week is empty</h2>
+        <p>Add the classes you coach — every studio, one schedule. Your link starts working with the first one.</p>
+        <button class="btn si" onclick="openAdd()">Add your first class</button>
+      </div>`;
+    $('fabAdd').style.display='none';
+    return;
+  }
+  const g=groupByDay(classes);
+  let html='<div class="weekgrid">';
+  DAYS.forEach(d=>{
+    html+=`<div class="daycol ${g[d].length?'':'nix'}"><div class="daylabel">${d}</div>`;
+    g[d].sort(sortTime).forEach(c=>{
+      const p=pal(c.studio);
+      html+=`<div class="class-card">
+        <div class="rail" style="background:${p.rail}"></div>
+        <div class="time">${c.time}</div>
+        <div class="body">
+          <div class="name">${c.name}</div>
+          <div class="meta">${c.len} min${c.links&&c.links.length?` · ${c.links.length} booking link${c.links.length>1?'s':''}`:''}</div>
+          ${locTag(c.studio)}
+        </div>
+        <div class="editrow">
+          <button class="iconbtn" aria-label="Duplicate class" title="Duplicate" onclick="dupClass(${c.id})">⧉</button>
+          <button class="iconbtn" aria-label="Delete class" title="Delete" onclick="delClass(${c.id})">✕</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  $('trBody').innerHTML=html;
+  $('fabAdd').style.display=document.querySelector('#tr-schedule.on')?'flex':'none';
+}
+
+/* ---------------- page tab ---------------- */
+function renderPage(){
+  $('stVisits').textContent=stats.visits;
+  $('stSubs').textContent=stats.subs;
+  $('stClasses').textContent=classes.length;
+  $('stVisitsD').textContent=stats.visits?'this week':'';
+  $('stSubsD').textContent=stats.subs?'get texts':'';
+  $('pgHint').textContent = classes.length
+    ? `${stats.subs||'No'} ${stats.subs===1?'person':'people'} on your list so far. Every schedule change emails them automatically.`
+    : 'Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale.';
+}
+
+/* ---------------- public ---------------- */
+function renderPublic(){
+  $('pubGyms').textContent = classes.length
+    ? [...new Set(classes.map(c=>studio(c.studio).name))].join(' + ')
+    : 'Schedules for every studio they coach at, in one place.';
+  if(!classes.length){
+    $('pubBody').innerHTML=`
+      <div class="empty-block" style="background:#fff">
+        <div class="glyph">MON–SUN</div>
+        <h2>Nothing published yet</h2>
+        <p>${me.name} hasn't posted this week's classes. Join the list and you'll get an email the moment they do.</p>
+      </div>${madeWith()}`;
+  } else {
+    const g=groupByDay(classes);let html='';
+    DAYS.forEach(d=>{
+      if(!g[d].length)return;
+      html+=`<div class="daylabel">${d}</div>`;
+      g[d].sort(sortTime).forEach(c=>{
+        const s=studio(c.studio),p=pal(c.studio);
+        html+=`<div class="class-card">
+          <div class="rail" style="background:${p.rail}"></div>
+          <div class="time">${c.time}</div>
+          <div class="body">
+            <div class="name">${c.name}</div>
+            <div class="meta">${c.len} min · ${s.addr}</div>
+            ${locTag(c.studio)}
+            ${(c.links&&c.links.length)?'<br>'+c.links.map(l=>`<a class="booklink" href="#" onclick="event.preventDefault();toast('Opening ${l.label} booking…')">Book via ${l.label} ↗</a>`).join(''):''}
+          </div>
+        </div>`;
+      });
+    });
+    $('pubBody').innerHTML=html+madeWith();
+  }
+  $('notifyBar').classList.add('on');
+  $('notifyBtn').textContent = subscribed?"You're on the list ✓":'Email me when this changes';
+  $('notifyBtn').classList.toggle('si',!subscribed);
+  $('notifyBtn').classList.toggle('ghost',subscribed);
+  const nd=$('notifyBtnD');
+  nd.textContent = subscribed?"You're on the list ✓":'Email me when this changes';
+  nd.classList.toggle('si',!subscribed);
+  nd.classList.toggle('cloudghost',subscribed);
+}
+function madeWith(){
+  return `<div class="madewith">Made with <span class="mw-logo">${BRAND_INK}</span> — coach classes? <button onclick="toast('New trainer signup starts here')">Claim your page</button></div>`;
+}
+
+/* ---------------- notify ---------------- */
+function openNotify(){
+  if(subscribed){toast("You're already on the list");return}
+  $('sheetNotify').classList.add('on');
+}
+function subscribe(){
+  const p=$('ntPhone').value.trim();
+  if(!p){$('ntPhone').focus();return}
+  subscribed=true;stats.subs++;
+  closeSheets();renderPublic();renderPage();
+  toast("You're on "+me.name+"'s list");
+}
+
+/* ---------------- THE ADDER ---------------- */
+let sel = {days:new Set(), time:'06:00', dur:50, studio:'s1', linkOpen:false};
+let lastUsed = {time:'06:00', dur:50, studio:'s1'};
+
+function openAdd(prefill){
+  sel = {days:new Set(), time:lastUsed.time, dur:lastUsed.dur, studio:lastUsed.studio, links:[]};
+  $('fName').value='';
+  $('nameSug').classList.remove('on'); $('nameSug').innerHTML='';
+  $('addTitle').textContent='New class';
+  $('addLead').textContent='Type it once — fittlist remembers the whole class. Pick days; one publish covers them all.';
+  if(prefill){
+    $('fName').value=prefill.name;
+    sel.time=prefill.rawTime; sel.dur=prefill.len; sel.studio=prefill.studio;
+    sel.links=(prefill.links||[]).map(l=>({...l}));
+    $('addTitle').textContent='Duplicate class';
+    $('addLead').textContent='Same class — pick the new days.';
+    stage('form');
+  } else if(Object.keys(classMemory).length){
+    stage('start');
+  } else {
+    stage('form');
+  }
+  renderAdder();
+  $('sheetAdd').classList.add('on');
+}
+function closeAdder(){$('sheetAdd').classList.remove('on')}
+function stage(s){
+  $('stageStart').style.display = s==='start'?'block':'none';
+  $('stageForm').style.display = s==='form'?'block':'none';
+  $('stagePick').style.display = s==='pick'?'block':'none';
+  $('stageNew').style.display  = s==='new'?'block':'none';
+  $('formBack').style.display = (s==='form'&&Object.keys(classMemory).length)?'inline-block':'none';
+  if(s==='start')renderSaved();
+  if(s==='pick'){$('studioSearch').value='';renderStudioList();setTimeout(()=>$('studioSearch').focus(),80)}
+  if(s==='new'){$('nsName').value='';$('nsAddr').value='';setTimeout(()=>$('nsName').focus(),80)}
+}
+function renderSaved(){
+  $('savedList').innerHTML=Object.keys(classMemory).map(n=>{
+    const t=classMemory[n],s=studio(t.studio),p=pal(t.studio);
+    const lk=t.links.length?` · ${t.links.length} link${t.links.length>1?'s':''}`:'';
+    return `<button class="studio-row" onclick="pickSaved('${n.replace(/'/g,"\\'")}')">
+      <span class="swd" style="background:${p.rail}"></span>
+      <span><span class="nm">${n}</span><br><span class="ad">${fmtTime(t.rawTime)} · ${t.dur} min · ${s.name}${lk}</span></span>
+      <span class="tick">›</span>
+    </button>`;
+  }).join('');
+}
+function pickSaved(n){
+  const t=classMemory[n];
+  $('fName').value=n;
+  sel.time=t.rawTime; sel.dur=t.dur; sel.studio=t.studio;
+  sel.links=t.links.map(l=>({...l}));
+  $('addTitle').textContent='Add '+n;
+  $('addLead').textContent='Everything is filled — just pick the days.';
+  stage('form');renderAdder();
+}
+function newClassForm(){
+  $('fName').value='';sel.links=[];
+  $('addTitle').textContent='New class';
+  $('addLead').textContent='Type it once — fittlist remembers the whole class.';
+  stage('form');renderAdder();setTimeout(()=>$('fName').focus(),60);
+}
+function renderAdder(){
+  $('fDays').innerHTML = DAYS.map(d=>`<button class="${sel.days.has(d)?'sel':''}" onclick="togDay('${d}')">${d[0]}${d[1].toLowerCase()}</button>`).join('');
+  $('fTimes').innerHTML = TIME_PRESETS.map(t=>`<button class="chip ${sel.time===t?'sel':''}" onclick="sel.time='${t}';renderAdder()">${fmtTime(t)}</button>`).join('')
+    + `<input type="time" value="${sel.time}" onchange="sel.time=this.value;renderAdder()" aria-label="Custom time">`;
+  $('fDur').innerHTML = DUR_PRESETS.map(d=>`<button class="chip ${sel.dur===d?'sel':''}" onclick="sel.dur=${d};renderAdder()">${d} min</button>`).join('');
+  const s=studio(sel.studio),p=pal(sel.studio);
+  $('fStudio').innerHTML = `<span class="swd" style="background:${p.rail}"></span><span><span class="nm">${s.name}</span><br><span class="ad">${s.addr}</span></span><span class="chev">›</span>`;
+  const n=sel.days.size;
+  const dayList=[...DAYS.filter(d=>sel.days.has(d))];
+  $('publishBtn').disabled = n===0;
+  $('publishBtn').textContent = n===0 ? 'Pick at least one day'
+    : `Publish ${n>1?n+' classes':''} · ${dayList.join(', ')} · ${fmtTime(sel.time)}`
+      + (stats.subs?` · emails ${stats.subs}`:'');
+  renderLinks();
+}
+const LINK_LABELS=['Website','Mindbody','ClassPass','Other'];
+function renderLinks(){
+  $('linkRows').innerHTML=sel.links.map((l,i)=>`
+    <div class="linkrow">
+      <select onchange="sel.links[${i}].label=this.value" aria-label="Link type">${LINK_LABELS.map(x=>`<option ${l.label===x?'selected':''}>${x}</option>`).join('')}</select>
+      <input type="url" placeholder="Paste the link" value="${l.url}" oninput="sel.links[${i}].url=this.value" aria-label="Booking URL">
+      <button class="iconbtn" aria-label="Remove link" onclick="removeLink(${i})">✕</button>
+    </div>`).join('');
+}
+function addLinkRow(){sel.links.push({label:sel.links.length?'ClassPass':'Website',url:''});renderLinks();
+  const inputs=$('linkRows').querySelectorAll('input');if(inputs.length)inputs[inputs.length-1].focus();}
+function removeLink(i){sel.links.splice(i,1);renderLinks()}
+function togDay(d){sel.days.has(d)?sel.days.delete(d):sel.days.add(d);renderAdder()}
+function nameInput(){
+  const q=$('fName').value.trim().toLowerCase();
+  const box=$('nameSug');
+  const names=Object.keys(classMemory).filter(n=>q && n.toLowerCase().includes(q) && n.toLowerCase()!==q);
+  if(!names.length){box.classList.remove('on');box.innerHTML='';return}
+  box.innerHTML=names.slice(0,4).map(n=>{
+    const t=classMemory[n];
+    return `<button onclick="pickName('${n.replace(/'/g,"\\'")}')">${n}<span class="sub">${fmtTime(t.rawTime)} · ${studio(t.studio).name}</span></button>`;
+  }).join('');
+  box.classList.add('on');
+}
+function pickName(n){
+  const t=classMemory[n];
+  $('fName').value=n;
+  sel.time=t.rawTime; sel.dur=t.dur; sel.studio=t.studio;
+  sel.links=t.links.map(l=>({...l}));
+  $('nameSug').classList.remove('on');
+  renderAdder();
+  toast('Autofilled from last time');
+}
+function saveClasses(){
+  const name=$('fName').value.trim()||'New class';
+  const links=sel.links.filter(l=>l.url.trim()).map(l=>({label:l.label,url:l.url.trim()}));
+  const dayList=DAYS.filter(d=>sel.days.has(d));
+  classMemory[name]={rawTime:sel.time,dur:sel.dur,studio:sel.studio,links};
+  dayList.forEach(d=>classes.push({id:nextId++,day:d,rawTime:sel.time,time:fmtTime(sel.time),len:sel.dur,name,studio:sel.studio,links}));
+  lastUsed={time:sel.time,dur:sel.dur,studio:sel.studio};
+  closeAdder();
+  const first = classes.length===dayList.length;
+  if(first && stats.subs===0){
+    toast('Your page is live');
+    setTimeout(()=>{stats.visits=12;stats.subs=3;renderPage();toast('12 visits · 3 joined your list this week')},2500);
+  } else {
+    toast(stats.subs?`Published · emailed ${stats.subs} ${stats.subs===1?'person':'people'}`:`Published ${dayList.length>1?dayList.length+' classes':''}`);
+  }
+  renderAll();
+}
+function dupClass(id){
+  const c=classes.find(x=>x.id===id);
+  openAdd(c);
+}
+function delClass(id){
+  classes=classes.filter(c=>c.id!==id);
+  renderAll();
+  toast(stats.subs?`Removed · emailed ${stats.subs} ${stats.subs===1?'person':'people'}`:'Removed');
+}
+
+/* ---------------- studios ---------------- */
+function renderStudioList(){
+  const q=($('studioSearch').value||'').trim().toLowerCase();
+  const hits=studios.filter(s=>!q||s.name.toLowerCase().includes(q)||s.addr.toLowerCase().includes(q));
+  $('studioList').innerHTML = hits.length
+    ? hits.map(s=>{const p=pal(s.id);return `<button class="studio-row" onclick="pickStudio('${s.id}')">
+        <span class="swd" style="background:${p.rail}"></span>
+        <span><span class="nm">${s.name}</span><br><span class="ad">${s.addr}</span></span>
+        ${sel.studio===s.id?'<span class="tick">✓</span>':''}
+      </button>`}).join('')
+    : `<p class="empty">Nothing named "${$('studioSearch').value.trim()}" yet. Add it below — takes ten seconds.</p>`;
+}
+function pickStudio(id){sel.studio=id;stage('form');renderAdder()}
+function saveStudio(){
+  const name=$('nsName').value.trim(), addr=$('nsAddr').value.trim();
+  if(!name){$('nsName').focus();return}
+  if(!addr){$('nsAddr').focus();return}
+  const id='s'+(studios.length+1)+Date.now()%1000;
+  studios.push({id,name,addr});
+  sel.studio=id;
+  stage('form');renderAdder();
+  toast('Added to the studio directory');
+}
+
+/* ---------------- share ---------------- */
+let shareSpan='week';
+function openShare(){$('sheetShare').classList.add('on');renderStory()}
+function renderStory(){
+  $('shareSpan').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('sel',(i===0)===(shareSpan==='week')));
+  let mine=[...classes];
+  if(shareSpan==='day')mine=mine.filter(c=>c.day===TODAY);
+  const g=groupByDay(mine);
+  let lines='';
+  DAYS.forEach(d=>{
+    if(!g[d].length)return;
+    if(shareSpan==='week')lines+=`<div class="sday">${d}</div>`;
+    g[d].sort(sortTime).forEach(c=>{
+      lines+=`<div class="sline"><span class="st">${c.time}</span><span><span class="sn">${c.name}</span><br><span class="sl">${studio(c.studio).name}</span></span></div>`;
+    });
+  });
+  $('storyCard').innerHTML=`
+    <div class="accent"></div>
+    <div class="kicker">${shareSpan==='week'?'This week':'Today'} · on the floor</div>
+    <div class="headline">Catch me<br><em>coaching.</em></div>
+    ${lines||`<div class="none">Nothing on the calendar yet — add a class first.</div>`}
+    <div class="foot"><span class="hd">fittlist.co/${me.handle}</span><span class="rc">${BRAND_CLOUD}</span></div>`;
+}
+
+/* ---------------- nav ---------------- */
+function closeSheets(){document.querySelectorAll('.sheet-scrim').forEach(s=>s.classList.remove('on'))}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
+function go(id){
+  showScreen(id);
+  document.querySelectorAll('#mainTabs button, .sidenav button').forEach(b=>b.classList.toggle('active',b.dataset.s===id));
+  $('fabAdd').style.display=(id==='tr-schedule'&&classes.length)?'flex':'none';
+  $('notifyBar').classList.remove('on');
+  closeSheets();
+}
+function setView(v){
+  const onboarding = $('mainTabs').style.display==='none'||!$('mainTabs').style.display;
+  if(onboarding && v==='pub'){toast('Finish claiming your link first');return}
+  $('vwApp').classList.toggle('active',v==='app');
+  $('vwPub').classList.toggle('active',v==='pub');
+  if(v==='pub'){
+    $('mainTabs').style.display='none';
+    document.body.classList.add('pubview');
+    renderPublic();showScreen('public');
+    $('fabAdd').style.display='none';
+  } else {
+    document.body.classList.remove('pubview');
+    $('mainTabs').style.display='flex';
+    $('notifyBar').classList.remove('on');
+    go('tr-page');
+  }
+}
+function renderAll(){renderSchedule();renderPage();if(document.querySelector('#public.on'))renderPublic()}
+
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
+
+document.querySelectorAll('.wordmark').forEach(el=>el.innerHTML=BRAND_INK);
+document.querySelectorAll('.ob .mark').forEach(el=>el.innerHTML=BRAND_CLOUD);
+</script>
+</body>
+</html>
