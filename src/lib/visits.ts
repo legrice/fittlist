@@ -1,18 +1,12 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { mondayOfCurrentWeek } from "@/lib/format";
 
 // Daily rollup per trainer (page_visits). The week runs Mon–Sun in UTC,
 // matching the product's week.
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
-}
-
-export function mondayOfCurrentWeek(now = new Date()): string {
-  const day = (now.getUTCDay() + 6) % 7; // 0 = Monday
-  const m = new Date(now);
-  m.setUTCDate(now.getUTCDate() - day);
-  return isoDate(m);
 }
 
 const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|curl|wget/i;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { publishClasses, updateClass } from "@/app/actions/classes";
+import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import { DAYS, DUR_PRESETS, LINK_LABELS, TIME_PRESETS, fmtTime, palForSeq } from "@/lib/format";
@@ -30,6 +30,7 @@ export function Adder({
   onClose,
   onToast,
   onPublished,
+  onDeleted,
 }: {
   studios: StudioDto[];
   templates: TemplateDto[];
@@ -40,6 +41,7 @@ export function Adder({
   onClose: () => void;
   onToast: (msg: string) => void;
   onPublished: (msg: string) => void;
+  onDeleted: (msg: string) => void;
 }) {
   const isEdit = Boolean(prefill?.classId);
   const [studios, setStudios] = useState(studiosProp);
@@ -64,6 +66,7 @@ export function Adder({
   const [search, setSearch] = useState("");
   const [nsName, setNsName] = useState("");
   const [nsAddr, setNsAddr] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -147,6 +150,23 @@ export function Adder({
             : emailed
               ? `Published${emailedSuffix}`
               : `Published${n > 1 ? ` ${n} classes` : ""}`,
+      );
+    });
+  };
+
+  const doDelete = () => {
+    if (!prefill?.classId) return;
+    startTransition(async () => {
+      const res = await deleteClass(prefill.classId!);
+      if (!res.ok) {
+        onToast(res.error ?? "Something went wrong");
+        return;
+      }
+      const emailed = res.notified ?? 0;
+      onDeleted(
+        emailed
+          ? `Deleted · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
+          : "Deleted",
       );
     });
   };
@@ -384,9 +404,32 @@ export function Adder({
 
             <div className="publishwrap">
               <button className="btn si" disabled={n === 0 || pending} onClick={publish}>
-                {pending ? "Publishing…" : publishLabel}
+                {pending ? (isEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>
             </div>
+
+            {isEdit && (
+              <div className="dangerzone">
+                {confirmDelete ? (
+                  <>
+                    <p className="lead" style={{ marginBottom: 12 }}>
+                      Delete this class? It disappears from your public page and your list gets
+                      notified. This can&rsquo;t be undone.
+                    </p>
+                    <button className="btn si" disabled={pending} onClick={doDelete}>
+                      {pending ? "Deleting…" : "Yes, delete it"}
+                    </button>
+                    <button className="keep" onClick={() => setConfirmDelete(false)}>
+                      Keep it
+                    </button>
+                  </>
+                ) : (
+                  <button className="deletelink" onClick={() => setConfirmDelete(true)}>
+                    Delete this class
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 

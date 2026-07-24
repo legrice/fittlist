@@ -68,6 +68,14 @@ export function fmtDays(days: number[]): string {
   return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
 }
 
+/** ISO date (YYYY-MM-DD) of the current week's Monday, UTC. */
+export function mondayOfCurrentWeek(now = new Date()): string {
+  const day = (now.getUTCDay() + 6) % 7; // 0 = Monday
+  const m = new Date(now);
+  m.setUTCDate(now.getUTCDate() - day);
+  return m.toISOString().slice(0, 10);
+}
+
 export function timeToMinutes(v: string): number {
   const [h, m] = v.split(":").map(Number);
   return h * 60 + m;

@@ -38,9 +38,11 @@ a { color: inherit; }
   text-transform: uppercase; color: var(--ol);
 }
 
+/* In-flow at the bottom of the fixed-height shell: the shell scrolls
+   internally, so iOS never collapses its chrome and the tabs never move. */
 .tabbar {
   display: flex; border-top: 1px solid var(--line); background: var(--card);
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 12;
+  flex-shrink: 0; z-index: 12;
   padding-bottom: env(safe-area-inset-bottom);
 }
 .tabbar a {
@@ -250,6 +252,11 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .seg button.sel { background: var(--ink); color: #fff; }
 .storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 18px; margin: 12px auto 4px; background: var(--ink); }
 
+/* delete lives at the bottom of the edit sheet, behind a confirmation */
+.dangerzone { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }
+.deletelink { color: var(--si); font-weight: 700; font-size: 14px; padding: 6px 0; }
+.dangerzone .keep { display: block; margin: 12px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
+
 .fab {
   position: fixed; right: 18px; bottom: 76px; z-index: 10; background: var(--si); color: #fff;
   font-weight: 700; font-size: 14px; padding: 14px 20px; border-radius: 999px;
@@ -264,9 +271,13 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 .empty { color: var(--ol); font-size: 13.5px; padding: 14px 0; }
 
-/* app shell */
-.appshell { min-height: 100dvh; display: flex; flex-direction: column; }
-.appshell .stage { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+/* app shell — the stage is the scroll container, not the body */
+.appshell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.appshell .stage {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
+.appshell .screen { min-height: 100%; }
 .sidenav { display: none; }
 .heronotify { display: none; }
 .weekgrid { display: block; }
@@ -278,7 +289,6 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   .appshell .sidenav {
     display: flex; flex-direction: column; gap: 4px; width: 216px; flex-shrink: 0;
     border-right: 1px solid var(--line); padding: 26px 16px;
-    position: sticky; top: 0; height: 100vh;
   }
   .sidenav .wordmark { padding: 0 10px 22px; }
   .sidenav .wordmark svg { height: 20px; width: auto; display: block; }

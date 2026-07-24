@@ -80,22 +80,13 @@ await page.getByText("Published", { exact: false }).waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 3);
 console.log("saved-class flow ok");
 
-// ---- delete one
-await page.locator(".class-card .iconbtn[title=Delete]").last().click();
-await page.getByText("Removed").waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 2);
-console.log("delete ok");
-
-// ---- duplicate opens prefilled with empty days
-await page.locator(".class-card .iconbtn[title=Duplicate]").first().click();
-await page.getByRole("heading", { name: "Duplicate class" }).waitFor();
-const dupName = await page.getByPlaceholder("Type it once — it's remembered").inputValue();
-if (dupName !== "Barbell Strength") fail("duplicate not prefilled");
-const dupLabel = await page.locator(".publishwrap .btn").textContent();
-if (!dupLabel.includes("Pick at least one day")) fail("duplicate days not empty: " + dupLabel);
-await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
-console.log("duplicate ok (closed via X)");
+// ---- cards show only an Edit button (no duplicate/delete)
+if ((await page.locator(".class-card .editrow .iconbtn").first().count()) === 0)
+  fail("no edit button on card");
+if ((await page.locator(".class-card .iconbtn[title=Delete]").count()) !== 0)
+  fail("delete button should not be on cards");
+if ((await page.locator(".class-card .iconbtn[title=Duplicate]").count()) !== 0)
+  fail("duplicate button should not be on cards");
 
 // ---- edit in place: prefilled with its day, saves without adding a card
 await page.locator(".class-card .iconbtn[title=Edit]").first().click();
@@ -106,9 +97,20 @@ if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
 await page.getByRole("button", { name: "75 min" }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 2);
+await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 3);
 await page.waitForFunction(() => document.body.innerText.includes("75 min"));
 console.log("edit ok");
+
+// ---- delete lives inside the edit sheet, behind a confirmation
+await page.locator(".class-card .iconbtn[title=Edit]").last().click();
+await page.getByRole("heading", { name: "Edit class" }).waitFor();
+await page.getByRole("button", { name: "Delete this class" }).click();
+await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
+await page.getByRole("button", { name: "Delete this class" }).click();
+await page.getByRole("button", { name: "Yes, delete it" }).click();
+await page.getByText("Deleted", { exact: true }).waitFor();
+await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 2);
+console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- My page tab
 await page.locator(".tabbar").getByText("My page").click();
@@ -188,10 +190,13 @@ if (!/Barbell Strength added Sat 6:00a at Ironbound Strength → fittlist\.co\/m
   fail("change email body wrong");
 console.log("publish notification ok");
 
-// delete -> removal email
+// delete (via edit sheet) -> removal email
 await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 3);
-await page.locator(".class-card .iconbtn[title=Delete]").last().click();
-await page.getByText("Removed · emailed 1 person").waitFor();
+await page.locator(".class-card .iconbtn[title=Edit]").last().click();
+await page.getByRole("heading", { name: "Edit class" }).waitFor();
+await page.getByRole("button", { name: "Delete this class" }).click();
+await page.getByRole("button", { name: "Yes, delete it" }).click();
+await page.getByText("Deleted · emailed 1 person").waitFor();
 await new Promise((r) => setTimeout(r, 400));
 mailLog = readLog();
 if (!/Barbell Strength removed Sat 6:00a at Ironbound Strength/.test(mailLog))

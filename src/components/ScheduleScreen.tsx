@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { deleteClass } from "@/app/actions/classes";
 import { DAYS, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -43,29 +42,6 @@ export function ScheduleScreen({
     for (const list of g) list.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     return g;
   }, [classes]);
-
-  const remove = (id: string) => {
-    void deleteClass(id).then((res) => {
-      if (res.ok) {
-        const emailed = res.notified ?? 0;
-        toast(emailed ? `Removed · emailed ${emailed} ${emailed === 1 ? "person" : "people"}` : "Removed");
-        router.refresh();
-      } else toast(res.error ?? "Something went wrong");
-    });
-  };
-
-  const duplicate = (c: ClassDto) => {
-    setAdder({
-      open: true,
-      prefill: {
-        name: c.name,
-        startTime: c.startTime,
-        durationMin: c.durationMin,
-        studioId: c.studioId,
-        links: c.links.map((l) => ({ ...l })),
-      },
-    });
-  };
 
   const edit = (c: ClassDto) => {
     setAdder({
@@ -148,28 +124,6 @@ export function ScheduleScreen({
                         >
                           <Icon name="edit" size={15} />
                         </button>
-                        <button
-                          className="iconbtn"
-                          aria-label="Duplicate class"
-                          title="Duplicate"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            duplicate(c);
-                          }}
-                        >
-                          <Icon name="content_copy" size={15} />
-                        </button>
-                        <button
-                          className="iconbtn"
-                          aria-label="Delete class"
-                          title="Delete"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            remove(c.id);
-                          }}
-                        >
-                          <Icon name="delete" size={15} />
-                        </button>
                       </div>
                     </div>
                   );
@@ -197,6 +151,11 @@ export function ScheduleScreen({
           onClose={() => setAdder({ open: false })}
           onToast={toast}
           onPublished={(msg) => {
+            setAdder({ open: false });
+            toast(msg);
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
             setAdder({ open: false });
             toast(msg);
             router.refresh();
