@@ -1,0 +1,137 @@
+"use client";
+
+import { useState } from "react";
+import { Toast, useToast } from "@/components/Toast";
+import { Wordmark } from "@/components/Wordmark";
+
+export function MyPageScreen({
+  handle,
+  visits,
+  subsCount,
+  classCount,
+}: {
+  handle: string;
+  visits: number;
+  subsCount: number;
+  classCount: number;
+}) {
+  const [toastMsg, toastOn, toast] = useToast();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
+  const url = `fittlist.co/${handle}`;
+
+  const copy = async () => {
+    // Copy the real deployed origin — before the fittlist.co domain is
+    // attached, a hardcoded https://fittlist.co link would be dead.
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
+      toast("Link copied");
+    } catch {
+      toast(url);
+    }
+  };
+
+  return (
+    <section className="screen">
+      <div className="appbar">
+        <Wordmark />
+        <div className="sub">My page</div>
+      </div>
+      <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
+        <h1 className="screen-title">{url}</h1>
+        <div className="statgrid">
+          <div className="stat">
+            <div className="n">{visits}</div>
+            <div className="l">visits</div>
+            <div className="d">{visits ? "this week" : ""}</div>
+          </div>
+          <div className="stat">
+            <div className="n">{subsCount}</div>
+            <div className="l">on your list</div>
+            <div className="d">{subsCount ? "get emails" : ""}</div>
+          </div>
+          <div className="stat">
+            <div className="n">{classCount}</div>
+            <div className="l">classes</div>
+            <div className="d"></div>
+          </div>
+        </div>
+        <div className="linkcard">
+          <div className="eyebrow">Your link</div>
+          <div className="url">{url}</div>
+          <button className="btn si" onClick={copy}>
+            Copy link
+          </button>
+          <div className="hint">
+            {classCount
+              ? `${subsCount || "No"} ${subsCount === 1 ? "person" : "people"} on your list so far. Every schedule change emails them automatically.`
+              : "Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale."}
+          </div>
+        </div>
+        <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
+          <span className="ig">👁</span>
+          <span>
+            <span className="t">Preview your page</span>
+            <br />
+            <span className="s">Exactly what someone sees when they tap your bio</span>
+          </span>
+        </a>
+        <button className="rowcta" onClick={() => setShareOpen(true)}>
+          <span className="ig">◫</span>
+          <span>
+            <span className="t">Share your week</span>
+            <br />
+            <span className="s">A story image with your link on it</span>
+          </span>
+        </button>
+      </div>
+
+      {shareOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShareOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <div className="grab" />
+            <h2>Your story image</h2>
+            <div className="share-toggles">
+              <div className="seg">
+                <button
+                  className={shareSpan === "week" ? "sel" : ""}
+                  onClick={() => setShareSpan("week")}
+                >
+                  My week
+                </button>
+                <button
+                  className={shareSpan === "day" ? "sel" : ""}
+                  onClick={() => setShareSpan("day")}
+                >
+                  Today
+                </button>
+              </div>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="storyimg"
+              src={`/api/story/${handle}?span=${shareSpan}`}
+              alt={`Story image of ${shareSpan === "week" ? "this week's" : "today's"} classes`}
+            />
+            <div className="publishwrap">
+              <a
+                className="btn"
+                href={`/api/story/${handle}?span=${shareSpan}`}
+                download={`fittlist-${handle}-${shareSpan}.png`}
+              >
+                Save image
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toast msg={toastMsg} on={toastOn} />
+    </section>
+  );
+}
