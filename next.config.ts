@@ -2,8 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
-  // The story-image route reads vendored TTFs off disk at runtime.
+  // Files read off disk at runtime must be listed here or serverless
+  // bundles omit them: drizzle/ (migrations run on boot, every route
+  // touches the DB) and the story-image fonts.
   outputFileTracingIncludes: {
+    "/**": ["./drizzle/**/*"],
     "/api/story/[handle]": ["./src/assets/fonts/*.ttf"],
   },
 };
