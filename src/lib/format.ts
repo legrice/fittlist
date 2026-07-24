@@ -31,6 +31,15 @@ export function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "") || "you";
 }
 
+const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** [0, 2, 4] -> "Mon, Wed & Fri" */
+export function fmtDays(days: number[]): string {
+  const names = [...days].sort((a, b) => a - b).map((d) => DAY_SHORT[d]);
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+}
+
 export function timeToMinutes(v: string): number {
   const [h, m] = v.split(":").map(Number);
   return h * 60 + m;
@@ -38,5 +47,5 @@ export function timeToMinutes(v: string): number {
 
 export const RESERVED_HANDLES = new Set([
   "app", "api", "auth", "login", "logout", "signup", "admin", "brand",
-  "design", "static", "assets", "about", "privacy", "terms", "you",
+  "design", "static", "assets", "about", "privacy", "terms", "you", "u",
 ]);

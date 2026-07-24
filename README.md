@@ -48,6 +48,6 @@ SERVER_LOG=<path-to-server-log> node scripts/smoke.mjs
 ## Phase status
 
 - [x] Phase 1 — core loop: auth → adder → public page
-- [ ] Phase 2 — the list: welcome + change emails, unsubscribe
+- [x] Phase 2 — the list: welcome + change emails, unsubscribe
 - [ ] Phase 3 — dashboard + growth: visit tracking, stats, OG tags
 - [ ] v1.5 — share image endpoint

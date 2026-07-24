@@ -1,10 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { sendWelcome } from "@/lib/notifier";
 
-// Phase 1 stores the subscriber only. Phase 2 adds the welcome email and
-// schedule-change notifications on top of this.
 export async function subscribe(
   handle: string,
   emailRaw: string,
@@ -16,12 +15,29 @@ export async function subscribe(
   const db = await getDb();
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!trainer) return { ok: false, error: "Page not found." };
-  await db
+
+  const [existing] = await db
+    .select()
+    .from(schema.subscribers)
+    .where(
+      and(eq(schema.subscribers.trainerUserId, trainer.id), eq(schema.subscribers.email, email)),
+    );
+  // Already on the list and active: nothing to do, no duplicate welcome.
+  if (existing && !existing.optedOutAt) return { ok: true };
+
+  const [row] = await db
     .insert(schema.subscribers)
     .values({ trainerUserId: trainer.id, email })
     .onConflictDoUpdate({
       target: [schema.subscribers.trainerUserId, schema.subscribers.email],
       set: { optedOutAt: null },
-    });
+    })
+    .returning();
+
+  try {
+    await sendWelcome(trainer, row);
+  } catch (err) {
+    console.error("welcome email failed", err);
+  }
   return { ok: true };
 }

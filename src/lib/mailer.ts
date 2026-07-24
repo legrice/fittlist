@@ -11,9 +11,10 @@ export interface SendArgs {
   subject: string;
   text: string;
   kind: OutboundKind;
+  headers?: Record<string, string>;
 }
 
-export async function sendMessage({ to, subject, text, kind }: SendArgs): Promise<void> {
+export async function sendMessage({ to, subject, text, kind, headers }: SendArgs): Promise<void> {
   let status = "sent";
   try {
     if (process.env.RESEND_API_KEY) {
@@ -28,6 +29,7 @@ export async function sendMessage({ to, subject, text, kind }: SendArgs): Promis
           to: [to],
           subject,
           text,
+          ...(headers ? { headers } : {}),
         }),
       });
       if (!res.ok) status = `error:${res.status}`;

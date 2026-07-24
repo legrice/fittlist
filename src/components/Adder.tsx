@@ -126,7 +126,14 @@ export function Adder({
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      onPublished(firstPublish ? "Your page is live" : `Published${n > 1 ? ` ${n} classes` : ""}`);
+      const emailed = res.notified ?? 0;
+      onPublished(
+        firstPublish
+          ? "Your page is live"
+          : emailed
+            ? `Published · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
+            : `Published${n > 1 ? ` ${n} classes` : ""}`,
+      );
     });
   };
 

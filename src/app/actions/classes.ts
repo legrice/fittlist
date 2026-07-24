@@ -6,6 +6,7 @@ import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { LINK_LABELS } from "@/lib/format";
+import { notifyScheduleChange } from "@/lib/notifier";
 
 export type PublishInput = {
   name: string;
@@ -27,7 +28,7 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
 
 export async function publishClasses(
   input: PublishInput,
-): Promise<{ ok: boolean; count?: number; error?: string }> {
+): Promise<{ ok: boolean; count?: number; notified?: number; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
 
@@ -67,17 +68,58 @@ export async function publishClasses(
     })),
   );
 
+  // One publish, many days -> one notification, never one per class row.
+  let notified = 0;
+  try {
+    notified = await notifyScheduleChange(userId, {
+      verb: "added",
+      className: name,
+      days,
+      startTime: input.startTime,
+      studioName: studio.name,
+    });
+  } catch (err) {
+    console.error("schedule-change notify failed", err);
+  }
+
   revalidatePath("/app");
-  return { ok: true, count: days.length };
+  return { ok: true, count: days.length, notified };
 }
 
-export async function deleteClass(classId: string): Promise<{ ok: boolean; error?: string }> {
+export async function deleteClass(
+  classId: string,
+): Promise<{ ok: boolean; notified?: number; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
-  await db
-    .delete(schema.classes)
+  const [row] = await db
+    .select({
+      id: schema.classes.id,
+      name: schema.classes.name,
+      dayOfWeek: schema.classes.dayOfWeek,
+      startTime: schema.classes.startTime,
+      studioName: schema.studios.name,
+    })
+    .from(schema.classes)
+    .innerJoin(schema.studios, eq(schema.classes.studioId, schema.studios.id))
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
+  if (!row) return { ok: true, notified: 0 };
+
+  await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
+
+  let notified = 0;
+  try {
+    notified = await notifyScheduleChange(userId, {
+      verb: "removed",
+      className: row.name,
+      days: [row.dayOfWeek],
+      startTime: row.startTime,
+      studioName: row.studioName,
+    });
+  } catch (err) {
+    console.error("schedule-change notify failed", err);
+  }
+
   revalidatePath("/app");
-  return { ok: true };
+  return { ok: true, notified };
 }

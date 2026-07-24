@@ -46,7 +46,8 @@ export function ScheduleScreen({
   const remove = (id: string) => {
     void deleteClass(id).then((res) => {
       if (res.ok) {
-        toast("Removed");
+        const emailed = res.notified ?? 0;
+        toast(emailed ? `Removed · emailed ${emailed} ${emailed === 1 ? "person" : "people"}` : "Removed");
         router.refresh();
       } else toast(res.error ?? "Something went wrong");
     });

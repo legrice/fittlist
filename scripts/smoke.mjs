@@ -142,5 +142,64 @@ const subN = await page.locator(".statgrid .stat").nth(1).locator(".n").textCont
 if (subN.trim() !== "1") fail("subscriber count should be 1, got " + subN);
 console.log("stats ok");
 
+// ================= Phase 2: the list =================
+const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
+
+// welcome email was sent on subscribe
+let mailLog = readLog();
+if (!mailLog.includes("[mail:welcome] to=fan@example.com")) fail("no welcome email in log");
+if (!mailLog.includes("You're on Matt's list")) fail("welcome subject wrong");
+const unsubUrl = (mailLog.match(/Unsubscribe any time: (\S+)/) || [])[1];
+if (!unsubUrl) fail("no unsubscribe link in welcome email");
+console.log("welcome email ok:", unsubUrl.slice(0, 40) + "…");
+
+// publish -> one schedule_change email to the subscriber
+await page.goto(BASE + "/app");
+await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("heading", { name: "Add to your week" }).waitFor();
+await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await page.getByRole("button", { name: "Sa", exact: true }).click();
+await page.locator(".publishwrap .btn").click();
+await page.getByText("Published · emailed 1 person").waitFor();
+await new Promise((r) => setTimeout(r, 400));
+mailLog = readLog();
+if (!mailLog.includes("[mail:schedule_change] to=fan@example.com")) fail("no schedule_change email");
+if (!/Barbell Strength added Sat 6:00a at Ironbound Strength → fittlist\.co\/matt/.test(mailLog))
+  fail("change email body wrong");
+console.log("publish notification ok");
+
+// delete -> removal email
+await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 3);
+await page.locator(".class-card .iconbtn[title=Delete]").last().click();
+await page.getByText("Removed · emailed 1 person").waitFor();
+await new Promise((r) => setTimeout(r, 400));
+mailLog = readLog();
+if (!/Barbell Strength removed Sat 6:00a at Ironbound Strength/.test(mailLog))
+  fail("removal email body wrong");
+console.log("delete notification ok");
+
+// one-click unsubscribe link works and is honored
+await page.goto(unsubUrl);
+await page.getByText("You’re off the list.").waitFor();
+console.log("unsubscribe page ok");
+
+const changeCountBefore = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
+await page.goto(BASE + "/app");
+await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("heading", { name: "Add to your week" }).waitFor();
+await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await page.getByRole("button", { name: "Su", exact: true }).click();
+await page.locator(".publishwrap .btn").click();
+await page.getByText("Published", { exact: false }).waitFor();
+await new Promise((r) => setTimeout(r, 600));
+const changeCountAfter = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
+if (changeCountAfter !== changeCountBefore) fail("opted-out subscriber still got emailed");
+
+await page.goto(BASE + "/app/page");
+await page.getByText("on your list", { exact: true }).waitFor();
+const subN2 = await page.locator(".statgrid .stat").nth(1).locator(".n").textContent();
+if (subN2.trim() !== "0") fail("list should be 0 after unsubscribe, got " + subN2);
+console.log("opt-out honored ok");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");
