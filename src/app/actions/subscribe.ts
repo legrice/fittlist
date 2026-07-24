@@ -41,3 +41,22 @@ export async function subscribe(
   }
   return { ok: true };
 }
+
+// In-page opt-out for the session where the fan just subscribed. Equivalent
+// in power to the unsubscribe link every email carries.
+export async function unsubscribeEmail(
+  handle: string,
+  emailRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const email = emailRaw.trim().toLowerCase();
+  const db = await getDb();
+  const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!trainer) return { ok: false, error: "Page not found." };
+  await db
+    .update(schema.subscribers)
+    .set({ optedOutAt: new Date() })
+    .where(
+      and(eq(schema.subscribers.trainerUserId, trainer.id), eq(schema.subscribers.email, email)),
+    );
+  return { ok: true };
+}

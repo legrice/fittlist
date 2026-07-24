@@ -26,12 +26,11 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
     }));
 }
 
-export async function publishClasses(
-  input: PublishInput,
-): Promise<{ ok: boolean; count?: number; notified?: number; error?: string }> {
-  const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired." };
+type SaveResult = { ok: boolean; count?: number; notified?: number; error?: string };
 
+// Shared by publish (new rows) and edit (replaceClassId set: the original
+// row is swapped for rows on the selected days).
+async function save(userId: string, input: PublishInput, replaceClassId?: string): Promise<SaveResult> {
   const name = input.name.trim() || "New class";
   const days = [...new Set(input.days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
   if (!days.length) return { ok: false, error: "Pick at least one day." };
@@ -43,6 +42,15 @@ export async function publishClasses(
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
   if (!studio) return { ok: false, error: "Pick a studio." };
   const links = cleanLinks(input.links ?? []);
+
+  if (replaceClassId) {
+    const [existing] = await db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(and(eq(schema.classes.id, replaceClassId), eq(schema.classes.userId, userId)));
+    if (!existing) return { ok: false, error: "Class not found." };
+    await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
+  }
 
   // Templates track latest: publishing upserts the saved class with the
   // values used, so autofill always reflects the most recent version.
@@ -68,11 +76,11 @@ export async function publishClasses(
     })),
   );
 
-  // One publish, many days -> one notification, never one per class row.
+  // One action, many days -> one notification, never one per class row.
   let notified = 0;
   try {
     notified = await notifyScheduleChange(userId, {
-      verb: "added",
+      verb: replaceClassId ? "updated" : "added",
       className: name,
       days,
       startTime: input.startTime,
@@ -84,6 +92,18 @@ export async function publishClasses(
 
   revalidatePath("/app");
   return { ok: true, count: days.length, notified };
+}
+
+export async function publishClasses(input: PublishInput): Promise<SaveResult> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  return save(userId, input);
+}
+
+export async function updateClass(classId: string, input: PublishInput): Promise<SaveResult> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  return save(userId, input, classId);
 }
 
 export async function deleteClass(

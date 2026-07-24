@@ -97,6 +97,19 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("duplicate ok (closed via X)");
 
+// ---- edit in place: prefilled with its day, saves without adding a card
+await page.locator(".class-card .iconbtn[title=Edit]").first().click();
+await page.getByRole("heading", { name: "Edit class" }).waitFor();
+const editLabel = await page.locator(".publishwrap .btn").textContent();
+if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
+  fail("edit not prefilled with its day: " + editLabel);
+await page.getByRole("button", { name: "75 min" }).click();
+await page.locator(".publishwrap .btn").click();
+await page.getByText("Saved", { exact: true }).waitFor();
+await page.waitForFunction(() => document.querySelectorAll(".class-card").length === 2);
+await page.waitForFunction(() => document.body.innerText.includes("75 min"));
+console.log("edit ok");
+
 // ---- My page tab
 await page.locator(".tabbar").getByText("My page").click();
 await page.getByText("Your link", { exact: true }).waitFor();
@@ -118,7 +131,13 @@ await page.locator("#ntEmail").fill("fan@example.com");
 await page.getByRole("button", { name: "Add me to the list" }).click();
 await page.getByText("You're on Matt's list").waitFor();
 await expect(page.locator(".notifybar .btn").textContent().then(t => t.includes("You're on the list")), "cta flips to subscribed");
-console.log("subscribe ok");
+
+// subscribed CTA opens a manage sheet with an Unsubscribe button (close without acting)
+await page.locator(".notifybar .btn").click();
+await page.getByRole("button", { name: "Unsubscribe" }).waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+console.log("subscribe ok (manage sheet has Unsubscribe)");
 
 // ---- 404 for unclaimed handle
 const r = await page.goto(BASE + "/nobodyhere");

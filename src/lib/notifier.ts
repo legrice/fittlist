@@ -63,7 +63,7 @@ export async function sendWelcome(trainer: Trainer, subscriber: { id: string; em
 }
 
 export type ScheduleChange = {
-  verb: "added" | "removed";
+  verb: "added" | "removed" | "updated";
   className: string;
   days: number[];
   startTime: string; // "HH:MM"
@@ -87,9 +87,11 @@ export async function notifyScheduleChange(trainerUserId: string, change: Schedu
     );
   if (!subs.length) return 0;
 
+  const when = `${fmtDays(change.days)} ${fmtTime(change.startTime)}`;
   const line =
-    `${change.className} ${change.verb} ${fmtDays(change.days)} ${fmtTime(change.startTime)}` +
-    ` at ${change.studioName} → fittlist.co/${trainer.handle}`;
+    change.verb === "updated"
+      ? `${change.className} updated — now ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`
+      : `${change.className} ${change.verb} ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`;
 
   for (const sub of subs) {
     const unsub = await unsubFooter(sub.id);
