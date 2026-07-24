@@ -21,8 +21,10 @@ export function MyPageScreen({
   const url = `fittlist.co/${handle}`;
 
   const copy = async () => {
+    // Copy the real deployed origin — before the fittlist.co domain is
+    // attached, a hardcoded https://fittlist.co link would be dead.
     try {
-      await navigator.clipboard.writeText(`https://${url}`);
+      await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
       toast("Link copied");
     } catch {
       toast(url);
