@@ -235,6 +235,13 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .addnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 2px; display: inline-block; }
 .dirnote { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
 
+/* share story */
+.share-toggles { display: flex; gap: 8px; margin: 12px 0; }
+.seg { display: flex; background: var(--cl); border-radius: 11px; padding: 3px; gap: 3px; flex: 1; }
+.seg button { flex: 1; padding: 9px 0; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--ol); }
+.seg button.sel { background: var(--ink); color: #fff; }
+.storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 18px; margin: 12px auto 4px; background: var(--ink); }
+
 .fab {
   position: fixed; right: 18px; bottom: 76px; z-index: 10; background: var(--si); color: #fff;
   font-weight: 700; font-size: 14px; padding: 14px 20px; border-radius: 999px;

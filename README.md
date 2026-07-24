@@ -52,4 +52,4 @@ node scripts/check-attribution.mjs
 - [x] Phase 1 — core loop: auth → adder → public page
 - [x] Phase 2 — the list: welcome + change emails, unsubscribe
 - [x] Phase 3 — dashboard + growth: visit tracking, stats, OG tags
-- [ ] v1.5 — share image endpoint
+- [x] v1.5 — share image endpoint (`/api/story/{handle}?span=week|day`)

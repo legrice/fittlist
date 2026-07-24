@@ -98,7 +98,7 @@ console.log("duplicate ok");
 
 // ---- My page tab
 await page.locator(".tabbar").getByText("My page").click();
-await page.getByText("Your link").waitFor();
+await page.getByText("Your link", { exact: true }).waitFor();
 await expect(page.locator("h1.screen-title", { hasText: "fittlist.co/matt" }).isVisible(), "my page shows url");
 await page.screenshot({ path: SCRATCH + "/shot-mobile-mypage.png" });
 
@@ -255,6 +255,36 @@ const vis1 = await page.locator(".statgrid .stat").nth(0).locator(".n").textCont
 if (vis1.trim() !== "3") fail("visits should be 3 (2 anon views + 1 fetch), got " + vis1);
 await expect(page.getByText("this week").isVisible(), "visits stat shows 'this week'");
 console.log("visit stats ok");
+
+// ================= v1.5: story image =================
+const story = await ctx.request.get(BASE + "/api/story/matt?span=week");
+if (story.status() !== 200) fail("story endpoint returned " + story.status());
+if (!(story.headers()["content-type"] || "").includes("image/png")) fail("story is not a png");
+const buf = await story.body();
+const w = buf.readUInt32BE(16), h = buf.readUInt32BE(20);
+if (w !== 1080 || h !== 1920) fail(`story should be 1080x1920, got ${w}x${h}`);
+fs.writeFileSync(SCRATCH + "/story-week.png", buf);
+const storyDay = await ctx.request.get(BASE + "/api/story/matt?span=day");
+if (storyDay.status() !== 200) fail("story day span failed");
+const s404 = await ctx.request.get(BASE + "/api/story/nobodyhere?span=week");
+if (s404.status() !== 404) fail("story for unknown handle should 404, got " + s404.status());
+console.log("story endpoint ok (1080x1920 png)");
+
+// share sheet UI on My page
+await page.goto(BASE + "/app/page");
+await page.locator(".rowcta", { hasText: "Share your week" }).click();
+await page.getByRole("heading", { name: "Your story image" }).waitFor();
+await page.waitForFunction(() => {
+  const img = document.querySelector(".storyimg");
+  return img && img.complete && img.naturalWidth > 0;
+});
+await page.locator(".seg").getByText("Today").click();
+const imgSrc = await page.locator(".storyimg").getAttribute("src");
+if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
+const dl = await page.locator("a", { hasText: "Save image" }).getAttribute("download");
+if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
+await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
+console.log("share sheet ok");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");
