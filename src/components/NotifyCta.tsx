@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { subscribe, unsubscribeEmail } from "@/app/actions/subscribe";
+import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
 // Rendered once inside the public hero. The hero button shows on desktop
@@ -68,7 +69,7 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              ✕
+              <Icon name="close" size={16} />
             </button>
             {subscribed ? (
               <>

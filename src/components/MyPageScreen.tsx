@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -18,11 +20,12 @@ export function MyPageScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
+  const [theme, setTheme] = useState<StoryThemeId>("iron");
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const url = `fittlist.co/${handle}`;
-  const storyUrl = `/api/story/${handle}?span=${shareSpan}`;
-  const storyFileName = `fittlist-${handle}-${shareSpan}.png`;
+  const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${theme}`;
+  const storyFileName = `fittlist-${handle}-${shareSpan}-${theme}.png`;
 
   // File-sharing support (the native share sheet is the only route into
   // the iOS photo library from the web) is detectable only client-side.
@@ -115,7 +118,7 @@ export function MyPageScreen({
           </div>
         </div>
         <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
-          <span className="ig">👁</span>
+          <span className="ig"><Icon name="visibility" size={22} /></span>
           <span>
             <span className="t">Preview your page</span>
             <br />
@@ -123,7 +126,7 @@ export function MyPageScreen({
           </span>
         </a>
         <button className="rowcta" onClick={() => setShareOpen(true)}>
-          <span className="ig">◫</span>
+          <span className="ig"><Icon name="share" size={22} /></span>
           <span>
             <span className="t">Share your week</span>
             <br />
@@ -145,7 +148,7 @@ export function MyPageScreen({
               aria-label="Close"
               onClick={() => setShareOpen(false)}
             >
-              ✕
+              <Icon name="close" size={16} />
             </button>
             <h2>Your story image</h2>
             <div className="share-toggles">
@@ -164,10 +167,27 @@ export function MyPageScreen({
                 </button>
               </div>
             </div>
+            <div className="chips" style={{ justifyContent: "center" }}>
+              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["iron"]][]).map(
+                ([id, t]) => (
+                  <button
+                    key={id}
+                    className={`chip themechip${theme === id ? " sel" : ""}`}
+                    onClick={() => setTheme(id)}
+                  >
+                    <span
+                      className="swd"
+                      style={{ background: t.bg, borderColor: t.accent }}
+                    />
+                    {t.label}
+                  </button>
+                ),
+              )}
+            </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="storyimg"
-              src={`/api/story/${handle}?span=${shareSpan}`}
+              src={storyUrl}
               alt={`Story image of ${shareSpan === "week" ? "this week's" : "today's"} classes`}
             />
             <div className="publishwrap">

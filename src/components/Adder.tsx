@@ -6,6 +6,7 @@ import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import { DAYS, DUR_PRESETS, LINK_LABELS, TIME_PRESETS, fmtTime, palForSeq } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import { Icon } from "@/components/Icon";
 
 export type AdderPrefill = {
   name: string;
@@ -180,7 +181,7 @@ export function Adder({
     >
       <div className="sheet adder">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          ✕
+          <Icon name="close" size={16} />
         </button>
 
         {stage === "start" && (
@@ -207,7 +208,7 @@ export function Adder({
                         {lk}
                       </span>
                     </span>
-                    <span className="tick">›</span>
+                    <span className="tick"><Icon name="chevron_right" size={18} /></span>
                   </button>
                 );
               })}
@@ -329,7 +330,7 @@ export function Adder({
               ) : (
                 <span className="nm">Choose a studio</span>
               )}
-              <span className="chev">›</span>
+              <span className="chev"><Icon name="chevron_right" size={18} /></span>
             </button>
 
             <label className="flabel">
@@ -367,7 +368,7 @@ export function Adder({
                     aria-label="Remove link"
                     onClick={() => setLinks((prev) => prev.filter((_, xi) => xi !== i))}
                   >
-                    ✕
+                    <Icon name="close" size={14} />
                   </button>
                 </div>
               ))}
@@ -396,7 +397,7 @@ export function Adder({
             </button>
             <h2>Choose a studio</h2>
             <div className="searchbox">
-              <span className="mag">⌕</span>
+              <span className="mag"><Icon name="search" size={17} /></span>
               <input
                 type="text"
                 placeholder="Name or street"
@@ -425,7 +426,7 @@ export function Adder({
                         <br />
                         <span className="ad">{s.address}</span>
                       </span>
-                      {studioId === s.id && <span className="tick">✓</span>}
+                      {studioId === s.id && <span className="tick"><Icon name="check" size={16} /></span>}
                     </button>
                   );
                 })

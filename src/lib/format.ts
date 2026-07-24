@@ -19,6 +19,30 @@ export function palForSeq(seq: number) {
   return PALETTES[Math.max(0, seq - 1) % PALETTES.length];
 }
 
+// Story-image looks — one per coach personality, all built from brand colors.
+export type StoryThemeId = "iron" | "paper" | "moss" | "pop";
+export type StoryTheme = {
+  label: string;
+  bg: string;
+  fg: string;
+  accent: string;
+  muted: string; // kicker
+  faint: string; // day labels, studio names
+  time: string; // times column
+  lockup: "cloud" | "ink";
+  lockupAccent?: string; // swap the lockup's Sienna row when it would vanish on bg
+};
+export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
+  iron: { label: "Iron", bg: "#191502", fg: "#F7F2E8", accent: "#DD583A", muted: "#C9C3AE", faint: "#8A8570", time: "#DAD4BE", lockup: "cloud" },
+  paper: { label: "Paper", bg: "#F7F2E8", fg: "#191502", accent: "#DD583A", muted: "#4E4B3B", faint: "#8A8570", time: "#3A3526", lockup: "ink" },
+  moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
+  pop: { label: "Pop", bg: "#DD583A", fg: "#F7F2E8", accent: "#191502", muted: "#F9E4DD", faint: "#F2C1B2", time: "#FFF2EA", lockup: "cloud", lockupAccent: "#191502" },
+};
+export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
+  const key = (id && id in STORY_THEMES ? id : "iron") as StoryThemeId;
+  return [key, STORY_THEMES[key]];
+}
+
 /** "17:30" -> "5:30p" */
 export function fmtTime(v: string): string {
   const [hRaw, m] = v.split(":").map(Number);
