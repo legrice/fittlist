@@ -1,0 +1,32 @@
+{
+  "name": "fittlist",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "drizzle-orm": "^0.41.0",
+    "jose": "^5.9.6",
+    "next": "^15.3.2",
+    "pg": "^8.14.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/pg": "^8.11.11",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "drizzle-kit": "^0.30.6",
+    "playwright": "^1.61.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

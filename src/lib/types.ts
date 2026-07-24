@@ -1,0 +1,23 @@
+import type { BookingLink } from "@/db/schema";
+
+export type StudioDto = { id: string; seq: number; name: string; address: string };
+
+export type ClassDto = {
+  id: string;
+  dayOfWeek: number; // 0 = Monday … 6 = Sunday
+  startTime: string; // "HH:MM"
+  durationMin: number;
+  name: string;
+  studioId: string;
+  links: BookingLink[];
+};
+
+export type TemplateDto = {
+  name: string;
+  startTime: string;
+  durationMin: number;
+  studioId: string;
+  links: BookingLink[];
+};
+
+export type LastUsed = { startTime: string; durationMin: number; studioId: string | null };
