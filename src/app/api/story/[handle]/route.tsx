@@ -120,8 +120,8 @@ export async function GET(
             marginBottom: 78,
           }}
         >
-          <span>Catch me</span>
-          <span style={{ color: t.accent }}>coaching.</span>
+          <span>Train</span>
+          <span style={{ color: t.accent }}>with me.</span>
         </div>
 
         {byDay.length === 0 ? (
