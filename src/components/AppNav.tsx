@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/Wordmark";
 
 const ITEMS = [
   { href: "/app", ico: "view_week", label: "Schedule" },
-  { href: "/app/page", ico: "open_in_new", label: "My page" },
+  { href: "/app/page", ico: "person", label: "My page" },
 ];
 
 function isActive(pathname: string, href: string) {
