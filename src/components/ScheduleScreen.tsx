@@ -6,6 +6,7 @@ import { deleteClass } from "@/app/actions/classes";
 import { DAYS, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -145,7 +146,7 @@ export function ScheduleScreen({
                             edit(c);
                           }}
                         >
-                          ✎
+                          <Icon name="edit" size={15} />
                         </button>
                         <button
                           className="iconbtn"
@@ -156,7 +157,7 @@ export function ScheduleScreen({
                             duplicate(c);
                           }}
                         >
-                          ⧉
+                          <Icon name="content_copy" size={15} />
                         </button>
                         <button
                           className="iconbtn"
@@ -167,7 +168,7 @@ export function ScheduleScreen({
                             remove(c.id);
                           }}
                         >
-                          ✕
+                          <Icon name="delete" size={15} />
                         </button>
                       </div>
                     </div>

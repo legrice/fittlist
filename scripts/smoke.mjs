@@ -304,6 +304,19 @@ if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + img
 const dl = await page.locator("a", { hasText: "Save image" }).getAttribute("download");
 if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
 await expect(page.locator(".btn.ghost", { hasText: "Share image" }).isVisible(), "share image button present");
+
+// theme picker: 4 chips, selecting swaps the preview + download URLs
+if ((await page.locator(".themechip").count()) !== 4) fail("expected 4 theme chips");
+await page.locator(".themechip", { hasText: "Moss" }).click();
+const themedSrc = await page.locator(".storyimg").getAttribute("src");
+if (!themedSrc.includes("theme=moss")) fail("theme chip didn't switch preview: " + themedSrc);
+for (const th of ["paper", "moss", "pop"]) {
+  const r2 = await ctx.request.get(BASE + `/api/story/matt?span=week&theme=${th}`);
+  if (r2.status() !== 200 || !(r2.headers()["content-type"] || "").includes("image/png"))
+    fail(`theme ${th} endpoint broken`);
+}
+console.log("story themes ok");
+await page.locator(".themechip", { hasText: "Iron" }).click();
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));

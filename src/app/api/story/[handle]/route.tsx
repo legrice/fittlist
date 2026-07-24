@@ -3,8 +3,8 @@ import { join } from "path";
 import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
-import { BRAND_CLOUD } from "@/lib/brand";
-import { DAYS, fmtTime, timeToMinutes } from "@/lib/format";
+import { BRAND_CLOUD, BRAND_INK } from "@/lib/brand";
+import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -30,14 +30,23 @@ function loadFonts() {
 
 // Satori needs base64 data URIs and explicit dimensions for <img>.
 // Lockup viewBox is 5036x1164, so height 52 -> width ~225.
-const LOCKUP_URI = `data:image/svg+xml;base64,${Buffer.from(BRAND_CLOUD).toString("base64")}`;
+function lockupUri(variant: "cloud" | "ink", accentOverride?: string) {
+  let svg = variant === "ink" ? BRAND_INK : BRAND_CLOUD;
+  // Only the accent row/period is recolored when it would vanish on the
+  // theme background — blocks are never rearranged.
+  if (accentOverride) svg = svg.split("#DD583A").join(accentOverride);
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ handle: string }> },
 ) {
   const { handle } = await params;
-  const span = new URL(req.url).searchParams.get("span") === "day" ? "day" : "week";
+  const params2 = new URL(req.url).searchParams;
+  const span = params2.get("span") === "day" ? "day" : "week";
+  const [, t] = storyTheme(params2.get("theme"));
+  const lockup = lockupUri(t.lockup, t.lockupAccent);
 
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -69,8 +78,8 @@ export async function GET(
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: "#191502",
-          color: "#ffffff",
+          background: t.bg,
+          color: t.fg,
           padding: "104px 86px",
           fontFamily: "Archivo",
         }}
@@ -82,7 +91,7 @@ export async function GET(
             left: 0,
             width: 1080,
             height: 26,
-            background: "#DD583A",
+            background: t.accent,
             display: "flex",
           }}
         />
@@ -93,7 +102,7 @@ export async function GET(
             fontSize: 37,
             letterSpacing: 7,
             textTransform: "uppercase",
-            color: "#C9C3AE",
+            color: t.muted,
             marginBottom: 34,
           }}
         >
@@ -112,11 +121,11 @@ export async function GET(
           }}
         >
           <span>Catch me</span>
-          <span style={{ color: "#DD583A" }}>coaching.</span>
+          <span style={{ color: t.accent }}>coaching.</span>
         </div>
 
         {byDay.length === 0 ? (
-          <div style={{ display: "flex", color: "#8A8570", fontSize: 44 }}>
+          <div style={{ display: "flex", color: t.faint, fontSize: 44 }}>
             Nothing on the calendar yet.
           </div>
         ) : (
@@ -130,7 +139,7 @@ export async function GET(
                       fontFamily: "Space Mono",
                       fontSize: 37,
                       letterSpacing: 6,
-                      color: "#8A8570",
+                      color: t.faint,
                       margin: "34px 0 17px",
                     }}
                   >
@@ -147,7 +156,7 @@ export async function GET(
                         fontFamily: "Space Mono",
                         fontSize: 43,
                         fontWeight: 700,
-                        color: "#DAD4BE",
+                        color: t.time,
                         width: 190,
                         flexShrink: 0,
                         display: "flex",
@@ -157,7 +166,7 @@ export async function GET(
                     </span>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <span style={{ fontSize: 48, fontWeight: 700 }}>{c.name}</span>
-                      <span style={{ fontSize: 41, color: "#8A8570" }}>
+                      <span style={{ fontSize: 41, color: t.faint }}>
                         {studioName.get(c.studioId) ?? ""}
                       </span>
                     </div>
@@ -180,7 +189,7 @@ export async function GET(
             fittlist.co/{handle}
           </span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOCKUP_URI} alt="" width={225} height={52} />
+          <img src={lockup} alt="" width={225} height={52} />
         </div>
       </div>
     ),
