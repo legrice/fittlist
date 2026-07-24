@@ -201,5 +201,60 @@ const subN2 = await page.locator(".statgrid .stat").nth(1).locator(".n").textCon
 if (subN2.trim() !== "0") fail("list should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
 
+// ================= Phase 3: dashboard + growth =================
+// The trainer has viewed /matt repeatedly this run while logged in —
+// none of that may count.
+await page.goto(BASE + "/app/page");
+const vis0 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
+if (vis0.trim() !== "0") fail("own visits should not count, got " + vis0);
+console.log("own-visit exclusion ok");
+
+// Anonymous visitors count (2 page views + 1 raw fetch = 3)
+const anon = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const anonPage = await anon.newPage();
+anonPage.setDefaultTimeout(10000);
+await anonPage.goto(BASE + "/matt");
+await anonPage.getByText("Coaching schedule · this week").waitFor();
+await anonPage.goto(BASE + "/matt");
+await anonPage.getByText("Coaching schedule · this week").waitFor();
+
+const ogRes = await anon.request.get(BASE + "/matt", {
+  headers: { "user-agent": "Mozilla/5.0 (smoke test)" },
+});
+const ogHtml = await ogRes.text();
+if (!ogHtml.includes('property="og:title"') || !ogHtml.includes("this week's classes"))
+  fail("og:title missing from public page");
+if (!ogHtml.includes('property="og:url"')) fail("og:url missing");
+if (!ogHtml.includes("/?via=matt")) fail("footer link not attributed with ?via=matt");
+console.log("og tags + attributed footer ok");
+
+// Crawler user-agents must not count
+await anon.request.get(BASE + "/matt", { headers: { "user-agent": "facebookexternalhit/1.1" } });
+await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Twitterbot/1.0" } });
+
+// Growth loop: sign up through the made-with footer, attributed to matt
+await anonPage.locator(".madewith").getByText("Claim your page").click();
+await anonPage.getByText("Never answer").waitFor();
+if (!anonPage.url().includes("via=matt")) fail("footer click lost via param: " + anonPage.url());
+await anonPage.getByPlaceholder("you@example.com").fill("sam@example.com");
+await anonPage.getByRole("button", { name: "Email me a code" }).click();
+await anonPage.getByText("Check your inbox.").waitFor();
+await new Promise((r) => setTimeout(r, 500));
+const code2 = [...readLog().matchAll(/login code is (\d{6})/g)].pop()[1];
+await anonPage.getByPlaceholder("••••••").fill(code2);
+await anonPage.getByRole("button", { name: "Verify" }).click();
+await anonPage.getByText("Claim your page.").waitFor();
+await anonPage.getByPlaceholder("Matt").fill("Sam");
+await anonPage.getByRole("button", { name: "Claim it" }).click();
+await anonPage.getByRole("heading", { name: "New class" }).waitFor();
+console.log("footer signup flow ok (attribution checked post-run)");
+
+// Trainer sees 3 visits this week
+await page.goto(BASE + "/app/page");
+const vis1 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
+if (vis1.trim() !== "3") fail("visits should be 3 (2 anon views + 1 fetch), got " + vis1);
+await expect(page.getByText("this week").isVisible(), "visits stat shows 'this week'");
+console.log("visit stats ok");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

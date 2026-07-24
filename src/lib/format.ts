@@ -31,6 +31,10 @@ export function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "") || "you";
 }
 
+export function siteOrigin(): string {
+  return process.env.NEXT_PUBLIC_ORIGIN || "https://fittlist.co";
+}
+
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** [0, 2, 4] -> "Mon, Wed & Fri" */

@@ -18,6 +18,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull().default(""),
   handle: text("handle").unique(),
+  // e.g. "footer:matt" — set at claim time when signup came through the
+  // public-page footer. One of the three §8 success metrics.
+  signupSource: text("signup_source"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

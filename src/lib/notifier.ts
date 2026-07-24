@@ -2,7 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
-import { fmtDays, fmtTime } from "@/lib/format";
+import { fmtDays, fmtTime, siteOrigin } from "@/lib/format";
 
 // All list email goes through here — the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
@@ -11,9 +11,7 @@ function secret() {
   return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
 }
 
-export function origin(): string {
-  return process.env.NEXT_PUBLIC_ORIGIN || "https://fittlist.co";
-}
+const origin = siteOrigin;
 
 export async function unsubTokenFor(subscriberId: string): Promise<string> {
   // No expiry: an unsubscribe link must keep working forever.

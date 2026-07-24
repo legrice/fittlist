@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/Wordmark";
 
 type Stage = "email" | "code" | "claim";
 
-export function AuthFlow({ startStage }: { startStage: Stage }) {
+export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: string | null }) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>(startStage);
   const [email, setEmail] = useState("");
@@ -53,7 +53,7 @@ export function AuthFlow({ startStage }: { startStage: Stage }) {
     if (!name.trim()) return;
     setError("");
     startTransition(async () => {
-      const res = await claimProfile(name);
+      const res = await claimProfile(name, via);
       if (res.ok) router.push("/app?add=1");
       else setError(res.error ?? "Something went wrong.");
     });

@@ -104,11 +104,16 @@ export async function verifyCode(
   return { ok: true, needsProfile: !user.handle };
 }
 
-export async function claimProfile(nameRaw: string): Promise<{ ok: boolean; handle?: string; error?: string }> {
+export async function claimProfile(
+  nameRaw: string,
+  via: string | null = null,
+): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired — log in again." };
   const name = nameRaw.trim();
   if (!name) return { ok: false, error: "Enter your name." };
+  // Growth-loop attribution: signup arrived through a public page's footer.
+  const signupSource = via ? `footer:${slug(via)}`.slice(0, 64) : null;
 
   const db = await getDb();
   const base = slug(name);
@@ -123,6 +128,9 @@ export async function claimProfile(nameRaw: string): Promise<{ ok: boolean; hand
     }
     handle = `${base}${i}`;
   }
-  await db.update(schema.users).set({ name, handle }).where(eq(schema.users.id, userId));
+  await db
+    .update(schema.users)
+    .set({ name, handle, ...(signupSource ? { signupSource } : {}) })
+    .where(eq(schema.users.id, userId));
   return { ok: true, handle };
 }

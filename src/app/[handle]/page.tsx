@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { eq, inArray } from "drizzle-orm";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { DAYS, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, palForSeq, siteOrigin, timeToMinutes } from "@/lib/format";
+import { getSessionUserId } from "@/lib/session";
+import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { NotifyCta } from "@/components/NotifyCta";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -16,9 +19,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
+  const title = `${user.name} — this week's classes`;
+  const description = `${user.name}'s coaching schedule — every studio they coach at, one link. Always the current week.`;
+  const url = `${siteOrigin()}/${handle}`;
   return {
     title: `${user.name} — fittlist`,
-    description: `${user.name}'s coaching schedule, this week — every studio, one link.`,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: "fittlist", type: "profile" },
+    twitter: { card: "summary", title, description },
   };
 }
 
@@ -27,6 +36,17 @@ export default async function PublicPage({ params }: Props) {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
+
+  // Count the visit — but a trainer viewing their own page doesn't count,
+  // and neither do crawlers (link unfurlers would inflate the number).
+  const [viewerId, hdrs] = await Promise.all([getSessionUserId(), headers()]);
+  if (viewerId !== user.id && !looksLikeBot(hdrs.get("user-agent"))) {
+    try {
+      await recordVisit(user.id);
+    } catch (err) {
+      console.error("visit rollup failed", err);
+    }
+  }
 
   const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
   const studioIds = [...new Set(classRows.map((c) => c.studioId))];
@@ -115,7 +135,7 @@ export default async function PublicPage({ params }: Props) {
         <div className="madewith">
           Made with{" "}
           <Wordmark className="mw-logo" />
-          {" "}— coach classes? <Link href="/">Claim your page</Link>
+          {" "}— coach classes? <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
     </div>

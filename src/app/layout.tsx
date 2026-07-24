@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { siteOrigin } from "@/lib/format";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin()),
   title: "fittlist — one link in your bio, every gym you coach at",
   description:
     "Claim your page, publish the classes you coach across every studio, share one permanent link.",
+  openGraph: {
+    title: "fittlist",
+    description: "One link in your bio. Always your current week, every studio you coach at.",
+    siteName: "fittlist",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
