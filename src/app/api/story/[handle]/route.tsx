@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { BRAND_CLOUD, BRAND_INK } from "@/lib/brand";
-import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, mondayOfCurrentWeek, storyTheme, timeToMinutes } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -106,7 +106,9 @@ export async function GET(
             marginBottom: 34,
           }}
         >
-          {span === "week" ? "This week" : "Today"} · on the floor
+          {span === "week"
+            ? `Week of ${new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
+            : "Today"}
         </div>
         <div
           style={{
