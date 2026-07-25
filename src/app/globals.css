@@ -486,6 +486,30 @@ button.bl-band { cursor: pointer; }
   color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
 }
 
+/* schedule (editable): flat, editorial rows like the story image — time in a
+   mono gutter, bold name, muted studio — with a chevron + press state so it
+   still reads as tappable. */
+[data-theme="poster"] .ps-daycards { gap: 6px; }
+.ps-event {
+  display: grid; grid-template-columns: 52px 1fr 20px; gap: 12px; align-items: center;
+  width: 100%; text-align: left; color: var(--pg-cream);
+  background: rgba(247, 242, 232, .04); border-radius: 12px; padding: 11px 12px;
+  -webkit-tap-highlight-color: transparent; transition: background .12s ease;
+}
+.ps-event:hover { background: rgba(247, 242, 232, .08); }
+.ps-event:active { background: rgba(247, 242, 232, .13); }
+.ps-etime {
+  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  color: var(--pg-cream); white-space: nowrap; text-align: right;
+}
+.ps-ebody { display: flex; flex-direction: column; min-width: 0; }
+.ps-enm {
+  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.15;
+  letter-spacing: -.01em; color: var(--pg-cream);
+}
+.ps-estudio { font-size: 13px; font-weight: 600; color: #9a947f; margin-top: 2px; }
+.ps-echev { color: rgba(247, 242, 232, .45); display: flex; align-items: center; justify-content: center; }
+
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
   background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 18px;

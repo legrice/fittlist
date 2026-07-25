@@ -129,13 +129,16 @@ export function ScheduleScreen({
                       {byDay[di].map((c) => {
                         const studio = studioById.get(c.studioId);
                         return (
-                          <div key={c.id} className="ps-classrow">
-                            <span className="ps-time">{fmtTime(c.startTime)}</span>
-                            <button className="ps-card" onClick={() => edit(c)}>
-                              <span className="ps-nm">{c.name}</span>
-                              {studio && <span className="ps-sub">{studio.name}</span>}
-                            </button>
-                          </div>
+                          <button key={c.id} className="ps-event" onClick={() => edit(c)}>
+                            <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                            <span className="ps-ebody">
+                              <span className="ps-enm">{c.name}</span>
+                              {studio && <span className="ps-estudio">{studio.name}</span>}
+                            </span>
+                            <span className="ps-echev" aria-hidden="true">
+                              <Icon name="chevron_right" size={20} />
+                            </span>
+                          </button>
                         );
                       })}
                     </div>
@@ -154,13 +157,16 @@ export function ScheduleScreen({
                         {items.map((c) => {
                           const studio = studioById.get(c.studioId);
                           return (
-                            <div key={c.id} className="ps-classrow">
-                              <span className="ps-time">{fmtTime(c.startTime)}</span>
-                              <button className="ps-card" onClick={() => edit(c)}>
-                                <span className="ps-nm">{c.name}</span>
-                                {studio && <span className="ps-sub">{studio.name}</span>}
-                              </button>
-                            </div>
+                            <button key={c.id} className="ps-event" onClick={() => edit(c)}>
+                              <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                              <span className="ps-ebody">
+                                <span className="ps-enm">{c.name}</span>
+                                {studio && <span className="ps-estudio">{studio.name}</span>}
+                              </span>
+                              <span className="ps-echev" aria-hidden="true">
+                                <Icon name="chevron_right" size={20} />
+                              </span>
+                            </button>
                           );
                         })}
                       </div>

@@ -8,6 +8,7 @@ const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
 const cardCount = (pg) => pg.locator(".ps-card").count();
+const eventCount = (pg) => pg.locator(".ps-event").count();
 
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -60,7 +61,7 @@ if (!label.includes("Publish 2 classes") || !label.includes("MON, WED") || !labe
   fail("publish narration wrong: " + label);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length === 2);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
 await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
 
@@ -75,11 +76,11 @@ await page.waitForFunction(() => {
 await page.getByRole("button", { name: "Fr", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length === 3);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
 console.log("saved-class flow ok");
 
 // ---- edit in place: tap a card, prefilled with its day, saves without adding one
-await page.locator(".ps-card").first().click();
+await page.locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = await page.locator(".publishwrap .btn").textContent();
 if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
@@ -87,18 +88,18 @@ if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
 await page.getByRole("button", { name: "75 min" }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length === 3);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
 console.log("edit ok");
 
 // ---- delete lives inside the edit sheet, behind a confirmation
-await page.locator(".ps-card").last().click();
+await page.locator(".ps-event").last().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
 await page.getByText("Deleted", { exact: true }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length === 2);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- My page tab (nav has no icons; current tab is plain text, other is a pill)
@@ -140,7 +141,7 @@ await page.getByText("Nobody’s here yet.").waitFor();
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto(BASE + "/app");
 await page.locator(".sidenav").getByText("Schedule").waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length >= 1);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length >= 1);
 await page.screenshot({ path: SCRATCH + "/shot-desktop-schedule.png" });
 await page.goto(BASE + "/matt");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-card'));
@@ -178,8 +179,8 @@ if (!/Barbell Strength added Sat 6:00a at Ironbound Strength → fittlist\.co\/m
 console.log("publish notification ok");
 
 // delete (via edit sheet) -> removal email
-await page.waitForFunction(() => document.querySelectorAll(".ps-card").length === 3);
-await page.locator(".ps-card").last().click();
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
+await page.locator(".ps-event").last().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
@@ -314,7 +315,7 @@ const inWeek = new Date(monD); inWeek.setUTCDate(monD.getUTCDate() + 5); // Sat 
 const future = new Date(monD); future.setUTCDate(monD.getUTCDate() + 10); // next week
 
 await page.goto(BASE + "/app");
-const weekBefore = await cardCount(page);
+const weekBefore = await eventCount(page);
 
 // a one-off dated inside the current week shows in the main week
 await page.getByRole("button", { name: "Add class" }).click();
@@ -327,7 +328,7 @@ if (!/^Publish · \w{3}, \w{3} \d+ · 6:00a$/.test(oneLabel.trim()))
   fail("one-off publish label wrong: " + oneLabel);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
-await page.waitForFunction((n) => document.querySelectorAll(".ps-card").length === n, weekBefore + 1);
+await page.waitForFunction((n) => document.querySelectorAll(".ps-event").length === n, weekBefore + 1);
 console.log("one-off in-week ok");
 
 // a future-dated one-off lands in "Up Next", not the current week
@@ -338,7 +339,7 @@ await page.locator('input[type="date"]').fill(iso(future));
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
 await page.getByText("Up Next").waitFor();
-await page.waitForFunction((n) => document.querySelectorAll(".ps-card").length === n, weekBefore + 2);
+await page.waitForFunction((n) => document.querySelectorAll(".ps-event").length === n, weekBefore + 2);
 console.log("one-off future -> Up Next ok");
 
 // public page shows the in-week one-off but never the future one
