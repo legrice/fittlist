@@ -7,6 +7,20 @@ const BASE = "http://localhost:3000";
 const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 
+// Set the trainer's page style from My page; retries past hydration races.
+async function setStyle(pg, name) {
+  const attr = name.toLowerCase();
+  for (let i = 0; i < 4; i++) {
+    await pg.goto(BASE + "/app/page");
+    await pg.waitForTimeout(400);
+    await pg.getByRole("button", { name, exact: true }).click().catch(() => {});
+    await pg.waitForTimeout(500);
+    await pg.goto(BASE + "/app");
+    if (await pg.locator('.appshell[data-theme="' + attr + '"]').count()) return;
+  }
+  fail("could not set style " + name);
+}
+
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
@@ -37,6 +51,17 @@ await page.getByRole("button", { name: "Claim it" }).click();
 // ---- lands in /app with the adder open on the form stage (no templates yet)
 await page.getByRole("heading", { name: "New class" }).waitFor();
 console.log("adder auto-opened after claim");
+
+// New accounts default to the Poster style. Verify, then switch to Classic
+// so the mechanical CRUD assertions below run against classic markup.
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+if (!(await page.locator('.appshell[data-theme="poster"]').count()))
+  fail("new account should default to Poster");
+console.log("defaults to poster ok");
+await setStyle(page, "Classic");
+await page.getByRole("button", { name: "Add your first class" }).click();
+await page.getByRole("heading", { name: "New class" }).waitFor();
 
 await page.getByPlaceholder("Type it once — it's remembered").fill("Barbell Strength");
 await page.getByRole("button", { name: "Mo", exact: true }).click();
@@ -327,15 +352,9 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("share sheet ok (save + share + X close)");
 
-// ================= Blocks theme flag =================
-await page.goto(BASE + "/app/page");
-await page.getByText("Page style", { exact: true }).waitFor();
-// classic by default: app shell + public page carry no blocks theme
-if ((await page.locator('.appshell[data-theme="blocks"]').count()) !== 0)
-  fail("app should default to classic");
-await page.getByRole("button", { name: "Blocks", exact: true }).click();
-await page.getByText("Blocks look on").waitFor();
-await page.waitForFunction(() => document.querySelector('.appshell[data-theme="blocks"]'));
+// ================= page style flag =================
+// (account is currently on Classic — set at the top for the CRUD flow)
+await setStyle(page, "Blocks");
 // schedule renders the full-bleed band layout: dark header + colored bands
 await page.goto(BASE + "/app");
 await page.waitForFunction(() => {
@@ -359,32 +378,17 @@ await page.waitForFunction(() => document.querySelector('.pub[data-theme="blocks
 await page.screenshot({ path: SCRATCH + "/shot-blocks-public.png", fullPage: true });
 console.log("blocks theme ok (bands + dark header + edit)");
 
-// Poster theme: the Ink poster look across app + public
-await page.goto(BASE + "/app/page");
-await page.getByRole("button", { name: "Poster", exact: true }).click();
-await page.getByText("Poster look on").waitFor();
-await page.goto(BASE + "/app");
+// Poster theme: the Ink poster look across app + public (the default)
+await setStyle(page, "Poster");
 await page.waitForFunction(() => document.querySelector('.appshell[data-theme="poster"] .ps-card'));
 if (!(await page.getByText("fittlist.co/matt").first().isVisible())) fail("poster infobar missing");
 await page.goto(BASE + "/matt");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-card'));
 console.log("poster theme ok (app + public)");
 
-// revert to classic (retry: toggle click can race hydration)
-let reverted = false;
-for (let i = 0; i < 4 && !reverted; i++) {
-  await page.goto(BASE + "/app/page");
-  await page.waitForTimeout(400);
-  await page
-    .getByRole("button", { name: "Classic", exact: true })
-    .click()
-    .catch(() => {});
-  await page.waitForTimeout(600);
-  await page.goto(BASE + "/app");
-  reverted = (await page.locator('.appshell[data-theme="classic"]').count()) > 0;
-}
-if (!reverted) fail("could not revert to classic");
-console.log("revert to classic ok");
+// switch back to classic works
+await setStyle(page, "Classic");
+console.log("classic switch ok");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

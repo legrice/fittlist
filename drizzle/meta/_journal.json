@@ -22,6 +22,13 @@
       "when": 1784937495060,
       "tag": "0002_bumpy_cardiac",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784949433670,
+      "tag": "0003_living_the_leader",
+      "breakpoints": true
     }
   ]
 }

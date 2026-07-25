@@ -542,3 +542,12 @@ button.ps-card { cursor: pointer; }
   [data-theme="poster"] .heronotify { display: none; }
   [data-theme="poster"] .notifybar { display: block; }
 }
+
+/* poster: empty schedule state on the dark ground */
+[data-theme="poster"] .empty-block { border-color: var(--pg-cream); }
+[data-theme="poster"] .empty-block .glyph,
+[data-theme="poster"] .empty-block h2 { color: var(--pg-cream); }
+[data-theme="poster"] .empty-block p { color: #c9c3ae; }
+
+/* onboarding: green primary action to match the poster app it leads into */
+.ob .btn { background: #CBD665; color: #191502; }

@@ -21,8 +21,8 @@ export const users = pgTable("users", {
   // e.g. "footer:matt" — set at claim time when signup came through the
   // public-page footer. One of the three §8 success metrics.
   signupSource: text("signup_source"),
-  // Visual style for this trainer's app + public page: "classic" | "blocks".
-  theme: text("theme").notNull().default("classic"),
+  // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".
+  theme: text("theme").notNull().default("poster"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
