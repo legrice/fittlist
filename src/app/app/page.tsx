@@ -109,7 +109,6 @@ export default async function SchedulePage({
       theme={appTheme(user?.theme)}
       weekLabel={weekLabel}
       weekDates={weekDates}
-      handle={user?.handle ?? ""}
     />
   );
 }

@@ -31,7 +31,6 @@ export function ScheduleScreen({
   theme,
   weekLabel,
   weekDates,
-  handle,
 }: {
   classes: ClassDto[];
   upcoming?: ClassDto[];
@@ -44,7 +43,6 @@ export function ScheduleScreen({
   theme: AppTheme;
   weekLabel: string;
   weekDates: number[];
-  handle: string;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -183,7 +181,6 @@ export function ScheduleScreen({
                 </div>
               </>
             )}
-            <div className="ps-infobar">fittlist.co/{handle}</div>
           </>
         ) : theme === "blocks" ? (
           <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
@@ -276,8 +273,8 @@ export function ScheduleScreen({
       </div>
 
       {hasAnyClass && !adder.open && (
-        <button className="fab" onClick={() => setAdder({ open: true })}>
-          + Add class
+        <button className="fab" aria-label="Add class" onClick={() => setAdder({ open: true })}>
+          +
         </button>
       )}
 

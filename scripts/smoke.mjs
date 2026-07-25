@@ -65,7 +65,7 @@ await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
 
 // ---- steady-state: fab -> saved class -> day -> publish
-await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.waitForFunction(() => {
@@ -163,7 +163,7 @@ console.log("welcome email ok:", unsubUrl.slice(0, 40) + "…");
 
 // publish -> one schedule_change email to the subscriber
 await page.goto(BASE + "/app");
-await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "Sa", exact: true }).click();
@@ -196,7 +196,7 @@ console.log("unsubscribe page ok");
 
 const changeCountBefore = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
 await page.goto(BASE + "/app");
-await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "Su", exact: true }).click();
@@ -316,7 +316,7 @@ await page.goto(BASE + "/app");
 const weekBefore = await cardCount(page);
 
 // a one-off dated inside the current week shows in the main week
-await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
@@ -330,7 +330,7 @@ await page.waitForFunction((n) => document.querySelectorAll(".ps-card").length =
 console.log("one-off in-week ok");
 
 // a future-dated one-off lands in "Up Next", not the current week
-await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("button", { name: "Add class" }).click();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(future));
