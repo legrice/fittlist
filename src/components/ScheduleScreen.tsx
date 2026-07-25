@@ -172,11 +172,7 @@ export function ScheduleScreen({
                           <button key={c.id} className="ps-event" onClick={() => edit(c)}>
                             <span className="ps-etimecol">
                               <span className="ps-etime">{fmtTime(c.startTime)}</span>
-                              {!c.specificDate && (
-                                <span className="ps-recur" title="Repeats weekly" aria-label="Repeats weekly">
-                                  <Icon name="repeat" size={14} />
-                                </span>
-                              )}
+                              <span className="ps-edur">{c.durationMin} min</span>
                             </span>
                             <span className="ps-ebody">
                               <span className="ps-enm">{c.name}</span>
@@ -207,6 +203,7 @@ export function ScheduleScreen({
                             <button key={c.id} className="ps-event" onClick={() => edit(c)}>
                               <span className="ps-etimecol">
                                 <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                                <span className="ps-edur">{c.durationMin} min</span>
                               </span>
                               <span className="ps-ebody">
                                 <span className="ps-enm">{c.name}</span>
