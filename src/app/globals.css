@@ -475,16 +475,19 @@ button.ps-card { cursor: pointer; }
   box-shadow: 5px 5px 0 #000; font-family: 'Archivo Black', sans-serif; text-transform: uppercase;
 }
 [data-theme="poster"] .tabbar {
-  background: var(--pg-ground); border-top: none; gap: 8px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--pg-ground); border-top: none; gap: 12px;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .tabbar a {
-  flex-direction: row; gap: 7px; border: 2.5px solid var(--pg-cream); border-radius: 14px;
-  color: var(--pg-cream); font-family: 'Archivo Black', sans-serif; font-size: 11px;
-  text-transform: uppercase; padding: 11px 0;
+  border: none; background: transparent; border-radius: 14px;
+  color: var(--pg-cream); font-family: 'Archivo Black', sans-serif; font-size: 13px;
+  letter-spacing: .02em; text-transform: uppercase; padding: 13px 0;
 }
-[data-theme="poster"] .tabbar a.active { background: var(--pg-cream); color: var(--pg-ground); }
-[data-theme="poster"] .tabbar a.active .ico { color: var(--pg-ground); }
+/* the current tab is a plain label; the other is a cream sticker pill */
+[data-theme="poster"] .tabbar a:not(.active) {
+  background: var(--pg-cream); color: #191502;
+  border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502;
+}
 
 /* My page: sticker stats, link card, rows, toggle */
 [data-theme="poster"] .stat {
