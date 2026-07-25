@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { disconnectGoogleAction } from "@/app/actions/google";
+import { updateProfile } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The trainer's "My page" — stats, shareable link, and story image — shown as a
-// dismissable bottom sheet reached from the user icon on the schedule.
+// The trainer's "My page" — profile, stats, shareable link, and story image —
+// shown as a dismissable bottom sheet reached from the user icon.
 export function ProfileSheet({
   handle,
+  name,
+  about,
+  photo,
   visits,
   subsCount,
   classCount,
@@ -19,6 +24,9 @@ export function ProfileSheet({
   onClose,
 }: {
   handle: string;
+  name: string;
+  about: string;
+  photo: string | null;
   visits: number;
   subsCount: number;
   classCount: number;
@@ -27,6 +35,7 @@ export function ProfileSheet({
   googleEmail: string | null;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
   const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
@@ -36,7 +45,52 @@ export function ProfileSheet({
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
   const [disconnecting, startDisconnect] = useTransition();
+  // profile editing
+  const [editOpen, setEditOpen] = useState(false);
+  const [pName, setPName] = useState(name);
+  const [pAbout, setPAbout] = useState(about);
+  const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [saving, startSaving] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
   const url = `fittlist.co/${handle}`;
+
+  // Resize the picked image to a small JPEG data URL before storing it.
+  const pickPhoto = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 640;
+        let { width, height } = img;
+        if (width > height && width > max) {
+          height = (height * max) / width;
+          width = max;
+        } else if (height > max) {
+          width = (width * max) / height;
+          height = max;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
+        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveProfile = () =>
+    startSaving(async () => {
+      const res = await updateProfile({ name: pName, about: pAbout, photo: pPhoto });
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't save");
+        return;
+      }
+      setEditOpen(false);
+      toast("Profile saved");
+      router.refresh();
+    });
 
   // The subscribe feed lives at /api/cal/{handle}; build the URL once mounted
   // (the deployed host isn't known at build time). Used for Apple/Outlook.
@@ -128,6 +182,31 @@ export function ProfileSheet({
             <Icon name="close" size={16} />
           </button>
           <h2>My page</h2>
+          <div className="profrow">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="profrow-photo" src={photo} alt="" />
+            ) : (
+              <div className="profrow-photo profrow-empty" aria-hidden="true">
+                {(name.trim().charAt(0) || "?").toUpperCase()}
+              </div>
+            )}
+            <div className="profrow-info">
+              <div className="profrow-name">{name}</div>
+              <div className="profrow-sub">{about?.trim() || "Add a short bio"}</div>
+            </div>
+            <button
+              className="profrow-edit"
+              onClick={() => {
+                setPName(name);
+                setPAbout(about);
+                setPPhoto(photo);
+                setEditOpen(true);
+              }}
+            >
+              Edit
+            </button>
+          </div>
           <div className="statgrid">
             <div className="stat">
               <div className="n">{visits}</div>
@@ -273,6 +352,81 @@ export function ProfileSheet({
                 onClick={shareStory}
               >
                 Share image
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEditOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Edit profile</h2>
+            <div className="editphoto">
+              {pPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="editphoto-img" src={pPhoto} alt="" />
+              ) : (
+                <div className="editphoto-img profrow-empty" aria-hidden="true">
+                  {(pName.trim().charAt(0) || "?").toUpperCase()}
+                </div>
+              )}
+              <div className="editphoto-actions">
+                <button className="btn ghost" onClick={() => fileRef.current?.click()}>
+                  {pPhoto ? "Change photo" : "Add photo"}
+                </button>
+                {pPhoto && (
+                  <button className="linktoggle" onClick={() => setPPhoto(null)}>
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) pickPhoto(f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            <label className="flabel" htmlFor="pName">
+              Name
+            </label>
+            <input
+              id="pName"
+              type="text"
+              className="editinput"
+              value={pName}
+              maxLength={80}
+              onChange={(e) => setPName(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pAbout">
+              About <span>· a line or two about you</span>
+            </label>
+            <textarea
+              id="pAbout"
+              className="abouttext"
+              value={pAbout}
+              maxLength={600}
+              rows={4}
+              placeholder="Coach at three studios across Jersey City. Strength &amp; conditioning, all levels."
+              onChange={(e) => setPAbout(e.target.value)}
+            />
+            <div className="publishwrap">
+              <button className="btn si" disabled={saving || !pName.trim()} onClick={saveProfile}>
+                {saving ? "Saving…" : "Save profile"}
               </button>
             </div>
           </div>

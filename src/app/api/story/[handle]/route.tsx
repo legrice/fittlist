@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { BRAND_CLOUD, BRAND_INK } from "@/lib/brand";
-import { DAYS, fmtTime, mondayOfCurrentWeek, storyTheme, timeToMinutes, weekBucket } from "@/lib/format";
+import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -52,25 +52,30 @@ export async function GET(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  let classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
-  // The share image is always the current week — one-offs outside it drop off.
-  classRows = classRows.filter((c) => weekBucket(c.specificDate) === "current");
-  if (span === "day") {
-    const todayMon0 = (new Date().getUTCDay() + 6) % 7; // 0 = Monday
-    classRows = classRows.filter((c) => c.dayOfWeek === todayMon0);
+  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  // The week image starts on *today* and runs the next 7 days (1 for "day").
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const start = new Date(`${todayIso}T00:00:00Z`);
+  const spanDays = span === "day" ? 1 : 7;
+  const byDay: { day: string; items: typeof classRows }[] = [];
+  const usedStudioIds = new Set<string>();
+  for (let i = 0; i < spanDays; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = (d.getUTCDay() + 6) % 7;
+    const items = classRows
+      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+    if (items.length) {
+      items.forEach((c) => usedStudioIds.add(c.studioId));
+      byDay.push({ day: DAYS[dow], items });
+    }
   }
-  const studioIds = [...new Set(classRows.map((c) => c.studioId))];
-  const studioRows = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+  const studioRows = usedStudioIds.size
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, [...usedStudioIds]))
     : [];
   const studioName = new Map(studioRows.map((s) => [s.id, s.name]));
-
-  const byDay = DAYS.map((day, di) => ({
-    day,
-    items: classRows
-      .filter((c) => c.dayOfWeek === di)
-      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)),
-  })).filter((d) => d.items.length);
 
   return new ImageResponse(
     (
@@ -109,7 +114,7 @@ export async function GET(
           }}
         >
           {span === "week"
-            ? `Week of ${new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
+            ? `Week of ${new Date(`${todayIso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
             : "Today"}
         </div>
         <div

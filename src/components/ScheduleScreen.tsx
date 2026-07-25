@@ -24,6 +24,9 @@ export function ScheduleScreen({
   subsCount,
   autoOpenAdder,
   handle,
+  name,
+  about,
+  photo,
   visits,
   classCount,
   googleConfigured,
@@ -39,6 +42,9 @@ export function ScheduleScreen({
   subsCount: number;
   autoOpenAdder: boolean;
   handle: string;
+  name: string;
+  about: string;
+  photo: string | null;
   visits: number;
   classCount: number;
   googleConfigured: boolean;
@@ -217,6 +223,9 @@ export function ScheduleScreen({
       {profileOpen && (
         <ProfileSheet
           handle={handle}
+          name={name}
+          about={about}
+          photo={photo}
           visits={visits}
           subsCount={subsCount}
           classCount={classCount}

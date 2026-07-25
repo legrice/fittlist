@@ -668,6 +668,64 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .madewith { color: #5a5647; }
 [data-theme="poster"] .madewith a { color: var(--pg-day); }
 
+/* trainer profile (ClassPass-style landing): photo, name, about, View schedule */
+.profile { display: flex; flex-direction: column; min-height: 100dvh; }
+.profwrap {
+  flex: 1; width: 100%; max-width: 520px; margin: 0 auto;
+  padding: calc(18px + env(safe-area-inset-top)) 18px 120px;
+}
+.profphoto {
+  width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; display: block;
+  box-shadow: var(--soft-shadow);
+}
+.profphoto-empty {
+  display: flex; align-items: center; justify-content: center; background: #fff;
+  font-family: 'Archivo Black', sans-serif; font-size: 76px; color: #d8d1bd;
+}
+.profname {
+  font-family: 'Archivo Black', sans-serif; font-size: 32px; letter-spacing: -.02em; line-height: 1.05;
+  color: #191502; margin: 20px 0 0;
+}
+.profabout { font-size: 15px; line-height: 1.55; color: #5a5647; margin-top: 12px; white-space: pre-wrap; }
+.profcta {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
+  background: var(--pg-cream); border-top: 1px solid var(--line);
+}
+.profcta .btn { max-width: 520px; margin: 0 auto; }
+.pubback {
+  display: inline-block; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px;
+  color: var(--pg-day); text-decoration: none; margin-bottom: 12px;
+}
+
+/* profile preview + editor inside the My page sheet */
+.profrow { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; }
+.profrow-photo { width: 52px; height: 52px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
+.profrow-empty {
+  display: flex; align-items: center; justify-content: center; background: var(--pg-day); color: #fff;
+  font-family: 'Archivo Black', sans-serif; font-size: 22px;
+}
+.profrow-info { flex: 1; min-width: 0; }
+.profrow-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
+.profrow-sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profrow-edit {
+  flex-shrink: 0; font-weight: 700; font-size: 13px; color: var(--ink);
+  border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 16px;
+}
+.editphoto { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+.editphoto-img { width: 72px; height: 72px; border-radius: 999px; object-fit: cover; flex-shrink: 0; font-size: 30px; }
+.editphoto-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.editphoto-actions .btn { width: auto; padding: 9px 16px; }
+.editinput {
+  width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff;
+  font-family: inherit; font-size: 16px; color: var(--ink);
+}
+.editinput:focus, .abouttext:focus { outline: none; border-color: var(--pg-day); }
+.abouttext {
+  width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff;
+  font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;
+}
+
 /* owner-only "you're previewing" bar with a way back to the account */
 .previewbar {
   position: sticky; top: 0; z-index: 10;

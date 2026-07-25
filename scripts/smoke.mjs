@@ -127,18 +127,32 @@ await page.locator(".usericon").click();
 await page.getByText("Your link", { exact: true }).waitFor();
 await expect(page.getByRole("heading", { name: "My page" }).isVisible(), "profile sheet opens");
 await expect(page.locator(".linkcard .url", { hasText: "fittlist.co/matt" }).isVisible(), "link card shows url");
+
+// ---- edit profile (name/about) from the sheet
+await page.locator(".profrow-edit").click();
+await page.getByRole("heading", { name: "Edit profile" }).waitFor();
+await page.locator(".abouttext").fill("Strength coach across Jersey City.");
+await page.getByRole("button", { name: "Save profile" }).click();
+await page.getByText("Profile saved").waitFor();
 await page.locator(".sheet .sheetclose").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png" });
+console.log("profile edit ok");
 
-// ---- public page (mobile) + subscribe
+// ---- public PROFILE page (mobile): photo/name/about + View schedule CTA
 await page.goto(BASE + "/matt");
-await page.getByText("Coaching schedule · this week").waitFor();
-await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
-await expect(page.getByText("Barbell Strength").first().isVisible(), "public shows class");
+await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
+await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
+await expect(page.locator(".profcta").getByText("View schedule").isVisible(), "view schedule CTA");
+await expect(page.locator(".previewbar", { hasText: "Previewing your profile" }).isVisible(), "owner preview bar");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
-// owner viewing their own page sees the preview bar with a way back
-await expect(page.locator(".previewbar", { hasText: "Previewing your page" }).isVisible(), "owner sees preview bar");
+await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
+
+// ---- View schedule -> continuous public calendar
+await page.locator(".profcta").getByText("View schedule").click();
+await page.getByText("Coaching schedule", { exact: true }).waitFor();
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
 // ---- each event taps through to its own booking page
@@ -148,8 +162,8 @@ await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event p
 await expect(page.getByText("Book via Website ↗").isVisible(), "event page shows booking link");
 await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });
 await page.locator(".evback").click();
-await page.getByText("Coaching schedule · this week").waitFor();
-console.log("event page ok");
+await page.getByText("Coaching schedule", { exact: true }).waitFor();
+console.log("profile + schedule + event pages ok");
 
 await page.locator(".notifybar .btn").click();
 await page.getByRole("heading", { name: "Get an email when the schedule changes" }).waitFor();
@@ -174,7 +188,7 @@ await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto(BASE + "/app");
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length >= 1);
 await page.screenshot({ path: SCRATCH + "/shot-desktop-schedule.png" });
-await page.goto(BASE + "/matt");
+await page.goto(BASE + "/matt/schedule");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await page.screenshot({ path: SCRATCH + "/shot-desktop-public.png" });
 console.log("desktop ok");
@@ -255,15 +269,15 @@ const anon = await browser.newContext({ viewport: { width: 390, height: 844 } })
 const anonPage = await anon.newPage();
 anonPage.setDefaultTimeout(10000);
 await anonPage.goto(BASE + "/matt");
-await anonPage.getByText("Coaching schedule · this week").waitFor();
+await anonPage.locator(".profcta").getByText("View schedule").waitFor();
 if ((await anonPage.locator(".previewbar").count()) !== 0) fail("visitors must not see the preview bar");
 await anonPage.goto(BASE + "/matt");
-await anonPage.getByText("Coaching schedule · this week").waitFor();
+await anonPage.locator(".profcta").getByText("View schedule").waitFor();
 
 const ogRes = await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Mozilla/5.0 (smoke test)" } });
 const ogHtml = await ogRes.text();
-if (!ogHtml.includes('property="og:title"') || !ogHtml.includes("this week's classes"))
-  fail("og:title missing from public page");
+if (!ogHtml.includes('property="og:title"') || !ogHtml.includes("Matt"))
+  fail("og:title missing from profile page");
 if (!ogHtml.includes('property="og:url"')) fail("og:url missing");
 if (!ogHtml.includes("/?via=matt")) fail("footer link not attributed with ?via=matt");
 console.log("og tags + attributed footer ok");
@@ -362,11 +376,6 @@ const monD = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth(), nowD.g
 const inWeekD = new Date(monD); inWeekD.setUTCDate(monD.getUTCDate() + 6); // Sun this week (in-week, >= today)
 const nextWeekD = new Date(monD); nextWeekD.setUTCDate(monD.getUTCDate() + 9); // next week
 
-// public "this week" count before adding any one-offs
-await page.goto(BASE + "/matt");
-await page.getByText("Coaching schedule · this week").waitFor();
-const pubBefore = await eventCount(page);
-
 await page.goto(BASE + "/app");
 await page.waitForFunction(() => document.querySelectorAll(".ps-event[data-cid]").length > 0);
 const schedBefore = await scheduleClasses(page);
@@ -385,7 +394,7 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 1);
 console.log("one-off in-week ok");
 
-// a next-week one-off — shows on the infinite schedule, not on the public week
+// a next-week one-off — the continuous calendar spans several weeks, so it shows too
 await page.getByRole("button", { name: "Add class" }).click();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
@@ -395,13 +404,13 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 2);
 console.log("one-off future ok");
 
-// public shows the in-week one-off but never the next-week one
-await page.goto(BASE + "/matt");
-await page.getByText("Coaching schedule · this week").waitFor();
-const pubAfter = await eventCount(page);
-if (pubAfter !== pubBefore + 1)
-  fail(`public should add only the in-week one-off, got ${pubAfter} (want ${pubBefore + 1})`);
-console.log("public excludes future one-off ok");
+// the public schedule is a continuous multi-week window — it renders events
+await page.goto(BASE + "/matt/schedule");
+await page.getByText("Coaching schedule", { exact: true }).waitFor();
+await page.waitForFunction(() => document.querySelectorAll(".ps-event").length > 0);
+const pubCount = await eventCount(page);
+if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);
+console.log("public continuous schedule ok (" + pubCount + " events)");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

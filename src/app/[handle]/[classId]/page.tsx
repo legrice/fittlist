@@ -57,8 +57,8 @@ export default async function EventPage({ params }: Props) {
         </div>
       )}
       <div className="evwrap">
-        <Link className="evback" href={`/${handle}`}>
-          ← {user.name}&rsquo;s week
+        <Link className="evback" href={`/${handle}/schedule`}>
+          ← {user.name}&rsquo;s schedule
         </Link>
         <div className="evcard">
           <div className="evwhen">

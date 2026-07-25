@@ -43,6 +43,13 @@
       "when": 1784997892484,
       "tag": "0005_silly_nightmare",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785016305425,
+      "tag": "0006_harsh_roughhouse",
+      "breakpoints": true
     }
   ]
 }

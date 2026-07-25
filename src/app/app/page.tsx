@@ -29,7 +29,13 @@ export default async function SchedulePage({
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.trainerUserId, userId), isNull(schema.subscribers.optedOutAt))),
     db
-      .select({ theme: schema.users.theme, handle: schema.users.handle })
+      .select({
+        theme: schema.users.theme,
+        handle: schema.users.handle,
+        name: schema.users.name,
+        about: schema.users.about,
+        photo: schema.users.photo,
+      })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
     visitsThisWeek(userId),
@@ -86,6 +92,9 @@ export default async function SchedulePage({
       subsCount={subRows.length}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
+      name={user?.name ?? ""}
+      about={user?.about ?? ""}
+      photo={user?.photo ?? null}
       visits={visits}
       classCount={classRows.length}
       googleConfigured={googleConfigured()}
