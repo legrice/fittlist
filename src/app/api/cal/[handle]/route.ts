@@ -1,0 +1,117 @@
+import { eq, inArray } from "drizzle-orm";
+import { getDb, schema } from "@/db";
+import { mondayOfCurrentWeek } from "@/lib/format";
+
+// Per-coach iCalendar feed. A trainer (or anyone) subscribes to this URL in
+// Google/Apple/Outlook and their fittlist classes appear alongside everything
+// else — weekly classes as recurring events, one-offs as single events.
+//
+// Times are emitted as "floating" (no timezone): "6:00a" shows as 6:00 in the
+// viewer's own timezone, which is what a coach wants for their local classes.
+
+export const dynamic = "force-dynamic";
+
+const BYDAY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+
+const esc = (s: string) =>
+  s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+
+// RFC 5545 asks lines be folded at 75 octets; fold conservatively at 73 chars.
+function fold(line: string): string {
+  const out: string[] = [];
+  let s = line;
+  while (s.length > 73) {
+    out.push(s.slice(0, 73));
+    s = " " + s.slice(73);
+  }
+  out.push(s);
+  return out.join("\r\n");
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** "2026-07-20" + "06:00" -> "20260720T060000" (floating local time) */
+function dtStart(dateStr: string, hhmm: string): string {
+  return `${dateStr.replace(/-/g, "")}T${hhmm.replace(/:/g, "")}00`;
+}
+
+/** start + duration -> floating end stamp, rolling past midnight if needed */
+function dtEnd(dateStr: string, hhmm: string, mins: number): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCHours(h, m + mins, 0, 0);
+  return (
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00`
+  );
+}
+
+export async function GET(_req: Request, { params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!user) return new Response("Not found", { status: 404 });
+
+  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  const monday = mondayOfCurrentWeek();
+  // Weekly classes always; one-offs only if they haven't already passed.
+  const rows = classRows.filter((c) => !c.specificDate || c.specificDate >= monday);
+
+  const studioIds = [...new Set(rows.map((c) => c.studioId))];
+  const studios = studioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+    : [];
+  const studioById = new Map(studios.map((s) => [s.id, s]));
+
+  const stamp =
+    new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//fittlist//schedule//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${esc(user.name || handle)} — fittlist`,
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
+    "X-PUBLISHED-TTL:PT1H",
+  ];
+
+  for (const c of rows) {
+    const studio = studioById.get(c.studioId);
+    // Weekly classes anchor to this week's matching weekday and recur forever.
+    const date =
+      c.specificDate ??
+      (() => {
+        const d = new Date(`${monday}T00:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
+        return d.toISOString().slice(0, 10);
+      })();
+    const desc = c.links.length
+      ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\\n") +
+        `\\n\\nfittlist.co/${handle}`
+      : `fittlist.co/${handle}`;
+
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${c.id}@fittlist.co`);
+    lines.push(`DTSTAMP:${stamp}`);
+    lines.push(`DTSTART:${dtStart(date, c.startTime)}`);
+    lines.push(`DTEND:${dtEnd(date, c.startTime, c.durationMin)}`);
+    if (!c.specificDate) lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`);
+    lines.push(fold(`SUMMARY:${esc(c.name)}`));
+    if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
+    lines.push(fold(`DESCRIPTION:${desc}`));
+    lines.push("END:VEVENT");
+  }
+
+  lines.push("END:VCALENDAR");
+  const body = lines.join("\r\n") + "\r\n";
+
+  return new Response(body, {
+    headers: {
+      "content-type": "text/calendar; charset=utf-8",
+      "content-disposition": `inline; filename="fittlist-${handle}.ics"`,
+      "cache-control": "public, max-age=1800",
+    },
+  });
+}

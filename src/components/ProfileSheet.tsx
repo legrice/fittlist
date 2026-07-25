@@ -26,7 +26,17 @@ export function ProfileSheet({
   const [storyThemeId, setStoryThemeId] = useState<StoryThemeId>("iron");
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [webcalUrl, setWebcalUrl] = useState("");
+  const [gcalUrl, setGcalUrl] = useState("");
   const url = `fittlist.co/${handle}`;
+
+  // The subscribe feed lives at /api/cal/{handle}; build the client-side URLs
+  // once mounted (the deployed host isn't known at build time).
+  useEffect(() => {
+    const webcal = `webcal://${window.location.host}/api/cal/${handle}`;
+    setWebcalUrl(webcal);
+    setGcalUrl(`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`);
+  }, [handle]);
   const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${storyThemeId}`;
   const storyFileName = `fittlist-${handle}-${shareSpan}-${storyThemeId}.png`;
 
@@ -80,6 +90,15 @@ export function ProfileSheet({
       toast("Link copied");
     } catch {
       toast(url);
+    }
+  };
+
+  const copyCal = async () => {
+    try {
+      await navigator.clipboard.writeText(webcalUrl);
+      toast("Calendar link copied");
+    } catch {
+      toast(webcalUrl);
     }
   };
 
@@ -140,6 +159,17 @@ export function ProfileSheet({
               <br />
               <span className="s">A story image with your link on it</span>
             </span>
+          </button>
+          <a className="rowcta" href={gcalUrl || undefined} target="_blank" rel="noopener">
+            <span className="ig"><Icon name="event" size={22} /></span>
+            <span>
+              <span className="t">Add to Google Calendar</span>
+              <br />
+              <span className="s">Your classes, always in sync — one place for everything</span>
+            </span>
+          </a>
+          <button className="calcopy" onClick={copyCal}>
+            Apple or Outlook? Copy your calendar feed link
           </button>
         </div>
       </div>

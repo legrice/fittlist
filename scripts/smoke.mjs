@@ -289,6 +289,19 @@ const s404 = await ctx.request.get(BASE + "/api/story/nobodyhere?span=week");
 if (s404.status() !== 404) fail("story for unknown handle should 404, got " + s404.status());
 console.log("story endpoint ok (1080x1920 png)");
 
+// ---- iCal subscribe feed
+const cal = await ctx.request.get(BASE + "/api/cal/matt");
+if (cal.status() !== 200) fail("cal feed returned " + cal.status());
+if (!(cal.headers()["content-type"] || "").includes("text/calendar")) fail("cal feed not text/calendar");
+const ics = await cal.text();
+if (!ics.includes("BEGIN:VCALENDAR") || !ics.includes("END:VCALENDAR")) fail("cal feed not a VCALENDAR");
+if (!ics.includes("BEGIN:VEVENT")) fail("cal feed has no events");
+if (!ics.includes("RRULE:FREQ=WEEKLY")) fail("cal feed missing weekly recurrence");
+if (!ics.includes("SUMMARY:Barbell Strength")) fail("cal feed missing class name");
+const cal404 = await ctx.request.get(BASE + "/api/cal/nobodyhere");
+if (cal404.status() !== 404) fail("cal feed for unknown handle should 404, got " + cal404.status());
+console.log("ical feed ok (VEVENT + weekly RRULE)");
+
 // share sheet UI from the profile sheet
 await openProfile(page);
 await page.locator(".rowcta", { hasText: "Share your week" }).click();
