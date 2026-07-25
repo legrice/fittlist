@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { DAYS, fmtTime, palForSeq, siteOrigin, timeToMinutes } from "@/lib/format";
+import { DAYS, blocksFill, fmtTime, palForSeq, siteOrigin, timeToMinutes } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -62,7 +62,7 @@ export default async function PublicPage({ params }: Props) {
   );
 
   return (
-    <div className="pub screen">
+    <div className="pub screen" data-theme={user.theme}>
       <div className="pubhero">
         <div className="eyebrow">Coaching schedule · this week</div>
         <div className="big">{user.name}</div>
@@ -88,8 +88,13 @@ export default async function PublicPage({ params }: Props) {
                 {byDay[di].map((c) => {
                   const s = studioById.get(c.studioId);
                   const p = palForSeq(s?.seq ?? 1);
+                  const bf = blocksFill(s?.seq ?? 1);
                   return (
-                    <div key={c.id} className="class-card">
+                    <div
+                      key={c.id}
+                      className="class-card"
+                      style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
+                    >
                       <div className="rail" style={{ background: p.rail }} />
                       <div className="time">{fmtTime(c.startTime)}</div>
                       <div className="body">

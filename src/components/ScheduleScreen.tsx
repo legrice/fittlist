@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DAYS, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
+import { DAYS, blocksFill, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
@@ -86,12 +86,14 @@ export function ScheduleScreen({
                 {byDay[di].map((c) => {
                   const studio = studioById.get(c.studioId);
                   const p = palForSeq(studio?.seq ?? 1);
+                  const bf = blocksFill(studio?.seq ?? 1);
                   return (
                     <div
                       key={c.id}
                       className="class-card editable"
                       role="button"
                       tabIndex={0}
+                      style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
                       onClick={() => edit(c)}
                       onKeyDown={(e) => e.key === "Enter" && edit(c)}
                     >

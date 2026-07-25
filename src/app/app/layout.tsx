@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user?.handle) redirect("/");
 
   return (
-    <div className="appshell">
+    <div className="appshell" data-theme={user.theme}>
       <SideNav handle={user.handle} />
       <div className="stage">{children}</div>
       <TabBar />
