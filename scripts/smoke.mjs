@@ -73,6 +73,16 @@ await page.getByText("Added to the studio directory").waitFor();
 await page.getByRole("button", { name: "+ Add booking link" }).click();
 await page.getByPlaceholder("Paste the link").fill("https://example.com/book");
 
+// start/end behave like a calendar event: nudging start slides end (length holds)
+const mins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const endBefore = await page.locator("#fEnd").inputValue();
+await page.locator("#fStart").fill("07:00");
+const endAfter = await page.locator("#fEnd").inputValue();
+if (mins(endAfter) - mins(endBefore) !== 60)
+  fail(`start change should slide end +60m: ${endBefore} -> ${endAfter}`);
+await page.locator("#fStart").fill("06:00"); // restore for the 6:00a label assertion
+console.log("start slides end ok");
+
 // narrated publish (start time defaults to 6:00a)
 const label = await page.locator(".publishwrap .btn").textContent();
 console.log("publish label:", label);
@@ -105,11 +115,13 @@ await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = await page.locator(".publishwrap .btn").textContent();
 if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
   fail("edit not prefilled with its day: " + editLabel);
-await page.getByRole("button", { name: "75 min" }).click();
+// change the class length by moving the End time (start is 6:00a → 75 min)
+await page.locator("#fEnd").fill("07:15");
+await expect(page.locator(".durnote", { hasText: "75 min" }).isVisible(), "durnote reflects end time");
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
 await waitSchedule(page, 3);
-console.log("edit ok");
+console.log("edit ok (end-time length)");
 
 // ---- delete lives inside the edit sheet, behind a confirmation (delete Friday)
 await page.locator(".ps-daygroup", { hasText: "Fri," }).first().locator(".ps-event").first().click();

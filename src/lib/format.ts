@@ -98,6 +98,14 @@ export function timeToMinutes(v: string): number {
   return h * 60 + m;
 }
 
+/** minutes-since-midnight → "HH:MM" 24h, wrapping within a single day. */
+export function minutesToTime(mins: number): string {
+  const t = ((mins % 1440) + 1440) % 1440;
+  const h = Math.floor(t / 60);
+  const m = t % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 /** day-of-week (0 = Monday … 6 = Sunday) for an ISO date, UTC. */
 export function dowOfDate(iso: string): number {
   return (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;

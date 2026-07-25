@@ -266,6 +266,15 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
 [data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
 [data-theme="poster"] .timegrid input.timeinput:focus { border-color: var(--pg-day); }
+/* start + end side by side */
+.timegrid.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.timegrid.two .flabel { margin-top: 0; }
+.timegrid.two input.timeinput { width: 100%; }
+.timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
+.durnote {
+  font-family: 'Space Mono', monospace; font-size: 12.5px; color: var(--ol);
+  margin-top: 8px;
+}
 .studio-sel {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
   border: 1.5px solid var(--line); border-radius: 13px; padding: 12px 14px;

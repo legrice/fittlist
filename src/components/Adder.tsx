@@ -4,7 +4,15 @@ import { useMemo, useState, useTransition } from "react";
 import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
-import { DAYS, DUR_PRESETS, LINK_LABELS, fmtDate, fmtTime, palForSeq } from "@/lib/format";
+import {
+  DAYS,
+  LINK_LABELS,
+  fmtDate,
+  fmtTime,
+  minutesToTime,
+  palForSeq,
+  timeToMinutes,
+} from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 
@@ -61,8 +69,10 @@ export function Adder({
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
   const [date, setDate] = useState(prefill?.specificDate ?? "");
-  const [time, setTime] = useState(prefill?.startTime ?? lastUsed.startTime);
-  const [dur, setDur] = useState(prefill?.durationMin ?? lastUsed.durationMin);
+  const initStart = prefill?.startTime ?? lastUsed.startTime;
+  const initDur = prefill?.durationMin ?? lastUsed.durationMin;
+  const [time, setTime] = useState(initStart);
+  const [end, setEnd] = useState(minutesToTime(timeToMinutes(initStart) + initDur));
   const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? lastUsed.studioId);
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
@@ -78,9 +88,19 @@ export function Adder({
   const fillFromTemplate = (t: TemplateDto) => {
     setName(t.name);
     setTime(t.startTime);
-    setDur(t.durationMin);
+    setEnd(minutesToTime(timeToMinutes(t.startTime) + t.durationMin));
     setStudioId(t.studioId);
     setLinks(t.links.map((l) => ({ ...l })));
+  };
+
+  // Length is the gap between start and end; changing the start slides the end
+  // to keep the same length (like a calendar event), changing the end sets it.
+  const durationMin = timeToMinutes(end) - timeToMinutes(time);
+  const durValid = durationMin > 0;
+  const changeStart = (v: string) => {
+    if (!v) return;
+    if (durValid) setEnd(minutesToTime(timeToMinutes(v) + durationMin));
+    setTime(v);
   };
 
   const pickSaved = (t: TemplateDto) => {
@@ -125,19 +145,21 @@ export function Adder({
       : "Pick at least one day"
     : !selectedStudio
       ? "Pick a studio"
-      : oneTime
-        ? `${isEdit ? "Save changes" : "Publish"} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
-        : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
+      : !durValid
+        ? "End time must be after start"
+        : oneTime
+          ? `${isEdit ? "Save changes" : "Publish"} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
+          : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
 
   const publish = () => {
-    if (!whenChosen || !studioId) return;
+    if (!whenChosen || !studioId || !durValid) return;
     startTransition(async () => {
       const input = {
         name,
         days: [...days],
         specificDate: oneTime ? date : null,
         startTime: time,
-        durationMin: dur,
+        durationMin,
         studioId,
         links,
       };
@@ -344,28 +366,32 @@ export function Adder({
               </>
             )}
 
-            <label className="flabel">Start</label>
-            <div className="timegrid">
-              <input
-                type="time"
-                className="timeinput"
-                value={time}
-                onChange={(e) => e.target.value && setTime(e.target.value)}
-                aria-label="Start time"
-              />
+            <div className="timegrid two">
+              <div>
+                <label className="flabel" htmlFor="fStart">Start</label>
+                <input
+                  id="fStart"
+                  type="time"
+                  className="timeinput"
+                  value={time}
+                  onChange={(e) => changeStart(e.target.value)}
+                  aria-label="Start time"
+                />
+              </div>
+              <div>
+                <label className="flabel" htmlFor="fEnd">End</label>
+                <input
+                  id="fEnd"
+                  type="time"
+                  className={`timeinput${durValid ? "" : " invalid"}`}
+                  value={end}
+                  onChange={(e) => e.target.value && setEnd(e.target.value)}
+                  aria-label="End time"
+                />
+              </div>
             </div>
-
-            <label className="flabel">Length</label>
-            <div className="chips">
-              {DUR_PRESETS.map((d) => (
-                <button
-                  key={d}
-                  className={`chip${dur === d ? " sel" : ""}`}
-                  onClick={() => setDur(d)}
-                >
-                  {d} min
-                </button>
-              ))}
+            <div className="durnote">
+              {durValid ? `${durationMin} min` : "End time must be after start"}
             </div>
             </div>
 
