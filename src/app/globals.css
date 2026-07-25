@@ -12,6 +12,9 @@
   --si-soft: #f9e4dd;
   --sa: #d6d1b3;
   --radius: 14px;
+  /* soft card shadows — the calendar-page look, shared across surfaces */
+  --soft-shadow: 0 1px 2px rgba(25, 21, 2, .10), 0 3px 8px rgba(25, 21, 2, .06);
+  --soft-shadow-lg: 0 2px 8px rgba(25, 21, 2, .10), 0 12px 34px rgba(25, 21, 2, .14);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -247,8 +250,6 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   font-size: 12.5px; font-weight: 700; color: var(--ink);
 }
 .modetoggle button.sel { background: var(--si); color: #fff; border-color: var(--si); }
-[data-theme="poster"] .modetoggle button { border: 2.5px solid #191502; border-radius: 12px; }
-[data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 10px;
@@ -263,7 +264,8 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 12px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
-[data-theme="poster"] .timegrid input.timeinput { border: 2.5px solid #191502; }
+[data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
+[data-theme="poster"] .timegrid input.timeinput:focus { border-color: var(--pg-day); }
 .studio-sel {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
   border: 1.5px solid var(--line); border-radius: 13px; padding: 12px 14px;
@@ -531,8 +533,8 @@ button.bl-band { cursor: pointer; }
 .ps-event {
   display: grid; grid-template-columns: 54px 1fr 20px; gap: 12px; align-items: center;
   width: 100%; text-align: left; color: #191502; text-decoration: none;
-  background: #fff; border-radius: 12px; padding: 12px 12px 12px 8px;
-  box-shadow: 0 1px 2px rgba(25, 21, 2, .10), 0 3px 8px rgba(25, 21, 2, .06);
+  background: #fff; border-radius: 14px; padding: 16px;
+  box-shadow: var(--soft-shadow);
   -webkit-tap-highlight-color: transparent; transition: box-shadow .12s ease, background .12s ease;
 }
 .ps-event:hover { box-shadow: 0 2px 4px rgba(25, 21, 2, .12), 0 6px 14px rgba(25, 21, 2, .10); }
@@ -592,15 +594,15 @@ button.ps-card { cursor: pointer; }
   border: 2.5px solid #191502;
 }
 
-/* My page: sticker stats, link card, rows, toggle */
+/* My page: soft cards, link card, rows */
 [data-theme="poster"] .stat {
-  background: var(--pg-cream); border: 2.5px solid #191502; border-radius: 16px; color: #191502;
+  background: #fff; border: none; border-radius: 14px; color: #191502; box-shadow: var(--soft-shadow);
 }
 [data-theme="poster"] .stat .n { color: var(--pg-day); }
 [data-theme="poster"] .stat .l, [data-theme="poster"] .stat .d { color: #5a5647; }
-[data-theme="poster"] .linkcard { border: 2.5px solid #191502; }
+[data-theme="poster"] .linkcard { border: none; box-shadow: var(--soft-shadow); }
 [data-theme="poster"] .rowcta {
-  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 16px;
+  background: #fff; color: #191502; border: none; border-radius: 14px; box-shadow: var(--soft-shadow);
 }
 [data-theme="poster"] .rowcta .s { color: #5a5647; }
 [data-theme="poster"] .themetoggle { background: transparent; padding: 0; gap: 8px; }
@@ -609,28 +611,34 @@ button.ps-card { cursor: pointer; }
 }
 [data-theme="poster"] .themetoggle button.sel { background: var(--pg-green); color: #191502; border-color: #191502; }
 
-/* green sticker for the primary action everywhere */
+/* green primary action everywhere — borderless, soft shadow */
 [data-theme="poster"] .btn.si {
-  background: var(--pg-green); color: #191502; border: 2.5px solid #191502;
+  background: var(--pg-green); color: #191502; border: none; box-shadow: var(--soft-shadow);
 }
 
-/* the adder sheet + controls */
-[data-theme="poster"] .sheet { border: 2.5px solid #191502; }
+/* the adder sheet + controls — clean, like the calendar page */
+[data-theme="poster"] .sheet { background: var(--pg-cream); border: none; box-shadow: var(--soft-shadow-lg); }
 [data-theme="poster"] .adder input[type=text], [data-theme="poster"] .adder input[type=url],
 [data-theme="poster"] .searchbox input, [data-theme="poster"] .linkrow input,
 [data-theme="poster"] .linkrow select, [data-theme="poster"] #ntEmail {
-  border: 2.5px solid #191502;
+  background: #fff; border: 1.5px solid var(--line);
 }
-[data-theme="poster"] .chip { border: 2.5px solid #191502; }
-[data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
-[data-theme="poster"] .daypick button { border: 2.5px solid #191502; border-radius: 12px; }
-[data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
-[data-theme="poster"] .studio-sel { border: 2.5px solid #191502; }
-[data-theme="poster"] .adder input.adder-title { border: none; box-shadow: none; color: #191502; }
+[data-theme="poster"] .adder input:focus, [data-theme="poster"] .searchbox input:focus,
+[data-theme="poster"] .linkrow input:focus, [data-theme="poster"] #ntEmail:focus {
+  border-color: var(--pg-day);
+}
+[data-theme="poster"] .chip { background: #fff; border: 1.5px solid var(--line); }
+[data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
+[data-theme="poster"] .daypick button { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; }
+[data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
+[data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; }
+[data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
+[data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
+[data-theme="poster"] .adder input.adder-title { background: transparent; border: none; box-shadow: none; color: #191502; }
 [data-theme="poster"] .adder input.adder-title::placeholder { color: #b7b09a; }
 [data-theme="poster"] .adder-kicker { color: var(--pg-day); }
 [data-theme="poster"] .adder-card {
-  background: #FFFDF7; border: 2.5px solid #191502; border-radius: 16px;
+  background: #fff; border: none; border-radius: 16px; box-shadow: var(--soft-shadow);
 }
 
 /* public page: ground bg, cream hero card, green CTA, cloud footer */
@@ -668,8 +676,8 @@ button.ps-card { cursor: pointer; }
   color: var(--pg-day); text-decoration: none; margin-bottom: 18px;
 }
 .evcard {
-  background: var(--pg-cream); border: 2.5px solid #191502; border-radius: 22px;
- padding: 22px 20px; color: #191502;
+  background: #fff; border: none; border-radius: 18px; box-shadow: var(--soft-shadow);
+  padding: 22px 20px; color: #191502;
 }
 .evwhen {
   font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .02em;
@@ -690,7 +698,7 @@ button.ps-card { cursor: pointer; }
   padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .notifybar .btn.si {
-  background: var(--pg-green); color: #191502; border: 2.5px solid #191502;
+  background: var(--pg-green); color: #191502; border: none; box-shadow: var(--soft-shadow);
 }
 @media (min-width: 940px) {
   [data-theme="poster"].pub { flex-direction: column; }
