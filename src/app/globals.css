@@ -473,8 +473,10 @@ button.bl-band { cursor: pointer; }
   --pg-ground: #191502; --pg-cream: #F7F2E8; --pg-day: #DD583A;
   --pg-green: #CBD665; --pg-peach: #F4A574;
 }
-/* app chrome: ground fill, hide the classic appbar (poster renders its own brand) */
-[data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-ground); }
+/* app chrome: light cream fill (matches the sheets); hide the classic appbar */
+[data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-cream); }
+/* day heading is dark on the app's light bg (the public page stays dark) */
+.appshell .ps-daycol { color: #191502; }
 [data-theme="poster"] .appbar { display: none; }
 [data-theme="poster"] .screen-title { color: var(--pg-cream); }
 [data-theme="poster"] .eyebrow { color: var(--pg-cream); }
@@ -493,18 +495,18 @@ button.bl-band { cursor: pointer; }
 /* schedule header: fittlist logo + profile icon up top, "My Calendar" below */
 .brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  position: sticky; top: 0; z-index: 6; background: var(--pg-ground);
+  position: sticky; top: 0; z-index: 6; background: var(--pg-cream);
   margin: -14px -18px 0; padding: 16px 18px 10px;
 }
 .brandbar .wordmark svg { height: 22px; width: auto; display: block; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 27px; letter-spacing: -.02em; line-height: 1;
-  color: var(--pg-cream); margin: 8px 0 14px;
+  color: #191502; margin: 8px 0 14px;
 }
 .usericon {
   flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; box-shadow: 3px 3px 0 #000;
+  background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; box-shadow: 3px 3px 0 #000;
 }
 .usericon:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
@@ -529,23 +531,23 @@ button.bl-band { cursor: pointer; }
 [data-theme="poster"] .ps-daycards { gap: 6px; }
 .ps-event {
   display: grid; grid-template-columns: 52px 1fr 20px; gap: 12px; align-items: center;
-  width: 100%; text-align: left; color: var(--pg-cream);
-  background: rgba(247, 242, 232, .04); border-radius: 12px; padding: 11px 12px;
+  width: 100%; text-align: left; color: #191502;
+  background: rgba(25, 21, 2, .05); border-radius: 12px; padding: 11px 12px;
   -webkit-tap-highlight-color: transparent; transition: background .12s ease;
 }
-.ps-event:hover { background: rgba(247, 242, 232, .08); }
-.ps-event:active { background: rgba(247, 242, 232, .13); }
+.ps-event:hover { background: rgba(25, 21, 2, .08); }
+.ps-event:active { background: rgba(25, 21, 2, .12); }
 .ps-etime {
   font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
-  color: var(--pg-cream); white-space: nowrap; text-align: right;
+  color: #191502; white-space: nowrap; text-align: right;
 }
 .ps-ebody { display: flex; flex-direction: column; min-width: 0; }
 .ps-enm {
   font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.15;
-  letter-spacing: -.01em; color: var(--pg-cream);
+  letter-spacing: -.01em; color: #191502;
 }
-.ps-estudio { font-size: 13px; font-weight: 600; color: #9a947f; margin-top: 2px; }
-.ps-echev { color: rgba(247, 242, 232, .45); display: flex; align-items: center; justify-content: center; }
+.ps-estudio { font-size: 13px; font-weight: 600; color: #8a8272; margin-top: 2px; }
+.ps-echev { color: rgba(25, 21, 2, .35); display: flex; align-items: center; justify-content: center; }
 
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;

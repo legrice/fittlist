@@ -111,7 +111,7 @@ export function ScheduleScreen({
         {theme === "poster" && (
           <>
             <div className="brandbar">
-              <Wordmark variant="cloud" />
+              <Wordmark variant="ink" />
               <button
                 className="usericon"
                 aria-label="Your page"
