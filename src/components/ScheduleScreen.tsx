@@ -114,10 +114,10 @@ export function ScheduleScreen({
               <Wordmark variant="ink" />
               <button
                 className="usericon"
-                aria-label="Your page"
+                aria-label="Menu"
                 onClick={() => setProfileOpen(true)}
               >
-                <Icon name="person" size={28} />
+                <Icon name="menu" size={28} />
               </button>
             </div>
             <div className="calbar-title">My Calendar</div>
