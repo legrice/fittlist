@@ -18,6 +18,7 @@ export function ScheduleScreen({
   autoOpenAdder,
   theme,
   weekLabel,
+  weekDates,
   handle,
 }: {
   classes: ClassDto[];
@@ -28,6 +29,7 @@ export function ScheduleScreen({
   autoOpenAdder: boolean;
   theme: AppTheme;
   weekLabel: string;
+  weekDates: number[];
   handle: string;
 }) {
   const router = useRouter();
@@ -102,17 +104,20 @@ export function ScheduleScreen({
               {DAYS.map((day, di) =>
                 byDay[di].length ? (
                   <div key={day} className="ps-daygroup">
-                    <div className="ps-daycol">{day}</div>
+                    <div className="ps-daycol">
+                      <span className="ps-dow">{day}</span>
+                      <span className="ps-date">{weekDates[di]}</span>
+                    </div>
                     <div className="ps-daycards">
                       {byDay[di].map((c) => {
                         const studio = studioById.get(c.studioId);
                         return (
                           <button key={c.id} className="ps-card" onClick={() => edit(c)}>
-                            <span className="ps-body">
-                              <span className="ps-nm">{c.name}</span>
-                              {studio && <span className="ps-sub">{studio.name}</span>}
+                            <span className="ps-nm">{c.name}</span>
+                            <span className="ps-sub">
+                              {fmtTime(c.startTime)}
+                              {studio ? ` at ${studio.name}` : ""}
                             </span>
-                            <span className="ps-time">{fmtTime(c.startTime)}</span>
                           </button>
                         );
                       })}

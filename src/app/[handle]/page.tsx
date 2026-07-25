@@ -4,7 +4,15 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { DAYS, blocksFill, fmtTime, palForSeq, siteOrigin, timeToMinutes } from "@/lib/format";
+import {
+  DAYS,
+  blocksFill,
+  fmtTime,
+  mondayOfCurrentWeek,
+  palForSeq,
+  siteOrigin,
+  timeToMinutes,
+} from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -61,6 +69,14 @@ export default async function PublicPage({ params }: Props) {
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)),
   );
 
+  // Day-of-month for each weekday (Mon..Sun) of the current week — shown in the
+  // schedule gutter. Computed server-side to avoid hydration drift.
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
+    return d.getUTCDate();
+  });
+
   return (
     <div className="pub screen" data-theme={user.theme}>
       <div className="pubhero">
@@ -84,30 +100,32 @@ export default async function PublicPage({ params }: Props) {
             {DAYS.map((day, di) =>
               byDay[di].length ? (
                 <div key={day} className="ps-daygroup">
-                  <div className="ps-daycol">{day}</div>
+                  <div className="ps-daycol">
+                    <span className="ps-dow">{day}</span>
+                    <span className="ps-date">{weekDates[di]}</span>
+                  </div>
                   <div className="ps-daycards">
                     {byDay[di].map((c) => {
                       const s = studioById.get(c.studioId);
                       return (
                         <div key={c.id} className="ps-card">
-                          <span className="ps-body">
-                            <span className="ps-nm">{c.name}</span>
-                            <span className="ps-sub">
-                              {c.durationMin} min{s ? ` · ${s.address}` : ""}
-                            </span>
-                            {c.links.map((l, i) => (
-                              <a
-                                key={i}
-                                className="ps-book"
-                                href={l.url}
-                                target="_blank"
-                                rel="noopener nofollow"
-                              >
-                                Book via {l.label} ↗
-                              </a>
-                            ))}
+                          <span className="ps-nm">{c.name}</span>
+                          <span className="ps-sub">
+                            {fmtTime(c.startTime)}
+                            {s ? ` at ${s.name}` : ""}
                           </span>
-                          <span className="ps-time">{fmtTime(c.startTime)}</span>
+                          {s && <span className="ps-addr">{s.address}</span>}
+                          {c.links.map((l, i) => (
+                            <a
+                              key={i}
+                              className="ps-book"
+                              href={l.url}
+                              target="_blank"
+                              rel="noopener nofollow"
+                            >
+                              Book via {l.label} ↗
+                            </a>
+                          ))}
                         </div>
                       );
                     })}

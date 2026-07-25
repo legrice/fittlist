@@ -38,6 +38,13 @@ export default async function SchedulePage({
     day: "numeric",
     timeZone: "UTC",
   });
+  // Day-of-month for each weekday (Mon..Sun) of the current week — shown in the
+  // schedule gutter. Computed server-side to avoid hydration drift.
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
+    return d.getUTCDate();
+  });
 
   const classes: ClassDto[] = classRows.map((c) => ({
     id: c.id,
@@ -83,6 +90,7 @@ export default async function SchedulePage({
       autoOpenAdder={add === "1"}
       theme={appTheme(user?.theme)}
       weekLabel={weekLabel}
+      weekDates={weekDates}
       handle={user?.handle ?? ""}
     />
   );
