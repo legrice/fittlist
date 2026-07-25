@@ -490,15 +490,16 @@ button.bl-band { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
-/* schedule header: "My Calendar" title on the left, profile user icon on the right */
-.calbar {
+/* schedule header: fittlist logo + profile icon up top, "My Calendar" below */
+.brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   position: sticky; top: 0; z-index: 6; background: var(--pg-ground);
-  margin: -14px -18px 12px; padding: 16px 18px 10px;
+  margin: -14px -18px 0; padding: 16px 18px 10px;
 }
+.brandbar .wordmark svg { height: 22px; width: auto; display: block; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 27px; letter-spacing: -.02em; line-height: 1;
-  color: var(--pg-cream);
+  color: var(--pg-cream); margin: 8px 0 14px;
 }
 .usericon {
   flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;

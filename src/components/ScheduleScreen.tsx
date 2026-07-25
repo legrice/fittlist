@@ -109,16 +109,19 @@ export function ScheduleScreen({
       </div>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         {theme === "poster" && (
-          <div className="calbar">
-            <span className="calbar-title">My Calendar</span>
-            <button
-              className="usericon"
-              aria-label="Your page"
-              onClick={() => setProfileOpen(true)}
-            >
-              <Icon name="person" size={22} />
-            </button>
-          </div>
+          <>
+            <div className="brandbar">
+              <Wordmark variant="cloud" />
+              <button
+                className="usericon"
+                aria-label="Your page"
+                onClick={() => setProfileOpen(true)}
+              >
+                <Icon name="person" size={22} />
+              </button>
+            </div>
+            <div className="calbar-title">My Calendar</div>
+          </>
         )}
         {theme === "classic" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 && upcoming.length === 0 ? (
