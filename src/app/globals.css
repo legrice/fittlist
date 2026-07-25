@@ -526,7 +526,7 @@ button.bl-band { cursor: pointer; }
 .usericon:active { opacity: .6; }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day sits on top as a section title; the day's classes stack full-width below */
-.ps-week { display: flex; flex-direction: column; gap: 22px; }
+.ps-week { display: flex; flex-direction: column; gap: 38px; }
 .ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
   font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -.01em;
