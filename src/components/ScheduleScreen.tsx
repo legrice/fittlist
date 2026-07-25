@@ -25,7 +25,10 @@ export function ScheduleScreen({
   autoOpenAdder,
   handle,
   name,
+  title,
   about,
+  instagram,
+  website,
   photo,
   visits,
   classCount,
@@ -43,7 +46,10 @@ export function ScheduleScreen({
   autoOpenAdder: boolean;
   handle: string;
   name: string;
+  title: string;
   about: string;
+  instagram: string;
+  website: string;
   photo: string | null;
   visits: number;
   classCount: number;
@@ -155,8 +161,15 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         <div className="brandbar">
           <Wordmark variant="ink" />
-          <button className="usericon" aria-label="Menu" onClick={() => setProfileOpen(true)}>
-            <Icon name="menu" size={28} />
+          <button className="usericon" aria-label="My page" onClick={() => setProfileOpen(true)}>
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="usericon-photo" src={photo} alt="" />
+            ) : (
+              <span className="usericon-initial" aria-hidden="true">
+                {(name.trim().charAt(0) || "?").toUpperCase()}
+              </span>
+            )}
           </button>
         </div>
         <div className="calbar-title">My Calendar</div>
@@ -224,7 +237,10 @@ export function ScheduleScreen({
         <ProfileSheet
           handle={handle}
           name={name}
+          title={title}
           about={about}
+          instagram={instagram}
+          website={website}
           photo={photo}
           visits={visits}
           subsCount={subsCount}

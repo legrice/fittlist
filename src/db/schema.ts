@@ -21,6 +21,11 @@ export const users = pgTable("users", {
   // Public profile: a short bio and a photo (stored as a small data URL).
   about: text("about"),
   photo: text("photo"),
+  // A short role/tagline shown under the name (e.g. "Strength coach").
+  title: text("title"),
+  // Optional social links surfaced as buttons on the public profile.
+  instagram: text("instagram"),
+  website: text("website"),
   // e.g. "footer:matt" — set at claim time when signup came through the
   // public-page footer. One of the three §8 success metrics.
   signupSource: text("signup_source"),

@@ -33,7 +33,10 @@ export default async function SchedulePage({
         theme: schema.users.theme,
         handle: schema.users.handle,
         name: schema.users.name,
+        title: schema.users.title,
         about: schema.users.about,
+        instagram: schema.users.instagram,
+        website: schema.users.website,
         photo: schema.users.photo,
       })
       .from(schema.users)
@@ -93,7 +96,10 @@ export default async function SchedulePage({
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}
+      title={user?.title ?? ""}
       about={user?.about ?? ""}
+      instagram={user?.instagram ?? ""}
+      website={user?.website ?? ""}
       photo={user?.photo ?? null}
       visits={visits}
       classCount={classRows.length}

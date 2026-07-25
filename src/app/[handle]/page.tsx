@@ -8,6 +8,7 @@ import { siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { Icon } from "@/components/Icon";
+import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +69,8 @@ export default async function ProfilePage({ params }: Props) {
         </div>
       )}
       <div className="profwrap">
+        <h1 className="profname">{user.name}</h1>
+        {user.title?.trim() && <p className="proftitle">{user.title}</p>}
         {user.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="profphoto" src={user.photo} alt={user.name} />
@@ -76,8 +79,26 @@ export default async function ProfilePage({ params }: Props) {
             {user.name.trim().charAt(0).toUpperCase() || "?"}
           </div>
         )}
-        <h1 className="profname">{user.name}</h1>
         {user.about?.trim() && <p className="profabout">{user.about}</p>}
+        {(user.instagram || user.website) && (
+          <div className="proflinks">
+            {user.instagram && (
+              <a
+                className="proflink"
+                href={`https://instagram.com/${user.instagram}`}
+                target="_blank"
+                rel="noopener nofollow"
+              >
+                <InstagramGlyph /> Instagram
+              </a>
+            )}
+            {user.website && (
+              <a className="proflink" href={user.website} target="_blank" rel="noopener nofollow">
+                <Icon name="public" size={18} /> Website
+              </a>
+            )}
+          </div>
+        )}
         <div className="madewith">
           Made with <Wordmark variant="ink" className="mw-logo" /> — coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>

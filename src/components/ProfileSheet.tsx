@@ -13,7 +13,10 @@ import { Toast, useToast } from "@/components/Toast";
 export function ProfileSheet({
   handle,
   name,
+  title,
   about,
+  instagram,
+  website,
   photo,
   visits,
   subsCount,
@@ -25,7 +28,10 @@ export function ProfileSheet({
 }: {
   handle: string;
   name: string;
+  title: string;
   about: string;
+  instagram: string;
+  website: string;
   photo: string | null;
   visits: number;
   subsCount: number;
@@ -48,7 +54,10 @@ export function ProfileSheet({
   // profile editing
   const [editOpen, setEditOpen] = useState(false);
   const [pName, setPName] = useState(name);
+  const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
+  const [pInstagram, setPInstagram] = useState(instagram);
+  const [pWebsite, setPWebsite] = useState(website);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -82,7 +91,14 @@ export function ProfileSheet({
 
   const saveProfile = () =>
     startSaving(async () => {
-      const res = await updateProfile({ name: pName, about: pAbout, photo: pPhoto });
+      const res = await updateProfile({
+        name: pName,
+        title: pTitle,
+        about: pAbout,
+        instagram: pInstagram,
+        website: pWebsite,
+        photo: pPhoto,
+      });
       if (!res.ok) {
         toast(res.error ?? "Couldn't save");
         return;
@@ -199,7 +215,10 @@ export function ProfileSheet({
               className="profrow-edit"
               onClick={() => {
                 setPName(name);
+                setPTitle(title);
                 setPAbout(about);
+                setPInstagram(instagram);
+                setPWebsite(website);
                 setPPhoto(photo);
                 setEditOpen(true);
               }}
@@ -412,6 +431,18 @@ export function ProfileSheet({
               maxLength={80}
               onChange={(e) => setPName(e.target.value)}
             />
+            <label className="flabel" htmlFor="pTitle">
+              Title <span>· your role or tagline</span>
+            </label>
+            <input
+              id="pTitle"
+              type="text"
+              className="editinput"
+              value={pTitle}
+              maxLength={80}
+              placeholder="Strength coach"
+              onChange={(e) => setPTitle(e.target.value)}
+            />
             <label className="flabel" htmlFor="pAbout">
               About <span>· a line or two about you</span>
             </label>
@@ -423,6 +454,37 @@ export function ProfileSheet({
               rows={4}
               placeholder="Coach at three studios across Jersey City. Strength &amp; conditioning, all levels."
               onChange={(e) => setPAbout(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pInstagram">
+              Instagram <span>· optional</span>
+            </label>
+            <div className="editprefix">
+              <span className="editprefix-at">@</span>
+              <input
+                id="pInstagram"
+                type="text"
+                className="editinput"
+                value={pInstagram}
+                maxLength={40}
+                placeholder="yourhandle"
+                autoCapitalize="none"
+                autoCorrect="off"
+                onChange={(e) => setPInstagram(e.target.value)}
+              />
+            </div>
+            <label className="flabel" htmlFor="pWebsite">
+              Website <span>· optional</span>
+            </label>
+            <input
+              id="pWebsite"
+              type="url"
+              className="editinput"
+              value={pWebsite}
+              maxLength={200}
+              placeholder="yoursite.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              onChange={(e) => setPWebsite(e.target.value)}
             />
             <div className="publishwrap">
               <button className="btn si" disabled={saving || !pName.trim()} onClick={saveProfile}>

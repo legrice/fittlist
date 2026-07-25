@@ -521,9 +521,14 @@ button.bl-band { cursor: pointer; }
 }
 .usericon {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  background: transparent; color: #191502; border: none; box-shadow: none; padding: 4px;
+  width: 38px; height: 38px; border-radius: 999px; overflow: hidden;
+  background: #efe9db; color: #191502; border: 1px solid var(--line); box-shadow: none; padding: 0;
 }
-.usericon:active { opacity: .6; }
+.usericon:active { opacity: .7; }
+.usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+.usericon-initial {
+  font-family: 'Archivo Black', sans-serif; font-size: 16px; line-height: 1; color: #191502;
+}
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day sits on top as a section title; the day's classes stack full-width below */
 .ps-week { display: flex; flex-direction: column; gap: 38px; }
@@ -676,17 +681,29 @@ button.ps-card { cursor: pointer; }
 }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; display: block;
-  box-shadow: var(--soft-shadow);
+  margin-top: 20px;
 }
 .profphoto-empty {
-  display: flex; align-items: center; justify-content: center; background: #fff;
+  display: flex; align-items: center; justify-content: center; background: #efe9db;
   font-family: 'Archivo Black', sans-serif; font-size: 76px; color: #d8d1bd;
 }
 .profname {
   font-family: 'Archivo Black', sans-serif; font-size: 32px; letter-spacing: -.02em; line-height: 1.05;
-  color: #191502; margin: 20px 0 0;
+  color: #191502; margin: 0;
 }
-.profabout { font-size: 15px; line-height: 1.55; color: #5a5647; margin-top: 12px; white-space: pre-wrap; }
+.proftitle {
+  font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--pg-day); margin: 8px 0 0;
+}
+.profabout { font-size: 15px; line-height: 1.55; color: #5a5647; margin-top: 18px; white-space: pre-wrap; }
+.proflinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.proflink {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 14px; color: #191502;
+  text-decoration: none;
+}
+.proflink:active { background: #f2ecdd; }
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
@@ -721,6 +738,12 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 16px; color: var(--ink);
 }
 .editinput:focus, .abouttext:focus { outline: none; border-color: var(--pg-day); }
+.editprefix { position: relative; }
+.editprefix .editinput { padding-left: 30px; }
+.editprefix-at {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: var(--ol); pointer-events: none;
+}
 .abouttext {
   width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;

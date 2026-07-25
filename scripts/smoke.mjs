@@ -131,7 +131,10 @@ await expect(page.locator(".linkcard .url", { hasText: "fittlist.co/matt" }).isV
 // ---- edit profile (name/about) from the sheet
 await page.locator(".profrow-edit").click();
 await page.getByRole("heading", { name: "Edit profile" }).waitFor();
+await page.locator("#pTitle").fill("Strength coach");
 await page.locator(".abouttext").fill("Strength coach across Jersey City.");
+await page.locator("#pInstagram").fill("@mattlifts");
+await page.locator("#pWebsite").fill("mattlifts.com");
 await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
 await page.locator(".sheet .sheetclose").first().click();
@@ -142,7 +145,16 @@ console.log("profile edit ok");
 // ---- public PROFILE page (mobile): photo/name/about + View schedule CTA
 await page.goto(BASE + "/matt");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
+await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible(), "profile shows title");
 await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
+await expect(
+  page.locator('.proflink[href="https://instagram.com/mattlifts"]').isVisible(),
+  "profile shows instagram link",
+);
+await expect(
+  page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
+  "profile shows website link",
+);
 await expect(page.locator(".profcta").getByText("View schedule").isVisible(), "view schedule CTA");
 await expect(page.locator(".previewbar", { hasText: "Previewing your profile" }).isVisible(), "owner preview bar");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
