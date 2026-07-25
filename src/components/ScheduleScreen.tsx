@@ -14,6 +14,7 @@ import {
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
+import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -29,6 +30,9 @@ export function ScheduleScreen({
   theme,
   weekLabel,
   weekDateLabels,
+  handle,
+  visits,
+  classCount,
 }: {
   classes: ClassDto[];
   upcoming?: ClassDto[];
@@ -41,9 +45,13 @@ export function ScheduleScreen({
   theme: AppTheme;
   weekLabel: string;
   weekDateLabels: string[];
+  handle: string;
+  visits: number;
+  classCount: number;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
+  const [profileOpen, setProfileOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   useEffect(() => {
@@ -100,6 +108,18 @@ export function ScheduleScreen({
         <div className="sub">My schedule</div>
       </div>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
+        {theme === "poster" && (
+          <div className="calbar">
+            <span className="calbar-title">My Calendar</span>
+            <button
+              className="usericon"
+              aria-label="Your page"
+              onClick={() => setProfileOpen(true)}
+            >
+              <Icon name="person" size={22} />
+            </button>
+          </div>
+        )}
         {theme === "classic" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 && upcoming.length === 0 ? (
           <div className="empty-block">
@@ -265,6 +285,16 @@ export function ScheduleScreen({
         <button className="fab" aria-label="Add class" onClick={() => setAdder({ open: true })}>
           +
         </button>
+      )}
+
+      {profileOpen && (
+        <ProfileSheet
+          handle={handle}
+          visits={visits}
+          subsCount={subsCount}
+          classCount={classCount}
+          onClose={() => setProfileOpen(false)}
+        />
       )}
 
       {adder.open && (

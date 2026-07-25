@@ -9,6 +9,12 @@ const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
 const cardCount = (pg) => pg.locator(".ps-card").count();
 const eventCount = (pg) => pg.locator(".ps-event").count();
+// My page is now a bottom sheet reached from the user icon on the schedule.
+const openProfile = async (pg) => {
+  await pg.goto(BASE + "/app");
+  await pg.locator(".usericon").click();
+  await pg.getByText("Your link", { exact: true }).waitFor();
+};
 
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -102,11 +108,13 @@ await page.getByText("Deleted", { exact: true }).waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
-// ---- My page via the top toggle (active tab is the cream pill)
-await page.locator(".pagetoggle").getByText("My page").click();
+// ---- My page as a dismissable bottom sheet from the user icon
+await page.locator(".usericon").click();
 await page.getByText("Your link", { exact: true }).waitFor();
-await expect(page.locator(".pagetoggle a.active", { hasText: "My page" }).isVisible(), "toggle marks My page active");
+await expect(page.getByRole("heading", { name: "My page" }).isVisible(), "profile sheet opens");
 await expect(page.locator(".linkcard .url", { hasText: "fittlist.co/matt" }).isVisible(), "link card shows url");
+await page.locator(".sheet .sheetclose").first().click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png" });
 
 // ---- public page (mobile) + subscribe
@@ -140,7 +148,6 @@ await page.getByText("Nobody’s here yet.").waitFor();
 // ---- desktop
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto(BASE + "/app");
-await page.locator(".sidenav").getByText("Schedule").waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length >= 1);
 await page.screenshot({ path: SCRATCH + "/shot-desktop-schedule.png" });
 await page.goto(BASE + "/matt");
@@ -149,7 +156,7 @@ await page.screenshot({ path: SCRATCH + "/shot-desktop-public.png" });
 console.log("desktop ok");
 
 // ---- my-page list count reflects subscriber
-await page.goto(BASE + "/app/page");
+await openProfile(page);
 await page.getByText("on your list", { exact: true }).waitFor();
 const subN = await page.locator(".statgrid .stat").nth(1).locator(".n").textContent();
 if (subN.trim() !== "1") fail("subscriber count should be 1, got " + subN);
@@ -208,14 +215,14 @@ await new Promise((r) => setTimeout(r, 600));
 const changeCountAfter = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
 if (changeCountAfter !== changeCountBefore) fail("opted-out subscriber still got emailed");
 
-await page.goto(BASE + "/app/page");
+await openProfile(page);
 await page.getByText("on your list", { exact: true }).waitFor();
 const subN2 = await page.locator(".statgrid .stat").nth(1).locator(".n").textContent();
 if (subN2.trim() !== "0") fail("list should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
 
 // ================= Phase 3: dashboard + growth =================
-await page.goto(BASE + "/app/page");
+await openProfile(page);
 const vis0 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
 if (vis0.trim() !== "0") fail("own visits should not count, got " + vis0);
 console.log("own-visit exclusion ok");
@@ -256,7 +263,7 @@ await anonPage.getByRole("button", { name: "Claim it" }).click();
 await anonPage.getByRole("heading", { name: "New class" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
 
-await page.goto(BASE + "/app/page");
+await openProfile(page);
 const vis1 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
 if (vis1.trim() !== "3") fail("visits should be 3 (2 anon views + 1 fetch), got " + vis1);
 await expect(page.getByText("this week").isVisible(), "visits stat shows 'this week'");
@@ -274,8 +281,8 @@ const s404 = await ctx.request.get(BASE + "/api/story/nobodyhere?span=week");
 if (s404.status() !== 404) fail("story for unknown handle should 404, got " + s404.status());
 console.log("story endpoint ok (1080x1920 png)");
 
-// share sheet UI on My page
-await page.goto(BASE + "/app/page");
+// share sheet UI from the profile sheet
+await openProfile(page);
 await page.locator(".rowcta", { hasText: "Share your week" }).click();
 await page.getByRole("heading", { name: "Your story image" }).waitFor();
 await page.waitForFunction(() => {
@@ -301,6 +308,9 @@ for (const th of ["paper", "moss", "pop"]) {
 }
 await page.locator(".themechip", { hasText: "Iron" }).click();
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
+// close the story sheet (on top), then the profile sheet beneath it
+await page.locator(".sheet .sheetclose").last().click();
+await page.waitForFunction(() => document.querySelectorAll(".sheet").length === 1);
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("share sheet ok (save + share + colours + X close)");

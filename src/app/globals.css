@@ -490,6 +490,22 @@ button.bl-band { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
+/* schedule header: "My Calendar" title on the left, profile user icon on the right */
+.calbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  position: sticky; top: 0; z-index: 6; background: var(--pg-ground);
+  margin: -14px -18px 12px; padding: 16px 18px 10px;
+}
+.calbar-title {
+  font-family: 'Archivo Black', sans-serif; font-size: 27px; letter-spacing: -.02em; line-height: 1;
+  color: var(--pg-cream);
+}
+.usericon {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; box-shadow: 3px 3px 0 #000;
+}
+.usericon:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day sits on top as a section title; the day's classes stack full-width below */
 .ps-week { display: flex; flex-direction: column; gap: 22px; }

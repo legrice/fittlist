@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { Wordmark } from "@/components/Wordmark";
 
-export function MyPageScreen({
+// The trainer's "My page" — stats, shareable link, and story image — shown as a
+// dismissable bottom sheet reached from the user icon on the schedule.
+export function ProfileSheet({
   handle,
   visits,
   subsCount,
   classCount,
+  onClose,
 }: {
   handle: string;
   visits: number;
   subsCount: number;
   classCount: number;
+  onClose: () => void;
 }) {
   const [toastMsg, toastOn, toast] = useToast();
   const [shareOpen, setShareOpen] = useState(false);
@@ -81,57 +84,64 @@ export function MyPageScreen({
   };
 
   return (
-    <section className="screen">
-      <div className="appbar">
-        <Wordmark />
-        <div className="sub">My page</div>
-      </div>
-      <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
-        <div className="statgrid">
-          <div className="stat">
-            <div className="n">{visits}</div>
-            <div className="l">visits</div>
-            <div className="d">{visits ? "this week" : ""}</div>
-          </div>
-          <div className="stat">
-            <div className="n">{subsCount}</div>
-            <div className="l">on your list</div>
-            <div className="d">{subsCount ? "get emails" : ""}</div>
-          </div>
-          <div className="stat">
-            <div className="n">{classCount}</div>
-            <div className="l">classes</div>
-            <div className="d"></div>
-          </div>
-        </div>
-        <div className="linkcard">
-          <div className="eyebrow">Your link</div>
-          <div className="url">{url}</div>
-          <button className="btn si" onClick={copy}>
-            Copy link
+    <>
+      <div
+        className="sheet-scrim"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="sheet">
+          <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={16} />
           </button>
-          <div className="hint">
-            {classCount
-              ? `${subsCount || "No"} ${subsCount === 1 ? "person" : "people"} on your list so far. Every schedule change emails them automatically.`
-              : "Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale."}
+          <h2>My page</h2>
+          <div className="statgrid">
+            <div className="stat">
+              <div className="n">{visits}</div>
+              <div className="l">visits</div>
+              <div className="d">{visits ? "this week" : ""}</div>
+            </div>
+            <div className="stat">
+              <div className="n">{subsCount}</div>
+              <div className="l">on your list</div>
+              <div className="d">{subsCount ? "get emails" : ""}</div>
+            </div>
+            <div className="stat">
+              <div className="n">{classCount}</div>
+              <div className="l">classes</div>
+              <div className="d"></div>
+            </div>
           </div>
+          <div className="linkcard">
+            <div className="eyebrow">Your link</div>
+            <div className="url">{url}</div>
+            <button className="btn si" onClick={copy}>
+              Copy link
+            </button>
+            <div className="hint">
+              {classCount
+                ? `${subsCount || "No"} ${subsCount === 1 ? "person" : "people"} on your list so far. Every schedule change emails them automatically.`
+                : "Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale."}
+            </div>
+          </div>
+          <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
+            <span className="ig"><Icon name="visibility" size={22} /></span>
+            <span>
+              <span className="t">Preview your page</span>
+              <br />
+              <span className="s">Exactly what someone sees when they tap your bio</span>
+            </span>
+          </a>
+          <button className="rowcta" onClick={() => setShareOpen(true)}>
+            <span className="ig"><Icon name="share" size={22} /></span>
+            <span>
+              <span className="t">Share your week</span>
+              <br />
+              <span className="s">A story image with your link on it</span>
+            </span>
+          </button>
         </div>
-        <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
-          <span className="ig"><Icon name="visibility" size={22} /></span>
-          <span>
-            <span className="t">Preview your page</span>
-            <br />
-            <span className="s">Exactly what someone sees when they tap your bio</span>
-          </span>
-        </a>
-        <button className="rowcta" onClick={() => setShareOpen(true)}>
-          <span className="ig"><Icon name="share" size={22} /></span>
-          <span>
-            <span className="t">Share your week</span>
-            <br />
-            <span className="s">A story image with your link on it</span>
-          </span>
-        </button>
       </div>
 
       {shareOpen && (
@@ -174,10 +184,7 @@ export function MyPageScreen({
                     className={`chip themechip${storyThemeId === id ? " sel" : ""}`}
                     onClick={() => setStoryThemeId(id)}
                   >
-                    <span
-                      className="swd"
-                      style={{ background: t.bg, borderColor: t.accent }}
-                    />
+                    <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
                     {t.label}
                   </button>
                 ),
@@ -213,6 +220,6 @@ export function MyPageScreen({
       )}
 
       <Toast msg={toastMsg} on={toastOn} />
-    </section>
+    </>
   );
 }

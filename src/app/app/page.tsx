@@ -2,6 +2,7 @@ import { desc, eq, isNull, and } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { appTheme, fmtDateLong, mondayOfCurrentWeek, timeToMinutes, weekBucket } from "@/lib/format";
+import { visitsThisWeek } from "@/lib/visits";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
@@ -15,7 +16,7 @@ export default async function SchedulePage({
   const userId = (await getSessionUserId())!;
   const db = await getDb();
 
-  const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([
+  const [classRows, studioRows, templateRows, subRows, [user], visits] = await Promise.all([
     db.select().from(schema.classes).where(eq(schema.classes.userId, userId)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -31,6 +32,7 @@ export default async function SchedulePage({
       .select({ theme: schema.users.theme, handle: schema.users.handle })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
+    visitsThisWeek(userId),
   ]);
 
   const weekLabel = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -109,6 +111,9 @@ export default async function SchedulePage({
       theme={appTheme(user?.theme)}
       weekLabel={weekLabel}
       weekDateLabels={weekDateLabels}
+      handle={user?.handle ?? ""}
+      visits={visits}
+      classCount={classRows.length}
     />
   );
 }
