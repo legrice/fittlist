@@ -80,34 +80,42 @@ export default async function PublicPage({ params }: Props) {
             </p>
           </div>
         ) : user.theme === "poster" ? (
-          byDay.flat().map((c, idx, arr) => {
-            const s = studioById.get(c.studioId);
-            const showDay = idx === 0 || arr[idx - 1].dayOfWeek !== c.dayOfWeek;
-            return (
-              <div key={c.id} className="ps-card">
-                <span className="ps-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
-                <span className="ps-div" />
-                <span className="ps-body">
-                  <span className="ps-nm">{c.name}</span>
-                  <span className="ps-sub">
-                    {c.durationMin} min{s ? ` · ${s.address}` : ""}
-                  </span>
-                  {c.links.map((l, i) => (
-                    <a
-                      key={i}
-                      className="ps-book"
-                      href={l.url}
-                      target="_blank"
-                      rel="noopener nofollow"
-                    >
-                      Book via {l.label} ↗
-                    </a>
-                  ))}
-                </span>
-                <span className="ps-time">{fmtTime(c.startTime)}</span>
-              </div>
-            );
-          })
+          <div className="ps-week">
+            {DAYS.map((day, di) =>
+              byDay[di].length ? (
+                <div key={day} className="ps-daygroup">
+                  <div className="ps-daycol">{day}</div>
+                  <div className="ps-daycards">
+                    {byDay[di].map((c) => {
+                      const s = studioById.get(c.studioId);
+                      return (
+                        <div key={c.id} className="ps-card">
+                          <span className="ps-body">
+                            <span className="ps-nm">{c.name}</span>
+                            <span className="ps-sub">
+                              {c.durationMin} min{s ? ` · ${s.address}` : ""}
+                            </span>
+                            {c.links.map((l, i) => (
+                              <a
+                                key={i}
+                                className="ps-book"
+                                href={l.url}
+                                target="_blank"
+                                rel="noopener nofollow"
+                              >
+                                Book via {l.label} ↗
+                              </a>
+                            ))}
+                          </span>
+                          <span className="ps-time">{fmtTime(c.startTime)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null,
+            )}
+          </div>
         ) : user.theme === "blocks" ? (
           <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
             {byDay.flat().map((c, idx, arr) => {

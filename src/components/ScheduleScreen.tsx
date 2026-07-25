@@ -98,21 +98,29 @@ export function ScheduleScreen({
               <br />
               Week
             </div>
-            {flat.map((c, idx) => {
-              const studio = studioById.get(c.studioId);
-              const showDay = idx === 0 || flat[idx - 1].dayOfWeek !== c.dayOfWeek;
-              return (
-                <button key={c.id} className="ps-card" onClick={() => edit(c)}>
-                  <span className="ps-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
-                  <span className="ps-div" />
-                  <span className="ps-body">
-                    <span className="ps-nm">{c.name}</span>
-                    {studio && <span className="ps-sub">{studio.name}</span>}
-                  </span>
-                  <span className="ps-time">{fmtTime(c.startTime)}</span>
-                </button>
-              );
-            })}
+            <div className="ps-week">
+              {DAYS.map((day, di) =>
+                byDay[di].length ? (
+                  <div key={day} className="ps-daygroup">
+                    <div className="ps-daycol">{day}</div>
+                    <div className="ps-daycards">
+                      {byDay[di].map((c) => {
+                        const studio = studioById.get(c.studioId);
+                        return (
+                          <button key={c.id} className="ps-card" onClick={() => edit(c)}>
+                            <span className="ps-body">
+                              <span className="ps-nm">{c.name}</span>
+                              {studio && <span className="ps-sub">{studio.name}</span>}
+                            </span>
+                            <span className="ps-time">{fmtTime(c.startTime)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null,
+              )}
+            </div>
             <div className="ps-infobar">fittlist.co/{handle}</div>
           </>
         ) : theme === "blocks" ? (
