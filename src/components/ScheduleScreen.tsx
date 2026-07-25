@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DAYS, blocksFill, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
+import { DAYS, type AppTheme, blocksFill, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
@@ -16,6 +16,8 @@ export function ScheduleScreen({
   lastUsed,
   subsCount,
   autoOpenAdder,
+  theme,
+  weekLabel,
 }: {
   classes: ClassDto[];
   studios: StudioDto[];
@@ -23,6 +25,8 @@ export function ScheduleScreen({
   lastUsed: LastUsed;
   subsCount: number;
   autoOpenAdder: boolean;
+  theme: AppTheme;
+  weekLabel: string;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -58,6 +62,9 @@ export function ScheduleScreen({
     });
   };
 
+  // Blocks lays the week out as one flat, day-ordered stack of bands.
+  const flat = useMemo(() => byDay.flat(), [byDay]);
+
   return (
     <section className="screen">
       <div className="appbar">
@@ -65,7 +72,7 @@ export function ScheduleScreen({
         <div className="sub">My schedule</div>
       </div>
       <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
-        <h1 className="screen-title">This week</h1>
+        {theme !== "blocks" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 ? (
           <div className="empty-block">
             <div className="glyph">MON–SUN</div>
@@ -77,6 +84,38 @@ export function ScheduleScreen({
             <button className="btn si" onClick={() => setAdder({ open: true })}>
               Add your first class
             </button>
+          </div>
+        ) : theme === "blocks" ? (
+          <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
+            <div className="bl-head">
+              <div className="eb">Week of {weekLabel}</div>
+              <h2>This week</h2>
+            </div>
+            {flat.map((c, idx) => {
+              const studio = studioById.get(c.studioId);
+              const bf = blocksFill(studio?.seq ?? 1);
+              const showDay = idx === 0 || flat[idx - 1].dayOfWeek !== c.dayOfWeek;
+              return (
+                <button
+                  key={c.id}
+                  className="bl-band"
+                  style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
+                  onClick={() => edit(c)}
+                >
+                  <span className="bl-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
+                  <span className="bl-body">
+                    <span className="bl-nm">{c.name}</span>
+                    <span className="bl-mt">
+                      {fmtTime(c.startTime)} · {c.durationMin} min
+                    </span>
+                    {studio && <span className="bl-loc">{studio.name}</span>}
+                  </span>
+                  <span className="bl-edit" aria-hidden="true">
+                    <Icon name="edit" size={15} />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="weekgrid">

@@ -356,46 +356,50 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 input, select, textarea { font-size: max(1em, 16px); }
 
 /* ============================================================
-   "Blocks" theme — vivid full-bleed color fields per studio.
-   Opt-in per trainer via [data-theme="blocks"] on the app shell
-   and public page. Classic is untouched.
+   "Blocks" theme — edge-to-edge color bands, one per studio,
+   dark header, big day label on the left. Opt-in per trainer via
+   [data-theme="blocks"]. Classic markup/styles are untouched.
    ============================================================ */
-[data-theme="blocks"] .class-card {
-  background: var(--bbg, #8FE0C8);
-  color: var(--bfg, #191502);
-  border: none;
-  box-shadow: none;
-  border-radius: 14px;
-  padding: 14px 16px;
-  gap: 14px;
+.blweek { display: flex; flex-direction: column; }         /* full-bleed: parent cancels its own side padding */
+.bl-head { background: var(--ink); color: #F7F2E8; padding: 24px 20px 22px; }
+.bl-head .eb {
+  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: #C9C3AE;
 }
-[data-theme="blocks"] .class-card .rail { display: none; }
-[data-theme="blocks"] .class-card .time,
-[data-theme="blocks"] .class-card .meta { color: var(--bfg); }
-[data-theme="blocks"] .class-card .meta { opacity: .78; }
-[data-theme="blocks"] .class-card .name {
-  font-family: 'Archivo Black', sans-serif; text-transform: uppercase;
-  letter-spacing: -.01em; font-size: 17px;
+.bl-head h2 {
+  font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .86;
+  letter-spacing: -.03em; text-transform: uppercase; margin-top: 6px;
 }
-/* studio tag becomes plain text on the block (inline pastel colors overridden) */
-[data-theme="blocks"] .loctag {
-  background: transparent !important; color: var(--bfg) !important;
-  padding: 0; margin-top: 6px; font-weight: 700;
+.bl-band {
+  display: flex; gap: 16px; align-items: center; width: 100%; text-align: left;
+  background: var(--bbg, #8FE0C8); color: var(--bfg, #191502);
+  border: none; padding: 18px 20px;
 }
-[data-theme="blocks"] .loctag .swd { display: none; }
-[data-theme="blocks"] .class-card .iconbtn {
-  border-color: var(--bfg); color: var(--bfg); background: transparent;
+button.bl-band { cursor: pointer; }
+.bl-day {
+  font-family: 'Archivo Black', sans-serif; font-size: 30px; line-height: .82;
+  letter-spacing: -.01em; text-transform: uppercase; min-width: 62px; flex-shrink: 0;
 }
-[data-theme="blocks"] .daylabel { font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 0; }
-
-/* public page: keep the dark hero, blocks for the schedule + booking links */
-[data-theme="blocks"] .booklink {
-  color: var(--bfg) !important; border-bottom: 2px solid var(--bfg); text-decoration: none;
+.bl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.bl-nm {
+  font-family: 'Archivo Black', sans-serif; font-size: 21px; line-height: .98;
+  letter-spacing: -.01em; text-transform: uppercase;
 }
-[data-theme="blocks"].pub .pubhero .big { text-transform: uppercase; }
+.bl-mt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.bl-loc { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: .82; }
+.bl-book {
+  display: inline-block; margin-top: 8px; font-family: 'Space Mono', monospace; font-weight: 700;
+  font-size: 12.5px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
+}
+.bl-edit {
+  margin-left: auto; align-self: flex-start; width: 32px; height: 32px; border-radius: 9px;
+  border: 2px solid var(--bfg); color: var(--bfg); display: grid; place-items: center; flex-shrink: 0;
+}
+[data-theme="blocks"] .pub .pubhero .big { text-transform: uppercase; }
 
 @media (min-width: 940px) {
-  [data-theme="blocks"] .weekgrid .class-card { border-radius: 12px; }
+  .bl-head h2 { font-size: 56px; }
+  .bl-band { padding: 22px 30px; }
 }
 
 /* appearance toggle on My page */

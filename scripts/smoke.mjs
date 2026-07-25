@@ -336,20 +336,28 @@ if ((await page.locator('.appshell[data-theme="blocks"]').count()) !== 0)
 await page.getByRole("button", { name: "Blocks", exact: true }).click();
 await page.getByText("Blocks look on").waitFor();
 await page.waitForFunction(() => document.querySelector('.appshell[data-theme="blocks"]'));
-// schedule cards now carry the blocks fill var
+// schedule renders the full-bleed band layout: dark header + colored bands
 await page.goto(BASE + "/app");
 await page.waitForFunction(() => {
-  const c = document.querySelector('.appshell[data-theme="blocks"] .class-card');
-  if (!c) return false;
-  const bg = getComputedStyle(c).backgroundColor;
-  return bg === "rgb(143, 224, 200)" || bg === "rgb(245, 211, 74)" || bg === "rgb(221, 88, 58)" || bg === "rgb(169, 216, 218)";
+  const head = document.querySelector(".blweek .bl-head");
+  const band = document.querySelector(".blweek .bl-band");
+  if (!head || !band) return false;
+  const bg = getComputedStyle(band).backgroundColor;
+  return ["rgb(143, 224, 200)", "rgb(245, 211, 74)", "rgb(221, 88, 58)", "rgb(169, 216, 218)"].includes(bg);
 });
+if (!(await page.getByRole("heading", { name: "This week" }).isVisible()))
+  fail("blocks header missing");
 await page.screenshot({ path: SCRATCH + "/shot-blocks-app.png" });
-// public page inherits the trainer's theme
+// editing still works: tap a band
+await page.locator(".bl-band").first().click();
+await page.getByRole("heading", { name: "Edit class" }).waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+// public page inherits the trainer's theme + band layout
 await page.goto(BASE + "/matt");
-await page.waitForFunction(() => document.querySelector('.pub[data-theme="blocks"]'));
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="blocks"] .bl-band'));
 await page.screenshot({ path: SCRATCH + "/shot-blocks-public.png", fullPage: true });
-console.log("blocks theme ok");
+console.log("blocks theme ok (bands + dark header + edit)");
 // revert to classic
 await page.goto(BASE + "/app/page");
 await page.getByRole("button", { name: "Classic", exact: true }).click();

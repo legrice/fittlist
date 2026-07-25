@@ -1,6 +1,7 @@
 import { desc, eq, isNull, and } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { appTheme, mondayOfCurrentWeek } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
@@ -14,7 +15,7 @@ export default async function SchedulePage({
   const userId = (await getSessionUserId())!;
   const db = await getDb();
 
-  const [classRows, studioRows, templateRows, subRows] = await Promise.all([
+  const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([
     db.select().from(schema.classes).where(eq(schema.classes.userId, userId)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -26,7 +27,14 @@ export default async function SchedulePage({
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.trainerUserId, userId), isNull(schema.subscribers.optedOutAt))),
+    db.select({ theme: schema.users.theme }).from(schema.users).where(eq(schema.users.id, userId)),
   ]);
+
+  const weekLabel = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
   const classes: ClassDto[] = classRows.map((c) => ({
     id: c.id,
@@ -70,6 +78,8 @@ export default async function SchedulePage({
       lastUsed={lastUsed}
       subsCount={subRows.length}
       autoOpenAdder={add === "1"}
+      theme={appTheme(user?.theme)}
+      weekLabel={weekLabel}
     />
   );
 }

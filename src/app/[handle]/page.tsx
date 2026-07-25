@@ -79,6 +79,42 @@ export default async function PublicPage({ params }: Props) {
               you&rsquo;ll get an email the moment they do.
             </p>
           </div>
+        ) : user.theme === "blocks" ? (
+          <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
+            {byDay.flat().map((c, idx, arr) => {
+              const s = studioById.get(c.studioId);
+              const bf = blocksFill(s?.seq ?? 1);
+              const showDay = idx === 0 || arr[idx - 1].dayOfWeek !== c.dayOfWeek;
+              return (
+                <div
+                  key={c.id}
+                  className="bl-band"
+                  style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
+                >
+                  <span className="bl-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
+                  <span className="bl-body">
+                    <span className="bl-nm">{c.name}</span>
+                    <span className="bl-mt">
+                      {fmtTime(c.startTime)} · {c.durationMin} min
+                    </span>
+                    {s && <span className="bl-loc">{s.address}</span>}
+                    {c.links.map((l, i) => (
+                      <a
+                        key={i}
+                        className="bl-book"
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener nofollow"
+                        style={{ marginRight: 14 }}
+                      >
+                        Book via {l.label} ↗
+                      </a>
+                    ))}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           DAYS.map((day, di) => {
             if (!byDay[di].length) return null;
