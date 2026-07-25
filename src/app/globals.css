@@ -490,8 +490,8 @@ button.ps-card { cursor: pointer; }
   color: var(--pg-cream); font-family: 'Archivo Black', sans-serif; font-size: 13px;
   letter-spacing: .02em; text-transform: uppercase; padding: 13px 0;
 }
-/* the current tab is a plain label; the other is a cream sticker pill */
-[data-theme="poster"] .tabbar a:not(.active) {
+/* the current tab is a cream sticker pill; the other is a plain label */
+[data-theme="poster"] .tabbar a.active {
   background: var(--pg-cream); color: #191502;
   border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502;
 }
