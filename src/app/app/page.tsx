@@ -1,7 +1,7 @@
 import { desc, eq, isNull, and } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { appTheme, mondayOfCurrentWeek } from "@/lib/format";
+import { appTheme, mondayOfCurrentWeek, timeToMinutes, weekBucket } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
@@ -46,15 +46,31 @@ export default async function SchedulePage({
     return d.getUTCDate();
   });
 
-  const classes: ClassDto[] = classRows.map((c) => ({
+  const toDto = (c: (typeof classRows)[number]): ClassDto => ({
     id: c.id,
     dayOfWeek: c.dayOfWeek,
+    specificDate: c.specificDate,
     startTime: c.startTime,
     durationMin: c.durationMin,
     name: c.name,
     studioId: c.studioId,
     links: c.links,
-  }));
+  });
+  // Weekly classes + this week's one-offs render in the gutter; future-dated
+  // one-offs go in an "Upcoming" list; past one-offs drop off entirely.
+  const buckets = classRows.map((c) => ({ c, bucket: weekBucket(c.specificDate) }));
+  const classes: ClassDto[] = buckets.filter((b) => b.bucket === "current").map((b) => toDto(b.c));
+  const upcoming: ClassDto[] = buckets
+    .filter((b) => b.bucket === "upcoming")
+    .map((b) => toDto(b.c))
+    .sort(
+      (a, b) =>
+        (a.specificDate! < b.specificDate! ? -1 : a.specificDate! > b.specificDate! ? 1 : 0) ||
+        timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+    );
+  // "First publish" narration keys off whether the trainer has any class at all,
+  // not just this week's — a coach with only upcoming one-offs isn't new.
+  const hasAnyClass = classRows.length > 0;
   const studios: StudioDto[] = studioRows.map((s) => ({
     id: s.id,
     seq: s.seq,
@@ -83,6 +99,8 @@ export default async function SchedulePage({
   return (
     <ScheduleScreen
       classes={classes}
+      upcoming={upcoming}
+      hasAnyClass={hasAnyClass}
       studios={studios}
       templates={templates}
       lastUsed={lastUsed}

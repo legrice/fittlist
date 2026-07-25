@@ -203,6 +203,14 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .namesug button:last-child { border-bottom: none; }
 .namesug button:hover { background: var(--cl); }
 .namesug .sub { font-size: 11.5px; color: var(--ol); font-weight: 400; white-space: nowrap; }
+.modetoggle { display: flex; gap: 6px; margin-top: 8px; }
+.modetoggle button {
+  flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 10px;
+  font-size: 12.5px; font-weight: 700; color: var(--ink);
+}
+.modetoggle button.sel { background: var(--si); color: #fff; border-color: var(--si); }
+[data-theme="poster"] .modetoggle button { border: 2.5px solid #191502; box-shadow: 2px 2px 0 #191502; border-radius: 12px; }
+[data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 10px;
@@ -443,6 +451,7 @@ button.bl-band { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
+.ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day lives in a left gutter as a title; each day's classes stack beside it */
 .ps-week { display: flex; flex-direction: column; gap: 20px; }
 .ps-daygroup { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }

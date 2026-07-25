@@ -60,6 +60,9 @@ export const classes = pgTable(
     userId: uuid("user_id").notNull().references(() => users.id),
     templateId: uuid("template_id").references(() => classTemplates.id),
     dayOfWeek: integer("day_of_week").notNull(),
+    // null = standing weekly (shows every week, link never stales); set = a
+    // one-off pinned to this ISO date, shown only in the week it falls in.
+    specificDate: date("specific_date"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),

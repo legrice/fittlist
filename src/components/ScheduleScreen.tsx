@@ -2,7 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DAYS, type AppTheme, blocksFill, fmtTime, palForSeq, timeToMinutes } from "@/lib/format";
+import {
+  DAYS,
+  type AppTheme,
+  blocksFill,
+  fmtTime,
+  domOfDate,
+  dowOfDate,
+  fmtDate,
+  palForSeq,
+  timeToMinutes,
+} from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
@@ -11,6 +21,8 @@ import { Wordmark } from "@/components/Wordmark";
 
 export function ScheduleScreen({
   classes,
+  upcoming = [],
+  hasAnyClass,
   studios,
   templates,
   lastUsed,
@@ -22,6 +34,8 @@ export function ScheduleScreen({
   handle,
 }: {
   classes: ClassDto[];
+  upcoming?: ClassDto[];
+  hasAnyClass: boolean;
   studios: StudioDto[];
   templates: TemplateDto[];
   lastUsed: LastUsed;
@@ -61,6 +75,7 @@ export function ScheduleScreen({
         studioId: c.studioId,
         links: c.links.map((l) => ({ ...l })),
         days: [c.dayOfWeek],
+        specificDate: c.specificDate,
         classId: c.id,
       },
     });
@@ -68,6 +83,19 @@ export function ScheduleScreen({
 
   // Blocks lays the week out as one flat, day-ordered stack of bands.
   const flat = useMemo(() => byDay.flat(), [byDay]);
+
+  // Future-dated one-offs, grouped by their own date so a day with several
+  // classes shares one gutter header.
+  const upcomingGroups = useMemo(() => {
+    const groups: { date: string; items: ClassDto[] }[] = [];
+    for (const c of upcoming) {
+      if (!c.specificDate) continue;
+      const last = groups[groups.length - 1];
+      if (last && last.date === c.specificDate) last.items.push(c);
+      else groups.push({ date: c.specificDate, items: [c] });
+    }
+    return groups;
+  }, [upcoming]);
 
   return (
     <section className="screen">
@@ -77,7 +105,7 @@ export function ScheduleScreen({
       </div>
       <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
         {theme === "classic" && <h1 className="screen-title">This week</h1>}
-        {classes.length === 0 ? (
+        {classes.length === 0 && upcoming.length === 0 ? (
           <div className="empty-block">
             <div className="glyph">MON–SUN</div>
             <h2>Your week is empty</h2>
@@ -126,6 +154,35 @@ export function ScheduleScreen({
                 ) : null,
               )}
             </div>
+            {upcomingGroups.length > 0 && (
+              <>
+                <div className="ps-h2 ps-upnext">Up Next</div>
+                <div className="ps-week">
+                  {upcomingGroups.map(({ date, items }) => (
+                    <div key={date} className="ps-daygroup">
+                      <div className="ps-daycol">
+                        <span className="ps-dow">{DAYS[dowOfDate(date)]}</span>
+                        <span className="ps-date">{domOfDate(date)}</span>
+                      </div>
+                      <div className="ps-daycards">
+                        {items.map((c) => {
+                          const studio = studioById.get(c.studioId);
+                          return (
+                            <button key={c.id} className="ps-card" onClick={() => edit(c)}>
+                              <span className="ps-nm">{c.name}</span>
+                              <span className="ps-sub">
+                                {fmtDate(c.specificDate!)} · {fmtTime(c.startTime)}
+                                {studio ? ` at ${studio.name}` : ""}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="ps-infobar">fittlist.co/{handle}</div>
           </>
         ) : theme === "blocks" ? (
@@ -218,7 +275,7 @@ export function ScheduleScreen({
         )}
       </div>
 
-      {classes.length > 0 && !adder.open && (
+      {hasAnyClass && !adder.open && (
         <button className="fab" onClick={() => setAdder({ open: true })}>
           + Add class
         </button>
@@ -231,7 +288,7 @@ export function ScheduleScreen({
           lastUsed={lastUsed}
           subsCount={subsCount}
           prefill={adder.prefill}
-          firstPublish={classes.length === 0}
+          firstPublish={!hasAnyClass}
           onClose={() => setAdder({ open: false })}
           onToast={toast}
           onPublished={(msg) => {

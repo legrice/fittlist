@@ -29,6 +29,13 @@
       "when": 1784949433670,
       "tag": "0003_living_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784984147759,
+      "tag": "0004_tired_sugar_man",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
-import { fmtDays, fmtTime, siteOrigin } from "@/lib/format";
+import { fmtDate, fmtDays, fmtTime, siteOrigin } from "@/lib/format";
 
 // All list email goes through here — the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
@@ -66,6 +66,7 @@ export type ScheduleChange = {
   verb: "added" | "removed" | "updated";
   className: string;
   days: number[];
+  specificDate?: string | null; // set = one-off; the email names the date not the weekday
   startTime: string; // "HH:MM"
   studioName: string;
 };
@@ -87,7 +88,7 @@ export async function notifyScheduleChange(trainerUserId: string, change: Schedu
     );
   if (!subs.length) return 0;
 
-  const when = `${fmtDays(change.days)} ${fmtTime(change.startTime)}`;
+  const when = `${change.specificDate ? fmtDate(change.specificDate) : fmtDays(change.days)} ${fmtTime(change.startTime)}`;
   const line =
     change.verb === "updated"
       ? `${change.className} updated — now ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`

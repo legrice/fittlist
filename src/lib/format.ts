@@ -98,6 +98,42 @@ export function timeToMinutes(v: string): number {
   return h * 60 + m;
 }
 
+/** day-of-week (0 = Monday … 6 = Sunday) for an ISO date, UTC. */
+export function dowOfDate(iso: string): number {
+  return (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+}
+
+/** day-of-month for an ISO date, UTC — the number shown in the gutter. */
+export function domOfDate(iso: string): number {
+  return new Date(`${iso}T00:00:00Z`).getUTCDate();
+}
+
+/** "2026-07-26" -> "Sat Jul 26", UTC. */
+export function fmtDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** Where a one-off falls relative to the current Mon–Sun week.
+    Weekly classes (specificDate null) always show → "current". */
+export function weekBucket(
+  specificDate: string | null | undefined,
+  now = new Date(),
+): "current" | "upcoming" | "past" {
+  if (!specificDate) return "current";
+  const mon = new Date(`${mondayOfCurrentWeek(now)}T00:00:00Z`);
+  const sun = new Date(mon);
+  sun.setUTCDate(mon.getUTCDate() + 6);
+  const d = new Date(`${specificDate}T00:00:00Z`);
+  if (d < mon) return "past";
+  if (d > sun) return "upcoming";
+  return "current";
+}
+
 export const RESERVED_HANDLES = new Set([
   "app", "api", "auth", "login", "logout", "signup", "admin", "brand",
   "design", "static", "assets", "about", "privacy", "terms", "you", "u",

@@ -5,12 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
-import { LINK_LABELS } from "@/lib/format";
+import { LINK_LABELS, dowOfDate } from "@/lib/format";
 import { notifyScheduleChange } from "@/lib/notifier";
 
 export type PublishInput = {
   name: string;
   days: number[]; // 0 = Monday … 6 = Sunday
+  // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
+  specificDate?: string | null;
   startTime: string; // "HH:MM"
   durationMin: number;
   studioId: string;
@@ -32,8 +34,14 @@ type SaveResult = { ok: boolean; count?: number; notified?: number; error?: stri
 // row is swapped for rows on the selected days).
 async function save(userId: string, input: PublishInput, replaceClassId?: string): Promise<SaveResult> {
   const name = input.name.trim() || "New class";
-  const days = [...new Set(input.days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
-  if (!days.length) return { ok: false, error: "Pick at least one day." };
+  // A one-off is authoritative on its date: the weekday comes from the date,
+  // not the day pills. Weekly classes fan out across the selected days.
+  const oneOff = input.specificDate?.trim() || null;
+  if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return { ok: false, error: "Invalid date." };
+  const days = oneOff
+    ? [dowOfDate(oneOff)]
+    : [...new Set(input.days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+  if (!days.length) return { ok: false, error: oneOff ? "Pick a date." : "Pick at least one day." };
   if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Invalid start time." };
   const durationMin = Math.round(input.durationMin);
   if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
@@ -68,6 +76,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       userId,
       templateId: template.id,
       dayOfWeek,
+      specificDate: oneOff,
       startTime: input.startTime,
       durationMin,
       name,
@@ -83,6 +92,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       verb: replaceClassId ? "updated" : "added",
       className: name,
       days,
+      specificDate: oneOff,
       startTime: input.startTime,
       studioName: studio.name,
     });
@@ -117,6 +127,7 @@ export async function deleteClass(
       id: schema.classes.id,
       name: schema.classes.name,
       dayOfWeek: schema.classes.dayOfWeek,
+      specificDate: schema.classes.specificDate,
       startTime: schema.classes.startTime,
       studioName: schema.studios.name,
     })
@@ -133,6 +144,7 @@ export async function deleteClass(
       verb: "removed",
       className: row.name,
       days: [row.dayOfWeek],
+      specificDate: row.specificDate,
       startTime: row.startTime,
       studioName: row.studioName,
     });

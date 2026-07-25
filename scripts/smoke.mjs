@@ -300,5 +300,51 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("share sheet ok (save + share + colours + X close)");
 
+// ================= dated classes: weekly default + one-time option =================
+const pad = (n) => String(n).padStart(2, "0");
+const iso = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+const nowD = new Date();
+const dow0 = (nowD.getUTCDay() + 6) % 7; // 0 = Monday
+const monD = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth(), nowD.getUTCDate() - dow0));
+const inWeek = new Date(monD); inWeek.setUTCDate(monD.getUTCDate() + 5); // Sat this week
+const future = new Date(monD); future.setUTCDate(monD.getUTCDate() + 10); // next week
+
+await page.goto(BASE + "/app");
+const weekBefore = await cardCount(page);
+
+// a one-off dated inside the current week shows in the main week
+await page.getByRole("button", { name: "+ Add class" }).click();
+await page.getByRole("heading", { name: "Add to your week" }).waitFor();
+await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await page.getByText("Everything is filled — just pick the days.").waitFor();
+await page.getByRole("button", { name: "One-time", exact: true }).click();
+await page.locator('input[type="date"]').fill(iso(inWeek));
+const oneLabel = await page.locator(".publishwrap .btn").textContent();
+if (!/^Publish · \w{3}, \w{3} \d+ · 6:00a$/.test(oneLabel.trim()))
+  fail("one-off publish label wrong: " + oneLabel);
+await page.locator(".publishwrap .btn").click();
+await page.getByText("Published", { exact: false }).waitFor();
+await page.waitForFunction((n) => document.querySelectorAll(".ps-card").length === n, weekBefore + 1);
+console.log("one-off in-week ok");
+
+// a future-dated one-off lands in "Up Next", not the current week
+await page.getByRole("button", { name: "+ Add class" }).click();
+await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await page.getByRole("button", { name: "One-time", exact: true }).click();
+await page.locator('input[type="date"]').fill(iso(future));
+await page.locator(".publishwrap .btn").click();
+await page.getByText("Published", { exact: false }).waitFor();
+await page.getByText("Up Next").waitFor();
+await page.waitForFunction((n) => document.querySelectorAll(".ps-card").length === n, weekBefore + 2);
+console.log("one-off future -> Up Next ok");
+
+// public page shows the in-week one-off but never the future one
+await page.goto(BASE + "/matt");
+await page.getByText("Coaching schedule · this week").waitFor();
+const pubCards = await cardCount(page);
+if (pubCards !== weekBefore + 1)
+  fail(`public should show weekly + in-week one-off only, got ${pubCards} (want ${weekBefore + 1})`);
+console.log("public excludes future one-off ok");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

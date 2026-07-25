@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { BRAND_CLOUD, BRAND_INK } from "@/lib/brand";
-import { DAYS, fmtTime, mondayOfCurrentWeek, storyTheme, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, mondayOfCurrentWeek, storyTheme, timeToMinutes, weekBucket } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -53,6 +53,8 @@ export async function GET(
   if (!user) return new Response("Not found", { status: 404 });
 
   let classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  // The share image is always the current week — one-offs outside it drop off.
+  classRows = classRows.filter((c) => weekBucket(c.specificDate) === "current");
   if (span === "day") {
     const todayMon0 = (new Date().getUTCDay() + 6) % 7; // 0 = Monday
     classRows = classRows.filter((c) => c.dayOfWeek === todayMon0);

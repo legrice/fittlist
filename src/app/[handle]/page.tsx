@@ -12,6 +12,7 @@ import {
   palForSeq,
   siteOrigin,
   timeToMinutes,
+  weekBucket,
 } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
@@ -56,7 +57,10 @@ export default async function PublicPage({ params }: Props) {
     }
   }
 
-  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  const allClassRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  // The public page is always "this week": weekly classes plus one-offs dated
+  // inside the current Mon–Sun week. Future/past one-offs never leak here.
+  const classRows = allClassRows.filter((c) => weekBucket(c.specificDate) === "current");
   const studioIds = [...new Set(classRows.map((c) => c.studioId))];
   const studioRows = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))

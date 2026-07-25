@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
-import { DAYS, DUR_PRESETS, LINK_LABELS, fmtTime, palForSeq } from "@/lib/format";
+import { DAYS, DUR_PRESETS, LINK_LABELS, fmtDate, fmtTime, palForSeq } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 
@@ -15,6 +15,7 @@ export type AdderPrefill = {
   studioId: string;
   links: BookingLink[];
   days?: number[]; // preselected (edit); empty for duplicate
+  specificDate?: string | null; // set = editing a one-off pinned to this date
   classId?: string; // set = edit this class in place
 };
 
@@ -58,6 +59,8 @@ export function Adder({
   );
   const [name, setName] = useState(prefill?.name ?? "");
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
+  const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
+  const [date, setDate] = useState(prefill?.specificDate ?? "");
   const [time, setTime] = useState(prefill?.startTime ?? lastUsed.startTime);
   const [dur, setDur] = useState(prefill?.durationMin ?? lastUsed.durationMin);
   const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? lastUsed.studioId);
@@ -112,20 +115,27 @@ export function Adder({
 
   const dayList = DAYS.filter((_, i) => days.has(i));
   const n = days.size;
-  const publishLabel =
-    n === 0
-      ? "Pick at least one day"
-      : !selectedStudio
-        ? "Pick a studio"
-        : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}` +
-          (subsCount ? ` · emails ${subsCount}` : "");
+  const oneTime = mode === "date";
+  const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
+  const whenChosen = oneTime ? dateValid : n > 0;
+  const emailSuffix = subsCount ? ` · emails ${subsCount}` : "";
+  const publishLabel = !whenChosen
+    ? oneTime
+      ? "Pick a date"
+      : "Pick at least one day"
+    : !selectedStudio
+      ? "Pick a studio"
+      : oneTime
+        ? `${isEdit ? "Save changes" : "Publish"} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
+        : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
 
   const publish = () => {
-    if (n === 0 || !studioId) return;
+    if (!whenChosen || !studioId) return;
     startTransition(async () => {
       const input = {
         name,
         days: [...days],
+        specificDate: oneTime ? date : null,
         startTime: time,
         durationMin: dur,
         studioId,
@@ -285,21 +295,56 @@ export function Adder({
               </div>
             )}
 
-            <label className="flabel">
-              Days <span>· tap all that apply</span>
-            </label>
-            <div className="daypick">
-              {DAYS.map((d, i) => (
-                <button
-                  key={d}
-                  className={days.has(i) ? "sel" : ""}
-                  onClick={() => toggleDay(i)}
-                >
-                  {d[0]}
-                  {d[1].toLowerCase()}
-                </button>
-              ))}
+            <label className="flabel">When</label>
+            <div className="modetoggle">
+              <button
+                className={!oneTime ? "sel" : ""}
+                onClick={() => setMode("weekly")}
+                type="button"
+              >
+                Repeats weekly
+              </button>
+              <button
+                className={oneTime ? "sel" : ""}
+                onClick={() => setMode("date")}
+                type="button"
+              >
+                One-time
+              </button>
             </div>
+
+            {oneTime ? (
+              <>
+                <label className="flabel">Date</label>
+                <div className="timegrid">
+                  <input
+                    type="date"
+                    className="timeinput"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    aria-label="Class date"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="flabel">
+                  Days <span>· tap all that apply</span>
+                </label>
+                <div className="daypick">
+                  {DAYS.map((d, i) => (
+                    <button
+                      key={d}
+                      className={days.has(i) ? "sel" : ""}
+                      onClick={() => toggleDay(i)}
+                    >
+                      {d[0]}
+                      {d[1].toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
             <label className="flabel">Start</label>
             <div className="timegrid">
@@ -395,7 +440,7 @@ export function Adder({
             </button>
 
             <div className="publishwrap">
-              <button className="btn si" disabled={n === 0 || pending} onClick={publish}>
+              <button className="btn si" disabled={!whenChosen || pending} onClick={publish}>
                 {pending ? (isEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>
             </div>
