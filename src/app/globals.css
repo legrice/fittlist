@@ -42,7 +42,7 @@ a { color: inherit; }
    internally, so iOS never collapses its chrome and the tabs never move. */
 .tabbar {
   display: flex; border-top: 1px solid var(--line); background: var(--card);
-  flex-shrink: 0; z-index: 12;
+  flex-shrink: 0; position: relative; z-index: 1;
   padding-bottom: env(safe-area-inset-bottom);
 }
 .tabbar a {
@@ -280,7 +280,10 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .appshell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 .appshell .stage {
   flex: 1; display: flex; flex-direction: column; min-height: 0;
-  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  /* NB: no -webkit-overflow-scrolling:touch — WebKit makes such a scroll
+     container a stacking context, which would trap the modal sheets'
+     z-index inside it and let the in-flow tab bar paint over them. */
+  overflow-y: auto; overscroll-behavior: contain;
 }
 .appshell .screen { min-height: 100%; }
 .sidenav { display: none; }
