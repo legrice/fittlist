@@ -170,7 +170,14 @@ export function ScheduleScreen({
                         const studio = studioById.get(c.studioId);
                         return (
                           <button key={c.id} className="ps-event" onClick={() => edit(c)}>
-                            <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                            <span className="ps-etimecol">
+                              <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                              {!c.specificDate && (
+                                <span className="ps-recur" title="Repeats weekly" aria-label="Repeats weekly">
+                                  <Icon name="repeat" size={14} />
+                                </span>
+                              )}
+                            </span>
                             <span className="ps-ebody">
                               <span className="ps-enm">{c.name}</span>
                               {studio && <span className="ps-estudio">{studio.name}</span>}
@@ -198,7 +205,9 @@ export function ScheduleScreen({
                           const studio = studioById.get(c.studioId);
                           return (
                             <button key={c.id} className="ps-event" onClick={() => edit(c)}>
-                              <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                              <span className="ps-etimecol">
+                                <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                              </span>
                               <span className="ps-ebody">
                                 <span className="ps-enm">{c.name}</span>
                                 {studio && <span className="ps-estudio">{studio.name}</span>}

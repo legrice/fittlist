@@ -123,7 +123,14 @@ export default async function PublicPage({ params }: Props) {
                       const s = studioById.get(c.studioId);
                       return (
                         <Link key={c.id} className="ps-event" href={`/${handle}/${c.id}`}>
-                          <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                          <span className="ps-etimecol">
+                            <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                            {!c.specificDate && (
+                              <span className="ps-recur" title="Repeats weekly" aria-label="Repeats weekly">
+                                <Icon name="repeat" size={14} />
+                              </span>
+                            )}
+                          </span>
                           <span className="ps-ebody">
                             <span className="ps-enm">{c.name}</span>
                             {s && <span className="ps-estudio">{s.name}</span>}
