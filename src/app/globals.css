@@ -497,9 +497,22 @@ button.bl-band { cursor: pointer; }
 /* schedule header: fittlist logo + profile icon up top, "My Calendar" below */
 .brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  position: sticky; top: 0; z-index: 6; background: var(--pg-cream);
+  background: var(--pg-cream);
   margin: -14px -18px 0; padding: 16px 18px 10px;
 }
+/* sticky day tabs that anchor-scroll to each day's section below */
+.daytabs {
+  position: sticky; top: 0; z-index: 6; background: var(--pg-cream);
+  display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
+  margin: 4px -18px 14px; padding: 8px 18px 0; border-bottom: 1px solid var(--line);
+}
+.daytabs::-webkit-scrollbar { display: none; }
+.daytab {
+  flex-shrink: 0; font-size: 14.5px; font-weight: 700; color: #8a8272; white-space: nowrap;
+  padding: 6px 0 12px; border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+}
+.daytab.active { color: #191502; border-bottom-color: #191502; }
+.ps-daygroup { scroll-margin-top: 58px; }
 .brandbar .wordmark svg { height: 29px; width: auto; display: block; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 36px; letter-spacing: -.02em; line-height: 1;

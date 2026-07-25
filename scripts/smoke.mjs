@@ -68,6 +68,7 @@ if (!label.includes("Publish 2 classes") || !label.includes("MON, WED") || !labe
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
+if ((await page.locator(".daytab").count()) !== 2) fail("expected 2 day tabs (Mon, Wed)");
 await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
 

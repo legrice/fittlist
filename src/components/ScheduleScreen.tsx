@@ -13,6 +13,7 @@ import {
 } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { DayTabs } from "@/components/DayTabs";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -123,6 +124,23 @@ export function ScheduleScreen({
     return groups;
   }, [upcoming]);
 
+  // One tab per day that has classes this week — "Mon 20" — anchoring to the
+  // day section below.
+  const dayTabs = useMemo(
+    () =>
+      DAYS.flatMap((day, di) =>
+        byDay[di].length
+          ? [
+              {
+                id: `day-${di}`,
+                label: `${day[0]}${day.slice(1).toLowerCase()} ${weekDateLabels[di].split(" ").pop()}`,
+              },
+            ]
+          : [],
+      ),
+    [byDay, weekDateLabels],
+  );
+
   return (
     <section className="screen">
       <div className="appbar">
@@ -160,10 +178,11 @@ export function ScheduleScreen({
           </div>
         ) : theme === "poster" ? (
           <>
+            {dayTabs.length > 0 && <DayTabs days={dayTabs} />}
             <div className="ps-week">
               {DAYS.map((day, di) =>
                 byDay[di].length ? (
-                  <div key={day} className="ps-daygroup">
+                  <div key={day} id={`day-${di}`} className="ps-daygroup">
                     <div className="ps-daycol">{weekDateLabels[di]}</div>
                     <div className="ps-daycards">
                       {byDay[di].map((c) => {
