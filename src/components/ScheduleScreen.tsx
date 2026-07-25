@@ -1,16 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import {
-  DAYS,
-  type AppTheme,
-  blocksFill,
-  fmtTime,
-  fmtDateLong,
-  palForSeq,
-  timeToMinutes,
-} from "@/lib/format";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DAYS, fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { DayTabs } from "@/components/DayTabs";
@@ -19,18 +11,18 @@ import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
+const INITIAL_WEEKS = 4;
+const MAX_WEEKS = 52;
+
 export function ScheduleScreen({
   classes,
-  upcoming = [],
   hasAnyClass,
+  todayIso,
   studios,
   templates,
   lastUsed,
   subsCount,
   autoOpenAdder,
-  theme,
-  weekLabel,
-  weekDateLabels,
   handle,
   visits,
   classCount,
@@ -39,16 +31,13 @@ export function ScheduleScreen({
   googleEmail,
 }: {
   classes: ClassDto[];
-  upcoming?: ClassDto[];
   hasAnyClass: boolean;
+  todayIso: string;
   studios: StudioDto[];
   templates: TemplateDto[];
   lastUsed: LastUsed;
   subsCount: number;
   autoOpenAdder: boolean;
-  theme: AppTheme;
-  weekLabel: string;
-  weekDateLabels: string[];
   handle: string;
   visits: number;
   classCount: number;
@@ -59,6 +48,7 @@ export function ScheduleScreen({
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
   const [profileOpen, setProfileOpen] = useState(false);
+  const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   const [toastMsg, toastOn, toast] = useToast();
 
   useEffect(() => {
@@ -85,12 +75,6 @@ export function ScheduleScreen({
   }, [toast]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
-  const byDay = useMemo(() => {
-    const g: ClassDto[][] = DAYS.map(() => []);
-    for (const c of classes) g[c.dayOfWeek]?.push(c);
-    for (const list of g) list.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-    return g;
-  }, [classes]);
 
   const edit = (c: ClassDto) => {
     setAdder({
@@ -108,63 +92,70 @@ export function ScheduleScreen({
     });
   };
 
-  // Blocks lays the week out as one flat, day-ordered stack of bands.
-  const flat = useMemo(() => byDay.flat(), [byDay]);
-
-  // Future-dated one-offs, grouped by their own date so a day with several
-  // classes shares one gutter header.
-  const upcomingGroups = useMemo(() => {
-    const groups: { date: string; items: ClassDto[] }[] = [];
-    for (const c of upcoming) {
-      if (!c.specificDate) continue;
-      const last = groups[groups.length - 1];
-      if (last && last.date === c.specificDate) last.items.push(c);
-      else groups.push({ date: c.specificDate, items: [c] });
+  // The infinite calendar: every date from today forward that has classes —
+  // weekly classes recur on their weekday, one-offs land on their date. The
+  // window grows as the trainer scrolls (see the loader below).
+  const days = useMemo(() => {
+    const start = new Date(`${todayIso}T00:00:00Z`);
+    const out: { iso: string; label: string; tabLabel: string; items: ClassDto[] }[] = [];
+    for (let i = 0; i < weeks * 7; i++) {
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() + i);
+      const iso = d.toISOString().slice(0, 10);
+      const dow = (d.getUTCDay() + 6) % 7; // 0 = Monday
+      const items = classes
+        .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+        .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      if (items.length) {
+        const full = fmtDateLong(iso); // "Mon, July 20"
+        const weekday = DAYS[dow];
+        out.push({
+          iso,
+          label: full,
+          tabLabel: `${weekday[0]}${weekday.slice(1).toLowerCase()} ${full.split(" ").pop()}`,
+          items,
+        });
+      }
     }
-    return groups;
-  }, [upcoming]);
+    return out;
+  }, [classes, todayIso, weeks]);
 
-  // One tab per day that has classes this week — "Mon 20" — anchoring to the
-  // day section below.
   const dayTabs = useMemo(
-    () =>
-      DAYS.flatMap((day, di) =>
-        byDay[di].length
-          ? [
-              {
-                id: `day-${di}`,
-                label: `${day[0]}${day.slice(1).toLowerCase()} ${weekDateLabels[di].split(" ").pop()}`,
-              },
-            ]
-          : [],
-      ),
-    [byDay, weekDateLabels],
+    () => days.map((d) => ({ id: `day-${d.iso}`, label: d.tabLabel })),
+    [days],
   );
+
+  // Load more weeks when the trainer nears the bottom (one load per render).
+  const loadingRef = useRef(false);
+  useEffect(() => {
+    loadingRef.current = false;
+  }, [weeks]);
+  useEffect(() => {
+    const stage = document.querySelector(".stage");
+    if (!stage) return;
+    const onScroll = () => {
+      if (loadingRef.current) return;
+      if (stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 800) {
+        loadingRef.current = true;
+        setWeeks((w) => Math.min(w + INITIAL_WEEKS, MAX_WEEKS));
+      }
+    };
+    stage.addEventListener("scroll", onScroll, { passive: true });
+    return () => stage.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <section className="screen">
-      <div className="appbar">
-        <Wordmark />
-        <div className="sub">My schedule</div>
-      </div>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
-        {theme === "poster" && (
-          <>
-            <div className="brandbar">
-              <Wordmark variant="ink" />
-              <button
-                className="usericon"
-                aria-label="Menu"
-                onClick={() => setProfileOpen(true)}
-              >
-                <Icon name="menu" size={28} />
-              </button>
-            </div>
-            <div className="calbar-title">My Calendar</div>
-          </>
-        )}
-        {theme === "classic" && <h1 className="screen-title">This week</h1>}
-        {classes.length === 0 && upcoming.length === 0 ? (
+        <div className="brandbar">
+          <Wordmark variant="ink" />
+          <button className="usericon" aria-label="Menu" onClick={() => setProfileOpen(true)}>
+            <Icon name="menu" size={28} />
+          </button>
+        </div>
+        <div className="calbar-title">My Calendar</div>
+
+        {!hasAnyClass ? (
           <div className="empty-block">
             <div className="glyph">MON–SUN</div>
             <h2>Your week is empty</h2>
@@ -176,158 +167,44 @@ export function ScheduleScreen({
               Add your first class
             </button>
           </div>
-        ) : theme === "poster" ? (
-          <>
-            {dayTabs.length > 0 && <DayTabs days={dayTabs} />}
-            <div className="ps-week">
-              {DAYS.map((day, di) =>
-                byDay[di].length ? (
-                  <div key={day} id={`day-${di}`} className="ps-daygroup">
-                    <div className="ps-daycol">{weekDateLabels[di]}</div>
-                    <div className="ps-daycards">
-                      {byDay[di].map((c) => {
-                        const studio = studioById.get(c.studioId);
-                        return (
-                          <button key={c.id} className="ps-event" onClick={() => edit(c)}>
-                            <span className="ps-etimecol">
-                              <span className="ps-etime">{fmtTime(c.startTime)}</span>
-                              <span className="ps-edur">{c.durationMin} min</span>
-                            </span>
-                            <span className="ps-ebody">
-                              <span className="ps-enm">{c.name}</span>
-                              {studio && <span className="ps-estudio">{studio.name}</span>}
-                            </span>
-                            <span className="ps-echev" aria-hidden="true">
-                              <Icon name="chevron_right" size={20} />
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null,
-              )}
-            </div>
-            {upcomingGroups.length > 0 && (
-              <>
-                <div className="ps-h2 ps-upnext">Up Next</div>
-                <div className="ps-week">
-                  {upcomingGroups.map(({ date, items }) => (
-                    <div key={date} className="ps-daygroup">
-                      <div className="ps-daycol">{fmtDateLong(date)}</div>
-                      <div className="ps-daycards">
-                        {items.map((c) => {
-                          const studio = studioById.get(c.studioId);
-                          return (
-                            <button key={c.id} className="ps-event" onClick={() => edit(c)}>
-                              <span className="ps-etimecol">
-                                <span className="ps-etime">{fmtTime(c.startTime)}</span>
-                                <span className="ps-edur">{c.durationMin} min</span>
-                              </span>
-                              <span className="ps-ebody">
-                                <span className="ps-enm">{c.name}</span>
-                                {studio && <span className="ps-estudio">{studio.name}</span>}
-                              </span>
-                              <span className="ps-echev" aria-hidden="true">
-                                <Icon name="chevron_right" size={20} />
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        ) : theme === "blocks" ? (
-          <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
-            <div className="bl-head">
-              <div className="eb">Week of {weekLabel}</div>
-              <h2>This week</h2>
-            </div>
-            {flat.map((c, idx) => {
-              const studio = studioById.get(c.studioId);
-              const bf = blocksFill(studio?.seq ?? 1);
-              const showDay = idx === 0 || flat[idx - 1].dayOfWeek !== c.dayOfWeek;
-              return (
-                <button
-                  key={c.id}
-                  className="bl-band"
-                  style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
-                  onClick={() => edit(c)}
-                >
-                  <span className="bl-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
-                  <span className="bl-body">
-                    <span className="bl-nm">{c.name}</span>
-                    <span className="bl-mt">
-                      {fmtTime(c.startTime)} · {c.durationMin} min
-                    </span>
-                    {studio && <span className="bl-loc">{studio.name}</span>}
-                  </span>
-                  <span className="bl-edit" aria-hidden="true">
-                    <Icon name="edit" size={15} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        ) : days.length === 0 ? (
+          <p className="ps-none">Nothing coming up — add a class to fill your calendar.</p>
         ) : (
-          <div className="weekgrid">
-            {DAYS.map((day, di) => (
-              <div key={day} className={`daycol${byDay[di].length ? "" : " nix"}`}>
-                <div className="daylabel">{day}</div>
-                {byDay[di].map((c) => {
-                  const studio = studioById.get(c.studioId);
-                  const p = palForSeq(studio?.seq ?? 1);
-                  const bf = blocksFill(studio?.seq ?? 1);
-                  return (
-                    <div
-                      key={c.id}
-                      className="class-card editable"
-                      role="button"
-                      tabIndex={0}
-                      style={{ ["--bbg" as string]: bf.bg, ["--bfg" as string]: bf.fg }}
-                      onClick={() => edit(c)}
-                      onKeyDown={(e) => e.key === "Enter" && edit(c)}
-                    >
-                      <div className="rail" style={{ background: p.rail }} />
-                      <div className="time">{fmtTime(c.startTime)}</div>
-                      <div className="body">
-                        <div className="name">{c.name}</div>
-                        <div className="meta">
-                          {c.durationMin} min
-                          {c.links.length
-                            ? ` · ${c.links.length} booking link${c.links.length > 1 ? "s" : ""}`
-                            : ""}
-                        </div>
-                        {studio && (
-                          <span className="loctag" style={{ background: p.bg, color: p.tx }}>
-                            <span className="swd" style={{ background: p.rail }} />
-                            {studio.name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="editrow">
+          <>
+            <DayTabs days={dayTabs} />
+            <div className="ps-week">
+              {days.map((d) => (
+                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
+                  <div className="ps-daycol">{d.label}</div>
+                  <div className="ps-daycards">
+                    {d.items.map((c) => {
+                      const studio = studioById.get(c.studioId);
+                      return (
                         <button
-                          className="iconbtn"
-                          aria-label="Edit class"
-                          title="Edit"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            edit(c);
-                          }}
+                          key={`${d.iso}-${c.id}`}
+                          className="ps-event"
+                          data-cid={c.id}
+                          onClick={() => edit(c)}
                         >
-                          <Icon name="edit" size={15} />
+                          <span className="ps-etimecol">
+                            <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                            <span className="ps-edur">{c.durationMin} min</span>
+                          </span>
+                          <span className="ps-ebody">
+                            <span className="ps-enm">{c.name}</span>
+                            {studio && <span className="ps-estudio">{studio.name}</span>}
+                          </span>
+                          <span className="ps-echev" aria-hidden="true">
+                            <Icon name="chevron_right" size={20} />
+                          </span>
                         </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

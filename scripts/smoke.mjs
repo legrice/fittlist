@@ -9,6 +9,19 @@ const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
 const cardCount = (pg) => pg.locator(".ps-card").count();
 const eventCount = (pg) => pg.locator(".ps-event").count();
+// The schedule is an infinite calendar: a class recurs across many weeks, so
+// count DISTINCT classes by their data-cid rather than rendered rows.
+const scheduleClasses = (pg) =>
+  pg.evaluate(() =>
+    new Set([...document.querySelectorAll(".ps-event[data-cid]")].map((e) => e.getAttribute("data-cid"))).size,
+  );
+const waitSchedule = (pg, n) =>
+  pg.waitForFunction(
+    (k) =>
+      new Set([...document.querySelectorAll(".ps-event[data-cid]")].map((e) => e.getAttribute("data-cid")))
+        .size === k,
+    n,
+  );
 // My page is now a bottom sheet reached from the user icon on the schedule.
 const openProfile = async (pg) => {
   await pg.goto(BASE + "/app");
@@ -67,8 +80,8 @@ if (!label.includes("Publish 2 classes") || !label.includes("MON, WED") || !labe
   fail("publish narration wrong: " + label);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
-if ((await page.locator(".daytab").count()) !== 2) fail("expected 2 day tabs (Mon, Wed)");
+await waitSchedule(page, 2);
+if ((await page.locator(".daytab").count()) < 2) fail("expected day tabs for the week's days");
 await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
 
@@ -83,11 +96,11 @@ await page.waitForFunction(() => {
 await page.getByRole("button", { name: "Fr", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
+await waitSchedule(page, 3);
 console.log("saved-class flow ok");
 
-// ---- edit in place: tap a card, prefilled with its day, saves without adding one
-await page.locator(".ps-event").first().click();
+// ---- edit in place: tap the Monday class, prefilled with its day, no new class
+await page.locator(".ps-daygroup", { hasText: "Mon," }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = await page.locator(".publishwrap .btn").textContent();
 if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
@@ -95,18 +108,18 @@ if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
 await page.getByRole("button", { name: "75 min" }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
+await waitSchedule(page, 3);
 console.log("edit ok");
 
-// ---- delete lives inside the edit sheet, behind a confirmation
-await page.locator(".ps-event").last().click();
+// ---- delete lives inside the edit sheet, behind a confirmation (delete Friday)
+await page.locator(".ps-daygroup", { hasText: "Fri," }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
 await page.getByText("Deleted", { exact: true }).waitFor();
-await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
+await waitSchedule(page, 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- My page as a dismissable bottom sheet from the user icon
@@ -196,9 +209,9 @@ if (!/Barbell Strength added Sat 6:00a at Ironbound Strength → fittlist\.co\/m
   fail("change email body wrong");
 console.log("publish notification ok");
 
-// delete (via edit sheet) -> removal email
-await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 3);
-await page.locator(".ps-event").last().click();
+// delete (via edit sheet) -> removal email (delete the Saturday class)
+await waitSchedule(page, 3);
+await page.locator(".ps-daygroup", { hasText: "Sat," }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
@@ -340,49 +353,54 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("share sheet ok (save + share + colours + X close)");
 
-// ================= dated classes: weekly default + one-time option =================
+// ================= dated classes: one-time option =================
 const pad = (n) => String(n).padStart(2, "0");
 const iso = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 const nowD = new Date();
 const dow0 = (nowD.getUTCDay() + 6) % 7; // 0 = Monday
 const monD = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth(), nowD.getUTCDate() - dow0));
-const inWeek = new Date(monD); inWeek.setUTCDate(monD.getUTCDate() + 5); // Sat this week
-const future = new Date(monD); future.setUTCDate(monD.getUTCDate() + 10); // next week
+const inWeekD = new Date(monD); inWeekD.setUTCDate(monD.getUTCDate() + 6); // Sun this week (in-week, >= today)
+const nextWeekD = new Date(monD); nextWeekD.setUTCDate(monD.getUTCDate() + 9); // next week
+
+// public "this week" count before adding any one-offs
+await page.goto(BASE + "/matt");
+await page.getByText("Coaching schedule · this week").waitFor();
+const pubBefore = await eventCount(page);
 
 await page.goto(BASE + "/app");
-const weekBefore = await eventCount(page);
+await page.waitForFunction(() => document.querySelectorAll(".ps-event[data-cid]").length > 0);
+const schedBefore = await scheduleClasses(page);
 
-// a one-off dated inside the current week shows in the main week
+// a one-off dated inside the current week
 await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
-await page.locator('input[type="date"]').fill(iso(inWeek));
+await page.locator('input[type="date"]').fill(iso(inWeekD));
 const oneLabel = await page.locator(".publishwrap .btn").textContent();
 if (!/^Publish · \w{3}, \w{3} \d+ · 6:00a$/.test(oneLabel.trim()))
   fail("one-off publish label wrong: " + oneLabel);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
-await page.waitForFunction((n) => document.querySelectorAll(".ps-event").length === n, weekBefore + 1);
+await waitSchedule(page, schedBefore + 1);
 console.log("one-off in-week ok");
 
-// a future-dated one-off lands in "Up Next", not the current week
+// a next-week one-off — shows on the infinite schedule, not on the public week
 await page.getByRole("button", { name: "Add class" }).click();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
-await page.locator('input[type="date"]').fill(iso(future));
+await page.locator('input[type="date"]').fill(iso(nextWeekD));
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
-await page.getByText("Up Next").waitFor();
-await page.waitForFunction((n) => document.querySelectorAll(".ps-event").length === n, weekBefore + 2);
-console.log("one-off future -> Up Next ok");
+await waitSchedule(page, schedBefore + 2);
+console.log("one-off future ok");
 
-// public page shows the in-week one-off but never the future one
+// public shows the in-week one-off but never the next-week one
 await page.goto(BASE + "/matt");
 await page.getByText("Coaching schedule · this week").waitFor();
-const pubCards = await eventCount(page);
-if (pubCards !== weekBefore + 1)
-  fail(`public should show weekly + in-week one-off only, got ${pubCards} (want ${weekBefore + 1})`);
+const pubAfter = await eventCount(page);
+if (pubAfter !== pubBefore + 1)
+  fail(`public should add only the in-week one-off, got ${pubAfter} (want ${pubBefore + 1})`);
 console.log("public excludes future one-off ok");
 
 await browser.close();

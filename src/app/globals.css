@@ -513,6 +513,7 @@ button.bl-band { cursor: pointer; }
 }
 .daytab.active { color: #191502; border-bottom-color: #191502; }
 .ps-daygroup { scroll-margin-top: 58px; }
+.ps-none { color: #8a8272; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark svg { height: 29px; width: auto; display: block; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 36px; letter-spacing: -.02em; line-height: 1;
