@@ -40,3 +40,21 @@ export function TabBar() {
     </nav>
   );
 }
+
+// Mobile: a sticky header with the wordmark and a Schedule/My page toggle,
+// sitting where each screen's page title used to be.
+export function TopNav({ theme }: { theme: string }) {
+  const pathname = usePathname();
+  return (
+    <div className="topnav">
+      <Wordmark variant={theme === "poster" ? "cloud" : "ink"} />
+      <nav className="pagetoggle" aria-label="Main">
+        {ITEMS.map((it) => (
+          <Link key={it.href} href={it.href} className={isActive(pathname, it.href) ? "active" : ""}>
+            {it.label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}

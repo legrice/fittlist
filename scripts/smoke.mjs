@@ -102,10 +102,10 @@ await page.getByText("Deleted", { exact: true }).waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length === 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
-// ---- My page tab (nav has no icons; current tab is plain text, other is a pill)
-await page.locator(".tabbar").getByText("My page").click();
+// ---- My page via the top toggle (active tab is the cream pill)
+await page.locator(".pagetoggle").getByText("My page").click();
 await page.getByText("Your link", { exact: true }).waitFor();
-await expect(page.getByRole("heading", { name: "My page" }).isVisible(), "my page shows title");
+await expect(page.locator(".pagetoggle a.active", { hasText: "My page" }).isVisible(), "toggle marks My page active");
 await expect(page.locator(".linkcard .url", { hasText: "fittlist.co/matt" }).isVisible(), "link card shows url");
 await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png" });
 

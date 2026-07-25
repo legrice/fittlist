@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { SideNav, TabBar } from "@/components/AppNav";
+import { SideNav, TopNav } from "@/components/AppNav";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const userId = await getSessionUserId();
@@ -14,8 +14,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="appshell" data-theme={user.theme}>
       <SideNav handle={user.handle} />
-      <div className="stage">{children}</div>
-      <TabBar />
+      <div className="stage">
+        <TopNav theme={user.theme} />
+        {children}
+      </div>
     </div>
   );
 }

@@ -99,7 +99,7 @@ export function ScheduleScreen({
         <Wordmark />
         <div className="sub">My schedule</div>
       </div>
-      <div className="pad" style={{ paddingTop: 24, paddingBottom: 110 }}>
+      <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         {theme === "classic" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 && upcoming.length === 0 ? (
           <div className="empty-block">
@@ -115,11 +115,6 @@ export function ScheduleScreen({
           </div>
         ) : theme === "poster" ? (
           <>
-            <div className="ps-brand">
-              <Wordmark variant="cloud" />
-              <span className="ps-tag">Mon–Sun</span>
-            </div>
-            <div className="ps-h2">Schedule</div>
             <div className="ps-week">
               {DAYS.map((day, di) =>
                 byDay[di].length ? (
