@@ -2,11 +2,19 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { LINK_LABELS, dowOfDate } from "@/lib/format";
 import { notifyScheduleChange } from "@/lib/notifier";
+import { syncUserToGoogle } from "@/lib/gcal";
+
+// Mirror the schedule to Google after the response is sent, so publishing stays
+// snappy. No-ops unless the trainer connected Google.
+function syncGoogleAfter(userId: string) {
+  after(() => syncUserToGoogle(userId).catch((err) => console.error("gcal sync failed", err)));
+}
 
 export type PublishInput = {
   name: string;
@@ -100,6 +108,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     console.error("schedule-change notify failed", err);
   }
 
+  syncGoogleAfter(userId);
   revalidatePath("/app");
   return { ok: true, count: days.length, notified };
 }
@@ -152,6 +161,7 @@ export async function deleteClass(
     console.error("schedule-change notify failed", err);
   }
 
+  syncGoogleAfter(userId);
   revalidatePath("/app");
   return { ok: true, notified };
 }

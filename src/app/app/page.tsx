@@ -3,6 +3,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { appTheme, fmtDateLong, mondayOfCurrentWeek, timeToMinutes, weekBucket } from "@/lib/format";
 import { visitsThisWeek } from "@/lib/visits";
+import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
@@ -34,6 +35,7 @@ export default async function SchedulePage({
       .where(eq(schema.users.id, userId)),
     visitsThisWeek(userId),
   ]);
+  const gconn = await isGoogleConnected(userId);
 
   const weekLabel = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "short",
@@ -114,6 +116,9 @@ export default async function SchedulePage({
       handle={user?.handle ?? ""}
       visits={visits}
       classCount={classRows.length}
+      googleConfigured={googleConfigured()}
+      googleConnected={gconn.connected}
+      googleEmail={gconn.email}
     />
   );
 }

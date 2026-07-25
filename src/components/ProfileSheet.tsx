@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -12,12 +13,18 @@ export function ProfileSheet({
   visits,
   subsCount,
   classCount,
+  googleConfigured,
+  googleConnected,
+  googleEmail,
   onClose,
 }: {
   handle: string;
   visits: number;
   subsCount: number;
   classCount: number;
+  googleConfigured: boolean;
+  googleConnected: boolean;
+  googleEmail: string | null;
   onClose: () => void;
 }) {
   const [toastMsg, toastOn, toast] = useToast();
@@ -27,16 +34,22 @@ export function ProfileSheet({
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
-  const [gcalUrl, setGcalUrl] = useState("");
+  const [connected, setConnected] = useState(googleConnected);
+  const [disconnecting, startDisconnect] = useTransition();
   const url = `fittlist.co/${handle}`;
 
-  // The subscribe feed lives at /api/cal/{handle}; build the client-side URLs
-  // once mounted (the deployed host isn't known at build time).
+  // The subscribe feed lives at /api/cal/{handle}; build the URL once mounted
+  // (the deployed host isn't known at build time). Used for Apple/Outlook.
   useEffect(() => {
-    const webcal = `webcal://${window.location.host}/api/cal/${handle}`;
-    setWebcalUrl(webcal);
-    setGcalUrl(`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`);
+    setWebcalUrl(`webcal://${window.location.host}/api/cal/${handle}`);
   }, [handle]);
+
+  const disconnectGcal = () =>
+    startDisconnect(async () => {
+      await disconnectGoogleAction();
+      setConnected(false);
+      toast("Google Calendar disconnected");
+    });
   const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${storyThemeId}`;
   const storyFileName = `fittlist-${handle}-${shareSpan}-${storyThemeId}.png`;
 
@@ -160,14 +173,31 @@ export function ProfileSheet({
               <span className="s">A story image with your link on it</span>
             </span>
           </button>
-          <a className="rowcta" href={gcalUrl || undefined} target="_blank" rel="noopener">
-            <span className="ig"><Icon name="event" size={22} /></span>
-            <span>
-              <span className="t">Add to Google Calendar</span>
-              <br />
-              <span className="s">Your classes, always in sync — one place for everything</span>
-            </span>
-          </a>
+          {googleConfigured &&
+            (connected ? (
+              <div className="rowcta gcal-on">
+                <span className="ig"><Icon name="event_available" size={22} /></span>
+                <span>
+                  <span className="t">Google Calendar connected</span>
+                  <br />
+                  <span className="s">
+                    {googleEmail ? `Syncing to ${googleEmail}` : "Your classes auto-sync on every change"}
+                  </span>
+                </span>
+                <button className="gcal-off" disabled={disconnecting} onClick={disconnectGcal}>
+                  {disconnecting ? "…" : "Disconnect"}
+                </button>
+              </div>
+            ) : (
+              <a className="rowcta" href="/api/google/connect">
+                <span className="ig"><Icon name="event" size={22} /></span>
+                <span>
+                  <span className="t">Connect Google Calendar</span>
+                  <br />
+                  <span className="s">Auto-sync your classes into your calendar</span>
+                </span>
+              </a>
+            ))}
           <button className="calcopy" onClick={copyCal}>
             Apple or Outlook? Copy your calendar feed link
           </button>

@@ -95,6 +95,20 @@ export const pageVisits = pgTable(
   (t) => [uniqueIndex("page_visits_trainer_date").on(t.trainerUserId, t.date)],
 );
 
+// One row per trainer who connected Google Calendar. We mirror their classes
+// into their calendar (one-way); syncedEventIds tracks the events we created so
+// a re-sync can clear and repopulate without touching their personal events.
+export const googleConnections = pgTable("google_connections", {
+  userId: uuid("user_id").primaryKey().references(() => users.id),
+  refreshToken: text("refresh_token").notNull(), // AES-256-GCM encrypted
+  calendarId: text("calendar_id").notNull().default("primary"),
+  timeZone: text("time_zone"),
+  email: text("email"),
+  syncedEventIds: jsonb("synced_event_ids").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const messageLog = pgTable("message_log", {
   id: uuid("id").primaryKey().defaultRandom(),
   toAddress: text("to_address").notNull(),

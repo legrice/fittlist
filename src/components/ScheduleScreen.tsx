@@ -33,6 +33,9 @@ export function ScheduleScreen({
   handle,
   visits,
   classCount,
+  googleConfigured,
+  googleConnected,
+  googleEmail,
 }: {
   classes: ClassDto[];
   upcoming?: ClassDto[];
@@ -48,6 +51,9 @@ export function ScheduleScreen({
   handle: string;
   visits: number;
   classCount: number;
+  googleConfigured: boolean;
+  googleConnected: boolean;
+  googleEmail: string | null;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -60,6 +66,22 @@ export function ScheduleScreen({
       window.history.replaceState(null, "", "/app");
     }
   }, [autoOpenAdder]);
+
+  // Returning from the Google OAuth flow -> confirm and open the profile.
+  useEffect(() => {
+    const g = new URLSearchParams(window.location.search).get("gcal");
+    if (!g) return;
+    const msg: Record<string, string> = {
+      connected: "Google Calendar connected — your classes are syncing",
+      denied: "Google connection cancelled",
+      noretoken: "Couldn't connect — try again and allow calendar access",
+      unconfigured: "Google Calendar isn't set up yet",
+      error: "Something went wrong connecting Google",
+    };
+    toast(msg[g] ?? "");
+    if (g === "connected") setProfileOpen(true);
+    window.history.replaceState(null, "", "/app");
+  }, [toast]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const byDay = useMemo(() => {
@@ -296,6 +318,9 @@ export function ScheduleScreen({
           visits={visits}
           subsCount={subsCount}
           classCount={classCount}
+          googleConfigured={googleConfigured}
+          googleConnected={googleConnected}
+          googleEmail={googleEmail}
           onClose={() => setProfileOpen(false)}
         />
       )}
