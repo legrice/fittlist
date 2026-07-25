@@ -408,3 +408,137 @@ button.bl-band { cursor: pointer; }
   flex: 1; padding: 10px 0; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--ol);
 }
 .themetoggle button.sel { background: var(--ink); color: #fff; }
+
+/* ============================================================
+   "Poster" theme — Ink palette. Saturated Exhaust ground, cream
+   cards floating on hard shadows, big Sienna day, green time pill,
+   peach info bar. Opt-in per trainer via [data-theme="poster"].
+   ============================================================ */
+[data-theme="poster"] {
+  --pg-ground: #191502; --pg-cream: #F7F2E8; --pg-day: #DD583A;
+  --pg-green: #CBD665; --pg-peach: #F4A574;
+}
+/* app chrome: ground fill, hide the classic appbar (poster renders its own brand) */
+[data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-ground); }
+[data-theme="poster"] .appbar { display: none; }
+[data-theme="poster"] .screen-title { color: var(--pg-cream); }
+[data-theme="poster"] .eyebrow { color: var(--pg-cream); }
+
+.ps-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.ps-brand .wordmark svg { height: 22px; width: auto; display: block; }
+.ps-tag {
+  margin-left: auto; background: transparent; color: var(--pg-cream);
+  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Space Mono', monospace;
+  font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px;
+}
+.ps-h2 {
+  font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
+  text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
+}
+.ps-card {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 20px;
+  box-shadow: 6px 6px 0 #000; padding: 15px 16px; margin-bottom: 16px;
+}
+button.ps-card { cursor: pointer; }
+.ps-day {
+  font-family: 'Archivo Black', sans-serif; font-size: 29px; line-height: .85; text-transform: uppercase;
+  color: var(--pg-day); min-width: 54px; flex-shrink: 0;
+}
+.ps-div { width: 2.5px; align-self: stretch; background: #191502; border-radius: 2px; opacity: .85; }
+.ps-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.ps-nm { font-family: 'Archivo Black', sans-serif; font-size: 18px; line-height: 1; text-transform: uppercase; letter-spacing: -.01em; }
+.ps-sub { font-size: 12.5px; font-weight: 700; margin-top: 5px; color: #5a5647; }
+.ps-book {
+  display: inline-block; margin-top: 8px; font-family: 'Space Mono', monospace; font-weight: 700;
+  font-size: 12px; color: #191502; border-bottom: 2.5px solid var(--pg-day); text-decoration: none;
+}
+.ps-time {
+  flex-shrink: 0; align-self: center; background: var(--pg-green); color: #191502; border: 2.5px solid #191502;
+  border-radius: 999px; box-shadow: 2px 2px 0 #191502; font-family: 'Space Mono', monospace;
+  font-weight: 700; font-size: 12px; padding: 6px 11px; white-space: nowrap;
+}
+.ps-infobar {
+  background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
+  box-shadow: 4px 4px 0 #000; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px;
+  text-align: center; padding: 12px; margin-top: 4px;
+}
+
+/* fab + tab bar */
+[data-theme="poster"] .fab {
+  background: var(--pg-green); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
+  box-shadow: 5px 5px 0 #000; font-family: 'Archivo Black', sans-serif; text-transform: uppercase;
+}
+[data-theme="poster"] .tabbar {
+  background: var(--pg-ground); border-top: none; gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+}
+[data-theme="poster"] .tabbar a {
+  flex-direction: row; gap: 7px; border: 2.5px solid var(--pg-cream); border-radius: 14px;
+  color: var(--pg-cream); font-family: 'Archivo Black', sans-serif; font-size: 11px;
+  text-transform: uppercase; padding: 11px 0;
+}
+[data-theme="poster"] .tabbar a.active { background: var(--pg-cream); color: var(--pg-ground); }
+[data-theme="poster"] .tabbar a.active .ico { color: var(--pg-ground); }
+
+/* My page: sticker stats, link card, rows, toggle */
+[data-theme="poster"] .stat {
+  background: var(--pg-cream); border: 2.5px solid #191502; border-radius: 16px; box-shadow: 4px 4px 0 #000; color: #191502;
+}
+[data-theme="poster"] .stat .n { color: var(--pg-day); }
+[data-theme="poster"] .stat .l, [data-theme="poster"] .stat .d { color: #5a5647; }
+[data-theme="poster"] .linkcard { border: 2.5px solid #191502; box-shadow: 6px 6px 0 #000; }
+[data-theme="poster"] .rowcta {
+  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 16px; box-shadow: 5px 5px 0 #000;
+}
+[data-theme="poster"] .rowcta .s { color: #5a5647; }
+[data-theme="poster"] .themetoggle { background: transparent; padding: 0; gap: 8px; }
+[data-theme="poster"] .themetoggle button {
+  border: 2.5px solid var(--pg-cream); border-radius: 999px; color: var(--pg-cream);
+}
+[data-theme="poster"] .themetoggle button.sel { background: var(--pg-green); color: #191502; border-color: #191502; }
+
+/* green sticker for the primary action everywhere */
+[data-theme="poster"] .btn.si {
+  background: var(--pg-green); color: #191502; border: 2.5px solid #191502; box-shadow: 4px 4px 0 #191502;
+}
+
+/* the adder sheet + controls */
+[data-theme="poster"] .sheet { border: 2.5px solid #191502; box-shadow: 6px 6px 0 #000; }
+[data-theme="poster"] .adder input[type=text], [data-theme="poster"] .adder input[type=url],
+[data-theme="poster"] .searchbox input, [data-theme="poster"] .linkrow input,
+[data-theme="poster"] .linkrow select, [data-theme="poster"] #ntEmail {
+  border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502;
+}
+[data-theme="poster"] .chip { border: 2.5px solid #191502; box-shadow: 2px 2px 0 #191502; }
+[data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
+[data-theme="poster"] .daypick button { border: 2.5px solid #191502; box-shadow: 2px 2px 0 #191502; border-radius: 12px; }
+[data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
+[data-theme="poster"] .studio-sel { border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502; }
+
+/* public page: ground bg, cream hero card, green CTA, cloud footer */
+[data-theme="poster"].pub { background: var(--pg-ground); display: block; }
+[data-theme="poster"] .pubhero {
+  background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 22px;
+  box-shadow: 6px 6px 0 #000; margin: 18px 18px 0; padding: 18px 16px; position: static; width: auto; min-height: 0;
+}
+[data-theme="poster"] .pubhero .eyebrow { color: #5a5647; }
+[data-theme="poster"] .pubhero .big { color: var(--pg-day); text-transform: uppercase; }
+[data-theme="poster"] .pubhero .gyms { color: #5a5647; }
+[data-theme="poster"] .pubbody { padding: 16px 18px 120px; }
+[data-theme="poster"] .madewith { color: var(--pg-cream); }
+[data-theme="poster"] .madewith a { color: var(--pg-green); }
+[data-theme="poster"] .heronotify { display: none; }
+[data-theme="poster"] .notifybar {
+  display: block; background: var(--pg-ground); border-top: none;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+}
+[data-theme="poster"] .notifybar .btn.si {
+  background: var(--pg-green); color: #191502; border: 2.5px solid #191502; box-shadow: 4px 4px 0 #000;
+}
+@media (min-width: 940px) {
+  [data-theme="poster"].pub { flex-direction: column; }
+  [data-theme="poster"] .pubhero { position: static; width: auto; }
+  [data-theme="poster"] .heronotify { display: none; }
+  [data-theme="poster"] .notifybar { display: block; }
+}

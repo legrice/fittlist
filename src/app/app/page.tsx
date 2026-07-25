@@ -27,7 +27,10 @@ export default async function SchedulePage({
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.trainerUserId, userId), isNull(schema.subscribers.optedOutAt))),
-    db.select({ theme: schema.users.theme }).from(schema.users).where(eq(schema.users.id, userId)),
+    db
+      .select({ theme: schema.users.theme, handle: schema.users.handle })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId)),
   ]);
 
   const weekLabel = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -80,6 +83,7 @@ export default async function SchedulePage({
       autoOpenAdder={add === "1"}
       theme={appTheme(user?.theme)}
       weekLabel={weekLabel}
+      handle={user?.handle ?? ""}
     />
   );
 }
