@@ -19,9 +19,9 @@ export function palForSeq(seq: number) {
   return PALETTES[Math.max(0, seq - 1) % PALETTES.length];
 }
 
-export type AppTheme = "classic" | "blocks";
+export type AppTheme = "classic" | "blocks" | "poster";
 export function appTheme(v: string | null | undefined): AppTheme {
-  return v === "blocks" ? "blocks" : "classic";
+  return v === "blocks" ? "blocks" : v === "poster" ? "poster" : "classic";
 }
 
 // "Blocks" look: vivid full-bleed color fields, one per studio (deterministic

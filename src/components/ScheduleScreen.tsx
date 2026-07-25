@@ -18,6 +18,7 @@ export function ScheduleScreen({
   autoOpenAdder,
   theme,
   weekLabel,
+  handle,
 }: {
   classes: ClassDto[];
   studios: StudioDto[];
@@ -27,6 +28,7 @@ export function ScheduleScreen({
   autoOpenAdder: boolean;
   theme: AppTheme;
   weekLabel: string;
+  handle: string;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -72,7 +74,7 @@ export function ScheduleScreen({
         <div className="sub">My schedule</div>
       </div>
       <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
-        {theme !== "blocks" && <h1 className="screen-title">This week</h1>}
+        {theme === "classic" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 ? (
           <div className="empty-block">
             <div className="glyph">MON–SUN</div>
@@ -85,6 +87,34 @@ export function ScheduleScreen({
               Add your first class
             </button>
           </div>
+        ) : theme === "poster" ? (
+          <>
+            <div className="ps-brand">
+              <Wordmark variant="cloud" />
+              <span className="ps-tag">Mon–Sun</span>
+            </div>
+            <div className="ps-h2">
+              This
+              <br />
+              Week
+            </div>
+            {flat.map((c, idx) => {
+              const studio = studioById.get(c.studioId);
+              const showDay = idx === 0 || flat[idx - 1].dayOfWeek !== c.dayOfWeek;
+              return (
+                <button key={c.id} className="ps-card" onClick={() => edit(c)}>
+                  <span className="ps-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
+                  <span className="ps-div" />
+                  <span className="ps-body">
+                    <span className="ps-nm">{c.name}</span>
+                    {studio && <span className="ps-sub">{studio.name}</span>}
+                  </span>
+                  <span className="ps-time">{fmtTime(c.startTime)}</span>
+                </button>
+              );
+            })}
+            <div className="ps-infobar">fittlist.co/{handle}</div>
+          </>
         ) : theme === "blocks" ? (
           <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
             <div className="bl-head">

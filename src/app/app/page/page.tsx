@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { appTheme } from "@/lib/format";
 import { visitsThisWeek } from "@/lib/visits";
 import { MyPageScreen } from "@/components/MyPageScreen";
 
@@ -29,7 +30,7 @@ export default async function MyPage() {
       visits={visits}
       subsCount={subsCount}
       classCount={classCount}
-      theme={user.theme === "blocks" ? "blocks" : "classic"}
+      theme={appTheme(user.theme)}
     />
   );
 }

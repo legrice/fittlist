@@ -358,11 +358,32 @@ await page.goto(BASE + "/matt");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="blocks"] .bl-band'));
 await page.screenshot({ path: SCRATCH + "/shot-blocks-public.png", fullPage: true });
 console.log("blocks theme ok (bands + dark header + edit)");
-// revert to classic
+
+// Poster theme: the Ink poster look across app + public
 await page.goto(BASE + "/app/page");
-await page.getByRole("button", { name: "Classic", exact: true }).click();
-await page.getByText("Classic look on").waitFor();
-await page.waitForFunction(() => !document.querySelector('.appshell[data-theme="blocks"]'));
+await page.getByRole("button", { name: "Poster", exact: true }).click();
+await page.getByText("Poster look on").waitFor();
+await page.goto(BASE + "/app");
+await page.waitForFunction(() => document.querySelector('.appshell[data-theme="poster"] .ps-card'));
+if (!(await page.getByText("fittlist.co/matt").first().isVisible())) fail("poster infobar missing");
+await page.goto(BASE + "/matt");
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-card'));
+console.log("poster theme ok (app + public)");
+
+// revert to classic (retry: toggle click can race hydration)
+let reverted = false;
+for (let i = 0; i < 4 && !reverted; i++) {
+  await page.goto(BASE + "/app/page");
+  await page.waitForTimeout(400);
+  await page
+    .getByRole("button", { name: "Classic", exact: true })
+    .click()
+    .catch(() => {});
+  await page.waitForTimeout(600);
+  await page.goto(BASE + "/app");
+  reverted = (await page.locator('.appshell[data-theme="classic"]').count()) > 0;
+}
+if (!reverted) fail("could not revert to classic");
 console.log("revert to classic ok");
 
 await browser.close();

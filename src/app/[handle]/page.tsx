@@ -79,6 +79,35 @@ export default async function PublicPage({ params }: Props) {
               you&rsquo;ll get an email the moment they do.
             </p>
           </div>
+        ) : user.theme === "poster" ? (
+          byDay.flat().map((c, idx, arr) => {
+            const s = studioById.get(c.studioId);
+            const showDay = idx === 0 || arr[idx - 1].dayOfWeek !== c.dayOfWeek;
+            return (
+              <div key={c.id} className="ps-card">
+                <span className="ps-day">{showDay ? DAYS[c.dayOfWeek] : ""}</span>
+                <span className="ps-div" />
+                <span className="ps-body">
+                  <span className="ps-nm">{c.name}</span>
+                  <span className="ps-sub">
+                    {c.durationMin} min{s ? ` · ${s.address}` : ""}
+                  </span>
+                  {c.links.map((l, i) => (
+                    <a
+                      key={i}
+                      className="ps-book"
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener nofollow"
+                    >
+                      Book via {l.label} ↗
+                    </a>
+                  ))}
+                </span>
+                <span className="ps-time">{fmtTime(c.startTime)}</span>
+              </div>
+            );
+          })
         ) : user.theme === "blocks" ? (
           <div className="blweek" style={{ marginLeft: -18, marginRight: -18 }}>
             {byDay.flat().map((c, idx, arr) => {
@@ -170,7 +199,7 @@ export default async function PublicPage({ params }: Props) {
         )}
         <div className="madewith">
           Made with{" "}
-          <Wordmark className="mw-logo" />
+          <Wordmark variant={user.theme === "poster" ? "cloud" : "ink"} className="mw-logo" />
           {" "}— coach classes? <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>

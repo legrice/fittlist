@@ -25,12 +25,17 @@ export function MyPageScreen({
   const [themePending, startThemeTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
+  const THEME_LABEL: Record<AppTheme, string> = {
+    classic: "Classic",
+    blocks: "Blocks",
+    poster: "Poster",
+  };
   const chooseTheme = (t: AppTheme) => {
     if (t === theme) return;
     startThemeTransition(async () => {
       await setTheme(t);
       router.refresh();
-      toast(t === "blocks" ? "Blocks look on" : "Classic look on");
+      toast(`${THEME_LABEL[t]} look on`);
     });
   };
   const [shareOpen, setShareOpen] = useState(false);
@@ -136,20 +141,16 @@ export function MyPageScreen({
           Page style
         </div>
         <div className="themetoggle" role="group" aria-label="Page style">
-          <button
-            className={theme === "classic" ? "sel" : ""}
-            disabled={themePending}
-            onClick={() => chooseTheme("classic")}
-          >
-            Classic
-          </button>
-          <button
-            className={theme === "blocks" ? "sel" : ""}
-            disabled={themePending}
-            onClick={() => chooseTheme("blocks")}
-          >
-            Blocks
-          </button>
+          {(["classic", "blocks", "poster"] as AppTheme[]).map((t) => (
+            <button
+              key={t}
+              className={theme === t ? "sel" : ""}
+              disabled={themePending}
+              onClick={() => chooseTheme(t)}
+            >
+              {THEME_LABEL[t]}
+            </button>
+          ))}
         </div>
 
         <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
