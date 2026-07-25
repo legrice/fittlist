@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { setTheme } from "@/app/actions/theme";
-import { STORY_THEMES, type AppTheme, type StoryThemeId } from "@/lib/format";
+import { useEffect, useState } from "react";
+import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
@@ -13,31 +11,13 @@ export function MyPageScreen({
   visits,
   subsCount,
   classCount,
-  theme,
 }: {
   handle: string;
   visits: number;
   subsCount: number;
   classCount: number;
-  theme: AppTheme;
 }) {
-  const router = useRouter();
-  const [themePending, startThemeTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-
-  const THEME_LABEL: Record<AppTheme, string> = {
-    classic: "Classic",
-    blocks: "Blocks",
-    poster: "Poster",
-  };
-  const chooseTheme = (t: AppTheme) => {
-    if (t === theme) return;
-    startThemeTransition(async () => {
-      await setTheme(t);
-      router.refresh();
-      toast(`${THEME_LABEL[t]} look on`);
-    });
-  };
   const [shareOpen, setShareOpen] = useState(false);
   const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
   const [storyThemeId, setStoryThemeId] = useState<StoryThemeId>("iron");
@@ -137,22 +117,6 @@ export function MyPageScreen({
               : "Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale."}
           </div>
         </div>
-        <div className="eyebrow" style={{ marginTop: 20 }}>
-          Page style
-        </div>
-        <div className="themetoggle" role="group" aria-label="Page style">
-          {(["classic", "blocks", "poster"] as AppTheme[]).map((t) => (
-            <button
-              key={t}
-              className={theme === t ? "sel" : ""}
-              disabled={themePending}
-              onClick={() => chooseTheme(t)}
-            >
-              {THEME_LABEL[t]}
-            </button>
-          ))}
-        </div>
-
         <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
           <span className="ig"><Icon name="visibility" size={22} /></span>
           <span>

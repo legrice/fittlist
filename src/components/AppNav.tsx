@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
 const ITEMS = [
-  { href: "/app", ico: "view_week", label: "Schedule" },
-  { href: "/app/page", ico: "person", label: "My page" },
+  { href: "/app", label: "Schedule" },
+  { href: "/app/page", label: "My page" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -21,7 +20,6 @@ export function SideNav({ handle }: { handle: string }) {
       <Wordmark />
       {ITEMS.map((it) => (
         <Link key={it.href} href={it.href} className={isActive(pathname, it.href) ? "active" : ""}>
-          <span className="ico"><Icon name={it.ico} size={18} /></span>
           {it.label}
         </Link>
       ))}
@@ -36,7 +34,6 @@ export function TabBar() {
     <nav className="tabbar" aria-label="Main">
       {ITEMS.map((it) => (
         <Link key={it.href} href={it.href} className={isActive(pathname, it.href) ? "active" : ""}>
-          <span className="ico"><Icon name={it.ico} size={18} /></span>
           {it.label}
         </Link>
       ))}
