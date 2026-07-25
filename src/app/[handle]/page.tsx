@@ -17,6 +17,7 @@ import {
 } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
+import { Icon } from "@/components/Icon";
 import { NotifyCta } from "@/components/NotifyCta";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -109,25 +110,16 @@ export default async function PublicPage({ params }: Props) {
                     {byDay[di].map((c) => {
                       const s = studioById.get(c.studioId);
                       return (
-                        <div key={c.id} className="ps-classrow">
-                          <span className="ps-time">{fmtTime(c.startTime)}</span>
-                          <div className="ps-card">
-                            <span className="ps-nm">{c.name}</span>
-                            {s && <span className="ps-sub">{s.name}</span>}
-                            {s && <span className="ps-addr">{s.address}</span>}
-                            {c.links.map((l, i) => (
-                              <a
-                                key={i}
-                                className="ps-book"
-                                href={l.url}
-                                target="_blank"
-                                rel="noopener nofollow"
-                              >
-                                Book via {l.label} ↗
-                              </a>
-                            ))}
-                          </div>
-                        </div>
+                        <Link key={c.id} className="ps-event" href={`/${handle}/${c.id}`}>
+                          <span className="ps-etime">{fmtTime(c.startTime)}</span>
+                          <span className="ps-ebody">
+                            <span className="ps-enm">{c.name}</span>
+                            {s && <span className="ps-estudio">{s.name}</span>}
+                          </span>
+                          <span className="ps-echev" aria-hidden="true">
+                            <Icon name="chevron_right" size={20} />
+                          </span>
+                        </Link>
                       );
                     })}
                   </div>
@@ -226,7 +218,7 @@ export default async function PublicPage({ params }: Props) {
         )}
         <div className="madewith">
           Made with{" "}
-          <Wordmark variant={user.theme === "poster" ? "cloud" : "ink"} className="mw-logo" />
+          <Wordmark variant="ink" className="mw-logo" />
           {" "}— coach classes? <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>

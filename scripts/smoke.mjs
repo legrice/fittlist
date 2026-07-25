@@ -120,12 +120,20 @@ await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png" });
 // ---- public page (mobile) + subscribe
 await page.goto(BASE + "/matt");
 await page.getByText("Coaching schedule · this week").waitFor();
-await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-card'));
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await expect(page.getByText("Barbell Strength").first().isVisible(), "public shows class");
-await expect(page.getByText("143 Newark Ave, Jersey City").first().isVisible(), "public shows address");
-await expect(page.getByText("Book via Website ↗").first().isVisible(), "public shows booking link");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
+
+// ---- each event taps through to its own booking page
+await page.locator(".ps-event").first().click();
+await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
+await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event page shows address");
+await expect(page.getByText("Book via Website ↗").isVisible(), "event page shows booking link");
+await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });
+await page.locator(".evback").click();
+await page.getByText("Coaching schedule · this week").waitFor();
+console.log("event page ok");
 
 await page.locator(".notifybar .btn").click();
 await page.getByRole("heading", { name: "Get an email when the schedule changes" }).waitFor();
@@ -151,7 +159,7 @@ await page.goto(BASE + "/app");
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length >= 1);
 await page.screenshot({ path: SCRATCH + "/shot-desktop-schedule.png" });
 await page.goto(BASE + "/matt");
-await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-card'));
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await page.screenshot({ path: SCRATCH + "/shot-desktop-public.png" });
 console.log("desktop ok");
 
@@ -355,7 +363,7 @@ console.log("one-off future -> Up Next ok");
 // public page shows the in-week one-off but never the future one
 await page.goto(BASE + "/matt");
 await page.getByText("Coaching schedule · this week").waitFor();
-const pubCards = await cardCount(page);
+const pubCards = await eventCount(page);
 if (pubCards !== weekBefore + 1)
   fail(`public should show weekly + in-week one-off only, got ${pubCards} (want ${weekBefore + 1})`);
 console.log("public excludes future one-off ok");
