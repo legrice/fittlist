@@ -312,7 +312,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   bottom: calc(22px + env(safe-area-inset-bottom));
   width: 64px; height: 64px; padding: 0; border-radius: 999px;
   font-weight: 700; font-size: 36px; line-height: 1;
-  box-shadow: 0 8px 22px rgba(221, 88, 58, .35);
+  box-shadow: 0 6px 18px rgba(25, 21, 2, .20);
   display: flex; align-items: center; justify-content: center;
 }
 .toast {
@@ -473,7 +473,7 @@ button.bl-band { cursor: pointer; }
    ============================================================ */
 [data-theme="poster"] {
   --pg-ground: #191502; --pg-cream: #F7F2E8; --pg-day: #DD583A;
-  --pg-green: #CBD665; --pg-peach: #F4A574;
+  --pg-green: #C6F23C; --pg-peach: #F4A574;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
 [data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-cream); }
@@ -569,8 +569,7 @@ button.ps-card { cursor: pointer; }
 
 /* fab + tab bar */
 [data-theme="poster"] .fab {
-  background: var(--pg-green); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
- font-family: 'Archivo Black', sans-serif; text-transform: uppercase;
+  background: var(--pg-green); color: #191502; border: none; border-radius: 999px;
 }
 [data-theme="poster"] .tabbar {
   background: var(--pg-ground); border-top: none; gap: 12px;
