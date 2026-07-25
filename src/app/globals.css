@@ -641,6 +641,17 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .madewith { color: #5a5647; }
 [data-theme="poster"] .madewith a { color: var(--pg-day); }
 
+/* owner-only "you're previewing" bar with a way back to the account */
+.previewbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--ink); color: var(--pg-cream);
+  padding: calc(9px + env(safe-area-inset-top)) 16px 9px;
+  font-size: 13px; font-weight: 700;
+}
+.previewbar .pv-eye { vertical-align: -3px; margin-right: 3px; }
+.previewbar .previewback { color: var(--pg-green); text-decoration: none; font-weight: 700; white-space: nowrap; }
+
 /* per-event booking page */
 .evpage { min-height: 100dvh; }
 .evwrap {

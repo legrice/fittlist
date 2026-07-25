@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, mondayOfCurrentWeek } from "@/lib/format";
+import { getSessionUserId } from "@/lib/session";
+import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -40,9 +42,20 @@ export default async function EventPage({ params }: Props) {
   const mapsUrl = studio
     ? `https://maps.google.com/?q=${encodeURIComponent(`${studio.name}, ${studio.address}`)}`
     : null;
+  const isOwner = (await getSessionUserId()) === user.id;
 
   return (
     <div className="pub evpage" data-theme={user.theme}>
+      {isOwner && (
+        <div className="previewbar">
+          <span>
+            <Icon name="visibility" size={16} className="pv-eye" /> Previewing your page
+          </span>
+          <Link className="previewback" href="/app">
+            ← Back to your account
+          </Link>
+        </div>
+      )}
       <div className="evwrap">
         <Link className="evback" href={`/${handle}`}>
           ← {user.name}&rsquo;s week

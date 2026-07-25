@@ -82,8 +82,20 @@ export default async function PublicPage({ params }: Props) {
     return fmtDateLong(d.toISOString().slice(0, 10));
   });
 
+  const isOwner = viewerId === user.id;
+
   return (
     <div className="pub screen" data-theme={user.theme}>
+      {isOwner && (
+        <div className="previewbar">
+          <span>
+            <Icon name="visibility" size={16} className="pv-eye" /> Previewing your page
+          </span>
+          <Link className="previewback" href="/app">
+            ← Back to your account
+          </Link>
+        </div>
+      )}
       <div className="pubhero">
         <div className="eyebrow">Coaching schedule · this week</div>
         <div className="big">{user.name}</div>

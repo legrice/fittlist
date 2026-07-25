@@ -123,6 +123,8 @@ await page.getByText("Coaching schedule · this week").waitFor();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await expect(page.getByText("Barbell Strength").first().isVisible(), "public shows class");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
+// owner viewing their own page sees the preview bar with a way back
+await expect(page.locator(".previewbar", { hasText: "Previewing your page" }).isVisible(), "owner sees preview bar");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
 // ---- each event taps through to its own booking page
@@ -240,6 +242,7 @@ const anonPage = await anon.newPage();
 anonPage.setDefaultTimeout(10000);
 await anonPage.goto(BASE + "/matt");
 await anonPage.getByText("Coaching schedule · this week").waitFor();
+if ((await anonPage.locator(".previewbar").count()) !== 0) fail("visitors must not see the preview bar");
 await anonPage.goto(BASE + "/matt");
 await anonPage.getByText("Coaching schedule · this week").waitFor();
 
