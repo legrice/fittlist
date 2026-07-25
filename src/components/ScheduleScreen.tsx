@@ -117,7 +117,7 @@ export function ScheduleScreen({
                 aria-label="Your page"
                 onClick={() => setProfileOpen(true)}
               >
-                <Icon name="person" size={22} />
+                <Icon name="person" size={28} />
               </button>
             </div>
             <div className="calbar-title">My Calendar</div>

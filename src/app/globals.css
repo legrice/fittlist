@@ -306,8 +306,8 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 
 .fab {
   position: fixed; right: 18px; z-index: 20; background: var(--si); color: #fff;
-  /* clear the bottom tab bar (~64px) + the phone's home-indicator inset */
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  /* no bottom nav anymore — sit near the bottom, clearing the home indicator */
+  bottom: calc(22px + env(safe-area-inset-bottom));
   width: 64px; height: 64px; padding: 0; border-radius: 999px;
   font-weight: 700; font-size: 36px; line-height: 1;
   box-shadow: 0 8px 22px rgba(221, 88, 58, .35);
@@ -502,11 +502,10 @@ button.bl-band { cursor: pointer; }
   color: #191502; margin: 8px 0 14px;
 }
 .usericon {
-  flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; box-shadow: 3px 3px 0 #000;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: transparent; color: #191502; border: none; box-shadow: none; padding: 4px;
 }
-.usericon:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #000; }
+.usericon:active { opacity: .6; }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day sits on top as a section title; the day's classes stack full-width below */
 .ps-week { display: flex; flex-direction: column; gap: 22px; }
