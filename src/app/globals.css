@@ -261,7 +261,9 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .dangerzone .keep { display: block; margin: 12px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 
 .fab {
-  position: fixed; right: 18px; bottom: 76px; z-index: 10; background: var(--si); color: #fff;
+  position: fixed; right: 18px; z-index: 20; background: var(--si); color: #fff;
+  /* clear the bottom tab bar (~64px) + the phone's home-indicator inset */
+  bottom: calc(88px + env(safe-area-inset-bottom));
   font-weight: 700; font-size: 14px; padding: 14px 20px; border-radius: 999px;
   box-shadow: 0 8px 22px rgba(221, 88, 58, .35); display: flex; align-items: center; gap: 8px;
 }
