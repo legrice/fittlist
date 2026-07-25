@@ -486,6 +486,12 @@ button.bl-band { cursor: pointer; }
   color: var(--pg-cream);
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* time sits in a left gutter beside each class, echoing the old date column */
+.ps-classrow { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
+.ps-time {
+  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
+}
 
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;

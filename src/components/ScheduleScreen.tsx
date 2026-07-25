@@ -9,7 +9,6 @@ import {
   fmtTime,
   domOfDate,
   dowOfDate,
-  fmtDate,
   palForSeq,
   timeToMinutes,
 } from "@/lib/format";
@@ -138,13 +137,13 @@ export function ScheduleScreen({
                       {byDay[di].map((c) => {
                         const studio = studioById.get(c.studioId);
                         return (
-                          <button key={c.id} className="ps-card" onClick={() => edit(c)}>
-                            <span className="ps-nm">{c.name}</span>
-                            <span className="ps-sub">
-                              {fmtTime(c.startTime)}
-                              {studio ? ` at ${studio.name}` : ""}
-                            </span>
-                          </button>
+                          <div key={c.id} className="ps-classrow">
+                            <span className="ps-time">{fmtTime(c.startTime)}</span>
+                            <button className="ps-card" onClick={() => edit(c)}>
+                              <span className="ps-nm">{c.name}</span>
+                              {studio && <span className="ps-sub">{studio.name}</span>}
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -166,13 +165,13 @@ export function ScheduleScreen({
                         {items.map((c) => {
                           const studio = studioById.get(c.studioId);
                           return (
-                            <button key={c.id} className="ps-card" onClick={() => edit(c)}>
-                              <span className="ps-nm">{c.name}</span>
-                              <span className="ps-sub">
-                                {fmtDate(c.specificDate!)} · {fmtTime(c.startTime)}
-                                {studio ? ` at ${studio.name}` : ""}
-                              </span>
-                            </button>
+                            <div key={c.id} className="ps-classrow">
+                              <span className="ps-time">{fmtTime(c.startTime)}</span>
+                              <button className="ps-card" onClick={() => edit(c)}>
+                                <span className="ps-nm">{c.name}</span>
+                                {studio && <span className="ps-sub">{studio.name}</span>}
+                              </button>
+                            </div>
                           );
                         })}
                       </div>
