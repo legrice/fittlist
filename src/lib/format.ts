@@ -118,6 +118,16 @@ export function fmtDate(iso: string): string {
   });
 }
 
+/** "2026-07-20" -> "Tue, July 20", UTC — one clean line for a day heading. */
+export function fmtDateLong(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /** Where a one-off falls relative to the current Mon–Sun week.
     Weekly classes (specificDate null) always show → "current". */
 export function weekBucket(

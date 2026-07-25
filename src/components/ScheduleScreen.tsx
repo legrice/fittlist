@@ -7,8 +7,7 @@ import {
   type AppTheme,
   blocksFill,
   fmtTime,
-  domOfDate,
-  dowOfDate,
+  fmtDateLong,
   palForSeq,
   timeToMinutes,
 } from "@/lib/format";
@@ -29,7 +28,7 @@ export function ScheduleScreen({
   autoOpenAdder,
   theme,
   weekLabel,
-  weekDates,
+  weekDateLabels,
 }: {
   classes: ClassDto[];
   upcoming?: ClassDto[];
@@ -41,7 +40,7 @@ export function ScheduleScreen({
   autoOpenAdder: boolean;
   theme: AppTheme;
   weekLabel: string;
-  weekDates: number[];
+  weekDateLabels: string[];
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -120,19 +119,12 @@ export function ScheduleScreen({
               <Wordmark variant="cloud" />
               <span className="ps-tag">Mon–Sun</span>
             </div>
-            <div className="ps-h2">
-              This
-              <br />
-              Week
-            </div>
+            <div className="ps-h2">Schedule</div>
             <div className="ps-week">
               {DAYS.map((day, di) =>
                 byDay[di].length ? (
                   <div key={day} className="ps-daygroup">
-                    <div className="ps-daycol">
-                      <span className="ps-dow">{day}</span>
-                      <span className="ps-date">{weekDates[di]}</span>
-                    </div>
+                    <div className="ps-daycol">{weekDateLabels[di]}</div>
                     <div className="ps-daycards">
                       {byDay[di].map((c) => {
                         const studio = studioById.get(c.studioId);
@@ -157,10 +149,7 @@ export function ScheduleScreen({
                 <div className="ps-week">
                   {upcomingGroups.map(({ date, items }) => (
                     <div key={date} className="ps-daygroup">
-                      <div className="ps-daycol">
-                        <span className="ps-dow">{DAYS[dowOfDate(date)]}</span>
-                        <span className="ps-date">{domOfDate(date)}</span>
-                      </div>
+                      <div className="ps-daycol">{fmtDateLong(date)}</div>
                       <div className="ps-daycards">
                         {items.map((c) => {
                           const studio = studioById.get(c.studioId);

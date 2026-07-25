@@ -87,7 +87,7 @@ export function MyPageScreen({
         <div className="sub">My page</div>
       </div>
       <div className="pad" style={{ paddingTop: 24, paddingBottom: 110 }}>
-        <h1 className="screen-title">{url}</h1>
+        <h1 className="ps-h2">My page</h1>
         <div className="statgrid">
           <div className="stat">
             <div className="n">{visits}</div>

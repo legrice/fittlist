@@ -1,7 +1,7 @@
 import { desc, eq, isNull, and } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { appTheme, mondayOfCurrentWeek, timeToMinutes, weekBucket } from "@/lib/format";
+import { appTheme, fmtDateLong, mondayOfCurrentWeek, timeToMinutes, weekBucket } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
@@ -38,12 +38,12 @@ export default async function SchedulePage({
     day: "numeric",
     timeZone: "UTC",
   });
-  // Day-of-month for each weekday (Mon..Sun) of the current week — shown in the
-  // schedule gutter. Computed server-side to avoid hydration drift.
-  const weekDates = Array.from({ length: 7 }, (_, i) => {
+  // "Mon, July 20" for each weekday of the current week — the day heading.
+  // Computed server-side (UTC) to avoid hydration drift.
+  const weekDateLabels = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + i);
-    return d.getUTCDate();
+    return fmtDateLong(d.toISOString().slice(0, 10));
   });
 
   const toDto = (c: (typeof classRows)[number]): ClassDto => ({
@@ -108,7 +108,7 @@ export default async function SchedulePage({
       autoOpenAdder={add === "1"}
       theme={appTheme(user?.theme)}
       weekLabel={weekLabel}
-      weekDates={weekDates}
+      weekDateLabels={weekDateLabels}
     />
   );
 }

@@ -475,15 +475,8 @@ button.bl-band { cursor: pointer; }
 .ps-week { display: flex; flex-direction: column; gap: 22px; }
 .ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  display: flex; align-items: baseline; gap: 8px; white-space: nowrap;
-}
-.ps-dow {
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--pg-day);
-}
-.ps-date {
-  font-family: 'Archivo Black', sans-serif; font-size: 22px; line-height: 1; letter-spacing: -.03em;
-  color: var(--pg-cream);
+  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -.01em;
+  color: var(--pg-cream); white-space: nowrap;
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* time sits in a left gutter beside each class, echoing the old date column */

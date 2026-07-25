@@ -7,6 +7,7 @@ import { getDb, schema } from "@/db";
 import {
   DAYS,
   blocksFill,
+  fmtDateLong,
   fmtTime,
   mondayOfCurrentWeek,
   palForSeq,
@@ -73,12 +74,11 @@ export default async function PublicPage({ params }: Props) {
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)),
   );
 
-  // Day-of-month for each weekday (Mon..Sun) of the current week — shown in the
-  // schedule gutter. Computed server-side to avoid hydration drift.
-  const weekDates = Array.from({ length: 7 }, (_, i) => {
+  // "Mon, July 20" for each weekday of the current week — the day heading.
+  const weekDateLabels = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + i);
-    return d.getUTCDate();
+    return fmtDateLong(d.toISOString().slice(0, 10));
   });
 
   return (
@@ -104,10 +104,7 @@ export default async function PublicPage({ params }: Props) {
             {DAYS.map((day, di) =>
               byDay[di].length ? (
                 <div key={day} className="ps-daygroup">
-                  <div className="ps-daycol">
-                    <span className="ps-dow">{day}</span>
-                    <span className="ps-date">{weekDates[di]}</span>
-                  </div>
+                  <div className="ps-daycol">{weekDateLabels[di]}</div>
                   <div className="ps-daycards">
                     {byDay[di].map((c) => {
                       const s = studioById.get(c.studioId);
