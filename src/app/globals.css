@@ -471,19 +471,19 @@ button.bl-band { cursor: pointer; }
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
-/* day lives in a left gutter as a title; each day's classes stack beside it */
-.ps-week { display: flex; flex-direction: column; gap: 20px; }
-.ps-daygroup { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
+/* day sits on top as a section title; the day's classes stack full-width below */
+.ps-week { display: flex; flex-direction: column; gap: 22px; }
+.ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  display: flex; flex-direction: column; align-items: flex-start; padding-top: 15px; white-space: nowrap;
+  display: flex; align-items: baseline; gap: 8px; white-space: nowrap;
 }
 .ps-dow {
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: .04em;
+  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--pg-day);
 }
 .ps-date {
-  font-family: 'Archivo Black', sans-serif; font-size: 26px; line-height: .9; letter-spacing: -.03em;
-  color: var(--pg-cream); margin-top: 2px;
+  font-family: 'Archivo Black', sans-serif; font-size: 22px; line-height: 1; letter-spacing: -.03em;
+  color: var(--pg-cream);
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
