@@ -190,6 +190,22 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .adder input:focus { outline: none; border-color: var(--si); }
+/* reference-style layout: small kicker, big borderless title input, grouped cards */
+.adder-kicker {
+  font-family: 'Space Mono', monospace !important; font-size: 11px !important; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ol); margin: 2px 0 0 !important;
+}
+.adder input.adder-title {
+  border: none; background: transparent; border-radius: 0; padding: 2px 0 10px;
+  font-family: 'Archivo Black', sans-serif; font-size: 28px; line-height: 1.05; letter-spacing: -.02em;
+}
+.adder input.adder-title:focus { border: none; }
+.adder input.adder-title::placeholder { color: var(--line); }
+.adder-card {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 4px 16px 16px; margin-top: 14px;
+}
+.adder-card > .flabel:first-child { margin-top: 12px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .chip { font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
 .chip:hover { border-color: var(--ink); }
@@ -292,6 +308,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
      container a stacking context, which would trap the modal sheets'
      z-index inside it and let the in-flow tab bar paint over them. */
   overflow-y: auto; overscroll-behavior: contain;
+  padding-top: env(safe-area-inset-top);
 }
 .appshell .screen { min-height: 100%; }
 .sidenav { display: none; }
@@ -541,12 +558,18 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .daypick button { border: 2.5px solid #191502; box-shadow: 2px 2px 0 #191502; border-radius: 12px; }
 [data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: #191502; }
 [data-theme="poster"] .studio-sel { border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502; }
+[data-theme="poster"] .adder input.adder-title { border: none; box-shadow: none; color: #191502; }
+[data-theme="poster"] .adder input.adder-title::placeholder { color: #b7b09a; }
+[data-theme="poster"] .adder-kicker { color: var(--pg-day); }
+[data-theme="poster"] .adder-card {
+  background: #FFFDF7; border: 2.5px solid #191502; border-radius: 16px; box-shadow: 4px 4px 0 #000;
+}
 
 /* public page: ground bg, cream hero card, green CTA, cloud footer */
 [data-theme="poster"].pub { background: var(--pg-ground); display: block; }
 [data-theme="poster"] .pubhero {
   background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 22px;
-  box-shadow: 6px 6px 0 #000; margin: 18px 18px 0; padding: 18px 16px; position: static; width: auto; min-height: 0;
+  box-shadow: 6px 6px 0 #000; margin: calc(24px + env(safe-area-inset-top)) 18px 0; padding: 18px 16px; position: static; width: auto; min-height: 0;
 }
 [data-theme="poster"] .pubhero .eyebrow { color: #5a5647; }
 [data-theme="poster"] .pubhero .big { color: var(--pg-day); text-transform: uppercase; }

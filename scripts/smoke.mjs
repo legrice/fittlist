@@ -37,7 +37,7 @@ await page.getByRole("heading", { name: "New class" }).waitFor();
 if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app should be Poster");
 console.log("adder auto-opened, poster default");
 
-await page.getByPlaceholder("Type it once — it's remembered").fill("Barbell Strength");
+await page.getByPlaceholder("Add a class").fill("Barbell Strength");
 await page.getByRole("button", { name: "Mo", exact: true }).click();
 await page.getByRole("button", { name: "We", exact: true }).click();
 
@@ -68,7 +68,10 @@ console.log("first publish ok");
 await page.getByRole("button", { name: "+ Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
-await page.getByText("Everything is filled — just pick the days.").waitFor();
+await page.waitForFunction(() => {
+  const t = document.querySelector(".adder-title");
+  return t && t.value === "Barbell Strength";
+});
 await page.getByRole("button", { name: "Fr", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
@@ -316,7 +319,6 @@ const weekBefore = await cardCount(page);
 await page.getByRole("button", { name: "+ Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
-await page.getByText("Everything is filled — just pick the days.").waitFor();
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(inWeek));
 const oneLabel = await page.locator(".publishwrap .btn").textContent();

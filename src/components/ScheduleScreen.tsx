@@ -103,7 +103,7 @@ export function ScheduleScreen({
         <Wordmark />
         <div className="sub">My schedule</div>
       </div>
-      <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
+      <div className="pad" style={{ paddingTop: 24, paddingBottom: 110 }}>
         {theme === "classic" && <h1 className="screen-title">This week</h1>}
         {classes.length === 0 && upcoming.length === 0 ? (
           <div className="empty-block">

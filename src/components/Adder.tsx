@@ -256,16 +256,13 @@ export function Adder({
                 &larr; Saved classes
               </button>
             )}
-            <h2>{heading.title}</h2>
-            <p className="lead">{heading.lead}</p>
+            <h2 className="adder-kicker">{heading.title}</h2>
 
-            <label className="flabel" htmlFor="fName">
-              Class name
-            </label>
             <input
               type="text"
               id="fName"
-              placeholder="Type it once — it's remembered"
+              className="adder-title"
+              placeholder="Add a class"
               autoComplete="off"
               value={name}
               onChange={(e) => {
@@ -295,6 +292,7 @@ export function Adder({
               </div>
             )}
 
+            <div className="adder-card">
             <label className="flabel">When</label>
             <div className="modetoggle">
               <button
@@ -369,7 +367,9 @@ export function Adder({
                 </button>
               ))}
             </div>
+            </div>
 
+            <div className="adder-card">
             <label className="flabel">Studio</label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
@@ -389,7 +389,9 @@ export function Adder({
               )}
               <span className="chev"><Icon name="chevron_right" size={18} /></span>
             </button>
+            </div>
 
+            <div className="adder-card">
             <label className="flabel">
               Booking links <span>· website, Mindbody, ClassPass…</span>
             </label>
@@ -438,6 +440,7 @@ export function Adder({
             >
               + Add booking link
             </button>
+            </div>
 
             <div className="publishwrap">
               <button className="btn si" disabled={!whenChosen || pending} onClick={publish}>

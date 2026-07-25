@@ -86,7 +86,7 @@ export function MyPageScreen({
         <Wordmark />
         <div className="sub">My page</div>
       </div>
-      <div className="pad" style={{ paddingTop: 4, paddingBottom: 110 }}>
+      <div className="pad" style={{ paddingTop: 24, paddingBottom: 110 }}>
         <h1 className="screen-title">{url}</h1>
         <div className="statgrid">
           <div className="stat">
