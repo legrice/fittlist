@@ -19,6 +19,23 @@ export function palForSeq(seq: number) {
   return PALETTES[Math.max(0, seq - 1) % PALETTES.length];
 }
 
+export type AppTheme = "classic" | "blocks";
+export function appTheme(v: string | null | undefined): AppTheme {
+  return v === "blocks" ? "blocks" : "classic";
+}
+
+// "Blocks" look: vivid full-bleed color fields, one per studio (deterministic
+// by directory index). fg is the readable text color on each fill.
+export const BLOCKS_FILLS = [
+  { bg: "#8FE0C8", fg: "#191502" }, // mint
+  { bg: "#F5D34A", fg: "#191502" }, // butter
+  { bg: "#DD583A", fg: "#F7F2E8" }, // sienna
+  { bg: "#A9D8DA", fg: "#191502" }, // sky
+];
+export function blocksFill(seq: number) {
+  return BLOCKS_FILLS[Math.max(0, seq - 1) % BLOCKS_FILLS.length];
+}
+
 // Story-image looks — one per coach personality, all built from brand colors.
 export type StoryThemeId = "iron" | "paper" | "moss" | "pop";
 export type StoryTheme = {

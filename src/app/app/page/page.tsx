@@ -29,6 +29,7 @@ export default async function MyPage() {
       visits={visits}
       subsCount={subsCount}
       classCount={classCount}
+      theme={user.theme === "blocks" ? "blocks" : "classic"}
     />
   );
 }

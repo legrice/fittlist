@@ -327,5 +327,35 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("share sheet ok (save + share + X close)");
 
+// ================= Blocks theme flag =================
+await page.goto(BASE + "/app/page");
+await page.getByText("Page style", { exact: true }).waitFor();
+// classic by default: app shell + public page carry no blocks theme
+if ((await page.locator('.appshell[data-theme="blocks"]').count()) !== 0)
+  fail("app should default to classic");
+await page.getByRole("button", { name: "Blocks", exact: true }).click();
+await page.getByText("Blocks look on").waitFor();
+await page.waitForFunction(() => document.querySelector('.appshell[data-theme="blocks"]'));
+// schedule cards now carry the blocks fill var
+await page.goto(BASE + "/app");
+await page.waitForFunction(() => {
+  const c = document.querySelector('.appshell[data-theme="blocks"] .class-card');
+  if (!c) return false;
+  const bg = getComputedStyle(c).backgroundColor;
+  return bg === "rgb(143, 224, 200)" || bg === "rgb(245, 211, 74)" || bg === "rgb(221, 88, 58)" || bg === "rgb(169, 216, 218)";
+});
+await page.screenshot({ path: SCRATCH + "/shot-blocks-app.png" });
+// public page inherits the trainer's theme
+await page.goto(BASE + "/matt");
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="blocks"]'));
+await page.screenshot({ path: SCRATCH + "/shot-blocks-public.png", fullPage: true });
+console.log("blocks theme ok");
+// revert to classic
+await page.goto(BASE + "/app/page");
+await page.getByRole("button", { name: "Classic", exact: true }).click();
+await page.getByText("Classic look on").waitFor();
+await page.waitForFunction(() => !document.querySelector('.appshell[data-theme="blocks"]'));
+console.log("revert to classic ok");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

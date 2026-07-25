@@ -15,6 +15,13 @@
       "when": 1784911143928,
       "tag": "0001_lively_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784937495060,
+      "tag": "0002_bumpy_cardiac",
+      "breakpoints": true
     }
   ]
 }

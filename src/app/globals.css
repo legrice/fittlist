@@ -354,3 +354,53 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 
 /* iOS Safari zooms into any focused form control under 16px — never go below. */
 input, select, textarea { font-size: max(1em, 16px); }
+
+/* ============================================================
+   "Blocks" theme — vivid full-bleed color fields per studio.
+   Opt-in per trainer via [data-theme="blocks"] on the app shell
+   and public page. Classic is untouched.
+   ============================================================ */
+[data-theme="blocks"] .class-card {
+  background: var(--bbg, #8FE0C8);
+  color: var(--bfg, #191502);
+  border: none;
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  gap: 14px;
+}
+[data-theme="blocks"] .class-card .rail { display: none; }
+[data-theme="blocks"] .class-card .time,
+[data-theme="blocks"] .class-card .meta { color: var(--bfg); }
+[data-theme="blocks"] .class-card .meta { opacity: .78; }
+[data-theme="blocks"] .class-card .name {
+  font-family: 'Archivo Black', sans-serif; text-transform: uppercase;
+  letter-spacing: -.01em; font-size: 17px;
+}
+/* studio tag becomes plain text on the block (inline pastel colors overridden) */
+[data-theme="blocks"] .loctag {
+  background: transparent !important; color: var(--bfg) !important;
+  padding: 0; margin-top: 6px; font-weight: 700;
+}
+[data-theme="blocks"] .loctag .swd { display: none; }
+[data-theme="blocks"] .class-card .iconbtn {
+  border-color: var(--bfg); color: var(--bfg); background: transparent;
+}
+[data-theme="blocks"] .daylabel { font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 0; }
+
+/* public page: keep the dark hero, blocks for the schedule + booking links */
+[data-theme="blocks"] .booklink {
+  color: var(--bfg) !important; border-bottom: 2px solid var(--bfg); text-decoration: none;
+}
+[data-theme="blocks"].pub .pubhero .big { text-transform: uppercase; }
+
+@media (min-width: 940px) {
+  [data-theme="blocks"] .weekgrid .class-card { border-radius: 12px; }
+}
+
+/* appearance toggle on My page */
+.themetoggle { display: flex; background: var(--cl); border-radius: 12px; padding: 4px; gap: 4px; margin-top: 6px; }
+.themetoggle button {
+  flex: 1; padding: 10px 0; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--ol);
+}
+.themetoggle button.sel { background: var(--ink); color: #fff; }

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { setTheme } from "@/app/actions/theme";
+import { STORY_THEMES, type AppTheme, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
@@ -11,21 +13,34 @@ export function MyPageScreen({
   visits,
   subsCount,
   classCount,
+  theme,
 }: {
   handle: string;
   visits: number;
   subsCount: number;
   classCount: number;
+  theme: AppTheme;
 }) {
+  const router = useRouter();
+  const [themePending, startThemeTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+
+  const chooseTheme = (t: AppTheme) => {
+    if (t === theme) return;
+    startThemeTransition(async () => {
+      await setTheme(t);
+      router.refresh();
+      toast(t === "blocks" ? "Blocks look on" : "Classic look on");
+    });
+  };
   const [shareOpen, setShareOpen] = useState(false);
   const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
-  const [theme, setTheme] = useState<StoryThemeId>("iron");
+  const [storyThemeId, setStoryThemeId] = useState<StoryThemeId>("iron");
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const url = `fittlist.co/${handle}`;
-  const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${theme}`;
-  const storyFileName = `fittlist-${handle}-${shareSpan}-${theme}.png`;
+  const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${storyThemeId}`;
+  const storyFileName = `fittlist-${handle}-${shareSpan}-${storyThemeId}.png`;
 
   // File-sharing support (the native share sheet is the only route into
   // the iOS photo library from the web) is detectable only client-side.
@@ -117,6 +132,26 @@ export function MyPageScreen({
               : "Your link shows an empty week until you add a class. Drop it in your bio anyway — it never goes stale."}
           </div>
         </div>
+        <div className="eyebrow" style={{ marginTop: 20 }}>
+          Page style
+        </div>
+        <div className="themetoggle" role="group" aria-label="Page style">
+          <button
+            className={theme === "classic" ? "sel" : ""}
+            disabled={themePending}
+            onClick={() => chooseTheme("classic")}
+          >
+            Classic
+          </button>
+          <button
+            className={theme === "blocks" ? "sel" : ""}
+            disabled={themePending}
+            onClick={() => chooseTheme("blocks")}
+          >
+            Blocks
+          </button>
+        </div>
+
         <a className="rowcta" href={`/${handle}`} target="_blank" rel="noopener">
           <span className="ig"><Icon name="visibility" size={22} /></span>
           <span>
@@ -172,8 +207,8 @@ export function MyPageScreen({
                 ([id, t]) => (
                   <button
                     key={id}
-                    className={`chip themechip${theme === id ? " sel" : ""}`}
-                    onClick={() => setTheme(id)}
+                    className={`chip themechip${storyThemeId === id ? " sel" : ""}`}
+                    onClick={() => setStoryThemeId(id)}
                   >
                     <span
                       className="swd"
