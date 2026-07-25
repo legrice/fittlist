@@ -215,6 +215,9 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
   font-family: 'Space Mono', monospace; font-size: 16px; background: var(--card); color: var(--ink);
 }
+.timegrid input.timeinput { padding: 11px 14px; border-radius: 12px; }
+.timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
+[data-theme="poster"] .timegrid input.timeinput { border: 2.5px solid #191502; box-shadow: 3px 3px 0 #191502; }
 .studio-sel {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
   border: 1.5px solid var(--line); border-radius: 13px; padding: 12px 14px;

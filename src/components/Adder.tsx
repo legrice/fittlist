@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
-import { DAYS, DUR_PRESETS, LINK_LABELS, TIME_PRESETS, fmtTime, palForSeq } from "@/lib/format";
+import { DAYS, DUR_PRESETS, LINK_LABELS, fmtTime, palForSeq } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 
@@ -303,20 +303,12 @@ export function Adder({
 
             <label className="flabel">Start</label>
             <div className="timegrid">
-              {TIME_PRESETS.map((t) => (
-                <button
-                  key={t}
-                  className={`chip${time === t ? " sel" : ""}`}
-                  onClick={() => setTime(t)}
-                >
-                  {fmtTime(t)}
-                </button>
-              ))}
               <input
                 type="time"
+                className="timeinput"
                 value={time}
                 onChange={(e) => e.target.value && setTime(e.target.value)}
-                aria-label="Custom time"
+                aria-label="Start time"
               />
             </div>
 
