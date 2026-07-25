@@ -122,7 +122,11 @@ await page.getByText("Deleted", { exact: true }).waitFor();
 await waitSchedule(page, 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
-// ---- My page as a dismissable bottom sheet from the user icon
+// ---- My page as a dismissable bottom sheet from the user avatar
+await expect(
+  page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
+  "header shows avatar (initial fallback)",
+);
 await page.locator(".usericon").click();
 await page.getByText("Your link", { exact: true }).waitFor();
 await expect(page.getByRole("heading", { name: "My page" }).isVisible(), "profile sheet opens");
@@ -155,6 +159,7 @@ await expect(
   page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
   "profile shows website link",
 );
+await expect(page.locator(".profshare").isVisible(), "profile share button");
 await expect(page.locator(".profcta").getByText("View schedule").isVisible(), "view schedule CTA");
 await expect(page.locator(".previewbar", { hasText: "Previewing your profile" }).isVisible(), "owner preview bar");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");

@@ -32,11 +32,14 @@ export function DayTabs({ days }: { days: { id: string; label: string }[] }) {
     };
   }, [days]);
 
-  // keep the active tab scrolled into view within the strip
+  // keep the active tab centered within the strip — scroll only the strip
+  // horizontally so it can never nudge the page's vertical scroll.
   useEffect(() => {
-    stripRef.current
-      ?.querySelector(`[data-tab="${active}"]`)
-      ?.scrollIntoView({ block: "nearest", inline: "center" });
+    const strip = stripRef.current;
+    const tab = strip?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
+    if (!strip || !tab) return;
+    const target = tab.offsetLeft - strip.clientWidth / 2 + tab.offsetWidth / 2;
+    strip.scrollTo({ left: target, behavior: "smooth" });
   }, [active]);
 
   const go = (id: string) =>

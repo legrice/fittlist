@@ -9,6 +9,7 @@ import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
+import { ShareProfileButton } from "@/components/ShareProfileButton";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -69,8 +70,13 @@ export default async function ProfilePage({ params }: Props) {
         </div>
       )}
       <div className="profwrap">
-        <h1 className="profname">{user.name}</h1>
-        {user.title?.trim() && <p className="proftitle">{user.title}</p>}
+        <div className="profhead">
+          <div className="profhead-txt">
+            <h1 className="profname">{user.name}</h1>
+            {user.title?.trim() && <p className="proftitle">{user.title}</p>}
+          </div>
+          <ShareProfileButton name={user.name} />
+        </div>
         {user.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="profphoto" src={user.photo} alt={user.name} />

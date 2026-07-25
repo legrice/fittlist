@@ -494,7 +494,7 @@ button.bl-band { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
-/* schedule header: fittlist logo + profile icon up top, "My Calendar" below */
+/* schedule header: fittlist logo + profile icon up top, "My Schedule" below */
 .brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   background: var(--pg-cream);
@@ -503,8 +503,10 @@ button.bl-band { cursor: pointer; }
 /* sticky day tabs that anchor-scroll to each day's section below */
 .daytabs {
   position: sticky; top: 0; z-index: 6; background: var(--pg-cream);
-  display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 20px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
   margin: 4px -18px 14px; padding: 8px 18px 0; border-bottom: 1px solid var(--line);
+  /* horizontal swipes stay horizontal — no vertical scroll play, no page bleed */
+  touch-action: pan-x; overscroll-behavior: contain;
 }
 .daytabs::-webkit-scrollbar { display: none; }
 .daytab {
@@ -687,6 +689,14 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; background: #efe9db;
   font-family: 'Archivo Black', sans-serif; font-size: 76px; color: #d8d1bd;
 }
+.profhead { display: flex; align-items: flex-start; gap: 12px; }
+.profhead-txt { flex: 1; min-width: 0; }
+.profshare {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 999px; margin-top: 2px;
+  background: #fff; border: 1px solid var(--line); color: #191502;
+}
+.profshare:active { background: #f2ecdd; }
 .profname {
   font-family: 'Archivo Black', sans-serif; font-size: 32px; letter-spacing: -.02em; line-height: 1.05;
   color: #191502; margin: 0;
