@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash, randomBytes } from "crypto";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
@@ -82,6 +83,45 @@ export async function adminInvite(
 
   const url = await mintLink(
     email,
+    "You're invited to fittlist",
+    "You're in! Tap to set up your fittlist page:",
+  );
+  revalidatePath("/admin");
+  return { ok: true, url, emailed: true };
+}
+
+// Act on a "request an invite" submission: invite them (creates the invite +
+// emails a link) or just dismiss it. Either way the request is marked handled.
+export async function adminActOnRequest(
+  id: string,
+  action: "invite" | "dismiss",
+): Promise<{ ok: boolean; url?: string; emailed?: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const [req] = await db
+    .select()
+    .from(schema.inviteRequests)
+    .where(eq(schema.inviteRequests.id, id));
+  if (!req) return { ok: false, error: "Request not found." };
+
+  await db
+    .update(schema.inviteRequests)
+    .set({ handledAt: new Date() })
+    .where(eq(schema.inviteRequests.id, id));
+
+  if (action === "dismiss") {
+    revalidatePath("/admin");
+    return { ok: true };
+  }
+
+  const label = req.name?.trim() || null;
+  await db
+    .insert(schema.invites)
+    .values({ email: req.email, label, invitedByUserId: admin.id })
+    .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
+  const url = await mintLink(
+    req.email,
     "You're invited to fittlist",
     "You're in! Tap to set up your fittlist page:",
   );

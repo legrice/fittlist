@@ -58,6 +58,16 @@ export const invites = pgTable("invites", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Coaches who hit the invite-only wall and asked to be let in. The admin sees
+// these and can invite them with one tap.
+export const inviteRequests = pgTable("invite_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().default(""),
+  email: text("email").notNull().unique(), // normalized lowercase
+  handledAt: timestamp("handled_at", { withTimezone: true }), // invited or dismissed
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Studios a coach says they work at, chosen in the setup wizard. Independent of
 // the classes they publish, so "Where I coach" can be populated before any class
 // exists. Public "Where I coach" is the union of these and class-derived studios.

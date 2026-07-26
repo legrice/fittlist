@@ -1284,3 +1284,4 @@ button.ps-card { cursor: pointer; }
 .adminaddform-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
 .adminaddform-row .btn { width: auto; padding: 12px 20px; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
+.adminsec-h { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }

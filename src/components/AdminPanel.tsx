@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { adminAddStudio, adminInvite, adminSendMagicLink } from "@/app/actions/admin";
+import { adminActOnRequest, adminAddStudio, adminInvite, adminSendMagicLink } from "@/app/actions/admin";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -38,6 +38,7 @@ type Invite = {
   acceptedName: string;
   acceptedHandle: string;
 };
+type Request = { id: string; name: string; email: string; requested: string | null };
 type Stats = {
   coaches: number;
   studios: number;
@@ -45,6 +46,7 @@ type Stats = {
   subscribers: number;
   newThisWeek: number;
   pendingInvites: number;
+  requests: number;
 };
 
 export function AdminPanel({
@@ -52,12 +54,14 @@ export function AdminPanel({
   coaches,
   studios,
   invites,
+  requests,
   stats,
 }: {
   adminEmail: string;
   coaches: Coach[];
   studios: Studio[];
   invites: Invite[];
+  requests: Request[];
   stats: Stats;
 }) {
   const [tab, setTab] = useState<"coaches" | "studios" | "invites">("coaches");
@@ -111,8 +115,8 @@ export function AdminPanel({
           <Stat n={stats.coaches} label="Coaches" />
           <Stat n={stats.studios} label="Studios" />
           <Stat n={stats.classes} label="Classes" />
-          <Stat n={stats.subscribers} label="Subscribers" />
           <Stat n={stats.pendingInvites} label="Invites pending" />
+          <Stat n={stats.requests} label="Requests" />
         </div>
 
         <div className="adminseg">
@@ -147,6 +151,17 @@ export function AdminPanel({
           </div>
         ) : tab === "invites" ? (
           <>
+            {requests.length > 0 && (
+              <>
+                <div className="adminsec-h">Requests ({requests.length})</div>
+                <div className="admincards" style={{ marginBottom: 18 }}>
+                  {requests.map((r) => (
+                    <RequestCard key={r.id} r={r} toast={toast} />
+                  ))}
+                </div>
+                <div className="adminsec-h">Invite a coach</div>
+              </>
+            )}
             <InviteForm toast={toast} />
             <div className="admincards">
               {shownInvites.map((i) => (
@@ -251,6 +266,38 @@ function CoachCard({ c, toast }: { c: Coach; toast: (m: string) => void }) {
           {pending ? "Creating…" : "Send sign-in link"}
         </button>
       )}
+    </div>
+  );
+}
+
+function RequestCard({ r, toast }: { r: Request; toast: (m: string) => void }) {
+  const [pending, start] = useTransition();
+  const act = (action: "invite" | "dismiss") =>
+    start(async () => {
+      const res = await adminActOnRequest(r.id, action);
+      if (!res.ok) {
+        toast(res.error ?? "Something went wrong");
+        return;
+      }
+      toast(action === "invite" ? `Invited ${r.email}` : "Request dismissed");
+    });
+
+  return (
+    <div className="admincard">
+      <div className="admincard-h">
+        <span className="admincard-nm">{r.name || r.email}</span>
+        <span className="adminbadge warn">request</span>
+      </div>
+      {r.name && <div className="admincard-sub">{r.email}</div>}
+      <div className="adminmeta">{r.requested && <span>requested {r.requested}</span>}</div>
+      <div className="adminaddform-row" style={{ marginTop: 12 }}>
+        <button className="btn si" disabled={pending} onClick={() => act("invite")}>
+          {pending ? "…" : "Invite"}
+        </button>
+        <button className="linktoggle" disabled={pending} onClick={() => act("dismiss")}>
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }

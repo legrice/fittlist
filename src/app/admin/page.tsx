@@ -15,7 +15,8 @@ export default async function AdminPage() {
   if (!admin) notFound();
 
   const db = await getDb();
-  const [users, studios, classes, subs, creds, gconns, picked, invitesRows] = await Promise.all([
+  const [users, studios, classes, subs, creds, gconns, picked, invitesRows, requestRows] =
+    await Promise.all([
     db.select().from(schema.users).orderBy(schema.users.createdAt),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -37,6 +38,10 @@ export default async function AdminPage() {
       .select({ userId: schema.coachStudios.userId, studioId: schema.coachStudios.studioId })
       .from(schema.coachStudios),
     db.select().from(schema.invites).orderBy(desc(schema.invites.createdAt)),
+    db
+      .select()
+      .from(schema.inviteRequests)
+      .orderBy(desc(schema.inviteRequests.createdAt)),
   ]);
 
   // Roll the join tables up into per-user and per-studio counts in memory (beta
@@ -103,6 +108,10 @@ export default async function AdminPage() {
     };
   });
 
+  const requests = requestRows
+    .filter((r) => !r.handledAt)
+    .map((r) => ({ id: r.id, name: r.name, email: r.email, requested: fmt(r.createdAt) }));
+
   const stats = {
     coaches: users.filter((u) => u.handle).length,
     studios: studios.length,
@@ -110,6 +119,7 @@ export default async function AdminPage() {
     subscribers: subs.filter((s) => !s.optedOutAt).length,
     newThisWeek: users.filter((u) => u.createdAt && new Date(u.createdAt).getTime() >= weekAgo).length,
     pendingInvites: invitesRows.filter((i) => !i.acceptedAt).length,
+    requests: requests.length,
   };
 
   return (
@@ -118,6 +128,7 @@ export default async function AdminPage() {
       coaches={coaches}
       studios={studioRows}
       invites={invites}
+      requests={requests}
       stats={stats}
     />
   );

@@ -12,6 +12,7 @@ import {
   passwordAuth,
   requestMagicLink,
 } from "@/app/actions/auth";
+import { requestInvite } from "@/app/actions/invites";
 import { slug } from "@/lib/format";
 import { brandIcon } from "@/lib/brand";
 import { Icon } from "@/components/Icon";
@@ -57,13 +58,19 @@ export function AuthFlow({
   const [handle, setHandle] = useState("");
   const [error, setError] = useState(
     search.get("invite")
-      ? "Fittlist is invite-only during beta. Ask for an invite, then sign in with that email."
+      ? "Fittlist is invite-only during beta. Request an invite below, then sign in with that email."
       : search.get("expired")
         ? "That link expired. Try again."
         : "",
   );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
+  // "Request an invite" modal (invite-only beta).
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [reqName, setReqName] = useState("");
+  const [reqEmail, setReqEmail] = useState("");
+  const [reqErr, setReqErr] = useState("");
+  const [reqSent, setReqSent] = useState(false);
   const pendingProfile = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const viaQ = via ? `?via=${encodeURIComponent(via)}` : "";
@@ -144,6 +151,28 @@ export function AuthFlow({
     });
   };
 
+  const openRequest = () => {
+    setReqErr("");
+    setReqSent(false);
+    setReqName((n) => n || name);
+    setReqEmail((e) => e || email);
+    setSheet(null);
+    setRequestOpen(true);
+  };
+
+  const submitRequest = () => {
+    if (!reqEmail.trim()) {
+      setReqErr("Enter your email.");
+      return;
+    }
+    setReqErr("");
+    startTransition(async () => {
+      const res = await requestInvite(reqName, reqEmail);
+      if (res.ok) setReqSent(true);
+      else setReqErr(res.error ?? "Something went wrong.");
+    });
+  };
+
   const claim = () => {
     if (!name.trim()) return;
     setError("");
@@ -197,6 +226,11 @@ export function AuthFlow({
             <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
               Already have an account? <b>Log in</b>
             </button>
+            {inviteOnly && (
+              <button className="obloginlink" onClick={openRequest}>
+                Not invited yet? <b>Request an invite</b>
+              </button>
+            )}
           </>
         )}
 
@@ -298,6 +332,11 @@ export function AuthFlow({
               </button>
             )}
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
+            {inviteOnly && sheet === "signup" && (
+              <button className="authmagic" onClick={openRequest}>
+                Not invited yet? Request an invite
+              </button>
+            )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={submitPassword} disabled={pending}>
                 {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
@@ -329,6 +368,62 @@ export function AuthFlow({
                 Not now
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* request-an-invite bottom sheet (invite-only beta) */}
+      {requestOpen && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRequestOpen(false); }}>
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setRequestOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            {reqSent ? (
+              <>
+                <h2>You&rsquo;re on the list.</h2>
+                <p className="lead">
+                  Thanks{reqName.trim() ? `, ${reqName.trim().split(" ")[0]}` : ""}. We&rsquo;ll email
+                  <b> {reqEmail.trim()}</b> an invite when a spot opens.
+                </p>
+                <div className="publishwrap nostick">
+                  <button className="btn si" onClick={() => setRequestOpen(false)}>Done</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2>Request an invite</h2>
+                <p className="lead">
+                  Fittlist is invite-only during beta. Tell us who you are and we&rsquo;ll send an
+                  invite when a spot opens.
+                </p>
+                <input
+                  className="editinput"
+                  placeholder="Your name"
+                  autoComplete="name"
+                  maxLength={80}
+                  value={reqName}
+                  onChange={(e) => setReqName(e.target.value)}
+                />
+                <input
+                  type="email"
+                  className="editinput"
+                  style={{ marginTop: 10 }}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  value={reqEmail}
+                  onChange={(e) => setReqEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submitRequest()}
+                />
+                {reqErr && <div className="errorcopy" style={{ textAlign: "left" }}>{reqErr}</div>}
+                <div className="publishwrap nostick">
+                  <button className="btn si" onClick={submitRequest} disabled={pending}>
+                    {pending ? "Sending…" : "Request an invite"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -2,9 +2,10 @@ import { and, eq, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
-// Shown wherever a non-invited email tries to create an account.
+// Shown wherever a non-invited email tries to create an account. The signup
+// screen also renders a "Request an invite" link next to it.
 export const INVITE_MSG =
-  "Fittlist is invite-only during beta. Use the email you were invited with, or ask for an invite.";
+  "Fittlist is invite-only during beta. Use the email you were invited with, or request an invite below.";
 
 // Invite gating is on unless explicitly disabled (INVITE_ONLY=false opens
 // self-serve signups when the beta ends).
