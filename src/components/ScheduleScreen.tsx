@@ -64,6 +64,14 @@ export function ScheduleScreen({
     }
   }, [autoOpenAdder]);
 
+  // Coming back from the profile preview reopens the account page.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("acct")) {
+      setProfileOpen(true);
+      window.history.replaceState(null, "", "/app");
+    }
+  }, []);
+
   // Returning from the Google OAuth flow -> confirm and open the profile.
   useEffect(() => {
     const g = new URLSearchParams(window.location.search).get("gcal");

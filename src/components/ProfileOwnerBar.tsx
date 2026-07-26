@@ -93,7 +93,7 @@ export function ProfileOwnerBar({
   return (
     <>
       <div className="ownerbar">
-        <button className="ownerback" aria-label="Back to your account" onClick={() => router.push("/app")}>
+        <button className="ownerback" aria-label="Back to your account" onClick={() => router.push("/app?acct=1")}>
           <Icon name="arrow_back" size={20} />
         </button>
         <button className="owneredit" onClick={openEdit}>
