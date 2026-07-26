@@ -13,8 +13,6 @@ import {
   CLASS_TYPES,
   DAYS,
   detectProvider,
-  fmtDate,
-  fmtTime,
   minutesToTime,
   timeToMinutes,
 } from "@/lib/format";
@@ -176,16 +174,12 @@ export function Adder({
     });
   };
 
-  const dayList = DAYS.filter((_, i) => days.has(i));
   const n = days.size;
   const oneTime = mode === "date";
   const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const whenChosen = oneTime ? dateValid : n > 0;
-  // Public classes need a studio; private ones don't. Only public changes email
-  // the subscriber list.
+  // Public classes need a studio; private ones don't.
   const needsStudio = isPublic && !selectedStudio;
-  const saveVerb = isEdit ? "Save changes" : isPublic ? "Publish" : "Save";
-  const emailSuffix = isPublic && subsCount ? ` · emails ${subsCount}` : "";
   const publishLabel = !whenChosen
     ? oneTime
       ? "Pick a date"
@@ -196,9 +190,9 @@ export function Adder({
         ? "End time must be after start"
         : isEdit
           ? "Save changes"
-          : oneTime
-            ? `${saveVerb} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
-            : `${saveVerb}${!isPublic ? "" : n > 1 ? ` ${n} classes` : ""} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
+          : isPublic
+            ? "Publish event"
+            : "Save event";
 
   const publish = () => {
     if (!whenChosen || !durValid || (isPublic && !studioId)) return;

@@ -113,11 +113,10 @@ if (mins(endAfter) - mins(endBefore) !== 60)
 await page.locator("#fStart").fill("06:00"); // restore for the 6:00a label assertion
 console.log("start slides end ok");
 
-// narrated publish (start time defaults to 6:00a)
-const label = await page.locator(".publishwrap .btn").textContent();
+// publish CTA is just "Publish event" (no day/time details)
+const label = (await page.locator(".publishwrap .btn").textContent()).trim();
 console.log("publish label:", label);
-if (!label.includes("Publish 2 classes") || !label.includes("MON, WED") || !label.includes("6:00a"))
-  fail("publish narration wrong: " + label);
+if (label !== "Publish event") fail("publish CTA wrong: " + label);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
 await waitSchedule(page, 2);
@@ -466,9 +465,8 @@ const schedBefore = await scheduleClasses(page);
 await addSaved(page);
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(inWeekD));
-const oneLabel = await page.locator(".publishwrap .btn").textContent();
-if (!/^Publish · \w{3}, \w{3} \d+ · 6:00a$/.test(oneLabel.trim()))
-  fail("one-off publish label wrong: " + oneLabel);
+const oneLabel = (await page.locator(".publishwrap .btn").textContent()).trim();
+if (oneLabel !== "Publish event") fail("one-off publish label wrong: " + oneLabel);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 1);
