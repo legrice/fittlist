@@ -527,7 +527,7 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #878c96; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark svg { height: 29px; width: auto; display: block; }
 .calbar-title {
-  font-family: 'Archivo Black', sans-serif; font-size: 36px; letter-spacing: -.02em; line-height: 1;
+  font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: #191502; margin: 10px 0 16px;
 }
 .usericon {

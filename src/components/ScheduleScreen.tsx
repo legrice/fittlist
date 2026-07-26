@@ -166,7 +166,7 @@ export function ScheduleScreen({
             )}
           </button>
         </div>
-        <div className="calbar-title">My Schedule</div>
+        <div className="calbar-title">Schedule</div>
 
         {!hasAnyClass ? (
           <div className="empty-block">
