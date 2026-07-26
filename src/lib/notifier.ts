@@ -106,3 +106,33 @@ export async function notifyScheduleChange(trainerUserId: string, change: Schedu
   }
   return subs.length;
 }
+
+/** Broadcast a coach's announcement to every active subscriber. Returns how
+    many were emailed. */
+export async function notifyAnnouncement(trainerUserId: string, message: string): Promise<number> {
+  const db = await getDb();
+  const [trainer] = await db.select().from(schema.users).where(eq(schema.users.id, trainerUserId));
+  if (!trainer?.handle) return 0;
+  const subs = await db
+    .select()
+    .from(schema.subscribers)
+    .where(
+      and(
+        eq(schema.subscribers.trainerUserId, trainerUserId),
+        isNull(schema.subscribers.optedOutAt),
+      ),
+    );
+  if (!subs.length) return 0;
+
+  for (const sub of subs) {
+    const unsub = await unsubFooter(sub.id);
+    await sendMessage({
+      to: sub.email,
+      kind: "announcement",
+      subject: `Update from ${trainer.name}`,
+      text: `${message}\n\nfittlist.co/${trainer.handle}` + unsub.text,
+      headers: unsub.headers,
+    });
+  }
+  return subs.length;
+}

@@ -44,6 +44,10 @@ export const users = pgTable("users", {
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  // A short pinned status shown at the top of the public page (e.g. "Away this
+  // week", "Subbing the 6pm today"). Null = no active announcement.
+  announcement: text("announcement"),
+  announcementAt: timestamp("announcement_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

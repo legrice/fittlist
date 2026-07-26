@@ -46,6 +46,7 @@ export default async function SchedulePage({
         photo: schema.users.photo,
         passwordHash: schema.users.passwordHash,
         onboardedAt: schema.users.onboardedAt,
+        announcement: schema.users.announcement,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
@@ -124,6 +125,7 @@ export default async function SchedulePage({
       customTypes={customTypes}
       lastUsed={lastUsed}
       subsCount={subRows.length}
+      announcement={user?.announcement ?? null}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}

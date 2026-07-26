@@ -242,6 +242,39 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
+/* Announcement — coach's editor bar on their schedule */
+.annbar {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left;
+  margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+  background: var(--si-soft); border: 1px solid #f0c9ae; color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.annbar:active { background: #f6dcc8; }
+.annbar-ic { color: var(--si); flex-shrink: 0; position: relative; top: 1px; }
+.annbar-txt { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; line-height: 1.4; }
+.annbar-edit { color: var(--ol); flex-shrink: 0; }
+.annadd {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+  padding: 10px 14px; border-radius: 12px; border: 1.5px dashed var(--line);
+  background: transparent; color: var(--ol); font-size: 13.5px; font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+}
+.annadd:active { background: rgba(0, 0, 0, .03); }
+.annta { resize: none; line-height: 1.45; }
+.anncount { text-align: right; font-size: 12px; color: var(--ol); margin-top: 6px; }
+.annbroadcast { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.annbroadcast input { width: 18px; height: 18px; accent-color: var(--si); }
+.annremove { display: block; width: 100%; margin-top: 10px; background: none; border: none; color: #a8452a; font-weight: 700; font-size: 14px; padding: 8px; }
+
+/* Announcement — pinned banner on the public page */
+.annpublic {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 0 18px; padding: 13px 15px; border-radius: 14px;
+  background: var(--si-soft); border: 1px solid #f0c9ae;
+}
+.annpublic-ic { color: var(--si); flex-shrink: 0; position: relative; top: 1px; }
+.annpublic-txt { font-size: 14.5px; font-weight: 600; line-height: 1.45; color: var(--ink); }
+
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);
   border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;

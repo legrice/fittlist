@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { AnnouncementEditor } from "@/components/AnnouncementEditor";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -22,6 +23,7 @@ export function ScheduleScreen({
   customTypes,
   lastUsed,
   subsCount,
+  announcement,
   autoOpenAdder,
   handle,
   name,
@@ -51,6 +53,7 @@ export function ScheduleScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
+  announcement: string | null;
   autoOpenAdder: boolean;
   handle: string;
   name: string;
@@ -214,6 +217,7 @@ export function ScheduleScreen({
             )}
           </button>
         </div>
+        <AnnouncementEditor announcement={announcement} subsCount={subsCount} onToast={toast} />
         <div className="calbar-title">Your schedule</div>
 
         {!hasAnyClass ? (

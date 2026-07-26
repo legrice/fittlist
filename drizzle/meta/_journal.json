@@ -134,6 +134,13 @@
       "when": 1785091471990,
       "tag": "0018_seed_jc_studios",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785105695068,
+      "tag": "0019_clear_korvac",
+      "breakpoints": true
     }
   ]
 }

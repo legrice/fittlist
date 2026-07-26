@@ -189,6 +189,12 @@ export async function PublicProfileView({
         />
       )}
       <div className="profwrap">
+        {user.announcement?.trim() && (
+          <div className="annpublic" role="status">
+            <span className="annpublic-ic"><Icon name="campaign" size={18} /></span>
+            <span className="annpublic-txt">{user.announcement}</span>
+          </div>
+        )}
         <ProfileTabs
           handle={handle}
           initialTab={initialTab}
