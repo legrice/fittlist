@@ -79,6 +79,9 @@ export function ProfileSheet({
   const [storyThemeId, setStoryThemeId] = useState<StoryThemeId>("iron");
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrSharing, setQrSharing] = useState(false);
+  const [pageUrl, setPageUrl] = useState(`fittlist.co/${handle}`);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
   const [disconnecting, startDisconnect] = useTransition();
@@ -109,6 +112,7 @@ export function ProfileSheet({
   }, []);
   useEffect(() => {
     setWebcalUrl(`webcal://${window.location.host}/api/cal/${handle}`);
+    setPageUrl(`${window.location.host}/${handle}`);
   }, [handle]);
   useEffect(() => {
     setCanShareFiles(
@@ -260,6 +264,44 @@ export function ProfileSheet({
     }
   };
 
+  const qrImgUrl = `/api/qr/${handle}`;
+  const qrFileName = `fittlist-${handle}-qr.png`;
+
+  const shareQr = async () => {
+    if (qrSharing) return;
+    setQrSharing(true);
+    try {
+      if (canShareFiles) {
+        const res = await fetch(qrImgUrl);
+        if (res.ok) {
+          const file = new File([await res.blob()], qrFileName, { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+            return;
+          }
+        }
+      }
+      const a = document.createElement("a");
+      a.href = qrImgUrl;
+      a.download = qrFileName;
+      a.click();
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") toast("Couldn't share the QR code");
+    } finally {
+      setQrSharing(false);
+    }
+  };
+
+  const copyPageLink = async () => {
+    const url = `${window.location.origin}/${handle}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Link copied");
+    } catch {
+      toast(url);
+    }
+  };
+
   const copyCal = async () => {
     try {
       await navigator.clipboard.writeText(webcalUrl);
@@ -327,6 +369,13 @@ export function ProfileSheet({
             <span className="acctcard-ic"><Icon name="share" size={26} /></span>
             <span className="acctcard-t">Share your week</span>
             <span className="acctcard-s">A story image with your link</span>
+          </button>
+          <button className="acctcard acctcard-wide" onClick={() => setQrOpen(true)}>
+            <span className="acctcard-ic"><Icon name="qr_code_2" size={26} /></span>
+            <span className="acctcard-txt">
+              <span className="acctcard-t">Your QR code</span>
+              <span className="acctcard-s">A scannable code that opens your page</span>
+            </span>
           </button>
         </div>
 
@@ -565,6 +614,38 @@ export function ProfileSheet({
                 <a className="btn" href={storyUrl} download={storyFileName}>Save image</a>
               )}
               <button className="btn ghost" style={{ marginTop: 8 }} disabled={sharing} onClick={shareStory}>Share image</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {qrOpen && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setQrOpen(false); }}>
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setQrOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your QR code</h2>
+            <p className="lead">
+              Point a phone camera at it to open your page. Print it on a flyer or business card, or
+              show it at the end of class.
+            </p>
+            <div className="qrframe">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="qrimg" src={qrImgUrl} alt="QR code that opens your fittlist page" />
+            </div>
+            <div className="qrurl">{pageUrl}</div>
+            <div className="publishwrap">
+              {canShareFiles ? (
+                <button className="btn" disabled={qrSharing} onClick={shareQr}>
+                  {qrSharing ? "Opening…" : "Save QR code"}
+                </button>
+              ) : (
+                <a className="btn" href={qrImgUrl} download={qrFileName}>Save QR code</a>
+              )}
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={copyPageLink}>
+                Copy link
+              </button>
             </div>
           </div>
         </div>
