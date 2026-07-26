@@ -62,11 +62,12 @@ export default async function EventPage({ params }: Props) {
           ← {user.name}&rsquo;s schedule
         </BackLink>
         <div className="evcard">
-          <div className="evwhen">
-            {fmtDateLong(whenIso)} · {fmtTime(c.startTime)} · {c.durationMin} min
-          </div>
-          <h1 className="evname">{c.name}</h1>
           {c.classType && <span className="evtype">{c.classType}</span>}
+          <h1 className="evname">{c.name}</h1>
+          <div className="evwhen">
+            {fmtDateLong(whenIso)} · {fmtTime(c.startTime)}
+          </div>
+          <div className="evlen">{c.durationMin} min</div>
           {c.description?.trim() && <p className="evdesc">{c.description}</p>}
           {studio && (
             <>
@@ -86,7 +87,8 @@ export default async function EventPage({ params }: Props) {
                   target="_blank"
                   rel="noopener nofollow"
                 >
-                  Book via {l.label} ↗
+                  Book via {l.label}
+                  <Icon name="north_east" size={18} className="evbtn-ico" />
                 </a>
               ))
             ) : (

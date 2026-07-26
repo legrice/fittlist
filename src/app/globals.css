@@ -1071,24 +1071,30 @@ button.ps-card { cursor: pointer; }
   background: #fff; border: none; border-radius: 16px; box-shadow: var(--soft-shadow);
   padding: 22px 20px; color: #191502;
 }
-.evwhen {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em;
-  text-transform: uppercase; color: var(--pg-day); margin-bottom: 8px;
+.evtype {
+  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--pg-day); background: var(--si-soft); border-radius: 999px; padding: 5px 12px;
+  margin-bottom: 14px;
 }
 .evname {
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
   color: var(--ink); margin-bottom: 12px;
 }
-.evtype {
-  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--pg-day); background: var(--si-soft); border-radius: 999px; padding: 5px 12px;
+.evwhen {
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 16px;
+  color: var(--ink); margin-top: 2px;
 }
-.evdesc { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 14px; white-space: pre-wrap; }
+.evlen {
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 14px;
+  color: var(--ol); margin-top: 2px;
+}
+.evdesc { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
 .evstudio { font-size: 16px; font-weight: 700; color: #191502; margin-top: 18px; }
 .evaddr { display: inline-block; font-size: 14px; font-weight: 600; color: #928b78; text-decoration: none; margin-top: 3px; border-bottom: 1.5px solid #cec6b0; }
 .evbook { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-.evbtn { width: 100%; }
+.evbtn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.evbtn-ico { position: relative; top: 1px; }
 .evnobook { font-size: 14px; font-weight: 600; color: #6b6555; }
 [data-theme="poster"] .heronotify { display: none; }
 [data-theme="poster"] .notifybar {
