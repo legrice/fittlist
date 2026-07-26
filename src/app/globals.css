@@ -143,6 +143,9 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 }
 .obalt:active { background: #f3ecdf; }
 .obalt[disabled] { opacity: .5; pointer-events: none; }
+.obalt.google, .obalt.apple { text-decoration: none; }
+.obalt.apple { background: #191502; color: #fff; border-color: #191502; }
+.obalt.apple:active { background: #000; }
 
 .empty-block { margin-top: 22px; border: 1.5px dashed var(--line); border-radius: 16px; padding: 28px 22px; text-align: center; }
 .empty-block .glyph { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }

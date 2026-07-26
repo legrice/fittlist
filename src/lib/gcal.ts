@@ -36,6 +36,32 @@ export function authUrl(state: string): string {
   return `${AUTH}?${p.toString()}`;
 }
 
+// "Continue with Google" for sign-in. Same redirect + token exchange as the
+// calendar connect, but the consent also carries profile + calendar scope, so
+// one tap can log a trainer in AND wire up calendar sync. We don't force
+// prompt=consent here, so returning logins stay a single tap; the granular
+// consent screen still lets a new user skip calendar and just sign in.
+const LOGIN_SCOPES = [
+  "openid",
+  "email",
+  "profile",
+  "https://www.googleapis.com/auth/calendar.events",
+];
+
+export function authUrlLogin(state: string): string {
+  const p = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: redirectUri(),
+    response_type: "code",
+    scope: LOGIN_SCOPES.join(" "),
+    access_type: "offline",
+    include_granted_scopes: "true",
+    prompt: "select_account",
+    state,
+  });
+  return `${AUTH}?${p.toString()}`;
+}
+
 type TokenResponse = {
   access_token?: string;
   refresh_token?: string;
