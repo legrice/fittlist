@@ -66,11 +66,12 @@ console.log("adder auto-opened, poster default");
 
 await page.getByPlaceholder("e.g. Barbell Strength").fill("Barbell Strength");
 await page.locator(".typechips").getByRole("button", { name: "Strength", exact: true }).click();
+await page.locator("#fDesc").fill("Barbell club for all levels. Bring a belt.");
 await page.getByRole("button", { name: "Mo", exact: true }).click();
 await page.getByRole("button", { name: "We", exact: true }).click();
 
 // no studio yet -> route through the shared directory + create one
-await page.getByRole("button", { name: "Choose a studio" }).click();
+await page.getByRole("button", { name: "Select or start typing a studio" }).click();
 await page.getByRole("heading", { name: "Choose a studio" }).waitFor();
 await page.getByRole("button", { name: "+ New studio" }).click();
 await page.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound Strength");
@@ -207,6 +208,8 @@ await page.locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
 await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event page shows address");
 await expect(page.getByText("Book via Website ↗").isVisible(), "event page shows booking link");
+await expect(page.locator(".evtype", { hasText: "Strength" }).isVisible(), "event page shows class type");
+await expect(page.getByText("Barbell club for all levels").isVisible(), "event page shows description");
 await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });
 await page.locator(".evback").click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));

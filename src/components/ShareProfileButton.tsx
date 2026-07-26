@@ -10,10 +10,10 @@ export function ShareProfileButton({ name }: { name: string }) {
 
   const share = async () => {
     const url = window.location.href.split("?")[0];
-    const title = `${name} on fittlist`;
     try {
       if (typeof navigator.share === "function") {
-        await navigator.share({ title, text: `${name}'s class schedule`, url });
+        // Just the link, no title/text, so a paste is the bare URL.
+        await navigator.share({ url });
         return;
       }
       await navigator.clipboard.writeText(url);

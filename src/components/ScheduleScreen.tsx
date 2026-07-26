@@ -104,6 +104,7 @@ export function ScheduleScreen({
       prefill: {
         name: c.name,
         classType: c.classType,
+        description: c.description,
         startTime: c.startTime,
         durationMin: c.durationMin,
         studioId: c.studioId,

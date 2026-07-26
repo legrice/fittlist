@@ -20,6 +20,7 @@ import { Icon } from "@/components/Icon";
 export type AdderPrefill = {
   name: string;
   classType?: string | null;
+  description?: string | null;
   startTime: string;
   durationMin: number;
   studioId: string;
@@ -71,6 +72,7 @@ export function Adder({
   );
   const [name, setName] = useState(prefill?.name ?? "");
   const [classType, setClassType] = useState<string | null>(prefill?.classType ?? null);
+  const [description, setDescription] = useState(prefill?.description ?? "");
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
   const [date, setDate] = useState(prefill?.specificDate ?? "");
@@ -78,7 +80,9 @@ export function Adder({
   const initDur = prefill?.durationMin ?? lastUsed.durationMin;
   const [time, setTime] = useState(initStart);
   const [end, setEnd] = useState(minutesToTime(timeToMinutes(initStart) + initDur));
-  const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? lastUsed.studioId);
+  // No studio prefill on a brand-new class: an already-filled gym reads as a
+  // mistake. Editing/duplicating still carries the class's studio.
+  const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? null);
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -90,11 +94,12 @@ export function Adder({
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
 
+  // Reusing a saved class fills everything EXCEPT the time, so the coach sets a
+  // fresh time for this slot rather than inheriting the last one.
   const fillFromTemplate = (t: TemplateDto) => {
     setName(t.name);
     setClassType(t.classType ?? null);
-    setTime(t.startTime);
-    setEnd(minutesToTime(timeToMinutes(t.startTime) + t.durationMin));
+    setDescription(t.description ?? "");
     setStudioId(t.studioId);
     setLinks(t.links.map((l) => ({ ...l })));
   };
@@ -165,6 +170,7 @@ export function Adder({
       const input = {
         name,
         classType,
+        description,
         days: [...days],
         specificDate: oneTime ? date : null,
         startTime: time,
@@ -338,6 +344,19 @@ export function Adder({
                 </button>
               ))}
             </div>
+
+            <label className="flabel" htmlFor="fDesc">
+              Description <span>· optional, shown on the class page</span>
+            </label>
+            <textarea
+              id="fDesc"
+              className="abouttext"
+              value={description}
+              maxLength={500}
+              rows={3}
+              placeholder="What to expect, what to bring, who it's for…"
+              onChange={(e) => setDescription(e.target.value)}
+            />
             </div>
 
             <div className="adder-card">
@@ -425,19 +444,12 @@ export function Adder({
             <label className="flabel">Studio</label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
-                <>
-                  <span
-                    className="swd"
-                    style={{ background: palForSeq(selectedStudio.seq).rail }}
-                  />
-                  <span>
-                    <span className="nm">{selectedStudio.name}</span>
-                    <br />
-                    <span className="ad">{selectedStudio.address}</span>
-                  </span>
-                </>
+                <span className="studio-sel-txt">
+                  <span className="nm">{selectedStudio.name}</span>
+                  <span className="ad">{selectedStudio.address}</span>
+                </span>
               ) : (
-                <span className="nm">Choose a studio</span>
+                <span className="nm placeholder">Select or start typing a studio</span>
               )}
               <span className="chev"><Icon name="chevron_right" size={18} /></span>
             </button>

@@ -71,6 +71,13 @@
       "when": 1785074786811,
       "tag": "0009_faulty_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785075384908,
+      "tag": "0010_confused_rick_jones",
+      "breakpoints": true
     }
   ]
 }

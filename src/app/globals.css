@@ -338,12 +338,28 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
   border: 1.5px solid var(--line); border-radius: 16px; padding: 12px 14px;
 }
 .studio-sel:hover { border-color: var(--ink); }
-.studio-sel .swd { width: 12px; height: 12px; border-radius: 16px; flex-shrink: 0; }
-.studio-sel .nm { font-weight: 700; font-size: 14.5px; }
-.studio-sel .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
-.studio-sel .chev { margin-left: auto; color: var(--ol); }
+.studio-sel-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.studio-sel .nm {
+  font-weight: 700; font-size: 14.5px; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.studio-sel .nm.placeholder {
+  flex: 1; font-weight: 600; color: var(--ol);
+  white-space: normal; overflow: visible; text-overflow: clip;
+}
+.studio-sel .ad {
+  font-size: 12px; color: var(--ol); margin-top: 1px; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.studio-sel .chev { margin-left: auto; color: var(--ol); flex-shrink: 0; }
 .linktoggle { font-size: 13px; font-weight: 700; color: var(--si); margin-top: 14px; display: inline-block; }
-.publishwrap { position: sticky; bottom: -26px; background: var(--card); padding: 14px 0 4px; margin-top: 18px; }
+/* Sticky save/publish footer: bleed past the sheet's padding so the white bar
+   spans the full width (and reaches the bottom edge) behind the button. */
+.publishwrap {
+  position: sticky; bottom: 0; z-index: 3; background: var(--card);
+  margin: 18px -20px -26px; padding: 14px 20px calc(20px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); border-radius: 0 0 16px 16px;
+}
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
@@ -941,9 +957,15 @@ button.ps-card { cursor: pointer; }
 }
 .evname {
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
-  color: var(--ink); margin-bottom: 14px;
+  color: var(--ink); margin-bottom: 12px;
 }
-.evstudio { font-size: 16px; font-weight: 700; color: #191502; }
+.evtype {
+  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--pg-day); background: var(--si-soft); border-radius: 999px; padding: 5px 12px;
+}
+.evdesc { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 14px; white-space: pre-wrap; }
+.evstudio { font-size: 16px; font-weight: 700; color: #191502; margin-top: 18px; }
 .evaddr { display: inline-block; font-size: 14px; font-weight: 600; color: #928b78; text-decoration: none; margin-top: 3px; border-bottom: 1.5px solid #cec6b0; }
 .evbook { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
 .evbtn { width: 100%; }

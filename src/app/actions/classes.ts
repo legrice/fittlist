@@ -19,6 +19,7 @@ function syncGoogleAfter(userId: string) {
 export type PublishInput = {
   name: string;
   classType?: string | null;
+  description?: string | null;
   days: number[]; // 0 = Monday … 6 = Sunday
   // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
   specificDate?: string | null;
@@ -65,6 +66,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   if (!studio) return { ok: false, error: "Pick a studio." };
   const links = cleanLinks(input.links ?? []);
   const classType = cleanType(input.classType);
+  const description = input.description?.trim().slice(0, 500) || null;
 
   if (replaceClassId) {
     const [existing] = await db
@@ -79,10 +81,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // values used, so autofill always reflects the most recent version.
   const [template] = await db
     .insert(schema.classTemplates)
-    .values({ userId, name, classType, startTime: input.startTime, durationMin, studioId: studio.id, links })
+    .values({ userId, name, classType, description, startTime: input.startTime, durationMin, studioId: studio.id, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { classType, startTime: input.startTime, durationMin, studioId: studio.id, links, updatedAt: new Date() },
+      set: { classType, description, startTime: input.startTime, durationMin, studioId: studio.id, links, updatedAt: new Date() },
     })
     .returning();
 
@@ -96,6 +98,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       durationMin,
       name,
       classType,
+      description,
       studioId: studio.id,
       links,
     })),

@@ -66,6 +66,8 @@ export default async function EventPage({ params }: Props) {
             {fmtDateLong(whenIso)} · {fmtTime(c.startTime)} · {c.durationMin} min
           </div>
           <h1 className="evname">{c.name}</h1>
+          {c.classType && <span className="evtype">{c.classType}</span>}
+          {c.description?.trim() && <p className="evdesc">{c.description}</p>}
           {studio && (
             <>
               <div className="evstudio">{studio.name}</div>

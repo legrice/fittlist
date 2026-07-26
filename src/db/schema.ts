@@ -56,6 +56,8 @@ export const classTemplates = pgTable(
     name: text("name").notNull(),
     // Category from the curated CLASS_TYPES list (e.g. "Strength", "Yoga").
     classType: text("class_type"),
+    // Short blurb shown on the public class page.
+    description: text("description"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     studioId: uuid("studio_id").notNull().references(() => studios.id),
@@ -98,6 +100,7 @@ export const classes = pgTable(
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),
     classType: text("class_type"),
+    description: text("description"),
     studioId: uuid("studio_id").notNull().references(() => studios.id),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
