@@ -1180,7 +1180,7 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .empty-block { border-color: var(--pg-cream); }
 [data-theme="poster"] .empty-block .glyph,
 [data-theme="poster"] .empty-block h2 { color: var(--pg-cream); }
-[data-theme="poster"] .empty-block p { color: #c9c3ae; }
+[data-theme="poster"] .empty-block p { color: var(--ink); }
 
 /* onboarding: green primary action to match the poster app it leads into */
 .ob .btn { background: var(--si); color: #fff; }
