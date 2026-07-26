@@ -169,7 +169,7 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
-// ---- public PROFILE page (mobile): photo/name/about + View schedule CTA
+// ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 await page.goto(BASE + "/matt");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
 await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible(), "profile shows title");
@@ -183,15 +183,16 @@ await expect(
   "profile shows website link",
 );
 await expect(page.locator(".profshare").isVisible(), "profile share button");
-await expect(page.locator(".profcta").getByText("View schedule").isVisible(), "view schedule CTA");
+await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
+await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");
 await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
 await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 
-// ---- View schedule -> continuous public calendar
-await page.locator(".profcta").getByText("View schedule").click();
-await page.getByText("Coaching schedule", { exact: true }).waitFor();
+// ---- Schedule tab -> continuous public calendar, no navigation, URL updates
+await page.locator(".pubtab", { hasText: "Schedule" }).click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+await page.waitForURL("**/matt/schedule");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
@@ -202,8 +203,8 @@ await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event p
 await expect(page.getByText("Book via Website ↗").isVisible(), "event page shows booking link");
 await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });
 await page.locator(".evback").click();
-await page.getByText("Coaching schedule", { exact: true }).waitFor();
-console.log("profile + schedule + event pages ok");
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+console.log("profile + schedule tabs + event pages ok");
 
 await page.locator(".notifybar .btn").click();
 await page.getByRole("heading", { name: "Get an email when the schedule changes" }).waitFor();
@@ -306,10 +307,10 @@ const anon = await browser.newContext({ viewport: { width: 390, height: 844 } })
 const anonPage = await anon.newPage();
 anonPage.setDefaultTimeout(10000);
 await anonPage.goto(BASE + "/matt");
-await anonPage.locator(".profcta").getByText("View schedule").waitFor();
+await anonPage.locator(".pubtab", { hasText: "Schedule" }).waitFor();
 if ((await anonPage.locator(".ownerbar").count()) !== 0) fail("visitors must not see the owner bar");
 await anonPage.goto(BASE + "/matt");
-await anonPage.locator(".profcta").getByText("View schedule").waitFor();
+await anonPage.locator(".pubtab", { hasText: "Schedule" }).waitFor();
 
 const ogRes = await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Mozilla/5.0 (smoke test)" } });
 const ogHtml = await ogRes.text();
@@ -436,7 +437,7 @@ console.log("one-off future ok");
 
 // the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
-await page.getByText("Coaching schedule", { exact: true }).waitFor();
+await expect(page.locator(".pubtab.sel", { hasText: "Schedule" }).isVisible(), "schedule tab active on /schedule");
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length > 0);
 const pubCount = await eventCount(page);
 if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);

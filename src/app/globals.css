@@ -753,6 +753,19 @@ button.ps-card { cursor: pointer; }
   text-decoration: none;
 }
 .proflink:active { background: #efe8d8; }
+
+/* About / Schedule tab switcher on the public profile */
+.pubtabs { display: flex; gap: 26px; border-bottom: 1px solid var(--line); margin: 22px 0 0; }
+.pubtab {
+  padding: 12px 2px; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 15px; color: var(--ol); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  -webkit-tap-highlight-color: transparent;
+}
+.pubtab.sel { color: var(--ink); border-bottom-color: var(--ink); }
+.pubpanel { padding-top: 20px; }
+.pubpanel .profphoto { margin-top: 0; }
+.pubpanel .ps-week { margin-top: 2px; }
+
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
