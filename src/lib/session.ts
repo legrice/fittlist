@@ -38,5 +38,13 @@ export async function getSessionUserId(): Promise<string | null> {
 
 export async function destroySession() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  // Overwrite with an already-expired cookie using the SAME path the session
+  // was set with, so the browser actually drops it.
+  jar.set(COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/",
+  });
 }

@@ -452,5 +452,16 @@ const pubCount = await eventCount(page);
 if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);
 console.log("public continuous schedule ok (" + pubCount + " events)");
 
+// ---- log out from the account page destroys the session
+await openProfile(page);
+await page.getByRole("button", { name: "Log out" }).click();
+await page.waitForURL(BASE + "/");
+if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
+  fail("session cookie should be cleared after logout");
+// a fresh load of /app now bounces to the signed-out landing
+await page.goto(BASE + "/app");
+await page.getByText("Never answer").waitFor();
+console.log("logout ok");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

@@ -5,7 +5,8 @@ import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
-import { createSession, getSessionUserId } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { RESERVED_HANDLES, slug } from "@/lib/format";
 
 const CODE_TTL_MS = 10 * 60 * 1000;
@@ -133,4 +134,9 @@ export async function claimProfile(
     .set({ name, handle, ...(signupSource ? { signupSource } : {}) })
     .where(eq(schema.users.id, userId));
   return { ok: true, handle };
+}
+
+export async function logout() {
+  await destroySession();
+  redirect("/");
 }

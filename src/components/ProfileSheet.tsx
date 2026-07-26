@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { logout } from "@/app/actions/auth";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -200,6 +201,11 @@ export function ProfileSheet({
         <button className="calcopy" onClick={copyCal}>
           Apple or Outlook? Copy your calendar feed link
         </button>
+        <form action={logout}>
+          <button type="submit" className="logoutbtn">
+            Log out
+          </button>
+        </form>
       </div>
 
       {shareOpen && (
