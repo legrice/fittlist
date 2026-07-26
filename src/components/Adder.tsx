@@ -7,7 +7,7 @@ import type { BookingLink } from "@/db/schema";
 import {
   CLASS_TYPES,
   DAYS,
-  LINK_LABELS,
+  detectProvider,
   fmtDate,
   fmtTime,
   minutesToTime,
@@ -457,35 +457,34 @@ export function Adder({
 
             <div className="adder-card">
             <label className="flabel">
-              Booking links <span>· website, Mindbody, ClassPass…</span>
+              Booking &amp; profile links <span>· paste any link, we tag it</span>
             </label>
             <div>
               {links.map((l, i) => (
                 <div className="linkrow" key={i}>
-                  <select
-                    value={l.label}
-                    aria-label="Link type"
-                    onChange={(e) =>
-                      setLinks((prev) =>
-                        prev.map((x, xi) => (xi === i ? { ...x, label: e.target.value } : x)),
-                      )
-                    }
-                  >
-                    {LINK_LABELS.map((x) => (
-                      <option key={x}>{x}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="url"
-                    placeholder="Paste the link"
-                    value={l.url}
-                    aria-label="Booking URL"
-                    onChange={(e) =>
-                      setLinks((prev) =>
-                        prev.map((x, xi) => (xi === i ? { ...x, url: e.target.value } : x)),
-                      )
-                    }
-                  />
+                  <div className="linkfield">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="Paste a link"
+                      value={l.url}
+                      aria-label="Link"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      onChange={(e) =>
+                        setLinks((prev) =>
+                          prev.map((x, xi) =>
+                            xi === i ? { url: e.target.value, label: detectProvider(e.target.value) } : x,
+                          ),
+                        )
+                      }
+                    />
+                    {l.url.trim() && (
+                      <span className="linktag">
+                        <Icon name="check" size={13} /> {detectProvider(l.url)}
+                      </span>
+                    )}
+                  </div>
                   <button
                     className="iconbtn"
                     aria-label="Remove link"
@@ -498,11 +497,9 @@ export function Adder({
             </div>
             <button
               className="linktoggle"
-              onClick={() =>
-                setLinks((prev) => [...prev, { label: prev.length ? "ClassPass" : "Website", url: "" }])
-              }
+              onClick={() => setLinks((prev) => [...prev, { label: "Website", url: "" }])}
             >
-              + Add booking link
+              + Add link
             </button>
             </div>
 

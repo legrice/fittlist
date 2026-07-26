@@ -15,6 +15,9 @@ export function ProfileOwnerBar({
   about,
   instagram,
   website,
+  contactEmail,
+  phone,
+  whatsapp,
   photo,
 }: {
   name: string;
@@ -22,6 +25,9 @@ export function ProfileOwnerBar({
   about: string;
   instagram: string;
   website: string;
+  contactEmail: string;
+  phone: string;
+  whatsapp: string;
   photo: string | null;
 }) {
   const router = useRouter();
@@ -33,6 +39,9 @@ export function ProfileOwnerBar({
   const [pAbout, setPAbout] = useState(about);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
+  const [pEmail, setPEmail] = useState(contactEmail);
+  const [pPhone, setPPhone] = useState(phone);
+  const [pWhatsapp, setPWhatsapp] = useState(whatsapp);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -69,6 +78,9 @@ export function ProfileOwnerBar({
     setPAbout(about);
     setPInstagram(instagram);
     setPWebsite(website);
+    setPEmail(contactEmail);
+    setPPhone(phone);
+    setPWhatsapp(whatsapp);
     setPPhoto(photo);
     setEditOpen(true);
   };
@@ -81,6 +93,9 @@ export function ProfileOwnerBar({
         about: pAbout,
         instagram: pInstagram,
         website: pWebsite,
+        contactEmail: pEmail,
+        phone: pPhone,
+        whatsapp: pWhatsapp,
         photo: pPhoto,
       });
       if (!res.ok) {
@@ -211,6 +226,44 @@ export function ProfileOwnerBar({
               autoCapitalize="none"
               autoCorrect="off"
               onChange={(e) => setPWebsite(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pEmail">
+              Contact email <span>· optional, shown as an email button</span>
+            </label>
+            <input
+              id="pEmail"
+              type="email"
+              className="editinput"
+              value={pEmail}
+              maxLength={120}
+              placeholder="you@example.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              onChange={(e) => setPEmail(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pPhone">
+              Phone <span>· optional, call or text</span>
+            </label>
+            <input
+              id="pPhone"
+              type="tel"
+              className="editinput"
+              value={pPhone}
+              maxLength={40}
+              placeholder="+1 555 123 4567"
+              onChange={(e) => setPPhone(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pWhatsapp">
+              WhatsApp <span>· optional</span>
+            </label>
+            <input
+              id="pWhatsapp"
+              type="tel"
+              className="editinput"
+              value={pWhatsapp}
+              maxLength={40}
+              placeholder="+1 555 123 4567"
+              onChange={(e) => setPWhatsapp(e.target.value)}
             />
             <div className="publishwrap">
               <button className="btn si" disabled={saving || !pName.trim()} onClick={saveProfile}>

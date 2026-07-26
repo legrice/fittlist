@@ -47,16 +47,21 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
 page.setDefaultTimeout(10000);
 
-// ---- auth: email + password sign-up -> claim
+// ---- auth: sign up with email (bottom sheet) -> biometric prompt -> pick URL
 await page.goto(BASE + "/");
-await expect(page.getByText("Never answer").isVisible(), "auth screen 1 visible");
+await expect(page.getByText("built for coaches").isVisible(), "landing headline visible");
+await page.getByRole("button", { name: "Sign up with email" }).click();
+await page.getByRole("heading", { name: "Sign up with email" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
 await page.getByPlaceholder("Password").fill("smoke-pass-123");
-await page.getByRole("button", { name: "Continue" }).click();
-await page.getByText("Claim your page.").waitFor();
+await page.getByRole("button", { name: "Create account" }).click();
+// biometric enrollment prompt appears after a password sign-in
+await page.getByRole("heading", { name: "Sign in faster next time?" }).waitFor();
+await page.getByRole("button", { name: "Not now" }).click();
+await page.getByText("Pick your link.").waitFor();
 console.log("password sign-up ok");
-await page.getByPlaceholder("Matt").fill("Matt");
-await expect(page.getByText("fittlist.co/matt").isVisible(), "handle preview shows fittlist.co/matt");
+await page.getByPlaceholder("Your name").fill("Matt");
+await expect(page.getByText("fittlist.co/matt").isVisible(), "URL preview shows fittlist.co/matt");
 await page.getByRole("button", { name: "Claim it" }).click();
 
 // ---- lands in /app on the Poster style with the adder open (form stage)
@@ -79,8 +84,9 @@ await page.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("143 Newa
 await page.getByRole("button", { name: "Add studio" }).click();
 await page.getByText("Added to the studio directory").waitFor();
 
-await page.getByRole("button", { name: "+ Add booking link" }).click();
-await page.getByPlaceholder("Paste the link").fill("https://example.com/book");
+await page.getByRole("button", { name: "+ Add link" }).click();
+await page.getByPlaceholder("Paste a link").fill("https://example.com/book");
+await expect(page.locator(".linktag", { hasText: "Website" }).isVisible(), "booking link auto-tagged");
 
 // start/end behave like a calendar event: nudging start slides end (length holds)
 const mins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
@@ -165,6 +171,8 @@ await page.locator("#pTitle").fill("Strength coach");
 await page.locator(".abouttext").fill("Strength coach across Jersey City.");
 await page.locator("#pInstagram").fill("@mattlifts");
 await page.locator("#pWebsite").fill("mattlifts.com");
+await page.locator("#pEmail").fill("matt@ironbound.co");
+await page.locator("#pPhone").fill("+1 555 867 5309");
 await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
@@ -188,6 +196,14 @@ await expect(
 await expect(
   page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
   "profile shows website link",
+);
+await expect(
+  page.locator('.proflink[href="mailto:matt@ironbound.co"]').isVisible(),
+  "profile shows email contact button",
+);
+await expect(
+  page.locator('.proflink[href^="tel:"]').isVisible(),
+  "profile shows call contact button",
 );
 await expect(page.locator(".profshare").isVisible(), "profile share button");
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
@@ -334,13 +350,17 @@ await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Twitterbot/1.
 
 // Growth loop: sign up through the made-with footer, attributed to matt
 await anonPage.locator(".madewith").getByText("Claim your page").click();
-await anonPage.getByText("Never answer").waitFor();
+await anonPage.getByText("built for coaches").waitFor();
 if (!anonPage.url().includes("via=matt")) fail("footer click lost via param: " + anonPage.url());
+await anonPage.getByRole("button", { name: "Sign up with email" }).click();
+await anonPage.getByRole("heading", { name: "Sign up with email" }).waitFor();
 await anonPage.getByPlaceholder("you@example.com").fill("sam@example.com");
 await anonPage.getByPlaceholder("Password").fill("smoke-pass-sam");
-await anonPage.getByRole("button", { name: "Continue" }).click();
-await anonPage.getByText("Claim your page.").waitFor();
-await anonPage.getByPlaceholder("Matt").fill("Sam");
+await anonPage.getByRole("button", { name: "Create account" }).click();
+// anon context has no virtual authenticator; the biometric prompt still shows
+await anonPage.getByRole("button", { name: "Not now" }).click();
+await anonPage.getByText("Pick your link.").waitFor();
+await anonPage.getByPlaceholder("Your name").fill("Sam");
 await anonPage.getByRole("button", { name: "Claim it" }).click();
 await anonPage.getByRole("heading", { name: "New class" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
@@ -484,13 +504,15 @@ if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("session cookie should be cleared after logout");
 // a fresh load of /app now bounces to the signed-out landing
 await page.goto(BASE + "/app");
-await page.getByText("Never answer").waitFor();
+await page.getByText("built for coaches").waitFor();
 console.log("logout ok");
 
-// ---- magic link: request one, follow the URL from the mail log, land in /app
+// ---- magic link: request one from the login sheet, follow the URL, land in /app
 await page.goto(BASE + "/");
+await page.getByRole("button", { name: "Already have an account? Log in" }).click();
+await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
-await page.getByRole("button", { name: "Email me a magic link" }).click();
+await page.getByRole("button", { name: "Email me a magic link instead" }).click();
 await page.getByText("Check your inbox.").waitFor();
 await new Promise((r) => setTimeout(r, 400));
 const magicUrl = [...readLog().matchAll(/\/auth\/magic\?token=[a-f0-9]{64}/g)].pop()[0];
@@ -501,11 +523,13 @@ if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
 
-// log back out, then sign in with the enrolled passkey (no password typed)
+// log back out, then sign in with the enrolled passkey from the login sheet
 await openProfile(page);
 await page.getByRole("button", { name: "Log out" }).click();
 await page.waitForURL(BASE + "/");
-await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+await page.getByRole("button", { name: "Already have an account? Log in" }).click();
+await page.getByRole("heading", { name: "Log in" }).waitFor();
+await page.getByRole("button", { name: "Use a passkey" }).click();
 await page.waitForURL(BASE + "/app");
 await page.getByText("Your schedule").waitFor();
 console.log("passkey login ok");

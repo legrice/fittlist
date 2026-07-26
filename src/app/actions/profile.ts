@@ -31,6 +31,18 @@ function normalizeWebsite(raw: string): string | null {
   }
 }
 
+function normalizeEmail(raw: string): string | null {
+  const v = raw.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v.slice(0, 120) : null;
+}
+
+// Phone / WhatsApp: keep the digits, a leading +, and common separators.
+function normalizePhone(raw: string): string | null {
+  const v = raw.trim().replace(/[^\d+().\-\s]/g, "");
+  const digits = v.replace(/\D/g, "");
+  return digits.length >= 6 ? v.slice(0, 40) : null;
+}
+
 // Profile edits: name, title, about, social links, and a photo stored as a
 // small data URL. The photo is resized client-side; we just guard size/format.
 export async function updateProfile(input: {
@@ -39,6 +51,9 @@ export async function updateProfile(input: {
   about: string;
   instagram: string;
   website: string;
+  contactEmail?: string;
+  phone?: string;
+  whatsapp?: string;
   photo?: string | null; // data URL, "" to clear, undefined to leave as-is
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
@@ -50,6 +65,9 @@ export async function updateProfile(input: {
   const about = input.about.trim().slice(0, 600);
   const instagram = normalizeInstagram(input.instagram);
   const website = normalizeWebsite(input.website);
+  const contactEmail = normalizeEmail(input.contactEmail ?? "");
+  const phone = normalizePhone(input.phone ?? "");
+  const whatsapp = normalizePhone(input.whatsapp ?? "");
 
   const set: {
     name: string;
@@ -57,8 +75,11 @@ export async function updateProfile(input: {
     about: string;
     instagram: string | null;
     website: string | null;
+    contactEmail: string | null;
+    phone: string | null;
+    whatsapp: string | null;
     photo?: string | null;
-  } = { name, title: title || null, about, instagram, website };
+  } = { name, title: title || null, about, instagram, website, contactEmail, phone, whatsapp };
   if (input.photo !== undefined) {
     const photo = input.photo;
     if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {

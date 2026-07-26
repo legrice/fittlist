@@ -7,6 +7,49 @@ export const TIME_PRESETS = ["06:00", "09:00", "12:00", "17:30", "18:30"];
 export const DUR_PRESETS = [30, 45, 50, 60, 75];
 export const LINK_LABELS = ["Website", "Mindbody", "ClassPass", "Other"];
 
+// Booking/profile providers we recognise from a pasted URL, so the coach never
+// has to pick a label. Order matters only for readability; matching is by
+// hostname substring. Anything unrecognised falls back to "Website".
+const PROVIDER_DOMAINS: [string, string][] = [
+  ["mindbodyonline.com", "Mindbody"],
+  ["mindbody", "Mindbody"],
+  ["classpass.com", "ClassPass"],
+  ["wellnessliving.com", "WellnessLiving"],
+  ["glofox.com", "Glofox"],
+  ["punchpass.com", "Punchpass"],
+  ["momence.com", "Momence"],
+  ["acuityscheduling.com", "Acuity"],
+  ["calendly.com", "Calendly"],
+  ["eventbrite.", "Eventbrite"],
+  ["wodify.com", "Wodify"],
+  ["walla.app", "Walla"],
+  ["sessionsapp.com", "Sessions"],
+  ["trainerize.com", "Trainerize"],
+  ["squareup.com", "Square"],
+  ["square.site", "Square"],
+  ["instagram.com", "Instagram"],
+  ["facebook.com", "Facebook"],
+  ["fb.com", "Facebook"],
+  ["linktr.ee", "Linktree"],
+  ["youtube.com", "YouTube"],
+  ["tiktok.com", "TikTok"],
+];
+
+export function detectProvider(rawUrl: string): string {
+  const url = rawUrl.trim();
+  if (!url) return "Website";
+  let host = url.toLowerCase();
+  try {
+    host = new URL(url.includes("://") ? url : `https://${url}`).hostname.toLowerCase();
+  } catch {
+    /* not a parseable URL yet (still typing); fall back to substring match */
+  }
+  for (const [domain, label] of PROVIDER_DOMAINS) {
+    if (host.includes(domain)) return label;
+  }
+  return "Website";
+}
+
 // Curated class categories. Kept short and canonical so the per-studio catalog
 // (and a future member-facing browse) stays organized instead of ten spellings
 // of the same thing.

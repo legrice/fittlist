@@ -2,11 +2,13 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { startAuthentication } from "@simplewebauthn/browser";
+import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import {
   beginPasskeyLogin,
+  beginPasskeyRegistration,
   claimProfile,
   finishPasskeyLogin,
+  finishPasskeyRegistration,
   passwordAuth,
   requestMagicLink,
 } from "@/app/actions/auth";
@@ -15,26 +17,15 @@ import { brandIcon } from "@/lib/brand";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
-type Stage = "email" | "sent" | "claim";
+type Stage = "landing" | "sent" | "claim";
+type SheetMode = "signup" | "login";
 
 const GoogleG = () => (
   <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
-    <path
-      fill="#EA4335"
-      d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z"
-    />
-    <path
-      fill="#4285F4"
-      d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.8 46.5 24.5z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M10.4 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.1z"
-    />
-    <path
-      fill="#34A853"
-      d="M24 48c6.3 0 11.6-2.1 15.5-5.7l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.7-3.7-13.6-9.9l-7.9 6.1C6.4 42.6 14.6 48 24 48z"
-    />
+    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.9 37.9 46.5 31.8 46.5 24.5z" />
+    <path fill="#FBBC05" d="M10.4 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.1z" />
+    <path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.7l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.7-3.7-13.6-9.9l-7.9 6.1C6.4 42.6 14.6 48 24 48z" />
   </svg>
 );
 
@@ -49,21 +40,25 @@ export function AuthFlow({
   via = null,
   providers = { google: false, apple: false },
 }: {
-  startStage: Stage;
+  startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
 }) {
   const router = useRouter();
-  const viaQ = via ? `?via=${encodeURIComponent(via)}` : "";
   const search = useSearchParams();
-  const [stage, setStage] = useState<Stage>(startStage);
+  const [stage, setStage] = useState<Stage>(startStage === "claim" ? "claim" : "landing");
+  const [sheet, setSheet] = useState<SheetMode | null>(null);
+  const [bio, setBio] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
   const [error, setError] = useState(search.get("expired") ? "That link expired. Try again." : "");
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
+  const pendingProfile = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  const viaQ = via ? `?via=${encodeURIComponent(via)}` : "";
 
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
@@ -72,7 +67,7 @@ export function AuthFlow({
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
 
-  const afterAuth = (needsProfile?: boolean) => {
+  const proceed = (needsProfile: boolean) => {
     if (needsProfile) setStage("claim");
     else router.push("/app");
   };
@@ -82,8 +77,15 @@ export function AuthFlow({
     setError("");
     startTransition(async () => {
       const res = await passwordAuth(email, password);
-      if (res.ok) afterAuth(res.needsProfile);
-      else setError(res.error ?? "Something went wrong.");
+      if (!res.ok) {
+        setError(res.error ?? "Something went wrong.");
+        return;
+      }
+      setSheet(null);
+      pendingProfile.current = !!res.needsProfile;
+      // Offer to add a passkey right after signing in with a password.
+      if (passkeyable && !res.hasPasskey) setBio(true);
+      else proceed(!!res.needsProfile);
     });
   };
 
@@ -95,25 +97,41 @@ export function AuthFlow({
     setError("");
     startTransition(async () => {
       const res = await requestMagicLink(email, via);
-      if (res.ok) setStage("sent");
-      else setError(res.error ?? "Something went wrong.");
+      if (res.ok) {
+        setSheet(null);
+        setStage("sent");
+      } else setError(res.error ?? "Something went wrong.");
     });
   };
 
-  const usePasskey = () => {
+  const enrollBiometric = () => {
+    startTransition(async () => {
+      try {
+        const res = await beginPasskeyRegistration();
+        if (res.ok) {
+          const reg = await startRegistration({ optionsJSON: res.options });
+          await finishPasskeyRegistration(reg, "Passkey");
+        }
+      } catch {
+        /* user cancelled or it failed — either way, continue */
+      }
+      setBio(false);
+      proceed(pendingProfile.current);
+    });
+  };
+
+  const usePasskeyLogin = () => {
     setError("");
     startTransition(async () => {
       try {
         const { options } = await beginPasskeyLogin();
         const response = await startAuthentication({ optionsJSON: options });
         const res = await finishPasskeyLogin(response);
-        if (res.ok) afterAuth(res.needsProfile);
+        if (res.ok) proceed(!!res.needsProfile);
         else setError(res.error ?? "That didn't work.");
       } catch (err) {
         const nm = (err as Error)?.name;
-        if (nm !== "AbortError" && nm !== "NotAllowedError") {
-          setError("Couldn't use a passkey. Try your email instead.");
-        }
+        if (nm !== "AbortError" && nm !== "NotAllowedError") setError("Couldn't use a passkey.");
       }
     });
   };
@@ -122,87 +140,55 @@ export function AuthFlow({
     if (!name.trim()) return;
     setError("");
     startTransition(async () => {
-      const res = await claimProfile(name, via);
+      const res = await claimProfile(name, handle, via);
       if (res.ok) router.push("/app?add=1");
       else setError(res.error ?? "Something went wrong.");
     });
   };
 
-  const handle = name.trim() ? slug(name) : "…";
+  const urlPreview = slug(handle.trim() || name) || "yourname";
 
   return (
     <section className="screen ob">
       <div className="pad">
         <Wordmark variant="ink" className="mark" />
 
-        {stage === "email" && (
+        {stage === "landing" && (
           <>
             <div className="obhero">
-              <span
-                className="obmark"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }}
-              />
+              <span className="obmark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }} />
             </div>
             <h1>
-              Never answer
+              The link in bio,
               <br />
-              &ldquo;what&rsquo;s your
-              <br />
-              schedule?&rdquo; again.
+              built for coaches.
             </h1>
             <p>
-              One link in your bio, every gym you coach at. Log in, or pick a password to start a new
-              page.
+              Your classes across every studio, plus every way to book and reach you. One link in your
+              bio.
             </p>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitPassword()}
-            />
-            <button className="btn" onClick={submitPassword} disabled={pending}>
-              {pending ? "One sec…" : "Continue"}
-            </button>
-            {error && <div className="errorcopy">{error}</div>}
 
-            <div className="obdiv">
-              <span>or</span>
-            </div>
-            <div className="obalts">
-              {providers.google && (
-                <a className="obalt google" href={`/api/google/login${viaQ}`}>
-                  <GoogleG />
-                  Continue with Google
-                </a>
-              )}
-              {providers.apple && (
-                <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
-                  <AppleLogo />
-                  Continue with Apple
-                </a>
-              )}
-              <button className="obalt" onClick={sendLink} disabled={pending}>
-                <Icon name="mail" size={19} />
-                Email me a magic link
-              </button>
-              {passkeyable && (
-                <button className="obalt" onClick={usePasskey} disabled={pending}>
-                  <Icon name="fingerprint" size={19} />
-                  Sign in with a passkey
-                </button>
-              )}
-            </div>
-            <div className="microcopy">New here? Pick any password and you&rsquo;re in.</div>
+            <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
+              Sign up with email
+            </button>
+            {(providers.google || providers.apple) && (
+              <div className="obalts" style={{ marginTop: 12 }}>
+                {providers.google && (
+                  <a className="obalt google" href={`/api/google/login${viaQ}`}>
+                    <GoogleG /> Continue with Google
+                  </a>
+                )}
+                {providers.apple && (
+                  <a className="obalt apple" href={`/api/apple/login${viaQ}`}>
+                    <AppleLogo /> Continue with Apple
+                  </a>
+                )}
+              </div>
+            )}
+            {error && <div className="errorcopy">{error}</div>}
+            <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
+              Already have an account? <b>Log in</b>
+            </button>
           </>
         )}
 
@@ -213,7 +199,7 @@ export function AuthFlow({
               We emailed a one-tap sign-in link to <b>{email}</b>. Open it on this device and
               you&rsquo;re in. It expires in 15 minutes.
             </p>
-            <button className="btn ghost" onClick={() => setStage("email")}>
+            <button className="btn ghost" onClick={() => setStage("landing")}>
               Back
             </button>
             {error && <div className="errorcopy">{error}</div>}
@@ -223,19 +209,35 @@ export function AuthFlow({
 
         {stage === "claim" && (
           <>
-            <h1>Claim your page.</h1>
-            <p>Your name becomes your link. That&rsquo;s the whole signup.</p>
+            <h1>Pick your link.</h1>
+            <p>
+              This is the one link you share everywhere &mdash; your bio, your DMs, your business card.
+              Anyone who opens it sees your schedule and how to reach you.
+            </p>
             <input
               ref={nameRef}
-              placeholder="Matt"
-              autoComplete="off"
-              maxLength={24}
+              placeholder="Your name"
+              autoComplete="name"
+              maxLength={40}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && claim()}
             />
+            <div className="urlfield">
+              <span className="urlfield-pre">fittlist.co/</span>
+              <input
+                className="urlfield-in"
+                placeholder={slug(name) || "yourname"}
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                maxLength={30}
+                value={handle}
+                onChange={(e) => setHandle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && claim()}
+              />
+            </div>
             <div className="handlepreview">
-              fittlist.co/<b>{handle}</b>
+              Your page will live at <b>fittlist.co/{urlPreview}</b>
             </div>
             <button className="btn" onClick={claim} disabled={pending}>
               {pending ? "Claiming…" : "Claim it"}
@@ -244,6 +246,82 @@ export function AuthFlow({
           </>
         )}
       </div>
+
+      {/* email + password bottom sheet (sign up or log in) */}
+      {sheet && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>{sheet === "signup" ? "Sign up with email" : "Log in"}</h2>
+            <p className="lead">
+              {sheet === "signup"
+                ? "Pick any password and you're in."
+                : "Welcome back — enter your email and password."}
+            </p>
+            <input
+              type="email"
+              className="editinput"
+              placeholder="you@example.com"
+              autoComplete="email"
+              autoCapitalize="none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              className="editinput"
+              style={{ marginTop: 10 }}
+              placeholder="Password"
+              autoComplete={sheet === "signup" ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitPassword()}
+            />
+            <button className="authmagic" onClick={sendLink} disabled={pending}>
+              Email me a magic link instead
+            </button>
+            {sheet === "login" && passkeyable && (
+              <button className="obalt" style={{ marginTop: 6 }} onClick={usePasskeyLogin} disabled={pending}>
+                <Icon name="fingerprint" size={19} /> Use a passkey
+              </button>
+            )}
+            {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
+            <div className="publishwrap">
+              <button className="btn si" onClick={submitPassword} disabled={pending}>
+                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* biometric enrollment prompt after a password sign-in */}
+      {bio && (
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) { setBio(false); proceed(pendingProfile.current); } }}>
+          <div className="sheet">
+            <div className="bioicon"><Icon name="fingerprint" size={30} /></div>
+            <h2>Sign in faster next time?</h2>
+            <p className="lead">
+              Add Face ID, Touch ID, or your fingerprint and skip the password next time you log in.
+            </p>
+            <div className="publishwrap">
+              <button className="btn si" onClick={enrollBiometric} disabled={pending}>
+                {pending ? "…" : "Use biometrics"}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={pending}
+                onClick={() => { setBio(false); proceed(pendingProfile.current); }}
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

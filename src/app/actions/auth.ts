@@ -41,7 +41,7 @@ async function clientIp(): Promise<string> {
 export async function passwordAuth(
   emailRaw: string,
   password: string,
-): Promise<{ ok: boolean; needsProfile?: boolean; error?: string }> {
+): Promise<{ ok: boolean; needsProfile?: boolean; hasPasskey?: boolean; error?: string }> {
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   if (!password) return { ok: false, error: "Enter your password." };
@@ -56,7 +56,7 @@ export async function passwordAuth(
     const passwordHash = await hashPassword(password);
     const [created] = await db.insert(schema.users).values({ email, passwordHash }).returning();
     await createSession(created.id);
-    return { ok: true, needsProfile: true };
+    return { ok: true, needsProfile: true, hasPasskey: false };
   }
   if (!user.passwordHash) {
     return {
@@ -68,7 +68,11 @@ export async function passwordAuth(
     return { ok: false, error: "Wrong email or password." };
   }
   await createSession(user.id);
-  return { ok: true, needsProfile: !user.handle };
+  const passkeys = await db
+    .select({ id: schema.credentials.id })
+    .from(schema.credentials)
+    .where(eq(schema.credentials.userId, user.id));
+  return { ok: true, needsProfile: !user.handle, hasPasskey: passkeys.length > 0 };
 }
 
 export async function setPassword(password: string): Promise<{ ok: boolean; error?: string }> {
@@ -277,6 +281,7 @@ export async function finishPasskeyLogin(
 
 export async function claimProfile(
   nameRaw: string,
+  handleRaw: string = "",
   via: string | null = null,
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
@@ -287,23 +292,24 @@ export async function claimProfile(
   const signupSource = via ? `footer:${slug(via)}`.slice(0, 64) : null;
 
   const db = await getDb();
-  const base = slug(name);
-  let handle = base;
-  for (let i = 2; ; i++) {
-    if (!RESERVED_HANDLES.has(handle)) {
-      const [taken] = await db
-        .select({ id: schema.users.id })
-        .from(schema.users)
-        .where(eq(schema.users.handle, handle));
-      if (!taken || taken.id === userId) break;
-    }
-    handle = `${base}${i}`;
+  // The coach picks their URL; fall back to a slug of their name if left blank.
+  const chosen = slug(handleRaw.trim() || name);
+  if (!chosen) return { ok: false, error: "Pick a URL for your page." };
+  if (RESERVED_HANDLES.has(chosen)) {
+    return { ok: false, error: "That URL isn't available. Try another." };
+  }
+  const [taken] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.handle, chosen));
+  if (taken && taken.id !== userId) {
+    return { ok: false, error: `fittlist.co/${chosen} is taken. Try another.` };
   }
   await db
     .update(schema.users)
-    .set({ name, handle, ...(signupSource ? { signupSource } : {}) })
+    .set({ name, handle: chosen, ...(signupSource ? { signupSource } : {}) })
     .where(eq(schema.users.id, userId));
-  return { ok: true, handle };
+  return { ok: true, handle: chosen };
 }
 
 export async function logout() {

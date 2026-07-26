@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
-import { CLASS_TYPES, LINK_LABELS, dowOfDate } from "@/lib/format";
+import { CLASS_TYPES, detectProvider, dowOfDate } from "@/lib/format";
 import { notifyScheduleChange } from "@/lib/notifier";
 import { syncUserToGoogle } from "@/lib/gcal";
 
@@ -35,12 +35,11 @@ function cleanType(t: string | null | undefined): string | null {
 }
 
 function cleanLinks(links: BookingLink[]): BookingLink[] {
+  // The label is derived from the URL server-side, so it's always correct
+  // regardless of what the client sent.
   return links
     .filter((l) => l.url.trim())
-    .map((l) => ({
-      label: LINK_LABELS.includes(l.label) ? l.label : "Other",
-      url: l.url.trim(),
-    }));
+    .map((l) => ({ label: detectProvider(l.url), url: l.url.trim() }));
 }
 
 type SaveResult = { ok: boolean; count?: number; notified?: number; error?: string };

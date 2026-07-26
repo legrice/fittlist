@@ -60,8 +60,28 @@ export async function PublicProfileView({
         </div>
       )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
-      {(user.instagram || user.website) && (
+      {(user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website) && (
         <div className="proflinks">
+          {user.contactEmail && (
+            <a className="proflink" href={`mailto:${user.contactEmail}`}>
+              <Icon name="mail" size={18} /> Email
+            </a>
+          )}
+          {user.phone && (
+            <a className="proflink" href={`tel:${user.phone.replace(/[^\d+]/g, "")}`}>
+              <Icon name="call" size={18} /> Call
+            </a>
+          )}
+          {user.whatsapp && (
+            <a
+              className="proflink"
+              href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener nofollow"
+            >
+              <Icon name="chat" size={18} /> WhatsApp
+            </a>
+          )}
           {user.instagram && (
             <a
               className="proflink"
@@ -131,18 +151,22 @@ export async function PublicProfileView({
           about={user.about ?? ""}
           instagram={user.instagram ?? ""}
           website={user.website ?? ""}
+          contactEmail={user.contactEmail ?? ""}
+          phone={user.phone ?? ""}
+          whatsapp={user.whatsapp ?? ""}
           photo={user.photo}
         />
       )}
       <div className="profwrap">
-        <div className="profhead">
-          <div className="profhead-txt">
-            <h1 className="profname">{user.name}</h1>
-            {user.title?.trim() && <p className="proftitle">{user.title}</p>}
-          </div>
-          <ShareProfileButton name={user.name} />
-        </div>
-        <ProfileTabs handle={handle} initialTab={initialTab} about={about} schedule={schedule} />
+        <ProfileTabs
+          handle={handle}
+          initialTab={initialTab}
+          name={user.name}
+          title={user.title ?? ""}
+          share={<ShareProfileButton name={user.name} />}
+          about={about}
+          schedule={schedule}
+        />
         <div className="madewith">
           Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>
