@@ -207,6 +207,10 @@ await expect(
   page.locator('.proflink[href^="tel:"]').isVisible(),
   "profile shows call contact button",
 );
+await expect(
+  page.locator(".profstudio", { hasText: "Ironbound Strength" }).isVisible(),
+  "profile shows 'Where I coach' studio",
+);
 await expect(page.locator(".profshare").isVisible(), "profile share button");
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
 await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");

@@ -34,6 +34,8 @@ export async function PublicProfileView({
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
+  // Studios/spaces this coach is associated with, derived from where they coach.
+  const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
 
   // Continuous forward calendar: each date from today with classes.
   const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
@@ -97,6 +99,26 @@ export async function PublicProfileView({
               <Icon name="public" size={18} /> Website
             </a>
           )}
+        </div>
+      )}
+      {coachStudios.length > 0 && (
+        <div className="profstudios">
+          <h2 className="prof-sec-h">Where I coach</h2>
+          {coachStudios.map((s) => (
+            <a
+              key={s.id}
+              className="profstudio"
+              href={`https://maps.google.com/?q=${encodeURIComponent(`${s.name}, ${s.address}`)}`}
+              target="_blank"
+              rel="noopener nofollow"
+            >
+              <span className="profstudio-ic"><Icon name="place" size={20} /></span>
+              <span className="profstudio-txt">
+                <span className="nm">{s.name}</span>
+                <span className="ad">{s.address}</span>
+              </span>
+            </a>
+          ))}
         </div>
       )}
     </>

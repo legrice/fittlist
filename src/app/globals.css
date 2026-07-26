@@ -262,7 +262,12 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .sheet {
   background: var(--card); color: var(--ink); width: 100%; border-radius: 16px 16px 0 0;
   padding: 14px 20px 26px; animation: up .22s ease; max-height: 94%; overflow-y: auto;
+  overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
+/* Freeze the background while a bottom sheet is open, so it can't scroll and
+   break sticky footers / form editing. */
+body.sheet-open { overflow: hidden; }
+body.sheet-open .appshell .stage { overflow: hidden; }
 @keyframes up { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet { position: relative; }
@@ -813,6 +818,23 @@ button.ps-card { cursor: pointer; }
   text-decoration: none;
 }
 .proflink:active { background: #efe8d8; }
+
+/* "Where I coach": the studios/spaces a coach is associated with */
+.profstudios { margin-top: 26px; }
+.prof-sec-h {
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin: 0 0 10px;
+}
+.profstudio {
+  display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin-top: 8px;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px; text-decoration: none;
+}
+.profstudio:first-of-type { margin-top: 0; }
+.profstudio:active { background: #efe8d8; }
+.profstudio-ic { color: var(--pg-day); display: flex; flex-shrink: 0; }
+.profstudio-txt { min-width: 0; display: flex; flex-direction: column; }
+.profstudio-txt .nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+.profstudio-txt .ad { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 
 /* Public profile: sticky name + share row, then sticky tabs; title scrolls
    away between them (hidden behind the name row). */

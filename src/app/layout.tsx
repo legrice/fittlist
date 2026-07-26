@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { siteOrigin } from "@/lib/format";
+import { ScrollLock } from "@/components/ScrollLock";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=block" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ScrollLock />
+        {children}
+      </body>
     </html>
   );
 }
