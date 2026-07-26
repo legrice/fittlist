@@ -119,6 +119,19 @@ export function ScheduleScreen({
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
 
   const edit = (c: ClassDto) => {
+    // A weekly class is stored as one row per day; editing it should load every
+    // day it recurs on (its template's weekly rows), not just the tapped day. A
+    // one-off is a single dated row.
+    const days =
+      c.specificDate || !c.templateId
+        ? [c.dayOfWeek]
+        : [
+            ...new Set(
+              classes
+                .filter((x) => !x.specificDate && x.templateId === c.templateId)
+                .map((x) => x.dayOfWeek),
+            ),
+          ];
     setAdder({
       open: true,
       prefill: {
@@ -131,7 +144,7 @@ export function ScheduleScreen({
         location: c.location,
         isPublic: c.isPublic,
         links: c.links.map((l) => ({ ...l })),
-        days: [c.dayOfWeek],
+        days,
         specificDate: c.specificDate,
         classId: c.id,
       },

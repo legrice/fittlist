@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
@@ -117,11 +117,30 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
 
   if (replaceClassId) {
     const [existing] = await db
-      .select({ id: schema.classes.id })
+      .select({
+        id: schema.classes.id,
+        templateId: schema.classes.templateId,
+        specificDate: schema.classes.specificDate,
+      })
       .from(schema.classes)
       .where(and(eq(schema.classes.id, replaceClassId), eq(schema.classes.userId, userId)));
     if (!existing) return { ok: false, error: "Class not found." };
-    await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
+    if (!existing.specificDate && existing.templateId) {
+      // Editing a weekly class replaces its whole recurring set (all its
+      // weekly rows), so the selected days become the new set - one-off dated
+      // instances of the same class are left untouched.
+      await db
+        .delete(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, userId),
+            eq(schema.classes.templateId, existing.templateId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+    } else {
+      await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
+    }
   }
 
   // Templates track latest: publishing upserts the saved class with the

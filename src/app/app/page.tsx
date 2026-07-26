@@ -70,6 +70,7 @@ export default async function SchedulePage({
   // (weekly + one-offs) and today's date, and it lays out the dated days.
   const classes: ClassDto[] = classRows.map((c) => ({
     id: c.id,
+    templateId: c.templateId,
     dayOfWeek: c.dayOfWeek,
     specificDate: c.specificDate,
     startTime: c.startTime,
