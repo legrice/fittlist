@@ -14,7 +14,7 @@ import {
 } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
 import { slug } from "@/lib/format";
-import { brandIcon } from "@/lib/brand";
+import { ONBOARDING_HERO } from "@/lib/heroArt";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -192,9 +192,7 @@ export function AuthFlow({
 
         {stage === "landing" && (
           <>
-            <div className="obhero">
-              <span className="obmark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }} />
-            </div>
+            <div className="obhero" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ONBOARDING_HERO }} />
             <h1>
               The link in bio,
               <br />
