@@ -1,4 +1,4 @@
-// Shared display logic — mirrors the prototype's helpers exactly.
+// Shared display logic - mirrors the prototype's helpers exactly.
 
 export const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] as const;
 export type DayName = (typeof DAYS)[number];
@@ -36,7 +36,7 @@ export function blocksFill(seq: number) {
   return BLOCKS_FILLS[Math.max(0, seq - 1) % BLOCKS_FILLS.length];
 }
 
-// Story-image looks — one per coach personality, all built from brand colors.
+// Story-image looks - one per coach personality, all built from brand colors.
 export type StoryThemeId = "iron" | "paper" | "moss" | "pop";
 export type StoryTheme = {
   label: string;
@@ -111,7 +111,7 @@ export function dowOfDate(iso: string): number {
   return (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
 }
 
-/** day-of-month for an ISO date, UTC — the number shown in the gutter. */
+/** day-of-month for an ISO date, UTC - the number shown in the gutter. */
 export function domOfDate(iso: string): number {
   return new Date(`${iso}T00:00:00Z`).getUTCDate();
 }
@@ -126,7 +126,7 @@ export function fmtDate(iso: string): string {
   });
 }
 
-/** "2026-07-20" -> "Tue, July 20", UTC — one clean line for a day heading. */
+/** "2026-07-20" -> "Tue, July 20", UTC - one clean line for a day heading. */
 export function fmtDateLong(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
     weekday: "short",

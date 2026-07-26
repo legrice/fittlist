@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
-  const title = `${user.name} — fittlist`;
-  const description = user.about?.trim() || `${user.name}'s coaching schedule — every studio, one link.`;
+  const title = `${user.name} · fittlist`;
+  const description = user.about?.trim() || `${user.name}'s coaching schedule, every studio in one link.`;
   const url = `${siteOrigin()}/${handle}`;
   return {
     title,
@@ -47,7 +47,7 @@ export default async function ProfilePage({ params }: Props) {
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
 
-  // The profile is the shared landing — count the visit (not the owner, not bots).
+  // The profile is the shared landing - count the visit (not the owner, not bots).
   const [viewerId, hdrs] = await Promise.all([getSessionUserId(), headers()]);
   if (viewerId !== user.id && !looksLikeBot(hdrs.get("user-agent"))) {
     try {
@@ -107,7 +107,7 @@ export default async function ProfilePage({ params }: Props) {
           </div>
         )}
         <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" /> — coach classes?{" "}
+          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>

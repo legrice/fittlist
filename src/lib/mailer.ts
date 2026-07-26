@@ -1,6 +1,6 @@
 import { getDb, schema } from "@/db";
 
-// The notification sender is deliberately isolated behind this interface —
+// The notification sender is deliberately isolated behind this interface -
 // per the brief, it is the piece most likely to move to SMS later. Callers
 // never touch the transport.
 

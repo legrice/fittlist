@@ -110,7 +110,7 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
 
   const token = await accessTokenFrom(decryptSecret(conn.refreshToken));
   if (!token) {
-    // refresh token revoked/expired — drop the connection so the UI resets
+    // refresh token revoked/expired - drop the connection so the UI resets
     await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, userId));
     return;
   }

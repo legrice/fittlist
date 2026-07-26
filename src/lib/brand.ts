@@ -1,4 +1,4 @@
-// The fittlist mark: an "F" built from rounded blocks — three stacked on the
+// The fittlist mark: an "F" built from rounded blocks - three stacked on the
 // left, a long bar off the top and a medium bar off the middle. Fully accent
 // (warm orange) by default; pass a colour for surfaces where it would vanish.
 export function brandIcon(color = "#dd6a35"): string {

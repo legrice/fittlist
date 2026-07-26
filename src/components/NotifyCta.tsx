@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
 // Rendered once inside the public hero. The hero button shows on desktop
-// (.heronotify) and the fixed bottom bar on mobile (.notifybar) — one
+// (.heronotify) and the fixed bottom bar on mobile (.notifybar) - one
 // instance, shared state, both fixed elements escape the hero's layout.
 export function NotifyCta({ trainerName, handle }: { trainerName: string; handle: string }) {
   const [open, setOpen] = useState(false);
@@ -75,7 +75,7 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
               <>
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on the list</h2>
                 <p className="lead">
-                  Schedule changes go to <b>{email}</b>. Every email also has an unsubscribe link —
+                  Schedule changes go to <b>{email}</b>. Every email also has an unsubscribe link,
                   or tap below. You can rejoin any time.
                 </p>
                 {error && (

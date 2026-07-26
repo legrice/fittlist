@@ -1,5 +1,5 @@
 // Post-smoke check: reads the dev PGlite database directly (run AFTER the
-// server is stopped — PGlite is single-process) and verifies footer signup
+// server is stopped - PGlite is single-process) and verifies footer signup
 // attribution landed in users.signup_source.
 import { PGlite } from "@electric-sql/pglite";
 

@@ -59,12 +59,12 @@ export function Adder({
   const [stage, setStage] = useState<Stage>("form");
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
     isEdit
-      ? { title: "Edit class", lead: "Change anything — one save updates your page." }
+      ? { title: "Edit class", lead: "Change anything. One save updates your page." }
       : prefill
-        ? { title: "Duplicate class", lead: "Same class — pick the new days." }
+        ? { title: "Duplicate class", lead: "Same class. Pick the new days." }
         : {
             title: "New class",
-            lead: "Type it once — fittlist remembers the whole class. Pick days; one publish covers them all.",
+            lead: "Type it once and fittlist remembers the whole class. Pick days; one publish covers them all.",
           },
   );
   const [name, setName] = useState(prefill?.name ?? "");
@@ -107,14 +107,14 @@ export function Adder({
 
   const pickSaved = (t: TemplateDto) => {
     fillFromTemplate(t);
-    setHeading({ title: `Add ${t.name}`, lead: "Everything is filled — just pick the days." });
+    setHeading({ title: `Add ${t.name}`, lead: "Everything is filled. Just pick the days." });
     setStage("form");
   };
 
   const newClass = () => {
     setName("");
     setLinks([]);
-    setHeading({ title: "New class", lead: "Type it once — fittlist remembers the whole class." });
+    setHeading({ title: "New class", lead: "Type it once and fittlist remembers the whole class." });
     setStage("form");
   };
 
@@ -244,7 +244,7 @@ export function Adder({
           <div>
             <h2>Add to your week</h2>
             <p className="lead">
-              Slot in a saved class — everything&rsquo;s already filled — or make a new one.
+              Slot in a saved class (everything&rsquo;s already filled) or make a new one.
             </p>
             <div>
               {templates.map((t) => {
@@ -548,7 +548,7 @@ export function Adder({
                 })
               ) : (
                 <p className="empty">
-                  Nothing named &ldquo;{search.trim()}&rdquo; yet. Add it below — takes ten seconds.
+                  Nothing named &ldquo;{search.trim()}&rdquo; yet. Add it below. Takes ten seconds.
                 </p>
               )}
             </div>

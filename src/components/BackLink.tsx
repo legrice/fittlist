@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 // A "back" navigation: slide the current public page out to the right, flag the
-// next page to enter from the left, then navigate — the reverse of the
+// next page to enter from the left, then navigate - the reverse of the
 // forward (slide-in-from-right) transition.
 export function useSlideBack() {
   const router = useRouter();

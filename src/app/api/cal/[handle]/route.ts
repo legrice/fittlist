@@ -4,7 +4,7 @@ import { mondayOfCurrentWeek } from "@/lib/format";
 
 // Per-coach iCalendar feed. A trainer (or anyone) subscribes to this URL in
 // Google/Apple/Outlook and their fittlist classes appear alongside everything
-// else — weekly classes as recurring events, one-offs as single events.
+// else - weekly classes as recurring events, one-offs as single events.
 //
 // Times are emitted as "floating" (no timezone): "6:00a" shows as 6:00 in the
 // viewer's own timezone, which is what a coach wants for their local classes.
@@ -72,7 +72,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
     "PRODID:-//fittlist//schedule//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    `X-WR-CALNAME:${esc(user.name || handle)} — fittlist`,
+    `X-WR-CALNAME:${esc(user.name || handle)} · fittlist`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
     "X-PUBLISHED-TTL:PT1H",
   ];

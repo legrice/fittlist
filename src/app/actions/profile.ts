@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 
-// Instagram: accept a handle, an @handle, or a full URL — store the bare handle.
+// Instagram: accept a handle, an @handle, or a full URL - store the bare handle.
 function normalizeInstagram(raw: string): string | null {
   const v = raw.trim();
   if (!v) return null;
@@ -17,7 +17,7 @@ function normalizeInstagram(raw: string): string | null {
   return handle ? handle.slice(0, 40) : null;
 }
 
-// Website: accept a bare domain or full URL — store a normalized https URL.
+// Website: accept a bare domain or full URL - store a normalized https URL.
 function normalizeWebsite(raw: string): string | null {
   const v = raw.trim();
   if (!v) return null;
@@ -62,7 +62,7 @@ export async function updateProfile(input: {
   if (input.photo !== undefined) {
     const photo = input.photo;
     if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {
-      return { ok: false, error: "Photo is too large — try a smaller image." };
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
     set.photo = photo || null;
   }

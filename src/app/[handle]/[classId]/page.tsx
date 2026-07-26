@@ -88,12 +88,12 @@ export default async function EventPage({ params }: Props) {
                 </a>
               ))
             ) : (
-              <div className="evnobook">Just show up — no booking needed.</div>
+              <div className="evnobook">Just show up, no booking needed.</div>
             )}
           </div>
         </div>
         <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" /> — coach classes?{" "}
+          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>

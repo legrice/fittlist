@@ -1,13 +1,13 @@
-/* fittlist design system — ported from design/fittlist-prototype-v10.html.
+/* fittlist design system - ported from design/fittlist-prototype-v10.html.
    The prototype renders inside a fake phone frame; here the viewport is the
    frame, so absolute-positioned chrome (fab, toast, sheets, bars) is fixed. */
 
 :root {
-  /* Sora typeface. Warm charcoal ink, cream ground, pleasant orange CTA —
+  /* Sora typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards). */
   --cl: #f4efe1;           /* warm cream page ground */
   --card: #ffffff;         /* white cards float on the cream */
-  --ink: #191502;          /* warm charcoal — text + dark surfaces */
+  --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
   --line: #e6dfcd;         /* warm cream dividers / input borders */
   --rule: #191502;         /* charcoal hairline rules */
@@ -16,7 +16,7 @@
   --sa: #d6d1b3;
   --yellow: #f5f200;
   --radius: 16px;
-  /* soft drop shadows — floating containers, warm-charcoal tint */
+  /* soft drop shadows - floating containers, warm-charcoal tint */
   --soft-shadow: 0 1px 2px rgba(25, 21, 2, .06), 0 5px 16px rgba(25, 21, 2, .08);
   --soft-shadow-lg: 0 2px 6px rgba(25, 21, 2, .07), 0 12px 28px rgba(25, 21, 2, .11);
 }
@@ -94,7 +94,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
   text-transform: uppercase; color: var(--ol);
 }
 
-/* auth — warm cream screen à la the meetgen reference: centered wordmark, a
+/* auth - warm cream screen à la the meetgen reference: centered wordmark, a
    dark charcoal hero tile with the orange mark, big charcoal headline, muted
    copy, a warm-orange CTA. */
 .ob { justify-content: center; background: var(--cl); color: var(--ink); }
@@ -292,7 +292,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
   /* iOS renders native time inputs at a fixed intrinsic width that ignores the
-     grid track and overflows — flatten the appearance so width takes effect. */
+     grid track and overflows - flatten the appearance so width takes effect. */
   -webkit-appearance: none; appearance: none; min-width: 0;
 }
 .timegrid input[type=time]::-webkit-date-and-time-value { margin: 0; text-align: left; min-width: 0; }
@@ -301,7 +301,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 [data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
 [data-theme="poster"] .timegrid input.timeinput:focus { border-color: var(--pg-day); }
 /* start + end side by side */
-/* two equal columns that actually shrink — native time inputs have a wide
+/* two equal columns that actually shrink - native time inputs have a wide
    intrinsic min-width, so the tracks and items must be allowed to hit zero. */
 .timegrid.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 16px; }
 .timegrid.two > div { min-width: 0; }
@@ -356,7 +356,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 
 .fab {
   position: fixed; right: 18px; z-index: 20; background: var(--si); color: #fff;
-  /* no bottom nav anymore — sit near the bottom, clearing the home indicator */
+  /* no bottom nav anymore - sit near the bottom, clearing the home indicator */
   bottom: calc(22px + env(safe-area-inset-bottom));
   width: 64px; height: 64px; padding: 0; border-radius: 999px;
   font-weight: 700; font-size: 36px; line-height: 1;
@@ -372,11 +372,11 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 .empty { color: var(--ol); font-size: 13.5px; padding: 14px 0; }
 
-/* app shell — the stage is the scroll container, not the body */
+/* app shell - the stage is the scroll container, not the body */
 .appshell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 .appshell .stage {
   flex: 1; display: flex; flex-direction: column; min-height: 0;
-  /* NB: no -webkit-overflow-scrolling:touch — WebKit makes such a scroll
+  /* NB: no -webkit-overflow-scrolling:touch - WebKit makes such a scroll
      container a stacking context, which would trap the modal sheets'
      z-index inside it and let the in-flow tab bar paint over them. */
   overflow-y: auto; overscroll-behavior: contain;
@@ -456,11 +456,11 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .linkrow input:focus, .linkrow select:focus { outline: none; border-color: var(--si); }
 .linkrow .iconbtn { flex-shrink: 0; }
 
-/* iOS Safari zooms into any focused form control under 16px — never go below. */
+/* iOS Safari zooms into any focused form control under 16px - never go below. */
 input, select, textarea { font-size: max(1em, 16px); }
 
 /* ============================================================
-   "Blocks" theme — edge-to-edge color bands, one per studio,
+   "Blocks" theme - edge-to-edge color bands, one per studio,
    dark header, big day label on the left. Opt-in per trainer via
    [data-theme="blocks"]. Classic markup/styles are untouched.
    ============================================================ */
@@ -514,7 +514,7 @@ button.bl-band { cursor: pointer; }
 .themetoggle button.sel { background: var(--ink); color: #fff; }
 
 /* ============================================================
-   "Poster" theme — Ink palette. Saturated Exhaust ground, cream
+   "Poster" theme - Ink palette. Saturated Exhaust ground, cream
    cards floating on hard shadows, big Sienna day, green time pill,
    peach info bar. Opt-in per trainer via [data-theme="poster"].
    ============================================================ */
@@ -577,8 +577,8 @@ button.bl-band { cursor: pointer; }
   color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
 }
 
-/* schedule (editable): flat, editorial rows like the story image — time in a
-   mono gutter, bold name, muted studio — with a chevron + press state so it
+/* schedule (editable): flat, editorial rows like the story image - time in a
+   mono gutter, bold name, muted studio - with a chevron + press state so it
    still reads as tappable. */
 [data-theme="poster"] .ps-daycards { gap: 10px; }
 .ps-event {
@@ -662,12 +662,12 @@ button.ps-card { cursor: pointer; }
 }
 [data-theme="poster"] .themetoggle button.sel { background: var(--pg-green); color: #191502; border-color: #191502; }
 
-/* green primary action everywhere — borderless, soft shadow */
+/* green primary action everywhere - borderless, soft shadow */
 [data-theme="poster"] .btn.si {
   background: var(--pg-green); color: #fff; border: none; box-shadow: var(--soft-shadow);
 }
 
-/* the adder sheet + controls — clean, like the calendar page */
+/* the adder sheet + controls - clean, like the calendar page */
 [data-theme="poster"] .sheet { background: var(--pg-cream); border: none; box-shadow: var(--soft-shadow-lg); }
 [data-theme="poster"] .adder input[type=text], [data-theme="poster"] .adder input[type=url],
 [data-theme="poster"] .searchbox input, [data-theme="poster"] .linkrow input,

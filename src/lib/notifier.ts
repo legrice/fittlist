@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
 import { fmtDate, fmtDays, fmtTime, siteOrigin } from "@/lib/format";
 
-// All list email goes through here — the piece most likely to move to SMS
+// All list email goes through here - the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
 
 function secret() {
@@ -55,7 +55,7 @@ export async function sendWelcome(trainer: Trainer, subscriber: { id: string; em
     subject: `You're on ${trainer.name}'s list`,
     text:
       `You're on the list for ${trainer.name}'s coaching schedule.\n\n` +
-      `You'll get an email when it changes — new classes, time changes, cancellations. Nothing else, ever.\n\n` +
+      `You'll get an email when it changes: new classes, time changes, cancellations. Nothing else, ever.\n\n` +
       `The current week is always at ${url}.` +
       unsub.text,
     headers: unsub.headers,
@@ -91,7 +91,7 @@ export async function notifyScheduleChange(trainerUserId: string, change: Schedu
   const when = `${change.specificDate ? fmtDate(change.specificDate) : fmtDays(change.days)} ${fmtTime(change.startTime)}`;
   const line =
     change.verb === "updated"
-      ? `${change.className} updated — now ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`
+      ? `${change.className} updated, now ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`
       : `${change.className} ${change.verb} ${when} at ${change.studioName} → fittlist.co/${trainer.handle}`;
 
   for (const sub of subs) {

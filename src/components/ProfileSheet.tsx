@@ -8,7 +8,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The trainer's account page — a full-screen view reached from the header
+// The trainer's account page - a full-screen view reached from the header
 // avatar. Top tile: avatar + name + title with the three stats beside it;
 // below, cards to preview the public profile and share the week image.
 export function ProfileSheet({

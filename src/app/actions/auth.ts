@@ -84,7 +84,7 @@ export async function verifyCode(
     )
     .orderBy(sql`${schema.authCodes.createdAt} desc`)
     .limit(1);
-  if (!row) return { ok: false, error: "Code expired — request a new one." };
+  if (!row) return { ok: false, error: "Code expired. Request a new one." };
   if (row.attempts >= MAX_ATTEMPTS) {
     return { ok: false, error: "Too many tries. Request a new code." };
   }
@@ -110,7 +110,7 @@ export async function claimProfile(
   via: string | null = null,
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired — log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Log in again." };
   const name = nameRaw.trim();
   if (!name) return { ok: false, error: "Enter your name." };
   // Growth-loop attribution: signup arrived through a public page's footer.

@@ -6,7 +6,7 @@ import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
 import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
 
-// v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
+// v1.5 share image: 1080x1920 story PNG - Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
 // the prototype share sheet's .story card (250px wide) by ~4.32.
 

@@ -81,9 +81,9 @@ export function ScheduleScreen({
     const g = new URLSearchParams(window.location.search).get("gcal");
     if (!g) return;
     const msg: Record<string, string> = {
-      connected: "Google Calendar connected — your classes are syncing",
+      connected: "Google Calendar connected. Your classes are syncing",
       denied: "Google connection cancelled",
-      noretoken: "Couldn't connect — try again and allow calendar access",
+      noretoken: "Couldn't connect. Try again and allow calendar access",
       unconfigured: "Google Calendar isn't set up yet",
       error: "Something went wrong connecting Google",
     };
@@ -110,7 +110,7 @@ export function ScheduleScreen({
     });
   };
 
-  // The infinite calendar: every date from today forward that has classes —
+  // The infinite calendar: every date from today forward that has classes -
   // weekly classes recur on their weekday, one-offs land on their date. The
   // window grows as the trainer scrolls (see the loader below).
   const days = useMemo(() => {
@@ -180,7 +180,7 @@ export function ScheduleScreen({
             <div className="glyph">MON–SUN</div>
             <h2>Your week is empty</h2>
             <p>
-              Add the classes you coach — every studio, one schedule. Your link starts working with
+              Add the classes you coach, every studio in one schedule. Your link starts working with
               the first one.
             </p>
             <button className="btn si" onClick={() => setAdder({ open: true })}>
@@ -188,7 +188,7 @@ export function ScheduleScreen({
             </button>
           </div>
         ) : days.length === 0 ? (
-          <p className="ps-none">Nothing coming up — add a class to fill your calendar.</p>
+          <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
             <div className="ps-week">

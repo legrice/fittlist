@@ -83,7 +83,7 @@ export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: 
               schedule?&rdquo; again.
             </h1>
             <p>
-              One link in your bio, every gym you coach at. Log in with your email. We send a code —
+              One link in your bio, every gym you coach at. Log in with your email. We send a code,
               no passwords.
             </p>
             <input

@@ -26,7 +26,7 @@ export const users = pgTable("users", {
   // Optional social links surfaced as buttons on the public profile.
   instagram: text("instagram"),
   website: text("website"),
-  // e.g. "footer:matt" — set at claim time when signup came through the
+  // e.g. "footer:matt" - set at claim time when signup came through the
   // public-page footer. One of the three §8 success metrics.
   signupSource: text("signup_source"),
   // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".

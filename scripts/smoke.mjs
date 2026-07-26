@@ -435,7 +435,7 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 1);
 console.log("one-off in-week ok");
 
-// a next-week one-off — the continuous calendar spans several weeks, so it shows too
+// a next-week one-off - the continuous calendar spans several weeks, so it shows too
 await addSaved(page);
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(nextWeekD));
@@ -444,7 +444,7 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 2);
 console.log("one-off future ok");
 
-// the public schedule is a continuous multi-week window — it renders events
+// the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
 await page.getByText("Coaching schedule", { exact: true }).waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length > 0);

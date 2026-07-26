@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
   return {
-    title: `${user.name}'s schedule — fittlist`,
+    title: `${user.name}'s schedule · fittlist`,
     alternates: { canonical: `${siteOrigin()}/${handle}/schedule` },
   };
 }
@@ -40,7 +40,7 @@ export default async function SchedulePage({ params }: Props) {
     : [];
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
-  // Continuous forward calendar: each date from today with classes — weekly
+  // Continuous forward calendar: each date from today with classes - weekly
   // classes recur on their weekday, one-offs land on their date.
   const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
   const days: { iso: string; label: string; items: typeof classRows }[] = [];
@@ -117,7 +117,7 @@ export default async function SchedulePage({ params }: Props) {
           </div>
         )}
         <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" /> — coach classes?{" "}
+          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
