@@ -43,7 +43,7 @@ export async function GET(
   const params2 = new URL(req.url).searchParams;
   const span = params2.get("span") === "day" ? "day" : "week";
   const [, t] = storyTheme(params2.get("theme"));
-  const markUri = iconUri(t.lockupAccent ?? "#1B2CF5");
+  const markUri = iconUri(t.lockupAccent ?? t.accent);
 
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));

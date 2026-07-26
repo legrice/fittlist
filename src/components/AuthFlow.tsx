@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { claimProfile, requestCode, verifyCode } from "@/app/actions/auth";
 import { slug } from "@/lib/format";
+import { brandIcon } from "@/lib/brand";
 import { Wordmark } from "@/components/Wordmark";
 
 type Stage = "email" | "code" | "claim";
@@ -63,10 +64,17 @@ export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: 
 
   return (
     <section className="screen ob">
-      <Wordmark variant="cloud" className="mark" />
       <div className="pad">
+        <Wordmark variant="ink" className="mark" />
         {stage === "email" && (
           <>
+            <div className="obhero">
+              <span
+                className="obmark"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }}
+              />
+            </div>
             <h1>
               Never answer
               <br />
