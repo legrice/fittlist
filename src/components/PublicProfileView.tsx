@@ -137,7 +137,6 @@ export async function PublicProfileView({
   const schedule =
     days.length === 0 ? (
       <div className="empty-block" style={{ background: "#fff" }}>
-        <div className="glyph">MON–SUN</div>
         <h2>Nothing on the calendar</h2>
         <p>
           {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email the
