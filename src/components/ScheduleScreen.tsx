@@ -242,7 +242,7 @@ export function ScheduleScreen({
                       return (
                         <button
                           key={`${d.iso}-${c.id}`}
-                          className="ps-event"
+                          className={`ps-event${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
                           onClick={() => edit(c)}
                         >
