@@ -902,9 +902,15 @@ button.ps-card { cursor: pointer; }
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
 .profabout { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
-.proflinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+/* one horizontal, left/right-scrollable rail; bleeds to the content edges */
+.proflinks {
+  display: flex; flex-wrap: nowrap; gap: 10px;
+  margin: 18px -18px 0; padding: 2px 18px;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.proflinks::-webkit-scrollbar { display: none; }
 .proflink {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap;
   padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502;
   text-decoration: none;
