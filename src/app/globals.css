@@ -1291,3 +1291,22 @@ button.ps-card { cursor: pointer; }
 .adminaddform-row .btn { width: auto; padding: 12px 20px; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
 .adminsec-h { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
+
+/* centered confirmation modal (e.g. delete a class) */
+.confirm-scrim {
+  position: fixed; inset: 0; background: rgba(23, 26, 31, .55); z-index: 60;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.confirm-modal {
+  background: var(--card); color: var(--ink); width: 100%; max-width: 360px;
+  border-radius: 20px; padding: 24px 22px calc(22px + env(safe-area-inset-bottom));
+  box-shadow: var(--soft-shadow-lg); text-align: center; animation: up .18s ease;
+}
+.confirm-modal h3 {
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px;
+  letter-spacing: -.01em; margin-bottom: 8px;
+}
+.confirm-modal p { font-size: 14px; color: var(--ol); line-height: 1.5; margin-bottom: 20px; }
+.confirm-modal .btn { width: 100%; }
+.confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
+.confirm-keep[disabled] { opacity: .5; }

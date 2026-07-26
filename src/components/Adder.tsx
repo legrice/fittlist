@@ -558,24 +558,9 @@ export function Adder({
 
             {isEdit && (
               <div className="dangerzone">
-                {confirmDelete ? (
-                  <>
-                    <p className="lead" style={{ marginBottom: 12 }}>
-                      Delete this class? It disappears from your public page and your list gets
-                      notified. This can&rsquo;t be undone.
-                    </p>
-                    <button className="btn si" disabled={pending} onClick={doDelete}>
-                      {pending ? "Deleting…" : "Yes, delete it"}
-                    </button>
-                    <button className="keep" onClick={() => setConfirmDelete(false)}>
-                      Keep it
-                    </button>
-                  </>
-                ) : (
-                  <button className="deletelink" onClick={() => setConfirmDelete(true)}>
-                    Delete this class
-                  </button>
-                )}
+                <button className="deletelink" onClick={() => setConfirmDelete(true)}>
+                  Delete this class
+                </button>
               </div>
             )}
           </div>
@@ -676,6 +661,27 @@ export function Adder({
           </div>
         )}
       </div>
+
+      {confirmDelete && (
+        <div
+          className="confirm-scrim"
+          onClick={(e) => { if (e.target === e.currentTarget && !pending) setConfirmDelete(false); }}
+        >
+          <div className="confirm-modal" role="dialog" aria-modal="true">
+            <h3>Delete this class?</h3>
+            <p>
+              It disappears from your public page and your list gets notified. This can&rsquo;t be
+              undone.
+            </p>
+            <button className="btn si" disabled={pending} onClick={doDelete}>
+              {pending ? "Deleting…" : "Yes, delete it"}
+            </button>
+            <button className="confirm-keep" disabled={pending} onClick={() => setConfirmDelete(false)}>
+              Keep it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
