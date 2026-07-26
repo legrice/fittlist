@@ -22,11 +22,11 @@ const waitSchedule = (pg, n) =>
         .size === k,
     n,
   );
-// My page is now a bottom sheet reached from the user icon on the schedule.
+// The account page is a full-screen view reached from the header avatar.
 const openProfile = async (pg) => {
   await pg.goto(BASE + "/app");
   await pg.locator(".usericon").click();
-  await pg.getByText("Your link", { exact: true }).waitFor();
+  await pg.locator(".acctwrap").waitFor();
 };
 
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
@@ -134,18 +134,25 @@ await page.getByText("Deleted", { exact: true }).waitFor();
 await waitSchedule(page, 2);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
-// ---- My page as a dismissable bottom sheet from the user avatar
+// ---- account page: full-screen view reached from the header avatar
 await expect(
   page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
   "header shows avatar (initial fallback)",
 );
 await page.locator(".usericon").click();
-await page.getByText("Your link", { exact: true }).waitFor();
-await expect(page.getByRole("heading", { name: "My page" }).isVisible(), "profile sheet opens");
-await expect(page.locator(".linkcard .url", { hasText: "fittlist.co/matt" }).isVisible(), "link card shows url");
+await page.locator(".acctwrap").waitFor();
+await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
+await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
+if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three stats on the tile");
+await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
+await expect(page.locator(".acctcard", { hasText: "Share your week" }).isVisible(), "share your week card");
+await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
-// ---- edit profile (name/about) from the sheet
-await page.locator(".profrow-edit").click();
+// ---- tap the avatar -> public profile page with owner back + edit
+await page.locator(".acctid").click();
+await page.waitForURL("**/matt");
+await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
+await page.locator(".ownerbar .owneredit").click();
 await page.getByRole("heading", { name: "Edit profile" }).waitFor();
 await page.locator("#pTitle").fill("Strength coach");
 await page.locator(".abouttext").fill("Strength coach across Jersey City.");
@@ -153,10 +160,9 @@ await page.locator("#pInstagram").fill("@mattlifts");
 await page.locator("#pWebsite").fill("mattlifts.com");
 await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
-await page.locator(".sheet .sheetclose").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png" });
-console.log("profile edit ok");
+await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png", fullPage: true });
+console.log("account + profile edit ok");
 
 // ---- public PROFILE page (mobile): photo/name/about + View schedule CTA
 await page.goto(BASE + "/matt");
@@ -173,7 +179,7 @@ await expect(
 );
 await expect(page.locator(".profshare").isVisible(), "profile share button");
 await expect(page.locator(".profcta").getByText("View schedule").isVisible(), "view schedule CTA");
-await expect(page.locator(".previewbar", { hasText: "Previewing your profile" }).isVisible(), "owner preview bar");
+await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
 await expect(page.getByText("Made with").isVisible(), "made-with footer");
 await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 
@@ -220,12 +226,13 @@ await page.screenshot({ path: SCRATCH + "/shot-desktop-schedule.png" });
 await page.goto(BASE + "/matt/schedule");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await page.screenshot({ path: SCRATCH + "/shot-desktop-public.png" });
+await page.setViewportSize({ width: 390, height: 844 }); // back to the mobile flow
 console.log("desktop ok");
 
 // ---- my-page list count reflects subscriber
 await openProfile(page);
-await page.getByText("on your list", { exact: true }).waitFor();
-const subN = await page.locator(".statgrid .stat").nth(1).locator(".n").textContent();
+await page.getByText("On your list", { exact: true }).waitFor();
+const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
 if (subN.trim() !== "1") fail("subscriber count should be 1, got " + subN);
 console.log("stats ok");
 
@@ -283,14 +290,14 @@ const changeCountAfter = (readLog().match(/\[mail:schedule_change\]/g) || []).le
 if (changeCountAfter !== changeCountBefore) fail("opted-out subscriber still got emailed");
 
 await openProfile(page);
-await page.getByText("on your list", { exact: true }).waitFor();
-const subN2 = await page.locator(".statgrid .stat").nth(1).locator(".n").textContent();
+await page.getByText("On your list", { exact: true }).waitFor();
+const subN2 = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
 if (subN2.trim() !== "0") fail("list should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
 
 // ================= Phase 3: dashboard + growth =================
 await openProfile(page);
-const vis0 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
+const vis0 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
 if (vis0.trim() !== "0") fail("own visits should not count, got " + vis0);
 console.log("own-visit exclusion ok");
 
@@ -299,7 +306,7 @@ const anonPage = await anon.newPage();
 anonPage.setDefaultTimeout(10000);
 await anonPage.goto(BASE + "/matt");
 await anonPage.locator(".profcta").getByText("View schedule").waitFor();
-if ((await anonPage.locator(".previewbar").count()) !== 0) fail("visitors must not see the preview bar");
+if ((await anonPage.locator(".ownerbar").count()) !== 0) fail("visitors must not see the owner bar");
 await anonPage.goto(BASE + "/matt");
 await anonPage.locator(".profcta").getByText("View schedule").waitFor();
 
@@ -332,9 +339,9 @@ await anonPage.getByRole("heading", { name: "New class" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
 
 await openProfile(page);
-const vis1 = await page.locator(".statgrid .stat").nth(0).locator(".n").textContent();
+const vis1 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
 if (vis1.trim() !== "3") fail("visits should be 3 (2 anon views + 1 fetch), got " + vis1);
-await expect(page.getByText("this week").isVisible(), "visits stat shows 'this week'");
+await expect(page.locator(".acctstats .acctstat", { hasText: "Visits" }).isVisible(), "visits stat labelled");
 console.log("visit stats ok");
 
 // ================= v1.5: story image =================
@@ -362,9 +369,9 @@ const cal404 = await ctx.request.get(BASE + "/api/cal/nobodyhere");
 if (cal404.status() !== 404) fail("cal feed for unknown handle should 404, got " + cal404.status());
 console.log("ical feed ok (VEVENT + weekly RRULE)");
 
-// share sheet UI from the profile sheet
+// share sheet UI from the account page
 await openProfile(page);
-await page.locator(".rowcta", { hasText: "Share your week" }).click();
+await page.locator(".acctcard", { hasText: "Share your week" }).click();
 await page.getByRole("heading", { name: "Your story image" }).waitFor();
 await page.waitForFunction(() => {
   const img = document.querySelector(".storyimg");
@@ -389,11 +396,11 @@ for (const th of ["paper", "moss", "pop"]) {
 }
 await page.locator(".themechip", { hasText: "Iron" }).click();
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
-// close the story sheet (on top), then the profile sheet beneath it
-await page.locator(".sheet .sheetclose").last().click();
-await page.waitForFunction(() => document.querySelectorAll(".sheet").length === 1);
+// close the story sheet, then the account page beneath it
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
+await page.locator(".acctback").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("share sheet ok (save + share + colours + X close)");
 
 // ================= dated classes: one-time option =================

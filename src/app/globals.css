@@ -192,7 +192,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 
 /* sheets */
 .sheet-scrim {
-  position: fixed; inset: 0; background: rgba(25, 21, 2, .45); z-index: 20;
+  position: fixed; inset: 0; background: rgba(25, 21, 2, .45); z-index: 46;
   display: flex; align-items: flex-end;
 }
 .sheet {
@@ -330,7 +330,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%) translateY(8px);
   background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
   padding: 11px 16px; border-radius: 11px; opacity: 0; pointer-events: none;
-  transition: opacity .2s, transform .2s; z-index: 30; white-space: nowrap;
+  transition: opacity .2s, transform .2s; z-index: 60; white-space: nowrap;
 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 .empty { color: var(--ol); font-size: 13.5px; padding: 14px 0; }
@@ -767,6 +767,73 @@ button.ps-card { cursor: pointer; }
   width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;
 }
+
+/* ---- account page (full-screen, reached from the header avatar) ---- */
+.acctwrap {
+  position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: var(--pg-cream);
+  padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+}
+.acctwrap > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.accttop { display: flex; align-items: center; gap: 12px; }
+.acctback {
+  width: 38px; height: 38px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+  color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.acct-h { font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; color: #191502; margin: 0; }
+.accttile {
+  display: flex; gap: 8px; margin-top: 18px; padding: 22px 18px;
+  background: #fff; border-radius: 22px; box-shadow: var(--soft-shadow);
+}
+.acctid {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 4px; padding-right: 8px;
+}
+.acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #efe9db; }
+.acctavatar-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Archivo Black', sans-serif; font-size: 38px; color: #c9c2ad;
+}
+.acctname {
+  font-family: 'Archivo Black', sans-serif; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
+  color: #191502; margin-top: 8px; overflow-wrap: anywhere;
+}
+.accttitle-sub {
+  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--pg-day);
+}
+.acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.acctstat { padding: 14px 0 14px 20px; }
+.acctstat + .acctstat { border-top: 1px solid var(--line); }
+.acctstat .n { display: block; font-family: 'Archivo Black', sans-serif; font-size: 26px; color: #191502; line-height: 1; }
+.acctstat .l { display: block; font-size: 13.5px; font-weight: 700; color: #5a5647; margin-top: 5px; }
+.acctcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.acctcard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 18px 16px 16px; background: #fff; border-radius: 20px; box-shadow: var(--soft-shadow);
+  text-align: left;
+}
+.acctcard:active { background: #fbf7ee; }
+.acctcard-ic { color: #191502; margin-bottom: 24px; }
+.acctcard-t { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
+.acctcard-s { font-size: 12.5px; color: #8a8272; line-height: 1.35; }
+.acctwrap .rowcta { margin-top: 12px; }
+
+/* ---- owner bar atop the public profile (back + edit) ---- */
+.ownerbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top)) 18px 4px;
+  max-width: 520px; margin: 0 auto; width: 100%;
+}
+.ownerback {
+  width: 40px; height: 40px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+  color: #191502; display: flex; align-items: center; justify-content: center;
+}
+.ownerback:active { background: #f2ecdd; }
+.owneredit {
+  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; color: #191502;
+  background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
+}
+.owneredit:active { background: #f2ecdd; }
 
 /* owner-only "you're previewing" bar with a way back to the account */
 .previewbar {

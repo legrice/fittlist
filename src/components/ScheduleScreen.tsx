@@ -26,9 +26,6 @@ export function ScheduleScreen({
   handle,
   name,
   title,
-  about,
-  instagram,
-  website,
   photo,
   visits,
   classCount,
@@ -47,9 +44,6 @@ export function ScheduleScreen({
   handle: string;
   name: string;
   title: string;
-  about: string;
-  instagram: string;
-  website: string;
   photo: string | null;
   visits: number;
   classCount: number;
@@ -238,9 +232,6 @@ export function ScheduleScreen({
           handle={handle}
           name={name}
           title={title}
-          about={about}
-          instagram={instagram}
-          website={website}
           photo={photo}
           visits={visits}
           subsCount={subsCount}

@@ -97,9 +97,6 @@ export default async function SchedulePage({
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}
       title={user?.title ?? ""}
-      about={user?.about ?? ""}
-      instagram={user?.instagram ?? ""}
-      website={user?.website ?? ""}
       photo={user?.photo ?? null}
       visits={visits}
       classCount={classRows.length}

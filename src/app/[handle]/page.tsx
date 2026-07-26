@@ -9,6 +9,7 @@ import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
+import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { ShareProfileButton } from "@/components/ShareProfileButton";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -60,14 +61,14 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <div className="pub profile" data-theme={user.theme}>
       {isOwner && (
-        <div className="previewbar">
-          <span>
-            <Icon name="visibility" size={16} className="pv-eye" /> Previewing your profile
-          </span>
-          <Link className="previewback" href="/app">
-            ← Back to your account
-          </Link>
-        </div>
+        <ProfileOwnerBar
+          name={user.name}
+          title={user.title ?? ""}
+          about={user.about ?? ""}
+          instagram={user.instagram ?? ""}
+          website={user.website ?? ""}
+          photo={user.photo}
+        />
       )}
       <div className="profwrap">
         <div className="profhead">
