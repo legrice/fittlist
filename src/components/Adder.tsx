@@ -581,7 +581,7 @@ export function Adder({
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div>
+            <div className="studio-list">
               {filteredStudios.length ? (
                 filteredStudios.map((s) => (
                   <button
