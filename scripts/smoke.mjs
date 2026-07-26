@@ -1,3 +1,6 @@
+// Run the server with INVITE_ONLY=false for this suite: it exercises the full
+// self-serve signup flow, which the invite-only beta gate would otherwise
+// block. The gate itself is covered by scripts/invite-smoke.mjs.
 import { chromium } from "playwright";
 import fs from "fs";
 

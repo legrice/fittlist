@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { googleConfigured } from "@/lib/gcal";
 import { appleConfigured } from "@/lib/apple";
+import { inviteOnly } from "@/lib/invites";
 import { AuthFlow } from "@/components/AuthFlow";
 
 export default async function Home({
@@ -20,7 +21,7 @@ export default async function Home({
     const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     if (user?.handle) redirect("/app");
     // Signed in but never claimed a handle: resume onboarding at the claim step.
-    if (user) return <AuthFlow startStage="claim" via={viaHandle} providers={providers} />;
+    if (user) return <AuthFlow startStage="claim" via={viaHandle} providers={providers} inviteOnly={inviteOnly()} />;
   }
-  return <AuthFlow startStage="email" via={viaHandle} providers={providers} />;
+  return <AuthFlow startStage="email" via={viaHandle} providers={providers} inviteOnly={inviteOnly()} />;
 }

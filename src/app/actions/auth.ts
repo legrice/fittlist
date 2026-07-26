@@ -21,6 +21,7 @@ import { sendMessage } from "@/lib/mailer";
 import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
+import { acceptInvite, emailInvited, INVITE_MSG } from "@/lib/invites";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
@@ -50,11 +51,13 @@ export async function passwordAuth(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
 
   if (!user) {
-    // No account yet: treat this as sign-up and enforce a minimum strength.
+    // No account yet: treat this as sign-up. Gate on the invite list first.
+    if (!(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
     const problem = passwordProblem(password);
     if (problem) return { ok: false, error: problem };
     const passwordHash = await hashPassword(password);
     const [created] = await db.insert(schema.users).values({ email, passwordHash }).returning();
+    await acceptInvite(email, created.id);
     await createSession(created.id);
     return { ok: true, needsProfile: true, hasPasskey: false };
   }
@@ -139,6 +142,15 @@ export async function requestMagicLink(
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
 
   const db = await getDb();
+
+  // Invite gate: an email with no account yet must be invited to receive a link
+  // (existing accounts can always request a login link).
+  const [existing] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, email));
+  if (!existing && !(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
+
   const since = new Date(Date.now() - MAGIC_TTL_MS);
   const ip = await clientIp();
 
@@ -202,7 +214,11 @@ export async function consumeMagicToken(
 
   let [user] = await db.select().from(schema.users).where(eq(schema.users.email, row.email));
   if (!user) {
+    // Defense in depth: requestMagicLink already gates, but never create an
+    // account here for an email that isn't invited.
+    if (!(await emailInvited(row.email))) return null;
     [user] = await db.insert(schema.users).values({ email: row.email }).returning();
+    await acceptInvite(row.email, user.id);
   }
   await createSession(user.id);
   return { needsProfile: !user.handle, via: row.via };

@@ -10,6 +10,26 @@ import { sendMessage } from "@/lib/mailer";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
+// Mint a 24h one-time sign-in link for an email and email it. Returns the URL.
+async function mintLink(email: string, subject: string, intro: string): Promise<string> {
+  const token = randomBytes(32).toString("hex");
+  const db = await getDb();
+  await db.insert(schema.magicLinks).values({
+    email,
+    tokenHash: sha256(token),
+    ip: "admin",
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  });
+  const url = `${siteOrigin()}/auth/magic?token=${token}`;
+  await sendMessage({
+    to: email,
+    kind: "magic_link",
+    subject,
+    text: `${intro}\n\n${url}\n\nThis link works once and expires in 24 hours.`,
+  });
+  return url;
+}
+
 // Add a studio straight to the shared directory from the admin panel.
 export async function adminAddStudio(
   nameRaw: string,
@@ -38,20 +58,33 @@ export async function adminSendMagicLink(
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
 
-  const token = randomBytes(32).toString("hex");
+  const url = await mintLink(email, "Your fittlist sign-in link", "Tap to sign in to fittlist:");
+  return { ok: true, url, emailed: true };
+}
+
+// Invite a coach by email (invite-only beta gate) and email them a sign-in link
+// so they can join right away. Returns the link so the admin can copy it too.
+export async function adminInvite(
+  emailRaw: string,
+  labelRaw: string,
+): Promise<{ ok: boolean; url?: string; emailed?: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const email = emailRaw.trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
+  const label = labelRaw.trim().slice(0, 120) || null;
+
   const db = await getDb();
-  await db.insert(schema.magicLinks).values({
+  await db
+    .insert(schema.invites)
+    .values({ email, label, invitedByUserId: admin.id })
+    .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
+
+  const url = await mintLink(
     email,
-    tokenHash: sha256(token),
-    ip: "admin",
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  });
-  const url = `${siteOrigin()}/auth/magic?token=${token}`;
-  await sendMessage({
-    to: email,
-    kind: "magic_link",
-    subject: "Your fittlist sign-in link",
-    text: `Tap to sign in to fittlist:\n\n${url}\n\nThis link works once and expires in 24 hours.`,
-  });
+    "You're invited to fittlist",
+    "You're in! Tap to set up your fittlist page:",
+  );
+  revalidatePath("/admin");
   return { ok: true, url, emailed: true };
 }

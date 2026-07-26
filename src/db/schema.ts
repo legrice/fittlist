@@ -46,6 +46,18 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Invite-only beta: an email must be invited before it can create an account.
+// Existing accounts are never checked (only the new-user branch consults this).
+export const invites = pgTable("invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(), // normalized lowercase
+  label: text("label"), // optional note: name, gym, how you know them
+  invitedByUserId: uuid("invited_by_user_id").references(() => users.id),
+  acceptedUserId: uuid("accepted_user_id").references(() => users.id),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Studios a coach says they work at, chosen in the setup wizard. Independent of
 // the classes they publish, so "Where I coach" can be populated before any class
 // exists. Public "Where I coach" is the union of these and class-derived studios.

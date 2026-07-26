@@ -39,10 +39,12 @@ export function AuthFlow({
   startStage,
   via = null,
   providers = { google: false, apple: false },
+  inviteOnly = false,
 }: {
   startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
+  inviteOnly?: boolean;
 }) {
   const router = useRouter();
   const search = useSearchParams();
@@ -53,7 +55,13 @@ export function AuthFlow({
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
-  const [error, setError] = useState(search.get("expired") ? "That link expired. Try again." : "");
+  const [error, setError] = useState(
+    search.get("invite")
+      ? "Fittlist is invite-only during beta. Ask for an invite, then sign in with that email."
+      : search.get("expired")
+        ? "That link expired. Try again."
+        : "",
+  );
   const [pending, startTransition] = useTransition();
   const [passkeyable, setPasskeyable] = useState(false);
   const pendingProfile = useRef(false);
@@ -257,7 +265,9 @@ export function AuthFlow({
             <h2>{sheet === "signup" ? "Sign up with email" : "Log in"}</h2>
             <p className="lead">
               {sheet === "signup"
-                ? "Pick any password and you're in."
+                ? inviteOnly
+                  ? "Invite-only beta. Use the email you were invited with."
+                  : "Pick any password and you're in."
                 : "Welcome back — enter your email and password."}
             </p>
             <input

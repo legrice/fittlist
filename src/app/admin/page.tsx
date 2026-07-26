@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
@@ -14,7 +15,7 @@ export default async function AdminPage() {
   if (!admin) notFound();
 
   const db = await getDb();
-  const [users, studios, classes, subs, creds, gconns, picked] = await Promise.all([
+  const [users, studios, classes, subs, creds, gconns, picked, invitesRows] = await Promise.all([
     db.select().from(schema.users).orderBy(schema.users.createdAt),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -35,6 +36,7 @@ export default async function AdminPage() {
     db
       .select({ userId: schema.coachStudios.userId, studioId: schema.coachStudios.studioId })
       .from(schema.coachStudios),
+    db.select().from(schema.invites).orderBy(desc(schema.invites.createdAt)),
   ]);
 
   // Roll the join tables up into per-user and per-studio counts in memory (beta
@@ -86,13 +88,37 @@ export default async function AdminPage() {
     classCount: classCountByStudio.get(s.id) ?? 0,
   }));
 
+  const userById = new Map(users.map((u) => [u.id, u]));
+  const invites = invitesRows.map((i) => {
+    const accepted = i.acceptedUserId ? userById.get(i.acceptedUserId) : undefined;
+    return {
+      id: i.id,
+      email: i.email,
+      label: i.label ?? "",
+      invited: fmt(i.createdAt),
+      accepted: !!i.acceptedAt,
+      acceptedOn: fmt(i.acceptedAt),
+      acceptedName: accepted?.name || "",
+      acceptedHandle: accepted?.handle ?? "",
+    };
+  });
+
   const stats = {
     coaches: users.filter((u) => u.handle).length,
     studios: studios.length,
     classes: classes.length,
     subscribers: subs.filter((s) => !s.optedOutAt).length,
     newThisWeek: users.filter((u) => u.createdAt && new Date(u.createdAt).getTime() >= weekAgo).length,
+    pendingInvites: invitesRows.filter((i) => !i.acceptedAt).length,
   };
 
-  return <AdminPanel adminEmail={admin.email} coaches={coaches} studios={studioRows} stats={stats} />;
+  return (
+    <AdminPanel
+      adminEmail={admin.email}
+      coaches={coaches}
+      studios={studioRows}
+      invites={invites}
+      stats={stats}
+    />
+  );
 }
