@@ -45,6 +45,12 @@ a { color: inherit; }
 .wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
 .wm .wm-text { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
+.wm .wm-beta {
+  align-self: flex-start; margin-top: .05em; background: var(--si); color: #fff;
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: .42em;
+  letter-spacing: .06em; text-transform: uppercase; padding: .28em .55em; border-radius: 999px;
+  line-height: 1;
+}
 .appbar .sub {
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);

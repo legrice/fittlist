@@ -178,7 +178,7 @@ export function ScheduleScreen({
     <section className="screen">
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         <div className="brandbar">
-          <Wordmark variant="ink" />
+          <Wordmark variant="ink" beta />
           <button
             className="usericon"
             aria-label="My page"
