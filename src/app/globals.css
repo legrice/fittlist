@@ -710,10 +710,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 32px; letter-spacing: -.02em; line-height: 1.05;
   color: #191502; margin: 0;
 }
-.proftitle {
-  font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
-  letter-spacing: .04em; text-transform: uppercase; color: var(--pg-day); margin: 8px 0 0;
-}
+.proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
 .profabout { font-size: 15px; line-height: 1.55; color: #565a63; margin-top: 18px; white-space: pre-wrap; }
 .proflinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .proflink {
@@ -782,12 +779,12 @@ button.ps-card { cursor: pointer; }
 .acctclose:active { background: #e6e9ef; }
 .acct-h { font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; color: #191502; margin: 0; }
 .accttile {
-  display: flex; gap: 8px; margin-top: 18px; padding: 22px 18px;
+  display: flex; align-items: stretch; gap: 8px; margin-top: 18px; padding: 22px 18px;
   background: #fff; border-radius: 22px; box-shadow: var(--soft-shadow);
 }
 .acctid {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 4px; padding-right: 8px;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; gap: 4px; padding-right: 8px;
 }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #e7eaef; }
 .acctavatar-empty {
@@ -798,12 +795,10 @@ button.ps-card { cursor: pointer; }
   font-family: 'Archivo Black', sans-serif; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
   color: #191502; margin-top: 8px; overflow-wrap: anywhere;
 }
-.accttitle-sub {
-  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
-  letter-spacing: .04em; text-transform: uppercase; color: var(--pg-day);
-}
-.acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.acctstat { padding: 14px 0 14px 20px; }
+.accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 1px; }
+/* the 3 stats split the tile height evenly so both columns balance */
+.acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
 .acctstat + .acctstat { border-top: 1px solid var(--line); }
 .acctstat .n { display: block; font-family: 'Archivo Black', sans-serif; font-size: 26px; color: #191502; line-height: 1; }
 .acctstat .l { display: block; font-size: 13.5px; font-weight: 700; color: #565a63; margin-top: 5px; }

@@ -112,6 +112,7 @@ export function ProfileSheet({
   };
 
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
+  const firstName = name.trim().split(/\s+/)[0] || name;
 
   return (
     <>
@@ -133,7 +134,7 @@ export function ProfileSheet({
                 {initial}
               </span>
             )}
-            <span className="acctname">{name}</span>
+            <span className="acctname">{firstName}</span>
             {title ? <span className="accttitle-sub">{title}</span> : null}
           </button>
           <div className="acctstats">
