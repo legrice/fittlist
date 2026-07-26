@@ -297,7 +297,7 @@ export function Adder({
             <label className="flabel">Who sees this?</label>
             <div className="modetoggle">
               <button type="button" className={isPublic ? "sel" : ""} onClick={() => setIsPublic(true)}>
-                On my page
+                Public
               </button>
               <button type="button" className={!isPublic ? "sel" : ""} onClick={() => setIsPublic(false)}>
                 Private
@@ -305,8 +305,8 @@ export function Adder({
             </div>
             <p className="durnote" style={{ marginTop: 8 }}>
               {isPublic
-                ? "Public — shows on your schedule and your public page."
-                : "Use for private clients or classes. On your schedule only, hidden from your public schedule."}
+                ? "For public classes. Will be visible on your private schedule and on your public page."
+                : "Use for private clients or classes. Visible on your schedule only, hidden from your public page."}
             </p>
             </div>
 
