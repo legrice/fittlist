@@ -3,7 +3,7 @@
    frame, so absolute-positioned chrome (fab, toast, sheets, bars) is fixed. */
 
 :root {
-  --cl: #eef0f3;
+  --cl: #f5f5f5;
   --card: #ffffff;
   --ink: #191502;
   --ol: #565a63;
@@ -483,7 +483,7 @@ button.bl-band { cursor: pointer; }
    peach info bar. Opt-in per trainer via [data-theme="poster"].
    ============================================================ */
 [data-theme="poster"] {
-  --pg-ground: #191502; --pg-cream: #EEF0F3; --pg-day: #DD583A;
+  --pg-ground: #191502; --pg-cream: #F5F5F5; --pg-day: #DD583A;
   --pg-green: #C6F23C; --pg-peach: #F4A574;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
