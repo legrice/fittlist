@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { adminActOnRequest, adminAddStudio, adminInvite, adminSendMagicLink } from "@/app/actions/admin";
+import {
+  adminActOnRequest,
+  adminAddStudio,
+  adminDeleteStudio,
+  adminInvite,
+  adminSendMagicLink,
+} from "@/app/actions/admin";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -175,17 +181,7 @@ export function AdminPanel({
             <AddStudio toast={toast} />
             <div className="admincards">
               {shownStudios.map((s) => (
-                <div key={s.id} className="admincard">
-                  <div className="admincard-h">
-                    <span className="admincard-nm">{s.name}</span>
-                  </div>
-                  <div className="admincard-sub">{s.address}</div>
-                  <div className="adminmeta">
-                    <span>{s.coachCount} {s.coachCount === 1 ? "coach" : "coaches"}</span>
-                    <span>{s.classCount} {s.classCount === 1 ? "class" : "classes"}</span>
-                    {s.added && <span>added {s.added}</span>}
-                  </div>
-                </div>
+                <StudioCard key={s.id} s={s} toast={toast} />
               ))}
               {!shownStudios.length && <p className="adminempty">No studios match.</p>}
             </div>
@@ -421,6 +417,52 @@ function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
         ) : (
           <button className="btn ghost adminaction" disabled={pending} onClick={resend}>
             {pending ? "Creating…" : "Resend link"}
+          </button>
+        ))}
+    </div>
+  );
+}
+
+function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
+  const [pending, start] = useTransition();
+  const [confirming, setConfirming] = useState(false);
+  const removable = s.coachCount === 0 && s.classCount === 0;
+
+  const remove = () =>
+    start(async () => {
+      const res = await adminDeleteStudio(s.id);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't remove");
+        setConfirming(false);
+        return;
+      }
+      toast("Studio removed");
+    });
+
+  return (
+    <div className="admincard">
+      <div className="admincard-h">
+        <span className="admincard-nm">{s.name}</span>
+      </div>
+      <div className="admincard-sub">{s.address}</div>
+      <div className="adminmeta">
+        <span>{s.coachCount} {s.coachCount === 1 ? "coach" : "coaches"}</span>
+        <span>{s.classCount} {s.classCount === 1 ? "class" : "classes"}</span>
+        {s.added && <span>added {s.added}</span>}
+      </div>
+      {removable &&
+        (confirming ? (
+          <div className="adminaddform-row" style={{ marginTop: 10 }}>
+            <button className="btn si" disabled={pending} onClick={remove}>
+              {pending ? "Removing…" : "Remove studio"}
+            </button>
+            <button className="linktoggle" disabled={pending} onClick={() => setConfirming(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className="adminremove" onClick={() => setConfirming(true)}>
+            Remove
           </button>
         ))}
     </div>

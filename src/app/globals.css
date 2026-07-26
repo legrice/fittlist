@@ -1311,3 +1311,4 @@ button.ps-card { cursor: pointer; }
 .confirm-modal .btn { width: 100%; }
 .confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 .confirm-keep[disabled] { opacity: .5; }
+.adminremove { margin-top: 10px; font-weight: 700; font-size: 13px; color: #a8452a; }

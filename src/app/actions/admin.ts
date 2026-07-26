@@ -63,6 +63,31 @@ export async function adminSendMagicLink(
   return { ok: true, url, emailed: true };
 }
 
+// Remove a studio from the shared directory. Only allowed when nothing depends
+// on it (no classes, templates, or coach associations) so we never orphan data;
+// a studio that's in use should be edited, not deleted.
+export async function adminDeleteStudio(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+
+  const inUse =
+    (await db.select({ x: schema.classes.id }).from(schema.classes).where(eq(schema.classes.studioId, id)).limit(1)).length ||
+    (await db.select({ x: schema.classTemplates.id }).from(schema.classTemplates).where(eq(schema.classTemplates.studioId, id)).limit(1)).length ||
+    (await db.select({ x: schema.coachStudios.studioId }).from(schema.coachStudios).where(eq(schema.coachStudios.studioId, id)).limit(1)).length;
+  if (inUse) {
+    return { ok: false, error: "This studio is in use by a class or coach. Edit it instead of deleting." };
+  }
+
+  // studio_classes are just catalog groundwork — safe to clear before removing.
+  await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
+  await db.delete(schema.studios).where(eq(schema.studios.id, id));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Invite a coach by email (invite-only beta gate) and email them a sign-in link
 // so they can join right away. Returns the link so the admin can copy it too.
 export async function adminInvite(

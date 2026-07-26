@@ -127,6 +127,13 @@
       "when": 1785089096891,
       "tag": "0017_public_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785091471990,
+      "tag": "0018_seed_jc_studios",
+      "breakpoints": true
     }
   ]
 }
