@@ -19,6 +19,7 @@ export function ScheduleScreen({
   todayIso,
   studios,
   templates,
+  customTypes,
   lastUsed,
   subsCount,
   autoOpenAdder,
@@ -28,6 +29,13 @@ export function ScheduleScreen({
   photo,
   visits,
   classCount,
+  email,
+  instagram,
+  website,
+  contactEmail,
+  phone,
+  whatsapp,
+  about,
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -39,6 +47,7 @@ export function ScheduleScreen({
   todayIso: string;
   studios: StudioDto[];
   templates: TemplateDto[];
+  customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
   autoOpenAdder: boolean;
@@ -48,6 +57,13 @@ export function ScheduleScreen({
   photo: string | null;
   visits: number;
   classCount: number;
+  email: string;
+  instagram: string;
+  website: string;
+  contactEmail: string;
+  phone: string;
+  whatsapp: string;
+  about: string;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -58,7 +74,7 @@ export function ScheduleScreen({
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
   const [profileOpen, setProfileOpen] = useState(false);
   // "up" when opened from the header avatar, "left" when reached via a back tap.
-  const [acctAnim, setAcctAnim] = useState<"up" | "left">("up");
+  const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -74,7 +90,9 @@ export function ScheduleScreen({
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
     if (new URLSearchParams(window.location.search).get("acct")) {
-      setAcctAnim("left");
+      // Returning from the public preview: the public page already slid out to
+      // the right, so the account view should just be here, not animate in.
+      setAcctAnim("none");
       setProfileOpen(true);
       window.history.replaceState(null, "", "/app");
     }
@@ -249,6 +267,13 @@ export function ScheduleScreen({
           visits={visits}
           subsCount={subsCount}
           classCount={classCount}
+          email={email}
+          instagram={instagram}
+          website={website}
+          contactEmail={contactEmail}
+          phone={phone}
+          whatsapp={whatsapp}
+          about={about}
           googleConfigured={googleConfigured}
           googleConnected={googleConnected}
           googleEmail={googleEmail}
@@ -262,6 +287,7 @@ export function ScheduleScreen({
         <Adder
           studios={studios}
           templates={templates}
+          customTypes={customTypes}
           lastUsed={lastUsed}
           subsCount={subsCount}
           prefill={adder.prefill}

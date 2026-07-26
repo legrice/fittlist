@@ -75,16 +75,58 @@ export async function passwordAuth(
   return { ok: true, needsProfile: !user.handle, hasPasskey: passkeys.length > 0 };
 }
 
-export async function setPassword(password: string): Promise<{ ok: boolean; error?: string }> {
+// Sensitive account changes re-authenticate with the current password when the
+// account has one, so a hijacked session can't silently take everything over.
+export async function setPassword(
+  newPassword: string,
+  currentPassword: string = "",
+): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired. Log in again." };
-  const problem = passwordProblem(password);
+  const problem = passwordProblem(newPassword);
   if (problem) return { ok: false, error: problem };
   const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
+    return { ok: false, error: "Current password is incorrect." };
+  }
   await db
     .update(schema.users)
-    .set({ passwordHash: await hashPassword(password) })
+    .set({ passwordHash: await hashPassword(newPassword) })
     .where(eq(schema.users.id, userId));
+  return { ok: true };
+}
+
+export async function changeEmail(
+  newEmailRaw: string,
+  currentPassword: string = "",
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  const email = newEmailRaw.trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (email === user.email) return { ok: true };
+  if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
+    return { ok: false, error: "Enter your current password to change your email." };
+  }
+  const [taken] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, email));
+  if (taken && taken.id !== userId) return { ok: false, error: "That email is already in use." };
+  await db.update(schema.users).set({ email }).where(eq(schema.users.id, userId));
+  return { ok: true };
+}
+
+export async function removePasskeys(): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const db = await getDb();
+  await db.delete(schema.credentials).where(eq(schema.credentials.userId, userId));
   return { ok: true };
 }
 

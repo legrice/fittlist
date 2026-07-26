@@ -1,7 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  addClassType,
+  deleteClass,
+  getStudioCatalog,
+  publishClasses,
+  updateClass,
+} from "@/app/actions/classes";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import {
@@ -35,6 +41,7 @@ type Stage = "start" | "form" | "pick" | "new";
 export function Adder({
   studios: studiosProp,
   templates,
+  customTypes,
   lastUsed,
   subsCount,
   prefill,
@@ -46,6 +53,7 @@ export function Adder({
 }: {
   studios: StudioDto[];
   templates: TemplateDto[];
+  customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
   prefill?: AdderPrefill;
@@ -90,18 +98,69 @@ export function Adder({
   const [nsAddr, setNsAddr] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Studio-first: the class list is scoped to the chosen studio's catalog.
+  const [catalog, setCatalog] = useState<
+    { name: string; classType: string | null; description: string | null }[]
+  >([]);
+  const [extraTypes, setExtraTypes] = useState<string[]>(customTypes);
+  const [addingType, setAddingType] = useState(false);
+  const [newType, setNewType] = useState("");
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
 
-  // Reusing a saved class fills everything EXCEPT the time, so the coach sets a
-  // fresh time for this slot rather than inheriting the last one.
-  const fillFromTemplate = (t: TemplateDto) => {
-    setName(t.name);
-    setClassType(t.classType ?? null);
-    setDescription(t.description ?? "");
-    setStudioId(t.studioId);
-    setLinks(t.links.map((l) => ({ ...l })));
+  // Load the studio's shared class catalog whenever the studio changes.
+  useEffect(() => {
+    if (!studioId) {
+      setCatalog([]);
+      return;
+    }
+    let live = true;
+    getStudioCatalog(studioId).then((rows) => {
+      if (live) setCatalog(rows);
+    });
+    return () => {
+      live = false;
+    };
+  }, [studioId]);
+
+  // Reuse a class already logged at this studio: fills the name, type, and
+  // description, leaving the coach to set their own time, days, and links.
+  const fillFromCatalog = (c: { name: string; classType: string | null; description: string | null }) => {
+    setName(c.name);
+    setClassType(c.classType ?? null);
+    setDescription(c.description ?? "");
+  };
+
+  // The full Type dropdown: curated categories + coach-added ones (+ the class's
+  // own type if it isn't in either list yet, e.g. editing an old class).
+  const typeOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const t of [...CLASS_TYPES, ...extraTypes, ...(classType ? [classType] : [])]) {
+      const k = t.toLowerCase();
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push(t);
+      }
+    }
+    return out;
+  }, [extraTypes, classType]);
+
+  const addType = () => {
+    const v = newType.trim();
+    if (v.length < 2) return;
+    startTransition(async () => {
+      const res = await addClassType(v);
+      if (res.ok && res.name) {
+        setExtraTypes((prev) => (prev.some((t) => t.toLowerCase() === res.name!.toLowerCase()) ? prev : [...prev, res.name!]));
+        setClassType(res.name);
+        setNewType("");
+        setAddingType(false);
+      } else {
+        onToast(res.error ?? "Couldn't add that type");
+      }
+    });
   };
 
   // Length is the gap between start and end; changing the start slides the end
@@ -114,28 +173,15 @@ export function Adder({
     setTime(v);
   };
 
-  const pickSaved = (t: TemplateDto) => {
-    fillFromTemplate(t);
-    setHeading({ title: `Add ${t.name}`, lead: "Everything is filled. Just pick the days." });
-    setStage("form");
-  };
-
-  const newClass = () => {
-    setName("");
-    setLinks([]);
-    setHeading({ title: "New class", lead: "Type it once and fittlist remembers the whole class." });
-    setStage("form");
-  };
-
-  // Saved classes to offer in the name field: all of them when the field is
-  // empty (so you can just pick one), filtered as you type.
+  // Classes already run at the chosen studio, offered in the name field: all of
+  // them when the field is empty, filtered as you type.
   const suggestions = useMemo(() => {
     const q = name.trim().toLowerCase();
     const pool = q
-      ? templates.filter((t) => t.name.toLowerCase().includes(q) && t.name.toLowerCase() !== q)
-      : templates;
-    return pool.slice(0, 6);
-  }, [name, templates]);
+      ? catalog.filter((c) => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q)
+      : catalog;
+    return pool.slice(0, 8);
+  }, [name, catalog]);
 
   const toggleDay = (i: number) => {
     setDays((prev) => {
@@ -251,49 +297,33 @@ export function Adder({
           <Icon name="close" size={16} />
         </button>
 
-        {stage === "start" && (
-          <div>
-            <h2>Add to your week</h2>
-            <p className="lead">
-              Slot in a saved class (everything&rsquo;s already filled) or make a new one.
-            </p>
-            <div>
-              {templates.map((t) => {
-                const s = studioById.get(t.studioId);
-                const p = palForSeq(s?.seq ?? 1);
-                const lk = t.links.length
-                  ? ` · ${t.links.length} link${t.links.length > 1 ? "s" : ""}`
-                  : "";
-                return (
-                  <button key={t.name} className="studio-row" onClick={() => pickSaved(t)}>
-                    <span className="swd" style={{ background: p.rail }} />
-                    <span>
-                      <span className="nm">{t.name}</span>
-                      <br />
-                      <span className="ad">
-                        {fmtTime(t.startTime)} · {t.durationMin} min · {s?.name}
-                        {lk}
-                      </span>
-                    </span>
-                    <span className="tick"><Icon name="chevron_right" size={18} /></span>
-                  </button>
-                );
-              })}
-            </div>
-            <button className="btn si" style={{ marginTop: 16 }} onClick={newClass}>
-              + New class
-            </button>
-          </div>
-        )}
 
         {stage === "form" && (
           <div>
             <h2>{heading.title}</h2>
 
+            {/* Studio first — the class list below is scoped to it. */}
+            <div className="adder-card">
+            <label className="flabel">Studio</label>
+            <button className="studio-sel" onClick={() => setStage("pick")}>
+              {selectedStudio ? (
+                <span className="studio-sel-txt">
+                  <span className="nm">{selectedStudio.name}</span>
+                  <span className="ad">{selectedStudio.address}</span>
+                </span>
+              ) : (
+                <span className="nm placeholder">Select or start typing a studio</span>
+              )}
+              <span className="chev"><Icon name="chevron_right" size={18} /></span>
+            </button>
+            </div>
+
             <div className="adder-card">
             <label className="flabel" htmlFor="fName">
               Class name
-              {templates.length > 0 && !isEdit && <span> · type new or pick a saved one</span>}
+              {selectedStudio && catalog.length > 0 && !isEdit && (
+                <span> · type new or pick one from this studio</span>
+              )}
             </label>
             <div className="namefield">
               <input
@@ -311,39 +341,70 @@ export function Adder({
               />
               {sugOpen && suggestions.length > 0 && (
                 <div className="namesug">
-                  {suggestions.map((t) => (
+                  {suggestions.map((c) => (
                     <button
-                      key={t.name}
+                      key={c.name}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        fillFromTemplate(t);
+                        fillFromCatalog(c);
                         setSugOpen(false);
-                        onToast("Autofilled from last time");
+                        onToast("Filled from this studio");
                       }}
                     >
-                      <span className="namesug-nm">{t.name}</span>
-                      <span className="sub">{studioById.get(t.studioId)?.name}</span>
+                      <span className="namesug-nm">{c.name}</span>
+                      {c.classType && <span className="sub">{c.classType}</span>}
                     </button>
                   ))}
                 </div>
               )}
             </div>
+            {!selectedStudio && (
+              <p className="durnote" style={{ marginTop: 8 }}>
+                Pick a studio to see its classes.
+              </p>
+            )}
 
-            <label className="flabel">
+            <label className="flabel" htmlFor="fType">
               Type <span>· optional</span>
             </label>
-            <div className="chips typechips">
-              {CLASS_TYPES.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`chip${classType === t ? " sel" : ""}`}
-                  onClick={() => setClassType(classType === t ? null : t)}
-                >
+            <select
+              id="fType"
+              className="typeselect"
+              value={classType ?? ""}
+              onChange={(e) => {
+                if (e.target.value === "__add__") setAddingType(true);
+                else setClassType(e.target.value || null);
+              }}
+            >
+              <option value="">No type</option>
+              {typeOptions.map((t) => (
+                <option key={t} value={t}>
                   {t}
-                </button>
+                </option>
               ))}
-            </div>
+              <option value="__add__">+ Add a custom type…</option>
+            </select>
+            {addingType && (
+              <div className="linkrow" style={{ marginTop: 8 }}>
+                <input
+                  className="editinput"
+                  placeholder="New type, e.g. Spin"
+                  value={newType}
+                  autoFocus
+                  maxLength={30}
+                  onChange={(e) => setNewType(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addType()}
+                />
+                <button
+                  className="btn si"
+                  style={{ width: "auto", padding: "11px 16px" }}
+                  onClick={addType}
+                  disabled={pending || newType.trim().length < 2}
+                >
+                  Add
+                </button>
+              </div>
+            )}
 
             <label className="flabel" htmlFor="fDesc">
               Description <span>· optional, shown on the class page</span>
@@ -438,21 +499,6 @@ export function Adder({
             <div className="durnote">
               {durValid ? `${durationMin} min` : "End time must be after start"}
             </div>
-            </div>
-
-            <div className="adder-card">
-            <label className="flabel">Studio</label>
-            <button className="studio-sel" onClick={() => setStage("pick")}>
-              {selectedStudio ? (
-                <span className="studio-sel-txt">
-                  <span className="nm">{selectedStudio.name}</span>
-                  <span className="ad">{selectedStudio.address}</span>
-                </span>
-              ) : (
-                <span className="nm placeholder">Select or start typing a studio</span>
-              )}
-              <span className="chev"><Icon name="chevron_right" size={18} /></span>
-            </button>
             </div>
 
             <div className="adder-card">

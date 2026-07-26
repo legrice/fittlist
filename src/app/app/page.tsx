@@ -35,8 +35,12 @@ export default async function SchedulePage({
         name: schema.users.name,
         title: schema.users.title,
         about: schema.users.about,
+        email: schema.users.email,
         instagram: schema.users.instagram,
         website: schema.users.website,
+        contactEmail: schema.users.contactEmail,
+        phone: schema.users.phone,
+        whatsapp: schema.users.whatsapp,
         photo: schema.users.photo,
         passwordHash: schema.users.passwordHash,
       })
@@ -49,6 +53,11 @@ export default async function SchedulePage({
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
     .where(eq(schema.credentials.userId, userId));
+  const customTypeRows = await db
+    .select({ name: schema.customClassTypes.name })
+    .from(schema.customClassTypes)
+    .orderBy(schema.customClassTypes.name);
+  const customTypes = customTypeRows.map((r) => r.name);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -100,6 +109,7 @@ export default async function SchedulePage({
       todayIso={todayIso}
       studios={studios}
       templates={templates}
+      customTypes={customTypes}
       lastUsed={lastUsed}
       subsCount={subRows.length}
       autoOpenAdder={add === "1"}
@@ -109,6 +119,13 @@ export default async function SchedulePage({
       photo={user?.photo ?? null}
       visits={visits}
       classCount={classRows.length}
+      email={user?.email ?? ""}
+      instagram={user?.instagram ?? ""}
+      website={user?.website ?? ""}
+      contactEmail={user?.contactEmail ?? ""}
+      phone={user?.phone ?? ""}
+      whatsapp={user?.whatsapp ?? ""}
+      about={user?.about ?? ""}
       googleConfigured={googleConfigured()}
       googleConnected={gconn.connected}
       googleEmail={gconn.email}

@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
-import { CLASS_TYPES, detectProvider, dowOfDate } from "@/lib/format";
+import { detectProvider, dowOfDate } from "@/lib/format";
 import { notifyScheduleChange } from "@/lib/notifier";
 import { syncUserToGoogle } from "@/lib/gcal";
 
@@ -29,9 +29,46 @@ export type PublishInput = {
   links: BookingLink[];
 };
 
-// Only accept a type from the curated list; anything else is dropped to null.
+// Types come from a controlled dropdown (curated + coach-added), so just trim
+// and cap; an empty value clears the type.
 function cleanType(t: string | null | undefined): string | null {
-  return t && (CLASS_TYPES as readonly string[]).includes(t) ? t : null;
+  const v = (t ?? "").trim().replace(/\s+/g, " ").slice(0, 30);
+  return v || null;
+}
+
+// The classes already logged at a studio, by any coach — powers the studio-first
+// picker so a coach reuses an existing class (with its type + description).
+export async function getStudioCatalog(
+  studioId: string,
+): Promise<{ name: string; classType: string | null; description: string | null }[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  return db
+    .select({
+      name: schema.studioClasses.name,
+      classType: schema.studioClasses.classType,
+      description: schema.studioClasses.description,
+    })
+    .from(schema.studioClasses)
+    .where(eq(schema.studioClasses.studioId, studioId))
+    .orderBy(schema.studioClasses.name);
+}
+
+// Add a coach-defined class type to the shared list; returns the stored name.
+export async function addClassType(
+  nameRaw: string,
+): Promise<{ ok: boolean; name?: string; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const name = nameRaw.trim().replace(/\s+/g, " ").slice(0, 30);
+  if (name.length < 2) return { ok: false, error: "Type a longer name." };
+  const db = await getDb();
+  await db
+    .insert(schema.customClassTypes)
+    .values({ name, nameKey: name.toLowerCase(), createdByUserId: userId })
+    .onConflictDoNothing({ target: schema.customClassTypes.nameKey });
+  return { ok: true, name };
 }
 
 function cleanLinks(links: BookingLink[]): BookingLink[] {
@@ -108,10 +145,22 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   try {
     await db
       .insert(schema.studioClasses)
-      .values({ studioId: studio.id, name, nameKey: name.toLowerCase(), classType, createdByUserId: userId })
+      .values({
+        studioId: studio.id,
+        name,
+        nameKey: name.toLowerCase(),
+        classType,
+        description,
+        createdByUserId: userId,
+      })
       .onConflictDoUpdate({
         target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
-        set: { name, ...(classType ? { classType } : {}), updatedAt: new Date() },
+        set: {
+          name,
+          ...(classType ? { classType } : {}),
+          ...(description ? { description } : {}),
+          updatedAt: new Date(),
+        },
       });
   } catch (err) {
     console.error("studio catalog upsert failed", err);

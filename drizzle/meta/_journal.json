@@ -85,6 +85,13 @@
       "when": 1785076432084,
       "tag": "0011_orange_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785077300372,
+      "tag": "0012_graceful_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

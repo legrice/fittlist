@@ -81,11 +81,26 @@ export const studioClasses = pgTable(
     name: text("name").notNull(),
     nameKey: text("name_key").notNull(), // lowercased name, for dedupe
     classType: text("class_type"),
+    description: text("description"),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("studio_classes_studio_name").on(t.studioId, t.nameKey)],
+);
+
+// Coach-added class categories on top of the curated CLASS_TYPES list. Shared,
+// so once someone adds "Spin" it shows in everyone's Type dropdown.
+export const customClassTypes = pgTable(
+  "custom_class_types",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    nameKey: text("name_key").notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("custom_class_types_name").on(t.nameKey)],
 );
 
 // The standing week. day_of_week: 0 = Monday … 6 = Sunday (prototype order).

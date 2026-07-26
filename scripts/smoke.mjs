@@ -29,11 +29,15 @@ const openProfile = async (pg) => {
   await pg.locator(".acctwrap").waitFor();
 };
 
-// Add opens straight to the New class form; reuse a saved class by picking it
-// from the class-name field's autocomplete.
+// Studio-first: pick the studio, then reuse a class from that studio's shared
+// catalog via the class-name field.
 const addSaved = async (pg) => {
   await pg.getByRole("button", { name: "Add class" }).click();
   await pg.getByRole("heading", { name: "New class" }).waitFor();
+  await pg.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await pg.getByRole("heading", { name: "Choose a studio" }).waitFor();
+  await pg.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
+  await pg.locator(".studio-sel .nm", { hasText: "Ironbound Strength" }).waitFor();
   await pg.locator("#fName").click();
   await pg.locator(".namesug button", { hasText: "Barbell Strength" }).first().click();
   await pg.waitForFunction(() => {
@@ -70,12 +74,12 @@ if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app s
 console.log("adder auto-opened, poster default");
 
 await page.getByPlaceholder("e.g. Barbell Strength").fill("Barbell Strength");
-await page.locator(".typechips").getByRole("button", { name: "Strength", exact: true }).click();
+await page.locator("#fType").selectOption("Strength");
 await page.locator("#fDesc").fill("Barbell club for all levels. Bring a belt.");
 await page.getByRole("button", { name: "Mo", exact: true }).click();
 await page.getByRole("button", { name: "We", exact: true }).click();
 
-// no studio yet -> route through the shared directory + create one
+// studio-first: pick the studio (create it in the shared directory)
 await page.getByRole("button", { name: "Select or start typing a studio" }).click();
 await page.getByRole("heading", { name: "Choose a studio" }).waitFor();
 await page.getByRole("button", { name: "+ New studio" }).click();
@@ -123,11 +127,9 @@ await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = await page.locator(".publishwrap .btn").textContent();
 if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
   fail("edit not prefilled with its day: " + editLabel);
-// class type round-trips: the Strength chip is preselected on edit
-await expect(
-  page.locator(".typechips .chip.sel", { hasText: "Strength" }).isVisible(),
-  "class type persisted (Strength preselected on edit)",
-);
+// class type round-trips: the Type dropdown shows Strength on edit
+if ((await page.locator("#fType").inputValue()) !== "Strength")
+  fail("class type did not persist (Strength) on edit");
 // change the class length by moving the End time (start is 6:00a → 75 min)
 await page.locator("#fEnd").fill("07:15");
 await expect(page.locator(".durnote", { hasText: "75 min" }).isVisible(), "durnote reflects end time");
@@ -487,17 +489,28 @@ await cdp.send("WebAuthn.addVirtualAuthenticator", {
   },
 });
 await openProfile(page);
-await page.getByRole("button", { name: "Add", exact: true }).click();
+await page.locator(".setrow", { hasText: "Login & security" }).click();
+await page.getByRole("heading", { name: "Login & security" }).waitFor();
+// enroll a passkey (single passkey -> offers Remove afterwards)
+await page.locator(".secrow", { hasText: "Face ID" }).getByRole("button", { name: "Add" }).click();
 await page.getByText("Passkey added").waitFor();
+await expect(
+  page.locator(".secrow", { hasText: "Face ID" }).getByRole("button", { name: "Remove" }).isVisible(),
+  "passkey row shows Remove after enrolling",
+);
 console.log("passkey enroll ok");
 
-await page.getByRole("button", { name: "Change", exact: true }).click();
+// change the password — requires the current password (re-auth)
+await page.locator(".secrow", { hasText: "Password" }).getByRole("button", { name: "Change" }).click();
+await page.getByRole("heading", { name: "Change password" }).waitFor();
+await page.getByPlaceholder("Current password").fill("smoke-pass-123");
 await page.getByPlaceholder("New password").fill("smoke-pass-456");
 await page.getByRole("button", { name: "Save password" }).click();
 await page.getByText("Password saved").waitFor();
 console.log("password change ok");
 
-// ---- log out from the account page destroys the session
+// back out of the settings sub-view, then log out from the account home
+await page.locator(".settingspane .acctclose").click();
 await page.getByRole("button", { name: "Log out" }).click();
 await page.waitForURL(BASE + "/");
 if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
