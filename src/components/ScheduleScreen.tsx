@@ -53,6 +53,8 @@ export function ScheduleScreen({
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
   const [profileOpen, setProfileOpen] = useState(false);
+  // "up" when opened from the header avatar, "left" when reached via a back tap.
+  const [acctAnim, setAcctAnim] = useState<"up" | "left">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -68,6 +70,7 @@ export function ScheduleScreen({
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
     if (new URLSearchParams(window.location.search).get("acct")) {
+      setAcctAnim("left");
       setProfileOpen(true);
       window.history.replaceState(null, "", "/app");
     }
@@ -152,7 +155,14 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         <div className="brandbar">
           <Wordmark variant="ink" />
-          <button className="usericon" aria-label="My page" onClick={() => setProfileOpen(true)}>
+          <button
+            className="usericon"
+            aria-label="My page"
+            onClick={() => {
+              setAcctAnim("up");
+              setProfileOpen(true);
+            }}
+          >
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className="usericon-photo" src={photo} alt="" />
@@ -226,6 +236,7 @@ export function ScheduleScreen({
       {profileOpen && (
         <ProfileSheet
           handle={handle}
+          anim={acctAnim}
           name={name}
           title={title}
           photo={photo}

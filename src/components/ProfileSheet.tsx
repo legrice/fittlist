@@ -12,6 +12,7 @@ import { Toast, useToast } from "@/components/Toast";
 // below, cards to preview the public profile and share the week image.
 export function ProfileSheet({
   handle,
+  anim = "up",
   name,
   title,
   photo,
@@ -24,6 +25,7 @@ export function ProfileSheet({
   onClose,
 }: {
   handle: string;
+  anim?: "up" | "left";
   name: string;
   title: string;
   photo: string | null;
@@ -116,7 +118,11 @@ export function ProfileSheet({
 
   return (
     <>
-      <div className="acctwrap" role="dialog" aria-label="Your account">
+      <div
+        className={`acctwrap${anim === "left" ? " acct-from-left" : ""}`}
+        role="dialog"
+        aria-label="Your account"
+      >
         <div className="accttop">
           <h1 className="acct-h">Profile</h1>
           <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>

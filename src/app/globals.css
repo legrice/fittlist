@@ -771,6 +771,8 @@ button.ps-card { cursor: pointer; }
   padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
   animation: slideUpIn .32s cubic-bezier(.22, .8, .28, 1);
 }
+/* reached via a back tap: slide in from the left instead of up */
+.acctwrap.acct-from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
 .acctwrap > * { max-width: 560px; margin-left: auto; margin-right: auto; }
 .accttop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .acctclose {
@@ -938,6 +940,7 @@ button.ps-card { cursor: pointer; }
 .skel-links { display: flex; gap: 10px; margin-top: 18px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .acctwrap, .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
+  .acctwrap, .acctwrap.acct-from-left,
+  .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
   .skel::after { animation: none; }
 }
