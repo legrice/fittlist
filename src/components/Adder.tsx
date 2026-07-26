@@ -16,7 +16,6 @@ import {
   fmtDate,
   fmtTime,
   minutesToTime,
-  palForSeq,
   timeToMinutes,
 } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
@@ -307,7 +306,7 @@ export function Adder({
             <p className="durnote" style={{ marginTop: 8 }}>
               {isPublic
                 ? "Public — shows on your schedule and your public page."
-                : "Private — on your schedule only. Hidden from your page, no emails sent."}
+                : "Use for private clients or classes. On your schedule only, hidden from your public schedule."}
             </p>
             </div>
 
@@ -572,40 +571,35 @@ export function Adder({
               &larr; Back
             </button>
             <h2>Choose a studio</h2>
-            <div className="searchbox">
-              <span className="mag"><Icon name="search" size={17} /></span>
+            <div className="searchbox noicon">
               <input
                 type="text"
-                placeholder="Name or street"
                 autoComplete="off"
                 autoFocus
+                aria-label="Search studios"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div>
               {filteredStudios.length ? (
-                filteredStudios.map((s) => {
-                  const p = palForSeq(s.seq);
-                  return (
-                    <button
-                      key={s.id}
-                      className="studio-row"
-                      onClick={() => {
-                        setStudioId(s.id);
-                        setStage("form");
-                      }}
-                    >
-                      <span className="swd" style={{ background: p.rail }} />
-                      <span>
-                        <span className="nm">{s.name}</span>
-                        <br />
-                        <span className="ad">{s.address}</span>
-                      </span>
-                      {studioId === s.id && <span className="tick"><Icon name="check" size={16} /></span>}
-                    </button>
-                  );
-                })
+                filteredStudios.map((s) => (
+                  <button
+                    key={s.id}
+                    className="studio-row"
+                    onClick={() => {
+                      setStudioId(s.id);
+                      setStage("form");
+                    }}
+                  >
+                    <span>
+                      <span className="nm">{s.name}</span>
+                      <br />
+                      <span className="ad">{s.address}</span>
+                    </span>
+                    {studioId === s.id && <span className="tick"><Icon name="check" size={16} /></span>}
+                  </button>
+                ))
               ) : (
                 <p className="empty">
                   Nothing named &ldquo;{search.trim()}&rdquo; yet. Add it below. Takes ten seconds.
