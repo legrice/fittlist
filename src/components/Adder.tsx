@@ -195,7 +195,7 @@ export function Adder({
       : !durValid
         ? "End time must be after start"
         : isEdit
-          ? "Save"
+          ? "Save changes"
           : oneTime
             ? `${saveVerb} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
             : `${saveVerb}${!isPublic ? "" : n > 1 ? ` ${n} classes` : ""} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
