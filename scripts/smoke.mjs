@@ -57,7 +57,7 @@ await page.getByRole("heading", { name: "New class" }).waitFor();
 if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app should be Poster");
 console.log("adder auto-opened, poster default");
 
-await page.getByPlaceholder("Add a class").fill("Barbell Strength");
+await page.getByPlaceholder("e.g. Barbell Strength").fill("Barbell Strength");
 await page.getByRole("button", { name: "Mo", exact: true }).click();
 await page.getByRole("button", { name: "We", exact: true }).click();
 
@@ -99,7 +99,7 @@ await page.getByRole("button", { name: "Add class" }).click();
 await page.getByRole("heading", { name: "Add to your week" }).waitFor();
 await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
 await page.waitForFunction(() => {
-  const t = document.querySelector(".adder-title");
+  const t = document.querySelector("#fName");
   return t && t.value === "Barbell Strength";
 });
 await page.getByRole("button", { name: "Fr", exact: true }).click();

@@ -278,41 +278,45 @@ export function Adder({
                 &larr; Saved classes
               </button>
             )}
-            <h2 className="adder-kicker">{heading.title}</h2>
+            <h2>{heading.title}</h2>
 
-            <input
-              type="text"
-              id="fName"
-              className="adder-title"
-              placeholder="Add a class"
-              autoComplete="off"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setSugOpen(true);
-              }}
-              onBlur={() => setTimeout(() => setSugOpen(false), 150)}
-            />
-            {sugOpen && suggestions.length > 0 && (
-              <div className="namesug">
-                {suggestions.map((t) => (
-                  <button
-                    key={t.name}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      fillFromTemplate(t);
-                      setSugOpen(false);
-                      onToast("Autofilled from last time");
-                    }}
-                  >
-                    {t.name}
-                    <span className="sub">
-                      {fmtTime(t.startTime)} · {studioById.get(t.studioId)?.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="adder-card">
+            <label className="flabel" htmlFor="fName">Class name</label>
+            <div className="namefield">
+              <input
+                type="text"
+                id="fName"
+                placeholder="e.g. Barbell Strength"
+                autoComplete="off"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setSugOpen(true);
+                }}
+                onBlur={() => setTimeout(() => setSugOpen(false), 150)}
+              />
+              {sugOpen && suggestions.length > 0 && (
+                <div className="namesug">
+                  {suggestions.map((t) => (
+                    <button
+                      key={t.name}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        fillFromTemplate(t);
+                        setSugOpen(false);
+                        onToast("Autofilled from last time");
+                      }}
+                    >
+                      {t.name}
+                      <span className="sub">
+                        {fmtTime(t.startTime)} · {studioById.get(t.studioId)?.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            </div>
 
             <div className="adder-card">
             <label className="flabel">When</label>

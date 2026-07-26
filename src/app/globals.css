@@ -8,7 +8,7 @@
   --ink: #191502;
   --ol: #565a63;
   --line: #e4e6ea;
-  --si: #dd583a;
+  --si: #0e9488;
   --si-soft: #f9e4dd;
   --sa: #cfd3da;
   --radius: 14px;
@@ -218,16 +218,8 @@ h1.screen-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-siz
 }
 .adder input:focus { outline: none; border-color: var(--si); }
 /* reference-style layout: small kicker, big borderless title input, grouped cards */
-.adder-kicker {
-  font-family: 'Poppins', sans-serif !important; font-size: 11px !important; font-weight: 700;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--ol); margin: 2px 0 0 !important;
-}
-.adder input.adder-title {
-  border: none; background: transparent; border-radius: 0; padding: 2px 0 10px;
-  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; line-height: 1.05; letter-spacing: -.02em;
-}
-.adder input.adder-title:focus { border: none; }
-.adder input.adder-title::placeholder { color: var(--line); }
+.adder .sheet h2, .sheet.adder h2 { margin-bottom: 2px; }
+.namefield { position: relative; }
 .adder-card {
   background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
   padding: 4px 16px 16px; margin-top: 14px;
@@ -487,8 +479,8 @@ button.bl-band { cursor: pointer; }
    peach info bar. Opt-in per trainer via [data-theme="poster"].
    ============================================================ */
 [data-theme="poster"] {
-  --pg-ground: #191502; --pg-cream: #F5F5F5; --pg-day: #DD583A;
-  --pg-green: #C6F23C; --pg-peach: #F4A574;
+  --pg-ground: #191502; --pg-cream: #F5F5F5; --pg-day: #0E9488;
+  --pg-green: #0E9488; --pg-peach: #F4A574;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
 [data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-cream); }
@@ -632,7 +624,7 @@ button.ps-card { cursor: pointer; }
 
 /* green primary action everywhere — borderless, soft shadow */
 [data-theme="poster"] .btn.si {
-  background: var(--pg-green); color: #191502; border: none; box-shadow: var(--soft-shadow);
+  background: var(--pg-green); color: #fff; border: none; box-shadow: var(--soft-shadow);
 }
 
 /* the adder sheet + controls — clean, like the calendar page */
@@ -653,9 +645,6 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; }
 [data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
 [data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
-[data-theme="poster"] .adder input.adder-title { background: transparent; border: none; box-shadow: none; color: #191502; }
-[data-theme="poster"] .adder input.adder-title::placeholder { color: #b7b09a; }
-[data-theme="poster"] .adder-kicker { color: var(--pg-day); }
 [data-theme="poster"] .adder-card {
   background: #fff; border: none; border-radius: 16px; box-shadow: var(--soft-shadow);
 }
@@ -867,7 +856,7 @@ button.ps-card { cursor: pointer; }
   padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .notifybar .btn.si {
-  background: var(--pg-green); color: #191502; border: none; box-shadow: var(--soft-shadow);
+  background: var(--pg-green); color: #fff; border: none; box-shadow: var(--soft-shadow);
 }
 @media (min-width: 940px) {
   [data-theme="poster"].pub { flex-direction: column; }
@@ -883,7 +872,7 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .empty-block p { color: #c9c3ae; }
 
 /* onboarding: green primary action to match the poster app it leads into */
-.ob .btn { background: #CBD665; color: #191502; }
+.ob .btn { background: var(--si); color: #fff; }
 
 /* ===========================================================
    Motion: page transitions + loading skeletons
