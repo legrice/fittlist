@@ -1232,3 +1232,55 @@ button.ps-card { cursor: pointer; }
   .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
   .skel::after { animation: none; }
 }
+
+/* ---- admin panel (/admin), mobile-first ---- */
+.admin { background: var(--cl); color: var(--ink); }
+.admin .pad {
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 660px; margin: 0 auto;
+}
+.admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.admin h1 { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
+.adminsub { font-size: 12.5px; color: var(--ol); margin-top: 2px; word-break: break-all; }
+.adminback {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; text-decoration: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 14px; font-weight: 700; font-size: 13px; color: var(--ink); box-shadow: var(--soft-shadow);
+}
+.adminstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; margin-bottom: 18px; }
+.adminstat {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px 10px; text-align: center;
+}
+.adminstat-n { display: block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
+.adminstat-l { display: block; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin-top: 2px; }
+.adminseg { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 14px; }
+.adminseg button { flex: 1; padding: 10px 0; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ol); }
+.adminseg button.on { background: var(--ink); color: #fff; }
+.adminsearch { margin: 0 0 14px; }
+.admincards { display: flex; flex-direction: column; gap: 10px; }
+.admincard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px; box-shadow: var(--soft-shadow); }
+.admincard-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.admincard-nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admincard-tag { flex-shrink: 0; font-weight: 700; font-size: 12.5px; color: var(--si); text-decoration: none; }
+.admincard-tag.muted { color: var(--ol); }
+.admincard-sub { font-size: 13px; color: var(--ol); margin-top: 2px; word-break: break-word; }
+.adminmeta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ol); }
+.adminbadges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.adminbadge {
+  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  font-weight: 700; color: var(--ol); background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px;
+}
+.adminbadge.warn { color: #a85327; background: var(--si-soft); border-color: transparent; }
+.adminaction { width: 100%; margin-top: 12px; }
+.adminlink { display: flex; gap: 8px; margin-top: 12px; }
+.adminlink input {
+  flex: 1; min-width: 0; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 12px;
+  font-family: inherit; font-size: 13px; background: var(--cl); color: var(--ink);
+}
+.adminlink .btn { width: auto; padding: 11px 18px; flex-shrink: 0; }
+.adminaddbtn { width: 100%; margin-bottom: 14px; }
+.adminaddform { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px; margin-bottom: 14px; box-shadow: var(--soft-shadow); }
+.adminaddform-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.adminaddform-row .btn { width: auto; padding: 12px 20px; }
+.adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }

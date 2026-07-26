@@ -41,6 +41,7 @@ export function ScheduleScreen({
   googleEmail,
   hasPassword,
   passkeyCount,
+  isAdmin,
 }: {
   classes: ClassDto[];
   hasAnyClass: boolean;
@@ -69,6 +70,7 @@ export function ScheduleScreen({
   googleEmail: string | null;
   hasPassword: boolean;
   passkeyCount: number;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -279,6 +281,7 @@ export function ScheduleScreen({
           googleEmail={googleEmail}
           hasPassword={hasPassword}
           passkeyCount={passkeyCount}
+          isAdmin={isAdmin}
           onClose={() => setProfileOpen(false)}
         />
       )}

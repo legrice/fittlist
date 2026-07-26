@@ -40,6 +40,9 @@ export const users = pgTable("users", {
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =
   // they still need to run it; the app redirects them into /welcome until it's set.
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  // Refreshed every time a session is issued (any login method). Powers the
+  // admin "last seen" column.
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

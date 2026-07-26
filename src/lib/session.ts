@@ -4,6 +4,22 @@ import { cookies } from "next/headers";
 const COOKIE = "fl_session";
 const MAX_AGE = 60 * 60 * 24 * 90; // 90 days
 
+// Record that this user just signed in. Best-effort: a DB hiccup here must
+// never block the login itself, so failures are swallowed.
+async function stampLogin(userId: string) {
+  try {
+    const { eq } = await import("drizzle-orm");
+    const { getDb, schema } = await import("@/db");
+    const db = await getDb();
+    await db
+      .update(schema.users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(schema.users.id, userId));
+  } catch {
+    /* ignore */
+  }
+}
+
 function secret() {
   return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
 }
@@ -22,6 +38,7 @@ export async function createSession(userId: string) {
     maxAge: MAX_AGE,
     path: "/",
   });
+  await stampLogin(userId);
 }
 
 export async function getSessionUserId(): Promise<string | null> {

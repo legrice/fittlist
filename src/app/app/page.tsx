@@ -2,6 +2,7 @@ import { desc, eq, isNull, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { adminEmails } from "@/lib/admin";
 import { visitsThisWeek } from "@/lib/visits";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
@@ -137,6 +138,7 @@ export default async function SchedulePage({
       googleEmail={gconn.email}
       hasPassword={!!user?.passwordHash}
       passkeyCount={passkeyRows.length}
+      isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
     />
   );
 }

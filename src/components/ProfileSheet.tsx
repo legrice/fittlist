@@ -43,6 +43,7 @@ export function ProfileSheet({
   googleEmail,
   hasPassword,
   passkeyCount,
+  isAdmin = false,
   onClose,
 }: {
   handle: string;
@@ -65,6 +66,7 @@ export function ProfileSheet({
   googleEmail: string | null;
   hasPassword: boolean;
   passkeyCount: number;
+  isAdmin?: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -354,6 +356,16 @@ export function ProfileSheet({
               </span>
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </button>
+          )}
+          {isAdmin && (
+            <a className="setrow" href="/admin">
+              <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>
+              <span className="setrow-txt">
+                <span className="t">Admin</span>
+                <span className="s">Coaches, studios, sign-in links</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            </a>
           )}
         </div>
 
