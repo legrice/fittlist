@@ -57,6 +57,13 @@
       "when": 1785018267778,
       "tag": "0007_dapper_war_machine",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785070019493,
+      "tag": "0008_living_silverclaw",
+      "breakpoints": true
     }
   ]
 }

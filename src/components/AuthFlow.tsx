@@ -1,52 +1,84 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { claimProfile, requestCode, verifyCode } from "@/app/actions/auth";
+import { startAuthentication } from "@simplewebauthn/browser";
+import {
+  beginPasskeyLogin,
+  claimProfile,
+  finishPasskeyLogin,
+  passwordAuth,
+  requestMagicLink,
+} from "@/app/actions/auth";
 import { slug } from "@/lib/format";
 import { brandIcon } from "@/lib/brand";
+import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
-type Stage = "email" | "code" | "claim";
+type Stage = "email" | "sent" | "claim";
 
 export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: string | null }) {
   const router = useRouter();
+  const search = useSearchParams();
   const [stage, setStage] = useState<Stage>(startStage);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(search.get("expired") ? "That link expired. Try again." : "");
   const [pending, startTransition] = useTransition();
-  const codeRef = useRef<HTMLInputElement>(null);
+  const [passkeyable, setPasskeyable] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (stage === "code") codeRef.current?.focus();
+    setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
+  }, []);
+  useEffect(() => {
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
 
-  const sendCode = () => {
-    if (!email.trim()) return;
+  const afterAuth = (needsProfile?: boolean) => {
+    if (needsProfile) setStage("claim");
+    else router.push("/app");
+  };
+
+  const submitPassword = () => {
+    if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
-      const res = await requestCode(email);
-      if (res.ok) {
-        setCode("");
-        setStage("code");
-      } else setError(res.error ?? "Something went wrong.");
+      const res = await passwordAuth(email, password);
+      if (res.ok) afterAuth(res.needsProfile);
+      else setError(res.error ?? "Something went wrong.");
     });
   };
 
-  const verify = () => {
+  const sendLink = () => {
+    if (!email.trim()) {
+      setError("Enter your email first.");
+      return;
+    }
     setError("");
     startTransition(async () => {
-      const res = await verifyCode(email, code);
-      if (!res.ok) {
-        setError(res.error ?? "Something went wrong.");
-        return;
+      const res = await requestMagicLink(email, via);
+      if (res.ok) setStage("sent");
+      else setError(res.error ?? "Something went wrong.");
+    });
+  };
+
+  const usePasskey = () => {
+    setError("");
+    startTransition(async () => {
+      try {
+        const { options } = await beginPasskeyLogin();
+        const response = await startAuthentication({ optionsJSON: options });
+        const res = await finishPasskeyLogin(response);
+        if (res.ok) afterAuth(res.needsProfile);
+        else setError(res.error ?? "That didn't work.");
+      } catch (err) {
+        const nm = (err as Error)?.name;
+        if (nm !== "AbortError" && nm !== "NotAllowedError") {
+          setError("Couldn't use a passkey. Try your email instead.");
+        }
       }
-      if (res.needsProfile) setStage("claim");
-      else router.push("/app");
     });
   };
 
@@ -66,6 +98,7 @@ export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: 
     <section className="screen ob">
       <div className="pad">
         <Wordmark variant="ink" className="mark" />
+
         {stage === "email" && (
           <>
             <div className="obhero">
@@ -83,8 +116,8 @@ export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: 
               schedule?&rdquo; again.
             </h1>
             <p>
-              One link in your bio, every gym you coach at. Log in with your email. We send a code,
-              no passwords.
+              One link in your bio, every gym you coach at. Log in, or pick a password to start a new
+              page.
             </p>
             <input
               type="email"
@@ -92,41 +125,51 @@ export function AuthFlow({ startStage, via = null }: { startStage: Stage; via?: 
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendCode()}
             />
-            <button className="btn" onClick={sendCode} disabled={pending}>
-              {pending ? "Sending…" : "Email me a code"}
+            <input
+              type="password"
+              placeholder="Password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitPassword()}
+            />
+            <button className="btn" onClick={submitPassword} disabled={pending}>
+              {pending ? "One sec…" : "Continue"}
             </button>
             {error && <div className="errorcopy">{error}</div>}
-            <div className="microcopy">Email login. No passwords to forget.</div>
+
+            <div className="obdiv">
+              <span>or</span>
+            </div>
+            <div className="obalts">
+              <button className="obalt" onClick={sendLink} disabled={pending}>
+                <Icon name="mail" size={19} />
+                Email me a magic link
+              </button>
+              {passkeyable && (
+                <button className="obalt" onClick={usePasskey} disabled={pending}>
+                  <Icon name="fingerprint" size={19} />
+                  Sign in with a passkey
+                </button>
+              )}
+            </div>
+            <div className="microcopy">New here? Pick any password and you&rsquo;re in.</div>
           </>
         )}
 
-        {stage === "code" && (
+        {stage === "sent" && (
           <>
             <h1>Check your inbox.</h1>
             <p>
-              We sent a 6-digit code to <b>{email}</b>.
+              We emailed a one-tap sign-in link to <b>{email}</b>. Open it on this device and
+              you&rsquo;re in. It expires in 15 minutes.
             </p>
-            <input
-              ref={codeRef}
-              className="code"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="••••••"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && code.length === 6 && verify()}
-            />
-            <button className="btn" onClick={verify} disabled={pending || code.length < 6}>
-              {pending ? "Checking…" : "Verify"}
-            </button>
-            <button className="backlink" onClick={() => setStage("email")}>
-              Wrong email?
+            <button className="btn ghost" onClick={() => setStage("email")}>
+              Back
             </button>
             {error && <div className="errorcopy">{error}</div>}
-            <div className="microcopy">Codes expire after 10 minutes.</div>
+            <div className="microcopy">The link works once. Request a new one any time.</div>
           </>
         )}
 

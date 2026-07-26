@@ -16,6 +16,9 @@ export type BookingLink = { label: string; url: string };
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
+  // scrypt password hash ("salt:hash"). Null for accounts that only ever used
+  // a magic link or a passkey, which stay fully password-less.
+  passwordHash: text("password_hash"),
   name: text("name").notNull().default(""),
   handle: text("handle").unique(),
   // Public profile: a short bio and a photo (stored as a small data URL).
@@ -139,4 +142,39 @@ export const authCodes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("auth_codes_email").on(t.email)],
+);
+
+// Single-use magic sign-in links. We email the raw token inside a URL and only
+// keep its hash; a click that matches an unconsumed, unexpired row logs in.
+export const magicLinks = pgTable(
+  "magic_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    ip: text("ip"),
+    via: text("via"), // growth-loop attribution carried through signup
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("magic_links_email").on(t.email)],
+);
+
+// WebAuthn passkeys (Face ID / Touch ID / fingerprint / security keys). One row
+// per registered credential; a user can enroll several devices.
+export const credentials = pgTable(
+  "credentials",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    credentialId: text("credential_id").notNull().unique(), // base64url
+    publicKey: text("public_key").notNull(), // base64
+    counter: integer("counter").notNull().default(0),
+    transports: jsonb("transports").$type<string[]>().notNull().default([]),
+    label: text("label").notNull().default("Passkey"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => [index("credentials_user").on(t.userId)],
 );

@@ -2,8 +2,14 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { startRegistration } from "@simplewebauthn/browser";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
-import { logout } from "@/app/actions/auth";
+import {
+  beginPasskeyRegistration,
+  finishPasskeyRegistration,
+  logout,
+  setPassword as setPasswordAction,
+} from "@/app/actions/auth";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -23,6 +29,8 @@ export function ProfileSheet({
   googleConfigured,
   googleConnected,
   googleEmail,
+  hasPassword,
+  passkeyCount,
   onClose,
 }: {
   handle: string;
@@ -36,6 +44,8 @@ export function ProfileSheet({
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
+  hasPassword: boolean;
+  passkeyCount: number;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -48,6 +58,60 @@ export function ProfileSheet({
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
   const [disconnecting, startDisconnect] = useTransition();
+  // Security section: passkeys + password, both mutable in place.
+  const [pkCount, setPkCount] = useState(passkeyCount);
+  const [pwSet, setPwSet] = useState(hasPassword);
+  const [secBusy, setSecBusy] = useState(false);
+  const [passkeyable, setPasskeyable] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwValue, setPwValue] = useState("");
+
+  useEffect(() => {
+    setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
+  }, []);
+
+  const addPasskey = async () => {
+    if (secBusy) return;
+    setSecBusy(true);
+    try {
+      const res = await beginPasskeyRegistration();
+      if (!res.ok) {
+        toast(res.error);
+        return;
+      }
+      const reg = await startRegistration({ optionsJSON: res.options });
+      const fin = await finishPasskeyRegistration(reg, "Passkey");
+      if (fin.ok) {
+        setPkCount((n) => n + 1);
+        toast("Passkey added");
+      } else {
+        toast(fin.error ?? "Couldn't add that passkey");
+      }
+    } catch (err) {
+      const nm = (err as Error)?.name;
+      if (nm !== "AbortError" && nm !== "NotAllowedError") toast("Couldn't add that passkey");
+    } finally {
+      setSecBusy(false);
+    }
+  };
+
+  const savePassword = async () => {
+    if (secBusy || !pwValue) return;
+    setSecBusy(true);
+    try {
+      const res = await setPasswordAction(pwValue);
+      if (res.ok) {
+        setPwSet(true);
+        setPwOpen(false);
+        setPwValue("");
+        toast("Password saved");
+      } else {
+        toast(res.error ?? "Couldn't save that password");
+      }
+    } finally {
+      setSecBusy(false);
+    }
+  };
 
   // Tapping the avatar (or the preview card) opens the public profile page,
   // where the owner gets a back arrow and an Edit button.
@@ -173,6 +237,36 @@ export function ProfileSheet({
           </button>
         </div>
 
+        <div className="secblock">
+          <h2 className="sec-h">Sign-in</h2>
+          {passkeyable && (
+            <div className="secrow">
+              <span className="secrow-ic"><Icon name="fingerprint" size={22} /></span>
+              <span className="secrow-txt">
+                <span className="t">Face ID / passkey</span>
+                <span className="s">
+                  {pkCount > 0
+                    ? `${pkCount} passkey${pkCount > 1 ? "s" : ""} on this account`
+                    : "Sign in with your face or fingerprint"}
+                </span>
+              </span>
+              <button className="secbtn" onClick={addPasskey} disabled={secBusy}>
+                {pkCount > 0 ? "Add another" : "Add"}
+              </button>
+            </div>
+          )}
+          <div className="secrow">
+            <span className="secrow-ic"><Icon name="lock" size={22} /></span>
+            <span className="secrow-txt">
+              <span className="t">Password</span>
+              <span className="s">{pwSet ? "A password is set" : "No password yet"}</span>
+            </span>
+            <button className="secbtn" onClick={() => setPwOpen(true)} disabled={secBusy}>
+              {pwSet ? "Change" : "Set"}
+            </button>
+          </div>
+        </div>
+
         {googleConfigured &&
           (connected ? (
             <div className="rowcta gcal-on">
@@ -277,6 +371,37 @@ export function ProfileSheet({
                 onClick={shareStory}
               >
                 Share image
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pwOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPwOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPwOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>{pwSet ? "Change password" : "Set a password"}</h2>
+            <p className="lead">At least 8 characters. You can still use a magic link or passkey.</p>
+            <input
+              className="editinput"
+              type="password"
+              autoComplete="new-password"
+              placeholder="New password"
+              value={pwValue}
+              onChange={(e) => setPwValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && savePassword()}
+            />
+            <div className="publishwrap">
+              <button className="btn si" onClick={savePassword} disabled={secBusy || pwValue.length < 8}>
+                {secBusy ? "Saving…" : "Save password"}
               </button>
             </div>
           </div>

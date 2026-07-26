@@ -31,6 +31,8 @@ export function ScheduleScreen({
   googleConfigured,
   googleConnected,
   googleEmail,
+  hasPassword,
+  passkeyCount,
 }: {
   classes: ClassDto[];
   hasAnyClass: boolean;
@@ -49,6 +51,8 @@ export function ScheduleScreen({
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
+  hasPassword: boolean;
+  passkeyCount: number;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -246,6 +250,8 @@ export function ScheduleScreen({
           googleConfigured={googleConfigured}
           googleConnected={googleConnected}
           googleEmail={googleEmail}
+          hasPassword={hasPassword}
+          passkeyCount={passkeyCount}
           onClose={() => setProfileOpen(false)}
         />
       )}

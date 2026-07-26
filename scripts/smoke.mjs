@@ -47,20 +47,14 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
 page.setDefaultTimeout(10000);
 
-// ---- auth: email -> code -> claim
+// ---- auth: email + password sign-up -> claim
 await page.goto(BASE + "/");
 await expect(page.getByText("Never answer").isVisible(), "auth screen 1 visible");
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
-await page.getByRole("button", { name: "Email me a code" }).click();
-await page.getByText("Check your inbox.").waitFor();
-
-await new Promise((r) => setTimeout(r, 500));
-const code = [...readLog().matchAll(/login code is (\d{6})/g)].pop()[1];
-console.log("OTP:", code);
-
-await page.getByPlaceholder("••••••").fill(code);
-await page.getByRole("button", { name: "Verify" }).click();
+await page.getByPlaceholder("Password").fill("smoke-pass-123");
+await page.getByRole("button", { name: "Continue" }).click();
 await page.getByText("Claim your page.").waitFor();
+console.log("password sign-up ok");
 await page.getByPlaceholder("Matt").fill("Matt");
 await expect(page.getByText("fittlist.co/matt").isVisible(), "handle preview shows fittlist.co/matt");
 await page.getByRole("button", { name: "Claim it" }).click();
@@ -333,12 +327,8 @@ await anonPage.locator(".madewith").getByText("Claim your page").click();
 await anonPage.getByText("Never answer").waitFor();
 if (!anonPage.url().includes("via=matt")) fail("footer click lost via param: " + anonPage.url());
 await anonPage.getByPlaceholder("you@example.com").fill("sam@example.com");
-await anonPage.getByRole("button", { name: "Email me a code" }).click();
-await anonPage.getByText("Check your inbox.").waitFor();
-await new Promise((r) => setTimeout(r, 500));
-const code2 = [...readLog().matchAll(/login code is (\d{6})/g)].pop()[1];
-await anonPage.getByPlaceholder("••••••").fill(code2);
-await anonPage.getByRole("button", { name: "Verify" }).click();
+await anonPage.getByPlaceholder("Password").fill("smoke-pass-sam");
+await anonPage.getByRole("button", { name: "Continue" }).click();
 await anonPage.getByText("Claim your page.").waitFor();
 await anonPage.getByPlaceholder("Matt").fill("Sam");
 await anonPage.getByRole("button", { name: "Claim it" }).click();
@@ -452,8 +442,32 @@ const pubCount = await eventCount(page);
 if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);
 console.log("public continuous schedule ok (" + pubCount + " events)");
 
-// ---- log out from the account page destroys the session
+// ---- security: enroll a passkey via a CDP virtual authenticator (Face ID/
+// fingerprint stand-in), then change the password, from the account page.
+const cdp = await ctx.newCDPSession(page);
+await cdp.send("WebAuthn.enable");
+await cdp.send("WebAuthn.addVirtualAuthenticator", {
+  options: {
+    protocol: "ctap2",
+    transport: "internal",
+    hasResidentKey: true,
+    hasUserVerification: true,
+    isUserVerified: true,
+    automaticPresenceSimulation: true,
+  },
+});
 await openProfile(page);
+await page.getByRole("button", { name: "Add", exact: true }).click();
+await page.getByText("Passkey added").waitFor();
+console.log("passkey enroll ok");
+
+await page.getByRole("button", { name: "Change", exact: true }).click();
+await page.getByPlaceholder("New password").fill("smoke-pass-456");
+await page.getByRole("button", { name: "Save password" }).click();
+await page.getByText("Password saved").waitFor();
+console.log("password change ok");
+
+// ---- log out from the account page destroys the session
 await page.getByRole("button", { name: "Log out" }).click();
 await page.waitForURL(BASE + "/");
 if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
@@ -462,6 +476,29 @@ if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
 await page.goto(BASE + "/app");
 await page.getByText("Never answer").waitFor();
 console.log("logout ok");
+
+// ---- magic link: request one, follow the URL from the mail log, land in /app
+await page.goto(BASE + "/");
+await page.getByPlaceholder("you@example.com").fill("matt@example.com");
+await page.getByRole("button", { name: "Email me a magic link" }).click();
+await page.getByText("Check your inbox.").waitFor();
+await new Promise((r) => setTimeout(r, 400));
+const magicUrl = [...readLog().matchAll(/\/auth\/magic\?token=[a-f0-9]{64}/g)].pop()[0];
+await page.goto(BASE + magicUrl);
+await page.waitForURL(BASE + "/app");
+await page.getByText("Your schedule").waitFor();
+if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
+  fail("magic link should establish a session");
+console.log("magic-link login ok");
+
+// log back out, then sign in with the enrolled passkey (no password typed)
+await openProfile(page);
+await page.getByRole("button", { name: "Log out" }).click();
+await page.waitForURL(BASE + "/");
+await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+await page.waitForURL(BASE + "/app");
+await page.getByText("Your schedule").waitFor();
+console.log("passkey login ok");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

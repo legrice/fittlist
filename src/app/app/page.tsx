@@ -38,12 +38,17 @@ export default async function SchedulePage({
         instagram: schema.users.instagram,
         website: schema.users.website,
         photo: schema.users.photo,
+        passwordHash: schema.users.passwordHash,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
     visitsThisWeek(userId),
   ]);
   const gconn = await isGoogleConnected(userId);
+  const passkeyRows = await db
+    .select({ id: schema.credentials.id })
+    .from(schema.credentials)
+    .where(eq(schema.credentials.userId, userId));
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -103,6 +108,8 @@ export default async function SchedulePage({
       googleConfigured={googleConfigured()}
       googleConnected={gconn.connected}
       googleEmail={gconn.email}
+      hasPassword={!!user?.passwordHash}
+      passkeyCount={passkeyRows.length}
     />
   );
 }
