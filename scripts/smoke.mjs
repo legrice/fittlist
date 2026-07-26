@@ -172,7 +172,6 @@ console.log("account + profile edit ok (back -> account)");
 // ---- public PROFILE page (mobile): photo/name/about + View schedule CTA
 await page.goto(BASE + "/matt");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
-await expect(page.locator(".profhandle", { hasText: "@matt" }).isVisible(), "profile shows @handle");
 await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible(), "profile shows title");
 await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
 await expect(

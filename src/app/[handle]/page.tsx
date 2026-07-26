@@ -74,7 +74,6 @@ export default async function ProfilePage({ params }: Props) {
         <div className="profhead">
           <div className="profhead-txt">
             <h1 className="profname">{user.name}</h1>
-            <p className="profhandle">@{handle}</p>
             {user.title?.trim() && <p className="proftitle">{user.title}</p>}
           </div>
           <ShareProfileButton name={user.name} />
