@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
-import { currentAdmin } from "@/lib/admin";
+import { adminEmails, currentAdmin } from "@/lib/admin";
 import { siteOrigin } from "@/lib/format";
 import { sendMessage } from "@/lib/mailer";
 
@@ -88,6 +88,46 @@ export async function adminDeleteStudio(
   return { ok: true };
 }
 
+// Delete a coach and everything owned by their account (classes, templates,
+// subscribers, visits, calendar link, passkeys, studio associations). Shared
+// records they merely created (studios, catalog, types, invites) are kept but
+// de-attributed. Can't delete yourself or another admin.
+export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  if (id === admin.id) return { ok: false, error: "You can't delete your own account." };
+  const db = await getDb();
+  const [u] = await db
+    .select({ email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, id));
+  if (!u) return { ok: false, error: "User not found." };
+  if (adminEmails().includes(u.email.toLowerCase())) {
+    return { ok: false, error: "Can't delete an admin account." };
+  }
+
+  // Rows the account owns — delete outright.
+  await db.delete(schema.classes).where(eq(schema.classes.userId, id));
+  await db.delete(schema.classTemplates).where(eq(schema.classTemplates.userId, id));
+  await db.delete(schema.subscribers).where(eq(schema.subscribers.trainerUserId, id));
+  await db.delete(schema.pageVisits).where(eq(schema.pageVisits.trainerUserId, id));
+  await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, id));
+  await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));
+  await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
+  await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
+
+  // Shared records they created — keep, just drop the attribution FK.
+  await db.update(schema.studios).set({ createdByUserId: null }).where(eq(schema.studios.createdByUserId, id));
+  await db.update(schema.studioClasses).set({ createdByUserId: null }).where(eq(schema.studioClasses.createdByUserId, id));
+  await db.update(schema.customClassTypes).set({ createdByUserId: null }).where(eq(schema.customClassTypes.createdByUserId, id));
+  await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));
+  await db.update(schema.invites).set({ acceptedUserId: null, acceptedAt: null }).where(eq(schema.invites.acceptedUserId, id));
+
+  await db.delete(schema.users).where(eq(schema.users.id, id));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Invite a coach by email (invite-only beta gate) and email them a sign-in link
 // so they can join right away. Returns the link so the admin can copy it too.
 export async function adminInvite(
@@ -108,8 +148,8 @@ export async function adminInvite(
 
   const url = await mintLink(
     email,
-    "You're invited to fittlist",
-    "You're in! Tap to set up your fittlist page:",
+    "You're invited to the fittlist beta",
+    "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
   );
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };
@@ -147,8 +187,8 @@ export async function adminActOnRequest(
     .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
   const url = await mintLink(
     req.email,
-    "You're invited to fittlist",
-    "You're in! Tap to set up your fittlist page:",
+    "You're invited to the fittlist beta",
+    "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
   );
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };

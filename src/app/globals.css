@@ -1315,3 +1315,6 @@ button.ps-card { cursor: pointer; }
 .confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 .confirm-keep[disabled] { opacity: .5; }
 .adminremove { margin-top: 10px; font-weight: 700; font-size: 13px; color: #a8452a; }
+.admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--si-soft); }
+.admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }
+.admindanger .adminaddform-row { margin-top: 0; }

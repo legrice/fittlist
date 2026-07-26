@@ -6,6 +6,7 @@ import {
   adminActOnRequest,
   adminAddStudio,
   adminDeleteStudio,
+  adminDeleteUser,
   adminInvite,
   adminSendMagicLink,
 } from "@/app/actions/admin";
@@ -151,7 +152,7 @@ export function AdminPanel({
         {tab === "coaches" ? (
           <div className="admincards">
             {shownCoaches.map((c) => (
-              <CoachCard key={c.id} c={c} toast={toast} />
+              <CoachCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
             ))}
             {!shownCoaches.length && <p className="adminempty">No coaches match.</p>}
           </div>
@@ -202,9 +203,19 @@ function Stat({ n, label }: { n: number; label: string }) {
   );
 }
 
-function CoachCard({ c, toast }: { c: Coach; toast: (m: string) => void }) {
+function CoachCard({
+  c,
+  toast,
+  adminEmail,
+}: {
+  c: Coach;
+  toast: (m: string) => void;
+  adminEmail: string;
+}) {
   const [pending, start] = useTransition();
   const [link, setLink] = useState<string | null>(null);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const isSelf = c.email.toLowerCase() === adminEmail.toLowerCase();
 
   const sendLink = () =>
     start(async () => {
@@ -215,6 +226,17 @@ function CoachCard({ c, toast }: { c: Coach; toast: (m: string) => void }) {
       }
       setLink(res.url ?? null);
       toast(res.emailed ? `Emailed a sign-in link to ${c.email}` : "Link created");
+    });
+
+  const del = () =>
+    start(async () => {
+      const res = await adminDeleteUser(c.id);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't delete");
+        setConfirmDel(false);
+        return;
+      }
+      toast(`Deleted ${c.name}`);
     });
 
   const copy = async () => {
@@ -262,6 +284,24 @@ function CoachCard({ c, toast }: { c: Coach; toast: (m: string) => void }) {
           {pending ? "Creating…" : "Send sign-in link"}
         </button>
       )}
+      {!isSelf &&
+        (confirmDel ? (
+          <div className="admindanger">
+            <p>Delete {c.name} and all their classes, subscribers, and data? This can&rsquo;t be undone.</p>
+            <div className="adminaddform-row">
+              <button className="btn si" disabled={pending} onClick={del}>
+                {pending ? "Deleting…" : "Yes, delete"}
+              </button>
+              <button className="linktoggle" disabled={pending} onClick={() => setConfirmDel(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button className="adminremove" onClick={() => setConfirmDel(true)}>
+            Delete user
+          </button>
+        ))}
     </div>
   );
 }
