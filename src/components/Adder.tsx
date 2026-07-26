@@ -5,6 +5,7 @@ import { deleteClass, publishClasses, updateClass } from "@/app/actions/classes"
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import {
+  CLASS_TYPES,
   DAYS,
   LINK_LABELS,
   fmtDate,
@@ -18,6 +19,7 @@ import { Icon } from "@/components/Icon";
 
 export type AdderPrefill = {
   name: string;
+  classType?: string | null;
   startTime: string;
   durationMin: number;
   studioId: string;
@@ -68,6 +70,7 @@ export function Adder({
           },
   );
   const [name, setName] = useState(prefill?.name ?? "");
+  const [classType, setClassType] = useState<string | null>(prefill?.classType ?? null);
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
   const [date, setDate] = useState(prefill?.specificDate ?? "");
@@ -89,6 +92,7 @@ export function Adder({
 
   const fillFromTemplate = (t: TemplateDto) => {
     setName(t.name);
+    setClassType(t.classType ?? null);
     setTime(t.startTime);
     setEnd(minutesToTime(timeToMinutes(t.startTime) + t.durationMin));
     setStudioId(t.studioId);
@@ -160,6 +164,7 @@ export function Adder({
     startTransition(async () => {
       const input = {
         name,
+        classType,
         days: [...days],
         specificDate: oneTime ? date : null,
         startTime: time,
@@ -316,6 +321,22 @@ export function Adder({
                   ))}
                 </div>
               )}
+            </div>
+
+            <label className="flabel">
+              Type <span>· optional</span>
+            </label>
+            <div className="chips typechips">
+              {CLASS_TYPES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`chip${classType === t ? " sel" : ""}`}
+                  onClick={() => setClassType(classType === t ? null : t)}
+                >
+                  {t}
+                </button>
+              ))}
             </div>
             </div>
 

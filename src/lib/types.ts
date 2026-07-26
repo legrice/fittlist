@@ -9,12 +9,14 @@ export type ClassDto = {
   startTime: string; // "HH:MM"
   durationMin: number;
   name: string;
+  classType: string | null;
   studioId: string;
   links: BookingLink[];
 };
 
 export type TemplateDto = {
   name: string;
+  classType: string | null;
   startTime: string;
   durationMin: number;
   studioId: string;

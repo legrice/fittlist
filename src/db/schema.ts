@@ -54,6 +54,8 @@ export const classTemplates = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => users.id),
     name: text("name").notNull(),
+    // Category from the curated CLASS_TYPES list (e.g. "Strength", "Yoga").
+    classType: text("class_type"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     studioId: uuid("studio_id").notNull().references(() => studios.id),
@@ -61,6 +63,24 @@ export const classTemplates = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("class_templates_user_name").on(t.userId, t.name)],
+);
+
+// Shared, cross-coach catalog of what classes run at each studio. Every publish
+// upserts here (deduped by studio + normalized name), so the data accumulates
+// toward a future studio / member-facing view. Not surfaced in the coach UI yet.
+export const studioClasses = pgTable(
+  "studio_classes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    name: text("name").notNull(),
+    nameKey: text("name_key").notNull(), // lowercased name, for dedupe
+    classType: text("class_type"),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("studio_classes_studio_name").on(t.studioId, t.nameKey)],
 );
 
 // The standing week. day_of_week: 0 = Monday … 6 = Sunday (prototype order).
@@ -77,6 +97,7 @@ export const classes = pgTable(
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),
+    classType: text("class_type"),
     studioId: uuid("studio_id").notNull().references(() => studios.id),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

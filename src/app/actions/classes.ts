@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
-import { LINK_LABELS, dowOfDate } from "@/lib/format";
+import { CLASS_TYPES, LINK_LABELS, dowOfDate } from "@/lib/format";
 import { notifyScheduleChange } from "@/lib/notifier";
 import { syncUserToGoogle } from "@/lib/gcal";
 
@@ -18,6 +18,7 @@ function syncGoogleAfter(userId: string) {
 
 export type PublishInput = {
   name: string;
+  classType?: string | null;
   days: number[]; // 0 = Monday … 6 = Sunday
   // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
   specificDate?: string | null;
@@ -26,6 +27,11 @@ export type PublishInput = {
   studioId: string;
   links: BookingLink[];
 };
+
+// Only accept a type from the curated list; anything else is dropped to null.
+function cleanType(t: string | null | undefined): string | null {
+  return t && (CLASS_TYPES as readonly string[]).includes(t) ? t : null;
+}
 
 function cleanLinks(links: BookingLink[]): BookingLink[] {
   return links
@@ -58,6 +64,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
   if (!studio) return { ok: false, error: "Pick a studio." };
   const links = cleanLinks(input.links ?? []);
+  const classType = cleanType(input.classType);
 
   if (replaceClassId) {
     const [existing] = await db
@@ -72,10 +79,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // values used, so autofill always reflects the most recent version.
   const [template] = await db
     .insert(schema.classTemplates)
-    .values({ userId, name, startTime: input.startTime, durationMin, studioId: studio.id, links })
+    .values({ userId, name, classType, startTime: input.startTime, durationMin, studioId: studio.id, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { startTime: input.startTime, durationMin, studioId: studio.id, links, updatedAt: new Date() },
+      set: { classType, startTime: input.startTime, durationMin, studioId: studio.id, links, updatedAt: new Date() },
     })
     .returning();
 
@@ -88,10 +95,25 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       startTime: input.startTime,
       durationMin,
       name,
+      classType,
       studioId: studio.id,
       links,
     })),
   );
+
+  // Log this class into the shared per-studio catalog (deduped by studio +
+  // normalized name). Silent groundwork for a future studio-facing view.
+  try {
+    await db
+      .insert(schema.studioClasses)
+      .values({ studioId: studio.id, name, nameKey: name.toLowerCase(), classType, createdByUserId: userId })
+      .onConflictDoUpdate({
+        target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
+        set: { name, ...(classType ? { classType } : {}), updatedAt: new Date() },
+      });
+  } catch (err) {
+    console.error("studio catalog upsert failed", err);
+  }
 
   // One action, many days -> one notification, never one per class row.
   let notified = 0;

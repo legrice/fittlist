@@ -7,6 +7,26 @@ export const TIME_PRESETS = ["06:00", "09:00", "12:00", "17:30", "18:30"];
 export const DUR_PRESETS = [30, 45, 50, 60, 75];
 export const LINK_LABELS = ["Website", "Mindbody", "ClassPass", "Other"];
 
+// Curated class categories. Kept short and canonical so the per-studio catalog
+// (and a future member-facing browse) stays organized instead of ten spellings
+// of the same thing.
+export const CLASS_TYPES = [
+  "Strength",
+  "HIIT",
+  "Conditioning",
+  "Bootcamp",
+  "Cycle",
+  "Yoga",
+  "Pilates",
+  "Barre",
+  "Mobility",
+  "Boxing",
+  "Run",
+  "Dance",
+  "Other",
+] as const;
+export type ClassType = (typeof CLASS_TYPES)[number];
+
 // Studio colors cycle by directory index (studios.seq), deterministic.
 export const PALETTES = [
   { rail: "#92A6A7", bg: "#E4EAEA", tx: "#4C6768" }, // sky

@@ -59,6 +59,7 @@ export default async function SchedulePage({
     startTime: c.startTime,
     durationMin: c.durationMin,
     name: c.name,
+    classType: c.classType,
     studioId: c.studioId,
     links: c.links,
   }));
@@ -72,6 +73,7 @@ export default async function SchedulePage({
   }));
   const templates: TemplateDto[] = templateRows.map((t) => ({
     name: t.name,
+    classType: t.classType,
     startTime: t.startTime,
     durationMin: t.durationMin,
     studioId: t.studioId,

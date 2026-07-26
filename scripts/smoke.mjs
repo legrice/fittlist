@@ -65,6 +65,7 @@ if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app s
 console.log("adder auto-opened, poster default");
 
 await page.getByPlaceholder("e.g. Barbell Strength").fill("Barbell Strength");
+await page.locator(".typechips").getByRole("button", { name: "Strength", exact: true }).click();
 await page.getByRole("button", { name: "Mo", exact: true }).click();
 await page.getByRole("button", { name: "We", exact: true }).click();
 
@@ -115,6 +116,11 @@ await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = await page.locator(".publishwrap .btn").textContent();
 if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
   fail("edit not prefilled with its day: " + editLabel);
+// class type round-trips: the Strength chip is preselected on edit
+await expect(
+  page.locator(".typechips .chip.sel", { hasText: "Strength" }).isVisible(),
+  "class type persisted (Strength preselected on edit)",
+);
 // change the class length by moving the End time (start is 6:00a → 75 min)
 await page.locator("#fEnd").fill("07:15");
 await expect(page.locator(".durnote", { hasText: "75 min" }).isVisible(), "durnote reflects end time");

@@ -64,6 +64,13 @@
       "when": 1785070019493,
       "tag": "0008_living_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785074786811,
+      "tag": "0009_faulty_doctor_doom",
+      "breakpoints": true
     }
   ]
 }
