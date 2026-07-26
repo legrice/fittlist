@@ -269,9 +269,12 @@ h1.screen-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-siz
 [data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
 [data-theme="poster"] .timegrid input.timeinput:focus { border-color: var(--pg-day); }
 /* start + end side by side */
-.timegrid.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+/* two equal columns that actually shrink — native time inputs have a wide
+   intrinsic min-width, so the tracks and items must be allowed to hit zero. */
+.timegrid.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 16px; }
+.timegrid.two > div { min-width: 0; }
 .timegrid.two .flabel { margin-top: 0; }
-.timegrid.two input.timeinput { width: 100%; }
+.timegrid.two input.timeinput { width: 100%; min-width: 0; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
 .durnote {
   font-family: 'Poppins', sans-serif; font-size: 12.5px; color: var(--ol);
