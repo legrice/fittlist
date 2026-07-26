@@ -398,7 +398,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      end of the scroll too. Its own padding keeps the button off the edge. */
   position: sticky; bottom: calc(-1 * var(--pad-b)); z-index: 3; background: var(--card);
   margin: 18px -20px calc(-1 * var(--pad-b)); padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line); border-radius: 0 0 16px 16px;
+  border-top: 1px solid var(--line);
+  /* The bottom sheet has square bottom corners, so the footer bar does too;
+     the centered desktop modal restores the rounding below. */
+  border-radius: 0;
 }
 /* Short sheets (sign up / log in) keep the full-width bar but must not stick,
    or the footer would cover the secondary links sitting just above it. The
@@ -522,6 +525,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   /* sheets become centered modals */
   .sheet-scrim { align-items: center; justify-content: center; padding: 24px; }
   .sheet { max-width: 480px; border-radius: 16px; }
+  .publishwrap { border-radius: 0 0 16px 16px; }
 }
 
 /* v10: link rows */
@@ -1098,7 +1102,7 @@ button.ps-card { cursor: pointer; }
 .evnobook { font-size: 14px; font-weight: 600; color: #6b6555; }
 [data-theme="poster"] .heronotify { display: none; }
 [data-theme="poster"] .notifybar {
-  display: block; background: var(--pg-ground); border-top: none;
+  display: block; background: var(--pg-cream); border-top: 1px solid var(--line);
   padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .notifybar .btn.si {

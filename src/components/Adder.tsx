@@ -618,7 +618,7 @@ export function Adder({
               value={nsAddr}
               onChange={(e) => setNsAddr(e.target.value)}
             />
-            <div className="publishwrap">
+            <div className="publishwrap" style={{ marginTop: 24 }}>
               <button
                 className="btn si"
                 disabled={pending || !nsName.trim() || !nsAddr.trim()}
