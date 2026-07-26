@@ -1283,8 +1283,10 @@ button.ps-card { cursor: pointer; }
 .admincards { display: flex; flex-direction: column; gap: 10px; }
 .admincard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px; box-shadow: var(--soft-shadow); }
 .admincard-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.admincard-h-link { text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.admincard-h-link:active { opacity: .6; }
 .admincard-nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admincard-tag { flex-shrink: 0; font-weight: 700; font-size: 12.5px; color: var(--si); text-decoration: none; }
+.admincard-tag { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 12.5px; color: var(--si); text-decoration: none; }
 .admincard-tag.muted { color: var(--ol); }
 .admincard-sub { font-size: 13px; color: var(--ol); margin-top: 2px; word-break: break-word; }
 .adminmeta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ol); }

@@ -251,16 +251,19 @@ function CoachCard({
 
   return (
     <div className="admincard">
-      <div className="admincard-h">
-        <span className="admincard-nm">{c.name}</span>
-        {c.handle ? (
-          <Link className="admincard-tag" href={`/${c.handle}`} target="_blank">
-            /{c.handle}
-          </Link>
-        ) : (
+      {c.handle ? (
+        <Link className="admincard-h admincard-h-link" href={`/${c.handle}`} target="_blank">
+          <span className="admincard-nm">{c.name}</span>
+          <span className="admincard-tag">
+            /{c.handle} <Icon name="open_in_new" size={13} />
+          </span>
+        </Link>
+      ) : (
+        <div className="admincard-h">
+          <span className="admincard-nm">{c.name}</span>
           <span className="admincard-tag muted">no page</span>
-        )}
-      </div>
+        </div>
+      )}
       <div className="admincard-sub">{c.email}</div>
       <div className="adminmeta">
         {c.joined && <span>joined {c.joined}</span>}
