@@ -37,8 +37,24 @@ export const users = pgTable("users", {
   signupSource: text("signup_source"),
   // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".
   theme: text("theme").notNull().default("poster"),
+  // Set when the coach finishes (or skips) the post-signup setup wizard. Null =
+  // they still need to run it; the app redirects them into /welcome until it's set.
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Studios a coach says they work at, chosen in the setup wizard. Independent of
+// the classes they publish, so "Where I coach" can be populated before any class
+// exists. Public "Where I coach" is the union of these and class-derived studios.
+export const coachStudios = pgTable(
+  "coach_studios",
+  {
+    userId: uuid("user_id").notNull().references(() => users.id),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("coach_studios_user_studio").on(t.userId, t.studioId)],
+);
 
 // Global/shared directory. `seq` gives the deterministic directory index that
 // drives the studio color cycle (Sky, Tacha, Sand, Olive).

@@ -1,4 +1,5 @@
 import { desc, eq, isNull, and } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { visitsThisWeek } from "@/lib/visits";
@@ -43,11 +44,16 @@ export default async function SchedulePage({
         whatsapp: schema.users.whatsapp,
         photo: schema.users.photo,
         passwordHash: schema.users.passwordHash,
+        onboardedAt: schema.users.onboardedAt,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
     visitsThisWeek(userId),
   ]);
+
+  // First run after claiming a handle: send them through the setup wizard
+  // (photo, profile, studios) before they land on their schedule.
+  if (user && !user.onboardedAt) redirect("/welcome");
   const gconn = await isGoogleConnected(userId);
   const passkeyRows = await db
     .select({ id: schema.credentials.id })

@@ -68,10 +68,18 @@ await page.getByPlaceholder("Your name").fill("Matt");
 await expect(page.getByText("fittlist.co/matt").isVisible(), "URL preview shows fittlist.co/matt");
 await page.getByRole("button", { name: "Claim it" }).click();
 
-// ---- lands in /app on the Poster style with the adder open (form stage)
-await page.getByRole("heading", { name: "New class" }).waitFor();
+// ---- setup wizard (photo -> info -> studios), skippable. Skip it and confirm
+// we land on the blank schedule with the add button (no auto-opened adder).
+await page.getByRole("heading", { name: "Add a photo." }).waitFor();
+await page.getByRole("button", { name: "Skip for now" }).click();
+await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
 if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app should be Poster");
-console.log("adder auto-opened, poster default");
+console.log("setup wizard skippable, blank schedule ok");
+
+// open the adder from the empty state
+await page.getByRole("button", { name: "Add your first class" }).click();
+await page.getByRole("heading", { name: "New class" }).waitFor();
+console.log("adder opens from empty state");
 
 await page.getByPlaceholder("e.g. Barbell Strength").fill("Barbell Strength");
 await page.locator("#fType").selectOption("Strength");
@@ -229,7 +237,7 @@ await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: tru
 await page.locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
 await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event page shows address");
-await expect(page.getByText("Book via Website ↗").isVisible(), "event page shows booking link");
+await expect(page.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "event page shows booking link");
 await expect(page.locator(".evtype", { hasText: "Strength" }).isVisible(), "event page shows class type");
 await expect(page.getByText("Barbell club for all levels").isVisible(), "event page shows description");
 await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });

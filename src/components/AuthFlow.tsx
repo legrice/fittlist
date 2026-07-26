@@ -141,7 +141,7 @@ export function AuthFlow({
     setError("");
     startTransition(async () => {
       const res = await claimProfile(name, handle, via);
-      if (res.ok) router.push("/app?add=1");
+      if (res.ok) router.push("/welcome");
       else setError(res.error ?? "Something went wrong.");
     });
   };

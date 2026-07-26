@@ -29,7 +29,15 @@ export async function PublicProfileView({
   const handle = user.handle!;
   const db = await getDb();
   const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
-  const studioIds = [...new Set(classRows.map((c) => c.studioId))];
+  // "Where I coach" is the union of studios the coach picked in setup and any
+  // studio they've published a class at.
+  const pickedRows = await db
+    .select({ studioId: schema.coachStudios.studioId })
+    .from(schema.coachStudios)
+    .where(eq(schema.coachStudios.userId, user.id));
+  const studioIds = [
+    ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
+  ];
   const studioRows = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
