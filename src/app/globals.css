@@ -11,16 +11,7 @@
   --si: #dd583a;
   --si-soft: #f9e4dd;
   --sa: #cfd3da;
-  --radius: 20px;
-  /* heavy condensed display face for headlines + card titles */
-  --font-display: 'Anton', 'Archivo Black', sans-serif;
-  /* vibrant "masterclass" accents for color-block cards + pills */
-  --v-violet: #7b6ff0;
-  --v-lime: #c6da6a;
-  --v-yellow: #f5c84b;
-  --v-coral: #ec5e43;
-  --v-blue: #a9cbeb;
-  --v-plum: #3b3550;
+  --radius: 14px;
   /* soft, cool card shadows — subtle Airbnb-style elevation across surfaces */
   --soft-shadow: 0 1px 2px rgba(23, 26, 31, .05), 0 4px 12px rgba(23, 26, 31, .06);
   --soft-shadow-lg: 0 2px 6px rgba(23, 26, 31, .05), 0 12px 28px rgba(23, 26, 31, .10);
@@ -28,7 +19,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'Archivo', system-ui, sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   background: var(--cl);
   color: var(--ink);
   min-height: 100dvh;
@@ -49,9 +40,9 @@ a { color: inherit; }
 .wm { display: inline-flex; align-items: center; gap: .32em; line-height: 1; font-size: 20px; }
 .wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
-.wm .wm-text { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 1em; letter-spacing: -.03em; white-space: nowrap; }
+.wm .wm-text { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
 .appbar .sub {
-  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .12em;
+  font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -89,13 +80,13 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
+h1.screen-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
 .daylabel {
-  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+  font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
 }
 .eyebrow {
-  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .14em;
+  font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -103,28 +94,28 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .ob { justify-content: flex-end; background: var(--ink); color: #fff; }
 .ob .pad { padding: 28px 24px 40px; }
 .ob .mark { position: fixed; top: 24px; left: 24px; font-size: 28px; }
-.ob h1 { font-family: var(--font-display); font-weight: 400; font-size: 40px; letter-spacing: .01em; line-height: .98; text-transform: uppercase; margin-bottom: 12px; }
+.ob h1 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 10px; }
 .ob p { font-size: 14.5px; color: #c9c3ae; line-height: 1.5; margin-bottom: 22px; }
 .ob p b { color: #fff; }
 .ob input {
   width: 100%; padding: 15px 16px; border-radius: 13px; border: 1.5px solid #3a3526;
   background: #26200f; color: #fff; font-family: inherit; font-size: 17px; margin-bottom: 14px;
 }
-.ob input.code { font-family: 'Space Mono', monospace; letter-spacing: .5em; text-align: center; font-size: 20px; }
+.ob input.code { font-family: 'Poppins', sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; }
 .ob input:focus { outline: none; border-color: var(--si); }
 .ob .btn { background: var(--si); }
 .ob .microcopy {
-  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em;
+  font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: .08em;
   color: #8a8570; margin-top: 12px; text-align: center;
 }
 .ob .errorcopy { font-size: 13px; color: #f0a292; margin-top: 12px; text-align: center; }
-.ob .handlepreview { font-family: 'Space Mono', monospace; font-size: 13px; color: #c9c3ae; margin: -6px 0 16px; padding-left: 4px; }
+.ob .handlepreview { font-family: 'Poppins', sans-serif; font-size: 13px; color: #c9c3ae; margin: -6px 0 16px; padding-left: 4px; }
 .ob .handlepreview b { color: var(--si); font-weight: 400; }
 .ob .backlink { color: #c9c3ae; font-size: 13px; text-decoration: underline; margin-top: 14px; display: inline-block; }
 
 .empty-block { margin-top: 22px; border: 1.5px dashed var(--line); border-radius: 18px; padding: 28px 22px; text-align: center; }
-.empty-block .glyph { font-family: 'Space Mono', monospace; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
-.empty-block h2 { font-family: 'Archivo Black', sans-serif; font-size: 19px; margin-bottom: 8px; }
+.empty-block .glyph { font-family: 'Poppins', sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
+.empty-block h2 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
@@ -136,7 +127,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .class-card.editable { cursor: pointer; }
 .class-card.editable:hover { border-color: var(--ink); }
 .class-card .rail { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
-.class-card .time { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
+.class-card .time { font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
 .class-card .body { flex: 1; min-width: 0; }
 .class-card .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
 .class-card .meta { font-size: 12.5px; color: var(--ol); }
@@ -165,11 +156,11 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
 .stat { flex: 1; background: var(--cl); border-radius: 12px; padding: 12px; text-align: center; }
-.stat .n { font-family: 'Archivo Black', sans-serif; font-size: 20px; }
+.stat .n { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 20px; }
 .stat .l { font-size: 10.5px; color: var(--ol); margin-top: 2px; }
-.stat .d { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--si); margin-top: 2px; }
+.stat .d { font-family: 'Poppins', sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
 .linkcard { background: var(--ink); color: #fff; border-radius: 16px; padding: 16px; margin-top: 14px; }
-.linkcard .url { font-family: 'Space Mono', monospace; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
+.linkcard .url { font-family: 'Poppins', sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
 .linkcard .hint { font-size: 12px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .linkcard .eyebrow { color: #c9c3ae; }
 .rowcta {
@@ -187,7 +178,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .pub { background: var(--cl); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
-.pub .pubhero .big { font-family: var(--font-display); font-weight: 400; font-size: 44px; letter-spacing: .01em; line-height: .95; text-transform: uppercase; }
+.pub .pubhero .big { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -.02em; line-height: 1; text-transform: uppercase; }
 .pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
@@ -214,7 +205,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet { position: relative; }
 .sheetclose { position: absolute; top: 14px; right: 16px; z-index: 2; background: var(--card); }
-.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 27px; letter-spacing: .01em; text-transform: uppercase; margin-bottom: 6px; }
+.sheet h2 { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; }
 .sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
@@ -228,13 +219,12 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .adder input:focus { outline: none; border-color: var(--si); }
 /* reference-style layout: small kicker, big borderless title input, grouped cards */
 .adder-kicker {
-  font-family: 'Space Mono', monospace !important; font-size: 11px !important; font-weight: 700;
+  font-family: 'Poppins', sans-serif !important; font-size: 11px !important; font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase; color: var(--ol); margin: 2px 0 0 !important;
 }
 .adder input.adder-title {
   border: none; background: transparent; border-radius: 0; padding: 2px 0 10px;
-  font-family: var(--font-display); font-weight: 400; font-size: 32px; line-height: 1; letter-spacing: .01em;
-  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; line-height: 1.05; letter-spacing: -.02em;
 }
 .adder input.adder-title:focus { border: none; }
 .adder input.adder-title::placeholder { color: var(--line); }
@@ -265,14 +255,14 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 10px;
-  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+  font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700;
 }
 .daypick button.sel { background: var(--si); color: #fff; border-color: var(--si); }
 .timegrid { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.timegrid .chip { font-family: 'Space Mono', monospace; }
+.timegrid .chip { font-family: 'Poppins', sans-serif; }
 .timegrid input[type=time] {
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
-  font-family: 'Space Mono', monospace; font-size: 16px; background: var(--card); color: var(--ink);
+  font-family: 'Poppins', sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 12px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
@@ -284,7 +274,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .timegrid.two input.timeinput { width: 100%; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
 .durnote {
-  font-family: 'Space Mono', monospace; font-size: 12.5px; color: var(--ol);
+  font-family: 'Poppins', sans-serif; font-size: 12.5px; color: var(--ol);
   margin-top: 8px;
 }
 .studio-sel {
@@ -313,7 +303,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 .studio-row .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .studio-row .tick { margin-left: auto; color: var(--si); font-weight: 700; }
 .addnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 2px; display: inline-block; }
-.dirnote { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
+.dirnote { font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
 
 /* share story */
 .share-toggles { display: flex; gap: 8px; margin: 12px 0; }
@@ -378,7 +368,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
   .sidenav a .ico { font-size: 15px; }
   .sidenav a.active { background: var(--cl); color: var(--ink); }
   .sidenav a.active .ico { color: var(--si); }
-  .sideuser { margin-top: auto; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
+  .sideuser { margin-top: auto; font-family: 'Poppins', sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
   .tabbar { display: none; }
   .appshell .appbar .wordmark { visibility: hidden; }
   .pad { padding: 30px 38px; max-width: 1000px; }
@@ -442,11 +432,11 @@ input, select, textarea { font-size: max(1em, 16px); }
 .blweek { display: flex; flex-direction: column; }         /* full-bleed: parent cancels its own side padding */
 .bl-head { background: var(--ink); color: #F7F2E8; padding: 24px 20px 22px; }
 .bl-head .eb {
-  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+  font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase; color: #C9C3AE;
 }
 .bl-head h2 {
-  font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .86;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
   letter-spacing: -.03em; text-transform: uppercase; margin-top: 6px;
 }
 .bl-band {
@@ -456,18 +446,18 @@ input, select, textarea { font-size: max(1em, 16px); }
 }
 button.bl-band { cursor: pointer; }
 .bl-day {
-  font-family: 'Archivo Black', sans-serif; font-size: 30px; line-height: .82;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 30px; line-height: .82;
   letter-spacing: -.01em; text-transform: uppercase; min-width: 62px; flex-shrink: 0;
 }
 .bl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .bl-nm {
-  font-family: 'Archivo Black', sans-serif; font-size: 21px; line-height: .98;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 21px; line-height: .98;
   letter-spacing: -.01em; text-transform: uppercase;
 }
-.bl-mt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.bl-mt { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; margin-top: 6px; }
 .bl-loc { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: .82; }
 .bl-book {
-  display: inline-block; margin-top: 8px; font-family: 'Space Mono', monospace; font-weight: 700;
+  display: inline-block; margin-top: 8px; font-family: 'Poppins', sans-serif; font-weight: 700;
   font-size: 12.5px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
 }
 .bl-edit {
@@ -507,11 +497,11 @@ button.bl-band { cursor: pointer; }
 .ps-brand .wordmark { font-size: 22px; }
 .ps-tag {
   margin-left: auto; background: transparent; color: var(--pg-cream);
-  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Space Mono', monospace;
+  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Poppins', sans-serif;
   font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px;
 }
 .ps-h2 {
-  font-family: 'Archivo Black', sans-serif; font-size: 46px; line-height: .84; letter-spacing: -.03em;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
 /* schedule header: fittlist logo + profile icon up top, "My Schedule" below */
@@ -523,8 +513,8 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #878c96; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
 .calbar-title {
-  font-family: var(--font-display); font-weight: 400; font-size: 40px; letter-spacing: .01em; line-height: .95;
-  text-transform: uppercase; color: #191502; margin: 10px 0 18px;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1;
+  color: #191502; margin: 10px 0 16px;
 }
 .usericon {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
@@ -534,21 +524,21 @@ button.bl-band { cursor: pointer; }
 .usericon:active { opacity: .7; }
 .usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .usericon-initial {
-  font-family: 'Archivo Black', sans-serif; font-size: 16px; line-height: 1; color: #191502;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* day sits on top as a section title; the day's classes stack full-width below */
 .ps-week { display: flex; flex-direction: column; gap: 38px; }
 .ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  font-family: var(--font-display); font-weight: 400; font-size: 18px; letter-spacing: .01em;
-  text-transform: uppercase; color: #191502; white-space: nowrap;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -.01em;
+  color: #191502; white-space: nowrap;
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* time sits in a left gutter beside each class, echoing the old date column */
 .ps-classrow { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
 .ps-time {
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
 }
 
@@ -559,7 +549,7 @@ button.bl-band { cursor: pointer; }
 .ps-event {
   display: grid; grid-template-columns: 54px 1fr 20px; gap: 12px; align-items: center;
   width: 100%; text-align: left; color: #191502; text-decoration: none;
-  background: #fff; border-radius: 18px; padding: 16px 18px;
+  background: #fff; border-radius: 14px; padding: 16px;
   box-shadow: var(--soft-shadow);
   -webkit-tap-highlight-color: transparent; transition: box-shadow .12s ease, background .12s ease;
 }
@@ -567,23 +557,19 @@ button.bl-band { cursor: pointer; }
 .ps-event:active { background: #faf7ef; }
 .ps-etimecol { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .ps-etime {
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: #191502; white-space: nowrap;
 }
 .ps-edur {
-  font-family: 'Space Mono', monospace; font-weight: 400; font-size: 11px;
+  font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 11px;
   color: #a49d8b; white-space: nowrap;
 }
 .ps-ebody { display: flex; flex-direction: column; min-width: 0; }
 .ps-enm {
-  font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.02;
-  letter-spacing: .01em; text-transform: uppercase; color: #191502;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.15;
+  letter-spacing: -.01em; color: #191502;
 }
-.ps-estudio {
-  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
-  text-transform: uppercase; color: #565a63; margin-top: 6px;
-  background: #eef0f3; border-radius: 999px; padding: 3px 9px;
-}
+.ps-estudio { font-size: 13px; font-weight: 600; color: #878c96; margin-top: 2px; }
 .ps-echev { color: rgba(23, 26, 31, .35); display: flex; align-items: center; justify-content: center; }
 
 .ps-card {
@@ -592,16 +578,16 @@ button.bl-band { cursor: pointer; }
  padding: 14px 16px;
 }
 button.ps-card { cursor: pointer; }
-.ps-nm { font-family: 'Archivo Black', sans-serif; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
+.ps-nm { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
 .ps-sub { font-size: 13px; font-weight: 700; margin-top: 5px; color: #565a63; }
 .ps-addr { font-size: 12px; font-weight: 600; margin-top: 2px; color: #8a8472; }
 .ps-book {
-  display: inline-block; margin-top: 9px; font-family: 'Space Mono', monospace; font-weight: 700;
+  display: inline-block; margin-top: 9px; font-family: 'Poppins', sans-serif; font-weight: 700;
   font-size: 12px; color: #191502; border-bottom: 2.5px solid var(--pg-day); text-decoration: none;
 }
 .ps-infobar {
   background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
- font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px;
+ font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px;
   text-align: center; padding: 12px; margin-top: 4px;
 }
 
@@ -615,7 +601,7 @@ button.ps-card { cursor: pointer; }
 }
 [data-theme="poster"] .tabbar a {
   border: none; background: transparent; border-radius: 14px;
-  color: var(--pg-cream); font-family: 'Archivo Black', sans-serif; font-size: 13px;
+  color: var(--pg-cream); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .02em; text-transform: uppercase; padding: 13px 0;
 }
 /* the current tab is a cream sticker pill; the other is a plain label */
@@ -696,7 +682,7 @@ button.ps-card { cursor: pointer; }
 }
 .profphoto-empty {
   display: flex; align-items: center; justify-content: center; background: #e7eaef;
-  font-family: 'Archivo Black', sans-serif; font-size: 76px; color: #c3c8d1;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 76px; color: #c3c8d1;
 }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
@@ -707,8 +693,8 @@ button.ps-card { cursor: pointer; }
 }
 .profshare:active { background: #e6e9ef; }
 .profname {
-  font-family: var(--font-display); font-weight: 400; font-size: 40px; letter-spacing: .01em; line-height: .95;
-  text-transform: uppercase; color: #191502; margin: 0;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: -.02em; line-height: 1.05;
+  color: #191502; margin: 0;
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
 .profabout { font-size: 15px; line-height: 1.55; color: #565a63; margin-top: 18px; white-space: pre-wrap; }
@@ -716,7 +702,7 @@ button.ps-card { cursor: pointer; }
 .proflink {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 14px; color: #191502;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 14px; color: #191502;
   text-decoration: none;
 }
 .proflink:active { background: #e6e9ef; }
@@ -727,7 +713,7 @@ button.ps-card { cursor: pointer; }
 }
 .profcta .btn { max-width: 520px; margin: 0 auto; }
 .pubback {
-  display: inline-block; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 12px;
 }
 
@@ -736,7 +722,7 @@ button.ps-card { cursor: pointer; }
 .profrow-photo { width: 52px; height: 52px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
 .profrow-empty {
   display: flex; align-items: center; justify-content: center; background: var(--pg-day); color: #fff;
-  font-family: 'Archivo Black', sans-serif; font-size: 22px;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 22px;
 }
 .profrow-info { flex: 1; min-width: 0; }
 .profrow-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
@@ -780,7 +766,7 @@ button.ps-card { cursor: pointer; }
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .acctclose:active { background: #e6e9ef; }
-.acct-h { font-family: var(--font-display); font-weight: 400; font-size: 38px; letter-spacing: .01em; text-transform: uppercase; color: #191502; margin: 0; }
+.acct-h { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; color: #191502; margin: 0; }
 .accttile {
   display: flex; align-items: stretch; gap: 8px; margin-top: 18px; padding: 22px 18px;
   background: #fff; border-radius: 22px; box-shadow: var(--soft-shadow);
@@ -792,31 +778,29 @@ button.ps-card { cursor: pointer; }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #e7eaef; }
 .acctavatar-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Archivo Black', sans-serif; font-size: 38px; color: #c3c8d1;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 38px; color: #c3c8d1;
 }
 .acctname {
-  font-family: var(--font-display); font-weight: 400; font-size: 26px; letter-spacing: .01em; line-height: 1;
-  text-transform: uppercase; color: #191502; margin-top: 10px; overflow-wrap: anywhere;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
+  color: #191502; margin-top: 8px; overflow-wrap: anywhere;
 }
-.accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 4px; }
+.accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 1px; }
 /* the 3 stats split the tile height evenly so both columns balance */
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
 .acctstat + .acctstat { border-top: 1px solid var(--line); }
-.acctstat .n { display: block; font-family: var(--font-display); font-weight: 400; font-size: 27px; color: #191502; line-height: 1; }
-.acctstat .l { display: block; font-size: 12px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #565a63; margin-top: 5px; }
+.acctstat .n { display: block; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
+.acctstat .l { display: block; font-size: 13px; font-weight: 700; color: #565a63; margin-top: 5px; }
 .acctcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .acctcard {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-  padding: 18px 16px 18px; border-radius: 20px; box-shadow: var(--soft-shadow);
-  text-align: left; min-height: 148px; justify-content: flex-end;
+  padding: 18px 16px 16px; background: #fff; border-radius: 20px; box-shadow: var(--soft-shadow);
+  text-align: left;
 }
-.acctcard:nth-child(1) { background: var(--v-violet); color: #fff; }
-.acctcard:nth-child(2) { background: var(--v-lime); color: #191502; }
-.acctcard:active { filter: brightness(.96); }
-.acctcard-ic { margin-bottom: auto; }
-.acctcard-t { font-family: var(--font-display); font-weight: 400; font-size: 20px; letter-spacing: .01em; text-transform: uppercase; line-height: 1; }
-.acctcard-s { font-size: 12.5px; opacity: .8; line-height: 1.35; margin-top: 5px; }
+.acctcard:active { background: #f5f7fa; }
+.acctcard-ic { color: #191502; margin-bottom: 24px; }
+.acctcard-t { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
+.acctcard-s { font-size: 12.5px; color: #878c96; line-height: 1.35; }
 .acctwrap .rowcta { margin-top: 12px; }
 
 /* ---- owner bar atop the public profile (back + edit) ---- */
@@ -831,7 +815,7 @@ button.ps-card { cursor: pointer; }
 }
 .ownerback:active { background: #e6e9ef; }
 .owneredit {
-  font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 15px; color: #191502;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; color: #191502;
   background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
 }
 .owneredit:active { background: #e6e9ef; }
@@ -854,7 +838,7 @@ button.ps-card { cursor: pointer; }
   padding: calc(20px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom));
 }
 .evback {
-  display: inline-block; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 18px;
 }
 .evcard {
@@ -862,12 +846,12 @@ button.ps-card { cursor: pointer; }
   padding: 22px 20px; color: #191502;
 }
 .evwhen {
-  font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .02em;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em;
   text-transform: uppercase; color: var(--pg-day); margin-bottom: 8px;
 }
 .evname {
-  font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: .98; letter-spacing: .01em;
-  text-transform: uppercase; color: #191502; margin-bottom: 14px;
+  font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 30px; line-height: 1.02; letter-spacing: -.02em;
+  color: #191502; margin-bottom: 14px;
 }
 .evstudio { font-size: 16px; font-weight: 700; color: #191502; }
 .evaddr { display: inline-block; font-size: 14px; font-weight: 600; color: #878c96; text-decoration: none; margin-top: 3px; border-bottom: 1.5px solid #c3c8d1; }
