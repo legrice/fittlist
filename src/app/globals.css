@@ -266,8 +266,12 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
   display: flex; align-items: flex-end;
 }
 .sheet {
+  /* One place to set the sheet's bottom padding. The sticky footer offsets
+     against this so it sits flush on the sheet's edge instead of floating
+     above the padding box (which was leaving a gap under the save button). */
+  --pad-b: calc(22px + env(safe-area-inset-bottom));
   background: var(--card); color: var(--ink); width: 100%; border-radius: 16px 16px 0 0;
-  padding: 14px 20px 26px; animation: up .22s ease; max-height: 94%; overflow-y: auto;
+  padding: 14px 20px var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
 /* Freeze the background while a bottom sheet is open, so it can't scroll and
@@ -389,8 +393,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* Sticky save/publish footer: bleed past the sheet's padding so the white bar
    spans the full width (and reaches the bottom edge) behind the button. */
 .publishwrap {
-  position: sticky; bottom: 0; z-index: 3; background: var(--card);
-  margin: 18px -20px -26px; padding: 14px 20px calc(20px + env(safe-area-inset-bottom));
+  /* Pull the sticky footer down past the sheet's bottom padding so it pins
+     flush to the sheet edge; the negative bottom margin keeps it flush at the
+     end of the scroll too. Its own padding keeps the button off the edge. */
+  position: sticky; bottom: calc(-1 * var(--pad-b)); z-index: 3; background: var(--card);
+  margin: 18px -20px calc(-1 * var(--pad-b)); padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line); border-radius: 0 0 16px 16px;
 }
 
@@ -420,7 +427,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 16px; margin: 12px auto 4px; background: var(--ink); }
 
 /* delete lives at the bottom of the edit sheet, behind a confirmation */
-.dangerzone { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }
+.dangerzone { margin-top: var(--pad-b); padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }
 .deletelink { color: var(--si); font-weight: 700; font-size: 14px; padding: 6px 0; }
 .dangerzone .keep { display: block; margin: 12px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 
@@ -1017,6 +1024,7 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 16px; background: #fff; color: var(--ink); margin-top: 2px;
 }
 .typeselect:focus { outline: none; border-color: var(--si); }
+.typeadd { font-size: 13px; font-weight: 700; color: var(--si); margin-top: 10px; display: inline-block; }
 
 /* ---- owner bar atop the public profile (back + edit) ---- */
 .ownerbar {

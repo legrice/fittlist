@@ -371,10 +371,7 @@ export function Adder({
               id="fType"
               className="typeselect"
               value={classType ?? ""}
-              onChange={(e) => {
-                if (e.target.value === "__add__") setAddingType(true);
-                else setClassType(e.target.value || null);
-              }}
+              onChange={(e) => setClassType(e.target.value || null)}
             >
               <option value="">No type</option>
               {typeOptions.map((t) => (
@@ -382,15 +379,13 @@ export function Adder({
                   {t}
                 </option>
               ))}
-              <option value="__add__">+ Add a custom type…</option>
             </select>
-            {addingType && (
+            {addingType ? (
               <div className="linkrow" style={{ marginTop: 8 }}>
                 <input
                   className="editinput"
                   placeholder="New type, e.g. Spin"
                   value={newType}
-                  autoFocus
                   maxLength={30}
                   onChange={(e) => setNewType(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addType()}
@@ -403,7 +398,21 @@ export function Adder({
                 >
                   Add
                 </button>
+                <button
+                  className="iconbtn"
+                  aria-label="Cancel"
+                  onClick={() => {
+                    setAddingType(false);
+                    setNewType("");
+                  }}
+                >
+                  <Icon name="close" size={14} />
+                </button>
               </div>
+            ) : (
+              <button className="typeadd" onClick={() => setAddingType(true)}>
+                + Add a custom type
+              </button>
             )}
 
             <label className="flabel" htmlFor="fDesc">
