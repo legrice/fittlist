@@ -28,7 +28,9 @@ export type AdderPrefill = {
   description?: string | null;
   startTime: string;
   durationMin: number;
-  studioId: string;
+  studioId: string | null;
+  location?: string | null;
+  isPublic?: boolean;
   links: BookingLink[];
   days?: number[]; // preselected (edit); empty for duplicate
   specificDate?: string | null; // set = editing a one-off pinned to this date
@@ -90,6 +92,9 @@ export function Adder({
   // No studio prefill on a brand-new class: an already-filled gym reads as a
   // mistake. Editing/duplicating still carries the class's studio.
   const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? null);
+  // Public by default; private items are the coach's own work (PT clients etc.).
+  const [isPublic, setIsPublic] = useState<boolean>(prefill?.isPublic ?? true);
+  const [location, setLocation] = useState(prefill?.location ?? "");
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -177,21 +182,25 @@ export function Adder({
   const oneTime = mode === "date";
   const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const whenChosen = oneTime ? dateValid : n > 0;
-  const emailSuffix = subsCount ? ` · emails ${subsCount}` : "";
+  // Public classes need a studio; private ones don't. Only public changes email
+  // the subscriber list.
+  const needsStudio = isPublic && !selectedStudio;
+  const saveVerb = isEdit ? "Save changes" : isPublic ? "Publish" : "Save";
+  const emailSuffix = isPublic && subsCount ? ` · emails ${subsCount}` : "";
   const publishLabel = !whenChosen
     ? oneTime
       ? "Pick a date"
       : "Pick at least one day"
-    : !selectedStudio
+    : needsStudio
       ? "Pick a studio"
       : !durValid
         ? "End time must be after start"
         : oneTime
-          ? `${isEdit ? "Save changes" : "Publish"} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
-          : `${isEdit ? "Save changes" : `Publish ${n > 1 ? `${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
+          ? `${saveVerb} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
+          : `${isEdit ? "Save changes" : `${saveVerb}${!isPublic ? "" : n > 1 ? ` ${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
 
   const publish = () => {
-    if (!whenChosen || !studioId || !durValid) return;
+    if (!whenChosen || !durValid || (isPublic && !studioId)) return;
     startTransition(async () => {
       const input = {
         name,
@@ -202,6 +211,8 @@ export function Adder({
         startTime: time,
         durationMin,
         studioId,
+        location,
+        isPublic,
         links,
       };
       const res = isEdit
@@ -282,9 +293,29 @@ export function Adder({
           <div>
             <h2>{heading.title}</h2>
 
-            {/* Studio first — the class list below is scoped to it. */}
+            {/* Public (on your page) vs private (your own clients / sessions). */}
             <div className="adder-card">
-            <label className="flabel">Studio</label>
+            <label className="flabel">Who sees this?</label>
+            <div className="modetoggle">
+              <button type="button" className={isPublic ? "sel" : ""} onClick={() => setIsPublic(true)}>
+                On my page
+              </button>
+              <button type="button" className={!isPublic ? "sel" : ""} onClick={() => setIsPublic(false)}>
+                Private
+              </button>
+            </div>
+            <p className="durnote" style={{ marginTop: 8 }}>
+              {isPublic
+                ? "Public — shows on your schedule and your public page."
+                : "Private — on your schedule only. Hidden from your page, no emails sent."}
+            </p>
+            </div>
+
+            {/* Studio — required for public, optional for private. */}
+            <div className="adder-card">
+            <label className="flabel">
+              Studio{!isPublic && <span> · optional</span>}
+            </label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
                 <span className="studio-sel-txt">
@@ -296,6 +327,21 @@ export function Adder({
               )}
               <span className="chev"><Icon name="chevron_right" size={18} /></span>
             </button>
+            {!isPublic && !selectedStudio && (
+              <>
+                <label className="flabel" htmlFor="fLoc" style={{ marginTop: 12 }}>
+                  Or type a location <span>· optional</span>
+                </label>
+                <input
+                  id="fLoc"
+                  className="editinput"
+                  placeholder="e.g. Client's home, Online"
+                  value={location}
+                  maxLength={120}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </>
+            )}
             </div>
 
             <div className="adder-card">
@@ -338,7 +384,7 @@ export function Adder({
                 </div>
               )}
             </div>
-            {!selectedStudio && (
+            {isPublic && !selectedStudio && (
               <p className="durnote" style={{ marginTop: 8 }}>
                 Pick a studio to see its classes.
               </p>

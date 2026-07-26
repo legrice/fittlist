@@ -78,6 +78,8 @@ export default async function SchedulePage({
     classType: c.classType,
     description: c.description,
     studioId: c.studioId,
+    location: c.location,
+    isPublic: c.isPublic,
     links: c.links,
   }));
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -95,6 +97,8 @@ export default async function SchedulePage({
     startTime: t.startTime,
     durationMin: t.durationMin,
     studioId: t.studioId,
+    location: t.location,
+    isPublic: t.isPublic,
     links: t.links,
   }));
 

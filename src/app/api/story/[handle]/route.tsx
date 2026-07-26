@@ -49,7 +49,9 @@ export async function GET(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  const classRows = (
+    await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
+  ).filter((c) => c.isPublic); // shareable image: public classes only
   // The week image starts on *today* and runs the next 7 days (1 for "day").
   const todayIso = new Date().toISOString().slice(0, 10);
   const start = new Date(`${todayIso}T00:00:00Z`);
@@ -65,7 +67,7 @@ export async function GET(
       .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length) {
-      items.forEach((c) => usedStudioIds.add(c.studioId));
+      items.forEach((c) => c.studioId && usedStudioIds.add(c.studioId));
       byDay.push({ day: DAYS[dow], items });
     }
   }
@@ -173,7 +175,7 @@ export async function GET(
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <span style={{ fontSize: 48, fontWeight: 700 }}>{c.name}</span>
                       <span style={{ fontSize: 41, color: t.faint }}>
-                        {studioName.get(c.studioId) ?? ""}
+                        {(c.studioId && studioName.get(c.studioId)) || c.location || ""}
                       </span>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   integer,
@@ -104,7 +105,13 @@ export const classTemplates = pgTable(
     description: text("description"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
-    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    // Null for private items with no listed studio; `location` holds a free-form
+    // place ("Client's home", "Online") in that case.
+    studioId: uuid("studio_id").references(() => studios.id),
+    location: text("location"),
+    // false = a private client/session: on the coach's own schedule only, never
+    // on their public page, and no subscriber emails.
+    isPublic: boolean("is_public").notNull().default(true),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -160,7 +167,10 @@ export const classes = pgTable(
     name: text("name").notNull(),
     classType: text("class_type"),
     description: text("description"),
-    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    studioId: uuid("studio_id").references(() => studios.id),
+    location: text("location"),
+    // false = private (own schedule only, hidden from the public page).
+    isPublic: boolean("is_public").notNull().default(true),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

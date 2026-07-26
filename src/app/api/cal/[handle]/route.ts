@@ -54,10 +54,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
 
   const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
   const monday = mondayOfCurrentWeek();
-  // Weekly classes always; one-offs only if they haven't already passed.
-  const rows = classRows.filter((c) => !c.specificDate || c.specificDate >= monday);
+  // Public classes only (this feed is reachable by handle, like the page);
+  // weekly always, one-offs only if they haven't already passed. Private client
+  // sessions stay out of the shared feed (they still sync to the coach's own
+  // connected Google Calendar).
+  const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= monday));
 
-  const studioIds = [...new Set(rows.map((c) => c.studioId))];
+  const studioIds = [...new Set(rows.map((c) => c.studioId).filter((id): id is string => !!id))];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
@@ -78,7 +81,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
   ];
 
   for (const c of rows) {
-    const studio = studioById.get(c.studioId);
+    const studio = c.studioId ? studioById.get(c.studioId) : undefined;
     // Weekly classes anchor to this week's matching weekday and recur forever.
     const date =
       c.specificDate ??

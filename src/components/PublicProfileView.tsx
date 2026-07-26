@@ -28,7 +28,9 @@ export async function PublicProfileView({
 }) {
   const handle = user.handle!;
   const db = await getDb();
-  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  const classRows = (
+    await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
+  ).filter((c) => c.isPublic); // private client sessions never appear publicly
   // "Where I coach" is the union of studios the coach picked in setup and any
   // studio they've published a class at.
   const pickedRows = await db
@@ -37,7 +39,7 @@ export async function PublicProfileView({
     .where(eq(schema.coachStudios.userId, user.id));
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
-  ];
+  ].filter((id): id is string => !!id);
   const studioRows = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
@@ -149,7 +151,7 @@ export async function PublicProfileView({
             <div className="ps-daycol">{d.label}</div>
             <div className="ps-daycards">
               {d.items.map((c) => {
-                const s = studioById.get(c.studioId);
+                const s = c.studioId ? studioById.get(c.studioId) : undefined;
                 return (
                   <Link key={`${d.iso}-${c.id}`} className="ps-event" data-cid={c.id} href={`/${handle}/${c.id}`}>
                     <span className="ps-etimecol">

@@ -25,7 +25,9 @@ export type PublishInput = {
   specificDate?: string | null;
   startTime: string; // "HH:MM"
   durationMin: number;
-  studioId: string;
+  studioId?: string | null; // required for public; optional for private
+  location?: string | null; // free-form place for private items with no studio
+  isPublic?: boolean; // default true
   links: BookingLink[];
 };
 
@@ -98,8 +100,17 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
 
   const db = await getDb();
-  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
-  if (!studio) return { ok: false, error: "Pick a studio." };
+  const isPublic = input.isPublic !== false; // default public
+  let studio: typeof schema.studios.$inferSelect | undefined;
+  if (input.studioId) {
+    [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));
+    if (!studio) return { ok: false, error: "Pick a studio." };
+  }
+  // Public classes must have a studio; private ones can skip it and use a
+  // free-form location instead.
+  if (isPublic && !studio) return { ok: false, error: "Pick a studio." };
+  const studioId = studio?.id ?? null;
+  const location = studioId ? null : input.location?.trim().slice(0, 120) || null;
   const links = cleanLinks(input.links ?? []);
   const classType = cleanType(input.classType);
   const description = input.description?.trim().slice(0, 500) || null;
@@ -117,10 +128,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // values used, so autofill always reflects the most recent version.
   const [template] = await db
     .insert(schema.classTemplates)
-    .values({ userId, name, classType, description, startTime: input.startTime, durationMin, studioId: studio.id, links })
+    .values({ userId, name, classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { classType, description, startTime: input.startTime, durationMin, studioId: studio.id, links, updatedAt: new Date() },
+      set: { classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
     })
     .returning();
 
@@ -135,50 +146,58 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       name,
       classType,
       description,
-      studioId: studio.id,
+      studioId,
+      location,
+      isPublic,
       links,
     })),
   );
 
   // Log this class into the shared per-studio catalog (deduped by studio +
-  // normalized name). Silent groundwork for a future studio-facing view.
-  try {
-    await db
-      .insert(schema.studioClasses)
-      .values({
-        studioId: studio.id,
-        name,
-        nameKey: name.toLowerCase(),
-        classType,
-        description,
-        createdByUserId: userId,
-      })
-      .onConflictDoUpdate({
-        target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
-        set: {
+  // normalized name). Public + studio only: private sessions must never leak
+  // into the cross-coach catalog.
+  if (isPublic && studio) {
+    try {
+      await db
+        .insert(schema.studioClasses)
+        .values({
+          studioId: studio.id,
           name,
-          ...(classType ? { classType } : {}),
-          ...(description ? { description } : {}),
-          updatedAt: new Date(),
-        },
-      });
-  } catch (err) {
-    console.error("studio catalog upsert failed", err);
+          nameKey: name.toLowerCase(),
+          classType,
+          description,
+          createdByUserId: userId,
+        })
+        .onConflictDoUpdate({
+          target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
+          set: {
+            name,
+            ...(classType ? { classType } : {}),
+            ...(description ? { description } : {}),
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error("studio catalog upsert failed", err);
+    }
   }
 
-  // One action, many days -> one notification, never one per class row.
+  // One action, many days -> one notification, never one per class row. Private
+  // items never email the coach's public subscriber list.
   let notified = 0;
-  try {
-    notified = await notifyScheduleChange(userId, {
-      verb: replaceClassId ? "updated" : "added",
-      className: name,
-      days,
-      specificDate: oneOff,
-      startTime: input.startTime,
-      studioName: studio.name,
-    });
-  } catch (err) {
-    console.error("schedule-change notify failed", err);
+  if (isPublic && studio) {
+    try {
+      notified = await notifyScheduleChange(userId, {
+        verb: replaceClassId ? "updated" : "added",
+        className: name,
+        days,
+        specificDate: oneOff,
+        startTime: input.startTime,
+        studioName: studio.name,
+      });
+    } catch (err) {
+      console.error("schedule-change notify failed", err);
+    }
   }
 
   syncGoogleAfter(userId);
@@ -211,27 +230,31 @@ export async function deleteClass(
       dayOfWeek: schema.classes.dayOfWeek,
       specificDate: schema.classes.specificDate,
       startTime: schema.classes.startTime,
+      isPublic: schema.classes.isPublic,
       studioName: schema.studios.name,
     })
     .from(schema.classes)
-    .innerJoin(schema.studios, eq(schema.classes.studioId, schema.studios.id))
+    // leftJoin: private items can have no studio, and must still be deletable.
+    .leftJoin(schema.studios, eq(schema.classes.studioId, schema.studios.id))
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
   if (!row) return { ok: true, notified: 0 };
 
   await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
 
   let notified = 0;
-  try {
-    notified = await notifyScheduleChange(userId, {
-      verb: "removed",
-      className: row.name,
-      days: [row.dayOfWeek],
-      specificDate: row.specificDate,
-      startTime: row.startTime,
-      studioName: row.studioName,
-    });
-  } catch (err) {
-    console.error("schedule-change notify failed", err);
+  if (row.isPublic && row.studioName) {
+    try {
+      notified = await notifyScheduleChange(userId, {
+        verb: "removed",
+        className: row.name,
+        days: [row.dayOfWeek],
+        specificDate: row.specificDate,
+        startTime: row.startTime,
+        studioName: row.studioName,
+      });
+    } catch (err) {
+      console.error("schedule-change notify failed", err);
+    }
   }
 
   syncGoogleAfter(userId);

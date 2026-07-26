@@ -11,7 +11,9 @@ export type ClassDto = {
   name: string;
   classType: string | null;
   description: string | null;
-  studioId: string;
+  studioId: string | null;
+  location: string | null;
+  isPublic: boolean;
   links: BookingLink[];
 };
 
@@ -21,7 +23,9 @@ export type TemplateDto = {
   description: string | null;
   startTime: string;
   durationMin: number;
-  studioId: string;
+  studioId: string | null;
+  location: string | null;
+  isPublic: boolean;
   links: BookingLink[];
 };
 

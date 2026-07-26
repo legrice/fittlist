@@ -128,6 +128,8 @@ export function ScheduleScreen({
         startTime: c.startTime,
         durationMin: c.durationMin,
         studioId: c.studioId,
+        location: c.location,
+        isPublic: c.isPublic,
         links: c.links.map((l) => ({ ...l })),
         days: [c.dayOfWeek],
         specificDate: c.specificDate,
@@ -223,7 +225,7 @@ export function ScheduleScreen({
                   <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
                     {d.items.map((c) => {
-                      const studio = studioById.get(c.studioId);
+                      const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       return (
                         <button
                           key={`${d.iso}-${c.id}`}
@@ -236,8 +238,15 @@ export function ScheduleScreen({
                             <span className="ps-edur">{c.durationMin} min</span>
                           </span>
                           <span className="ps-ebody">
-                            <span className="ps-enm">{c.name}</span>
-                            {studio && <span className="ps-estudio">{studio.name}</span>}
+                            <span className="ps-enm">
+                              {c.name}
+                              {!c.isPublic && <span className="ps-private">Private</span>}
+                            </span>
+                            {studio ? (
+                              <span className="ps-estudio">{studio.name}</span>
+                            ) : (
+                              c.location && <span className="ps-estudio">{c.location}</span>
+                            )}
                           </span>
                           <span className="ps-echev" aria-hidden="true">
                             <Icon name="chevron_right" size={20} />

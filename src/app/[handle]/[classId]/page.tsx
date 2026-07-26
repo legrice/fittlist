@@ -28,6 +28,10 @@ export default async function EventPage({ params }: Props) {
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, user.id)));
   if (!c) notFound();
 
+  const isOwner = (await getSessionUserId()) === user.id;
+  // Private client sessions aren't public; only the owner can open their page.
+  if (!c.isPublic && !isOwner) notFound();
+
   const [studio] = c.studioId
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, c.studioId))
     : [];
@@ -43,7 +47,6 @@ export default async function EventPage({ params }: Props) {
   const mapsUrl = studio
     ? `https://maps.google.com/?q=${encodeURIComponent(`${studio.name}, ${studio.address}`)}`
     : null;
-  const isOwner = (await getSessionUserId()) === user.id;
 
   return (
     <div className="pub evpage" data-theme={user.theme}>
@@ -69,13 +72,15 @@ export default async function EventPage({ params }: Props) {
           </div>
           <div className="evlen">{c.durationMin} min</div>
           {c.description?.trim() && <p className="evdesc">{c.description}</p>}
-          {studio && (
+          {studio ? (
             <>
               <div className="evstudio">{studio.name}</div>
               <a className="evaddr" href={mapsUrl!} target="_blank" rel="noopener nofollow">
                 {studio.address}
               </a>
             </>
+          ) : (
+            c.location && <div className="evstudio">{c.location}</div>
           )}
           <div className="evbook">
             {c.links.length ? (

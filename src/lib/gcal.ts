@@ -167,7 +167,7 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, userId))
   ).filter((c) => !c.specificDate || c.specificDate >= monday);
-  const studioIds = [...new Set(classRows.map((c) => c.studioId))];
+  const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((id): id is string => !!id))];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
@@ -176,7 +176,7 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
 
   const newIds: string[] = [];
   for (const c of classRows) {
-    const studio = studioById.get(c.studioId);
+    const studio = c.studioId ? studioById.get(c.studioId) : undefined;
     const date =
       c.specificDate ??
       (() => {
@@ -195,6 +195,7 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
       source: { title: "fittlist", url: `${origin}/${user?.handle ?? ""}` },
     };
     if (studio) event.location = `${studio.name}, ${studio.address}`;
+    else if (c.location) event.location = c.location;
     if (!c.specificDate) event.recurrence = [`RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`];
 
     try {

@@ -51,6 +51,7 @@ export default async function AdminPage() {
   const coachesByStudio = new Map<string, Set<string>>();
   for (const c of classes) {
     classCountByUser.set(c.userId, (classCountByUser.get(c.userId) ?? 0) + 1);
+    if (!c.studioId) continue; // private items may have no studio
     classCountByStudio.set(c.studioId, (classCountByStudio.get(c.studioId) ?? 0) + 1);
     if (!coachesByStudio.has(c.studioId)) coachesByStudio.set(c.studioId, new Set());
     coachesByStudio.get(c.studioId)!.add(c.userId);
