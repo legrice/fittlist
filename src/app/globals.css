@@ -275,7 +275,11 @@ h1.screen-title { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-se
 .timegrid input[type=time] {
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
   font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
+  /* iOS renders native time inputs at a fixed intrinsic width that ignores the
+     grid track and overflows — flatten the appearance so width takes effect. */
+  -webkit-appearance: none; appearance: none; min-width: 0;
 }
+.timegrid input[type=time]::-webkit-date-and-time-value { margin: 0; text-align: left; min-width: 0; }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 12px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
 [data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
