@@ -510,23 +510,8 @@ button.bl-band { cursor: pointer; }
   background: var(--pg-cream);
   margin: -14px -18px 0; padding: 16px 18px 10px;
 }
-/* sticky day tabs that anchor-scroll to each day's section below */
-.daytabs {
-  position: sticky; top: 0; z-index: 6; background: var(--pg-cream);
-  display: flex; gap: 20px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-  margin: 4px -18px 14px; padding: 8px 18px 0; border-bottom: 1px solid var(--line);
-  /* horizontal swipes stay horizontal — no vertical scroll play, no page bleed */
-  touch-action: pan-x; overscroll-behavior: contain;
-}
-.daytabs::-webkit-scrollbar { display: none; }
-.daytab {
-  flex-shrink: 0; font-size: 14.5px; font-weight: 700; color: #878c96; white-space: nowrap;
-  padding: 6px 0 12px; border-bottom: 2.5px solid transparent; margin-bottom: -1px;
-}
-.daytab.active { color: #191502; border-bottom-color: #191502; }
-.ps-daygroup { scroll-margin-top: 58px; }
 .ps-none { color: #878c96; font-size: 14px; font-weight: 600; margin-top: 8px; }
-.brandbar .wordmark svg { height: 29px; width: auto; display: block; }
+.brandbar .wordmark svg { height: 26px; width: auto; display: block; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: #191502; margin: 10px 0 16px;
@@ -608,7 +593,7 @@ button.ps-card { cursor: pointer; }
 
 /* fab + tab bar */
 [data-theme="poster"] .fab {
-  background: var(--pg-green); color: #191502; border: none; border-radius: 999px;
+  background: var(--pg-day); color: #fff; border: none; border-radius: 999px;
 }
 [data-theme="poster"] .tabbar {
   background: var(--pg-ground); border-top: none; gap: 12px;
@@ -922,7 +907,6 @@ button.ps-card { cursor: pointer; }
 .skel-photo { width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; margin-top: 20px; }
 .skel-pill { width: 128px; height: 42px; border-radius: 999px; }
 .skel-event { height: 84px; border-radius: 16px; }
-.skel-tabs { display: flex; gap: 20px; margin: 8px 0 20px; }
 .skel-group { margin-top: 22px; }
 .skel-links { display: flex; gap: 10px; margin-top: 18px; }
 

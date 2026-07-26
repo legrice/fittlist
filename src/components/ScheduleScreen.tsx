@@ -2,10 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DAYS, fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
+import { fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { DayTabs } from "@/components/DayTabs";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -111,7 +110,7 @@ export function ScheduleScreen({
   // window grows as the trainer scrolls (see the loader below).
   const days = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00Z`);
-    const out: { iso: string; label: string; tabLabel: string; items: ClassDto[] }[] = [];
+    const out: { iso: string; label: string; items: ClassDto[] }[] = [];
     for (let i = 0; i < weeks * 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
@@ -121,23 +120,11 @@ export function ScheduleScreen({
         .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) {
-        const full = fmtDateLong(iso); // "Mon, July 20"
-        const weekday = DAYS[dow];
-        out.push({
-          iso,
-          label: full,
-          tabLabel: `${weekday[0]}${weekday.slice(1).toLowerCase()} ${full.split(" ").pop()}`,
-          items,
-        });
+        out.push({ iso, label: fmtDateLong(iso), items }); // "Mon, July 20"
       }
     }
     return out;
   }, [classes, todayIso, weeks]);
-
-  const dayTabs = useMemo(
-    () => days.map((d) => ({ id: `day-${d.iso}`, label: d.tabLabel })),
-    [days],
-  );
 
   // Load more weeks when the trainer nears the bottom (one load per render).
   const loadingRef = useRef(false);
@@ -192,7 +179,6 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up — add a class to fill your calendar.</p>
         ) : (
           <>
-            <DayTabs days={dayTabs} />
             <div className="ps-week">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
