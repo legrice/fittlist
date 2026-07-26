@@ -2,9 +2,11 @@ import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fmtDateLong, fmtTime, mondayOfCurrentWeek } from "@/lib/format";
+import { fmtDateLong, fmtTime, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
 import { BackLink } from "@/components/BackLink";
+import { EventActions } from "@/components/EventActions";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -47,6 +49,24 @@ export default async function EventPage({ params }: Props) {
   const mapsUrl = studio
     ? `https://maps.google.com/?q=${encodeURIComponent(`${studio.name}, ${studio.address}`)}`
     : null;
+
+  // "Add to calendar" targets. Google gets a prefilled template link; Apple and
+  // Outlook get the downloadable .ics. Weekly classes carry a weekly recurrence.
+  const classUrl = `${siteOrigin()}/${handle}/${c.id}`;
+  const locationText = studio ? `${studio.name}, ${studio.address}` : c.location ?? "";
+  const gcalDetails = c.links.length
+    ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") + `\n\n${classUrl}`
+    : classUrl;
+  const gcalParams = new URLSearchParams({
+    action: "TEMPLATE",
+    text: c.name,
+    dates: `${floatingStart(whenIso, c.startTime)}/${floatingEnd(whenIso, c.startTime, c.durationMin)}`,
+    details: gcalDetails,
+  });
+  if (locationText) gcalParams.set("location", locationText);
+  if (!c.specificDate) gcalParams.set("recur", `RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`);
+  const googleUrl = `https://calendar.google.com/calendar/render?${gcalParams.toString()}`;
+  const icsHref = `/api/cal/${handle}/${c.id}`;
 
   return (
     <div className="pub evpage" data-theme={user.theme}>
@@ -100,6 +120,12 @@ export default async function EventPage({ params }: Props) {
               <div className="evnobook">Just show up, no booking needed.</div>
             )}
           </div>
+          <EventActions
+            googleUrl={googleUrl}
+            icsHref={icsHref}
+            shareUrl={classUrl}
+            shareTitle={c.name}
+          />
         </div>
         <div className="madewith">
           Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}

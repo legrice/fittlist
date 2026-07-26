@@ -1191,6 +1191,26 @@ button.ps-card { cursor: pointer; }
 .evbtn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .evbtn-ico { position: relative; top: 1px; }
 .evnobook { font-size: 14px; font-weight: 600; color: #6b6555; }
+/* Secondary action row: Add to calendar + Share */
+.evactions { margin-top: 12px; display: flex; gap: 10px; }
+.evcal { position: relative; flex: 1 1 auto; min-width: 0; }
+.evactbtn {
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 12px 14px; font-size: 15px; white-space: nowrap;
+}
+.evshare { flex: 0 0 auto; width: auto; padding-left: 18px; padding-right: 18px; }
+.evact-ico { position: relative; top: 1px; }
+.evcalmenu {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 6px 24px rgba(17, 17, 17, .12);
+}
+.evcalitem {
+  display: block; padding: 13px 16px; font-size: 15px; font-weight: 600; color: #191502;
+  text-decoration: none;
+}
+.evcalitem:active { background: #f3ecdf; }
+.evcalitem + .evcalitem { border-top: 1px solid var(--line); }
 [data-theme="poster"] .heronotify { display: none; }
 [data-theme="poster"] .notifybar {
   display: block; background: var(--pg-cream); border-top: 1px solid var(--line);

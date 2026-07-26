@@ -1,50 +1,13 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek } from "@/lib/format";
+import { BYDAY, floatingEnd, floatingStart, icsEsc as esc, icsFold as fold } from "@/lib/ics";
 
 // Per-coach iCalendar feed. A trainer (or anyone) subscribes to this URL in
 // Google/Apple/Outlook and their fittlist classes appear alongside everything
 // else - weekly classes as recurring events, one-offs as single events.
-//
-// Times are emitted as "floating" (no timezone): "6:00a" shows as 6:00 in the
-// viewer's own timezone, which is what a coach wants for their local classes.
 
 export const dynamic = "force-dynamic";
-
-const BYDAY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-
-const esc = (s: string) =>
-  s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-
-// RFC 5545 asks lines be folded at 75 octets; fold conservatively at 73 chars.
-function fold(line: string): string {
-  const out: string[] = [];
-  let s = line;
-  while (s.length > 73) {
-    out.push(s.slice(0, 73));
-    s = " " + s.slice(73);
-  }
-  out.push(s);
-  return out.join("\r\n");
-}
-
-const pad = (n: number) => String(n).padStart(2, "0");
-
-/** "2026-07-20" + "06:00" -> "20260720T060000" (floating local time) */
-function dtStart(dateStr: string, hhmm: string): string {
-  return `${dateStr.replace(/-/g, "")}T${hhmm.replace(/:/g, "")}00`;
-}
-
-/** start + duration -> floating end stamp, rolling past midnight if needed */
-function dtEnd(dateStr: string, hhmm: string, mins: number): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  const d = new Date(`${dateStr}T00:00:00Z`);
-  d.setUTCHours(h, m + mins, 0, 0);
-  return (
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
-    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00`
-  );
-}
 
 export async function GET(_req: Request, { params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
@@ -98,8 +61,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${c.id}@fittlist.co`);
     lines.push(`DTSTAMP:${stamp}`);
-    lines.push(`DTSTART:${dtStart(date, c.startTime)}`);
-    lines.push(`DTEND:${dtEnd(date, c.startTime, c.durationMin)}`);
+    lines.push(`DTSTART:${floatingStart(date, c.startTime)}`);
+    lines.push(`DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`);
     if (!c.specificDate) lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`);
     lines.push(fold(`SUMMARY:${esc(c.name)}`));
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
