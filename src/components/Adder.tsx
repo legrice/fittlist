@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
-  addClassType,
   deleteClass,
   getStudioCatalog,
   publishClasses,
@@ -102,10 +101,6 @@ export function Adder({
   const [catalog, setCatalog] = useState<
     { name: string; classType: string | null; description: string | null }[]
   >([]);
-  const [extraTypes, setExtraTypes] = useState<string[]>(customTypes);
-  const [addingType, setAddingType] = useState(false);
-  const [newType, setNewType] = useState("");
-
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
 
@@ -132,12 +127,13 @@ export function Adder({
     setDescription(c.description ?? "");
   };
 
-  // The full Type dropdown: curated categories + coach-added ones (+ the class's
-  // own type if it isn't in either list yet, e.g. editing an old class).
+  // The Type dropdown: curated categories, any types already saved for this
+  // coach, plus the class's own type if it isn't in either list yet (e.g.
+  // editing an older class).
   const typeOptions = useMemo(() => {
     const seen = new Set<string>();
     const out: string[] = [];
-    for (const t of [...CLASS_TYPES, ...extraTypes, ...(classType ? [classType] : [])]) {
+    for (const t of [...CLASS_TYPES, ...customTypes, ...(classType ? [classType] : [])]) {
       const k = t.toLowerCase();
       if (!seen.has(k)) {
         seen.add(k);
@@ -145,23 +141,7 @@ export function Adder({
       }
     }
     return out;
-  }, [extraTypes, classType]);
-
-  const addType = () => {
-    const v = newType.trim();
-    if (v.length < 2) return;
-    startTransition(async () => {
-      const res = await addClassType(v);
-      if (res.ok && res.name) {
-        setExtraTypes((prev) => (prev.some((t) => t.toLowerCase() === res.name!.toLowerCase()) ? prev : [...prev, res.name!]));
-        setClassType(res.name);
-        setNewType("");
-        setAddingType(false);
-      } else {
-        onToast(res.error ?? "Couldn't add that type");
-      }
-    });
-  };
+  }, [customTypes, classType]);
 
   // Length is the gap between start and end; changing the start slides the end
   // to keep the same length (like a calendar event), changing the end sets it.
@@ -380,40 +360,6 @@ export function Adder({
                 </option>
               ))}
             </select>
-            {addingType ? (
-              <div className="linkrow" style={{ marginTop: 8 }}>
-                <input
-                  className="editinput"
-                  placeholder="New type, e.g. Spin"
-                  value={newType}
-                  maxLength={30}
-                  onChange={(e) => setNewType(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addType()}
-                />
-                <button
-                  className="btn si"
-                  style={{ width: "auto", padding: "11px 16px" }}
-                  onClick={addType}
-                  disabled={pending || newType.trim().length < 2}
-                >
-                  Add
-                </button>
-                <button
-                  className="iconbtn"
-                  aria-label="Cancel"
-                  onClick={() => {
-                    setAddingType(false);
-                    setNewType("");
-                  }}
-                >
-                  <Icon name="close" size={14} />
-                </button>
-              </div>
-            ) : (
-              <button className="typeadd" onClick={() => setAddingType(true)}>
-                + Add a custom type
-              </button>
-            )}
 
             <label className="flabel" htmlFor="fDesc">
               Description <span>· optional, shown on the class page</span>

@@ -288,7 +288,7 @@ export function AuthFlow({
               </button>
             )}
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
-            <div className="publishwrap">
+            <div className="publishwrap nostick">
               <button className="btn si" onClick={submitPassword} disabled={pending}>
                 {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
               </button>
