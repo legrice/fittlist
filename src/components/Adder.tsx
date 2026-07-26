@@ -194,9 +194,11 @@ export function Adder({
       ? "Pick a studio"
       : !durValid
         ? "End time must be after start"
-        : oneTime
-          ? `${saveVerb} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
-          : `${isEdit ? "Save changes" : `${saveVerb}${!isPublic ? "" : n > 1 ? ` ${n} classes` : ""}`} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
+        : isEdit
+          ? "Save"
+          : oneTime
+            ? `${saveVerb} · ${fmtDate(date)} · ${fmtTime(time)}${emailSuffix}`
+            : `${saveVerb}${!isPublic ? "" : n > 1 ? ` ${n} classes` : ""} · ${dayList.join(", ")} · ${fmtTime(time)}${emailSuffix}`;
 
   const publish = () => {
     if (!whenChosen || !durValid || (isPublic && !studioId)) return;

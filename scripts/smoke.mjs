@@ -135,9 +135,11 @@ console.log("saved-class flow ok");
 // ---- edit in place: tap the Monday class, prefilled with its day, no new class
 await page.locator(".ps-daygroup", { hasText: "Mon," }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
-const editLabel = await page.locator(".publishwrap .btn").textContent();
-if (!editLabel.includes("Save changes") || !editLabel.includes("MON"))
-  fail("edit not prefilled with its day: " + editLabel);
+const editLabel = (await page.locator(".publishwrap .btn").textContent()).trim();
+if (editLabel !== "Save") fail("edit save button should just say Save: " + editLabel);
+// the tapped class's recurring day is prefilled (Monday pill selected)
+if (!(await page.locator(".daypick button.sel", { hasText: "Mo" }).count()))
+  fail("edit not prefilled with its recurring day");
 // class type round-trips: the Type dropdown shows Strength on edit
 if ((await page.locator("#fType").inputValue()) !== "Strength")
   fail("class type did not persist (Strength) on edit");
