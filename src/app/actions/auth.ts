@@ -175,7 +175,7 @@ export async function beginPasskeyRegistration(): Promise<
     .select()
     .from(schema.credentials)
     .where(eq(schema.credentials.userId, userId));
-  const { rpID, rpName } = rpInfo();
+  const { rpID, rpName } = await rpInfo();
   const options = await generateRegistrationOptions({
     rpName,
     rpID,
@@ -201,7 +201,7 @@ export async function finishPasskeyRegistration(
   if (!userId) return { ok: false, error: "Log in first." };
   const challenge = await takeChallenge();
   if (!challenge) return { ok: false, error: "That took too long. Try again." };
-  const { rpID, origin } = rpInfo();
+  const { rpID, origin } = await rpInfo();
   let verification;
   try {
     verification = await verifyRegistrationResponse({
@@ -230,7 +230,7 @@ export async function finishPasskeyRegistration(
 }
 
 export async function beginPasskeyLogin(): Promise<{ options: PublicKeyCredentialRequestOptionsJSON }> {
-  const { rpID } = rpInfo();
+  const { rpID } = await rpInfo();
   const options = await generateAuthenticationOptions({ rpID, userVerification: "preferred" });
   await setChallenge(options.challenge);
   return { options };
@@ -247,7 +247,7 @@ export async function finishPasskeyLogin(
     .from(schema.credentials)
     .where(eq(schema.credentials.credentialId, response.id));
   if (!cred) return { ok: false, error: "Passkey not recognized. Try another way." };
-  const { rpID, origin } = rpInfo();
+  const { rpID, origin } = await rpInfo();
   let verification;
   try {
     verification = await verifyAuthenticationResponse({

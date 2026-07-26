@@ -310,10 +310,8 @@ export function Adder({
                         onToast("Autofilled from last time");
                       }}
                     >
-                      {t.name}
-                      <span className="sub">
-                        {fmtTime(t.startTime)} · {studioById.get(t.studioId)?.name}
-                      </span>
+                      <span className="namesug-nm">{t.name}</span>
+                      <span className="sub">{studioById.get(t.studioId)?.name}</span>
                     </button>
                   ))}
                 </div>

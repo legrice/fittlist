@@ -1,16 +1,27 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { siteOrigin } from "@/lib/format";
 
-// WebAuthn / passkey plumbing shared by the auth actions. The Relying Party is
-// derived from NEXT_PUBLIC_ORIGIN so it works on localhost and fittlist.co
-// without extra config.
+// WebAuthn / passkey plumbing shared by the auth actions. The Relying Party ID
+// and origin MUST match the domain the browser is actually on, or the
+// authenticator refuses (SecurityError) / verification fails. We derive them
+// from the incoming request host so passkeys work regardless of how
+// NEXT_PUBLIC_ORIGIN is configured (custom domain, preview URL, localhost),
+// falling back to the configured origin only if no host header is present.
 
 export const RP_NAME = "fittlist";
 
-export function rpInfo(): { rpID: string; origin: string; rpName: string } {
+export async function rpInfo(): Promise<{ rpID: string; origin: string; rpName: string }> {
+  const h = await headers();
+  const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "").split(",")[0].trim();
+  if (host) {
+    const hostname = host.split(":")[0];
+    const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+    const proto =
+      (h.get("x-forwarded-proto") ?? "").split(",")[0].trim() || (isLocal ? "http" : "https");
+    return { rpID: hostname, origin: `${proto}://${host}`, rpName: RP_NAME };
+  }
   const origin = siteOrigin();
-  const rpID = new URL(origin).hostname;
-  return { rpID, origin, rpName: RP_NAME };
+  return { rpID: new URL(origin).hostname, origin, rpName: RP_NAME };
 }
 
 // The registration/authentication challenge lives in a short-lived, httpOnly
