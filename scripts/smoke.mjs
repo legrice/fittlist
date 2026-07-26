@@ -29,6 +29,19 @@ const openProfile = async (pg) => {
   await pg.locator(".acctwrap").waitFor();
 };
 
+// Add opens straight to the New class form; reuse a saved class by picking it
+// from the class-name field's autocomplete.
+const addSaved = async (pg) => {
+  await pg.getByRole("button", { name: "Add class" }).click();
+  await pg.getByRole("heading", { name: "New class" }).waitFor();
+  await pg.locator("#fName").click();
+  await pg.locator(".namesug button", { hasText: "Barbell Strength" }).first().click();
+  await pg.waitForFunction(() => {
+    const t = document.querySelector("#fName");
+    return t && t.value === "Barbell Strength";
+  });
+};
+
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
@@ -94,14 +107,8 @@ await waitSchedule(page, 2);
 await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
 
-// ---- steady-state: fab -> saved class -> day -> publish
-await page.getByRole("button", { name: "Add class" }).click();
-await page.getByRole("heading", { name: "Add to your week" }).waitFor();
-await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
-await page.waitForFunction(() => {
-  const t = document.querySelector("#fName");
-  return t && t.value === "Barbell Strength";
-});
+// ---- steady-state: fab -> pick saved class from the name field -> day -> publish
+await addSaved(page);
 await page.getByRole("button", { name: "Fr", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
@@ -250,9 +257,7 @@ console.log("welcome email ok:", unsubUrl.slice(0, 40) + "…");
 
 // publish -> one schedule_change email to the subscriber
 await page.goto(BASE + "/app");
-await page.getByRole("button", { name: "Add class" }).click();
-await page.getByRole("heading", { name: "Add to your week" }).waitFor();
-await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await addSaved(page);
 await page.getByRole("button", { name: "Sa", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published · emailed 1 person").waitFor();
@@ -283,9 +288,7 @@ console.log("unsubscribe page ok");
 
 const changeCountBefore = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
 await page.goto(BASE + "/app");
-await page.getByRole("button", { name: "Add class" }).click();
-await page.getByRole("heading", { name: "Add to your week" }).waitFor();
-await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await addSaved(page);
 await page.getByRole("button", { name: "Su", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
@@ -421,9 +424,7 @@ await page.waitForFunction(() => document.querySelectorAll(".ps-event[data-cid]"
 const schedBefore = await scheduleClasses(page);
 
 // a one-off dated inside the current week
-await page.getByRole("button", { name: "Add class" }).click();
-await page.getByRole("heading", { name: "Add to your week" }).waitFor();
-await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await addSaved(page);
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(inWeekD));
 const oneLabel = await page.locator(".publishwrap .btn").textContent();
@@ -435,8 +436,7 @@ await waitSchedule(page, schedBefore + 1);
 console.log("one-off in-week ok");
 
 // a next-week one-off — the continuous calendar spans several weeks, so it shows too
-await page.getByRole("button", { name: "Add class" }).click();
-await page.locator(".sheet .studio-row", { hasText: "Barbell Strength" }).click();
+await addSaved(page);
 await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(nextWeekD));
 await page.locator(".publishwrap .btn").click();

@@ -54,7 +54,9 @@ export function Adder({
 }) {
   const isEdit = Boolean(prefill?.classId);
   const [studios, setStudios] = useState(studiosProp);
-  const [stage, setStage] = useState<Stage>(prefill ? "form" : templates.length ? "start" : "form");
+  // Add always opens straight to the new-class form; saved classes are reused
+  // via the class-name field's autocomplete rather than a separate stage.
+  const [stage, setStage] = useState<Stage>("form");
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
     isEdit
       ? { title: "Edit class", lead: "Change anything — one save updates your page." }
@@ -116,12 +118,14 @@ export function Adder({
     setStage("form");
   };
 
+  // Saved classes to offer in the name field: all of them when the field is
+  // empty (so you can just pick one), filtered as you type.
   const suggestions = useMemo(() => {
     const q = name.trim().toLowerCase();
-    if (!q) return [];
-    return templates
-      .filter((t) => t.name.toLowerCase().includes(q) && t.name.toLowerCase() !== q)
-      .slice(0, 4);
+    const pool = q
+      ? templates.filter((t) => t.name.toLowerCase().includes(q) && t.name.toLowerCase() !== q)
+      : templates;
+    return pool.slice(0, 6);
   }, [name, templates]);
 
   const toggleDay = (i: number) => {
@@ -273,15 +277,13 @@ export function Adder({
 
         {stage === "form" && (
           <div>
-            {templates.length > 0 && !prefill && (
-              <button className="backbtn" onClick={() => setStage("start")}>
-                &larr; Saved classes
-              </button>
-            )}
             <h2>{heading.title}</h2>
 
             <div className="adder-card">
-            <label className="flabel" htmlFor="fName">Class name</label>
+            <label className="flabel" htmlFor="fName">
+              Class name
+              {templates.length > 0 && !isEdit && <span> · type new or pick a saved one</span>}
+            </label>
             <div className="namefield">
               <input
                 type="text"
@@ -289,6 +291,7 @@ export function Adder({
                 placeholder="e.g. Barbell Strength"
                 autoComplete="off"
                 value={name}
+                onFocus={() => setSugOpen(true)}
                 onChange={(e) => {
                   setName(e.target.value);
                   setSugOpen(true);

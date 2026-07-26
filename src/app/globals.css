@@ -23,7 +23,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
   background: var(--cl);
   color: var(--ink);
   min-height: 100dvh;
@@ -44,9 +44,9 @@ a { color: inherit; }
 .wm { display: inline-flex; align-items: center; gap: .32em; line-height: 1; font-size: 20px; }
 .wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
-.wm .wm-text { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
+.wm .wm-text { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
 .appbar .sub {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: .12em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -84,13 +84,13 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
+h1.screen-title { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
 .daylabel {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
 }
 .eyebrow {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: .14em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -98,28 +98,28 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .ob { justify-content: flex-end; background: var(--ink); color: #fff; }
 .ob .pad { padding: 28px 24px 40px; }
 .ob .mark { position: fixed; top: 24px; left: 24px; font-size: 28px; }
-.ob h1 { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 10px; }
+.ob h1 { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 10px; }
 .ob p { font-size: 14.5px; color: #c9c3ae; line-height: 1.5; margin-bottom: 22px; }
 .ob p b { color: #fff; }
 .ob input {
   width: 100%; padding: 15px 16px; border-radius: 13px; border: 1.5px solid #3a3526;
   background: #26200f; color: #fff; font-family: inherit; font-size: 17px; margin-bottom: 14px;
 }
-.ob input.code { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; }
+.ob input.code { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; }
 .ob input:focus { outline: none; border-color: var(--si); }
 .ob .btn { background: var(--si); }
 .ob .microcopy {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: .08em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .08em;
   color: #8a8570; margin-top: 12px; text-align: center;
 }
 .ob .errorcopy { font-size: 13px; color: #f0a292; margin-top: 12px; text-align: center; }
-.ob .handlepreview { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #c9c3ae; margin: -6px 0 16px; padding-left: 4px; }
+.ob .handlepreview { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #c9c3ae; margin: -6px 0 16px; padding-left: 4px; }
 .ob .handlepreview b { color: var(--si); font-weight: 400; }
 .ob .backlink { color: #c9c3ae; font-size: 13px; text-decoration: underline; margin-top: 14px; display: inline-block; }
 
 .empty-block { margin-top: 22px; border: 1.5px dashed var(--line); border-radius: 18px; padding: 28px 22px; text-align: center; }
-.empty-block .glyph { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
-.empty-block h2 { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
+.empty-block .glyph { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
+.empty-block h2 { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
@@ -131,7 +131,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .class-card.editable { cursor: pointer; }
 .class-card.editable:hover { border-color: var(--ink); }
 .class-card .rail { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
-.class-card .time { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
+.class-card .time { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
 .class-card .body { flex: 1; min-width: 0; }
 .class-card .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
 .class-card .meta { font-size: 12.5px; color: var(--ol); }
@@ -160,11 +160,11 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
 .stat { flex: 1; background: var(--cl); border-radius: 12px; padding: 12px; text-align: center; }
-.stat .n { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 20px; }
+.stat .n { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px; }
 .stat .l { font-size: 10.5px; color: var(--ol); margin-top: 2px; }
-.stat .d { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
+.stat .d { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
 .linkcard { background: var(--ink); color: #fff; border-radius: 16px; padding: 16px; margin-top: 14px; }
-.linkcard .url { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
+.linkcard .url { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
 .linkcard .hint { font-size: 12px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .linkcard .eyebrow { color: #c9c3ae; }
 .rowcta {
@@ -182,7 +182,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .pub { background: var(--cl); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
-.pub .pubhero .big { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -.04em; line-height: .95; }
+.pub .pubhero .big { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -.04em; line-height: .95; }
 .pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
@@ -209,7 +209,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet { position: relative; }
 .sheetclose { position: absolute; top: 14px; right: 16px; z-index: 2; background: var(--card); }
-.sheet h2 { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; }
+.sheet h2 { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; }
 .sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
@@ -233,14 +233,18 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .chip { font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
 .chip:hover { border-color: var(--ink); }
 .chip.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
-.namesug { border: 1.5px solid var(--line); border-radius: 11px; margin-top: 6px; overflow: hidden; }
+.namesug {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 6;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 11px; overflow: hidden;
+  box-shadow: 0 6px 20px rgba(17, 17, 17, .12); max-height: 240px; overflow-y: auto;
+}
 .namesug button {
   display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
   width: 100%; text-align: left; padding: 11px 13px; font-size: 14px; font-weight: 600;
   border-bottom: 1px solid var(--line);
 }
 .namesug button:last-child { border-bottom: none; }
-.namesug button:hover { background: var(--cl); }
+.namesug button:hover { background: #f4f4f6; }
 .namesug .sub { font-size: 11.5px; color: var(--ol); font-weight: 400; white-space: nowrap; }
 .modetoggle { display: flex; gap: 6px; margin-top: 8px; }
 .modetoggle button {
@@ -251,14 +255,14 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 10px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
 }
 .daypick button.sel { background: var(--si); color: #fff; border-color: var(--si); }
 .timegrid { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.timegrid .chip { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+.timegrid .chip { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; }
 .timegrid input[type=time] {
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 12px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
@@ -273,7 +277,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .timegrid.two input.timeinput { width: 100%; min-width: 0; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
 .durnote {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12.5px; color: var(--ol);
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; color: var(--ol);
   margin-top: 8px;
 }
 .studio-sel {
@@ -302,7 +306,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
 .studio-row .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .studio-row .tick { margin-left: auto; color: var(--si); font-weight: 700; }
 .addnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 2px; display: inline-block; }
-.dirnote { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
+.dirnote { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
 
 /* share story */
 .share-toggles { display: flex; gap: 8px; margin: 12px 0; }
@@ -367,7 +371,7 @@ h1.screen-title { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; f
   .sidenav a .ico { font-size: 15px; }
   .sidenav a.active { background: var(--cl); color: var(--ink); }
   .sidenav a.active .ico { color: var(--si); }
-  .sideuser { margin-top: auto; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
+  .sideuser { margin-top: auto; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
   .tabbar { display: none; }
   .appshell .appbar .wordmark { visibility: hidden; }
   .pad { padding: 30px 38px; max-width: 1000px; }
@@ -431,11 +435,11 @@ input, select, textarea { font-size: max(1em, 16px); }
 .blweek { display: flex; flex-direction: column; }         /* full-bleed: parent cancels its own side padding */
 .bl-head { background: var(--ink); color: #F7F2E8; padding: 24px 20px 22px; }
 .bl-head .eb {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase; color: #C9C3AE;
 }
 .bl-head h2 {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
   letter-spacing: -.03em; text-transform: uppercase; margin-top: 6px;
 }
 .bl-band {
@@ -445,18 +449,18 @@ input, select, textarea { font-size: max(1em, 16px); }
 }
 button.bl-band { cursor: pointer; }
 .bl-day {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: .82;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: .82;
   letter-spacing: -.01em; text-transform: uppercase; min-width: 62px; flex-shrink: 0;
 }
 .bl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .bl-nm {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 21px; line-height: .98;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; line-height: .98;
   letter-spacing: -.01em; text-transform: uppercase;
 }
-.bl-mt { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.bl-mt { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; margin-top: 6px; }
 .bl-loc { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: .82; }
 .bl-book {
-  display: inline-block; margin-top: 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700;
+  display: inline-block; margin-top: 8px; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 12.5px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
 }
 .bl-edit {
@@ -496,11 +500,11 @@ button.bl-band { cursor: pointer; }
 .ps-brand .wordmark { font-size: 22px; }
 .ps-tag {
   margin-left: auto; background: transparent; color: var(--pg-cream);
-  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px;
 }
 .ps-h2 {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
 /* schedule header: fittlist logo + profile icon up top, "My Schedule" below */
@@ -512,7 +516,7 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #878c96; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
 .calbar-title {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -.035em; line-height: .95;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -.035em; line-height: .95;
   color: var(--ink); margin: 12px 0 4px;
 }
 .usericon {
@@ -523,57 +527,53 @@ button.bl-band { cursor: pointer; }
 .usericon:active { opacity: .7; }
 .usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .usericon-initial {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
-/* Swiss list: day groups and class rows separated by black hairline rules,
-   no boxes. Big Helvetica names, time in a fixed left column. */
-.ps-week { display: flex; flex-direction: column; gap: 0; }
-.ps-daygroup { display: flex; flex-direction: column; gap: 0; padding-top: 22px; }
+/* schedule: day sections with shadowed white class cards (containers, not lines) */
+.ps-week { display: flex; flex-direction: column; gap: 28px; }
+.ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px;
-  letter-spacing: .02em; text-transform: uppercase; color: var(--ink); white-space: nowrap;
-  padding-bottom: 8px; border-bottom: 2px solid var(--rule);
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px;
+  letter-spacing: -.01em; color: var(--ink); white-space: nowrap;
 }
-.ps-daycards { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.ps-daycards { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 /* time sits in a left gutter beside each class, echoing the old date column */
 .ps-classrow { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
 .ps-time {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
 }
 
 /* schedule (editable): flat, editorial rows like the story image — time in a
    mono gutter, bold name, muted studio — with a chevron + press state so it
    still reads as tappable. */
-[data-theme="poster"] .ps-daycards { gap: 0; }
+[data-theme="poster"] .ps-daycards { gap: 10px; }
 .ps-event {
-  display: grid; grid-template-columns: 68px 1fr 16px; gap: 12px; align-items: baseline;
+  display: grid; grid-template-columns: 54px 1fr 20px; gap: 12px; align-items: center;
   width: 100%; text-align: left; color: var(--ink); text-decoration: none;
-  background: transparent; border-radius: 0; padding: 15px 0;
-  border-bottom: 1px solid var(--line);
-  -webkit-tap-highlight-color: transparent; transition: background .12s ease;
+  background: #fff; border-radius: 14px; padding: 16px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .06), 0 5px 16px rgba(17, 17, 17, .07);
+  -webkit-tap-highlight-color: transparent; transition: box-shadow .12s ease, background .12s ease;
 }
-.ps-event:active { background: #f4f4f6; }
+.ps-event:hover { box-shadow: 0 2px 6px rgba(17, 17, 17, .08), 0 10px 24px rgba(17, 17, 17, .10); }
+.ps-event:active { background: #fafafa; }
 .ps-etimecol { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .ps-etime {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: #191502; white-space: nowrap;
 }
 .ps-edur {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 400; font-size: 11px;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 11px;
   color: var(--ol); white-space: nowrap;
 }
 .ps-ebody { display: flex; flex-direction: column; min-width: 0; }
 .ps-enm {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 23px; line-height: 1;
-  letter-spacing: -.03em; color: var(--ink);
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px; line-height: 1.15;
+  letter-spacing: -.015em; color: var(--ink);
 }
-.ps-estudio {
-  font-size: 11px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase;
-  color: var(--ol); margin-top: 6px;
-}
-.ps-echev { color: var(--ink); display: flex; align-items: center; justify-content: center; align-self: center; }
+.ps-estudio { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 2px; }
+.ps-echev { color: rgba(17, 17, 17, .32); display: flex; align-items: center; justify-content: center; }
 
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
@@ -581,16 +581,16 @@ button.bl-band { cursor: pointer; }
  padding: 14px 16px;
 }
 button.ps-card { cursor: pointer; }
-.ps-nm { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
+.ps-nm { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
 .ps-sub { font-size: 13px; font-weight: 700; margin-top: 5px; color: #565a63; }
 .ps-addr { font-size: 12px; font-weight: 600; margin-top: 2px; color: #8a8472; }
 .ps-book {
-  display: inline-block; margin-top: 9px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700;
+  display: inline-block; margin-top: 9px; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 12px; color: #191502; border-bottom: 2.5px solid var(--pg-day); text-decoration: none;
 }
 .ps-infobar {
   background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
- font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px;
+ font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   text-align: center; padding: 12px; margin-top: 4px;
 }
 
@@ -604,7 +604,7 @@ button.ps-card { cursor: pointer; }
 }
 [data-theme="poster"] .tabbar a {
   border: none; background: transparent; border-radius: 14px;
-  color: var(--pg-cream); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px;
+  color: var(--pg-cream); font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .02em; text-transform: uppercase; padding: 13px 0;
 }
 /* the current tab is a cream sticker pill; the other is a plain label */
@@ -682,7 +682,7 @@ button.ps-card { cursor: pointer; }
 }
 .profphoto-empty {
   display: flex; align-items: center; justify-content: center; background: #e7eaef;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 76px; color: #c3c8d1;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 76px; color: #c3c8d1;
 }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
@@ -693,7 +693,7 @@ button.ps-card { cursor: pointer; }
 }
 .profshare:active { background: #e6e9ef; }
 .profname {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 46px; letter-spacing: -.04em; line-height: .95;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; letter-spacing: -.04em; line-height: .95;
   color: var(--ink); margin: 0;
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
@@ -702,7 +702,7 @@ button.ps-card { cursor: pointer; }
 .proflink {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502;
   text-decoration: none;
 }
 .proflink:active { background: #e6e9ef; }
@@ -713,7 +713,7 @@ button.ps-card { cursor: pointer; }
 }
 .profcta .btn { max-width: 520px; margin: 0 auto; }
 .pubback {
-  display: inline-block; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 12px;
 }
 
@@ -722,7 +722,7 @@ button.ps-card { cursor: pointer; }
 .profrow-photo { width: 52px; height: 52px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
 .profrow-empty {
   display: flex; align-items: center; justify-content: center; background: var(--pg-day); color: #fff;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 22px;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
 }
 .profrow-info { flex: 1; min-width: 0; }
 .profrow-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
@@ -766,7 +766,7 @@ button.ps-card { cursor: pointer; }
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .acctclose:active { background: #e6e9ef; }
-.acct-h { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.035em; color: var(--ink); margin: 0; }
+.acct-h { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.035em; color: var(--ink); margin: 0; }
 .accttile {
   display: flex; align-items: stretch; gap: 8px; margin-top: 18px; padding: 22px 18px;
   background: #fff; border-radius: 4px; box-shadow: var(--soft-shadow);
@@ -778,10 +778,10 @@ button.ps-card { cursor: pointer; }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #e7eaef; }
 .acctavatar-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 38px; color: #c3c8d1;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #c3c8d1;
 }
 .acctname {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
   color: #191502; margin-top: 8px; overflow-wrap: anywhere;
 }
 .accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 1px; }
@@ -789,7 +789,7 @@ button.ps-card { cursor: pointer; }
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
 .acctstat + .acctstat { border-top: 1px solid var(--line); }
-.acctstat .n { display: block; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
+.acctstat .n { display: block; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
 .acctstat .l { display: block; font-size: 13px; font-weight: 700; color: #565a63; margin-top: 5px; }
 .acctcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .acctcard {
@@ -799,7 +799,7 @@ button.ps-card { cursor: pointer; }
 }
 .acctcard:active { background: #f5f7fa; }
 .acctcard-ic { color: #191502; margin-bottom: 24px; }
-.acctcard-t { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
+.acctcard-t { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
 .acctcard-s { font-size: 12.5px; color: #878c96; line-height: 1.35; }
 .acctwrap .rowcta { margin-top: 12px; }
 
@@ -815,7 +815,7 @@ button.ps-card { cursor: pointer; }
 }
 .ownerback:active { background: #e6e9ef; }
 .owneredit {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502;
   background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
 }
 .owneredit:active { background: #e6e9ef; }
@@ -838,7 +838,7 @@ button.ps-card { cursor: pointer; }
   padding: calc(20px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom));
 }
 .evback {
-  display: inline-block; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 18px;
 }
 .evcard {
@@ -846,11 +846,11 @@ button.ps-card { cursor: pointer; }
   padding: 22px 20px; color: #191502;
 }
 .evwhen {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em;
   text-transform: uppercase; color: var(--pg-day); margin-bottom: 8px;
 }
 .evname {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
   color: var(--ink); margin-bottom: 14px;
 }
 .evstudio { font-size: 16px; font-weight: 700; color: #191502; }
