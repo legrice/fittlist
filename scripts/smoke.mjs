@@ -399,7 +399,7 @@ await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
 // close the story sheet, then the account page beneath it
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".acctback").click();
+await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("share sheet ok (save + share + colours + X close)");
 

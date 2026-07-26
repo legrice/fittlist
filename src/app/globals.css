@@ -774,11 +774,12 @@ button.ps-card { cursor: pointer; }
   padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
 }
 .acctwrap > * { max-width: 560px; margin-left: auto; margin-right: auto; }
-.accttop { display: flex; align-items: center; gap: 12px; }
-.acctback {
+.accttop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.acctclose {
   width: 38px; height: 38px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.acctclose:active { background: #e6e9ef; }
 .acct-h { font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; color: #191502; margin: 0; }
 .accttile {
   display: flex; gap: 8px; margin-top: 18px; padding: 22px 18px;

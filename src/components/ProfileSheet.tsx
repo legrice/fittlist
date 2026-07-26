@@ -117,10 +117,10 @@ export function ProfileSheet({
     <>
       <div className="acctwrap" role="dialog" aria-label="Your account">
         <div className="accttop">
-          <button className="iconbtn acctback" aria-label="Back to schedule" onClick={onClose}>
-            <Icon name="arrow_back" size={20} />
-          </button>
           <h1 className="acct-h">Profile</h1>
+          <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={18} />
+          </button>
         </div>
 
         <div className="accttile">
