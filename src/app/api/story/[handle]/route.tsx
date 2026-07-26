@@ -3,7 +3,7 @@ import { join } from "path";
 import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
-import { BRAND_CLOUD, BRAND_INK } from "@/lib/brand";
+import { brandIcon } from "@/lib/brand";
 import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG — Exhaust background, class list in
@@ -28,14 +28,11 @@ function loadFonts() {
   return fonts;
 }
 
-// Satori needs base64 data URIs and explicit dimensions for <img>.
-// Lockup viewBox is 5036x1164, so height 52 -> width ~225.
-function lockupUri(variant: "cloud" | "ink", accentOverride?: string) {
-  let svg = variant === "ink" ? BRAND_INK : BRAND_CLOUD;
-  // Only the accent row/period is recolored when it would vanish on the
-  // theme background — blocks are never rearranged.
-  if (accentOverride) svg = svg.split("#DD583A").join(accentOverride);
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+// Satori renders the block mark as an <img> (base64 SVG) and the "FittList"
+// text natively in Archivo Black. The mark is red, recoloured only when it
+// would vanish on the theme background (e.g. the red "Pop" theme).
+function iconUri(color: string) {
+  return `data:image/svg+xml;base64,${Buffer.from(brandIcon(color)).toString("base64")}`;
 }
 
 export async function GET(
@@ -46,7 +43,7 @@ export async function GET(
   const params2 = new URL(req.url).searchParams;
   const span = params2.get("span") === "day" ? "day" : "week";
   const [, t] = storyTheme(params2.get("theme"));
-  const lockup = lockupUri(t.lockup, t.lockupAccent);
+  const markUri = iconUri(t.lockupAccent ?? "#DD583A");
 
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -197,8 +194,13 @@ export async function GET(
           <span style={{ fontFamily: "Space Mono", fontSize: 43 }}>
             fittlist.co/{handle}
           </span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lockup} alt="" width={225} height={52} />
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={markUri} alt="" width={62} height={55} />
+            <span style={{ fontFamily: "Archivo Black", fontSize: 52, color: t.fg, letterSpacing: -2 }}>
+              FittList
+            </span>
+          </div>
         </div>
       </div>
     ),

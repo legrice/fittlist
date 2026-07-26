@@ -36,7 +36,11 @@ a { color: inherit; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 18px 12px; position: sticky; top: 0; background: var(--card); z-index: 5;
 }
-.wordmark svg { height: 20px; width: auto; display: block; }
+/* lockup: red block mark + "FittList"; sized by font-size on the outer class */
+.wm { display: inline-flex; align-items: center; gap: .32em; line-height: 1; font-size: 20px; }
+.wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
+.wm .wm-ico svg { height: 100%; width: auto; display: block; }
+.wm .wm-text { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 1em; letter-spacing: -.03em; white-space: nowrap; }
 .appbar .sub {
   font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);
@@ -63,7 +67,6 @@ a { color: inherit; }
   position: sticky; top: 0; z-index: 6; background: var(--card);
   padding: 16px 18px 12px;
 }
-.topnav .wordmark svg { height: 20px; width: auto; display: block; }
 .pagetoggle { display: flex; gap: 6px; }
 .pagetoggle a {
   padding: 8px 15px; border-radius: 999px; font-size: 14px; font-weight: 700;
@@ -90,8 +93,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 /* auth */
 .ob { justify-content: flex-end; background: var(--ink); color: #fff; }
 .ob .pad { padding: 28px 24px 40px; }
-.ob .mark { position: fixed; top: 24px; left: 24px; }
-.ob .mark svg { height: 32px; width: auto; display: block; }
+.ob .mark { position: fixed; top: 24px; left: 24px; font-size: 28px; }
 .ob h1 { font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 10px; }
 .ob p { font-size: 14.5px; color: #c9c3ae; line-height: 1.5; margin-bottom: 22px; }
 .ob p b { color: #fff; }
@@ -187,8 +189,7 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
 }
 .notifybar .btn { margin: 0; }
 .madewith { text-align: center; font-size: 12px; color: var(--ol); padding: 26px 0 8px; }
-.madewith .mw-logo { display: inline; }
-.madewith .mw-logo svg { height: 12px; width: auto; display: inline-block; vertical-align: -2px; }
+.madewith .mw-logo { display: inline-flex; vertical-align: -3px; font-size: 14px; }
 .madewith a { color: var(--si); font-weight: 700; font-size: 12px; text-decoration: underline; }
 
 /* sheets */
@@ -360,7 +361,6 @@ h1.screen-title { font-family: 'Archivo Black', sans-serif; font-size: 26px; let
     border-right: 1px solid var(--line); padding: 26px 16px;
   }
   .sidenav .wordmark { padding: 0 10px 22px; }
-  .sidenav .wordmark svg { height: 20px; width: auto; display: block; }
   .sidenav a {
     display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 11px;
     font-size: 14px; font-weight: 600; color: var(--ol); text-align: left; text-decoration: none;
@@ -494,7 +494,7 @@ button.bl-band { cursor: pointer; }
 [data-theme="poster"] .eyebrow { color: var(--pg-cream); }
 
 .ps-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.ps-brand .wordmark svg { height: 22px; width: auto; display: block; }
+.ps-brand .wordmark { font-size: 22px; }
 .ps-tag {
   margin-left: auto; background: transparent; color: var(--pg-cream);
   border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Space Mono', monospace;
@@ -511,7 +511,7 @@ button.bl-band { cursor: pointer; }
   margin: -14px -18px 0; padding: 16px 18px 10px;
 }
 .ps-none { color: #878c96; font-size: 14px; font-weight: 600; margin-top: 8px; }
-.brandbar .wordmark svg { height: 26px; width: auto; display: block; }
+.brandbar .wordmark { font-size: 23px; }
 .calbar-title {
   font-family: 'Archivo Black', sans-serif; font-size: 30px; letter-spacing: -.02em; line-height: 1;
   color: #191502; margin: 10px 0 16px;
