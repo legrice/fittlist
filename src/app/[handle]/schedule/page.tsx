@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, siteOrigin, timeToMinutes } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { NotifyCta } from "@/components/NotifyCta";
 import { Wordmark } from "@/components/Wordmark";
@@ -63,15 +64,15 @@ export default async function SchedulePage({ params }: Props) {
           <span>
             <Icon name="visibility" size={16} className="pv-eye" /> Previewing your schedule
           </span>
-          <Link className="previewback" href="/app">
+          <BackLink className="previewback" href="/app">
             ← Back to your account
-          </Link>
+          </BackLink>
         </div>
       )}
       <div className="pubhero">
-        <Link className="pubback" href={`/${handle}`}>
+        <BackLink className="pubback" href={`/${handle}`}>
           ← {user.name}
-        </Link>
+        </BackLink>
         <div className="eyebrow">Coaching schedule</div>
         <div className="big">Schedule</div>
         <NotifyCta trainerName={user.name} handle={handle} />

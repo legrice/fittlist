@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
+import { useSlideBack } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -24,6 +25,7 @@ export function ProfileOwnerBar({
   photo: string | null;
 }) {
   const router = useRouter();
+  const slideBack = useSlideBack();
   const [toastMsg, toastOn, toast] = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [pName, setPName] = useState(name);
@@ -93,7 +95,7 @@ export function ProfileOwnerBar({
   return (
     <>
       <div className="ownerbar">
-        <button className="ownerback" aria-label="Back to your account" onClick={() => router.push("/app?acct=1")}>
+        <button className="ownerback" aria-label="Back to your account" onClick={() => slideBack("/app?acct=1")}>
           <Icon name="arrow_back" size={20} />
         </button>
         <button className="owneredit" onClick={openEdit}>

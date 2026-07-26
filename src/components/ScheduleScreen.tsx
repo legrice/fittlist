@@ -63,8 +63,10 @@ export function ScheduleScreen({
     }
   }, [autoOpenAdder]);
 
-  // Coming back from the profile preview reopens the account page.
+  // Coming back from the profile preview reopens the account page. Clear any
+  // leftover slide-direction flag now that we're back on the schedule.
   useEffect(() => {
+    sessionStorage.removeItem("fl-nav");
     if (new URLSearchParams(window.location.search).get("acct")) {
       setProfileOpen(true);
       window.history.replaceState(null, "", "/app");
