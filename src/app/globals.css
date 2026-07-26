@@ -214,7 +214,13 @@ h1.screen-title { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-se
 @keyframes up { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 .sheet { position: relative; }
-.sheetclose { position: absolute; top: 14px; right: 16px; z-index: 2; background: var(--card); }
+.sheetclose {
+  position: absolute; top: 14px; right: 16px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 999px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+}
+.sheetclose:active { background: #f4f4f6; }
 .sheet h2 { font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; }
 .sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
@@ -660,7 +666,8 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
 [data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
 [data-theme="poster"] .adder-card {
-  background: #fff; border: none; border-radius: 4px; box-shadow: var(--soft-shadow);
+  background: #fff; border: none; border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .06), 0 5px 16px rgba(17, 17, 17, .07);
 }
 
 /* public page: ground bg, cream hero card, green CTA, cloud footer */
