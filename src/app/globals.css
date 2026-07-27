@@ -1,9 +1,17 @@
+/* Delight — the brand typeface, self-hosted as woff2. (Static TTF copies of
+   400/600/700/800 also live in /public/fonts for the satori share image.) */
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Delight'; src: url('/fonts/delight-800.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+
 /* fittlist design system - ported from design/fittlist-prototype-v10.html.
    The prototype renders inside a fake phone frame; here the viewport is the
    frame, so absolute-positioned chrome (fab, toast, sheets, bars) is fixed. */
 
 :root {
-  /* Sora typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
+  /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards). */
   --cl: #f4efe1;           /* warm cream — headers, tags, accents */
   --paper: #faf8f2;        /* very light near-white ground for the main scroll */
@@ -24,7 +32,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   background: var(--paper);
   color: var(--ink);
   min-height: 100dvh;
@@ -45,15 +53,15 @@ a { color: inherit; }
 .wm { display: inline-flex; align-items: center; gap: .32em; line-height: 1; font-size: 20px; }
 .wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
-.wm .wm-text { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
+.wm .wm-text { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
 .wm .wm-beta {
   align-self: flex-start; margin-top: .05em; background: var(--si); color: #fff;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: .42em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: .42em;
   letter-spacing: .06em; text-transform: uppercase; padding: .28em .55em; border-radius: 999px;
   line-height: 1;
 }
 .appbar .sub {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .12em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -91,13 +99,13 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
+h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
 .daylabel {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
 }
 .eyebrow {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .14em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--ol);
 }
 
@@ -120,23 +128,23 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 }
 .obhero .obmark { position: relative; display: block; height: 66px; }
 .obhero .obmark svg { height: 100%; width: auto; display: block; }
-.ob h1 { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
+.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
 .ob p b { color: var(--ink); font-weight: 700; }
 .ob input {
   width: 100%; padding: 15px 16px; border-radius: 16px; border: 1.5px solid var(--line);
   background: #fff; color: var(--ink); font-family: inherit; font-size: 17px; margin-bottom: 14px;
 }
-.ob input.code { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 700; }
+.ob input.code { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 700; }
 .ob input::placeholder { color: #b3ac97; }
 .ob input:focus { outline: none; border-color: var(--si); }
 .ob .btn { background: var(--si); color: #fff; box-shadow: var(--soft-shadow); }
 .ob .microcopy {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; letter-spacing: .07em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; letter-spacing: .07em;
   color: var(--ol); margin-top: 14px; text-align: center;
 }
 .ob .errorcopy { font-size: 13px; color: #c0472b; margin-top: 12px; text-align: center; }
-.ob .handlepreview { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: var(--ol); margin: 12px 0 18px; padding-left: 4px; }
+.ob .handlepreview { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: var(--ol); margin: 12px 0 18px; padding-left: 4px; }
 .ob .handlepreview b { color: var(--si); font-weight: 700; }
 .ob .backlink { color: var(--ol); font-size: 13px; text-decoration: underline; margin-top: 14px; display: inline-block; }
 /* "or" divider + secondary sign-in options (magic link, passkey) */
@@ -190,7 +198,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .wizskip { font-size: 13.5px; font-weight: 600; color: var(--ol); }
 .wizskip:active { color: var(--ink); }
 .wiz h1 {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 29px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 29px;
   letter-spacing: -.025em; line-height: 1.08; margin-bottom: 10px; color: var(--ink);
 }
 .wiz > .pad > p { font-size: 15px; color: var(--ol); line-height: 1.5; margin-bottom: 22px; }
@@ -205,7 +213,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 }
 .wizphoto-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 52px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 52px;
   color: var(--ol); background: var(--sa);
 }
 .wizphoto-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -238,8 +246,8 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .wiznav .wizback { flex: 0 0 34%; }
 
 .empty-block { margin-top: 22px; border: 1.5px dashed var(--line); border-radius: 16px; padding: 28px 22px; text-align: center; }
-.empty-block .glyph { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
-.empty-block h2 { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
+.empty-block .glyph { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
+.empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
@@ -251,7 +259,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .class-card.editable { cursor: pointer; }
 .class-card.editable:hover { border-color: var(--ink); }
 .class-card .rail { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; }
-.class-card .time { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
+.class-card .time { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
 .class-card .body { flex: 1; min-width: 0; }
 .class-card .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
 .class-card .meta { font-size: 12.5px; color: var(--ol); }
@@ -280,11 +288,11 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
 .stat { flex: 1; background: var(--cl); border-radius: 16px; padding: 12px; text-align: center; }
-.stat .n { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px; }
+.stat .n { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px; }
 .stat .l { font-size: 10.5px; color: var(--ol); margin-top: 2px; }
-.stat .d { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
+.stat .d { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
 .linkcard { background: var(--ink); color: #fff; border-radius: 16px; padding: 16px; margin-top: 14px; }
-.linkcard .url { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
+.linkcard .url { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
 .linkcard .hint { font-size: 12px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .linkcard .eyebrow { color: #c9c3ae; }
 .rowcta {
@@ -308,7 +316,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .pub { background: var(--paper); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
-.pub .pubhero .big { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1; }
+.pub .pubhero .big { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1; }
 .pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
@@ -350,7 +358,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: flex; align-items: center; justify-content: center;
 }
 .sheetclose:active { background: #f3ecdf; }
-.sheet h2 { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
+.sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
 .sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
@@ -387,7 +395,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .namesug button:last-child { border-bottom: none; }
 .namesug button:hover { background: #f3ecdf; }
 .namesug-nm {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .namesug .sub {
@@ -403,14 +411,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 16px;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
 }
 .daypick button.sel { background: var(--si); color: #fff; border-color: var(--si); }
 .timegrid { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.timegrid .chip { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; }
+.timegrid .chip { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; }
 .timegrid input[type=time] {
   padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
   /* iOS renders native time inputs at a fixed intrinsic width that ignores the
      grid track and overflows - flatten the appearance so width takes effect. */
   -webkit-appearance: none; appearance: none; min-width: 0;
@@ -429,7 +437,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .timegrid.two input.timeinput { width: 100%; min-width: 0; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
 .durnote {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; color: var(--ol);
   margin-top: 8px;
 }
 .studio-sel {
@@ -488,7 +496,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .studio-row .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .studio-row .tick { margin-left: auto; color: var(--si); font-weight: 700; }
 .addnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 2px; display: inline-block; }
-.dirnote { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
+.dirnote { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .08em; color: var(--ol); margin-top: 10px; line-height: 1.6; }
 
 /* share story */
 .share-toggles { display: flex; gap: 8px; margin: 12px 0; }
@@ -553,7 +561,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   .sidenav a .ico { font-size: 15px; }
   .sidenav a.active { background: var(--cl); color: var(--ink); }
   .sidenav a.active .ico { color: var(--si); }
-  .sideuser { margin-top: auto; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
+  .sideuser { margin-top: auto; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
   .tabbar { display: none; }
   .appshell .appbar .wordmark { visibility: hidden; }
   /* The column keeps its max width but sits centered in the window. */
@@ -624,7 +632,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .linktag {
   position: absolute; right: 8px; display: inline-flex; align-items: center; gap: 3px;
   background: var(--si-soft); color: var(--pg-day); border-radius: 999px; padding: 4px 9px;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11.5px;
   pointer-events: none; max-width: 55%; white-space: nowrap; overflow: hidden;
 }
 .linkrow input {
@@ -645,11 +653,11 @@ input, select, textarea { font-size: max(1em, 16px); }
 .blweek { display: flex; flex-direction: column; }         /* full-bleed: parent cancels its own side padding */
 .bl-head { background: var(--ink); color: #F7F2E8; padding: 24px 20px 22px; }
 .bl-head .eb {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase; color: #C9C3AE;
 }
 .bl-head h2 {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
   letter-spacing: -.03em; text-transform: uppercase; margin-top: 6px;
 }
 .bl-band {
@@ -659,18 +667,18 @@ input, select, textarea { font-size: max(1em, 16px); }
 }
 button.bl-band { cursor: pointer; }
 .bl-day {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: .82;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: .82;
   letter-spacing: -.01em; text-transform: uppercase; min-width: 62px; flex-shrink: 0;
 }
 .bl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .bl-nm {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; line-height: .98;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; line-height: .98;
   letter-spacing: -.01em; text-transform: uppercase;
 }
-.bl-mt { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; margin-top: 6px; }
+.bl-mt { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; margin-top: 6px; }
 .bl-loc { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: .82; }
 .bl-book {
-  display: inline-block; margin-top: 8px; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  display: inline-block; margin-top: 8px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 12.5px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
 }
 .bl-edit {
@@ -710,11 +718,11 @@ button.bl-band { cursor: pointer; }
 .ps-brand .wordmark { font-size: 22px; }
 .ps-tag {
   margin-left: auto; background: transparent; color: var(--pg-cream);
-  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif;
+  border: 2.5px solid var(--pg-cream); border-radius: 999px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px;
 }
 .ps-h2 {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
 /* schedule header: fittlist logo + profile icon up top, "My Schedule" below */
@@ -727,7 +735,7 @@ button.bl-band { cursor: pointer; }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
 .calbar-title {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 24px 0;
 }
 /* Dashboard strip under the header: quick links to the most-reached-for
@@ -737,7 +745,7 @@ button.bl-band { cursor: pointer; }
 .dashlink {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 6px; background: var(--cl); border-radius: 16px;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
   color: var(--ink); white-space: nowrap;
 }
 .dashlink:active { background: #f3ecdf; }
@@ -749,21 +757,21 @@ button.bl-band { cursor: pointer; }
 .usericon:active { opacity: .7; }
 .usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .usericon-initial {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* schedule: day sections with shadowed white class cards (containers, not lines) */
 .ps-week { display: flex; flex-direction: column; gap: 28px; }
 .ps-daygroup { display: flex; flex-direction: column; gap: 10px; }
 .ps-daycol {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 15px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 15px;
   letter-spacing: -.01em; color: var(--ink); white-space: nowrap;
 }
 .ps-daycards { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 /* time sits in a left gutter beside each class, echoing the old date column */
 .ps-classrow { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
 .ps-time {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: var(--pg-cream); white-space: nowrap; padding-top: 15px; text-align: right;
 }
 
@@ -788,22 +796,22 @@ button.bl-band { cursor: pointer; }
 .ps-event-private:active { background: #e8e1cd; }
 .ps-etimecol { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .ps-etime {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -.01em;
   color: #191502; white-space: nowrap;
 }
 .ps-edur {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 11px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 11px;
   color: var(--ol); white-space: nowrap;
 }
 .ps-ebody { display: flex; flex-direction: column; min-width: 0; }
 .ps-enm {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px; line-height: 1.15;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px; line-height: 1.15;
   letter-spacing: -.015em; color: var(--ink);
 }
 .ps-estudio { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 2px; }
 .ps-private {
   display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
   letter-spacing: .05em; text-transform: uppercase; color: var(--ol);
   background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
 }
@@ -837,7 +845,7 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-estudio-ic { color: var(--ol); flex-shrink: 0; }
 .ps-agenda .ps-etimecol { flex-direction: column; align-items: flex-end; gap: 1px; }
 .ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
-.ps-agenda .ps-edur { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
+.ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
 /* Private sessions: no card fill, just a muted accent bar + the Private badge. */
 .ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
@@ -850,16 +858,16 @@ button.bl-band { cursor: pointer; }
  padding: 14px 16px;
 }
 button.ps-card { cursor: pointer; }
-.ps-nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
+.ps-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
 .ps-sub { font-size: 13px; font-weight: 700; margin-top: 5px; color: #6b6555; }
 .ps-addr { font-size: 12px; font-weight: 600; margin-top: 2px; color: #8a8472; }
 .ps-book {
-  display: inline-block; margin-top: 9px; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  display: inline-block; margin-top: 9px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 12px; color: #191502; border-bottom: 2.5px solid var(--pg-day); text-decoration: none;
 }
 .ps-infobar {
   background: var(--pg-peach); color: #191502; border: 2.5px solid #191502; border-radius: 999px;
- font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+ font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   text-align: center; padding: 12px; margin-top: 4px;
 }
 
@@ -873,7 +881,7 @@ button.ps-card { cursor: pointer; }
 }
 [data-theme="poster"] .tabbar a {
   border: none; background: transparent; border-radius: 16px;
-  color: var(--pg-cream); font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  color: var(--pg-cream); font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .02em; text-transform: uppercase; padding: 13px 0;
 }
 /* the current tab is a cream sticker pill; the other is a plain label */
@@ -953,7 +961,7 @@ button.ps-card { cursor: pointer; }
 }
 .profphoto-empty {
   display: flex; align-items: center; justify-content: center; background: #eae3d2;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 76px; color: #cec6b0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 76px; color: #cec6b0;
 }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
@@ -964,7 +972,7 @@ button.ps-card { cursor: pointer; }
 }
 .profshare:active { background: #efe8d8; }
 .profname {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 0;
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
@@ -981,7 +989,7 @@ button.ps-card { cursor: pointer; }
 .proflink {
   display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap;
   padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502;
   text-decoration: none;
 }
 .proflink:active { background: #efe8d8; }
@@ -1079,11 +1087,11 @@ button.ps-card { cursor: pointer; }
 .inboxrow-av {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: #eae3d2;
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: #191502;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
 }
 .inboxrow-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .inboxrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.inboxrow-top .nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inboxrow-top .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inboxrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
 .inboxrow-preview { font-size: 13.5px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inboxrow.unread .inboxrow-preview { color: var(--ink); font-weight: 600; }
@@ -1102,7 +1110,7 @@ button.ps-card { cursor: pointer; }
 }
 .chatback { width: 38px; height: 38px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); flex-shrink: 0; }
 .chattop-txt { display: flex; flex-direction: column; min-width: 0; }
-.chattop-nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chattop-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chattop-sub { font-size: 12.5px; color: var(--ol); text-decoration: none; }
 .chatbody { flex: 1; overflow-y: auto; padding: 18px; }
 .chat { display: flex; flex-direction: column; gap: 10px; max-width: 620px; margin: 0 auto; }
@@ -1125,7 +1133,7 @@ button.ps-card { cursor: pointer; }
 .chatfoot { display: flex; justify-content: center; padding: 14px; }
 
 .prof-sec-h {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin: 0 0 10px;
 }
 .profstudio {
@@ -1136,7 +1144,7 @@ button.ps-card { cursor: pointer; }
 .profstudio:active { background: #efe8d8; }
 .profstudio-ic { color: var(--pg-day); display: flex; flex-shrink: 0; }
 .profstudio-txt { min-width: 0; display: flex; flex-direction: column; }
-.profstudio-txt .nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+.profstudio-txt .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
 .profstudio-txt .ad { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 
 /* Public profile: sticky name + share row, then sticky tabs; title scrolls
@@ -1161,7 +1169,7 @@ button.ps-card { cursor: pointer; }
   padding: 0 calc(50vw - 50%);
 }
 .pubtab {
-  padding: 12px 2px; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  padding: 12px 2px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 15px; color: var(--ol); border-bottom: 2px solid transparent; margin-bottom: -1px;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1180,7 +1188,7 @@ button.ps-card { cursor: pointer; }
 }
 .profcta .btn { max-width: 520px; margin: 0 auto; }
 .pubback {
-  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 12px;
 }
 
@@ -1189,7 +1197,7 @@ button.ps-card { cursor: pointer; }
 .profrow-photo { width: 52px; height: 52px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
 .profrow-empty {
   display: flex; align-items: center; justify-content: center; background: var(--pg-day); color: #fff;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
 }
 .profrow-info { flex: 1; min-width: 0; }
 .profrow-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
@@ -1235,7 +1243,7 @@ button.ps-card { cursor: pointer; }
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .acctclose:active { background: #efe8d8; }
-.acct-h { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
+.acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
 .accttile {
   display: flex; align-items: stretch; gap: 8px; margin-top: 18px; padding: 22px 18px;
   background: #fff; border-radius: 16px; box-shadow: var(--soft-shadow);
@@ -1247,10 +1255,10 @@ button.ps-card { cursor: pointer; }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
 .acctavatar-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #cec6b0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #cec6b0;
 }
 .acctname {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
   color: #191502; margin-top: 8px; overflow-wrap: anywhere;
 }
 .accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 1px; }
@@ -1258,7 +1266,7 @@ button.ps-card { cursor: pointer; }
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
 .acctstat + .acctstat { border-top: 1px solid var(--line); }
-.acctstat .n { display: block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
+.acctstat .n { display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
 .acctstat .l { display: block; font-size: 13px; font-weight: 700; color: #6b6555; margin-top: 5px; }
 /* Analytics: a 2x2 grid of actionable numbers below the profile tile. */
 .acctstats-grid {
@@ -1277,7 +1285,7 @@ button.ps-card { cursor: pointer; }
 }
 .acctcard:active { background: #f3ecdf; }
 .acctcard-ic { color: #191502; margin-bottom: 24px; }
-.acctcard-t { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
+.acctcard-t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
 .acctcard-s { font-size: 12.5px; color: #928b78; line-height: 1.35; }
 /* The QR card spans the full row and lays out horizontally. */
 .acctcard-wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 14px; padding: 16px; }
@@ -1286,7 +1294,7 @@ button.ps-card { cursor: pointer; }
 /* QR sheet */
 .qrframe { width: 232px; max-width: 100%; margin: 20px auto 14px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
 .qrimg { display: block; width: 100%; height: auto; }
-.qrurl { text-align: center; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: var(--si); word-break: break-all; margin-bottom: 4px; }
+.qrurl { text-align: center; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: var(--si); word-break: break-all; margin-bottom: 4px; }
 .acctwrap .rowcta { margin-top: 12px; }
 
 /* account: sign-in / security section */
@@ -1295,17 +1303,17 @@ button.ps-card { cursor: pointer; }
   padding: 6px 16px 8px;
 }
 .sec-h {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin: 14px 2px 6px;
 }
 .secrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
 .secrow + .secrow { border-top: 1px solid var(--line); }
 .secrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .secrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.secrow-txt .t { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px; color: #191502; }
+.secrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px; color: #191502; }
 .secrow-txt .s { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 .secbtn {
-  flex-shrink: 0; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: #191502; background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 18px;
 }
 .secbtn:active { background: #f3ecdf; }
@@ -1322,7 +1330,7 @@ button.ps-card { cursor: pointer; }
 .setrow:active { background: #f3ecdf; }
 .setrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .setrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.setrow-txt .t { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502; }
+.setrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502; }
 .setrow-txt .s { font-size: 12.5px; color: var(--ol); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setrow-chev { color: rgba(25, 21, 2, .3); flex-shrink: 0; display: flex; }
 
@@ -1361,7 +1369,7 @@ button.ps-card { cursor: pointer; }
 }
 .ownerback:active { background: #efe8d8; }
 .owneredit {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502;
   background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
 }
 .owneredit:active { background: #efe8d8; }
@@ -1384,7 +1392,7 @@ button.ps-card { cursor: pointer; }
   padding: calc(20px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom));
 }
 .evback {
-  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+  display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 18px;
 }
 .evcard {
@@ -1392,21 +1400,21 @@ button.ps-card { cursor: pointer; }
   padding: 22px 20px; color: #191502;
 }
 .evtype {
-  display: inline-block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
   color: var(--pg-day); background: var(--si-soft); border-radius: 999px; padding: 5px 12px;
   margin-bottom: 14px;
 }
 .evname {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
   color: var(--ink); margin-bottom: 12px;
 }
 .evwhen {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 16px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 16px;
   color: var(--ink); margin-top: 2px;
 }
 .evlen {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 14px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 14px;
   color: var(--ol); margin-top: 2px;
 }
 .evdesc { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
@@ -1515,7 +1523,7 @@ button.ps-card { cursor: pointer; }
   width: 100%; max-width: 660px; margin: 0 auto;
 }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.admin h1 { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
+.admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
 .adminsub { font-size: 12.5px; color: var(--ol); margin-top: 2px; word-break: break-all; }
 .adminback {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; text-decoration: none;
@@ -1527,7 +1535,7 @@ button.ps-card { cursor: pointer; }
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   padding: 12px 10px; text-align: center;
 }
-.adminstat-n { display: block; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
+.adminstat-n { display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
 .adminstat-l { display: block; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin-top: 2px; }
 .adminseg { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 14px; }
 .adminseg button { flex: 1; padding: 10px 0; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ol); }
@@ -1538,14 +1546,14 @@ button.ps-card { cursor: pointer; }
 .admincard-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .admincard-h-link { text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .admincard-h-link:active { opacity: .6; }
-.admincard-nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admincard-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admincard-tag { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 12.5px; color: var(--si); text-decoration: none; }
 .admincard-tag.muted { color: var(--ol); }
 .admincard-sub { font-size: 13px; color: var(--ol); margin-top: 2px; word-break: break-word; }
 .adminmeta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ol); }
 .adminbadges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .adminbadge {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   font-weight: 700; color: var(--ol); background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px;
 }
 .adminbadge.warn { color: #a85327; background: var(--si-soft); border-color: transparent; }
@@ -1561,7 +1569,7 @@ button.ps-card { cursor: pointer; }
 .adminaddform-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
 .adminaddform-row .btn { width: auto; padding: 12px 20px; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
-.adminsec-h { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
+.adminsec-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
 
 /* centered confirmation modal (e.g. delete a class) */
 .confirm-scrim {
@@ -1574,7 +1582,7 @@ button.ps-card { cursor: pointer; }
   box-shadow: var(--soft-shadow-lg); text-align: center; animation: up .18s ease;
 }
 .confirm-modal h3 {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px;
   letter-spacing: -.01em; margin-bottom: 8px;
 }
 .confirm-modal p { font-size: 14px; color: var(--ol); line-height: 1.5; margin-bottom: 20px; }
@@ -1600,7 +1608,7 @@ button.ps-card { cursor: pointer; }
 }
 .notifrow-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .notifrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.notifrow-top .nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; }
+.notifrow-top .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; }
 .notifrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
 .notifrow-body { font-size: 13.5px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notifrow.unread .notifrow-body { color: var(--ink); }

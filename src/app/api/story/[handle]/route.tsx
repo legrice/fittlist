@@ -13,17 +13,18 @@ import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 const font = (file: string) =>
-  readFileSync(join(process.cwd(), "src/assets/fonts", file));
+  readFileSync(join(process.cwd(), "public/fonts", file));
 
 let fonts: { name: string; data: Buffer; weight: 400 | 600 | 700 | 800 }[] | null = null;
 function loadFonts() {
   if (!fonts) {
-    // The brand typeface — Sora — across the whole share image.
+    // The brand typeface — Delight — across the whole share image. Satori needs
+    // static TTFs (no woff2/variable), hence the .ttf copies in public/fonts.
     fonts = [
-      { name: "Sora", data: font("sora-400.ttf"), weight: 400 },
-      { name: "Sora", data: font("sora-600.ttf"), weight: 600 },
-      { name: "Sora", data: font("sora-700.ttf"), weight: 700 },
-      { name: "Sora", data: font("sora-800.ttf"), weight: 800 },
+      { name: "Delight", data: font("delight-400.ttf"), weight: 400 },
+      { name: "Delight", data: font("delight-600.ttf"), weight: 600 },
+      { name: "Delight", data: font("delight-700.ttf"), weight: 700 },
+      { name: "Delight", data: font("delight-800.ttf"), weight: 800 },
     ];
   }
   return fonts;
@@ -88,7 +89,7 @@ export async function GET(
           background: t.bg,
           color: t.fg,
           padding: "104px 86px",
-          fontFamily: "Sora",
+          fontFamily: "Delight",
         }}
       >
         <div
