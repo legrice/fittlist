@@ -556,7 +556,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   .sideuser { margin-top: auto; font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: var(--ol); padding: 0 10px; word-break: break-all; }
   .tabbar { display: none; }
   .appshell .appbar .wordmark { visibility: hidden; }
-  .pad { padding: 30px 38px; max-width: 1000px; }
+  /* The column keeps its max width but sits centered in the window. */
+  .pad { padding: 30px 38px; max-width: 1000px; width: 100%; margin: 0 auto; }
+  /* Full-bleed header: pull the sticky brandbar out to the window edges, then
+     pad its content back in so the lockup stays aligned with the column. The
+     stage clips the vw overhang (scrollbar width) so no horizontal scroll. */
+  .appshell .stage { overflow-x: hidden; }
+  /* .appshell prefix: the base .brandbar rule is declared later in the file,
+     so the full-bleed override needs the extra specificity to win. */
+  .appshell .brandbar {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: calc(50vw - 50%);
+    padding-right: calc(50vw - 50%);
+  }
 
   /* auth centered */
   .ob { justify-content: center; }
@@ -995,7 +1008,11 @@ button.ps-card { cursor: pointer; }
   font-size: 13.5px; font-weight: 600;
 }
 
-/* "What to expect" list (public) */
+/* "Coaching focus" list (public), ruled off above and below */
+.focussec {
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  padding: 22px 0 24px;
+}
 .expectlist { list-style: none; display: flex; flex-direction: column; gap: 9px; }
 .expectlist li { position: relative; padding-left: 22px; font-size: 15px; color: var(--ink); line-height: 1.4; }
 .expectlist li::before {
