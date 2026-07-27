@@ -117,15 +117,17 @@ export async function PublicProfileView({
   );
 
   // Contact gets its own tab/section: the private-session request plus the
-  // ways to reach the coach, stacked as full-width rows. Hidden only when
-  // there's nothing to show (owner preview with no contact info).
+  // ways to reach the coach, stacked as full-width rows. The request button
+  // only exists while the coach is taking clients (accepting/waitlist) —
+  // availability hidden means no inquiries.
   const hasContact = !!(
     user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website
   );
-  const contact = hasContact || !isOwner ? (
+  const canRequest = !isOwner && !!user.availability;
+  const contact = hasContact || canRequest ? (
     <>
       <h2 className="prof-sec-h sched-h">Contact</h2>
-      {!isOwner && <RequestSessionButton handle={handle} coachName={user.name} />}
+      {canRequest && <RequestSessionButton handle={handle} coachName={user.name} />}
       <div className="contactlist">
         {user.contactEmail && (
           <a className="proflink" href={`mailto:${user.contactEmail}`}>
