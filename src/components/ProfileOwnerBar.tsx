@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { useSlideBack } from "@/components/BackLink";
 import { ChipsField } from "@/components/ChipsField";
+import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -23,6 +24,7 @@ export function ProfileOwnerBar({
   contactEmail,
   phone,
   whatsapp,
+  profileLinks,
   photo,
 }: {
   name: string;
@@ -37,6 +39,7 @@ export function ProfileOwnerBar({
   contactEmail: string;
   phone: string;
   whatsapp: string;
+  profileLinks: ProfileLink[];
   photo: string | null;
 }) {
   const router = useRouter();
@@ -55,6 +58,7 @@ export function ProfileOwnerBar({
   const [pEmail, setPEmail] = useState(contactEmail);
   const [pPhone, setPPhone] = useState(phone);
   const [pWhatsapp, setPWhatsapp] = useState(whatsapp);
+  const [pLinks, setPLinks] = useState<ProfileLink[]>(profileLinks);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -98,6 +102,7 @@ export function ProfileOwnerBar({
     setPEmail(contactEmail);
     setPPhone(phone);
     setPWhatsapp(whatsapp);
+    setPLinks(profileLinks);
     setPPhoto(photo);
     setEditOpen(true);
   };
@@ -117,6 +122,7 @@ export function ProfileOwnerBar({
         contactEmail: pEmail,
         phone: pPhone,
         whatsapp: pWhatsapp,
+        profileLinks: pLinks,
         photo: pPhoto,
       });
       if (!res.ok) {
@@ -294,6 +300,10 @@ export function ProfileOwnerBar({
               autoCorrect="off"
               onChange={(e) => setPWebsite(e.target.value)}
             />
+            <label className="flabel">
+              More links <span>· booking, programs, anything (up to 6)</span>
+            </label>
+            <LinksField value={pLinks} onChange={setPLinks} />
             <label className="flabel" htmlFor="pEmail">
               Contact email <span>· optional, shown as an email button</span>
             </label>

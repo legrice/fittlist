@@ -76,6 +76,7 @@ export async function updateProfile(input: {
   contactEmail?: string;
   phone?: string;
   whatsapp?: string;
+  profileLinks?: { label: string; url: string }[];
   photo?: string | null; // data URL, "" to clear, undefined to leave as-is
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
@@ -111,8 +112,28 @@ export async function updateProfile(input: {
     contactEmail: string | null;
     phone: string | null;
     whatsapp: string | null;
+    profileLinks?: { label: string; url: string }[];
     photo?: string | null;
   } = { name, title: title || null, about, location, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
+  if (input.profileLinks !== undefined) {
+    // Labelled extra links: normalise the protocol, drop anything unparseable,
+    // fall back to the host for a missing label, cap the list.
+    const links: { label: string; url: string }[] = [];
+    for (const raw of input.profileLinks.slice(0, 6)) {
+      let url = (raw.url || "").trim();
+      if (!url) continue;
+      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      let host = "";
+      try {
+        host = new URL(url).hostname;
+      } catch {
+        continue;
+      }
+      const label = (raw.label || "").replace(/\s+/g, " ").trim().slice(0, 24) || host;
+      links.push({ label, url });
+    }
+    set.profileLinks = links;
+  }
   if (input.photo !== undefined) {
     const photo = input.photo;
     if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {

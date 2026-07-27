@@ -49,6 +49,12 @@ export const users = pgTable("users", {
   // Page look: how the coach's app AND public page render. Null = the default
   // light look; "dark" today, more colour looks later.
   look: text("look"),
+  // Extra labelled links on the public page (booking sites, programs, a second
+  // gig) beyond the single website field. Capped in the action, not here.
+  profileLinks: jsonb("profile_links")
+    .$type<{ label: string; url: string }[]>()
+    .notNull()
+    .default([]),
   // Share-image customisation: headline, photo chip, preferred theme. A blob so
   // later knobs (background image, formats) slot in without schema churn.
   storyPrefs: jsonb("story_prefs")

@@ -121,7 +121,12 @@ export async function PublicProfileView({
   // only exists while the coach is taking clients (accepting/waitlist) —
   // availability hidden means no inquiries.
   const hasContact = !!(
-    user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website
+    user.contactEmail ||
+    user.phone ||
+    user.whatsapp ||
+    user.instagram ||
+    user.website ||
+    user.profileLinks.length
   );
   const canRequest = !isOwner && !!user.availability;
   const contact = hasContact || canRequest ? (
@@ -164,6 +169,11 @@ export async function PublicProfileView({
             <Icon name="public" size={18} /> Website
           </a>
         )}
+        {user.profileLinks.map((l, i) => (
+          <a key={i} className="proflink" href={l.url} target="_blank" rel="noopener nofollow">
+            <Icon name="link" size={18} /> {l.label}
+          </a>
+        ))}
       </div>
     </>
   ) : null;
@@ -235,6 +245,7 @@ export async function PublicProfileView({
           contactEmail={user.contactEmail ?? ""}
           phone={user.phone ?? ""}
           whatsapp={user.whatsapp ?? ""}
+          profileLinks={user.profileLinks}
           photo={user.photo}
         />
       )}
