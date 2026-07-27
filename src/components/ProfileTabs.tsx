@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Icon } from "@/components/Icon";
 
 type Tab = "about" | "contact" | "schedule";
 
@@ -18,6 +17,7 @@ export function ProfileTabs({
   location,
   trackSchedule,
   share,
+  avail,
   about,
   contact,
   schedule,
@@ -29,6 +29,7 @@ export function ProfileTabs({
   location: string;
   trackSchedule: boolean;
   share: ReactNode;
+  avail: ReactNode | null;
   about: ReactNode;
   contact: ReactNode | null;
   schedule: ReactNode;
@@ -139,13 +140,15 @@ export function ProfileTabs({
         <h1 className="profname">{name}</h1>
         {share}
       </div>
-      {title.trim() && <p className="proftitle">{title}</p>}
-      {location.trim() && (
-        <p className="profloc">
-          <Icon name="place" size={15} className="profloc-ic" />
-          {location}
+      {/* One line: "Strength coach in Jersey City, NJ" */}
+      {(title.trim() || location.trim()) && (
+        <p className="proftitle">
+          {title.trim() && location.trim()
+            ? `${title.trim()} in ${location.trim()}`
+            : title.trim() || location.trim()}
         </p>
       )}
+      {avail}
       <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: rowH }}>
         {tabBtn("about", "About")}
         {contact && tabBtn("contact", "Contact")}

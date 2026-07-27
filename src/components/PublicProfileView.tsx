@@ -72,14 +72,7 @@ export async function PublicProfileView({
           {user.name.trim().charAt(0).toUpperCase() || "?"}
         </div>
       )}
-      {user.availability && (
-        <div className={`availpill availpill-${user.availability}`}>
-          <span className="availdot" aria-hidden="true" />
-          {user.availability === "accepting" ? "Accepting new clients" : "Waitlist for new clients"}
-        </div>
-      )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
-      {!isOwner && <RequestSessionButton handle={handle} coachName={user.name} />}
       {user.highlights.length > 0 && (
         <div className="profsec focussec">
           <h2 className="prof-sec-h">Coaching focus</h2>
@@ -123,14 +116,16 @@ export async function PublicProfileView({
     </>
   );
 
-  // Contact gets its own tab/section: the ways to reach the coach, stacked as
-  // full-width rows. Hidden entirely when the coach has no contact info.
+  // Contact gets its own tab/section: the private-session request plus the
+  // ways to reach the coach, stacked as full-width rows. Hidden only when
+  // there's nothing to show (owner preview with no contact info).
   const hasContact = !!(
     user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website
   );
-  const contact = hasContact ? (
+  const contact = hasContact || !isOwner ? (
     <>
       <h2 className="prof-sec-h sched-h">Contact</h2>
+      {!isOwner && <RequestSessionButton handle={handle} coachName={user.name} />}
       <div className="contactlist">
         {user.contactEmail && (
           <a className="proflink" href={`mailto:${user.contactEmail}`}>
@@ -250,6 +245,16 @@ export async function PublicProfileView({
           location={user.location ?? ""}
           trackSchedule={!isOwner}
           share={<ShareProfileButton name={user.name} />}
+          avail={
+            user.availability ? (
+              <div className={`availpill availpill-${user.availability}`}>
+                <span className="availdot" aria-hidden="true" />
+                {user.availability === "accepting"
+                  ? "Accepting new clients"
+                  : "Waitlist for new clients"}
+              </div>
+            ) : null
+          }
           about={about}
           contact={contact}
           schedule={schedule}

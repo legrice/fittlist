@@ -995,15 +995,16 @@ button.ps-card { cursor: pointer; }
 .proflink:active { background: #efe8d8; }
 /* Contact section: the same link pills, stacked full-width as rows */
 .contactlist { display: flex; flex-direction: column; gap: 10px; }
+.reqbtn + .contactlist { margin-top: 16px; }
 .contactlist .proflink { width: 100%; padding: 14px 16px; border-radius: 16px; }
 
 /* "Where I coach": the studios/spaces a coach is associated with */
 .profstudios { margin-top: 26px; }
 .profsec { margin-top: 26px; }
 
-/* Availability pill (public) */
+/* Availability pill (public) — sits under the title/location line */
 .availpill {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
   padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
   border: 1px solid var(--line); background: var(--cl); color: var(--ink);
 }
