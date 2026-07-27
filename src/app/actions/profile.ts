@@ -49,6 +49,7 @@ export async function updateProfile(input: {
   name: string;
   title: string;
   about: string;
+  location?: string;
   instagram: string;
   website: string;
   contactEmail?: string;
@@ -63,6 +64,7 @@ export async function updateProfile(input: {
   if (!name) return { ok: false, error: "Name can't be empty." };
   const title = input.title.trim().slice(0, 80);
   const about = input.about.trim().slice(0, 600);
+  const location = (input.location ?? "").trim().replace(/\s+/g, " ").slice(0, 80) || null;
   const instagram = normalizeInstagram(input.instagram);
   const website = normalizeWebsite(input.website);
   const contactEmail = normalizeEmail(input.contactEmail ?? "");
@@ -73,13 +75,14 @@ export async function updateProfile(input: {
     name: string;
     title: string | null;
     about: string;
+    location: string | null;
     instagram: string | null;
     website: string | null;
     contactEmail: string | null;
     phone: string | null;
     whatsapp: string | null;
     photo?: string | null;
-  } = { name, title: title || null, about, instagram, website, contactEmail, phone, whatsapp };
+  } = { name, title: title || null, about, location, instagram, website, contactEmail, phone, whatsapp };
   if (input.photo !== undefined) {
     const photo = input.photo;
     if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {

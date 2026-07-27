@@ -27,6 +27,8 @@ export const users = pgTable("users", {
   photo: text("photo"),
   // A short role/tagline shown under the name (e.g. "Strength coach").
   title: text("title"),
+  // City / area shown under the name on the public profile (e.g. "Jersey City").
+  location: text("location"),
   // Optional contact + social links surfaced as buttons on the public profile.
   instagram: text("instagram"),
   website: text("website"),

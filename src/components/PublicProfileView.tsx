@@ -188,6 +188,7 @@ export async function PublicProfileView({
           name={user.name}
           title={user.title ?? ""}
           about={user.about ?? ""}
+          location={user.location ?? ""}
           instagram={user.instagram ?? ""}
           website={user.website ?? ""}
           contactEmail={user.contactEmail ?? ""}
@@ -208,6 +209,7 @@ export async function PublicProfileView({
           initialTab={initialTab}
           name={user.name}
           title={user.title ?? ""}
+          location={user.location ?? ""}
           share={<ShareProfileButton name={user.name} />}
           about={about}
           schedule={schedule}

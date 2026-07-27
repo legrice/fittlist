@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Icon } from "@/components/Icon";
 
 // The public profile header + About/Schedule sections. Both render in one
 // continuous scroll: the name row sticks to the top, the tabs stick just
@@ -12,6 +13,7 @@ export function ProfileTabs({
   initialTab,
   name,
   title,
+  location,
   share,
   about,
   schedule,
@@ -20,6 +22,7 @@ export function ProfileTabs({
   initialTab: "about" | "schedule";
   name: string;
   title: string;
+  location: string;
   share: ReactNode;
   about: ReactNode;
   schedule: ReactNode;
@@ -99,6 +102,12 @@ export function ProfileTabs({
         {share}
       </div>
       {title.trim() && <p className="proftitle">{title}</p>}
+      {location.trim() && (
+        <p className="profloc">
+          <Icon name="place" size={15} className="profloc-ic" />
+          {location}
+        </p>
+      )}
       <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: rowH }}>
         <button
           role="tab"

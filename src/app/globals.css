@@ -5,7 +5,8 @@
 :root {
   /* Sora typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards). */
-  --cl: #f4efe1;           /* warm cream page ground */
+  --cl: #f4efe1;           /* warm cream — headers, tags, accents */
+  --paper: #faf8f2;        /* very light near-white ground for the main scroll */
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
@@ -24,7 +25,7 @@
 html, body { height: 100%; }
 body {
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif;
-  background: var(--cl);
+  background: var(--paper);
   color: var(--ink);
   min-height: 100dvh;
   overflow-x: hidden; /* clip the page-slide transition, no horizontal scrollbar */
@@ -255,11 +256,11 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .annbar-edit { color: var(--ol); flex-shrink: 0; }
 .annadd {
   display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
-  padding: 10px 14px; border-radius: 12px; border: 1.5px dashed var(--line);
-  background: transparent; color: var(--ol); font-size: 13.5px; font-weight: 700;
+  padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--cl); color: var(--ol); font-size: 13.5px; font-weight: 700;
   -webkit-tap-highlight-color: transparent;
 }
-.annadd:active { background: rgba(0, 0, 0, .03); }
+.annadd:active { background: #ece6d5; }
 .annta { resize: none; line-height: 1.45; }
 .anncount { text-align: right; font-size: 12px; color: var(--ol); margin-top: 6px; }
 .annbroadcast { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--ink); }
@@ -337,7 +338,7 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .logoutbtn:active { background: #f3ecdf; }
 
 /* public */
-.pub { background: var(--cl); min-height: 100dvh; }
+.pub { background: var(--paper); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
 .pub .pubhero .big { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1; }
@@ -720,7 +721,7 @@ button.bl-band { cursor: pointer; }
   --pg-green: #dd6a35; --pg-peach: #edddc0;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
-[data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--pg-cream); }
+[data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--paper); }
 [data-theme="poster"] .appbar { display: none; }
 [data-theme="poster"] .screen-title { color: var(--pg-cream); }
 [data-theme="poster"] .eyebrow { color: var(--pg-cream); }
@@ -975,6 +976,8 @@ button.ps-card { cursor: pointer; }
   color: var(--ink); margin: 0;
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
+.profloc { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ol); margin: 5px 0 0; }
+.profloc-ic { color: var(--si); position: relative; top: -.5px; }
 .profabout { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
 /* one horizontal, left/right-scrollable rail; bleeds to the content edges */
 .proflinks {

@@ -13,6 +13,7 @@ export function ProfileOwnerBar({
   name,
   title,
   about,
+  location,
   instagram,
   website,
   contactEmail,
@@ -23,6 +24,7 @@ export function ProfileOwnerBar({
   name: string;
   title: string;
   about: string;
+  location: string;
   instagram: string;
   website: string;
   contactEmail: string;
@@ -37,6 +39,7 @@ export function ProfileOwnerBar({
   const [pName, setPName] = useState(name);
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
+  const [pLocation, setPLocation] = useState(location);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
   const [pEmail, setPEmail] = useState(contactEmail);
@@ -76,6 +79,7 @@ export function ProfileOwnerBar({
     setPName(name);
     setPTitle(title);
     setPAbout(about);
+    setPLocation(location);
     setPInstagram(instagram);
     setPWebsite(website);
     setPEmail(contactEmail);
@@ -91,6 +95,7 @@ export function ProfileOwnerBar({
         name: pName,
         title: pTitle,
         about: pAbout,
+        location: pLocation,
         instagram: pInstagram,
         website: pWebsite,
         contactEmail: pEmail,
@@ -183,6 +188,18 @@ export function ProfileOwnerBar({
               maxLength={80}
               placeholder="Strength coach"
               onChange={(e) => setPTitle(e.target.value)}
+            />
+            <label className="flabel" htmlFor="pLocation">
+              Location <span>· city or area</span>
+            </label>
+            <input
+              id="pLocation"
+              type="text"
+              className="editinput"
+              value={pLocation}
+              maxLength={80}
+              placeholder="Jersey City, NJ"
+              onChange={(e) => setPLocation(e.target.value)}
             />
             <label className="flabel" htmlFor="pAbout">
               About <span>· a line or two about you</span>
