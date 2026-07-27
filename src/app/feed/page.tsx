@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { logout } from "@/app/actions/auth";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
+import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -92,15 +93,25 @@ export default async function FeedPage() {
         <div className="brandbar feedbar">
           <Wordmark variant="ink" beta />
         </div>
-        <div className="calbar-title">Your week</div>
+        <div className="feedhead">
+          <div className="calbar-title">Your week</div>
+          {coaches.length > 0 && (
+            <Link className="feedfind" href="/discover">
+              <Icon name="search" size={17} /> Find coaches
+            </Link>
+          )}
+        </div>
 
         {coaches.length === 0 ? (
           <div className="empty-block">
             <h2>Nobody yet</h2>
             <p>
-              Open a coach&rsquo;s FittList page and tap Follow — their schedule lands here and in
-              your weekly email.
+              Follow a coach and their schedule lands here and in your weekly email. Browse
+              who&rsquo;s teaching near you, or open a page you were sent and tap Follow.
             </p>
+            <Link className="btn" href="/discover">
+              Find coaches
+            </Link>
           </div>
         ) : (
           <FeedAgenda

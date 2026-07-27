@@ -702,10 +702,25 @@ await fan.getByRole("button", { name: "Create account" }).click();
 // cookie-set rerender redirects them straight to the feed
 await fan.locator(".calbar-title", { hasText: "Your week" }).waitFor();
 await fan.getByText("Nobody yet").waitFor();
-// one-tap follow from the coach page (no email sheet for signed-in viewers)
+
+// phase 3: the directory. Empty feed points at it; follow happens inline.
+await fan.getByRole("link", { name: "Find coaches" }).click();
+await fan.locator(".calbar-title", { hasText: "Find coaches" }).waitFor();
+await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
+if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
+  fail("directory row missing the classes-this-week line");
+// search narrows, and a miss says so
+await fan.locator(".dissearch-in").fill("zzzz");
+await fan.getByText("No coaches yet").waitFor();
+await fan.locator(".dissearch-in").fill("Matt");
+await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
+await fan.locator(".dissearch-x").click();
+// follow inline, then confirm it stuck on the coach's own page
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow").click();
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow.on").waitFor();
 await fan.goto(BASE + "/matt");
-await fan.locator(".notifybar .btn", { hasText: "Follow Matt" }).click();
 await fan.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
+console.log("discover ok (search + inline follow)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
