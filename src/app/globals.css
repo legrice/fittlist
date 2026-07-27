@@ -1782,3 +1782,7 @@ button.ps-card { cursor: pointer; }
   .sheet.adder { height: auto; max-height: 94%; border-radius: 16px; }
   .adderhead { padding-top: 20px; }
 }
+/* The class-name suggestions menu stays a white popover in dark mode, so its
+   text must stay ink-dark (the flipped tokens washed it out). */
+[data-mode="dark"] .namesug-nm { color: #191502; }
+[data-mode="dark"] .namesug .sub { color: #6b6555; }
