@@ -396,7 +396,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .modetoggle { display: flex; gap: 6px; margin-top: 8px; }
 .modetoggle button {
-  flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 16px;
+  flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 999px;
   font-size: 12.5px; font-weight: 700; color: var(--ink);
 }
 .modetoggle button.sel { background: var(--si); color: #fff; border-color: var(--si); }
@@ -494,8 +494,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .share-toggles { display: flex; gap: 8px; margin: 12px 0; }
 .chip.themechip { display: inline-flex; align-items: center; gap: 6px; }
 .chip.themechip .swd { width: 11px; height: 11px; border-radius: 16px; border: 2px solid; flex-shrink: 0; }
-.seg { display: flex; background: var(--cl); border-radius: 16px; padding: 3px; gap: 3px; flex: 1; }
-.seg button { flex: 1; padding: 9px 0; border-radius: 9px; font-weight: 700; font-size: 13px; color: var(--ol); }
+.seg { display: flex; background: var(--cl); border-radius: 999px; padding: 3px; gap: 3px; flex: 1; }
+.seg button { flex: 1; padding: 9px 0; border-radius: 999px; font-weight: 700; font-size: 13px; color: var(--ol); }
 .seg button.sel { background: var(--ink); color: #fff; }
 .storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 16px; margin: 12px auto 4px; background: var(--ink); }
 
@@ -919,7 +919,7 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
 [data-theme="poster"] .daypick button { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; }
 [data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
-[data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; }
+[data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 999px; }
 [data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
 [data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
 [data-theme="poster"] .adder-card {
