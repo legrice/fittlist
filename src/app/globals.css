@@ -1869,7 +1869,11 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px;
   color: #fff; background: var(--si);
 }
-.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si); }
+/* The ring marks a coach you've filtered to. "All" is the resting state — a
+   ring there is decoration, and nothing is dimmed to contrast it against. */
+.feedav.on .feedav-img:not(.feedav-all) {
+  box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si);
+}
 .feedav-all {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
