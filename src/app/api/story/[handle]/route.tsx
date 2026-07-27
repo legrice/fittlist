@@ -15,14 +15,15 @@ export const dynamic = "force-dynamic";
 const font = (file: string) =>
   readFileSync(join(process.cwd(), "src/assets/fonts", file));
 
-let fonts: { name: string; data: Buffer; weight: 400 | 700 }[] | null = null;
+let fonts: { name: string; data: Buffer; weight: 400 | 600 | 700 | 800 }[] | null = null;
 function loadFonts() {
   if (!fonts) {
+    // The brand typeface — Sora — across the whole share image.
     fonts = [
-      { name: "Archivo", data: font("archivo-700.ttf"), weight: 700 },
-      { name: "Archivo Black", data: font("archivo-black.ttf"), weight: 400 },
-      { name: "Space Mono", data: font("space-mono-400.ttf"), weight: 400 },
-      { name: "Space Mono", data: font("space-mono-700.ttf"), weight: 700 },
+      { name: "Sora", data: font("sora-400.ttf"), weight: 400 },
+      { name: "Sora", data: font("sora-600.ttf"), weight: 600 },
+      { name: "Sora", data: font("sora-700.ttf"), weight: 700 },
+      { name: "Sora", data: font("sora-800.ttf"), weight: 800 },
     ];
   }
   return fonts;
@@ -87,7 +88,7 @@ export async function GET(
           background: t.bg,
           color: t.fg,
           padding: "104px 86px",
-          fontFamily: "Archivo",
+          fontFamily: "Sora",
         }}
       >
         <div
@@ -104,12 +105,12 @@ export async function GET(
         <div
           style={{
             display: "flex",
-            fontFamily: "Space Mono",
-            fontSize: 37,
-            letterSpacing: 7,
+            fontWeight: 700,
+            fontSize: 34,
+            letterSpacing: 5,
             textTransform: "uppercase",
             color: t.muted,
-            marginBottom: 34,
+            marginBottom: 30,
           }}
         >
           {span === "week"
@@ -120,10 +121,10 @@ export async function GET(
           style={{
             display: "flex",
             flexDirection: "column",
-            fontFamily: "Archivo Black",
-            fontSize: 112,
-            lineHeight: 0.95,
-            letterSpacing: -2,
+            fontWeight: 800,
+            fontSize: 104,
+            lineHeight: 0.98,
+            letterSpacing: -3,
             textTransform: "uppercase",
             marginBottom: 78,
           }}
@@ -144,9 +145,10 @@ export async function GET(
                   <div
                     style={{
                       display: "flex",
-                      fontFamily: "Space Mono",
-                      fontSize: 37,
-                      letterSpacing: 6,
+                      fontWeight: 600,
+                      fontSize: 34,
+                      letterSpacing: 4,
+                      textTransform: "uppercase",
                       color: t.faint,
                       margin: "34px 0 17px",
                     }}
@@ -161,11 +163,10 @@ export async function GET(
                   >
                     <span
                       style={{
-                        fontFamily: "Space Mono",
-                        fontSize: 43,
                         fontWeight: 700,
+                        fontSize: 43,
                         color: t.time,
-                        width: 190,
+                        width: 172,
                         flexShrink: 0,
                         display: "flex",
                       }}
@@ -193,13 +194,13 @@ export async function GET(
             alignItems: "center",
           }}
         >
-          <span style={{ fontFamily: "Space Mono", fontSize: 43 }}>
+          <span style={{ fontWeight: 600, fontSize: 40 }}>
             fittlist.co/{handle}
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={62} height={55} />
-            <span style={{ fontFamily: "Archivo Black", fontSize: 52, color: t.fg, letterSpacing: -2 }}>
+            <span style={{ fontWeight: 800, fontSize: 50, color: t.fg, letterSpacing: -2 }}>
               FittList
             </span>
           </div>
