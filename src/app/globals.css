@@ -1759,5 +1759,6 @@ button.ps-card { cursor: pointer; }
 /* Segmented switchers (admin tabs, availability picker): the selected pill's
    fill follows --ink — light in dark mode — so its label flips dark. */
 [data-mode="dark"] .seg button.sel { color: #191502; }
+[data-mode="dark"] .adminseg button.on { color: #191502; }
 /* the visitor subscribe bar is pinned to poster cream — repaint */
 [data-mode="dark"] .notifybar { background: var(--card); }
