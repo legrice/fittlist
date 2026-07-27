@@ -1843,3 +1843,29 @@ button.ps-card { cursor: pointer; }
   text-align: left;
 }
 .linksfield-add[disabled] { opacity: .45; }
+
+/* ---- fan side (flag-gated) ---- */
+.roleseg { flex: none; margin: 2px 0 14px; background: var(--cl); }
+.feedbar { position: static; margin: -14px -18px 0; }
+.feedcoaches {
+  display: flex; flex-direction: column; background: var(--card); border-radius: 16px;
+  box-shadow: var(--soft-shadow); overflow: hidden; margin-top: 4px;
+}
+.feedcoach {
+  display: flex; align-items: center; gap: 13px; padding: 14px 16px; text-decoration: none;
+  color: var(--ink); border-bottom: 1px solid var(--line);
+}
+.feedcoach:last-child { border-bottom: none; }
+.feedcoach:active { background: #f3ecdf; }
+.feedcoach-av { flex-shrink: 0; width: 46px; height: 46px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
+.feedcoach-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; color: #fff;
+  background: var(--si);
+}
+.feedcoach-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.feedcoach-txt .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; }
+.feedcoach-txt .sub { font-size: 12.5px; color: var(--ol); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feedcoach-chev { color: rgba(25,21,2,.3); flex-shrink: 0; display: flex; }
+[data-mode="dark"] .feedcoach:active { background: #2c2718; }
+[data-mode="dark"] .feedcoach-chev { color: rgba(243,239,227,.32); }

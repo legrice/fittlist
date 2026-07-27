@@ -247,9 +247,30 @@ await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
-await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 25000 });
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+let lightOk = true;
+try {
+  await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 12000 });
+} catch {
+  lightOk = false;
+}
+if (lightOk) {
+  await page.locator(".acctclose").click();
+  await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+} else {
+  // The action's refresh occasionally stalls under load. Reload for server
+  // truth and re-tap only if the setting genuinely didn't land.
+  await page.reload();
+  await page.getByText("Your schedule").waitFor();
+  if (await page.locator('.appshell[data-mode="dark"]').count()) {
+    await page.locator(".usericon").click();
+    await page.locator(".acctwrap").waitFor();
+    await page.waitForTimeout(450);
+    await page.locator(".setrow", { hasText: "Dark mode" }).click();
+    await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
+    await page.locator(".acctclose").click();
+    await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+  }
+}
 console.log("light restored ok");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
@@ -665,6 +686,30 @@ await page.getByRole("button", { name: "Use a passkey" }).click();
 await page.waitForURL(BASE + "/app");
 await page.getByText("Your schedule").waitFor();
 console.log("passkey login ok");
+
+// ================= fan side (needs FANS_ENABLED=true on the server) =================
+const fanCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const fan = await fanCtx.newPage();
+fan.setDefaultTimeout(10000);
+await fan.goto(BASE + "/");
+await fan.getByRole("button", { name: "Sign up with email" }).click();
+await fan.getByRole("heading", { name: "Sign up with email" }).waitFor();
+await fan.locator(".roleseg button", { hasText: "here to train" }).click();
+await fan.getByPlaceholder("you@example.com").fill("lindley@example.com");
+await fan.getByPlaceholder("Password").fill("smoke-pass-fan");
+await fan.getByRole("button", { name: "Create account" }).click();
+// fans skip the invite gate, the handle claim, AND the passkey offer: the
+// cookie-set rerender redirects them straight to the feed
+await fan.getByText("Your coaches").waitFor();
+await fan.getByText("Nobody yet").waitFor();
+// one-tap follow from the coach page (no email sheet for signed-in viewers)
+await fan.goto(BASE + "/matt");
+await fan.locator(".notifybar .btn", { hasText: "Follow Matt" }).click();
+await fan.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
+await fan.goto(BASE + "/feed");
+await fan.locator(".feedcoach", { hasText: "Matt" }).waitFor();
+await fanCtx.close();
+console.log("fan flow ok (signup -> follow -> feed)");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

@@ -22,6 +22,7 @@ import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
 import { acceptInvite, emailInvited, INVITE_MSG } from "@/lib/invites";
+import { fansEnabled } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
@@ -42,7 +43,8 @@ async function clientIp(): Promise<string> {
 export async function passwordAuth(
   emailRaw: string,
   password: string,
-): Promise<{ ok: boolean; needsProfile?: boolean; hasPasskey?: boolean; error?: string }> {
+  asFan = false,
+): Promise<{ ok: boolean; needsProfile?: boolean; hasPasskey?: boolean; fan?: boolean; error?: string }> {
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   if (!password) return { ok: false, error: "Enter your password." };
@@ -51,15 +53,21 @@ export async function passwordAuth(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
 
   if (!user) {
-    // No account yet: treat this as sign-up. Gate on the invite list first.
-    if (!(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
+    // No account yet: treat this as sign-up.
+    // Fans (when the fan side is enabled) skip the invite gate — the beta gate
+    // protects coach handles, not demand.
+    const fan = asFan && fansEnabled();
+    if (!fan && !(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
     const problem = passwordProblem(password);
     if (problem) return { ok: false, error: problem };
     const passwordHash = await hashPassword(password);
-    const [created] = await db.insert(schema.users).values({ email, passwordHash }).returning();
-    await acceptInvite(email, created.id);
+    const [created] = await db
+      .insert(schema.users)
+      .values({ email, passwordHash, kind: fan ? "fan" : "coach" })
+      .returning();
+    if (!fan) await acceptInvite(email, created.id);
     await createSession(created.id);
-    return { ok: true, needsProfile: true, hasPasskey: false };
+    return { ok: true, needsProfile: !fan, hasPasskey: false, fan };
   }
   if (!user.passwordHash) {
     return {
@@ -75,7 +83,12 @@ export async function passwordAuth(
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
     .where(eq(schema.credentials.userId, user.id));
-  return { ok: true, needsProfile: !user.handle, hasPasskey: passkeys.length > 0 };
+  return {
+    ok: true,
+    needsProfile: user.kind !== "fan" && !user.handle,
+    hasPasskey: passkeys.length > 0,
+    fan: user.kind === "fan",
+  };
 }
 
 // Sensitive account changes re-authenticate with the current password when the
@@ -191,7 +204,7 @@ export async function requestMagicLink(
 // token; otherwise creates the session and reports what to do next.
 export async function consumeMagicToken(
   token: string,
-): Promise<{ needsProfile: boolean; via: string | null } | null> {
+): Promise<{ needsProfile: boolean; fan: boolean; via: string | null } | null> {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const db = await getDb();
   const [row] = await db
@@ -221,7 +234,7 @@ export async function consumeMagicToken(
     await acceptInvite(row.email, user.id);
   }
   await createSession(user.id);
-  return { needsProfile: !user.handle, via: row.via };
+  return { needsProfile: user.kind !== "fan" && !user.handle, fan: user.kind === "fan", via: row.via };
 }
 
 // ---- passkeys (WebAuthn): enroll while logged in, then sign in with biometrics
@@ -300,7 +313,7 @@ export async function beginPasskeyLogin(): Promise<{ options: PublicKeyCredentia
 
 export async function finishPasskeyLogin(
   response: AuthenticationResponseJSON,
-): Promise<{ ok: boolean; needsProfile?: boolean; error?: string }> {
+): Promise<{ ok: boolean; needsProfile?: boolean; fan?: boolean; error?: string }> {
   const challenge = await takeChallenge();
   if (!challenge) return { ok: false, error: "That took too long. Try again." };
   const db = await getDb();
@@ -334,7 +347,7 @@ export async function finishPasskeyLogin(
     .where(eq(schema.credentials.id, cred.id));
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, cred.userId));
   await createSession(user.id);
-  return { ok: true, needsProfile: !user.handle };
+  return { ok: true, needsProfile: user.kind !== "fan" && !user.handle, fan: user.kind === "fan" };
 }
 
 export async function claimProfile(

@@ -14,6 +14,9 @@ export async function GET(req: Request) {
   if (!result) {
     return NextResponse.redirect(`${origin}/?expired=1`);
   }
+  if (result.fan) {
+    return NextResponse.redirect(`${origin}/feed`);
+  }
   if (result.needsProfile) {
     const q = result.via ? `?via=${encodeURIComponent(result.via)}` : "";
     return NextResponse.redirect(`${origin}/${q}`);

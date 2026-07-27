@@ -1,6 +1,8 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
+import { fansEnabled } from "@/lib/flags";
+import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
@@ -29,6 +31,31 @@ export async function PublicProfileView({
 }) {
   const handle = user.handle!;
   const db = await getDb();
+
+  // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
+  // the subscribe bar instead of the email sheet.
+  let account: { following: boolean } | null = null;
+  if (fansEnabled() && !isOwner) {
+    const viewerId = await getSessionUserId();
+    if (viewerId) {
+      const [viewer] = await db
+        .select({ email: schema.users.email })
+        .from(schema.users)
+        .where(eq(schema.users.id, viewerId));
+      if (viewer) {
+        const [row] = await db
+          .select({ optedOutAt: schema.subscribers.optedOutAt })
+          .from(schema.subscribers)
+          .where(
+            and(
+              eq(schema.subscribers.trainerUserId, user.id),
+              eq(schema.subscribers.email, viewer.email),
+            ),
+          );
+        account = { following: !!row && !row.optedOutAt };
+      }
+    }
+  }
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
   ).filter((c) => c.isPublic); // private client sessions never appear publicly
@@ -279,7 +306,7 @@ export async function PublicProfileView({
       </div>
       {/* The subscribe bar is for visitors; the owner previewing their own page
           never sees it. */}
-      {!isOwner && <NotifyCta trainerName={user.name} handle={handle} />}
+      {!isOwner && <NotifyCta trainerName={user.name} handle={handle} account={account} />}
     </div>
   );
 }

@@ -41,16 +41,20 @@ export function AuthFlow({
   via = null,
   providers = { google: false, apple: false },
   inviteOnly = false,
+  fans = false,
 }: {
   startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
+  fans?: boolean;
 }) {
   const router = useRouter();
   const search = useSearchParams();
   const [stage, setStage] = useState<Stage>(startStage === "claim" ? "claim" : "landing");
   const [sheet, setSheet] = useState<SheetMode | null>(null);
+  // Fan side (flag-gated): who's signing up — a coach or someone following one.
+  const [role, setRole] = useState<"coach" | "fan">("coach");
   const [bio, setBio] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,8 +86,10 @@ export function AuthFlow({
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
 
-  const proceed = (needsProfile: boolean) => {
-    if (needsProfile) setStage("claim");
+  const pendingFan = useRef(false);
+  const proceed = (needsProfile: boolean, fan = false) => {
+    if (fan) router.push("/feed");
+    else if (needsProfile) setStage("claim");
     else router.push("/app");
   };
 
@@ -91,16 +97,19 @@ export function AuthFlow({
     if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
-      const res = await passwordAuth(email, password);
+      const res = await passwordAuth(email, password, fans && sheet === "signup" && role === "fan");
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
       }
       setSheet(null);
       pendingProfile.current = !!res.needsProfile;
-      // Offer to add a passkey right after signing in with a password.
-      if (passkeyable && !res.hasPasskey) setBio(true);
-      else proceed(!!res.needsProfile);
+      pendingFan.current = !!res.fan;
+      // Offer to add a passkey right after signing in with a password. Fans
+      // skip the offer: the cookie-set rerender of "/" already redirects them
+      // to /feed, which would unmount the prompt mid-display anyway.
+      if (!res.fan && passkeyable && !res.hasPasskey) setBio(true);
+      else proceed(!!res.needsProfile, !!res.fan);
     });
   };
 
@@ -131,7 +140,7 @@ export function AuthFlow({
         /* user cancelled or it failed — either way, continue */
       }
       setBio(false);
-      proceed(pendingProfile.current);
+      proceed(pendingProfile.current, pendingFan.current);
     });
   };
 
@@ -142,7 +151,7 @@ export function AuthFlow({
         const { options } = await beginPasskeyLogin();
         const response = await startAuthentication({ optionsJSON: options });
         const res = await finishPasskeyLogin(response);
-        if (res.ok) proceed(!!res.needsProfile);
+        if (res.ok) proceed(!!res.needsProfile, !!res.fan);
         else setError(res.error ?? "That didn't work.");
       } catch (err) {
         const nm = (err as Error)?.name;
@@ -297,11 +306,23 @@ export function AuthFlow({
               <Icon name="close" size={16} />
             </button>
             <h2>{sheet === "signup" ? "Sign up with email" : "Log in"}</h2>
+            {fans && sheet === "signup" && (
+              <div className="seg roleseg">
+                <button className={role === "coach" ? "sel" : ""} onClick={() => setRole("coach")}>
+                  I coach classes
+                </button>
+                <button className={role === "fan" ? "sel" : ""} onClick={() => setRole("fan")}>
+                  I&rsquo;m here to train
+                </button>
+              </div>
+            )}
             <p className="lead">
               {sheet === "signup"
-                ? inviteOnly
-                  ? "Invite-only beta. Use the email you were invited with."
-                  : "Pick any password and you're in."
+                ? fans && role === "fan"
+                  ? "Follow your coaches and see all their schedules in one place."
+                  : inviteOnly
+                    ? "Invite-only beta. Use the email you were invited with."
+                    : "Pick any password and you're in."
                 : "Welcome back — enter your email and password."}
             </p>
             <input
@@ -348,7 +369,7 @@ export function AuthFlow({
 
       {/* biometric enrollment prompt after a password sign-in */}
       {bio && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) { setBio(false); proceed(pendingProfile.current); } }}>
+        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) { setBio(false); proceed(pendingProfile.current, pendingFan.current); } }}>
           <div className="sheet">
             <div className="bioicon"><Icon name="fingerprint" size={30} /></div>
             <h2>Sign in faster next time?</h2>
@@ -363,7 +384,7 @@ export function AuthFlow({
                 className="btn ghost"
                 style={{ marginTop: 8 }}
                 disabled={pending}
-                onClick={() => { setBio(false); proceed(pendingProfile.current); }}
+                onClick={() => { setBio(false); proceed(pendingProfile.current, pendingFan.current); }}
               >
                 Not now
               </button>

@@ -72,3 +72,69 @@ export async function unsubscribeEmail(
     );
   return { ok: true };
 }
+
+// ---- account-based follows (the fan side). Same subscribers table, same
+// digest pipeline — the row just carries the follower's userId.
+
+export async function followTrainer(handle: string): Promise<{ ok: boolean; error?: string }> {
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Log in first." };
+  const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!trainer) return { ok: false, error: "Page not found." };
+  if (trainer.id === userId) return { ok: false, error: "That's your own page." };
+
+  const [existing] = await db
+    .select()
+    .from(schema.subscribers)
+    .where(
+      and(eq(schema.subscribers.trainerUserId, trainer.id), eq(schema.subscribers.email, me.email)),
+    );
+  const isNew = !existing || !!existing.optedOutAt;
+  const [row] = await db
+    .insert(schema.subscribers)
+    .values({ trainerUserId: trainer.id, email: me.email, userId })
+    .onConflictDoUpdate({
+      target: [schema.subscribers.trainerUserId, schema.subscribers.email],
+      set: { optedOutAt: null, userId },
+    })
+    .returning();
+
+  if (isNew) {
+    try {
+      await sendWelcome(trainer, row);
+    } catch (err) {
+      console.error("welcome email failed", err);
+    }
+    try {
+      await addNotification(trainer.id, {
+        type: "follow",
+        title: "New follower",
+        body: `${me.name.trim() || me.email} followed your schedule`,
+      });
+    } catch (err) {
+      console.error("follow notification failed", err);
+    }
+  }
+  return { ok: true };
+}
+
+export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; error?: string }> {
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!me || !trainer) return { ok: false, error: "Page not found." };
+  await db
+    .update(schema.subscribers)
+    .set({ optedOutAt: new Date() })
+    .where(
+      and(eq(schema.subscribers.trainerUserId, trainer.id), eq(schema.subscribers.email, me.email)),
+    );
+  return { ok: true };
+}

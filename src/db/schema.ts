@@ -16,6 +16,9 @@ export type BookingLink = { label: string; url: string };
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // "coach" (default) or "fan" — one identity system, two hats. A fan becomes
+  // a coach by claiming a handle; a coach can follow like any fan.
+  kind: text("kind").notNull().default("coach"),
   email: text("email").notNull().unique(),
   // scrypt password hash ("salt:hash"). Null for accounts that only ever used
   // a magic link or a passkey, which stay fully password-less.
@@ -235,6 +238,9 @@ export const subscribers = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     trainerUserId: uuid("trainer_user_id").notNull().references(() => users.id),
     email: text("email").notNull(),
+    // Set when the follow came from a signed-in account (the fan side); null
+    // for plain email subscribers. Same table, one digest pipeline.
+    userId: uuid("user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
   },

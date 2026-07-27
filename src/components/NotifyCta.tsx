@@ -1,24 +1,61 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { subscribe, unsubscribeEmail } from "@/app/actions/subscribe";
+import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
 // Rendered once inside the public hero. The hero button shows on desktop
 // (.heronotify) and the fixed bottom bar on mobile (.notifybar) - one
 // instance, shared state, both fixed elements escape the hero's layout.
-export function NotifyCta({ trainerName, handle }: { trainerName: string; handle: string }) {
+export function NotifyCta({
+  trainerName,
+  handle,
+  account = null,
+}: {
+  trainerName: string;
+  handle: string;
+  // Signed-in viewer (fan side): one-tap follow instead of the email sheet.
+  account?: { following: boolean } | null;
+}) {
   const [open, setOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [following, setFollowing] = useState(account?.following ?? false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
   const firstName = trainerName.trim().split(/\s+/)[0] || trainerName;
-  const label = subscribed ? "You're on the list ✓" : "Subscribe";
+  const label = account
+    ? following
+      ? "Following ✓"
+      : `Follow ${firstName}`
+    : subscribed
+      ? "You're on the list ✓"
+      : "Subscribe";
+  const toggleFollow = () => {
+    startTransition(async () => {
+      if (following) {
+        const res = await unfollowTrainer(handle);
+        if (res.ok) {
+          setFollowing(false);
+          toast(`Unfollowed ${firstName}`);
+        } else toast(res.error ?? "Something went wrong");
+      } else {
+        const res = await followTrainer(handle);
+        if (res.ok) {
+          setFollowing(true);
+          toast(`You're following ${firstName}`);
+        } else toast(res.error ?? "Something went wrong");
+      }
+    });
+  };
   const onCta = () => {
+    if (account) {
+      toggleFollow();
+      return;
+    }
     setError("");
     setOpen(true);
   };
