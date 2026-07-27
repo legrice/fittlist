@@ -1583,7 +1583,8 @@ button.ps-card { cursor: pointer; }
    ========================================================================== */
 [data-mode="dark"] .appshell,
 [data-mode="dark"] .screen,
-[data-mode="dark"] .chatscreen {
+[data-mode="dark"] .chatscreen,
+[data-mode="dark"] .sheet {
   --paper: #14120d;
   --card: #211c13;
   --ink: #f3efe3;
@@ -1646,3 +1647,33 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .ps-card { background: var(--card); color: var(--ink); border-color: var(--line); }
 /* keep the QR frame white so the code always scans */
 [data-mode="dark"] .qrframe { background: #fff; }
+/* Bottom sheets: the poster skin pins the sheet to cream and the adder's
+   cards/controls to white — repaint them like the light design (dark ground,
+   slightly-lifted cards, bordered inputs). */
+[data-mode="dark"] .sheet { background: var(--paper); color: var(--ink); }
+[data-mode="dark"] .adder-card,
+[data-mode="dark"] .stat,
+[data-mode="dark"] .rowcta {
+  background: var(--card); color: var(--ink);
+}
+[data-mode="dark"] .stat .l, [data-mode="dark"] .stat .d,
+[data-mode="dark"] .rowcta .s { color: var(--ol); }
+[data-mode="dark"] .adder input[type=text],
+[data-mode="dark"] .adder input[type=url],
+[data-mode="dark"] .searchbox input,
+[data-mode="dark"] .linkrow input,
+[data-mode="dark"] .linkrow select,
+[data-mode="dark"] .chip,
+[data-mode="dark"] .daypick button,
+[data-mode="dark"] .modetoggle button,
+[data-mode="dark"] .studio-sel,
+[data-mode="dark"] .abouttext,
+[data-mode="dark"] .sheetclose {
+  background: var(--card); color: var(--ink); border-color: var(--line);
+}
+[data-mode="dark"] .sheetclose:active { background: #2c2718; }
+/* Default buttons invert (bg follows --ink, now light) — flip their text dark.
+   Orange CTAs keep white text. */
+[data-mode="dark"] .btn { color: #191502; }
+[data-mode="dark"] .btn.si { color: #fff; }
+[data-mode="dark"] .btn.ghost { color: var(--ink); }
