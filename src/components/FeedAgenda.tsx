@@ -151,7 +151,11 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                     key={`${d.iso}-${i.classId}`}
                     className={`ps-event feedrow${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
                   >
-                    <span className="ps-accent" aria-hidden="true" />
+                    <span
+                      className="ps-accent"
+                      style={{ background: i.coachColor }}
+                      aria-hidden="true"
+                    />
                     <Link className="feedrow-main" href={`/${i.handle}/${i.classId}`}>
                       <span className="ps-ebody">
                         <span className="ps-enm">{i.name}</span>

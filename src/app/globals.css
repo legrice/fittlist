@@ -138,7 +138,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob input.code { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 700; }
 .ob input::placeholder { color: #b3ac97; }
 .ob input:focus { outline: none; border-color: var(--si); }
-.ob .btn { background: var(--si); color: #fff; box-shadow: var(--soft-shadow); }
+.ob .btn { background: var(--ink); color: var(--paper); box-shadow: var(--soft-shadow); }
 .ob .microcopy {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; letter-spacing: .07em;
   color: var(--ol); margin-top: 14px; text-align: center;
@@ -194,7 +194,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wizdots { display: flex; gap: 7px; }
 .wizdot { width: 22px; height: 5px; border-radius: 999px; background: var(--line); transition: background .2s; }
 .wizdot.done { background: var(--sa); }
-.wizdot.on { background: var(--si); }
+.wizdot.on { background: var(--ink); }
 .wizskip { font-size: 13.5px; font-weight: 600; color: var(--ol); }
 .wizskip:active { color: var(--ink); }
 .wiz h1 {
@@ -233,7 +233,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center;
   color: #fff;
 }
-.wizstudio.on .wizstudio-tick { background: var(--si); border-color: var(--si); }
+.wizstudio.on .wizstudio-tick { background: var(--ink); border-color: var(--ink); }
 .wizempty { font-size: 13.5px; color: var(--ol); padding: 14px 4px; }
 .wizaddnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 4px; display: inline-block; }
 .wizadd { margin-top: 14px; }
@@ -283,7 +283,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .btn:active { transform: scale(.985); }
 .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
-.btn.si { background: var(--si); }
+.btn.si { background: var(--ink); color: var(--paper); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
@@ -408,13 +408,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 999px;
   font-size: 12.5px; font-weight: 700; color: var(--ink);
 }
-.modetoggle button.sel { background: var(--si); color: #fff; border-color: var(--si); }
+.modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .daypick { display: flex; gap: 5px; }
 .daypick button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
 }
-.daypick button.sel { background: var(--si); color: #fff; border-color: var(--si); }
+.daypick button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .timegrid { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .timegrid .chip { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; }
 .timegrid input[type=time] {
@@ -514,7 +514,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .dangerzone .keep { display: block; margin: 12px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 
 .fab {
-  position: fixed; right: 18px; z-index: 20; background: var(--si); color: #fff;
+  position: fixed; right: 18px; z-index: 20; background: var(--ink); color: var(--paper);
   /* no bottom nav anymore - sit near the bottom, clearing the home indicator */
   bottom: calc(22px + env(safe-area-inset-bottom));
   width: 64px; height: 64px; padding: 0; border-radius: 999px;
@@ -874,7 +874,7 @@ button.ps-card { cursor: pointer; }
 
 /* fab + tab bar */
 [data-theme="poster"] .fab {
-  background: var(--pg-day); color: #fff; border: none; border-radius: 999px;
+  background: var(--ink); color: var(--paper); border: none; border-radius: 999px;
 }
 [data-theme="poster"] .tabbar {
   background: var(--pg-ground); border-top: none; gap: 12px;
@@ -910,7 +910,7 @@ button.ps-card { cursor: pointer; }
 
 /* green primary action everywhere - borderless, soft shadow */
 [data-theme="poster"] .btn.si {
-  background: var(--pg-green); color: #fff; border: none; box-shadow: var(--soft-shadow);
+  background: var(--ink); color: var(--paper); border: none; box-shadow: var(--soft-shadow);
 }
 
 /* the adder sheet + controls - clean, like the calendar page */
@@ -927,9 +927,9 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .chip { background: #fff; border: 1.5px solid var(--line); }
 [data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
 [data-theme="poster"] .daypick button { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; }
-[data-theme="poster"] .daypick button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
+[data-theme="poster"] .daypick button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 [data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 999px; }
-[data-theme="poster"] .modetoggle button.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
+[data-theme="poster"] .modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 [data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
 [data-theme="poster"] .adder-card {
   background: #fff; border: none; border-radius: 16px;
@@ -1448,7 +1448,7 @@ button.ps-card { cursor: pointer; }
   padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .notifybar .btn.si {
-  background: var(--pg-green); color: #fff; border: none; box-shadow: var(--soft-shadow);
+  background: var(--ink); color: var(--paper); border: none; box-shadow: var(--soft-shadow);
 }
 @media (min-width: 940px) {
   [data-theme="poster"].pub { flex-direction: column; }
@@ -1464,7 +1464,7 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .empty-block p { color: var(--ink); }
 
 /* onboarding: green primary action to match the poster app it leads into */
-.ob .btn { background: var(--si); color: #fff; }
+.ob .btn { background: var(--ink); color: var(--paper); }
 
 /* ===========================================================
    Motion: page transitions + loading skeletons
@@ -1617,7 +1617,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--sa);
   position: relative; transition: background .18s ease;
 }
-.switch.on { background: var(--si); }
+.switch.on { background: var(--ink); }
 .switch-knob {
   position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px;
   background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .18s ease;
@@ -1726,7 +1726,7 @@ button.ps-card { cursor: pointer; }
 /* Default buttons invert (bg follows --ink, now light) — flip their text dark.
    Orange CTAs keep white text. */
 [data-mode="dark"] .btn { color: #191502; }
-[data-mode="dark"] .btn.si { color: #fff; }
+[data-mode="dark"] .btn.si { color: #191502; }
 [data-mode="dark"] .btn.ghost { color: var(--ink); }
 /* Log out was a white pill whose light ink text vanished — dark pill instead. */
 [data-mode="dark"] .logoutbtn { background: var(--card); color: var(--ink); border-color: var(--line); }
@@ -1869,7 +1869,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px;
   color: #fff; background: var(--si);
 }
-.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si); }
+.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--ink); }
 .feedav-all {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
@@ -1946,7 +1946,7 @@ button.ps-card { cursor: pointer; }
   background: var(--card); color: var(--ol); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
 }
-.goingbtn.on { background: var(--si); border-color: var(--si); color: #fff; }
+.goingbtn.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .goingbar { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
 .goingfilter, .goingshare {
   display: flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 999px;
@@ -1954,7 +1954,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
 }
 .goingfilter.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.goingshare { margin-left: auto; background: var(--si); border-color: var(--si); color: #fff; }
+.goingshare { margin-left: auto; background: var(--ink); border-color: var(--ink); color: var(--paper); }
 [data-mode="dark"] .goingfilter.on { color: #191502; }
 
 /* ---- discover (the directory) ---- */
@@ -2017,7 +2017,7 @@ button.ps-card { cursor: pointer; }
 .disrow-txt .wk { font-size: 12px; font-weight: 600; color: var(--si); }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
-  background: var(--si); color: #fff;
+  background: var(--ink); color: var(--paper);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
 }
 .disfollow.on { background: var(--cl); color: var(--ink); }

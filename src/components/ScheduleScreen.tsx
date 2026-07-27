@@ -106,6 +106,8 @@ export function ScheduleScreen({
   // participant. Two roles, one timeline — so a 6:00 you teach and a 6:15 you
   // wanted to attend collide visibly.
   const [showAttending, setShowAttending] = useState(true);
+  // The coach's own colour marks the classes they teach.
+  const myAccent = avatarColor({ id: userId, avatarColor: myColor });
   const [toastMsg, toastOn, toast] = useToast();
 
   useEffect(() => {
@@ -341,7 +343,11 @@ export function ScheduleScreen({
                             className="ps-event ps-event-going"
                             href={`/${a.coachHandle}/${a.classId}`}
                           >
-                            <span className="ps-accent" aria-hidden="true" />
+                            <span
+                              className="ps-accent"
+                              style={{ background: a.coachColor }}
+                              aria-hidden="true"
+                            />
                             <span className="ps-ebody">
                               <span className="ps-enm">
                                 {a.name}
@@ -387,7 +393,11 @@ export function ScheduleScreen({
                           data-cid={c.id}
                           onClick={() => edit(c)}
                         >
-                          <span className="ps-accent" aria-hidden="true" />
+                          <span
+                            className="ps-accent"
+                            style={c.isPublic ? { background: myAccent } : undefined}
+                            aria-hidden="true"
+                          />
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}

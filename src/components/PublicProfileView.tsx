@@ -233,7 +233,11 @@ export async function PublicProfileView({
                 const start = clockParts(c.startTime);
                 return (
                   <Link key={`${d.iso}-${c.id}`} className="ps-event" data-cid={c.id} href={`/${handle}/${c.id}`}>
-                    <span className="ps-accent" aria-hidden="true" />
+                    <span
+                      className="ps-accent"
+                      style={{ background: avatarColor(user) }}
+                      aria-hidden="true"
+                    />
                     <span className="ps-ebody">
                       <span className="ps-enm">{c.name}</span>
                       {where && (
