@@ -817,6 +817,41 @@ button.bl-band { cursor: pointer; }
 }
 .ps-echev { color: rgba(17, 17, 17, .32); display: flex; align-items: center; justify-content: center; }
 
+/* Agenda list layout (coach's own schedule) - Apple/Fantastical style: hairline
+   rows, a left accent bar, title + place on the left, start/end times stacked on
+   the right, under a bold "Weekday - Mon D" heading. Scoped to .ps-agenda so the
+   public page keeps its cards. */
+.ps-agenda.ps-week { gap: 30px; }
+.ps-agenda .ps-daygroup { gap: 0; }
+.ps-agenda .ps-daycol {
+  font-weight: 700; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+}
+.ps-agenda .ps-daycards { display: block; gap: 0; }
+.ps-agenda .ps-event {
+  grid-template-columns: 3px 1fr auto; gap: 0 13px; align-items: center;
+  background: transparent; border-radius: 0; box-shadow: none; padding: 14px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.ps-agenda .ps-event:hover { box-shadow: none; }
+.ps-agenda .ps-event:active { background: #f3ecdf; }
+.ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
+.ps-agenda .ps-ebody { gap: 3px; }
+.ps-agenda .ps-enm { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 1.2; }
+.ps-agenda .ps-estudio {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
+  font-size: 13.5px; font-weight: 500; color: var(--ol); min-width: 0;
+}
+.ps-agenda .ps-estudio-ic { color: var(--ol); flex-shrink: 0; }
+.ps-agenda .ps-etimecol { flex-direction: column; align-items: flex-end; gap: 1px; }
+.ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
+.ps-agenda .ps-eend { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px; color: var(--ol); white-space: nowrap; }
+.ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
+/* Private sessions: no card fill, just a muted accent bar + the Private badge. */
+.ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
+.ps-agenda .ps-event-private:active { background: #f3ecdf; }
+.ps-agenda .ps-event-private .ps-accent { background: var(--sa); }
+
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
   background: var(--pg-cream); color: #191502; border: 2.5px solid #191502; border-radius: 16px;

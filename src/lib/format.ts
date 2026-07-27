@@ -131,6 +131,19 @@ export function fmtTime(v: string): string {
   return `${h}:${String(m).padStart(2, "0")}${ap}`;
 }
 
+/** "17:00" -> { hm: "5:00", ap: "PM" } for the agenda's two-line clock. */
+export function clockParts(v: string): { hm: string; ap: string } {
+  const [hRaw, m] = v.split(":").map(Number);
+  const ap = hRaw >= 12 ? "PM" : "AM";
+  const h = hRaw % 12 || 12;
+  return { hm: `${h}:${String(m).padStart(2, "0")}`, ap };
+}
+
+/** End-of-class clock from a start "HH:MM" + duration in minutes. */
+export function endClock(startHHMM: string, durationMin: number): { hm: string; ap: string } {
+  return clockParts(minutesToTime(timeToMinutes(startHHMM) + durationMin));
+}
+
 export function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "") || "you";
 }
@@ -197,6 +210,14 @@ export function fmtDateLong(iso: string): string {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+/** "2026-07-28" -> "Tuesday – Jul 28", UTC - the agenda day heading. */
+export function fmtDayHeader(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const weekday = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  return `${weekday} – ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

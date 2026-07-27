@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
+import { clockParts, endClock, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AnnouncementEditor } from "@/components/AnnouncementEditor";
@@ -169,7 +169,7 @@ export function ScheduleScreen({
         .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) {
-        out.push({ iso, label: fmtDateLong(iso), items }); // "Mon, July 20"
+        out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday – Jul 20"
       }
     }
     return out;
@@ -236,13 +236,16 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
-            <div className="ps-week">
+            <div className="ps-week ps-agenda">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
                   <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
                     {d.items.map((c) => {
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
+                      const where = studio ? studio.name : c.location;
+                      const start = clockParts(c.startTime);
+                      const end = endClock(c.startTime, c.durationMin);
                       return (
                         <button
                           key={`${d.iso}-${c.id}`}
@@ -250,23 +253,28 @@ export function ScheduleScreen({
                           data-cid={c.id}
                           onClick={() => edit(c)}
                         >
-                          <span className="ps-etimecol">
-                            <span className="ps-etime">{fmtTime(c.startTime)}</span>
-                            <span className="ps-edur">{c.durationMin} min</span>
-                          </span>
+                          <span className="ps-accent" aria-hidden="true" />
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}
                               {!c.isPublic && <span className="ps-private">Private</span>}
                             </span>
-                            {studio ? (
-                              <span className="ps-estudio">{studio.name}</span>
-                            ) : (
-                              c.location && <span className="ps-estudio">{c.location}</span>
+                            {where && (
+                              <span className="ps-estudio">
+                                <Icon name="place" size={13} className="ps-estudio-ic" />
+                                {where}
+                              </span>
                             )}
                           </span>
-                          <span className="ps-echev" aria-hidden="true">
-                            <Icon name="chevron_right" size={20} />
+                          <span className="ps-etimecol">
+                            <span className="ps-etime">
+                              {start.hm}
+                              <span className="ps-ap">{start.ap}</span>
+                            </span>
+                            <span className="ps-eend">
+                              {end.hm}
+                              <span className="ps-ap">{end.ap}</span>
+                            </span>
                           </span>
                         </button>
                       );
