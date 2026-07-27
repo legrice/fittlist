@@ -106,21 +106,33 @@ export function ShareWeekSheet({
             <button className={span === "day" ? "sel" : ""} onClick={() => setSpan("day")}>Today</button>
           </div>
         </div>
-        <div className="chips" style={{ justifyContent: "center" }}>
-          {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(([id, t]) => (
-            <button key={id} className={`chip themechip${themeId === id ? " sel" : ""}`} onClick={() => setThemeId(id)}>
-              <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
-              {t.label}
-            </button>
-          ))}
-        </div>
         <div className="storycustom">
+          <label className="flabel" htmlFor="stTheme">
+            Style <span>· colours for your image</span>
+          </label>
+          <select
+            id="stTheme"
+            className="typeselect"
+            value={themeId}
+            onChange={(e) => setThemeId(e.target.value as StoryThemeId)}
+          >
+            {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
+              ([id, t]) => (
+                <option key={id} value={id}>
+                  {t.label}
+                </option>
+              ),
+            )}
+          </select>
+          <label className="flabel" htmlFor="stHeadline">
+            Headline <span>· the big text at the top</span>
+          </label>
           <input
+            id="stHeadline"
             className="editinput"
             type="text"
             maxLength={28}
             placeholder="Train with me."
-            aria-label="Headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             onBlur={applyHeadline}

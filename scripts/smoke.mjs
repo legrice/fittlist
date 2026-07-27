@@ -516,9 +516,9 @@ const dl = await page.locator("a", { hasText: "Save image" }).getAttribute("down
 if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
 await expect(page.locator(".btn.ghost", { hasText: "Share image" }).isVisible(), "share image button present");
 
-// story colour picker: 4 chips, selecting swaps the preview + download URLs
-if ((await page.locator(".themechip").count()) !== 8) fail("expected 8 story colour chips");
-await page.locator(".themechip", { hasText: "Moss" }).click();
+// story style dropdown: 8 curated looks, selecting swaps the preview URL
+if ((await page.locator("#stTheme option").count()) !== 8) fail("expected 8 story styles");
+await page.locator("#stTheme").selectOption("moss");
 const themedSrc = await page.locator(".storyimg").getAttribute("src");
 if (!themedSrc.includes("theme=moss")) fail("colour chip didn't switch preview: " + themedSrc);
 for (const th of ["paper", "moss", "pop", "midnight", "sunset", "blush", "slate"]) {
@@ -526,7 +526,7 @@ for (const th of ["paper", "moss", "pop", "midnight", "sunset", "blush", "slate"
   if (r2.status() !== 200 || !(r2.headers()["content-type"] || "").includes("image/png"))
     fail(`story colour ${th} endpoint broken`);
 }
-await page.locator(".themechip", { hasText: "Ink" }).click();
+await page.locator("#stTheme").selectOption("iron");
 // custom headline: typing + blur persists and re-renders the preview
 const preHeadlineSrc = await page.locator(".storyimg").getAttribute("src");
 await page.locator(".storycustom input").fill("Lets work");
