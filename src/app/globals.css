@@ -1689,3 +1689,11 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .btn { color: #191502; }
 [data-mode="dark"] .btn.si { color: #fff; }
 [data-mode="dark"] .btn.ghost { color: var(--ink); }
+/* Log out was a white pill whose light ink text vanished — dark pill instead. */
+[data-mode="dark"] .logoutbtn { background: var(--card); color: var(--ink); border-color: var(--line); }
+[data-mode="dark"] .logoutbtn:active { background: #2c2718; }
+/* Initial-fallback avatar circles read as brand-orange chips on dark. */
+[data-mode="dark"] .usericon,
+[data-mode="dark"] .inboxrow-av,
+[data-mode="dark"] .acctavatar-empty { background: var(--si); color: #fff; }
+[data-mode="dark"] .usericon-initial { color: #fff; }
