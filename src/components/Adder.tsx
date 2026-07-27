@@ -268,14 +268,21 @@ export function Adder({
       }}
     >
       <div className="sheet adder">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
-        </button>
-
+        {stage !== "form" && (
+          <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={16} />
+          </button>
+        )}
 
         {stage === "form" && (
           <div>
-            <h2>{heading.title}</h2>
+            {/* Sticky title bar: heading + close stay pinned while the form scrolls. */}
+            <div className="adderhead">
+              <h2>{heading.title}</h2>
+              <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
+                <Icon name="close" size={16} />
+              </button>
+            </div>
 
             {/* Public (on your page) vs private (your own clients / sessions). */}
             <div className="adder-card">
