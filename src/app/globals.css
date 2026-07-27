@@ -243,15 +243,6 @@ h1.screen-title { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
-/* "Share your week" pill at the top of the coach's schedule */
-.weekshare {
-  display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
-  padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--cl); color: var(--ol); font-size: 13.5px; font-weight: 700;
-  -webkit-tap-highlight-color: transparent;
-}
-.weekshare:active { background: #ece6d5; }
-
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);
   border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;

@@ -213,7 +213,9 @@ export async function PublicProfileView({
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
-      <NotifyCta trainerName={user.name} handle={handle} />
+      {/* The subscribe bar is for visitors; the owner previewing their own page
+          never sees it. */}
+      {!isOwner && <NotifyCta trainerName={user.name} handle={handle} />}
     </div>
   );
 }
