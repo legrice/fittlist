@@ -837,7 +837,7 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-event:active { background: #f3ecdf; }
 .ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
 .ps-agenda .ps-ebody { gap: 3px; }
-.ps-agenda .ps-enm { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 1.2; }
+.ps-agenda .ps-enm { display: flex; align-items: center; gap: 8px; font-size: 18.5px; line-height: 1.2; }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
   font-size: 13.5px; font-weight: 500; color: var(--ol); min-width: 0;
