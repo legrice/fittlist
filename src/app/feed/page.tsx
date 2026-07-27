@@ -1,17 +1,19 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansEnabled } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { logout } from "@/app/actions/auth";
-import { Icon } from "@/components/Icon";
+import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
 
-// The fan home: the coaches you follow. Phase 2 adds the merged upcoming
-// schedule; Phase 3 adds discovery. Dark until FANS_ENABLED=true.
+const WINDOW_DAYS = 14; // two weeks out is plenty for "when can I train next"
+
+// The fan home: one merged agenda across every followed coach, today first.
+// Phase 3 adds discovery. Dark until FANS_ENABLED=true.
 export default async function FeedPage() {
   if (!fansEnabled()) redirect("/");
   const userId = await getSessionUserId();
@@ -25,10 +27,63 @@ export default async function FeedPage() {
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
   const trainerIds = followRows.map((r) => r.trainerUserId).filter((id) => id !== userId);
-  const coaches = trainerIds.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
-    : [];
+  const coaches = (
+    trainerIds.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
+      : []
+  ).filter((c) => !!c.handle);
   coaches.sort((a, b) => a.name.localeCompare(b.name));
+  const coachById = new Map(coaches.map((c) => [c.id, c]));
+
+  // Every followed coach's public classes, merged into one forward window.
+  const classRows = trainerIds.length
+    ? (
+        await db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerIds))
+      ).filter((c) => c.isPublic)
+    : [];
+  const studioIds = [...new Set(classRows.map((c) => c.studioId))].filter(
+    (id): id is string => !!id,
+  );
+  const studioRows = studioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+    : [];
+  const studioById = new Map(studioRows.map((s) => [s.id, s]));
+
+  const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+  const days: FeedDay[] = [];
+  for (let i = 0; i < WINDOW_DAYS; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = (d.getUTCDay() + 6) % 7;
+    const items = classRows
+      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+      .flatMap((c) => {
+        const coach = coachById.get(c.userId);
+        if (!coach?.handle) return [];
+        const s = c.studioId ? studioById.get(c.studioId) : undefined;
+        const t = clockParts(c.startTime);
+        return [
+          {
+            classId: c.id,
+            coachId: coach.id,
+            handle: coach.handle,
+            coachName: coach.name,
+            coachPhoto: coach.photo,
+            name: c.name,
+            hm: t.hm,
+            ap: t.ap,
+            durationMin: c.durationMin,
+            where: s ? s.name : c.location,
+          },
+        ];
+      });
+    if (items.length) {
+      const label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : fmtDayHeader(iso);
+      days.push({ iso, label, items });
+    }
+  }
 
   return (
     <section className="screen admin" data-mode={me.look === "dark" ? "dark" : undefined}>
@@ -47,29 +102,15 @@ export default async function FeedPage() {
             </p>
           </div>
         ) : (
-          <div className="feedcoaches">
-            {coaches.map((c) => (
-              <Link key={c.id} href={`/${c.handle}`} className="feedcoach">
-                {c.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="feedcoach-av" src={c.photo} alt="" />
-                ) : (
-                  <span className="feedcoach-av feedcoach-av-empty" aria-hidden="true">
-                    {(c.name.trim().charAt(0) || "?").toUpperCase()}
-                  </span>
-                )}
-                <span className="feedcoach-txt">
-                  <span className="nm">{c.name}</span>
-                  <span className="sub">
-                    {[c.title, c.location].filter(Boolean).join(" · ") || `fittlist.co/${c.handle}`}
-                  </span>
-                </span>
-                <span className="feedcoach-chev">
-                  <Icon name="chevron_right" size={20} />
-                </span>
-              </Link>
-            ))}
-          </div>
+          <FeedAgenda
+            coaches={coaches.map((c) => ({
+              id: c.id,
+              handle: c.handle!,
+              name: c.name,
+              photo: c.photo,
+            }))}
+            days={days}
+          />
         )}
 
         <form action={logout}>

@@ -1847,25 +1847,52 @@ button.ps-card { cursor: pointer; }
 /* ---- fan side (flag-gated) ---- */
 .roleseg { flex: none; margin: 2px 0 14px; background: var(--cl); }
 .feedbar { position: static; margin: -14px -18px 0; }
-.feedcoaches {
-  display: flex; flex-direction: column; background: var(--card); border-radius: 16px;
-  box-shadow: var(--soft-shadow); overflow: hidden; margin-top: 4px;
+/* avatar strip: every followed coach, tap to filter the agenda to one */
+.feedstrip {
+  display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  margin: 2px -18px 4px; padding: 6px 18px 14px; scrollbar-width: none;
 }
-.feedcoach {
-  display: flex; align-items: center; gap: 13px; padding: 14px 16px; text-decoration: none;
-  color: var(--ink); border-bottom: 1px solid var(--line);
+.feedstrip::-webkit-scrollbar { display: none; }
+.feedav {
+  display: flex; flex-direction: column; align-items: center; gap: 7px; flex-shrink: 0;
+  background: none; border: none; padding: 0; cursor: pointer; color: var(--ink);
+  transition: opacity .15s ease;
 }
-.feedcoach:last-child { border-bottom: none; }
-.feedcoach:active { background: #f3ecdf; }
-.feedcoach-av { flex-shrink: 0; width: 46px; height: 46px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
-.feedcoach-av-empty {
+.feedstrip.hassel .feedav:not(.on) { opacity: .45; }
+.feedav-img {
+  width: 58px; height: 58px; border-radius: 999px; object-fit: cover; background: #eae3d2;
+  display: block;
+}
+.feedav-img-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; color: #fff;
-  background: var(--si);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px;
+  color: #fff; background: var(--si);
 }
-.feedcoach-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.feedcoach-txt .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; }
-.feedcoach-txt .sub { font-size: 12.5px; color: var(--ol); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feedcoach-chev { color: rgba(25,21,2,.3); flex-shrink: 0; display: flex; }
-[data-mode="dark"] .feedcoach:active { background: #2c2718; }
-[data-mode="dark"] .feedcoach-chev { color: rgba(243,239,227,.32); }
+.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si); }
+.feedav-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12.5px;
+  max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* the "filtered to one coach" bar above the agenda */
+.feedfilterbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0 0 14px; padding: 10px 14px; background: var(--cl); border-radius: 12px;
+}
+.feedfilter-txt { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; }
+.feedfilter-link {
+  display: flex; align-items: center; gap: 1px; flex-shrink: 0; text-decoration: none;
+  font-weight: 600; font-size: 13.5px; color: var(--si);
+}
+/* coach chip on each merged-agenda row */
+.feedagenda { margin-top: 2px; }
+.ps-agenda .ps-ecoach { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ps-ecoachav {
+  flex-shrink: 0; width: 18px; height: 18px; border-radius: 999px; object-fit: cover;
+  background: #eae3d2; display: block;
+}
+.ps-ecoachav-empty {
+  display: flex; align-items: center; justify-content: center; font-size: 10px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  color: #fff; background: var(--si);
+}
+.ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

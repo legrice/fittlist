@@ -707,9 +707,19 @@ await fan.goto(BASE + "/matt");
 await fan.locator(".notifybar .btn", { hasText: "Follow Matt" }).click();
 await fan.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
 await fan.goto(BASE + "/feed");
-await fan.locator(".feedcoach", { hasText: "Matt" }).waitFor();
+// phase 2: merged agenda — avatar strip on top, chronological class rows below
+await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
+await fan.locator(".feedagenda .ps-event").first().waitFor();
+const feedRows = await fan.locator(".feedagenda .ps-event").count();
+if (feedRows < 1) fail("feed agenda has no class rows");
+// tap the avatar to filter to that coach, then clear it
+await fan.locator(".feedav", { hasText: "Matt" }).click();
+await fan.locator(".feedfilterbar", { hasText: "Classes with Matt" }).waitFor();
+await fan.locator(".feedagenda .ps-event").first().waitFor();
+await fan.locator(".feedav", { hasText: "Matt" }).click();
+await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 await fanCtx.close();
-console.log("fan flow ok (signup -> follow -> feed)");
+console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");
