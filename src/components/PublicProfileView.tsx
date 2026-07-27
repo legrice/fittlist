@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fmtDateLong, fmtTime, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -58,7 +58,7 @@ export async function PublicProfileView({
     const items = classRows
       .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-    if (items.length) days.push({ iso, label: fmtDateLong(iso), items });
+    if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
   }
 
   const about = (
@@ -144,25 +144,33 @@ export async function PublicProfileView({
         </p>
       </div>
     ) : (
-      <div className="ps-week">
+      <div className="ps-week ps-agenda">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
             <div className="ps-daycol">{d.label}</div>
             <div className="ps-daycards">
               {d.items.map((c) => {
                 const s = c.studioId ? studioById.get(c.studioId) : undefined;
+                const where = s ? s.name : c.location;
+                const start = clockParts(c.startTime);
                 return (
                   <Link key={`${d.iso}-${c.id}`} className="ps-event" data-cid={c.id} href={`/${handle}/${c.id}`}>
-                    <span className="ps-etimecol">
-                      <span className="ps-etime">{fmtTime(c.startTime)}</span>
-                      <span className="ps-edur">{c.durationMin} min</span>
-                    </span>
+                    <span className="ps-accent" aria-hidden="true" />
                     <span className="ps-ebody">
                       <span className="ps-enm">{c.name}</span>
-                      {s && <span className="ps-estudio">{s.name}</span>}
+                      {where && (
+                        <span className="ps-estudio">
+                          <Icon name="place" size={13} className="ps-estudio-ic" />
+                          {where}
+                        </span>
+                      )}
                     </span>
-                    <span className="ps-echev" aria-hidden="true">
-                      <Icon name="chevron_right" size={20} />
+                    <span className="ps-etimecol">
+                      <span className="ps-etime">
+                        {start.hm}
+                        <span className="ps-ap">{start.ap}</span>
+                      </span>
+                      <span className="ps-edur">{c.durationMin} min</span>
                     </span>
                   </Link>
                 );
