@@ -131,17 +131,12 @@ export function fmtTime(v: string): string {
   return `${h}:${String(m).padStart(2, "0")}${ap}`;
 }
 
-/** "17:00" -> { hm: "5:00", ap: "PM" } for the agenda's two-line clock. */
+/** "17:00" -> { hm: "5:00", ap: "PM" } for the agenda's stacked clock. */
 export function clockParts(v: string): { hm: string; ap: string } {
   const [hRaw, m] = v.split(":").map(Number);
   const ap = hRaw >= 12 ? "PM" : "AM";
   const h = hRaw % 12 || 12;
   return { hm: `${h}:${String(m).padStart(2, "0")}`, ap };
-}
-
-/** End-of-class clock from a start "HH:MM" + duration in minutes. */
-export function endClock(startHHMM: string, durationMin: number): { hm: string; ap: string } {
-  return clockParts(minutesToTime(timeToMinutes(startHHMM) + durationMin));
 }
 
 export function slug(s: string): string {

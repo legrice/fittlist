@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { clockParts, endClock, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AnnouncementEditor } from "@/components/AnnouncementEditor";
@@ -245,7 +245,6 @@ export function ScheduleScreen({
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       const where = studio ? studio.name : c.location;
                       const start = clockParts(c.startTime);
-                      const end = endClock(c.startTime, c.durationMin);
                       return (
                         <button
                           key={`${d.iso}-${c.id}`}
@@ -271,10 +270,7 @@ export function ScheduleScreen({
                               {start.hm}
                               <span className="ps-ap">{start.ap}</span>
                             </span>
-                            <span className="ps-eend">
-                              {end.hm}
-                              <span className="ps-ap">{end.ap}</span>
-                            </span>
+                            <span className="ps-edur">{c.durationMin} min</span>
                           </span>
                         </button>
                       );

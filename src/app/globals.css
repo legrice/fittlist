@@ -845,7 +845,7 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-estudio-ic { color: var(--ol); flex-shrink: 0; }
 .ps-agenda .ps-etimecol { flex-direction: column; align-items: flex-end; gap: 1px; }
 .ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
-.ps-agenda .ps-eend { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px; color: var(--ol); white-space: nowrap; }
+.ps-agenda .ps-edur { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
 /* Private sessions: no card fill, just a muted accent bar + the Private badge. */
 .ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
