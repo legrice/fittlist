@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
+import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 
 export type FeedCoach = {
   id: string;
@@ -22,6 +24,7 @@ export type FeedItem = {
   ap: string;
   durationMin: number;
   where: string | null;
+  going: boolean;
 };
 
 export type FeedDay = { iso: string; label: string; items: FeedItem[] };
@@ -31,11 +34,35 @@ export type FeedDay = { iso: string; label: string; items: FeedItem[] };
 // tap to focus, tap again to clear.
 export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: FeedDay[] }) {
   const [sel, setSel] = useState<string | null>(null);
+  const [share, setShare] = useState(false);
+  const [goingOnly, setGoingOnly] = useState(false);
+  // Keyed by class AND day: a weekly class is a different commitment each week.
+  const [going, setGoingMap] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(days.flatMap((d) => d.items.map((i) => [`${i.classId}|${d.iso}`, i.going]))),
+  );
+  const [, startTransition] = useTransition();
   const selCoach = sel ? coaches.find((c) => c.id === sel) : undefined;
 
   const shown = days
-    .map((d) => ({ ...d, items: sel ? d.items.filter((i) => i.coachId === sel) : d.items }))
+    .map((d) => ({
+      ...d,
+      items: d.items.filter(
+        (i) => (!sel || i.coachId === sel) && (!goingOnly || going[`${i.classId}|${d.iso}`]),
+      ),
+    }))
     .filter((d) => d.items.length > 0);
+
+  const goingCount = Object.values(going).filter(Boolean).length;
+
+  const toggleGoing = (classId: string, iso: string) => {
+    const key = `${classId}|${iso}`;
+    const next = !going[key];
+    setGoingMap((g) => ({ ...g, [key]: next })); // optimistic — the tap must land instantly
+    startTransition(async () => {
+      const res = await setGoing(classId, iso, next);
+      if (!res.ok) setGoingMap((g) => ({ ...g, [key]: !next }));
+    });
+  };
 
   const avatar = (photo: string | null, name: string, cls: string) =>
     photo ? (
@@ -86,6 +113,22 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
         </div>
       )}
 
+      {goingCount > 0 && (
+        <div className="goingbar">
+          <button
+            type="button"
+            className={`goingfilter${goingOnly ? " on" : ""}`}
+            aria-pressed={goingOnly}
+            onClick={() => setGoingOnly(!goingOnly)}
+          >
+            <Icon name="check" size={15} /> Going ({goingCount})
+          </button>
+          <button type="button" className="goingshare" onClick={() => setShare(true)}>
+            <Icon name="ios_share" size={16} /> Share my week
+          </button>
+        </div>
+      )}
+
       {shown.length === 0 ? (
         <div className="empty-block">
           <h2>Nothing coming up</h2>
@@ -102,36 +145,49 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
               <div className="ps-daycol">{d.label}</div>
               <div className="ps-daycards">
                 {d.items.map((i) => (
-                  <Link
+                  <div
                     key={`${d.iso}-${i.classId}`}
-                    className="ps-event"
-                    href={`/${i.handle}/${i.classId}`}
+                    className={`ps-event feedrow${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
                   >
                     <span className="ps-accent" aria-hidden="true" />
-                    <span className="ps-ebody">
-                      <span className="ps-enm">{i.name}</span>
-                      <span className="ps-estudio ps-ecoach">
-                        {avatar(i.coachPhoto, i.coachName, "ps-ecoachav")}
-                        <span className="ps-ecoach-txt">
-                          {i.coachName.trim().split(/\s+/)[0]}
-                          {i.where ? ` · ${i.where}` : ""}
+                    <Link className="feedrow-main" href={`/${i.handle}/${i.classId}`}>
+                      <span className="ps-ebody">
+                        <span className="ps-enm">{i.name}</span>
+                        <span className="ps-estudio ps-ecoach">
+                          {avatar(i.coachPhoto, i.coachName, "ps-ecoachav")}
+                          <span className="ps-ecoach-txt">
+                            {i.coachName.trim().split(/\s+/)[0]}
+                            {i.where ? ` · ${i.where}` : ""}
+                          </span>
                         </span>
                       </span>
-                    </span>
-                    <span className="ps-etimecol">
-                      <span className="ps-etime">
-                        {i.hm}
-                        <span className="ps-ap">{i.ap}</span>
+                      <span className="ps-etimecol">
+                        <span className="ps-etime">
+                          {i.hm}
+                          <span className="ps-ap">{i.ap}</span>
+                        </span>
+                        <span className="ps-edur">{i.durationMin} min</span>
                       </span>
-                      <span className="ps-edur">{i.durationMin} min</span>
-                    </span>
-                  </Link>
+                    </Link>
+                    <button
+                      type="button"
+                      className={`goingbtn${going[`${i.classId}|${d.iso}`] ? " on" : ""}`}
+                      aria-pressed={!!going[`${i.classId}|${d.iso}`]}
+                      onClick={() => toggleGoing(i.classId, d.iso)}
+                      title="A personal note — not a booking"
+                    >
+                      <Icon name={going[`${i.classId}|${d.iso}`] ? "check" : "add"} size={16} />
+                      {going[`${i.classId}|${d.iso}`] ? "Going" : "I'm going"}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
     </>
   );
 }

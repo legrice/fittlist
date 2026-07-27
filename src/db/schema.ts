@@ -253,6 +253,23 @@ export const subscribers = pgTable(
   (t) => [uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email)],
 );
 
+// "I'm going" — a member marking a class they intend to attend. Deliberately
+// NOT a booking: most classes are reserved through the studio, so this is a
+// personal note that drives their week and their share image, nothing more.
+export const attendances = pgTable(
+  "attendances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    classId: uuid("class_id").notNull().references(() => classes.id),
+    // The specific day they're going. Classes are recurring templates, so
+    // without a date "going" would mean every future Tuesday forever.
+    occurrenceDate: date("occurrence_date").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],
+);
+
 // A coach's activity feed. Today it's just "someone followed you"; the type +
 // jsonb data shape leaves room for more kinds later without new columns.
 export const notifications = pgTable(

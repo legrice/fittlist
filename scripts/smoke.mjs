@@ -742,6 +742,32 @@ await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
+// "I'm going" + the member's share image — the mirror of the coach's story
+await fan.goto(BASE + "/feed");
+await fan.locator(".feedagenda .ps-event").first().waitFor();
+await fan.locator(".goingbtn").first().click();
+await fan.locator(".goingbtn.on").first().waitFor();
+await fan.locator(".goingbar").waitFor();
+// it survives a reload (the note is on the server, not just in the tab)
+await fan.reload();
+await fan.locator(".goingbtn.on").first().waitFor();
+// "Going" filters the week down to what they committed to
+await fan.locator(".goingfilter").click();
+const goingRows = await fan.locator(".feedagenda .ps-event").count();
+if (goingRows !== 1) fail(`Going filter should show 1 row, got ${goingRows}`);
+await fan.locator(".goingfilter").click();
+// the share image renders from their attendance, not a coach's schedule
+const myStory = await fan.request.get(`${BASE}/api/story/me?theme=paper`);
+if (!myStory.ok()) fail("member story image failed: " + myStory.status());
+const myBuf = Buffer.from(await myStory.body());
+if (myBuf.length < 5000) fail("member story image suspiciously small");
+if (myBuf.readUInt32BE(16) !== 1080 || myBuf.readUInt32BE(20) !== 1920)
+  fail("member story image is not 1080x1920");
+await fan.locator(".goingshare").click();
+await fan.getByRole("heading", { name: "Share my week" }).waitFor();
+await fan.locator(".adderclose").click();
+console.log("going + share my week ok (1080x1920 png)");
+
 // the merged weekly digest: one "Your week" email covering every coach they
 // follow, instead of one email per coach
 const fanDigestCount = () =>

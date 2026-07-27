@@ -1908,6 +1908,30 @@ button.ps-card { cursor: pointer; }
   font-weight: 600; font-size: 13.5px; color: var(--si);
 }
 
+/* ---- "I'm going": a personal note on a class, never a booking ---- */
+.feedrow { flex-wrap: wrap; }
+.feedrow-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+  text-decoration: none; color: var(--ink);
+}
+.ps-agenda .feedrow.goingon .ps-accent { background: var(--si); width: 4px; }
+.goingbtn {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 10px;
+  padding: 7px 13px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--card); color: var(--ol); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
+}
+.goingbtn.on { background: var(--si); border-color: var(--si); color: #fff; }
+.goingbar { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.goingfilter, .goingshare {
+  display: flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
+}
+.goingfilter.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.goingshare { margin-left: auto; background: var(--si); border-color: var(--si); color: #fff; }
+[data-mode="dark"] .goingfilter.on { color: #191502; }
+
 /* ---- discover (the directory) ---- */
 .dissearch {
   display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; padding: 0 13px;

@@ -51,6 +51,16 @@ export default async function FeedPage() {
     : [];
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
+  // Classes this member marked "I'm going" to — a personal note, not a booking.
+  const goingRows = await db
+    .select({
+      classId: schema.attendances.classId,
+      occurrenceDate: schema.attendances.occurrenceDate,
+    })
+    .from(schema.attendances)
+    .where(eq(schema.attendances.userId, userId));
+  const going = new Set(goingRows.map((g) => `${g.classId}|${g.occurrenceDate}`));
+
   const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
   const days: FeedDay[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
@@ -78,6 +88,7 @@ export default async function FeedPage() {
             ap: t.ap,
             durationMin: c.durationMin,
             where: s ? s.name : c.location,
+            going: going.has(`${c.id}|${iso}`),
           },
         ];
       });
