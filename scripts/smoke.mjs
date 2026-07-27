@@ -206,23 +206,16 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
-// ---- dashboard strip on the schedule: stats glance + quick links
-await expect(page.locator(".dashstats").isVisible(), "dashboard stats strip present");
-if ((await page.locator(".dashstats .dashstat").count()) !== 4) fail("expected four dashboard stats");
+// ---- dashboard quick links on the schedule
 await expect(page.locator(".dashlink", { hasText: "My page" }).isVisible(), "my-page quick link");
 await expect(page.locator(".dashlink", { hasText: "Share week" }).isVisible(), "share quick link");
 await expect(page.locator(".dashlink", { hasText: "QR code" }).isVisible(), "qr quick link");
-// tapping the stats opens the account page (where the full grid lives)
-await page.locator(".dashstats").click();
-await page.locator(".acctwrap").waitFor();
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 // the QR quick link opens the QR sheet right from the schedule
 await page.locator(".dashlink", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-console.log("dashboard strip ok");
+console.log("dashboard quick links ok");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 await page.goto(BASE + "/matt");

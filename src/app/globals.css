@@ -717,21 +717,9 @@ button.bl-band { cursor: pointer; }
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 24px 0;
 }
-/* Dashboard strip under the header: a one-glance stats card that opens the
-   account page, and quick links to the most-reached-for actions. */
+/* Dashboard strip under the header: quick links to the most-reached-for
+   actions. (The stats glance lives on the account page for now.) */
 .dashstrip { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.dashstats {
-  display: flex; align-items: stretch; width: 100%; padding: 13px 4px;
-  background: var(--card); border-radius: 16px; box-shadow: var(--soft-shadow);
-}
-.dashstats:active { background: #f3ecdf; }
-.dashstat { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.dashstat + .dashstat { border-left: 1px solid var(--line); }
-.dashstat .n {
-  font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 18px;
-  color: var(--ink); line-height: 1;
-}
-.dashstat .l { font-size: 10.5px; font-weight: 600; color: var(--ol); }
 .dashlinks { display: flex; gap: 10px; }
 .dashlink {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -1661,7 +1649,6 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .acctclose:active,
 [data-mode="dark"] .ps-event:active,
 [data-mode="dark"] .ps-agenda .ps-event:active,
-[data-mode="dark"] .dashstats:active,
 [data-mode="dark"] .dashlink:active { background: #2c2718; }
 /* the account overlay + its stage wrappers use poster cream by default */
 [data-mode="dark"] .appshell,

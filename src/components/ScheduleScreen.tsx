@@ -235,34 +235,9 @@ export function ScheduleScreen({
             </button>
           </div>
         </div>
-        {/* Dashboard strip: a stats glance (taps through to the account page)
-            and one-tap links to the actions coaches reach for most. */}
+        {/* Dashboard strip: one-tap links to the actions coaches reach for
+            most. (Stats live on the account page for now.) */}
         <div className="dashstrip">
-          <button
-            className="dashstats"
-            aria-label="Your stats"
-            onClick={() => {
-              setAcctAnim("up");
-              setProfileOpen(true);
-            }}
-          >
-            <span className="dashstat">
-              <span className="n">{profileViews}</span>
-              <span className="l">Views</span>
-            </span>
-            <span className="dashstat">
-              <span className="n">{scheduleOpens}</span>
-              <span className="l">Opens</span>
-            </span>
-            <span className="dashstat">
-              <span className="n">{subsCount}</span>
-              <span className="l">Followers</span>
-            </span>
-            <span className="dashstat">
-              <span className="n">{requestCount}</span>
-              <span className="l">Requests</span>
-            </span>
-          </button>
           <div className="dashlinks">
             <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
               <Icon name="account_circle" size={19} />
