@@ -731,6 +731,13 @@ if (feedRows < 1) fail("feed agenda has no class rows");
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar", { hasText: "Classes with Matt" }).waitFor();
 await fan.locator(".feedagenda .ps-event").first().waitFor();
+// the All circle clears the filter
+await fan.locator(".feedav", { hasText: "All" }).click();
+await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
+await fan.locator(".feedav.on", { hasText: "All" }).waitFor();
+// tapping a selected coach again also clears it
+await fan.locator(".feedav", { hasText: "Matt" }).click();
+await fan.locator(".feedfilterbar").waitFor();
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");

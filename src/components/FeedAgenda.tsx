@@ -50,6 +50,19 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
   return (
     <>
       <div className={`feedstrip${sel ? " hassel" : ""}`}>
+        {/* "All" clears the filter — the way back to the merged week without
+            having to remember which avatar is currently selected. */}
+        <button
+          type="button"
+          className={`feedav${sel === null ? " on" : ""}`}
+          aria-pressed={sel === null}
+          onClick={() => setSel(null)}
+        >
+          <span className="feedav-img feedav-all" aria-hidden="true">
+            <Icon name="groups" size={26} />
+          </span>
+          <span className="feedav-nm">All</span>
+        </button>
         {coaches.map((c) => (
           <button
             key={c.id}
