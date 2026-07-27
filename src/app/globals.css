@@ -985,6 +985,9 @@ button.ps-card { cursor: pointer; }
   text-decoration: none;
 }
 .proflink:active { background: #efe8d8; }
+/* Contact section: the same link pills, stacked full-width as rows */
+.contactlist { display: flex; flex-direction: column; gap: 10px; }
+.contactlist .proflink { width: 100%; padding: 14px 16px; border-radius: 16px; }
 
 /* "Where I coach": the studios/spaces a coach is associated with */
 .profstudios { margin-top: 26px; }

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 
-// The public profile header + About/Schedule sections. Both render in one
-// continuous scroll: the name row sticks to the top, the tabs stick just
+type Tab = "about" | "contact" | "schedule";
+
+// The public profile header + About/Contact/Schedule sections. All render in
+// one continuous scroll: the name row sticks to the top, the tabs stick just
 // beneath it, and the title scrolls away between. The tabs are scroll anchors —
 // tapping one glides to that section — and a scroll-spy keeps the active tab in
 // sync with whatever section is under the sticky header.
@@ -17,6 +19,7 @@ export function ProfileTabs({
   trackSchedule,
   share,
   about,
+  contact,
   schedule,
 }: {
   handle: string;
@@ -27,11 +30,13 @@ export function ProfileTabs({
   trackSchedule: boolean;
   share: ReactNode;
   about: ReactNode;
+  contact: ReactNode | null;
   schedule: ReactNode;
 }) {
-  const [tab, setTab] = useState<"about" | "schedule">(initialTab);
+  const [tab, setTab] = useState<Tab>(initialTab);
   const rowRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
   const schedRef = useRef<HTMLDivElement>(null);
   const [rowH, setRowH] = useState(0);
   const [tabsH, setTabsH] = useState(0);
@@ -54,13 +59,14 @@ export function ProfileTabs({
 
   const offset = rowH + tabsH;
 
-  const goTo = (t: "about" | "schedule", smooth = true) => {
+  const goTo = (t: Tab, smooth = true) => {
     const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
     if (t === "schedule") schedRef.current?.scrollIntoView({ behavior, block: "start" });
+    else if (t === "contact") contactRef.current?.scrollIntoView({ behavior, block: "start" });
     else window.scrollTo({ top: 0, behavior });
   };
 
-  const select = (t: "about" | "schedule") => {
+  const select = (t: Tab) => {
     setTab(t);
     goTo(t);
     window.history.replaceState(null, "", t === "schedule" ? `/${handle}/schedule` : `/${handle}`);
@@ -86,8 +92,17 @@ export function ProfileTabs({
         raf = 0;
         const sched = schedRef.current;
         if (!sched) return;
-        const top = sched.getBoundingClientRect().top;
-        setTab(top <= offset + 16 ? "schedule" : "about");
+        const line = offset + 16;
+        if (sched.getBoundingClientRect().top <= line) {
+          setTab("schedule");
+          return;
+        }
+        const contactEl = contactRef.current;
+        if (contactEl && contactEl.getBoundingClientRect().top <= line) {
+          setTab("contact");
+          return;
+        }
+        setTab("about");
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -107,6 +122,17 @@ export function ProfileTabs({
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
   }, [tab, trackSchedule, handle]);
 
+  const tabBtn = (t: Tab, label: string) => (
+    <button
+      role="tab"
+      aria-selected={tab === t}
+      className={`pubtab${tab === t ? " sel" : ""}`}
+      onClick={() => select(t)}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <>
       <div className="pubhead" ref={rowRef}>
@@ -121,26 +147,18 @@ export function ProfileTabs({
         </p>
       )}
       <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: rowH }}>
-        <button
-          role="tab"
-          aria-selected={tab === "about"}
-          className={`pubtab${tab === "about" ? " sel" : ""}`}
-          onClick={() => select("about")}
-        >
-          About
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === "schedule"}
-          className={`pubtab${tab === "schedule" ? " sel" : ""}`}
-          onClick={() => select("schedule")}
-        >
-          Schedule
-        </button>
+        {tabBtn("about", "About")}
+        {contact && tabBtn("contact", "Contact")}
+        {tabBtn("schedule", "Schedule")}
       </div>
       <div className="pubpanel" style={{ scrollMarginTop: offset }}>
         {about}
       </div>
+      {contact && (
+        <div className="pubpanel pubpanel-sched" ref={contactRef} style={{ scrollMarginTop: offset }}>
+          {contact}
+        </div>
+      )}
       <div className="pubpanel pubpanel-sched" ref={schedRef} style={{ scrollMarginTop: offset }}>
         {schedule}
       </div>

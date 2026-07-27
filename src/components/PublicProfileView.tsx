@@ -80,45 +80,6 @@ export async function PublicProfileView({
       )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
       {!isOwner && <RequestSessionButton handle={handle} coachName={user.name} />}
-      {(user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website) && (
-        <div className="proflinks">
-          {user.contactEmail && (
-            <a className="proflink" href={`mailto:${user.contactEmail}`}>
-              <Icon name="mail" size={18} /> Email
-            </a>
-          )}
-          {user.phone && (
-            <a className="proflink" href={`tel:${user.phone.replace(/[^\d+]/g, "")}`}>
-              <Icon name="call" size={18} /> Call
-            </a>
-          )}
-          {user.whatsapp && (
-            <a
-              className="proflink"
-              href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener nofollow"
-            >
-              <Icon name="chat" size={18} /> WhatsApp
-            </a>
-          )}
-          {user.instagram && (
-            <a
-              className="proflink"
-              href={`https://instagram.com/${user.instagram}`}
-              target="_blank"
-              rel="noopener nofollow"
-            >
-              <InstagramGlyph /> Instagram
-            </a>
-          )}
-          {user.website && (
-            <a className="proflink" href={user.website} target="_blank" rel="noopener nofollow">
-              <Icon name="public" size={18} /> Website
-            </a>
-          )}
-        </div>
-      )}
       {user.highlights.length > 0 && (
         <div className="profsec focussec">
           <h2 className="prof-sec-h">Coaching focus</h2>
@@ -161,6 +122,54 @@ export async function PublicProfileView({
       )}
     </>
   );
+
+  // Contact gets its own tab/section: the ways to reach the coach, stacked as
+  // full-width rows. Hidden entirely when the coach has no contact info.
+  const hasContact = !!(
+    user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website
+  );
+  const contact = hasContact ? (
+    <>
+      <h2 className="prof-sec-h sched-h">Contact</h2>
+      <div className="contactlist">
+        {user.contactEmail && (
+          <a className="proflink" href={`mailto:${user.contactEmail}`}>
+            <Icon name="mail" size={18} /> Email
+          </a>
+        )}
+        {user.phone && (
+          <a className="proflink" href={`tel:${user.phone.replace(/[^\d+]/g, "")}`}>
+            <Icon name="call" size={18} /> Call
+          </a>
+        )}
+        {user.whatsapp && (
+          <a
+            className="proflink"
+            href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener nofollow"
+          >
+            <Icon name="chat" size={18} /> WhatsApp
+          </a>
+        )}
+        {user.instagram && (
+          <a
+            className="proflink"
+            href={`https://instagram.com/${user.instagram}`}
+            target="_blank"
+            rel="noopener nofollow"
+          >
+            <InstagramGlyph /> Instagram
+          </a>
+        )}
+        {user.website && (
+          <a className="proflink" href={user.website} target="_blank" rel="noopener nofollow">
+            <Icon name="public" size={18} /> Website
+          </a>
+        )}
+      </div>
+    </>
+  ) : null;
 
   const schedule = (
     <>
@@ -242,6 +251,7 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           share={<ShareProfileButton name={user.name} />}
           about={about}
+          contact={contact}
           schedule={schedule}
         />
         <div className="madewith">
