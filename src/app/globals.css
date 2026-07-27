@@ -1004,8 +1004,8 @@ button.ps-card { cursor: pointer; }
 .pubpanel .profphoto { margin-top: 0; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* Divider under About (Where I coach), then a titled Schedule section. */
-.pubpanel-sched { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
-.sched-h { margin-bottom: 14px; }
+.pubpanel-sched { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 40px; }
+.sched-h { margin-bottom: 26px; }
 
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
