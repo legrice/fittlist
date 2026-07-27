@@ -46,6 +46,9 @@ export const users = pgTable("users", {
   signupSource: text("signup_source"),
   // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".
   theme: text("theme").notNull().default("poster"),
+  // Page look: how the coach's app AND public page render. Null = the default
+  // light look; "dark" today, more colour looks later.
+  look: text("look"),
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =
   // they still need to run it; the app redirects them into /welcome until it's set.
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),

@@ -48,6 +48,7 @@ export function ScheduleScreen({
   hasPassword,
   passkeyCount,
   isAdmin,
+  look,
 }: {
   classes: ClassDto[];
   hasAnyClass: boolean;
@@ -80,6 +81,7 @@ export function ScheduleScreen({
   hasPassword: boolean;
   passkeyCount: number;
   isAdmin: boolean;
+  look: string | null;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
@@ -241,7 +243,7 @@ export function ScheduleScreen({
           <div className="dashlinks">
             <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
               <Icon name="account_circle" size={19} />
-              <span>My page</span>
+              <span>Your page</span>
             </button>
             <button className="dashlink" onClick={() => setShareOpen(true)}>
               <Icon name="calendar_today" size={19} />
@@ -349,6 +351,7 @@ export function ScheduleScreen({
           hasPassword={hasPassword}
           passkeyCount={passkeyCount}
           isAdmin={isAdmin}
+          look={look}
           onClose={() => setProfileOpen(false)}
         />
       )}

@@ -132,3 +132,20 @@ export async function updateProfile(input: {
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };
 }
+
+// The coach's page look — themes both their app and their public page for
+// every visitor. "dark" today; more looks later.
+export async function setLook(look: string): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const v = look === "dark" ? "dark" : null;
+  const db = await getDb();
+  const [user] = await db
+    .update(schema.users)
+    .set({ look: v })
+    .where(eq(schema.users.id, userId))
+    .returning({ handle: schema.users.handle });
+  revalidatePath("/app");
+  if (user?.handle) revalidatePath(`/${user.handle}`);
+  return { ok: true };
+}

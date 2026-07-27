@@ -69,7 +69,7 @@ export default async function EventPage({ params }: Props) {
   const icsHref = `/api/cal/${handle}/${c.id}`;
 
   return (
-    <div className="pub evpage" data-theme={user.theme}>
+    <div className="pub evpage" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
       {isOwner && (
         <div className="previewbar">
           <span>

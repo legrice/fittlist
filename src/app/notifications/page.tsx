@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { listNotifications, markNotificationsRead } from "@/lib/notify";
 import { Icon } from "@/components/Icon";
@@ -24,9 +26,14 @@ export default async function NotificationsPage() {
   const rows = await listNotifications(userId);
   // Landing here is the "I've seen these" signal — clear the unread badge.
   await markNotificationsRead(userId);
+  const db = await getDb();
+  const [me] = await db
+    .select({ look: schema.users.look })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
 
   return (
-    <section className="screen admin">
+    <section className="screen admin" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="pad">
         <div className="admintop">
           <div>

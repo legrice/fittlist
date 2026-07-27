@@ -23,6 +23,10 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
     .from(schema.inquiryThreads)
     .where(and(eq(schema.inquiryThreads.id, id), eq(schema.inquiryThreads.coachUserId, userId)));
   if (!thread) notFound();
+  const [me] = await db
+    .select({ look: schema.users.look })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
 
   // Opening the thread clears the coach's unread count.
   if (thread.coachUnread > 0) {
@@ -36,7 +40,7 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
     .orderBy(asc(schema.inquiryMessages.createdAt));
 
   return (
-    <section className="screen chatscreen">
+    <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="chattop">
         <Link className="iconbtn chatback" aria-label="Back to inbox" href="/inbox">
           <Icon name="arrow_back" size={18} />

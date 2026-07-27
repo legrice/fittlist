@@ -131,6 +131,7 @@ export default async function AdminPage() {
       invites={invites}
       requests={requests}
       stats={stats}
+      dark={admin.look === "dark"}
     />
   );
 }

@@ -34,6 +34,7 @@ export default async function SchedulePage({
     db
       .select({
         theme: schema.users.theme,
+        look: schema.users.look,
         handle: schema.users.handle,
         name: schema.users.name,
         title: schema.users.title,
@@ -156,6 +157,7 @@ export default async function SchedulePage({
       hasPassword={!!user?.passwordHash}
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
+      look={user?.look ?? null}
     />
   );
 }

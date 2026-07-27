@@ -20,6 +20,10 @@ export default async function InboxPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
+  const [me] = await db
+    .select({ look: schema.users.look })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
 
   const threads = await db
     .select()
@@ -40,7 +44,7 @@ export default async function InboxPage() {
   for (const m of msgs) if (!latest.has(m.threadId)) latest.set(m.threadId, m);
 
   return (
-    <section className="screen admin">
+    <section className="screen admin" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="pad">
         <div className="admintop">
           <div>

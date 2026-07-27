@@ -176,6 +176,13 @@
       "when": 1785155051321,
       "tag": "0024_eminent_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785162914314,
+      "tag": "0025_simple_shooting_star",
+      "breakpoints": true
     }
   ]
 }

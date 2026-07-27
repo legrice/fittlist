@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user?.handle) redirect("/");
 
   return (
-    <div className="appshell" data-theme={user.theme}>
+    <div className="appshell" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
       <div className="stage">{children}</div>
     </div>
   );

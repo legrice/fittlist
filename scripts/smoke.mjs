@@ -207,7 +207,7 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
 // ---- dashboard quick links on the schedule
-await expect(page.locator(".dashlink", { hasText: "My page" }).isVisible(), "my-page quick link");
+await expect(page.locator(".dashlink", { hasText: "Your page" }).isVisible(), "your-page quick link");
 await expect(page.locator(".dashlink", { hasText: "Share week" }).isVisible(), "share quick link");
 await expect(page.locator(".dashlink", { hasText: "QR code" }).isVisible(), "qr quick link");
 // the QR quick link opens the QR sheet right from the schedule
@@ -216,6 +216,27 @@ await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 console.log("dashboard quick links ok");
+
+// ---- page look: dark mode persists on the account and themes the app AND
+// the public page (visitors see it too — it's a server-rendered attribute).
+await page.locator(".usericon").click();
+await page.locator(".acctwrap").waitFor();
+await page.locator(".setrow", { hasText: "Dark mode" }).click();
+await page.waitForFunction(() => document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await page.goto(BASE + "/matt");
+await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'));
+console.log("dark page look ok (app + public)");
+// back to light for the rest of the run
+await page.goto(BASE + "/app");
+await page.locator(".usericon").click();
+await page.locator(".acctwrap").waitFor();
+await page.locator(".setrow", { hasText: "Dark mode" }).click();
+await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+console.log("light restored ok");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 await page.goto(BASE + "/matt");

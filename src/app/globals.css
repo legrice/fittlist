@@ -1609,10 +1609,11 @@ button.ps-card { cursor: pointer; }
    paint. Scoped to the app-shell surfaces (.screen / .chatscreen), so public
    profile pages — which carry their own poster theme — always stay light.
    ========================================================================== */
-[data-mode="dark"] .appshell,
-[data-mode="dark"] .screen,
-[data-mode="dark"] .chatscreen,
-[data-mode="dark"] .sheet {
+[data-mode="dark"] .appshell, .appshell[data-mode="dark"],
+[data-mode="dark"] .screen, .screen[data-mode="dark"],
+[data-mode="dark"] .chatscreen, .chatscreen[data-mode="dark"],
+[data-mode="dark"] .sheet,
+[data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
   --card: #211c13;
   --ink: #f3efe3;
@@ -1668,8 +1669,8 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .ps-agenda .ps-event:active,
 [data-mode="dark"] .dashlink:active { background: #2c2718; }
 /* the account overlay + its stage wrappers use poster cream by default */
-[data-mode="dark"] .appshell,
-[data-mode="dark"] .appshell .stage,
+[data-mode="dark"] .appshell, .appshell[data-mode="dark"],
+[data-mode="dark"] .appshell .stage, .appshell[data-mode="dark"] .stage,
 [data-mode="dark"] .acctwrap { background: var(--paper); }
 /* poster-cream surfaces that live inside the app: the sticky header + adder card */
 [data-mode="dark"] .brandbar { background: var(--card); }
@@ -1714,3 +1715,29 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .inboxrow-av,
 [data-mode="dark"] .acctavatar-empty { background: var(--si); color: #fff; }
 [data-mode="dark"] .usericon-initial { color: #fff; }
+/* ---- the coach's public page + event pages in dark ---- */
+[data-mode="dark"] .profshare,
+[data-mode="dark"] .proflink,
+[data-mode="dark"] .profstudio,
+[data-mode="dark"] .ownerback,
+[data-mode="dark"] .owneredit,
+[data-mode="dark"] .evcard {
+  background: var(--card); color: var(--ink); border-color: var(--line);
+}
+[data-mode="dark"] .profshare:active,
+[data-mode="dark"] .proflink:active,
+[data-mode="dark"] .profstudio:active,
+[data-mode="dark"] .ownerback:active,
+[data-mode="dark"] .owneredit:active { background: #2c2718; }
+[data-mode="dark"] .profabout,
+[data-mode="dark"] .evdesc,
+[data-mode="dark"] .evnobook,
+[data-mode="dark"] .madewith { color: var(--ol); }
+[data-mode="dark"] .profphoto-empty { background: var(--cl); color: #6f6852; }
+[data-mode="dark"] .evstudio { color: var(--ink); }
+[data-mode="dark"] .evaddr { color: var(--ol); border-bottom-color: var(--line); }
+/* Segmented switchers (admin tabs, availability picker): the selected pill's
+   fill follows --ink — light in dark mode — so its label flips dark. */
+[data-mode="dark"] .seg button.sel { color: #191502; }
+/* the visitor subscribe bar is pinned to poster cream — repaint */
+[data-mode="dark"] .notifybar { background: var(--card); }

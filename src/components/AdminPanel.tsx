@@ -63,6 +63,7 @@ export function AdminPanel({
   invites,
   requests,
   stats,
+  dark = false,
 }: {
   adminEmail: string;
   coaches: Coach[];
@@ -70,6 +71,7 @@ export function AdminPanel({
   invites: Invite[];
   requests: Request[];
   stats: Stats;
+  dark?: boolean;
 }) {
   const [tab, setTab] = useState<"coaches" | "studios" | "invites">("coaches");
   const [q, setQ] = useState("");
@@ -106,7 +108,7 @@ export function AdminPanel({
     tab === "coaches" ? "Search name, email, or handle" : tab === "studios" ? "Search studios" : "Search invites";
 
   return (
-    <section className="screen admin">
+    <section className="screen admin" data-mode={dark ? "dark" : undefined}>
       <div className="pad">
         <div className="admintop">
           <div>

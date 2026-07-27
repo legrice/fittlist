@@ -47,6 +47,7 @@ export function ProfileSheet({
   hasPassword,
   passkeyCount,
   isAdmin = false,
+  look,
   onClose,
 }: {
   handle: string;
@@ -71,6 +72,7 @@ export function ProfileSheet({
   hasPassword: boolean;
   passkeyCount: number;
   isAdmin?: boolean;
+  look: string | null;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -309,7 +311,6 @@ export function ProfileSheet({
         </div>
 
         <div className="settingslist">
-          {email.trim().toLowerCase() === "mattlegrice@gmail.com" && <DarkModeToggle />}
           <button className="setrow" onClick={() => openView("security")}>
             <span className="setrow-ic"><Icon name="lock" size={22} /></span>
             <span className="setrow-txt">
@@ -346,6 +347,11 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </a>
           )}
+        </div>
+
+        {/* Page look: themes the app and the coach's public page. */}
+        <div className="settingslist">
+          <DarkModeToggle initialOn={look === "dark"} />
         </div>
 
         <button className="calcopy" onClick={copyCal}>

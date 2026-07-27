@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { setLook } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 
-// A personal dark-mode switch for the coach app. State lives in localStorage and
-// is mirrored onto <html data-mode> (an inline script in the layout applies it
-// before paint, so there's no flash). Rendered only for the accounts allowed to
-// see it — see ProfileSheet.
-export function DarkModeToggle() {
-  const [on, setOn] = useState(false);
-
-  useEffect(() => {
-    setOn(document.documentElement.getAttribute("data-mode") === "dark");
-  }, []);
+// The coach's page look. Stored on their account: it themes the whole app AND
+// their public page for every visitor. The <html> attribute flips immediately
+// for feedback; the server attribute (rendered per page root) is the truth.
+export function DarkModeToggle({ initialOn }: { initialOn: boolean }) {
+  const router = useRouter();
+  const [on, setOn] = useState(initialOn);
+  const [, startTransition] = useTransition();
 
   const toggle = () => {
     const next = !on;
@@ -20,11 +19,10 @@ export function DarkModeToggle() {
     const root = document.documentElement;
     if (next) root.setAttribute("data-mode", "dark");
     else root.removeAttribute("data-mode");
-    try {
-      localStorage.setItem("fl-dark", next ? "1" : "0");
-    } catch {
-      /* private mode — the attribute still applies for this session */
-    }
+    startTransition(async () => {
+      await setLook(next ? "dark" : "light");
+      router.refresh();
+    });
   };
 
   return (
@@ -32,7 +30,7 @@ export function DarkModeToggle() {
       <span className="setrow-ic"><Icon name={on ? "dark_mode" : "light_mode"} size={22} /></span>
       <span className="setrow-txt">
         <span className="t">Dark mode</span>
-        <span className="s">{on ? "On" : "Off"}</span>
+        <span className="s">{on ? "On — your page and app" : "Off"}</span>
       </span>
       <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
         <span className="switch-knob" />

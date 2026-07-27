@@ -214,7 +214,7 @@ export async function PublicProfileView({
   );
 
   return (
-    <div className="pub profile" data-theme={user.theme}>
+    <div className="pub profile" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
       {isOwner && (
         <ProfileOwnerBar
           name={user.name}
