@@ -1,0 +1,1 @@
+ALTER TABLE "page_visits" ADD COLUMN "schedule_opens" integer DEFAULT 0 NOT NULL;

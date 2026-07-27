@@ -14,6 +14,7 @@ export function ProfileTabs({
   name,
   title,
   location,
+  trackSchedule,
   share,
   about,
   schedule,
@@ -23,6 +24,7 @@ export function ProfileTabs({
   name: string;
   title: string;
   location: string;
+  trackSchedule: boolean;
   share: ReactNode;
   about: ReactNode;
   schedule: ReactNode;
@@ -34,6 +36,7 @@ export function ProfileTabs({
   const [rowH, setRowH] = useState(0);
   const [tabsH, setTabsH] = useState(0);
   const didInitScroll = useRef(false);
+  const trackedSchedule = useRef(false);
 
   // The tabs stick right below the name row, so their offset tracks its height;
   // the two heights together define where a scrolled-to section should land.
@@ -94,6 +97,15 @@ export function ProfileTabs({
       if (raf) cancelAnimationFrame(raf);
     };
   }, [offset]);
+
+  // Count one "schedule open" per visit, the first time the schedule is viewed.
+  useEffect(() => {
+    if (tab !== "schedule" || !trackSchedule || trackedSchedule.current) return;
+    trackedSchedule.current = true;
+    const url = `/api/track/schedule/${handle}`;
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) navigator.sendBeacon(url);
+    else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
+  }, [tab, trackSchedule, handle]);
 
   return (
     <>

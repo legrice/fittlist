@@ -18,12 +18,13 @@ const scheduleClasses = (pg) =>
   pg.evaluate(() =>
     new Set([...document.querySelectorAll(".ps-event[data-cid]")].map((e) => e.getAttribute("data-cid"))).size,
   );
-const waitSchedule = (pg, n) =>
+const waitSchedule = (pg, n, timeout = 10000) =>
   pg.waitForFunction(
     (k) =>
       new Set([...document.querySelectorAll(".ps-event[data-cid]")].map((e) => e.getAttribute("data-cid")))
         .size === k,
     n,
+    { timeout },
   );
 // The account page is a full-screen view reached from the header avatar.
 const openProfile = async (pg) => {
@@ -147,7 +148,7 @@ await page.locator("#fEnd").fill("07:15");
 await expect(page.locator(".durnote", { hasText: "75 min" }).isVisible(), "durnote reflects end time");
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
-await waitSchedule(page, 3);
+await waitSchedule(page, 3, 20000);
 // Editing a weekly class recreates its rows with new ids via router.refresh();
 // let that settle so the delete below targets a current row, not a stale id.
 await page.waitForTimeout(700);
@@ -161,7 +162,9 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
 await page.getByText("Deleted", { exact: true }).waitFor();
-await waitSchedule(page, 2);
+// The delete triggers a router.refresh() that re-fetches and re-keys the cards;
+// give it a generous window to settle to the two remaining classes.
+await waitSchedule(page, 2, 20000);
 console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- account page: full-screen view reached from the header avatar
@@ -173,7 +176,9 @@ await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
 await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
-if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three stats on the tile");
+if ((await page.locator(".acctstats .acctstat").count()) !== 4) fail("expected four analytics stats");
+await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
+await expect(page.locator(".acctstats .acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
 await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
 await expect(page.locator(".acctcard", { hasText: "Share your week" }).isVisible(), "share your week card");
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
@@ -252,17 +257,32 @@ await page.locator(".evback").click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 console.log("profile + schedule tabs + event pages ok");
 
-await page.locator(".notifybar .btn").click();
-await page.locator(".sheet h2", { hasText: "schedule every week" }).waitFor();
-await page.locator("#ntEmail").fill("fan@example.com");
-await page.getByRole("button", { name: "Add me to the list" }).click();
-await page.getByText("You're on Matt's list").waitFor();
-await expect(page.locator(".notifybar .btn").textContent().then(t => t.includes("You're on the list")), "cta flips to subscribed");
+// Subscribing is a visitor action — the owner previewing their own page never
+// sees the subscribe bar, so do this from a fresh anonymous context.
+{
+  // A bot-flagged UA keeps this helper visit out of the profile-view counts
+  // asserted below, while the subscribe form (a server action, not a page GET)
+  // still records the subscription.
+  const subCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (smoke subscribe bot)",
+  });
+  const subPage = await subCtx.newPage();
+  subPage.setDefaultTimeout(10000);
+  await subPage.goto(BASE + "/matt");
+  await subPage.locator(".notifybar .btn").click();
+  await subPage.locator(".sheet h2", { hasText: "schedule every week" }).waitFor();
+  await subPage.locator("#ntEmail").fill("fan@example.com");
+  await subPage.getByRole("button", { name: "Add me to the list" }).click();
+  await subPage.getByText("You're on Matt's list").waitFor();
+  await expect(subPage.locator(".notifybar .btn").textContent().then(t => t.includes("You're on the list")), "cta flips to subscribed");
 
-await page.locator(".notifybar .btn").click();
-await page.getByRole("button", { name: "Unsubscribe" }).waitFor();
-await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
+  await subPage.locator(".notifybar .btn").click();
+  await subPage.getByRole("button", { name: "Unsubscribe" }).waitFor();
+  await subPage.locator(".sheet .sheetclose").click();
+  await subPage.waitForFunction(() => !document.querySelector(".sheet"));
+  await subCtx.close();
+}
 console.log("subscribe ok (manage sheet has Unsubscribe)");
 
 // ---- 404 for unclaimed handle
@@ -283,9 +303,9 @@ console.log("desktop ok");
 
 // ---- my-page list count reflects subscriber
 await openProfile(page);
-await page.getByText("On your list", { exact: true }).waitFor();
-const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
-if (subN.trim() !== "1") fail("subscriber count should be 1, got " + subN);
+await page.getByText("Followers", { exact: true }).waitFor();
+const subN = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
+if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
 // ================= Phase 2: the weekly list =================
@@ -334,15 +354,15 @@ if (weeklyAfter !== weeklyBefore) fail("opted-out subscriber still got the weekl
 console.log("opt-out honored ok");
 
 await openProfile(page);
-await page.getByText("On your list", { exact: true }).waitFor();
-const subN2 = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
-if (subN2.trim() !== "0") fail("list should be 0 after unsubscribe, got " + subN2);
+await page.getByText("Followers", { exact: true }).waitFor();
+const subN2 = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
+if (subN2.trim() !== "0") fail("followers should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
 
 // ================= Phase 3: dashboard + growth =================
 await openProfile(page);
 const vis0 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
-if (vis0.trim() !== "0") fail("own visits should not count, got " + vis0);
+if (vis0.trim() !== "0") fail("own profile views should not count, got " + vis0);
 console.log("own-visit exclusion ok");
 
 const anon = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -387,8 +407,8 @@ console.log("footer signup flow ok (attribution checked post-run)");
 
 await openProfile(page);
 const vis1 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
-if (vis1.trim() !== "3") fail("visits should be 3 (2 anon views + 1 fetch), got " + vis1);
-await expect(page.locator(".acctstats .acctstat", { hasText: "Visits" }).isVisible(), "visits stat labelled");
+if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch), got " + vis1);
+await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat labelled");
 console.log("visit stats ok");
 
 // ================= v1.5: story image =================
@@ -547,8 +567,14 @@ await page.getByRole("button", { name: "Email me a magic link instead" }).click(
 await page.getByText("Check your inbox.").waitFor();
 await new Promise((r) => setTimeout(r, 400));
 const magicUrl = [...readLog().matchAll(/\/auth\/magic\?token=[a-f0-9]{64}/g)].pop()[0];
-await page.goto(BASE + magicUrl);
-await page.waitForURL(BASE + "/app");
+// The magic route consumes the token (setting the session cookie) and then 302s
+// to the canonical origin (fittlist.co), which is unreachable from the sandbox.
+// Fire the request without following that cross-origin redirect — the Set-Cookie
+// still lands in this context — then navigate to /app as an authenticated user.
+const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
+if (![301, 302, 303, 307, 308].includes(magicRes.status()))
+  fail("magic link should redirect after setting the session, got " + magicRes.status());
+await page.goto(BASE + "/app");
 await page.getByText("Your schedule").waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");

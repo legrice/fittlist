@@ -26,6 +26,32 @@ export async function recordVisit(trainerUserId: string): Promise<void> {
     });
 }
 
+export async function recordScheduleOpen(trainerUserId: string): Promise<void> {
+  const db = await getDb();
+  await db
+    .insert(schema.pageVisits)
+    .values({ trainerUserId, date: isoDate(new Date()), count: 0, scheduleOpens: 1 })
+    .onConflictDoUpdate({
+      target: [schema.pageVisits.trainerUserId, schema.pageVisits.date],
+      set: { scheduleOpens: sql`${schema.pageVisits.scheduleOpens} + 1` },
+    });
+}
+
+// All-time totals for the coach's analytics.
+export async function coachAnalytics(
+  trainerUserId: string,
+): Promise<{ profileViews: number; scheduleOpens: number }> {
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      views: sql<number>`coalesce(sum(${schema.pageVisits.count}), 0)::int`,
+      opens: sql<number>`coalesce(sum(${schema.pageVisits.scheduleOpens}), 0)::int`,
+    })
+    .from(schema.pageVisits)
+    .where(eq(schema.pageVisits.trainerUserId, trainerUserId));
+  return { profileViews: row?.views ?? 0, scheduleOpens: row?.opens ?? 0 };
+}
+
 export async function visitsThisWeek(trainerUserId: string): Promise<number> {
   const db = await getDb();
   const [row] = await db

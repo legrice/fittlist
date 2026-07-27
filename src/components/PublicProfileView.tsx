@@ -239,6 +239,7 @@ export async function PublicProfileView({
           name={user.name}
           title={user.title ?? ""}
           location={user.location ?? ""}
+          trackSchedule={!isOwner}
           share={<ShareProfileButton name={user.name} />}
           about={about}
           schedule={schedule}

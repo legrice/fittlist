@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
-import { visitsThisWeek } from "@/lib/visits";
+import { coachAnalytics } from "@/lib/visits";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
@@ -18,7 +18,7 @@ export default async function SchedulePage({
   const userId = (await getSessionUserId())!;
   const db = await getDb();
 
-  const [classRows, studioRows, templateRows, subRows, [user], visits] = await Promise.all([
+  const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([
     db.select().from(schema.classes).where(eq(schema.classes.userId, userId)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -50,7 +50,6 @@ export default async function SchedulePage({
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
-    visitsThisWeek(userId),
   ]);
 
   // First run after claiming a handle: send them through the setup wizard
@@ -71,6 +70,8 @@ export default async function SchedulePage({
     .from(schema.inquiryThreads)
     .where(eq(schema.inquiryThreads.coachUserId, userId));
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
+  const requestCount = inboxRows.length;
+  const analytics = await coachAnalytics(userId);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -131,13 +132,14 @@ export default async function SchedulePage({
       lastUsed={lastUsed}
       subsCount={subRows.length}
       inboxUnread={inboxUnread}
+      profileViews={analytics.profileViews}
+      scheduleOpens={analytics.scheduleOpens}
+      requestCount={requestCount}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}
       title={user?.title ?? ""}
       photo={user?.photo ?? null}
-      visits={visits}
-      classCount={classRows.length}
       email={user?.email ?? ""}
       instagram={user?.instagram ?? ""}
       website={user?.website ?? ""}

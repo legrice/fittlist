@@ -24,13 +24,14 @@ export function ScheduleScreen({
   lastUsed,
   subsCount,
   inboxUnread,
+  profileViews,
+  scheduleOpens,
+  requestCount,
   autoOpenAdder,
   handle,
   name,
   title,
   photo,
-  visits,
-  classCount,
   email,
   instagram,
   website,
@@ -54,13 +55,14 @@ export function ScheduleScreen({
   lastUsed: LastUsed;
   subsCount: number;
   inboxUnread: number;
+  profileViews: number;
+  scheduleOpens: number;
+  requestCount: number;
   autoOpenAdder: boolean;
   handle: string;
   name: string;
   title: string;
   photo: string | null;
-  visits: number;
-  classCount: number;
   email: string;
   instagram: string;
   website: string;
@@ -301,9 +303,10 @@ export function ScheduleScreen({
           name={name}
           title={title}
           photo={photo}
-          visits={visits}
           subsCount={subsCount}
-          classCount={classCount}
+          profileViews={profileViews}
+          scheduleOpens={scheduleOpens}
+          requestCount={requestCount}
           email={email}
           instagram={instagram}
           website={website}

@@ -231,7 +231,8 @@ export const pageVisits = pgTable(
   {
     trainerUserId: uuid("trainer_user_id").notNull().references(() => users.id),
     date: date("date").notNull(),
-    count: integer("count").notNull().default(0),
+    count: integer("count").notNull().default(0), // profile views
+    scheduleOpens: integer("schedule_opens").notNull().default(0), // schedule viewed
   },
   (t) => [uniqueIndex("page_visits_trainer_date").on(t.trainerUserId, t.date)],
 );

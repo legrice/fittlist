@@ -28,9 +28,10 @@ export function ProfileSheet({
   name,
   title,
   photo,
-  visits,
   subsCount,
-  classCount,
+  profileViews,
+  scheduleOpens,
+  requestCount,
   email,
   instagram,
   website,
@@ -51,9 +52,10 @@ export function ProfileSheet({
   name: string;
   title: string;
   photo: string | null;
-  visits: number;
   subsCount: number;
-  classCount: number;
+  profileViews: number;
+  scheduleOpens: number;
+  requestCount: number;
   email: string;
   instagram: string;
   website: string;
@@ -312,19 +314,24 @@ export function ProfileSheet({
             <span className="acctname">{firstName}</span>
             {title ? <span className="accttitle-sub">{title}</span> : null}
           </button>
-          <div className="acctstats">
-            <div className="acctstat">
-              <span className="n">{visits}</span>
-              <span className="l">Visits</span>
-            </div>
-            <div className="acctstat">
-              <span className="n">{subsCount}</span>
-              <span className="l">On your list</span>
-            </div>
-            <div className="acctstat">
-              <span className="n">{classCount}</span>
-              <span className="l">Classes</span>
-            </div>
+        </div>
+
+        <div className="acctstats acctstats-grid">
+          <div className="acctstat">
+            <span className="n">{profileViews}</span>
+            <span className="l">Profile views</span>
+          </div>
+          <div className="acctstat">
+            <span className="n">{scheduleOpens}</span>
+            <span className="l">Schedule opens</span>
+          </div>
+          <div className="acctstat">
+            <span className="n">{subsCount}</span>
+            <span className="l">Followers</span>
+          </div>
+          <div className="acctstat">
+            <span className="n">{requestCount}</span>
+            <span className="l">Requests</span>
           </div>
         </div>
 
