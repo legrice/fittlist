@@ -16,6 +16,7 @@ import { updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 type View = "home" | "security" | "contact" | "gcal";
@@ -78,10 +79,7 @@ export function ProfileSheet({
   const [leaving, setLeaving] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
-  const [canShareFiles, setCanShareFiles] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  const [qrSharing, setQrSharing] = useState(false);
-  const [pageUrl, setPageUrl] = useState(`fittlist.co/${handle}`);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
   const [disconnecting, startDisconnect] = useTransition();
@@ -112,15 +110,7 @@ export function ProfileSheet({
   }, []);
   useEffect(() => {
     setWebcalUrl(`webcal://${window.location.host}/api/cal/${handle}`);
-    setPageUrl(`${window.location.host}/${handle}`);
   }, [handle]);
-  useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
-  }, []);
 
   const openView = (v: View) => {
     setLeaving(false);
@@ -234,44 +224,6 @@ export function ProfileSheet({
       } else toast(res.error ?? "Couldn't save");
       setContactSaving(false);
     })();
-  };
-
-  const qrImgUrl = `/api/qr/${handle}`;
-  const qrFileName = `fittlist-${handle}-qr.png`;
-
-  const shareQr = async () => {
-    if (qrSharing) return;
-    setQrSharing(true);
-    try {
-      if (canShareFiles) {
-        const res = await fetch(qrImgUrl);
-        if (res.ok) {
-          const file = new File([await res.blob()], qrFileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      }
-      const a = document.createElement("a");
-      a.href = qrImgUrl;
-      a.download = qrFileName;
-      a.click();
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast("Couldn't share the QR code");
-    } finally {
-      setQrSharing(false);
-    }
-  };
-
-  const copyPageLink = async () => {
-    const url = `${window.location.origin}/${handle}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Link copied");
-    } catch {
-      toast(url);
-    }
   };
 
   const copyCal = async () => {
@@ -569,37 +521,7 @@ export function ProfileSheet({
         onToast={toast}
       />
 
-      {qrOpen && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setQrOpen(false); }}>
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setQrOpen(false)}>
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Your QR code</h2>
-            <p className="lead">
-              Point a phone camera at it to open your page. Print it on a flyer or business card, or
-              show it at the end of class.
-            </p>
-            <div className="qrframe">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="qrimg" src={qrImgUrl} alt="QR code that opens your fittlist page" />
-            </div>
-            <div className="qrurl">{pageUrl}</div>
-            <div className="publishwrap">
-              {canShareFiles ? (
-                <button className="btn" disabled={qrSharing} onClick={shareQr}>
-                  {qrSharing ? "Opening…" : "Save QR code"}
-                </button>
-              ) : (
-                <a className="btn" href={qrImgUrl} download={qrFileName}>Save QR code</a>
-              )}
-              <button className="btn ghost" style={{ marginTop: 8 }} onClick={copyPageLink}>
-                Copy link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
 
       <Toast msg={toastMsg} on={toastOn} />
     </>

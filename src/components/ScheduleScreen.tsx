@@ -8,6 +8,8 @@ import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
+import { QrSheet } from "@/components/QrSheet";
+import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -82,6 +84,8 @@ export function ScheduleScreen({
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
   const [profileOpen, setProfileOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
@@ -231,6 +235,50 @@ export function ScheduleScreen({
             </button>
           </div>
         </div>
+        {/* Dashboard strip: a stats glance (taps through to the account page)
+            and one-tap links to the actions coaches reach for most. */}
+        <div className="dashstrip">
+          <button
+            className="dashstats"
+            aria-label="Your stats"
+            onClick={() => {
+              setAcctAnim("up");
+              setProfileOpen(true);
+            }}
+          >
+            <span className="dashstat">
+              <span className="n">{profileViews}</span>
+              <span className="l">Views</span>
+            </span>
+            <span className="dashstat">
+              <span className="n">{scheduleOpens}</span>
+              <span className="l">Opens</span>
+            </span>
+            <span className="dashstat">
+              <span className="n">{subsCount}</span>
+              <span className="l">Followers</span>
+            </span>
+            <span className="dashstat">
+              <span className="n">{requestCount}</span>
+              <span className="l">Requests</span>
+            </span>
+          </button>
+          <div className="dashlinks">
+            <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
+              <Icon name="account_circle" size={19} />
+              <span>My page</span>
+            </button>
+            <button className="dashlink" onClick={() => setShareOpen(true)}>
+              <Icon name="share" size={19} />
+              <span>Share week</span>
+            </button>
+            <button className="dashlink" onClick={() => setQrOpen(true)}>
+              <Icon name="qr_code_2" size={19} />
+              <span>QR code</span>
+            </button>
+          </div>
+        </div>
+
         <div className="calbar-title">Your schedule</div>
 
         {!hasAnyClass ? (
@@ -353,6 +401,14 @@ export function ScheduleScreen({
           }}
         />
       )}
+
+      <ShareWeekSheet
+        handle={handle}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onToast={toast}
+      />
+      <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
 
       <Toast msg={toastMsg} on={toastOn} />
     </section>

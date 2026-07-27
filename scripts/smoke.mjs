@@ -206,6 +206,24 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
+// ---- dashboard strip on the schedule: stats glance + quick links
+await expect(page.locator(".dashstats").isVisible(), "dashboard stats strip present");
+if ((await page.locator(".dashstats .dashstat").count()) !== 4) fail("expected four dashboard stats");
+await expect(page.locator(".dashlink", { hasText: "My page" }).isVisible(), "my-page quick link");
+await expect(page.locator(".dashlink", { hasText: "Share week" }).isVisible(), "share quick link");
+await expect(page.locator(".dashlink", { hasText: "QR code" }).isVisible(), "qr quick link");
+// tapping the stats opens the account page (where the full grid lives)
+await page.locator(".dashstats").click();
+await page.locator(".acctwrap").waitFor();
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+// the QR quick link opens the QR sheet right from the schedule
+await page.locator(".dashlink", { hasText: "QR code" }).click();
+await page.locator(".sheet .qrframe").waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+console.log("dashboard strip ok");
+
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 await page.goto(BASE + "/matt");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
@@ -303,7 +321,7 @@ console.log("desktop ok");
 
 // ---- my-page list count reflects subscriber
 await openProfile(page);
-await page.getByText("Followers", { exact: true }).waitFor();
+await page.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 const subN = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
@@ -370,7 +388,7 @@ if (weeklyAfter !== weeklyBefore) fail("opted-out subscriber still got the weekl
 console.log("opt-out honored ok");
 
 await openProfile(page);
-await page.getByText("Followers", { exact: true }).waitFor();
+await page.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 const subN2 = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
 if (subN2.trim() !== "0") fail("followers should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
