@@ -1,7 +1,8 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { fansEnabled } from "@/lib/flags";
+import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { logout } from "@/app/actions/auth";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
@@ -15,7 +16,7 @@ const WINDOW_DAYS = 14; // two weeks out is plenty for "when can I train next"
 // The fan home: one merged agenda across every followed coach, today first.
 // Phase 3 adds discovery. Dark until FANS_ENABLED=true.
 export default async function FeedPage() {
-  if (!fansEnabled()) redirect("/");
+  if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -91,7 +92,7 @@ export default async function FeedPage() {
         <div className="brandbar feedbar">
           <Wordmark variant="ink" beta />
         </div>
-        <div className="calbar-title">Your coaches</div>
+        <div className="calbar-title">Your week</div>
 
         {coaches.length === 0 ? (
           <div className="empty-block">
@@ -113,11 +114,19 @@ export default async function FeedPage() {
           />
         )}
 
-        <form action={logout}>
-          <button type="submit" className="logoutbtn">
-            Log out
-          </button>
-        </form>
+        {/* A coach landing here is previewing the member side — give them the
+            way back rather than a log-out they didn't mean to tap. */}
+        {me.handle ? (
+          <Link className="logoutbtn" href="/app">
+            Back to my schedule
+          </Link>
+        ) : (
+          <form action={logout}>
+            <button type="submit" className="logoutbtn">
+              Log out
+            </button>
+          </form>
+        )}
       </div>
     </section>
   );

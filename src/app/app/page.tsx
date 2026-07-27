@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
+import { fansVisible } from "@/lib/flags";
 import { coachAnalytics } from "@/lib/visits";
 import { unreadNotifications } from "@/lib/notify";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
@@ -157,6 +158,7 @@ export default async function SchedulePage({
       hasPassword={!!user?.passwordHash}
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
+      showFanView={await fansVisible()}
       look={user?.look ?? null}
     />
   );

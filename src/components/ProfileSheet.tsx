@@ -47,6 +47,7 @@ export function ProfileSheet({
   hasPassword,
   passkeyCount,
   isAdmin = false,
+  showFanView = false,
   look,
   onClose,
 }: {
@@ -72,6 +73,7 @@ export function ProfileSheet({
   hasPassword: boolean;
   passkeyCount: number;
   isAdmin?: boolean;
+  showFanView?: boolean;
   look: string | null;
   onClose: () => void;
 }) {
@@ -336,6 +338,16 @@ export function ProfileSheet({
               </span>
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </button>
+          )}
+          {showFanView && (
+            <a className="setrow" href="/feed">
+              <span className="setrow-ic"><Icon name="favorite" size={22} /></span>
+              <span className="setrow-txt">
+                <span className="t">Your week</span>
+                <span className="s">Coaches you follow, as a member sees it</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            </a>
           )}
           {isAdmin && (
             <a className="setrow" href="/admin">

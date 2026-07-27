@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fansEnabled } from "@/lib/flags";
+import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { Icon } from "@/components/Icon";
@@ -35,7 +35,7 @@ export async function PublicProfileView({
   // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
   // the subscribe bar instead of the email sheet.
   let account: { following: boolean } | null = null;
-  if (fansEnabled() && !isOwner) {
+  if (!isOwner && (await fansVisible())) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db

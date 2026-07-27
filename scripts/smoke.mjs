@@ -700,7 +700,7 @@ await fan.getByPlaceholder("Password").fill("smoke-pass-fan");
 await fan.getByRole("button", { name: "Create account" }).click();
 // fans skip the invite gate, the handle claim, AND the passkey offer: the
 // cookie-set rerender redirects them straight to the feed
-await fan.getByText("Your coaches").waitFor();
+await fan.locator(".calbar-title", { hasText: "Your week" }).waitFor();
 await fan.getByText("Nobody yet").waitFor();
 // one-tap follow from the coach page (no email sheet for signed-in viewers)
 await fan.goto(BASE + "/matt");
@@ -718,8 +718,49 @@ await fan.locator(".feedfilterbar", { hasText: "Classes with Matt" }).waitFor();
 await fan.locator(".feedagenda .ps-event").first().waitFor();
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
-await fanCtx.close();
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
+
+// the merged weekly digest: one "Your week" email covering every coach they
+// follow, instead of one email per coach
+const digestBefore = readLog();
+let dcron = await fan.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
+if (!dcron.ok()) fail("weekly cron failed (digest): " + dcron.status());
+await new Promise((r) => setTimeout(r, 600));
+const digestNew = readLog().slice(digestBefore.length);
+const fanDigests = (digestNew.match(/\[mail:weekly_schedule\] to=lindley@example\.com/g) || [])
+  .length;
+if (fanDigests !== 1) fail(`expected exactly 1 merged digest, got ${fanDigests}`);
+const digestBlock = digestNew.split("[mail:weekly_schedule] to=lindley@example.com")[1] || "";
+if (!/Barbell Strength/.test(digestBlock)) fail("merged digest missing the class");
+if (!/Your week/.test(digestBlock)) fail("merged digest missing the subject");
+console.log("merged digest ok (one email across coaches)");
+
+// stopping the digest must NOT unfollow anyone — the feed stays intact
+const digestUnsub = (digestBlock.match(/\/u\/digest\/[A-Za-z0-9._-]+/) || [])[0];
+if (!digestUnsub) fail("merged digest has no unsubscribe link");
+await fan.goto(BASE + digestUnsub);
+await fan.getByText("No more weekly emails.").waitFor();
+await fan.goto(BASE + "/feed");
+await fan.locator(".feedagenda .ps-event").first().waitFor(); // still following
+const afterOptOut = readLog();
+dcron = await fan.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
+if (!dcron.ok()) fail("weekly cron failed (post opt-out): " + dcron.status());
+await new Promise((r) => setTimeout(r, 600));
+const stillSent = (
+  readLog().slice(afterOptOut.length).match(/\[mail:weekly_schedule\] to=lindley@example\.com/g) ||
+  []
+).length;
+if (stillSent !== 0) fail("digest opt-out ignored");
+console.log("digest opt-out ok (email stops, follows survive)");
+await fanCtx.close();
+
+// a coach can walk the member side from settings while the flag is dark
+await openProfile(page);
+await page.locator(".setrow", { hasText: "Your week" }).click();
+await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
+await page.getByRole("link", { name: "Back to my schedule" }).click();
+await page.locator(".dashlink", { hasText: "Your page" }).waitFor();
+console.log("coach fan-view preview ok");
 
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");

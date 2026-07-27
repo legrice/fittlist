@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "digest_opt_out_at" timestamp with time zone;
