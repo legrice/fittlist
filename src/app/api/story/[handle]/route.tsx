@@ -207,6 +207,14 @@ export async function GET(
         </div>
       </div>
     ),
-    { width: 1080, height: 1920, fonts: loadFonts() },
+    {
+      width: 1080,
+      height: 1920,
+      fonts: loadFonts(),
+      // ImageResponse defaults to a year-long immutable cache, which kept
+      // serving stale images (old copy, old schedule) from the CDN and the
+      // phone after deploys. The image reflects the live schedule — never cache.
+      headers: { "Cache-Control": "no-store" },
+    },
   );
 }

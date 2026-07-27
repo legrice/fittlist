@@ -22,6 +22,14 @@ export function ShareWeekSheet({
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
+  // A fresh cache-buster per open: CDNs and phones hold story PNGs cached
+  // under the old year-long header, so the bare URL can serve a stale image.
+  // A new query param gives every open a clean cache key.
+  const [bust, setBust] = useState(0);
+
+  useEffect(() => {
+    if (open) setBust(Date.now());
+  }, [open]);
 
   useEffect(() => {
     setCanShareFiles(
@@ -33,7 +41,7 @@ export function ShareWeekSheet({
 
   if (!open) return null;
 
-  const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}`;
+  const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}&v=${bust}`;
   const storyFileName = `fittlist-${handle}-${span}-${themeId}.png`;
 
   const shareStory = async () => {
