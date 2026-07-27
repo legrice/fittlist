@@ -58,6 +58,9 @@ export const users = pgTable("users", {
   // Listed in the Find coaches directory. Their page stays public either way —
   // this is only about being browsable by people who weren't sent the link.
   discoverable: boolean("discoverable").notNull().default(true),
+  // Their pick from AVATAR_COLORS, behind the initial when there's no photo.
+  // Null means "derive one from my id" — everyone looks distinct from day one.
+  avatarColor: text("avatar_color"),
   // Extra labelled links on the public page (booking sites, programs, a second
   // gig) beyond the single website field. Capped in the action, not here.
   profileLinks: jsonb("profile_links")

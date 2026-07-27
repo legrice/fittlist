@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { nextAvatarColor } from "@/lib/avatar-server";
 import { appleConfigured, appleEmail, appleExchange } from "@/lib/apple";
 import { createSession } from "@/lib/session";
 import { acceptInvite, emailInvited } from "@/lib/invites";
@@ -41,7 +42,9 @@ export async function POST(req: Request) {
   let [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
   if (!user) {
     if (!(await emailInvited(email))) return toLogin("invite=1");
-    [user] = await db.insert(schema.users).values({ email }).returning();
+    [user] = await db.insert(schema.users)
+      .values({ email, avatarColor: await nextAvatarColor() })
+      .returning();
     await acceptInvite(email, user.id);
   }
   await createSession(user.id);

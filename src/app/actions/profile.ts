@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { AVATAR_COLORS } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
 
 // Instagram: accept a handle, an @handle, or a full URL - store the bare handle.
@@ -78,6 +79,7 @@ export async function updateProfile(input: {
   whatsapp?: string;
   profileLinks?: { label: string; url: string }[];
   photo?: string | null; // data URL, "" to clear, undefined to leave as-is
+  avatarColor?: string | null; // a pick from AVATAR_COLORS, null to go back to the derived one
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
@@ -114,6 +116,7 @@ export async function updateProfile(input: {
     whatsapp: string | null;
     profileLinks?: { label: string; url: string }[];
     photo?: string | null;
+    avatarColor?: string | null;
   } = { name, title: title || null, about, location, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
   if (input.profileLinks !== undefined) {
     // Labelled extra links: normalise the protocol, drop anything unparseable,
@@ -140,6 +143,10 @@ export async function updateProfile(input: {
       return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
     set.photo = photo || null;
+  }
+  if (input.avatarColor !== undefined) {
+    // Only a colour from the palette; anything else falls back to the derived one.
+    set.avatarColor = AVATAR_COLORS.includes(input.avatarColor ?? "") ? input.avatarColor : null;
   }
 
   const db = await getDb();

@@ -11,6 +11,7 @@ export type FeedCoach = {
   handle: string;
   name: string;
   photo: string | null;
+  color: string;
 };
 
 export type FeedItem = {
@@ -19,6 +20,7 @@ export type FeedItem = {
   handle: string;
   coachName: string;
   coachPhoto: string | null;
+  coachColor: string;
   name: string;
   hm: string;
   ap: string;
@@ -64,12 +66,12 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
     });
   };
 
-  const avatar = (photo: string | null, name: string, cls: string) =>
+  const avatar = (photo: string | null, name: string, cls: string, color: string) =>
     photo ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img className={cls} src={photo} alt="" />
     ) : (
-      <span className={`${cls} ${cls}-empty`} aria-hidden="true">
+      <span className={`${cls} ${cls}-empty`} style={{ background: color }} aria-hidden="true">
         {(name.trim().charAt(0) || "?").toUpperCase()}
       </span>
     );
@@ -98,7 +100,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
             aria-pressed={sel === c.id}
             onClick={() => setSel(sel === c.id ? null : c.id)}
           >
-            {avatar(c.photo, c.name, "feedav-img")}
+            {avatar(c.photo, c.name, "feedav-img", c.color)}
             <span className="feedav-nm">{c.name.trim().split(/\s+/)[0]}</span>
           </button>
         ))}
@@ -154,7 +156,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                       <span className="ps-ebody">
                         <span className="ps-enm">{i.name}</span>
                         <span className="ps-estudio ps-ecoach">
-                          {avatar(i.coachPhoto, i.coachName, "ps-ecoachav")}
+                          {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
                           <span className="ps-ecoach-txt">
                             {i.coachName.trim().split(/\s+/)[0]}
                             {i.where ? ` · ${i.where}` : ""}

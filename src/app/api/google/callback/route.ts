@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { nextAvatarColor } from "@/lib/avatar-server";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeCode, emailFromIdToken, syncUserToGoogle, googleConfigured } from "@/lib/gcal";
 import { createSession } from "@/lib/session";
@@ -71,7 +72,9 @@ export async function GET(req: Request) {
     let [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
     if (!user) {
       if (!(await emailInvited(email))) return toLogin("invite=1");
-      [user] = await db.insert(schema.users).values({ email }).returning();
+      [user] = await db.insert(schema.users)
+      .values({ email, avatarColor: await nextAvatarColor() })
+      .returning();
       await acceptInvite(email, user.id);
     }
     if (tokens.refresh_token) await storeCalendar(user.id, tokens.refresh_token, email);

@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { logout } from "@/app/actions/auth";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
+import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -83,6 +84,7 @@ export default async function FeedPage() {
             handle: coach.handle,
             coachName: coach.name,
             coachPhoto: coach.photo,
+            coachColor: avatarColor(coach),
             name: c.name,
             hm: t.hm,
             ap: t.ap,
@@ -131,6 +133,7 @@ export default async function FeedPage() {
               handle: c.handle!,
               name: c.name,
               photo: c.photo,
+              color: avatarColor(c),
             }))}
             days={days}
           />

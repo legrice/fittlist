@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { QrSheet } from "@/components/QrSheet";
@@ -50,6 +51,8 @@ export function ScheduleScreen({
   isAdmin,
   showFanView,
   discoverable,
+  userId,
+  myColor,
   look,
 }: {
   classes: ClassDto[];
@@ -85,6 +88,8 @@ export function ScheduleScreen({
   isAdmin: boolean;
   showFanView: boolean;
   discoverable: boolean;
+  userId: string;
+  myColor: string | null;
   look: string | null;
 }) {
   const router = useRouter();
@@ -236,7 +241,11 @@ export function ScheduleScreen({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className="usericon-photo" src={photo} alt="" />
               ) : (
-                <span className="usericon-initial" aria-hidden="true">
+                <span
+                  className="usericon-initial"
+                  style={{ background: avatarColor({ id: userId, avatarColor: myColor }) }}
+                  aria-hidden="true"
+                >
                   {(name.trim().charAt(0) || "?").toUpperCase()}
                 </span>
               )}

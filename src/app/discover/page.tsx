@@ -5,6 +5,7 @@ import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
+import { avatarColor } from "@/lib/avatar";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -81,6 +82,7 @@ export default async function DiscoverPage() {
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
+      color: avatarColor(r),
     }))
     .sort(
       (a, b) =>

@@ -37,6 +37,7 @@ export default async function SchedulePage({
         theme: schema.users.theme,
         look: schema.users.look,
         discoverable: schema.users.discoverable,
+        avatarColor: schema.users.avatarColor,
         handle: schema.users.handle,
         name: schema.users.name,
         title: schema.users.title,
@@ -161,6 +162,8 @@ export default async function SchedulePage({
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
       showFanView={await fansVisible()}
       discoverable={user?.discoverable ?? true}
+      userId={userId}
+      myColor={user?.avatarColor ?? null}
       look={user?.look ?? null}
     />
   );

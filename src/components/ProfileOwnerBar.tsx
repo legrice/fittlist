@@ -6,6 +6,7 @@ import { updateProfile } from "@/app/actions/profile";
 import { useSlideBack } from "@/components/BackLink";
 import { ChipsField } from "@/components/ChipsField";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
+import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -26,6 +27,8 @@ export function ProfileOwnerBar({
   whatsapp,
   profileLinks,
   photo,
+  avatarColor: avatarColorProp,
+  userId,
 }: {
   name: string;
   title: string;
@@ -41,6 +44,8 @@ export function ProfileOwnerBar({
   whatsapp: string;
   profileLinks: ProfileLink[];
   photo: string | null;
+  avatarColor?: string | null;
+  userId: string;
 }) {
   const router = useRouter();
   const slideBack = useSlideBack();
@@ -60,6 +65,8 @@ export function ProfileOwnerBar({
   const [pWhatsapp, setPWhatsapp] = useState(whatsapp);
   const [pLinks, setPLinks] = useState<ProfileLink[]>(profileLinks);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
+  const shownColor = avatarColor({ id: userId, avatarColor: pColor });
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +111,7 @@ export function ProfileOwnerBar({
     setPWhatsapp(whatsapp);
     setPLinks(profileLinks);
     setPPhoto(photo);
+    setPColor(avatarColorProp ?? null);
     setEditOpen(true);
   };
 
@@ -124,6 +132,7 @@ export function ProfileOwnerBar({
         whatsapp: pWhatsapp,
         profileLinks: pLinks,
         photo: pPhoto,
+        avatarColor: pColor,
       });
       if (!res.ok) {
         toast(res.error ?? "Couldn't save");
@@ -162,7 +171,11 @@ export function ProfileOwnerBar({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className="editphoto-img" src={pPhoto} alt="" />
               ) : (
-                <div className="editphoto-img profrow-empty" aria-hidden="true">
+                <div
+                  className="editphoto-img profrow-empty"
+                  style={{ background: shownColor }}
+                  aria-hidden="true"
+                >
                   {(pName.trim().charAt(0) || "?").toUpperCase()}
                 </div>
               )}
@@ -188,6 +201,26 @@ export function ProfileOwnerBar({
                 }}
               />
             </div>
+            {!pPhoto && (
+              <>
+                <label className="flabel">
+                  Your colour <span>· until you add a photo</span>
+                </label>
+                <div className="swatchgrid">
+                  {AVATAR_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`swatch${c === shownColor ? " on" : ""}`}
+                      style={{ background: c }}
+                      aria-label={`Colour ${c}`}
+                      aria-pressed={c === shownColor}
+                      onClick={() => setPColor(c)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             <label className="flabel" htmlFor="pName">
               Name
             </label>

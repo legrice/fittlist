@@ -17,6 +17,7 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { getDb, schema } from "@/db";
+import { nextAvatarColor } from "@/lib/avatar-server";
 import { sendMessage } from "@/lib/mailer";
 import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
@@ -63,7 +64,7 @@ export async function passwordAuth(
     const passwordHash = await hashPassword(password);
     const [created] = await db
       .insert(schema.users)
-      .values({ email, passwordHash, kind: fan ? "fan" : "coach" })
+      .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor() })
       .returning();
     if (!fan) await acceptInvite(email, created.id);
     await createSession(created.id);
@@ -230,7 +231,10 @@ export async function consumeMagicToken(
     // Defense in depth: requestMagicLink already gates, but never create an
     // account here for an email that isn't invited.
     if (!(await emailInvited(row.email))) return null;
-    [user] = await db.insert(schema.users).values({ email: row.email }).returning();
+    [user] = await db
+      .insert(schema.users)
+      .values({ email: row.email, avatarColor: await nextAvatarColor() })
+      .returning();
     await acceptInvite(row.email, user.id);
   }
   await createSession(user.id);

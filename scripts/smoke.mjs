@@ -207,8 +207,22 @@ await page.locator("#pInstagram").fill("@mattlifts");
 await page.locator("#pWebsite").fill("mattlifts.com");
 await page.locator("#pEmail").fill("matt@ironbound.co");
 await page.locator("#pPhone").fill("+1 555 867 5309");
+// the avatar colour picker (shown only while there's no photo): pick one and
+// make sure it's the colour the public page renders behind the initial
+await page.locator(".swatchgrid .swatch").first().waitFor();
+const pickedColor = await page.locator(".swatchgrid .swatch").nth(23).evaluate((e) => {
+  e.click();
+  return getComputedStyle(e).backgroundColor;
+});
 await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
+await page.reload();
+const shownAvatar = await page
+  .locator(".profphoto-empty")
+  .evaluate((e) => getComputedStyle(e).backgroundColor);
+if (shownAvatar !== pickedColor)
+  fail(`avatar colour didn't stick: picked ${pickedColor}, page shows ${shownAvatar}`);
+console.log("avatar colour pick ok (persists to the public page)");
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png", fullPage: true });
 // the back arrow returns to the account page (not the schedule)
@@ -741,6 +755,21 @@ await fan.locator(".feedfilterbar").waitFor();
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
+
+// photo-less coaches must be visually distinct — that's the whole point of the
+// palette, so no two listed coaches may share a colour
+await fan.goto(BASE + "/discover");
+await fan.locator(".disrow-av-empty").first().waitFor();
+const avColors = await fan.locator(".disrow-av-empty").evaluateAll((els) =>
+  els.map((e) => getComputedStyle(e).backgroundColor),
+);
+if (new Set(avColors).size !== avColors.length)
+  fail("photo-less coaches share an avatar colour: " + avColors.join(", "));
+if (avColors.some((c) => !c || c === "rgba(0, 0, 0, 0)")) fail("avatar rendered with no colour");
+console.log(
+  `avatar colours ok (${avColors.length} listed, all distinct)` +
+    (avColors.length < 2 ? " — only one coach is listed, so this is a weak check" : ""),
+);
 
 // "I'm going" + the member's share image — the mirror of the coach's story
 await fan.goto(BASE + "/feed");

@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -95,7 +96,11 @@ export async function PublicProfileView({
         // eslint-disable-next-line @next/next/no-img-element
         <img className="profphoto" src={user.photo} alt={user.name} />
       ) : (
-        <div className="profphoto profphoto-empty" aria-hidden="true">
+        <div
+          className="profphoto profphoto-empty"
+          style={{ background: avatarColor(user) }}
+          aria-hidden="true"
+        >
           {user.name.trim().charAt(0).toUpperCase() || "?"}
         </div>
       )}
@@ -274,6 +279,8 @@ export async function PublicProfileView({
           whatsapp={user.whatsapp ?? ""}
           profileLinks={user.profileLinks}
           photo={user.photo}
+          avatarColor={user.avatarColor}
+          userId={user.id}
         />
       )}
       <div className="profwrap">

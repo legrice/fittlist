@@ -15,6 +15,7 @@ export type DiscoverCoach = {
   location: string;
   classesThisWeek: number;
   following: boolean;
+  color: string;
 };
 
 // Search + city filter over the directory, with Follow inline on every row —
@@ -125,7 +126,11 @@ export function DiscoverList({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img className="disrow-av" src={c.photo} alt="" />
                 ) : (
-                  <span className="disrow-av disrow-av-empty" aria-hidden="true">
+                  <span
+                    className="disrow-av disrow-av-empty"
+                    style={{ background: c.color }}
+                    aria-hidden="true"
+                  >
                     {(c.name.trim().charAt(0) || "?").toUpperCase()}
                   </span>
                 )}
