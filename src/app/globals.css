@@ -1152,12 +1152,20 @@ button.ps-card { cursor: pointer; }
 .setrow-chev { color: rgba(25, 21, 2, .3); flex-shrink: 0; display: flex; }
 
 /* settings sub-view slides in over the account page, back slides it out right */
-.settingspane { z-index: 41; }
+.settingspane { z-index: 41; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .settingspane.from-right { animation: slideInRight .28s cubic-bezier(.22, .8, .28, 1); }
 .settingspane.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
 .settingstop { justify-content: flex-start; gap: 10px; }
 .settings-h { font-size: 24px; }
 .settings-lead { font-size: 14px; color: var(--ol); line-height: 1.5; margin: 6px 2px 16px; }
+/* Save bar: full-bleed light strip pinned to the bottom of the window. */
+.settingspane .publishwrap {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
+  max-width: none; width: auto; margin: 0;
+  background: var(--paper); border-top: 1px solid var(--line); border-radius: 0;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+}
+.settingspane .publishwrap .btn { max-width: 560px; margin: 0 auto; }
 
 /* adder: class Type dropdown */
 .typeselect {
