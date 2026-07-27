@@ -1817,3 +1817,6 @@ button.ps-card { cursor: pointer; }
 .stylepick-row:last-child { border-bottom: none; }
 .stylepick-row.sel { font-weight: 700; }
 .stylepick-row .material-icons { color: var(--si); }
+
+/* Admin invites: joined/pending filter */
+.invitefilter { flex: none; margin: 14px 0 12px; background: var(--card); box-shadow: var(--soft-shadow); }

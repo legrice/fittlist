@@ -96,13 +96,21 @@ export function AdminPanel({
     );
   }, [studios, q]);
 
+  // Invites can be narrowed to who's set up a profile vs still sitting on the
+  // invite ("joined" = the invite was accepted).
+  const [inviteFilter, setInviteFilter] = useState<"all" | "joined" | "pending">("all");
   const shownInvites = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return invites;
-    return invites.filter(
-      (i) => i.email.toLowerCase().includes(s) || i.label.toLowerCase().includes(s),
-    );
-  }, [invites, q]);
+    let list = invites;
+    if (s) {
+      list = list.filter(
+        (i) => i.email.toLowerCase().includes(s) || i.label.toLowerCase().includes(s),
+      );
+    }
+    if (inviteFilter === "joined") list = list.filter((i) => i.accepted);
+    if (inviteFilter === "pending") list = list.filter((i) => !i.accepted);
+    return list;
+  }, [invites, q, inviteFilter]);
 
   const searchPlaceholder =
     tab === "coaches" ? "Search name, email, or handle" : tab === "studios" ? "Search studios" : "Search invites";
@@ -172,11 +180,29 @@ export function AdminPanel({
               </>
             )}
             <InviteForm toast={toast} />
+            <div className="seg invitefilter">
+              <button className={inviteFilter === "all" ? "sel" : ""} onClick={() => setInviteFilter("all")}>
+                All ({invites.length})
+              </button>
+              <button className={inviteFilter === "joined" ? "sel" : ""} onClick={() => setInviteFilter("joined")}>
+                Joined ({invites.filter((i) => i.accepted).length})
+              </button>
+              <button
+                className={inviteFilter === "pending" ? "sel" : ""}
+                onClick={() => setInviteFilter("pending")}
+              >
+                Pending ({invites.filter((i) => !i.accepted).length})
+              </button>
+            </div>
             <div className="admincards">
               {shownInvites.map((i) => (
                 <InviteCard key={i.id} i={i} toast={toast} />
               ))}
-              {!shownInvites.length && <p className="adminempty">No invites yet. Invite a coach above.</p>}
+              {!shownInvites.length && (
+                <p className="adminempty">
+                  {invites.length ? "No invites match." : "No invites yet. Invite a coach above."}
+                </p>
+              )}
             </div>
           </>
         ) : (
