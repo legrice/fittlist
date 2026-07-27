@@ -134,18 +134,20 @@ export async function PublicProfileView({
     </>
   );
 
-  const schedule =
-    days.length === 0 ? (
-      <div className="empty-block" style={{ background: "#fff" }}>
-        <h2>Nothing on the calendar</h2>
-        <p>
-          {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email the
-          moment they do.
-        </p>
-      </div>
-    ) : (
-      <div className="ps-week ps-agenda">
-        {days.map((d) => (
+  const schedule = (
+    <>
+      <h2 className="prof-sec-h sched-h">Schedule</h2>
+      {days.length === 0 ? (
+        <div className="empty-block" style={{ background: "#fff" }}>
+          <h2>Nothing on the calendar</h2>
+          <p>
+            {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
+            the moment they do.
+          </p>
+        </div>
+      ) : (
+        <div className="ps-week ps-agenda">
+          {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
             <div className="ps-daycol">{d.label}</div>
             <div className="ps-daycards">
@@ -177,9 +179,11 @@ export async function PublicProfileView({
               })}
             </div>
           </div>
-        ))}
-      </div>
-    );
+          ))}
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className="pub profile" data-theme={user.theme}>

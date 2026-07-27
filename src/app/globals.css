@@ -982,7 +982,7 @@ button.ps-card { cursor: pointer; }
 /* Public profile: sticky name + share row, then sticky tabs; title scrolls
    away between them (hidden behind the name row). */
 .pubhead {
-  position: sticky; top: 0; z-index: 6; background: var(--cl);
+  position: sticky; top: 0; z-index: 6; background: var(--paper);
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 0 8px;
 }
@@ -991,7 +991,7 @@ button.ps-card { cursor: pointer; }
 
 /* About / Schedule tab switcher on the public profile */
 .pubtabs {
-  position: sticky; z-index: 5; background: var(--cl);
+  position: sticky; z-index: 5; background: var(--paper);
   display: flex; gap: 26px; border-bottom: 1px solid var(--line); margin: 14px 0 0;
 }
 .pubtab {
@@ -1003,6 +1003,9 @@ button.ps-card { cursor: pointer; }
 .pubpanel { padding-top: 20px; }
 .pubpanel .profphoto { margin-top: 0; }
 .pubpanel .ps-week { margin-top: 2px; }
+/* Divider under About (Where I coach), then a titled Schedule section. */
+.pubpanel-sched { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
+.sched-h { margin-bottom: 14px; }
 
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;

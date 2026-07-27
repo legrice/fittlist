@@ -129,7 +129,7 @@ export function ProfileTabs({
       <div className="pubpanel" style={{ scrollMarginTop: offset }}>
         {about}
       </div>
-      <div className="pubpanel" ref={schedRef} style={{ scrollMarginTop: offset }}>
+      <div className="pubpanel pubpanel-sched" ref={schedRef} style={{ scrollMarginTop: offset }}>
         {schedule}
       </div>
     </>
