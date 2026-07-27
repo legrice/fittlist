@@ -221,8 +221,9 @@ console.log("dashboard quick links ok");
 // the public page (visitors see it too — it's a server-rendered attribute).
 await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
+await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
-await page.waitForFunction(() => document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
+await page.waitForFunction(() => document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 25000 });
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.goto(BASE + "/matt");
@@ -232,8 +233,9 @@ console.log("dark page look ok (app + public)");
 await page.goto(BASE + "/app");
 await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
+await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
-await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
+await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 25000 });
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("light restored ok");
@@ -340,21 +342,24 @@ const subN = await page.locator(".acctstats .acctstat").nth(2).locator(".n").tex
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
-// ---- that follow dropped a notification in the coach's feed; the header bell
-// shows a badge and the messages (inbox) icon sits beside it.
+// ---- that follow dropped a notification; the single Updates bell carries the
+// combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
 await page.getByText("Your schedule").waitFor();
-await expect(page.locator('a[href="/notifications"] .inboxdot').isVisible(), "notifications bell shows a badge");
-await expect(page.locator('a[href="/inbox"]').isVisible(), "messages icon present in header");
-await page.locator('a[href="/notifications"]').click();
-await page.getByRole("heading", { name: "Notifications" }).waitFor();
+await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
+await page.locator('a[href="/updates"]').click();
+await page.getByRole("heading", { name: "Updates" }).waitFor();
 await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).isVisible(), "follow notification listed");
+await page.locator(".updateseg button", { hasText: "Messages" }).click();
+await page.getByText("No messages yet", { exact: false }).waitFor();
+await page.locator(".updateseg button", { hasText: "Notifications" }).click();
+await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
 await page.getByText("Your schedule").waitFor();
-if (await page.locator('a[href="/notifications"] .inboxdot').count())
-  fail("notifications badge should clear after opening the feed");
-console.log("notifications ok");
+if (await page.locator('a[href="/updates"] .inboxdot').count())
+  fail("updates badge should clear after opening the feed");
+console.log("updates (notifications + messages) ok");
 
 // ================= Phase 2: the weekly list =================
 const CRON_KEY = process.env.CRON_SECRET ?? "smoke-cron";

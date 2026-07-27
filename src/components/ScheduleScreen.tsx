@@ -130,6 +130,8 @@ export function ScheduleScreen({
   }, [toast]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
+  // One bell for everything: unread notifications + unread messages.
+  const updatesUnread = notifUnread + inboxUnread;
 
   const edit = (c: ClassDto) => {
     // A weekly class is stored as one row per day; editing it should load every
@@ -210,13 +212,13 @@ export function ScheduleScreen({
         <div className="brandbar">
           <Wordmark variant="ink" beta />
           <div className="brandbar-actions">
-            <Link className="iconbtn inboxbtn" aria-label={`Notifications${notifUnread ? `, ${notifUnread} unread` : ""}`} href="/notifications">
+            <Link
+              className="iconbtn inboxbtn"
+              aria-label={`Updates${updatesUnread ? `, ${updatesUnread} unread` : ""}`}
+              href="/updates"
+            >
               <Icon name="notifications" size={20} />
-              {notifUnread > 0 && <span className="inboxdot">{notifUnread > 9 ? "9+" : notifUnread}</span>}
-            </Link>
-            <Link className="iconbtn inboxbtn" aria-label={`Messages${inboxUnread ? `, ${inboxUnread} unread` : ""}`} href="/inbox">
-              <Icon name="forum" size={20} />
-              {inboxUnread > 0 && <span className="inboxdot">{inboxUnread > 9 ? "9+" : inboxUnread}</span>}
+              {updatesUnread > 0 && <span className="inboxdot">{updatesUnread > 9 ? "9+" : updatesUnread}</span>}
             </Link>
             <button
               className="usericon"

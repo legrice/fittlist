@@ -42,7 +42,7 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
   return (
     <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="chattop">
-        <Link className="iconbtn chatback" aria-label="Back to inbox" href="/inbox">
+        <Link className="iconbtn chatback" aria-label="Back to messages" href="/updates?tab=messages">
           <Icon name="arrow_back" size={18} />
         </Link>
         <div className="chattop-txt">

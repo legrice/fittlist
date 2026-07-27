@@ -40,7 +40,7 @@ export async function emailCoachInquiry(opts: {
     subject: `${who} wants to train with you`,
     text:
       `${who} sent you a private-session request on fittlist:\n\n"${opts.body}"\n\n` +
-      `Reply from your inbox: ${siteOrigin()}/inbox`,
+      `Reply from your inbox: ${siteOrigin()}/updates?tab=messages`,
   });
 }
 
