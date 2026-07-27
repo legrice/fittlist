@@ -1540,3 +1540,107 @@ button.ps-card { cursor: pointer; }
 .admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--si-soft); }
 .admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }
 .admindanger .adminaddform-row { margin-top: 0; }
+
+/* ============================================================================
+   Notifications feed (bell in the brandbar -> /notifications)
+   ========================================================================== */
+.notiflist { display: flex; flex-direction: column; margin-top: 8px; }
+.notifrow {
+  display: flex; align-items: center; gap: 12px; padding: 14px 2px; text-decoration: none;
+  color: var(--ink); border-bottom: 1px solid var(--line); -webkit-tap-highlight-color: transparent;
+}
+.notifrow-ic {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: var(--cl);
+  border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--si);
+}
+.notifrow-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.notifrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.notifrow-top .nm { font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; }
+.notifrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
+.notifrow-body { font-size: 13.5px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notifrow.unread .notifrow-body { color: var(--ink); }
+.notifrow-dot { flex-shrink: 0; width: 9px; height: 9px; border-radius: 999px; background: var(--si); }
+
+/* iOS-style switch (dark-mode row, and reusable) */
+.switch {
+  flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--sa);
+  position: relative; transition: background .18s ease;
+}
+.switch.on { background: var(--si); }
+.switch-knob {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .18s ease;
+}
+.switch.on .switch-knob { transform: translateX(18px); }
+
+/* ============================================================================
+   Dark mode — opt-in, coach-app only. The account toggle flips
+   data-mode="dark" on <html>; an inline script in the layout restores it before
+   paint. Scoped to the app-shell surfaces (.screen / .chatscreen), so public
+   profile pages — which carry their own poster theme — always stay light.
+   ========================================================================== */
+[data-mode="dark"] .appshell,
+[data-mode="dark"] .screen,
+[data-mode="dark"] .chatscreen {
+  --paper: #14120d;
+  --card: #211c13;
+  --ink: #f3efe3;
+  --ol: #a89f8a;
+  --line: #35301f;
+  --cl: #272115;
+  --sa: #3d3826;
+  --si-soft: #3a2a1c;
+  --soft-shadow: 0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.5);
+  --soft-shadow-lg: 0 2px 8px rgba(0,0,0,.55), 0 14px 30px rgba(0,0,0,.6);
+  background: var(--paper);
+  color: var(--ink);
+}
+/* pre-token surfaces baked with #fff / #191502 — repaint for dark */
+[data-mode="dark"] .accttile,
+[data-mode="dark"] .acctstats-grid .acctstat,
+[data-mode="dark"] .acctcard,
+[data-mode="dark"] .secblock,
+[data-mode="dark"] .settingslist,
+[data-mode="dark"] .setrow,
+[data-mode="dark"] .typeselect,
+[data-mode="dark"] .editinput,
+[data-mode="dark"] .acctclose,
+[data-mode="dark"] .secbtn,
+[data-mode="dark"] .chatmsg.theirs .chatbubble {
+  background: var(--card);
+  color: var(--ink);
+}
+[data-mode="dark"] .acctname,
+[data-mode="dark"] .acctstat .n,
+[data-mode="dark"] .acctcard-ic,
+[data-mode="dark"] .acctcard-t,
+[data-mode="dark"] .secrow-ic,
+[data-mode="dark"] .secrow-txt .t,
+[data-mode="dark"] .setrow-ic,
+[data-mode="dark"] .setrow-txt .t,
+[data-mode="dark"] .usericon,
+[data-mode="dark"] .usericon-initial { color: var(--ink); }
+[data-mode="dark"] .acctstat .l,
+[data-mode="dark"] .acctcard-s { color: var(--ol); }
+[data-mode="dark"] .setrow-chev { color: rgba(243,239,227,.32); }
+/* pill / avatar chrome */
+[data-mode="dark"] .usericon,
+[data-mode="dark"] .inboxrow-av { background: var(--cl); }
+/* press states (were warm cream) */
+[data-mode="dark"] .setrow:active,
+[data-mode="dark"] .acctcard:active,
+[data-mode="dark"] .secbtn:active,
+[data-mode="dark"] .inboxrow:active,
+[data-mode="dark"] .logoutbtn:active,
+[data-mode="dark"] .acctclose:active,
+[data-mode="dark"] .ps-event:active,
+[data-mode="dark"] .ps-agenda .ps-event:active { background: #2c2718; }
+/* the account overlay + its stage wrappers use poster cream by default */
+[data-mode="dark"] .appshell,
+[data-mode="dark"] .appshell .stage,
+[data-mode="dark"] .acctwrap { background: var(--paper); }
+/* poster-cream surfaces that live inside the app: the sticky header + adder card */
+[data-mode="dark"] .brandbar { background: var(--card); }
+[data-mode="dark"] .ps-card { background: var(--card); color: var(--ink); border-color: var(--line); }
+/* keep the QR frame white so the code always scans */
+[data-mode="dark"] .qrframe { background: #fff; }

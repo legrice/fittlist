@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
 import { coachAnalytics } from "@/lib/visits";
+import { unreadNotifications } from "@/lib/notify";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
@@ -72,6 +73,7 @@ export default async function SchedulePage({
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
   const requestCount = inboxRows.length;
   const analytics = await coachAnalytics(userId);
+  const notifUnread = await unreadNotifications(userId);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -132,6 +134,7 @@ export default async function SchedulePage({
       lastUsed={lastUsed}
       subsCount={subRows.length}
       inboxUnread={inboxUnread}
+      notifUnread={notifUnread}
       profileViews={analytics.profileViews}
       scheduleOpens={analytics.scheduleOpens}
       requestCount={requestCount}

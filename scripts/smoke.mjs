@@ -308,6 +308,22 @@ const subN = await page.locator(".acctstats .acctstat").nth(2).locator(".n").tex
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
+// ---- that follow dropped a notification in the coach's feed; the header bell
+// shows a badge and the messages (inbox) icon sits beside it.
+await page.goto(BASE + "/app");
+await page.getByText("Your schedule").waitFor();
+await expect(page.locator('a[href="/notifications"] .inboxdot').isVisible(), "notifications bell shows a badge");
+await expect(page.locator('a[href="/inbox"]').isVisible(), "messages icon present in header");
+await page.locator('a[href="/notifications"]').click();
+await page.getByRole("heading", { name: "Notifications" }).waitFor();
+await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).isVisible(), "follow notification listed");
+// opening the feed clears the badge
+await page.goto(BASE + "/app");
+await page.getByText("Your schedule").waitFor();
+if (await page.locator('a[href="/notifications"] .inboxdot').count())
+  fail("notifications badge should clear after opening the feed");
+console.log("notifications ok");
+
 // ================= Phase 2: the weekly list =================
 const CRON_KEY = process.env.CRON_SECRET ?? "smoke-cron";
 let mailLog = readLog();

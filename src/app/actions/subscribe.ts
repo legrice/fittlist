@@ -3,6 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { sendWelcome } from "@/lib/notifier";
+import { addNotification } from "@/lib/notify";
 
 export async function subscribe(
   handle: string,
@@ -38,6 +39,17 @@ export async function subscribe(
     await sendWelcome(trainer, row);
   } catch (err) {
     console.error("welcome email failed", err);
+  }
+  // Drop a "someone followed you" note into the coach's activity feed. Best
+  // effort — a feed hiccup should never fail the subscribe itself.
+  try {
+    await addNotification(trainer.id, {
+      type: "follow",
+      title: "New follower",
+      body: `${email} followed your schedule`,
+    });
+  } catch (err) {
+    console.error("follow notification failed", err);
   }
   return { ok: true };
 }

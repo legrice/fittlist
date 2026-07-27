@@ -226,6 +226,23 @@ export const subscribers = pgTable(
   (t) => [uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email)],
 );
 
+// A coach's activity feed. Today it's just "someone followed you"; the type +
+// jsonb data shape leaves room for more kinds later without new columns.
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id), // the coach who receives it
+    type: text("type").notNull(), // "follow" (more later)
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    href: text("href"), // where tapping it should go, if anywhere
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("notifications_user_created").on(t.userId, t.createdAt)],
+);
+
 export const pageVisits = pgTable(
   "page_visits",
   {

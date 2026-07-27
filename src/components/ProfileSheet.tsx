@@ -15,6 +15,7 @@ import {
 import { updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Toast, useToast } from "@/components/Toast";
 
 type View = "home" | "security" | "contact" | "gcal";
@@ -356,6 +357,7 @@ export function ProfileSheet({
         </div>
 
         <div className="settingslist">
+          {email.trim().toLowerCase() === "mattlegrice@gmail.com" && <DarkModeToggle />}
           <button className="setrow" onClick={() => openView("security")}>
             <span className="setrow-ic"><Icon name="lock" size={22} /></span>
             <span className="setrow-txt">

@@ -24,6 +24,7 @@ export function ScheduleScreen({
   lastUsed,
   subsCount,
   inboxUnread,
+  notifUnread,
   profileViews,
   scheduleOpens,
   requestCount,
@@ -55,6 +56,7 @@ export function ScheduleScreen({
   lastUsed: LastUsed;
   subsCount: number;
   inboxUnread: number;
+  notifUnread: number;
   profileViews: number;
   scheduleOpens: number;
   requestCount: number;
@@ -202,8 +204,12 @@ export function ScheduleScreen({
         <div className="brandbar">
           <Wordmark variant="ink" beta />
           <div className="brandbar-actions">
-            <Link className="iconbtn inboxbtn" aria-label={`Inbox${inboxUnread ? `, ${inboxUnread} unread` : ""}`} href="/inbox">
-              <Icon name="mail" size={20} />
+            <Link className="iconbtn inboxbtn" aria-label={`Notifications${notifUnread ? `, ${notifUnread} unread` : ""}`} href="/notifications">
+              <Icon name="notifications" size={20} />
+              {notifUnread > 0 && <span className="inboxdot">{notifUnread > 9 ? "9+" : notifUnread}</span>}
+            </Link>
+            <Link className="iconbtn inboxbtn" aria-label={`Messages${inboxUnread ? `, ${inboxUnread} unread` : ""}`} href="/inbox">
+              <Icon name="forum" size={20} />
               {inboxUnread > 0 && <span className="inboxdot">{inboxUnread > 9 ? "9+" : inboxUnread}</span>}
             </Link>
             <button

@@ -12,13 +12,18 @@ export function Wordmark({
   className?: string;
   beta?: boolean;
 }) {
-  const color = variant === "ink" ? "#191502" : "#F5F5F5";
+  // The ink variant follows --ink so it flips with dark mode; the icon inherits
+  // via currentColor. The cloud variant stays a fixed off-white on dark heroes.
+  const color = variant === "ink" ? "var(--ink)" : "#F5F5F5";
   return (
-    <span className={`wm ${className}`} role="img" aria-label={beta ? "FittList beta" : "FittList"}>
-      <span className="wm-ico" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon(color) }} />
-      <span className="wm-text" style={{ color }}>
-        FittList
-      </span>
+    <span
+      className={`wm ${className}`}
+      role="img"
+      aria-label={beta ? "FittList beta" : "FittList"}
+      style={{ color }}
+    >
+      <span className="wm-ico" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("currentColor") }} />
+      <span className="wm-text">FittList</span>
       {beta && <span className="wm-beta">beta</span>}
     </span>
   );
