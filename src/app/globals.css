@@ -824,7 +824,7 @@ button.bl-band { cursor: pointer; }
 .ps-agenda.ps-week { gap: 30px; }
 .ps-agenda .ps-daygroup { gap: 0; }
 .ps-agenda .ps-daycol {
-  font-weight: 700; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
+  font-weight: 400; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
   padding-bottom: 10px; border-bottom: 1px solid var(--line);
 }
 .ps-agenda .ps-daycards { display: block; gap: 0; }
