@@ -209,6 +209,8 @@ await page.locator("#pEmail").fill("matt@ironbound.co");
 await page.locator("#pPhone").fill("+1 555 867 5309");
 // the avatar colour picker (shown only while there's no photo): pick one and
 // make sure it's the colour the public page renders behind the initial
+// the swatches live behind "Or pick a colour" so the form isn't a wall of dots
+await page.getByRole("button", { name: "Or pick a colour" }).click();
 await page.locator(".swatchgrid .swatch").first().waitFor();
 const pickedColor = await page.locator(".swatchgrid .swatch").nth(23).evaluate((e) => {
   e.click();
@@ -504,6 +506,20 @@ await anonPage.getByRole("heading", { name: "Add a photo." }).waitFor();
 await anonPage.getByRole("button", { name: "Skip for now" }).click();
 await anonPage.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
+
+// Give Sam a class so there's a second coach for the coach-follows-coach test.
+// An empty schedule offers the CTA, not the fab, so open the adder that way.
+await anonPage.getByRole("button", { name: "Add your first class" }).click();
+await anonPage.getByRole("heading", { name: "New class" }).waitFor();
+await anonPage.getByRole("button", { name: "Select or start typing a studio" }).click();
+await anonPage.getByRole("heading", { name: "Choose a studio" }).waitFor();
+await anonPage.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
+await anonPage.locator(".studio-sel .nm", { hasText: "Ironbound Strength" }).waitFor();
+await anonPage.locator("#fName").fill("Sam's Conditioning");
+await anonPage.getByRole("button", { name: "Mo", exact: true }).click();
+await anonPage.locator(".publishwrap .btn").click();
+await anonPage.getByText("Your page is live").waitFor();
+console.log("second coach has a class ok");
 
 await openProfile(page);
 const vis1 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
@@ -845,6 +861,31 @@ await fan.goto(BASE + "/discover");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();
 console.log("directory opt-out ok (delisted, page still public)");
+
+// a coach following another coach: what they're attending shows in their own
+// week beside what they teach, and never on their public page
+await page.goto(BASE + "/sam");
+await page.locator(".notifybar .btn", { hasText: "Follow" }).click();
+await page.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
+await page.goto(BASE + "/feed");
+await page.locator(".feedagenda .goingbtn").first().click();
+await page.locator(".feedagenda .goingbtn.on").first().waitFor();
+await page.goto(BASE + "/app");
+await page.locator(".ps-event-going").first().waitFor();
+await expect(
+  page.locator(".ps-event-going .ps-goingtag").first().isVisible(),
+  "Going tag on the coach's own week",
+);
+// "Just teaching" hides them; "Everything" brings them back
+await page.locator(".teachseg button", { hasText: "Just teaching" }).click();
+await page.locator(".ps-event-going").first().waitFor({ state: "detached" });
+await page.locator(".teachseg button", { hasText: "Everything" }).click();
+await page.locator(".ps-event-going").first().waitFor();
+// what a coach attends is private: it must not leak onto their public page
+const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
+if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
+  fail("a class the coach attends leaked onto their public page");
+console.log("coach attending ok (own week only, never public)");
 
 // a coach can walk the member side from settings while the flag is dark
 await openProfile(page);

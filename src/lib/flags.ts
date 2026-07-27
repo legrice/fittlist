@@ -1,15 +1,28 @@
-// Dark-launch switches. The fan/discovery side ships in the codebase but stays
-// invisible until FANS_ENABLED=true is set in the environment, so the coach
-// beta is untouched until we flip it.
+// Dark-launch switches for the fan/discovery side.
+//
+//   FANS_ENABLED unset      coach beta exactly as it was; admins can still
+//                           preview the member side
+//   FANS_ENABLED=coaches    every signed-in coach can follow, browse the
+//                           directory and keep a week — but the public signup
+//                           has no "I'm here to train" option yet
+//   FANS_ENABLED=true       fully public: members can sign up too
+
 export function fansEnabled(): boolean {
   return process.env.FANS_ENABLED === "true";
 }
 
-// Same switch, plus an admin bypass: admins can walk the fan side in production
-// while it's still dark for everyone else. Signed-out visitors and the signup
-// role toggle stay on fansEnabled() alone — there's no session to check yet.
+// Coach-to-coach testing: the member surface is live for anyone signed in,
+// while public fan signup stays closed.
+export function fansForCoaches(): boolean {
+  const v = process.env.FANS_ENABLED;
+  return v === "true" || v === "coaches";
+}
+
+// Whether this viewer gets the member surface at all: the flag, or an admin
+// previewing it while it's still dark. Signed-out visitors and the signup role
+// toggle stay on fansEnabled() alone — there's no session to check yet.
 export async function fansVisible(): Promise<boolean> {
-  if (fansEnabled()) return true;
+  if (fansForCoaches()) return true;
   const { currentAdmin } = await import("@/lib/admin");
   return !!(await currentAdmin());
 }

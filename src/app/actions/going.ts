@@ -19,6 +19,8 @@ export async function setGoing(
   const db = await getDb();
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
+  // You teach it; you're not attending it.
+  if (cls.userId === userId) return { ok: false, error: "That's your own class." };
 
   if (on) {
     await db

@@ -1869,11 +1869,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px;
   color: #fff; background: var(--si);
 }
-/* The ring marks a coach you've filtered to. "All" is the resting state — a
-   ring there is decoration, and nothing is dimmed to contrast it against. */
-.feedav.on .feedav-img:not(.feedav-all) {
-  box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si);
-}
+.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si); }
 .feedav-all {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
@@ -1922,6 +1918,20 @@ button.ps-card { cursor: pointer; }
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
 }
 .swatch.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+
+/* A class the coach is attending, sitting in their own week next to the ones
+   they teach. Outlined rather than filled: it isn't their work. */
+.teachseg { flex: none; margin: 0 0 16px; background: var(--cl); }
+.ps-agenda .ps-event-going { background: transparent; }
+.ps-agenda .ps-event-going .ps-accent { background: var(--ol); opacity: .5; }
+.ps-goingtag {
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--cl);
+  color: var(--ol); font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+  vertical-align: middle;
+}
+.ps-agenda .ps-event-going .ps-enm { color: var(--ol); }
+.ps-agenda .ps-event-going .ps-etime { color: var(--ol); }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
 .feedrow { flex-wrap: wrap; }

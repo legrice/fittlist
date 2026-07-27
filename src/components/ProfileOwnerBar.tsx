@@ -66,6 +66,7 @@ export function ProfileOwnerBar({
   const [pLinks, setPLinks] = useState<ProfileLink[]>(profileLinks);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
+  const [colorOpen, setColorOpen] = useState(false);
   const shownColor = avatarColor({ id: userId, avatarColor: pColor });
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -183,9 +184,19 @@ export function ProfileOwnerBar({
                 <button className="btn ghost" onClick={() => fileRef.current?.click()}>
                   {pPhoto ? "Change photo" : "Add photo"}
                 </button>
-                {pPhoto && (
+                {pPhoto ? (
                   <button className="linktoggle" onClick={() => setPPhoto(null)}>
                     Remove
+                  </button>
+                ) : (
+                  // No photo? Then the colour behind the initial is what people
+                  // see — offered here as the alternative, not dumped on the form.
+                  <button
+                    className="linktoggle"
+                    aria-expanded={colorOpen}
+                    onClick={() => setColorOpen((v) => !v)}
+                  >
+                    {colorOpen ? "Done" : "Or pick a colour"}
                   </button>
                 )}
               </div>
@@ -201,25 +212,20 @@ export function ProfileOwnerBar({
                 }}
               />
             </div>
-            {!pPhoto && (
-              <>
-                <label className="flabel">
-                  Your colour <span>· until you add a photo</span>
-                </label>
-                <div className="swatchgrid">
-                  {AVATAR_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`swatch${c === shownColor ? " on" : ""}`}
-                      style={{ background: c }}
-                      aria-label={`Colour ${c}`}
-                      aria-pressed={c === shownColor}
-                      onClick={() => setPColor(c)}
-                    />
-                  ))}
-                </div>
-              </>
+            {!pPhoto && colorOpen && (
+              <div className="swatchgrid">
+                {AVATAR_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`swatch${c === shownColor ? " on" : ""}`}
+                    style={{ background: c }}
+                    aria-label={`Colour ${c}`}
+                    aria-pressed={c === shownColor}
+                    onClick={() => setPColor(c)}
+                  />
+                ))}
+              </div>
             )}
             <label className="flabel" htmlFor="pName">
               Name

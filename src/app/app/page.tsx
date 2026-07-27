@@ -1,13 +1,14 @@
-import { desc, eq, isNull, and } from "drizzle-orm";
+import { desc, eq, inArray, isNull, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
 import { fansVisible } from "@/lib/flags";
+import { avatarColor } from "@/lib/avatar";
 import { coachAnalytics } from "@/lib/visits";
 import { unreadNotifications } from "@/lib/notify";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
-import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { AttendingDto, ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,53 @@ export default async function SchedulePage({
     .where(eq(schema.inquiryThreads.coachUserId, userId));
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
   const requestCount = inboxRows.length;
+  // Classes this coach is attending as a participant (the member side). Their
+  // own page never shows these — this is only their private week.
+  const attendRows = await db
+    .select({
+      classId: schema.attendances.classId,
+      occurrenceDate: schema.attendances.occurrenceDate,
+    })
+    .from(schema.attendances)
+    .where(eq(schema.attendances.userId, userId));
+  const attendClassIds = [...new Set(attendRows.map((a) => a.classId))];
+  const attendClasses = attendClassIds.length
+    ? await db.select().from(schema.classes).where(inArray(schema.classes.id, attendClassIds))
+    : [];
+  const attendClassById = new Map(attendClasses.map((c) => [c.id, c]));
+  const attendCoachIds = [...new Set(attendClasses.map((c) => c.userId))];
+  const attendCoaches = attendCoachIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, attendCoachIds))
+    : [];
+  const attendCoachById = new Map(attendCoaches.map((c) => [c.id, c]));
+  const attendStudioIds = [
+    ...new Set(attendClasses.map((c) => c.studioId).filter((x): x is string => !!x)),
+  ];
+  const attendStudios = attendStudioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, attendStudioIds))
+    : [];
+  const attendStudioById = new Map(attendStudios.map((s) => [s.id, s]));
+  const todayForAttend = new Date().toISOString().slice(0, 10);
+  const attending: AttendingDto[] = attendRows.flatMap((a) => {
+    const c = attendClassById.get(a.classId);
+    const coach = c ? attendCoachById.get(c.userId) : undefined;
+    if (!c || !coach?.handle || a.occurrenceDate < todayForAttend) return [];
+    return [
+      {
+        classId: c.id,
+        iso: a.occurrenceDate,
+        startTime: c.startTime,
+        durationMin: c.durationMin,
+        name: c.name,
+        where: (c.studioId && attendStudioById.get(c.studioId)?.name) || c.location,
+        coachName: coach.name,
+        coachHandle: coach.handle,
+        coachPhoto: coach.photo,
+        coachColor: avatarColor(coach),
+      },
+    ];
+  });
+
   const analytics = await coachAnalytics(userId);
   const notifUnread = await unreadNotifications(userId);
 
@@ -130,6 +178,7 @@ export default async function SchedulePage({
   return (
     <ScheduleScreen
       classes={classes}
+      attending={attending}
       hasAnyClass={hasAnyClass}
       todayIso={todayIso}
       studios={studios}
