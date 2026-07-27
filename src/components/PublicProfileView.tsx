@@ -91,13 +91,13 @@ export async function PublicProfileView({
         </div>
       )}
       {user.certifications.length > 0 && (
-        <div className="profsec">
+        <div className="profsec certsec">
           <h2 className="prof-sec-h">Certifications</h2>
-          <div className="certchips">
+          <ul className="expectlist">
             {user.certifications.map((c, i) => (
-              <span key={i} className="certchip">{c}</span>
+              <li key={i}>{c}</li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
       {coachStudios.length > 0 && (
