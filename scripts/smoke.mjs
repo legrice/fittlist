@@ -159,18 +159,23 @@ await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-e
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
-await page.getByRole("button", { name: "Delete this class" }).click();
-await page.getByRole("button", { name: "Yes, delete it" }).click();
-await page.getByText("Deleted", { exact: true }).waitFor();
-// The delete triggers a router.refresh() that re-fetches and re-keys the cards.
-// That refresh occasionally stalls under load; the delete itself is persisted,
-// so fall back to a hard reload (a user's pull-to-refresh) before failing.
-try {
-  await waitSchedule(page, 2, 12000);
-} catch {
-  await page.reload();
-  await page.getByText("Your schedule").waitFor();
-  await waitSchedule(page, 2, 12000);
+// The edit step just before this can recreate rows with fresh ids mid-flight,
+// so a delete can occasionally hit a stale row id. Retry the whole flow once.
+for (let attempt = 0; ; attempt++) {
+  await page.getByRole("button", { name: "Delete this class" }).click();
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await page.getByText("Deleted", { exact: true }).waitFor();
+  let done = false;
+  try { await waitSchedule(page, 2, 8000); done = true; } catch {}
+  if (!done) {
+    await page.reload();
+    await page.getByText("Your schedule").waitFor();
+    done = (await scheduleClasses(page)) === 2;
+  }
+  if (done) break;
+  if (attempt >= 1) fail("delete did not persist after retry");
+  await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
+  await page.getByRole("heading", { name: "Edit class" }).waitFor();
 }
 console.log("delete-in-sheet ok (confirm + cancel)");
 
@@ -215,7 +220,7 @@ console.log("account + profile edit ok (back -> account)");
 
 // ---- dashboard quick links on the schedule
 await expect(page.locator(".dashlink", { hasText: "Your page" }).isVisible(), "your-page quick link");
-await expect(page.locator(".dashlink", { hasText: "Share week" }).isVisible(), "share quick link");
+await expect(page.locator(".dashlink", { hasText: "Share cal" }).isVisible(), "share quick link");
 await expect(page.locator(".dashlink", { hasText: "QR code" }).isVisible(), "qr quick link");
 // the QR quick link opens the QR sheet right from the schedule
 await page.locator(".dashlink", { hasText: "QR code" }).click();

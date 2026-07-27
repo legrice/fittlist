@@ -249,7 +249,7 @@ export function ScheduleScreen({
             </button>
             <button className="dashlink" onClick={() => setShareOpen(true)}>
               <Icon name="calendar_today" size={19} />
-              <span>Share week</span>
+              <span>Share cal</span>
             </button>
             <button className="dashlink" onClick={() => setQrOpen(true)}>
               <Icon name="qr_code_2" size={19} />
