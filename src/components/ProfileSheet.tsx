@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { startRegistration } from "@simplewebauthn/browser";
-import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import {
   beginPasskeyRegistration,
   changeEmail as changeEmailAction,
@@ -75,10 +75,7 @@ export function ProfileSheet({
   const [leaving, setLeaving] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareSpan, setShareSpan] = useState<"week" | "day">("week");
-  const [storyThemeId, setStoryThemeId] = useState<StoryThemeId>("iron");
   const [canShareFiles, setCanShareFiles] = useState(false);
-  const [sharing, setSharing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrSharing, setQrSharing] = useState(false);
   const [pageUrl, setPageUrl] = useState(`fittlist.co/${handle}`);
@@ -234,34 +231,6 @@ export function ProfileSheet({
       } else toast(res.error ?? "Couldn't save");
       setContactSaving(false);
     })();
-  };
-
-  const storyUrl = `/api/story/${handle}?span=${shareSpan}&theme=${storyThemeId}`;
-  const storyFileName = `fittlist-${handle}-${shareSpan}-${storyThemeId}.png`;
-
-  const shareStory = async () => {
-    if (sharing) return;
-    setSharing(true);
-    try {
-      if (canShareFiles) {
-        const res = await fetch(storyUrl);
-        if (res.ok) {
-          const file = new File([await res.blob()], storyFileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      }
-      const a = document.createElement("a");
-      a.href = storyUrl;
-      a.download = storyFileName;
-      a.click();
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast("Couldn't share the image");
-    } finally {
-      setSharing(false);
-    }
   };
 
   const qrImgUrl = `/api/qr/${handle}`;
@@ -584,40 +553,12 @@ export function ProfileSheet({
         </div>
       )}
 
-      {shareOpen && (
-        <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setShareOpen(false); }}>
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setShareOpen(false)}>
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Your story image</h2>
-            <div className="share-toggles">
-              <div className="seg">
-                <button className={shareSpan === "week" ? "sel" : ""} onClick={() => setShareSpan("week")}>My week</button>
-                <button className={shareSpan === "day" ? "sel" : ""} onClick={() => setShareSpan("day")}>Today</button>
-              </div>
-            </div>
-            <div className="chips" style={{ justifyContent: "center" }}>
-              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["iron"]][]).map(([id, t]) => (
-                <button key={id} className={`chip themechip${storyThemeId === id ? " sel" : ""}`} onClick={() => setStoryThemeId(id)}>
-                  <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="storyimg" src={storyUrl} alt={`Story image of ${shareSpan === "week" ? "this week's" : "today's"} classes`} />
-            <div className="publishwrap">
-              {canShareFiles ? (
-                <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Save image"}</button>
-              ) : (
-                <a className="btn" href={storyUrl} download={storyFileName}>Save image</a>
-              )}
-              <button className="btn ghost" style={{ marginTop: 8 }} disabled={sharing} onClick={shareStory}>Share image</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ShareWeekSheet
+        handle={handle}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onToast={toast}
+      />
 
       {qrOpen && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setQrOpen(false); }}>

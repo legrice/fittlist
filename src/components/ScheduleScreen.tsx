@@ -5,8 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { AnnouncementEditor } from "@/components/AnnouncementEditor";
 import { Icon } from "@/components/Icon";
+import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
@@ -23,7 +23,6 @@ export function ScheduleScreen({
   customTypes,
   lastUsed,
   subsCount,
-  announcement,
   autoOpenAdder,
   handle,
   name,
@@ -53,7 +52,6 @@ export function ScheduleScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
-  announcement: string | null;
   autoOpenAdder: boolean;
   handle: string;
   name: string;
@@ -77,6 +75,7 @@ export function ScheduleScreen({
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
+  const [shareOpen, setShareOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
@@ -217,7 +216,9 @@ export function ScheduleScreen({
             )}
           </button>
         </div>
-        <AnnouncementEditor announcement={announcement} subsCount={subsCount} onToast={toast} />
+        <button className="weekshare" onClick={() => setShareOpen(true)}>
+          <Icon name="ios_share" size={18} /> Share your week
+        </button>
         <div className="calbar-title">Your schedule</div>
 
         {!hasAnyClass ? (
@@ -339,6 +340,13 @@ export function ScheduleScreen({
           }}
         />
       )}
+
+      <ShareWeekSheet
+        handle={handle}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onToast={toast}
+      />
 
       <Toast msg={toastMsg} on={toastOn} />
     </section>

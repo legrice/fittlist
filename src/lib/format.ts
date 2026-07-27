@@ -113,13 +113,13 @@ export type StoryTheme = {
   lockupAccent?: string; // swap the lockup's Sienna row when it would vanish on bg
 };
 export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
-  iron: { label: "Iron", bg: "#191502", fg: "#F7F2E8", accent: "#DD583A", muted: "#C9C3AE", faint: "#8A8570", time: "#DAD4BE", lockup: "cloud" },
-  paper: { label: "Paper", bg: "#F7F2E8", fg: "#191502", accent: "#DD583A", muted: "#4E4B3B", faint: "#8A8570", time: "#3A3526", lockup: "ink" },
+  paper: { label: "Cream", bg: "#f4efe1", fg: "#191502", accent: "#dd6a35", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
+  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#dd6a35", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
-  pop: { label: "Pop", bg: "#DD583A", fg: "#F7F2E8", accent: "#191502", muted: "#F9E4DD", faint: "#F2C1B2", time: "#FFF2EA", lockup: "cloud", lockupAccent: "#191502" },
+  pop: { label: "Pop", bg: "#dd6a35", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
 };
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
-  const key = (id && id in STORY_THEMES ? id : "iron") as StoryThemeId;
+  const key = (id && id in STORY_THEMES ? id : "paper") as StoryThemeId;
   return [key, STORY_THEMES[key]];
 }
 

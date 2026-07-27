@@ -125,7 +125,6 @@ export default async function SchedulePage({
       customTypes={customTypes}
       lastUsed={lastUsed}
       subsCount={subRows.length}
-      announcement={user?.announcement ?? null}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}
