@@ -10,7 +10,7 @@ import { ProfileTabs } from "@/components/ProfileTabs";
 import { ShareProfileButton } from "@/components/ShareProfileButton";
 import { Wordmark } from "@/components/Wordmark";
 
-const WINDOW_DAYS = 28; // a continuous forward window
+const WINDOW_DAYS = 31; // a continuous forward window — about a month
 
 type UserRow = typeof schema.users.$inferSelect;
 
