@@ -96,11 +96,13 @@ export function ShareWeekSheet({
 
   return (
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="sheet">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
-        </button>
-        <h2>Share your week</h2>
+      <div className="sheet sheet-full">
+        <div className="adderhead">
+          <h2>Share your week</h2>
+          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={16} />
+          </button>
+        </div>
         <div className="share-toggles">
           <div className="seg">
             <button className={span === "week" ? "sel" : ""} onClick={() => setSpan("week")}>My week</button>

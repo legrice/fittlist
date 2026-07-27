@@ -74,11 +74,13 @@ export function QrSheet({
 
   return (
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="sheet">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
-        </button>
-        <h2>Your QR code</h2>
+      <div className="sheet sheet-full">
+        <div className="adderhead">
+          <h2>Your QR code</h2>
+          <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={16} />
+          </button>
+        </div>
         <p className="lead">
           Point a phone camera at it to open your page. Print it on a flyer or business card, or
           show it at the end of class.
