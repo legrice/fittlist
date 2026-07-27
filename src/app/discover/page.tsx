@@ -23,7 +23,13 @@ export default async function DiscoverPage() {
   const rows = await db
     .select()
     .from(schema.users)
-    .where(and(isNotNull(schema.users.handle), eq(schema.users.kind, "coach")));
+    .where(
+      and(
+        isNotNull(schema.users.handle),
+        eq(schema.users.kind, "coach"),
+        eq(schema.users.discoverable, true),
+      ),
+    );
 
   const ids = rows.map((r) => r.id);
   const classRows = ids.length

@@ -55,6 +55,9 @@ export const users = pgTable("users", {
   // Set when this account unsubscribes from the merged weekly digest. Separate
   // from unfollowing on purpose: "stop emailing me" must not empty their feed.
   digestOptOutAt: timestamp("digest_opt_out_at", { withTimezone: true }),
+  // Listed in the Find coaches directory. Their page stays public either way —
+  // this is only about being browsable by people who weren't sent the link.
+  discoverable: boolean("discoverable").notNull().default(true),
   // Extra labelled links on the public page (booking sites, programs, a second
   // gig) beyond the single website field. Capped in the action, not here.
   profileLinks: jsonb("profile_links")

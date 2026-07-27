@@ -16,6 +16,7 @@ import { updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -48,6 +49,7 @@ export function ProfileSheet({
   passkeyCount,
   isAdmin = false,
   showFanView = false,
+  discoverable = true,
   look,
   onClose,
 }: {
@@ -74,6 +76,7 @@ export function ProfileSheet({
   passkeyCount: number;
   isAdmin?: boolean;
   showFanView?: boolean;
+  discoverable?: boolean;
   look: string | null;
   onClose: () => void;
 }) {
@@ -363,6 +366,7 @@ export function ProfileSheet({
 
         {/* Page look: themes the app and the coach's public page. */}
         <div className="settingslist">
+          {showFanView && <DiscoverableToggle initialOn={discoverable} />}
           <DarkModeToggle initialOn={look === "dark"} />
         </div>
 

@@ -49,6 +49,7 @@ export function ScheduleScreen({
   passkeyCount,
   isAdmin,
   showFanView,
+  discoverable,
   look,
 }: {
   classes: ClassDto[];
@@ -83,6 +84,7 @@ export function ScheduleScreen({
   passkeyCount: number;
   isAdmin: boolean;
   showFanView: boolean;
+  discoverable: boolean;
   look: string | null;
 }) {
   const router = useRouter();
@@ -356,6 +358,7 @@ export function ScheduleScreen({
           passkeyCount={passkeyCount}
           isAdmin={isAdmin}
           showFanView={showFanView}
+          discoverable={discoverable}
           look={look}
           onClose={() => setProfileOpen(false)}
         />

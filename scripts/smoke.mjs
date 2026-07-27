@@ -744,15 +744,16 @@ console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
 // the merged weekly digest: one "Your week" email covering every coach they
 // follow, instead of one email per coach
-const digestBefore = readLog();
+const fanDigestCount = () =>
+  (readLog().match(/\[mail:weekly_schedule\] to=lindley@example\.com/g) || []).length;
+const digestBefore = fanDigestCount();
 let dcron = await fan.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
 if (!dcron.ok()) fail("weekly cron failed (digest): " + dcron.status());
 await new Promise((r) => setTimeout(r, 600));
-const digestNew = readLog().slice(digestBefore.length);
-const fanDigests = (digestNew.match(/\[mail:weekly_schedule\] to=lindley@example\.com/g) || [])
-  .length;
+const fanDigests = fanDigestCount() - digestBefore;
+// exactly one email, no matter how many coaches they follow — that's the point
 if (fanDigests !== 1) fail(`expected exactly 1 merged digest, got ${fanDigests}`);
-const digestBlock = digestNew.split("[mail:weekly_schedule] to=lindley@example.com")[1] || "";
+const digestBlock = readLog().split("[mail:weekly_schedule] to=lindley@example.com").pop() || "";
 if (!/Barbell Strength/.test(digestBlock)) fail("merged digest missing the class");
 if (!/Your week/.test(digestBlock)) fail("merged digest missing the subject");
 console.log("merged digest ok (one email across coaches)");
@@ -764,17 +765,31 @@ await fan.goto(BASE + digestUnsub);
 await fan.getByText("No more weekly emails.").waitFor();
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event").first().waitFor(); // still following
-const afterOptOut = readLog();
+const afterOptOut = fanDigestCount();
 dcron = await fan.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
 if (!dcron.ok()) fail("weekly cron failed (post opt-out): " + dcron.status());
 await new Promise((r) => setTimeout(r, 600));
-const stillSent = (
-  readLog().slice(afterOptOut.length).match(/\[mail:weekly_schedule\] to=lindley@example\.com/g) ||
-  []
-).length;
-if (stillSent !== 0) fail("digest opt-out ignored");
+if (fanDigestCount() !== afterOptOut) fail("digest opt-out ignored");
 console.log("digest opt-out ok (email stops, follows survive)");
+
+// the directory opt-out: off means gone from Find coaches, page still public.
+// Checked from the fan's browser — a coach never sees themselves listed.
+await openProfile(page);
+await page.locator(".setrow", { hasText: "Listed in Find coaches" }).click();
+await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
+await fan.goto(BASE + "/discover");
+await fan.locator(".calbar-title", { hasText: "Find coaches" }).waitFor();
+if (await fan.locator(".disrow", { hasText: "Matt" }).count())
+  fail("opted-out coach still listed in the directory");
+const pub = await fan.request.get(`${BASE}/matt`);
+if (!pub.ok()) fail("opting out of the directory broke the public page");
+await openProfile(page);
+await page.locator(".setrow", { hasText: "Listed in Find coaches" }).click();
+await page.locator(".setrow", { hasText: "Members can find you" }).waitFor();
+await fan.goto(BASE + "/discover");
+await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();
+console.log("directory opt-out ok (delisted, page still public)");
 
 // a coach can walk the member side from settings while the flag is dark
 await openProfile(page);

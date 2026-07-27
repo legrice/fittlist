@@ -36,6 +36,7 @@ export default async function SchedulePage({
       .select({
         theme: schema.users.theme,
         look: schema.users.look,
+        discoverable: schema.users.discoverable,
         handle: schema.users.handle,
         name: schema.users.name,
         title: schema.users.title,
@@ -159,6 +160,7 @@ export default async function SchedulePage({
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
       showFanView={await fansVisible()}
+      discoverable={user?.discoverable ?? true}
       look={user?.look ?? null}
     />
   );

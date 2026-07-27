@@ -156,6 +156,18 @@ export async function updateProfile(input: {
 
 // The coach's page look — themes both their app and their public page for
 // every visitor. "dark" today; more looks later.
+// Opt in or out of the Find coaches directory. Their page stays public and
+// shareable either way — this only controls being browsable by strangers.
+export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const db = await getDb();
+  await db.update(schema.users).set({ discoverable: on }).where(eq(schema.users.id, userId));
+  revalidatePath("/app");
+  revalidatePath("/discover");
+  return { ok: true };
+}
+
 export async function setLook(look: string): Promise<{ ok: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
