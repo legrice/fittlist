@@ -45,11 +45,32 @@ function normalizePhone(raw: string): string | null {
 
 // Profile edits: name, title, about, social links, and a photo stored as a
 // small data URL. The photo is resized client-side; we just guard size/format.
+// Normalize a list of short chips (certs, highlights): trim, drop empties,
+// cap each and the count.
+function cleanChips(list: string[] | undefined, maxLen: number, maxCount: number): string[] {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of list) {
+    const v = String(raw).trim().replace(/\s+/g, " ").slice(0, maxLen);
+    const key = v.toLowerCase();
+    if (v && !seen.has(key)) {
+      seen.add(key);
+      out.push(v);
+    }
+    if (out.length >= maxCount) break;
+  }
+  return out;
+}
+
 export async function updateProfile(input: {
   name: string;
   title: string;
   about: string;
   location?: string;
+  certifications?: string[];
+  highlights?: string[];
+  availability?: string | null;
   instagram: string;
   website: string;
   contactEmail?: string;
@@ -65,6 +86,12 @@ export async function updateProfile(input: {
   const title = input.title.trim().slice(0, 80);
   const about = input.about.trim().slice(0, 600);
   const location = (input.location ?? "").trim().replace(/\s+/g, " ").slice(0, 80) || null;
+  const certifications = cleanChips(input.certifications, 40, 12);
+  const highlights = cleanChips(input.highlights, 60, 6);
+  const availability =
+    input.availability === "accepting" || input.availability === "waitlist"
+      ? input.availability
+      : null;
   const instagram = normalizeInstagram(input.instagram);
   const website = normalizeWebsite(input.website);
   const contactEmail = normalizeEmail(input.contactEmail ?? "");
@@ -76,13 +103,16 @@ export async function updateProfile(input: {
     title: string | null;
     about: string;
     location: string | null;
+    certifications: string[];
+    highlights: string[];
+    availability: string | null;
     instagram: string | null;
     website: string | null;
     contactEmail: string | null;
     phone: string | null;
     whatsapp: string | null;
     photo?: string | null;
-  } = { name, title: title || null, about, location, instagram, website, contactEmail, phone, whatsapp };
+  } = { name, title: title || null, about, location, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
   if (input.photo !== undefined) {
     const photo = input.photo;
     if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {

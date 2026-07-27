@@ -148,6 +148,13 @@
       "when": 1785116519973,
       "tag": "0020_bouncy_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1785151813539,
+      "tag": "0021_fuzzy_firebrand",
+      "breakpoints": true
     }
   ]
 }

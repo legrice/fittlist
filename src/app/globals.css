@@ -964,6 +964,56 @@ button.ps-card { cursor: pointer; }
 
 /* "Where I coach": the studios/spaces a coach is associated with */
 .profstudios { margin-top: 26px; }
+.profsec { margin-top: 26px; }
+
+/* Availability pill (public) */
+.availpill {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+  padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+  border: 1px solid var(--line); background: var(--cl); color: var(--ink);
+}
+.availdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.availpill-accepting .availdot { background: #3f9d5a; }
+.availpill-waitlist .availdot { background: #d98a2b; }
+
+/* Certifications chips (public) */
+.certchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.certchip {
+  display: inline-flex; align-items: center; padding: 7px 13px; border-radius: 999px;
+  background: var(--cl); border: 1px solid var(--line); color: var(--ink);
+  font-size: 13.5px; font-weight: 600;
+}
+
+/* "What to expect" list (public) */
+.expectlist { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.expectlist li { position: relative; padding-left: 22px; font-size: 15px; color: var(--ink); line-height: 1.4; }
+.expectlist li::before {
+  content: ""; position: absolute; left: 4px; top: 8px; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--si);
+}
+
+/* Chip editor (profile form) */
+.chipsfield { margin-top: 2px; }
+.chipsfield-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chipsfield-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
+  border-radius: 999px; background: var(--cl); border: 1px solid var(--line);
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
+}
+.chipsfield-chip button {
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ol);
+  width: 18px; height: 18px; border-radius: 50%;
+}
+.chipsfield-chip button:active { background: rgba(0, 0, 0, .06); }
+.chipsfield-row { display: flex; gap: 8px; align-items: stretch; }
+.chipsfield-row .editinput { flex: 1; }
+.chipsfield-add {
+  flex-shrink: 0; padding: 0 16px; border-radius: 11px; background: var(--ink); color: #fff;
+  font-weight: 700; font-size: 14px;
+}
+.chipsfield-add:disabled { opacity: .4; }
+.availseg { margin-top: 2px; }
+
 .prof-sec-h {
   font-family: 'Sora', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin: 0 0 10px;

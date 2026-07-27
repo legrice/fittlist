@@ -29,6 +29,12 @@ export const users = pgTable("users", {
   title: text("title"),
   // City / area shown under the name on the public profile (e.g. "Jersey City").
   location: text("location"),
+  // Compact credential chips shown on the profile (e.g. "NASM CPT", "HYROX Coach").
+  certifications: jsonb("certifications").$type<string[]>().notNull().default([]),
+  // "What to Expect" — a few short descriptors of the coach's style/vibe.
+  highlights: jsonb("highlights").$type<string[]>().notNull().default([]),
+  // Taking new private clients? "accepting" | "waitlist" | null (not shown).
+  availability: text("availability"),
   // Optional contact + social links surfaced as buttons on the public profile.
   instagram: text("instagram"),
   website: text("website"),

@@ -71,6 +71,12 @@ export async function PublicProfileView({
           {user.name.trim().charAt(0).toUpperCase() || "?"}
         </div>
       )}
+      {user.availability && (
+        <div className={`availpill availpill-${user.availability}`}>
+          <span className="availdot" aria-hidden="true" />
+          {user.availability === "accepting" ? "Accepting new clients" : "Waitlist for new clients"}
+        </div>
+      )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
       {(user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website) && (
         <div className="proflinks">
@@ -109,6 +115,26 @@ export async function PublicProfileView({
               <Icon name="public" size={18} /> Website
             </a>
           )}
+        </div>
+      )}
+      {user.highlights.length > 0 && (
+        <div className="profsec">
+          <h2 className="prof-sec-h">What to expect</h2>
+          <ul className="expectlist">
+            {user.highlights.map((h, i) => (
+              <li key={i}>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {user.certifications.length > 0 && (
+        <div className="profsec">
+          <h2 className="prof-sec-h">Certifications</h2>
+          <div className="certchips">
+            {user.certifications.map((c, i) => (
+              <span key={i} className="certchip">{c}</span>
+            ))}
+          </div>
         </div>
       )}
       {coachStudios.length > 0 && (
@@ -193,6 +219,9 @@ export async function PublicProfileView({
           title={user.title ?? ""}
           about={user.about ?? ""}
           location={user.location ?? ""}
+          certifications={user.certifications}
+          highlights={user.highlights}
+          availability={user.availability}
           instagram={user.instagram ?? ""}
           website={user.website ?? ""}
           contactEmail={user.contactEmail ?? ""}

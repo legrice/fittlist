@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { useSlideBack } from "@/components/BackLink";
+import { ChipsField } from "@/components/ChipsField";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -14,6 +15,9 @@ export function ProfileOwnerBar({
   title,
   about,
   location,
+  certifications,
+  highlights,
+  availability,
   instagram,
   website,
   contactEmail,
@@ -25,6 +29,9 @@ export function ProfileOwnerBar({
   title: string;
   about: string;
   location: string;
+  certifications: string[];
+  highlights: string[];
+  availability: string | null;
   instagram: string;
   website: string;
   contactEmail: string;
@@ -40,6 +47,9 @@ export function ProfileOwnerBar({
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
+  const [pCerts, setPCerts] = useState<string[]>(certifications);
+  const [pHighlights, setPHighlights] = useState<string[]>(highlights);
+  const [pAvailability, setPAvailability] = useState<string | null>(availability);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
   const [pEmail, setPEmail] = useState(contactEmail);
@@ -80,6 +90,9 @@ export function ProfileOwnerBar({
     setPTitle(title);
     setPAbout(about);
     setPLocation(location);
+    setPCerts(certifications);
+    setPHighlights(highlights);
+    setPAvailability(availability);
     setPInstagram(instagram);
     setPWebsite(website);
     setPEmail(contactEmail);
@@ -96,6 +109,9 @@ export function ProfileOwnerBar({
         title: pTitle,
         about: pAbout,
         location: pLocation,
+        certifications: pCerts,
+        highlights: pHighlights,
+        availability: pAvailability,
         instagram: pInstagram,
         website: pWebsite,
         contactEmail: pEmail,
@@ -213,6 +229,40 @@ export function ProfileOwnerBar({
               placeholder="Coach at three studios across Jersey City. Strength &amp; conditioning, all levels."
               onChange={(e) => setPAbout(e.target.value)}
             />
+            <label className="flabel">
+              Availability <span>· taking new private clients?</span>
+            </label>
+            <div className="seg availseg">
+              <button
+                type="button"
+                className={pAvailability === "accepting" ? "sel" : ""}
+                onClick={() => setPAvailability(pAvailability === "accepting" ? null : "accepting")}
+              >
+                Accepting
+              </button>
+              <button
+                type="button"
+                className={pAvailability === "waitlist" ? "sel" : ""}
+                onClick={() => setPAvailability(pAvailability === "waitlist" ? null : "waitlist")}
+              >
+                Waitlist
+              </button>
+              <button
+                type="button"
+                className={!pAvailability ? "sel" : ""}
+                onClick={() => setPAvailability(null)}
+              >
+                Hidden
+              </button>
+            </div>
+            <label className="flabel">
+              Certifications <span>· optional</span>
+            </label>
+            <ChipsField value={pCerts} onChange={setPCerts} placeholder="e.g. NASM CPT" maxLen={40} max={12} />
+            <label className="flabel">
+              What to expect <span>· a few short descriptors</span>
+            </label>
+            <ChipsField value={pHighlights} onChange={setPHighlights} placeholder="e.g. Beginner friendly" maxLen={60} max={6} />
             <label className="flabel" htmlFor="pInstagram">
               Instagram <span>· optional</span>
             </label>
