@@ -1060,8 +1060,9 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
 }
 
-/* Updates screen: Notifications | Messages toggle */
-.updateseg { flex: none; margin: 2px 0 14px; }
+/* Updates screen: Notifications | Messages toggle. The track gets the card
+   colour so it reads against the cream page (the base .seg cream blends in). */
+.updateseg { flex: none; margin: 2px 0 14px; background: var(--card); box-shadow: var(--soft-shadow); }
 
 /* Inbox list */
 .inbox-list { display: flex; flex-direction: column; margin-top: 8px; }
