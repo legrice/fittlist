@@ -78,6 +78,22 @@ export async function GET(
     : [];
   const studioName = new Map(studioRows.map((s) => [s.id, s.name]));
 
+  // Coach customisation: their headline (split across two lines, sized to fit)
+  // and an optional photo chip. The stock "Train / with me." keeps its
+  // canonical split.
+  const prefs = user.storyPrefs ?? {};
+  let line1 = "Train";
+  let line2 = "with me.";
+  if (prefs.headline) {
+    const words = prefs.headline.split(" ");
+    const cut = Math.ceil(words.length / 2);
+    line1 = words.slice(0, cut).join(" ");
+    line2 = words.slice(cut).join(" ");
+  }
+  const maxLine = Math.max(line1.length, line2.length);
+  const hSize = maxLine <= 9 ? 104 : maxLine <= 13 ? 86 : 70;
+  const showPhoto = prefs.showPhoto !== false && !!user.photo;
+
   return new ImageResponse(
     (
       <div
@@ -118,20 +134,40 @@ export async function GET(
             ? `Week of ${new Date(`${todayIso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
             : "Today"}
         </div>
+        {showPhoto && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={user.photo!}
+            alt=""
+            width={172}
+            height={172}
+            style={{
+              position: "absolute",
+              top: 96,
+              right: 86,
+              borderRadius: 999,
+              objectFit: "cover",
+              borderWidth: 8,
+              borderStyle: "solid",
+              borderColor: t.accent,
+            }}
+          />
+        )}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             fontWeight: 800,
-            fontSize: 104,
+            fontSize: hSize,
             lineHeight: 0.98,
             letterSpacing: -3,
             textTransform: "uppercase",
             marginBottom: 78,
+            maxWidth: showPhoto ? 690 : 908,
           }}
         >
-          <span>Train</span>
-          <span style={{ color: t.accent }}>with me.</span>
+          <span>{line1}</span>
+          {line2 && <span style={{ color: t.accent }}>{line2}</span>}
         </div>
 
         {byDay.length === 0 ? (

@@ -149,3 +149,48 @@ export async function setLook(look: string): Promise<{ ok: boolean }> {
   if (user?.handle) revalidatePath(`/${user.handle}`);
   return { ok: true };
 }
+
+// Share-image customisation. The headline caps at 28 chars so it always fits
+// the story layout; the theme must be one of the curated looks.
+const HEADLINE_MAX = 28;
+
+export async function getStoryPrefs(): Promise<{
+  headline: string;
+  showPhoto: boolean;
+  hasPhoto: boolean;
+}> {
+  const userId = await getSessionUserId();
+  if (!userId) return { headline: "", showPhoto: true, hasPhoto: false };
+  const db = await getDb();
+  const [u] = await db
+    .select({ storyPrefs: schema.users.storyPrefs, photo: schema.users.photo })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  return {
+    headline: u?.storyPrefs?.headline ?? "",
+    showPhoto: u?.storyPrefs?.showPhoto ?? true,
+    hasPhoto: !!u?.photo,
+  };
+}
+
+export async function setStoryPrefs(input: {
+  headline?: string;
+  showPhoto?: boolean;
+}): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const db = await getDb();
+  const [u] = await db
+    .select({ storyPrefs: schema.users.storyPrefs })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const prefs = { ...(u?.storyPrefs ?? {}) };
+  if (input.headline !== undefined) {
+    const h = input.headline.replace(/\s+/g, " ").trim().slice(0, HEADLINE_MAX);
+    if (h) prefs.headline = h;
+    else delete prefs.headline;
+  }
+  if (input.showPhoto !== undefined) prefs.showPhoto = !!input.showPhoto;
+  await db.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
+  return { ok: true };
+}

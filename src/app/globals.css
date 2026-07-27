@@ -1786,3 +1786,11 @@ button.ps-card { cursor: pointer; }
    text must stay ink-dark (the flipped tokens washed it out). */
 [data-mode="dark"] .namesug-nm { color: #191502; }
 [data-mode="dark"] .namesug .sub { color: #6b6555; }
+
+/* Share sheet: headline + photo-chip customisation controls */
+.storycustom { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 2px; }
+.storycustom .editinput { text-align: center; font-weight: 700; }
+.storyphoto {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 4px 4px 0; font-weight: 700; font-size: 13.5px; color: var(--ink);
+}

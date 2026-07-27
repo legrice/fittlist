@@ -100,7 +100,15 @@ export function blocksFill(seq: number) {
 }
 
 // Story-image looks - one per coach personality, all built from brand colors.
-export type StoryThemeId = "iron" | "paper" | "moss" | "pop";
+export type StoryThemeId =
+  | "iron"
+  | "paper"
+  | "moss"
+  | "pop"
+  | "midnight"
+  | "sunset"
+  | "blush"
+  | "slate";
 export type StoryTheme = {
   label: string;
   bg: string;
@@ -117,6 +125,10 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#dd6a35", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
   pop: { label: "Pop", bg: "#dd6a35", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
+  midnight: { label: "Midnight", bg: "#161e33", fg: "#f2efe4", accent: "#e5b558", muted: "#9aa3ba", faint: "#77809a", time: "#d5d9e6", lockup: "cloud", lockupAccent: "#e5b558" },
+  sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
+  blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
+  slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
 };
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
   const key = (id && id in STORY_THEMES ? id : "paper") as StoryThemeId;

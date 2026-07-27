@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "story_prefs" jsonb DEFAULT '{}'::jsonb NOT NULL;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 
@@ -27,9 +28,32 @@ export function ShareWeekSheet({
   // A new query param gives every open a clean cache key.
   const [bust, setBust] = useState(0);
 
+  // Customisation: the coach's headline + photo chip, persisted on their
+  // account so every week's image carries their look.
+  const [headline, setHeadline] = useState("");
+  const [showPhoto, setShowPhoto] = useState(true);
+  const [hasPhoto, setHasPhoto] = useState(false);
+
   useEffect(() => {
-    if (open) setBust(Date.now());
+    if (!open) return;
+    setBust(Date.now());
+    getStoryPrefs().then((p) => {
+      setHeadline(p.headline);
+      setShowPhoto(p.showPhoto);
+      setHasPhoto(p.hasPhoto);
+    });
   }, [open]);
+
+  const applyHeadline = async () => {
+    await setStoryPrefs({ headline });
+    setBust(Date.now()); // re-render the preview with the new text
+  };
+  const togglePhoto = async () => {
+    const v = !showPhoto;
+    setShowPhoto(v);
+    await setStoryPrefs({ showPhoto: v });
+    setBust(Date.now());
+  };
 
   useEffect(() => {
     setCanShareFiles(
@@ -89,6 +113,29 @@ export function ShareWeekSheet({
               {t.label}
             </button>
           ))}
+        </div>
+        <div className="storycustom">
+          <input
+            className="editinput"
+            type="text"
+            maxLength={28}
+            placeholder="Train with me."
+            aria-label="Headline"
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            onBlur={applyHeadline}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            }}
+          />
+          {hasPhoto && (
+            <button className="storyphoto" onClick={togglePhoto} aria-pressed={showPhoto}>
+              <span>Show my photo</span>
+              <span className={`switch${showPhoto ? " on" : ""}`} aria-hidden="true">
+                <span className="switch-knob" />
+              </span>
+            </button>
+          )}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="storyimg" src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />

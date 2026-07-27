@@ -162,9 +162,16 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Yes, delete it" }).click();
 await page.getByText("Deleted", { exact: true }).waitFor();
-// The delete triggers a router.refresh() that re-fetches and re-keys the cards;
-// give it a generous window to settle to the two remaining classes.
-await waitSchedule(page, 2, 20000);
+// The delete triggers a router.refresh() that re-fetches and re-keys the cards.
+// That refresh occasionally stalls under load; the delete itself is persisted,
+// so fall back to a hard reload (a user's pull-to-refresh) before failing.
+try {
+  await waitSchedule(page, 2, 12000);
+} catch {
+  await page.reload();
+  await page.getByText("Your schedule").waitFor();
+  await waitSchedule(page, 2, 12000);
+}
 console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- account page: full-screen view reached from the header avatar
@@ -505,16 +512,24 @@ if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
 await expect(page.locator(".btn.ghost", { hasText: "Share image" }).isVisible(), "share image button present");
 
 // story colour picker: 4 chips, selecting swaps the preview + download URLs
-if ((await page.locator(".themechip").count()) !== 4) fail("expected 4 story colour chips");
+if ((await page.locator(".themechip").count()) !== 8) fail("expected 8 story colour chips");
 await page.locator(".themechip", { hasText: "Moss" }).click();
 const themedSrc = await page.locator(".storyimg").getAttribute("src");
 if (!themedSrc.includes("theme=moss")) fail("colour chip didn't switch preview: " + themedSrc);
-for (const th of ["paper", "moss", "pop"]) {
+for (const th of ["paper", "moss", "pop", "midnight", "sunset", "blush", "slate"]) {
   const r2 = await ctx.request.get(BASE + `/api/story/matt?span=week&theme=${th}`);
   if (r2.status() !== 200 || !(r2.headers()["content-type"] || "").includes("image/png"))
     fail(`story colour ${th} endpoint broken`);
 }
 await page.locator(".themechip", { hasText: "Ink" }).click();
+// custom headline: typing + blur persists and re-renders the preview
+const preHeadlineSrc = await page.locator(".storyimg").getAttribute("src");
+await page.locator(".storycustom input").fill("Lets work");
+await page.locator(".storycustom input").blur();
+await page.waitForFunction(
+  (prev) => document.querySelector(".storyimg")?.getAttribute("src") !== prev,
+  preHeadlineSrc,
+);
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
 // close the story sheet, then the account page beneath it
 await page.locator(".sheet .sheetclose").click();

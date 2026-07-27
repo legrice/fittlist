@@ -49,6 +49,12 @@ export const users = pgTable("users", {
   // Page look: how the coach's app AND public page render. Null = the default
   // light look; "dark" today, more colour looks later.
   look: text("look"),
+  // Share-image customisation: headline, photo chip, preferred theme. A blob so
+  // later knobs (background image, formats) slot in without schema churn.
+  storyPrefs: jsonb("story_prefs")
+    .$type<{ headline?: string; showPhoto?: boolean; theme?: string }>()
+    .notNull()
+    .default({}),
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =
   // they still need to run it; the app redirects them into /welcome until it's set.
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
