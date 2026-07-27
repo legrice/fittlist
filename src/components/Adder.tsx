@@ -217,18 +217,12 @@ export function Adder({
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      const emailed = res.notified ?? 0;
-      const emailedSuffix = emailed
-        ? ` · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
-        : "";
       onPublished(
         isEdit
-          ? `Saved${emailedSuffix}`
+          ? "Saved"
           : firstPublish
             ? "Your page is live"
-            : emailed
-              ? `Published${emailedSuffix}`
-              : `Published${n > 1 ? ` ${n} classes` : ""}`,
+            : `Published${n > 1 ? ` ${n} classes` : ""}`,
       );
     });
   };
@@ -241,12 +235,7 @@ export function Adder({
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      const emailed = res.notified ?? 0;
-      onDeleted(
-        emailed
-          ? `Deleted · emailed ${emailed} ${emailed === 1 ? "person" : "people"}`
-          : "Deleted",
-      );
+      onDeleted("Deleted");
     });
   };
 
@@ -659,10 +648,7 @@ export function Adder({
         >
           <div className="confirm-modal" role="dialog" aria-modal="true">
             <h3>Delete this class?</h3>
-            <p>
-              It disappears from your public page and your list gets notified. This can&rsquo;t be
-              undone.
-            </p>
+            <p>It disappears from your public page. This can&rsquo;t be undone.</p>
             <button className="btn si" disabled={pending} onClick={doDelete}>
               {pending ? "Deleting…" : "Yes, delete it"}
             </button>

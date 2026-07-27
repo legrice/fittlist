@@ -132,7 +132,7 @@ await waitSchedule(page, 3);
 console.log("saved-class flow ok");
 
 // ---- edit in place: tap the Monday class, prefilled with its day, no new class
-await page.locator(".ps-daygroup", { hasText: "Mon," }).first().locator(".ps-event").first().click();
+await page.locator(".ps-daygroup", { hasText: "Monday" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = (await page.locator(".publishwrap .btn").textContent()).trim();
 if (editLabel !== "Save changes") fail("edit save button should say Save changes: " + editLabel);
@@ -148,10 +148,13 @@ await expect(page.locator(".durnote", { hasText: "75 min" }).isVisible(), "durno
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Saved", { exact: true }).waitFor();
 await waitSchedule(page, 3);
+// Editing a weekly class recreates its rows with new ids via router.refresh();
+// let that settle so the delete below targets a current row, not a stale id.
+await page.waitForTimeout(700);
 console.log("edit ok (end-time length)");
 
 // ---- delete lives inside the edit sheet, behind a confirmation (delete Friday)
-await page.locator(".ps-daygroup", { hasText: "Fri," }).first().locator(".ps-event").first().click();
+await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
@@ -250,7 +253,7 @@ await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster
 console.log("profile + schedule tabs + event pages ok");
 
 await page.locator(".notifybar .btn").click();
-await page.getByRole("heading", { name: "Get an email when the schedule changes" }).waitFor();
+await page.locator(".sheet h2", { hasText: "schedule every week" }).waitFor();
 await page.locator("#ntEmail").fill("fan@example.com");
 await page.getByRole("button", { name: "Add me to the list" }).click();
 await page.getByText("You're on Matt's list").waitFor();
@@ -285,7 +288,8 @@ const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").tex
 if (subN.trim() !== "1") fail("subscriber count should be 1, got " + subN);
 console.log("stats ok");
 
-// ================= Phase 2: the list =================
+// ================= Phase 2: the weekly list =================
+const CRON_KEY = process.env.CRON_SECRET ?? "smoke-cron";
 let mailLog = readLog();
 if (!mailLog.includes("[mail:welcome] to=fan@example.com")) fail("no welcome email in log");
 if (!mailLog.includes("You're on Matt's list")) fail("welcome subject wrong");
@@ -293,46 +297,41 @@ const unsubUrl = (mailLog.match(/Unsubscribe any time: (\S+)/) || [])[1];
 if (!unsubUrl) fail("no unsubscribe link in welcome email");
 console.log("welcome email ok:", unsubUrl.slice(0, 40) + "…");
 
-// publish -> one schedule_change email to the subscriber
+// publishing no longer sends a per-change email — subscribers get a weekly digest
 await page.goto(BASE + "/app");
 await addSaved(page);
 await page.getByRole("button", { name: "Sa", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
-await page.getByText("Published · emailed 1 person").waitFor();
-await new Promise((r) => setTimeout(r, 400));
-mailLog = readLog();
-if (!mailLog.includes("[mail:schedule_change] to=fan@example.com")) fail("no schedule_change email");
-if (!/Barbell Strength added Sat 6:00a at Ironbound Strength → fittlist\.co\/matt/.test(mailLog))
-  fail("change email body wrong");
-console.log("publish notification ok");
+await page.getByText("Published", { exact: false }).waitFor();
+await new Promise((r) => setTimeout(r, 300));
+if (readLog().includes("[mail:schedule_change]")) fail("publish should not send a per-change email");
+console.log("publish sends no per-change email ok");
 
-// delete (via edit sheet) -> removal email (delete the Saturday class)
-await waitSchedule(page, 3);
-await page.locator(".ps-daygroup", { hasText: "Sat," }).first().locator(".ps-event").first().click();
-await page.getByRole("heading", { name: "Edit class" }).waitFor();
-await page.getByRole("button", { name: "Delete this class" }).click();
-await page.getByRole("button", { name: "Yes, delete it" }).click();
-await page.getByText("Deleted · emailed 1 person").waitFor();
-await new Promise((r) => setTimeout(r, 400));
+// the weekly cron emails the subscriber the upcoming week with the class in it
+let cron = await page.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
+if (!cron.ok()) fail("weekly cron endpoint failed: " + cron.status());
+await new Promise((r) => setTimeout(r, 500));
 mailLog = readLog();
-if (!/Barbell Strength removed Sat 6:00a at Ironbound Strength/.test(mailLog))
-  fail("removal email body wrong");
-console.log("delete notification ok");
+const weeklyBlock = mailLog.split("[mail:weekly_schedule] to=fan@example.com").slice(1).join("");
+if (!weeklyBlock) fail("no weekly digest email to the subscriber");
+if (!/Barbell Strength/.test(weeklyBlock)) fail("weekly digest missing the class");
+console.log("weekly digest ok");
 
-// one-click unsubscribe link works and is honored
-await page.goto(unsubUrl);
+// unsubscribe link works and is honored. Emails use the canonical origin
+// (fittlist.co); rewrite it to this local server so the sandbox can reach it.
+const localUnsub = unsubUrl.replace(/^https?:\/\/[^/]+/, BASE);
+await page.goto(localUnsub);
 await page.getByText("You’re off the list.").waitFor();
 console.log("unsubscribe page ok");
 
-const changeCountBefore = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
-await page.goto(BASE + "/app");
-await addSaved(page);
-await page.getByRole("button", { name: "Su", exact: true }).click();
-await page.locator(".publishwrap .btn").click();
-await page.getByText("Published", { exact: false }).waitFor();
-await new Promise((r) => setTimeout(r, 600));
-const changeCountAfter = (readLog().match(/\[mail:schedule_change\]/g) || []).length;
-if (changeCountAfter !== changeCountBefore) fail("opted-out subscriber still got emailed");
+// opted-out subscriber is skipped on the next weekly run
+const weeklyBefore = (readLog().match(/\[mail:weekly_schedule\] to=fan@example\.com/g) || []).length;
+cron = await page.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
+if (!cron.ok()) fail("weekly cron endpoint failed (2): " + cron.status());
+await new Promise((r) => setTimeout(r, 500));
+const weeklyAfter = (readLog().match(/\[mail:weekly_schedule\] to=fan@example\.com/g) || []).length;
+if (weeklyAfter !== weeklyBefore) fail("opted-out subscriber still got the weekly email");
+console.log("opt-out honored ok");
 
 await openProfile(page);
 await page.getByText("On your list", { exact: true }).waitFor();
@@ -380,7 +379,10 @@ await anonPage.getByRole("button", { name: "Not now" }).click();
 await anonPage.getByText("Pick your link.").waitFor();
 await anonPage.getByPlaceholder("Your name").fill("Sam");
 await anonPage.getByRole("button", { name: "Claim it" }).click();
-await anonPage.getByRole("heading", { name: "New class" }).waitFor();
+// claiming a handle runs the setup wizard; skip it to land on the schedule
+await anonPage.getByRole("heading", { name: "Add a photo." }).waitFor();
+await anonPage.getByRole("button", { name: "Skip for now" }).click();
+await anonPage.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
 
 await openProfile(page);
@@ -417,7 +419,7 @@ console.log("ical feed ok (VEVENT + weekly RRULE)");
 // share sheet UI from the account page
 await openProfile(page);
 await page.locator(".acctcard", { hasText: "Share your week" }).click();
-await page.getByRole("heading", { name: "Your story image" }).waitFor();
+await page.locator(".sheet h2", { hasText: "Share your week" }).waitFor();
 await page.waitForFunction(() => {
   const img = document.querySelector(".storyimg");
   return img && img.complete && img.naturalWidth > 0;
@@ -439,7 +441,7 @@ for (const th of ["paper", "moss", "pop"]) {
   if (r2.status() !== 200 || !(r2.headers()["content-type"] || "").includes("image/png"))
     fail(`story colour ${th} endpoint broken`);
 }
-await page.locator(".themechip", { hasText: "Iron" }).click();
+await page.locator(".themechip", { hasText: "Ink" }).click();
 await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
 // close the story sheet, then the account page beneath it
 await page.locator(".sheet .sheetclose").click();
@@ -483,7 +485,8 @@ console.log("one-off future ok");
 
 // the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
-await expect(page.locator(".pubtab.sel", { hasText: "Schedule" }).isVisible(), "schedule tab active on /schedule");
+// deep-link scrolls to the schedule; the scroll-spy marks the tab active once settled
+await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length > 0);
 const pubCount = await eventCount(page);
 if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);

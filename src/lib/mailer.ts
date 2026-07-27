@@ -4,7 +4,13 @@ import { getDb, schema } from "@/db";
 // per the brief, it is the piece most likely to move to SMS later. Callers
 // never touch the transport.
 
-export type OutboundKind = "otp" | "magic_link" | "schedule_change" | "welcome" | "announcement";
+export type OutboundKind =
+  | "otp"
+  | "magic_link"
+  | "schedule_change"
+  | "welcome"
+  | "announcement"
+  | "weekly_schedule";
 
 export interface SendArgs {
   to: string;

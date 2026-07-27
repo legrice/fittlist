@@ -7,7 +7,6 @@ import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate } from "@/lib/format";
-import { notifyScheduleChange } from "@/lib/notifier";
 import { syncUserToGoogle } from "@/lib/gcal";
 
 // Mirror the schedule to Google after the response is sent, so publishing stays
@@ -81,7 +80,7 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
     .map((l) => ({ label: detectProvider(l.url), url: l.url.trim() }));
 }
 
-type SaveResult = { ok: boolean; count?: number; notified?: number; error?: string };
+type SaveResult = { ok: boolean; count?: number; error?: string };
 
 // Shared by publish (new rows) and edit (replaceClassId set: the original
 // row is swapped for rows on the selected days).
@@ -201,27 +200,11 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     }
   }
 
-  // One action, many days -> one notification, never one per class row. Private
-  // items never email the coach's public subscriber list.
-  let notified = 0;
-  if (isPublic && studio) {
-    try {
-      notified = await notifyScheduleChange(userId, {
-        verb: replaceClassId ? "updated" : "added",
-        className: name,
-        days,
-        specificDate: oneOff,
-        startTime: input.startTime,
-        studioName: studio.name,
-      });
-    } catch (err) {
-      console.error("schedule-change notify failed", err);
-    }
-  }
-
+  // Subscribers get the schedule as one weekly digest (see sendWeeklyDigests),
+  // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true, count: days.length, notified };
+  return { ok: true, count: days.length };
 }
 
 export async function publishClasses(input: PublishInput): Promise<SaveResult> {
@@ -236,47 +219,19 @@ export async function updateClass(classId: string, input: PublishInput): Promise
   return save(userId, input, classId);
 }
 
-export async function deleteClass(
-  classId: string,
-): Promise<{ ok: boolean; notified?: number; error?: string }> {
+export async function deleteClass(classId: string): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
   const [row] = await db
-    .select({
-      id: schema.classes.id,
-      name: schema.classes.name,
-      dayOfWeek: schema.classes.dayOfWeek,
-      specificDate: schema.classes.specificDate,
-      startTime: schema.classes.startTime,
-      isPublic: schema.classes.isPublic,
-      studioName: schema.studios.name,
-    })
+    .select({ id: schema.classes.id })
     .from(schema.classes)
-    // leftJoin: private items can have no studio, and must still be deletable.
-    .leftJoin(schema.studios, eq(schema.classes.studioId, schema.studios.id))
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
-  if (!row) return { ok: true, notified: 0 };
+  if (!row) return { ok: true };
 
   await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
 
-  let notified = 0;
-  if (row.isPublic && row.studioName) {
-    try {
-      notified = await notifyScheduleChange(userId, {
-        verb: "removed",
-        className: row.name,
-        days: [row.dayOfWeek],
-        specificDate: row.specificDate,
-        startTime: row.startTime,
-        studioName: row.studioName,
-      });
-    } catch (err) {
-      console.error("schedule-change notify failed", err);
-    }
-  }
-
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true, notified };
+  return { ok: true };
 }

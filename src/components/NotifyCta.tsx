@@ -16,7 +16,7 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
   const [pending, startTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const label = subscribed ? "You're on the list ✓" : "Get email updates";
+  const label = subscribed ? "You're on the list ✓" : "Get the weekly email";
   const onCta = () => {
     setError("");
     setOpen(true);
@@ -75,8 +75,8 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
               <>
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on the list</h2>
                 <p className="lead">
-                  Schedule changes go to <b>{email}</b>. Every email also has an unsubscribe link,
-                  or tap below. You can rejoin any time.
+                  {trainerName}&rsquo;s schedule lands in <b>{email}</b> once a week. Every email has
+                  an unsubscribe link, or tap below. You can rejoin any time.
                 </p>
                 {error && (
                   <p className="empty" style={{ paddingBottom: 0 }}>
@@ -91,9 +91,10 @@ export function NotifyCta({ trainerName, handle }: { trainerName: string; handle
               </>
             ) : (
               <>
-                <h2 style={{ marginTop: 10 }}>Get an email when the schedule changes</h2>
+                <h2 style={{ marginTop: 10 }}>Get {trainerName}&rsquo;s schedule every week</h2>
                 <p className="lead">
-                  New classes, time changes, cancellations. Nothing else, ever. Unsubscribe anytime.
+                  One email a week with {trainerName}&rsquo;s upcoming classes. Nothing else, ever.
+                  Unsubscribe anytime.
                 </p>
                 <label className="flabel" htmlFor="ntEmail">
                   Your email
