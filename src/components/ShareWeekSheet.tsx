@@ -21,6 +21,7 @@ export function ShareWeekSheet({
 }) {
   const [span, setSpan] = useState<"week" | "day">("week");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
+  const [styleOpen, setStyleOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   // A fresh cache-buster per open: CDNs and phones hold story PNGs cached
@@ -110,20 +111,44 @@ export function ShareWeekSheet({
           <label className="flabel" htmlFor="stTheme">
             Style <span>· colours for your image</span>
           </label>
-          <select
-            id="stTheme"
-            className="typeselect"
-            value={themeId}
-            onChange={(e) => setThemeId(e.target.value as StoryThemeId)}
-          >
-            {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
-              ([id, t]) => (
-                <option key={id} value={id}>
-                  {t.label}
-                </option>
-              ),
+          <div className="stylepick">
+            <button
+              id="stTheme"
+              className="stylepick-btn"
+              aria-haspopup="listbox"
+              aria-expanded={styleOpen}
+              onClick={() => setStyleOpen((v) => !v)}
+            >
+              <span
+                className="swd"
+                style={{ background: STORY_THEMES[themeId].bg, borderColor: STORY_THEMES[themeId].accent }}
+              />
+              <span className="stylepick-lbl">{STORY_THEMES[themeId].label}</span>
+              <Icon name="expand_more" size={18} />
+            </button>
+            {styleOpen && (
+              <div className="stylepick-menu" role="listbox" aria-label="Style">
+                {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
+                  ([id, t]) => (
+                    <button
+                      key={id}
+                      role="option"
+                      aria-selected={id === themeId}
+                      className={`stylepick-row${id === themeId ? " sel" : ""}`}
+                      onClick={() => {
+                        setThemeId(id);
+                        setStyleOpen(false);
+                      }}
+                    >
+                      <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
+                      <span className="stylepick-lbl">{t.label}</span>
+                      {id === themeId && <Icon name="check" size={16} />}
+                    </button>
+                  ),
+                )}
+              </div>
             )}
-          </select>
+          </div>
           <label className="flabel" htmlFor="stHeadline">
             Headline <span>· the big text at the top</span>
           </label>

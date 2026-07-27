@@ -1795,3 +1795,25 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 4px 4px 0; font-weight: 700; font-size: 13.5px; color: var(--ink);
 }
+
+/* Style picker: a dropdown whose rows carry colour swatches */
+.stylepick { position: relative; }
+.stylepick-btn {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 14px;
+  border: 1.5px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink);
+  font-family: inherit; font-size: 16px; text-align: left;
+}
+.stylepick-lbl { flex: 1; min-width: 0; }
+.stylepick .swd { width: 18px; height: 18px; border-radius: 999px; border: 2px solid; flex-shrink: 0; }
+.stylepick-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 7;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  box-shadow: var(--soft-shadow-lg); max-height: 264px; overflow-y: auto;
+}
+.stylepick-row {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; text-align: left;
+  font-weight: 600; font-size: 14.5px; color: var(--ink); border-bottom: 1px solid var(--line);
+}
+.stylepick-row:last-child { border-bottom: none; }
+.stylepick-row.sel { font-weight: 700; }
+.stylepick-row .material-icons { color: var(--si); }
