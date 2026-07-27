@@ -913,7 +913,7 @@ button.ps-card { cursor: pointer; }
 }
 
 /* public page: ground bg, cream hero card, green CTA, cloud footer */
-[data-theme="poster"].pub { background: var(--pg-cream); display: block; }
+[data-theme="poster"].pub { background: var(--paper); display: block; }
 [data-theme="poster"] .pubhero {
   background: transparent; color: #191502; border: none; box-shadow: none;
   margin: calc(20px + env(safe-area-inset-top)) 0 0; padding: 0 18px 4px; position: static; width: auto; min-height: 0;
@@ -934,6 +934,7 @@ button.ps-card { cursor: pointer; }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(25, 21, 2, .07), 0 14px 34px rgba(25, 21, 2, .12);
 }
 .profphoto-empty {
   display: flex; align-items: center; justify-content: center; background: #eae3d2;
