@@ -66,6 +66,11 @@ export default async function SchedulePage({
     .from(schema.customClassTypes)
     .orderBy(schema.customClassTypes.name);
   const customTypes = customTypeRows.map((r) => r.name);
+  const inboxRows = await db
+    .select({ n: schema.inquiryThreads.coachUnread })
+    .from(schema.inquiryThreads)
+    .where(eq(schema.inquiryThreads.coachUserId, userId));
+  const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -125,6 +130,7 @@ export default async function SchedulePage({
       customTypes={customTypes}
       lastUsed={lastUsed}
       subsCount={subRows.length}
+      inboxUnread={inboxUnread}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}

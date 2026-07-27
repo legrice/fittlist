@@ -81,6 +81,31 @@ export const inviteRequests = pgTable("invite_requests", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Private-training inquiries. A visitor's "Request private session" opens a
+// thread with the coach; both sides can keep replying (the coach in-app, the
+// visitor via a tokenized link). One thread per coach + requester email.
+export const inquiryThreads = pgTable(
+  "inquiry_threads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachUserId: uuid("coach_user_id").notNull().references(() => users.id),
+    requesterName: text("requester_name").notNull().default(""),
+    requesterEmail: text("requester_email").notNull(), // normalized lowercase
+    coachUnread: integer("coach_unread").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("inquiry_thread_coach_email").on(t.coachUserId, t.requesterEmail)],
+);
+
+export const inquiryMessages = pgTable("inquiry_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  threadId: uuid("thread_id").notNull().references(() => inquiryThreads.id),
+  fromCoach: boolean("from_coach").notNull().default(false), // false = the visitor
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Studios a coach says they work at, chosen in the setup wizard. Independent of
 // the classes they publish, so "Where I coach" can be populated before any class
 // exists. Public "Where I coach" is the union of these and class-derived studios.

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
@@ -22,6 +23,7 @@ export function ScheduleScreen({
   customTypes,
   lastUsed,
   subsCount,
+  inboxUnread,
   autoOpenAdder,
   handle,
   name,
@@ -51,6 +53,7 @@ export function ScheduleScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
+  inboxUnread: number;
   autoOpenAdder: boolean;
   handle: string;
   name: string;
@@ -196,23 +199,29 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
         <div className="brandbar">
           <Wordmark variant="ink" beta />
-          <button
-            className="usericon"
-            aria-label="My page"
-            onClick={() => {
-              setAcctAnim("up");
-              setProfileOpen(true);
-            }}
-          >
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="usericon-photo" src={photo} alt="" />
-            ) : (
-              <span className="usericon-initial" aria-hidden="true">
-                {(name.trim().charAt(0) || "?").toUpperCase()}
-              </span>
-            )}
-          </button>
+          <div className="brandbar-actions">
+            <Link className="iconbtn inboxbtn" aria-label={`Inbox${inboxUnread ? `, ${inboxUnread} unread` : ""}`} href="/inbox">
+              <Icon name="mail" size={20} />
+              {inboxUnread > 0 && <span className="inboxdot">{inboxUnread > 9 ? "9+" : inboxUnread}</span>}
+            </Link>
+            <button
+              className="usericon"
+              aria-label="My page"
+              onClick={() => {
+                setAcctAnim("up");
+                setProfileOpen(true);
+              }}
+            >
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="usericon-photo" src={photo} alt="" />
+              ) : (
+                <span className="usericon-initial" aria-hidden="true">
+                  {(name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
         <div className="calbar-title">Your schedule</div>
 

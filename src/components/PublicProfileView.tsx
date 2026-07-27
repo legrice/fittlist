@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
+import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { ShareProfileButton } from "@/components/ShareProfileButton";
 import { Wordmark } from "@/components/Wordmark";
@@ -78,6 +79,7 @@ export async function PublicProfileView({
         </div>
       )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
+      {!isOwner && <RequestSessionButton handle={handle} coachName={user.name} />}
       {(user.contactEmail || user.phone || user.whatsapp || user.instagram || user.website) && (
         <div className="proflinks">
           {user.contactEmail && (
