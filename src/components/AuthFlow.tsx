@@ -428,20 +428,23 @@ export function AuthFlow({
                 told what following would do for them. */}
             <p className="lead">
               {sheet === "signup"
-                ? [
-                    fans
-                      ? role === "fan"
-                        ? "Follow the coaches you train with and get their whole week in one place."
-                        : "Your classes across every studio, behind one link people can follow."
-                      : null,
-                    invited
-                      ? "Use the email your invite was sent to, and pick a password you'll remember. It's how you get back in on any other browser."
-                      : inviteOnly
-                        ? "Invite-only beta. Use the email you were invited with."
+                ? invited
+                  ? // Two sentences already, and the landing they came from
+                    // said which side they're on. Adding the role line here
+                    // would push it to three.
+                    "Use the email your invite was sent to. Pick a password you'll remember."
+                  : [
+                      fans
+                        ? role === "fan"
+                          ? "Follow your coaches and see their whole week in one place."
+                          : "Your classes across every studio, behind one link."
+                        : null,
+                      inviteOnly
+                        ? "Invite-only beta: use your invited email."
                         : "Pick any password and you're in.",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
                 : "Welcome back. Enter your email and password."}
             </p>
             <input
