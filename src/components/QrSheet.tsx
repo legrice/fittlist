@@ -82,8 +82,7 @@ export function QrSheet({
           </button>
         </div>
         <p className="lead">
-          Point a phone camera at it to open your page. Print it on a flyer or business card, or
-          show it at the end of class.
+          Anyone can scan this code to view your profile, schedule, and contact info.
         </p>
         <div className="qrframe">
           {/* eslint-disable-next-line @next/next/no-img-element */}
