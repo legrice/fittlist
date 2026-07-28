@@ -29,7 +29,10 @@ export default async function FeedPage() {
     .select({ trainerUserId: schema.subscribers.trainerUserId })
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
-  const trainerIds = followRows.map((r) => r.trainerUserId).filter((id) => id !== userId);
+  const followed = followRows.map((r) => r.trainerUserId).filter((id) => id !== userId);
+  // A coach's own week belongs here too — Home is "when can I train", and what
+  // they teach is part of that. They just can't mark themselves going to it.
+  const trainerIds = me.handle ? [...followed, userId] : followed;
   const coaches = (
     trainerIds.length
       ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
@@ -38,7 +41,9 @@ export default async function FeedPage() {
   coaches.sort((a, b) => a.name.localeCompare(b.name));
   const coachById = new Map(coaches.map((c) => [c.id, c]));
 
-  // Every followed coach's public classes, merged into one forward window.
+  // Their public classes, merged into one forward window. Private sessions stay
+  // out of it: Home is the member-facing week, even when you're looking at your
+  // own — the full schedule, private included, is the Schedule tab.
   const classRows = trainerIds.length
     ? (
         await db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerIds))
@@ -122,7 +127,9 @@ export default async function FeedPage() {
           }}
         />
 
-        {coaches.length === 0 ? (
+        {/* "Nobody yet" is for an empty Home, not an empty week: someone who
+            follows coaches with nothing on gets the agenda's own message. */}
+        {railCoaches.length === 0 && followed.length === 0 ? (
           <div className="empty-block">
             <h2>Nobody yet</h2>
             <p>

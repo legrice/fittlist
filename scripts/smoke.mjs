@@ -978,12 +978,40 @@ await page.goto(BASE + "/sam");
 await page.locator(".notifybar .btn", { hasText: "Follow" }).click();
 await page.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
 await page.goto(BASE + "/feed");
-await page.locator(".feedagenda .ps-event").first().click();
+// their own classes belong on their Home too, beside the ones they follow
+if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" }).count()))
+  fail("a coach's own classes should show on their Home");
+await page.locator(".feedav", { hasText: "Matt" }).waitFor();
+await page.locator(".feedagenda .ps-event", { hasText: "Conditioning" }).first().click();
 await page.getByRole("button", { name: "I'm going" }).click();
 await page.getByRole("button", { name: "You're going" }).waitFor();
 // it shows on the following page
 await page.goto(BASE + "/feed");
 await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
+
+// but they can't attend what they teach — swiping their own row says so and
+// leaves the row unmarked
+{
+  const mine = page
+    .locator(".feedagenda .swiperow")
+    .filter({ hasText: "Barbell Strength" })
+    .first();
+  await mine.locator(".ps-event").waitFor();
+  const box = await mine.boundingBox();
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + 20, y);
+  await page.mouse.down();
+  for (const s of [35, 70, 100, 120]) await page.mouse.move(box.x + 20 + s, y, { steps: 3 });
+  await page.mouse.up();
+  await page.locator(".toast.on", { hasText: "You aren’t able to attend your own class" }).waitFor();
+  if (await mine.locator(".ps-event.goingon").count())
+    fail("a coach's own class was marked Going");
+  await page.reload();
+  const marked = await page.locator(".feedagenda .ps-event.goingon").count();
+  if (marked !== 1) fail(`only the followed class should be marked, got ${marked}`);
+}
+console.log("own classes on Home ok (visible, not attendable)");
+
 // but the coach's own schedule is only what they teach
 await page.goto(BASE + "/app");
 await page.locator(".ps-event").first().waitFor();

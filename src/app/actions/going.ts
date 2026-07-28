@@ -19,8 +19,10 @@ export async function setGoing(
   const db = await getDb();
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
-  // You teach it; you're not attending it.
-  if (cls.userId === userId) return { ok: false, error: "That's your own class." };
+  // Your own classes show up on your Home alongside the ones you follow, so
+  // this is reachable — you teach it, you're not attending it.
+  if (cls.userId === userId)
+    return { ok: false, error: "You aren’t able to attend your own class." };
 
   if (on) {
     await db
