@@ -1728,6 +1728,9 @@ button.ps-card { cursor: pointer; }
 /* Default buttons invert (bg follows --ink, now light) — flip their text dark.
    Orange CTAs keep white text. */
 [data-mode="dark"] .btn { color: #191502; }
+/* The toast pill is --ink, which flips light in dark mode — so its text has
+   to flip with it. */
+[data-mode="dark"] .toast { color: #191502; }
 [data-mode="dark"] .btn.si { color: #191502; }
 [data-mode="dark"] .btn.ghost { color: var(--ink); }
 /* Log out was a white pill whose light ink text vanished — dark pill instead. */
