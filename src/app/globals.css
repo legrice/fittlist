@@ -1653,6 +1653,9 @@ button.ps-card { cursor: pointer; }
 }
 .confirm-modal p { font-size: 14px; color: var(--ol); line-height: 1.5; margin-bottom: 20px; }
 .confirm-modal .btn { width: 100%; }
+/* Second choice on a repeating delete: same weight as the first, so neither
+   reads as the safe default — they're different intentions, not degrees. */
+.confirm-modal .btn.confirm-all { margin-top: 10px; }
 .confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 .confirm-keep[disabled] { opacity: .5; }
 .adminremove { margin-top: 10px; font-weight: 700; font-size: 13px; color: #a8452a; }

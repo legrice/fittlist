@@ -219,19 +219,45 @@ export async function updateClass(classId: string, input: PublishInput): Promise
   return save(userId, input, classId);
 }
 
-export async function deleteClass(classId: string): Promise<{ ok: boolean; error?: string }> {
+// A repeating class is one row per weekday sharing a template, so deleting is
+// two different intentions: drop the day you opened, or drop the whole set.
+// "all" mirrors what editing already does — the recurring rows go, one-off
+// dated instances of the same class stay.
+export async function deleteClass(
+  classId: string,
+  scope: "one" | "all" = "one",
+): Promise<{ ok: boolean; error?: string; count?: number }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
   const [row] = await db
-    .select({ id: schema.classes.id })
+    .select({
+      id: schema.classes.id,
+      templateId: schema.classes.templateId,
+      specificDate: schema.classes.specificDate,
+    })
     .from(schema.classes)
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
-  if (!row) return { ok: true };
+  if (!row) return { ok: true, count: 0 };
 
-  await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
+  let count = 1;
+  if (scope === "all" && !row.specificDate && row.templateId) {
+    const gone = await db
+      .delete(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, userId),
+          eq(schema.classes.templateId, row.templateId),
+          isNull(schema.classes.specificDate),
+        ),
+      )
+      .returning({ id: schema.classes.id });
+    count = gone.length;
+  } else {
+    await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
+  }
 
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true };
+  return { ok: true, count };
 }

@@ -170,6 +170,7 @@ export function ScheduleScreen({
         isPublic: c.isPublic,
         links: c.links.map((l) => ({ ...l })),
         days,
+        dayOfWeek: c.dayOfWeek,
         specificDate: c.specificDate,
         classId: c.id,
       },

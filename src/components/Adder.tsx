@@ -13,6 +13,7 @@ import {
   CLASS_TYPES,
   DAYS,
   detectProvider,
+  fmtDays,
   minutesToTime,
   timeToMinutes,
 } from "@/lib/format";
@@ -30,9 +31,12 @@ export type AdderPrefill = {
   isPublic?: boolean;
   links: BookingLink[];
   days?: number[]; // preselected (edit); empty for duplicate
+  dayOfWeek?: number; // the weekday actually opened, for the delete choice
   specificDate?: string | null; // set = editing a one-off pinned to this date
   classId?: string; // set = edit this class in place
 };
+
+const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 type Stage = "start" | "form" | "pick" | "new";
 
@@ -227,15 +231,22 @@ export function Adder({
     });
   };
 
-  const doDelete = () => {
+  // A repeating class is several rows behind one card, so deleting has to ask
+  // which it means — the day you opened, or every day it runs.
+  const repeatDays = prefill?.specificDate ? [] : prefill?.days ?? [];
+  const repeats = repeatDays.length > 1;
+  const openedDay =
+    prefill?.dayOfWeek !== undefined ? DAY_FULL[prefill.dayOfWeek] : "this day";
+
+  const doDelete = (scope: "one" | "all") => {
     if (!prefill?.classId) return;
     startTransition(async () => {
-      const res = await deleteClass(prefill.classId!);
+      const res = await deleteClass(prefill.classId!, scope);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      onDeleted("Deleted");
+      onDeleted(res.count && res.count > 1 ? `Deleted ${res.count} days` : "Deleted");
     });
   };
 
@@ -654,11 +665,33 @@ export function Adder({
           onClick={(e) => { if (e.target === e.currentTarget && !pending) setConfirmDelete(false); }}
         >
           <div className="confirm-modal" role="dialog" aria-modal="true">
-            <h3>Delete this class?</h3>
-            <p>It disappears from your public page. This can&rsquo;t be undone.</p>
-            <button className="btn si" disabled={pending} onClick={doDelete}>
-              {pending ? "Deleting…" : "Yes, delete it"}
-            </button>
+            {repeats ? (
+              <>
+                <h3>This class repeats</h3>
+                <p>
+                  It runs {fmtDays(repeatDays)}. Delete just {openedDay}, or every day it
+                  runs? This can&rsquo;t be undone.
+                </p>
+                <button className="btn si" disabled={pending} onClick={() => doDelete("one")}>
+                  {pending ? "Deleting…" : `Delete ${openedDay} only`}
+                </button>
+                <button
+                  className="btn ghost confirm-all"
+                  disabled={pending}
+                  onClick={() => doDelete("all")}
+                >
+                  {pending ? "Deleting…" : `Delete all ${repeatDays.length} days`}
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>Delete this class?</h3>
+                <p>It disappears from your public page. This can&rsquo;t be undone.</p>
+                <button className="btn si" disabled={pending} onClick={() => doDelete("one")}>
+                  {pending ? "Deleting…" : "Yes, delete it"}
+                </button>
+              </>
+            )}
             <button className="confirm-keep" disabled={pending} onClick={() => setConfirmDelete(false)}>
               Keep it
             </button>

@@ -183,12 +183,21 @@ console.log("edit ok (end-time length)");
 await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
+// Barbell Strength runs Mon, Wed & Fri, so the confirm has to ask which is
+// meant rather than saying "this class" and taking the whole recurring day.
+await page.getByRole("heading", { name: "This class repeats" }).waitFor();
+await expect(
+  page.locator(".confirm-modal p").textContent().then((t) => t.includes("Mon, Wed & Fri")),
+  "the repeat confirm names the days it runs",
+);
+if (!(await page.getByRole("button", { name: "Delete all 3 days" }).count()))
+  fail("a repeating class should offer deleting the whole set");
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 // The edit step just before this can recreate rows with fresh ids mid-flight,
 // so a delete can occasionally hit a stale row id. Retry the whole flow once.
 for (let attempt = 0; ; attempt++) {
   await page.getByRole("button", { name: "Delete this class" }).click();
-  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await page.getByRole("button", { name: "Delete Friday only" }).click();
   await page.getByText("Deleted", { exact: true }).waitFor();
   let done = false;
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
@@ -202,7 +211,33 @@ for (let attempt = 0; ; attempt++) {
   await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
   await page.getByRole("heading", { name: "Edit class" }).waitFor();
 }
-console.log("delete-in-sheet ok (confirm + cancel)");
+console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
+
+// ---- deleting the whole repeating set, on a class made for the purpose
+{
+  const before = await scheduleClasses(page);
+  await page.getByRole("button", { name: "Add class" }).click();
+  await page.getByRole("heading", { name: "New class" }).waitFor();
+  await page.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
+  await page.locator("#fName").fill("Temp Repeat");
+  await page.getByRole("button", { name: "Tu", exact: true }).click();
+  await page.getByRole("button", { name: "Th", exact: true }).click();
+  await page.locator(".publishwrap .btn").click();
+  await page.getByText("Published", { exact: false }).waitFor();
+  await waitSchedule(page, before + 2, 20000);
+  await page.waitForTimeout(700);
+
+  await page.locator(".ps-event", { hasText: "Temp Repeat" }).first().click();
+  await page.getByRole("heading", { name: "Edit class" }).waitFor();
+  await page.getByRole("button", { name: "Delete this class" }).click();
+  await page.getByRole("button", { name: "Delete all 2 days" }).click();
+  await page.getByText("Deleted 2 days").waitFor();
+  await waitSchedule(page, before, 20000);
+  if (await page.locator(".ps-event", { hasText: "Temp Repeat" }).count())
+    fail("deleting all should clear every day of the repeat");
+}
+console.log("delete-all ok (whole repeating set goes)");
 
 // ---- account page: full-screen view reached from the header avatar
 await expect(
