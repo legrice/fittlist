@@ -90,6 +90,7 @@ export default async function SchedulePage({
   const classes: ClassDto[] = classRows.map((c) => ({
     id: c.id,
     templateId: c.templateId,
+    seriesId: c.seriesId,
     dayOfWeek: c.dayOfWeek,
     specificDate: c.specificDate,
     endsOn: c.endsOn,

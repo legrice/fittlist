@@ -241,7 +241,15 @@ export const classes = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => users.id),
+    // Autofill memory for a class NAME, one row per (coach, name). Two classes
+    // that share a name share this, so it can't identify a recurring set.
     templateId: uuid("template_id").references(() => classTemplates.id),
+    // Which recurring class this row is a weekday of. A weekly class is one row
+    // per weekday and they all carry the same seriesId; a one-off gets its own.
+    // This, not templateId, is what "the whole series" means when editing or
+    // deleting: a coach teaching Stretch+ at two studios has two series and one
+    // template, and grouping by the template collapsed them into one class.
+    seriesId: uuid("series_id").notNull().defaultRandom(),
     dayOfWeek: integer("day_of_week").notNull(),
     // null = standing weekly (shows every week, link never stales); set = a
     // one-off pinned to this ISO date, shown only in the week it falls in.

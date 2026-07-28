@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
@@ -124,26 +125,62 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.
   const keptSkips = new Map<number, string[]>();
+  // The set this save belongs to.
+  //
+  // A new weekly class joins an existing one when it is the same class in the
+  // coach's terms: same name, same time, same place, same visibility. Adding
+  // Friday to a class you already teach Monday and Wednesday should give you
+  // one class that runs three days, not two entries with the same name.
+  //
+  // Anything that differs starts its own set. That distinction is the whole
+  // fix: Stretch+ at 6am in Verona and Stretch+ at 6:30pm in Montclair are two
+  // classes, and treating them as one is what let an edit to either wipe the
+  // other.
+  let seriesId: string = randomUUID();
+  if (!replaceClassId && !oneOff) {
+    const [sibling] = await db
+      .select({ seriesId: schema.classes.seriesId })
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, userId),
+          eq(schema.classes.name, name),
+          eq(schema.classes.startTime, input.startTime),
+          studioId ? eq(schema.classes.studioId, studioId) : isNull(schema.classes.studioId),
+          location ? eq(schema.classes.location, location) : isNull(schema.classes.location),
+          eq(schema.classes.isPublic, isPublic),
+          isNull(schema.classes.specificDate),
+        ),
+      )
+      .limit(1);
+    if (sibling) seriesId = sibling.seriesId;
+  }
   if (replaceClassId) {
     const [existing] = await db
       .select({
         id: schema.classes.id,
-        templateId: schema.classes.templateId,
+        seriesId: schema.classes.seriesId,
         specificDate: schema.classes.specificDate,
       })
       .from(schema.classes)
       .where(and(eq(schema.classes.id, replaceClassId), eq(schema.classes.userId, userId)));
     if (!existing) return { ok: false, error: "Class not found." };
-    if (!existing.specificDate && existing.templateId) {
+    seriesId = existing.seriesId;
+    if (!existing.specificDate) {
       // Editing a weekly class replaces its whole recurring set (all its
       // weekly rows), so the selected days become the new set - one-off dated
       // instances of the same class are left untouched.
+      //
+      // Scoped to the series, not the template: the template is keyed on the
+      // class NAME, so a coach teaching the same class at two studios shares
+      // one template across both. Deleting by template took the other studio's
+      // class with it and rewrote it as this one.
       const gone = await db
         .delete(schema.classes)
         .where(
           and(
             eq(schema.classes.userId, userId),
-            eq(schema.classes.templateId, existing.templateId),
+            eq(schema.classes.seriesId, existing.seriesId),
             isNull(schema.classes.specificDate),
           ),
         )
@@ -169,6 +206,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     days.map((dayOfWeek) => ({
       userId,
       templateId: template.id,
+      seriesId,
       dayOfWeek,
       specificDate: oneOff,
       endsOn,
@@ -249,7 +287,7 @@ export async function deleteClass(
   const [row] = await db
     .select({
       id: schema.classes.id,
-      templateId: schema.classes.templateId,
+      seriesId: schema.classes.seriesId,
       specificDate: schema.classes.specificDate,
       skipDates: schema.classes.skipDates,
     })
@@ -286,13 +324,13 @@ export async function deleteClass(
   }
 
   let count = 1;
-  if (scope === "all" && !row.specificDate && row.templateId) {
+  if (scope === "all" && !row.specificDate) {
     const gone = await db
       .delete(schema.classes)
       .where(
         and(
           eq(schema.classes.userId, userId),
-          eq(schema.classes.templateId, row.templateId),
+          eq(schema.classes.seriesId, row.seriesId),
           isNull(schema.classes.specificDate),
         ),
       )

@@ -4,7 +4,8 @@ export type StudioDto = { id: string; seq: number; name: string; address: string
 
 export type ClassDto = {
   id: string;
-  templateId: string | null; // weekly rows of one class share a template
+  templateId: string | null; // autofill memory, keyed on the class NAME
+  seriesId: string; // weekly rows of ONE class share this; the template can span two
   dayOfWeek: number; // 0 = Monday … 6 = Sunday
   specificDate: string | null; // ISO date if a one-off; null = standing weekly
   endsOn: string | null; // last date a standing weekly runs; null = no end

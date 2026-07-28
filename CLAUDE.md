@@ -81,6 +81,10 @@ node scripts/feedback-smoke.mjs   # writing in, the reply, the prompt
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/desktop-smoke.mjs    # header links and the coach-rail arrows
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/series-smoke.mjs     # the same class at two studios is two classes
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -97,6 +101,15 @@ to expand a recurrence: schedule, public page, feed, digest, Discover, story
 image, `.ics`. A weekly class is one row per weekday sharing a `templateId`;
 `skipDates` cancels single occurrences. Change it there and everything agrees.
 Callers must load full class rows, or the column silently goes missing.
+
+**A series is not a template.** `classes.seriesId` identifies one recurring
+class: all its weekday rows share it, and editing or deleting "the whole thing"
+means that id. `templateId` is only autofill memory, keyed on `(userId, name)`,
+so a coach teaching Stretch+ at two studios has one template and two series.
+Grouping by the template is what let an edit to either one delete the other and
+rewrite it: change a description, lose a class. A new weekly class joins an
+existing series when name, time, place and visibility all match, which keeps
+"also on Friday" as one class; anything that differs starts its own.
 
 **Feature flags** (`src/lib/flags.ts`) compare exact strings. `FANS_ENABLED`
 must be literally `"true"` or `"coaches"`; `"1"` and `"yes"` are off.

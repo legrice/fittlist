@@ -149,16 +149,18 @@ export function ScheduleScreen({
     // A weekly class is stored as one row per day; editing it should load every
     // day it recurs on (its template's weekly rows), not just the tapped day. A
     // one-off is a single dated row.
-    const days =
-      c.specificDate || !c.templateId
-        ? [c.dayOfWeek]
-        : [
-            ...new Set(
-              classes
-                .filter((x) => !x.specificDate && x.templateId === c.templateId)
-                .map((x) => x.dayOfWeek),
-            ),
-          ];
+    // Grouped by series, not template: the template is keyed on the class name,
+    // so the same class at two studios shares one. Grouping by it pulled the
+    // other studio's days into this editor and saved them onto this class.
+    const days = c.specificDate
+      ? [c.dayOfWeek]
+      : [
+          ...new Set(
+            classes
+              .filter((x) => !x.specificDate && x.seriesId === c.seriesId)
+              .map((x) => x.dayOfWeek),
+          ),
+        ];
     setAdder({
       open: true,
       prefill: {
