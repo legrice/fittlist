@@ -961,9 +961,17 @@ await fan.locator(".roleseg button", { hasText: "here to train" }).click();
 await fan.getByPlaceholder("you@example.com").fill("lindley@example.com");
 await fan.getByPlaceholder("Password").fill("smoke-pass-fan");
 await fan.getByRole("button", { name: "Create account" }).click();
-// fans skip the handle claim AND the passkey offer: the cookie-set rerender
-// redirects them straight to the feed. (They do go through the invite gate,
-// same as coaches — this suite runs with INVITE_ONLY=false.)
+// A member sets up the same way a coach does: passkey offer, then a name and
+// a link, then their own two-step wizard. (They go through the invite gate
+// too — this suite runs with INVITE_ONLY=false.)
+await fan.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await fan.getByText("Pick your link.").waitFor();
+await fan.getByPlaceholder("Your name").fill("Lindley");
+await fan.getByRole("button", { name: "Claim it" }).click();
+await fan.getByRole("heading", { name: "Add a photo." }).waitFor();
+if ((await fan.locator(".wizdot").count()) !== 2)
+  fail("a member's setup is two steps: photo, then who they are");
+await fan.getByRole("button", { name: "Skip for now" }).click();
 await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
@@ -1401,11 +1409,14 @@ await page.getByRole("heading", { name: "Followers" }).waitFor();
   await emailRow.waitFor();
   if (await emailRow.locator(".disfollow").count())
     fail("an email subscriber has no page — there's nothing to follow back");
-  // a member with an account but no page of their own: same, no button
-  const memberRow = page.locator(".disrow", { hasText: "lindley" });
+  // a member has a profile to open, but following one would promise a week
+  // that isn't there yet, so the row links without offering a button
+  const memberRow = page.locator(".disrow", { hasText: "Lindley" });
   await memberRow.waitFor();
+  if (!(await memberRow.locator("a.disrow-main").count()))
+    fail("a member's row should link to their profile");
   if (await memberRow.locator(".disfollow").count())
-    fail("a member has no page — there's nothing to follow back");
+    fail("following a member promises a week that doesn't exist yet");
   // a coach who follows you can be followed back, right from the row. Matt
   // already follows Sam by now, so unfollow first and watch it round-trip.
   const samBtn = page.locator(".disrow", { hasText: "Sam" }).locator(".disfollow");

@@ -30,6 +30,8 @@ export default async function FeedPage({
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
+  // A member has a handle too now, so the coach shell keys off `kind`.
+  const isCoach = me.kind !== "fan" && !!me.handle;
 
   const followRows = await db
     .select({ trainerUserId: schema.subscribers.trainerUserId })
@@ -38,7 +40,7 @@ export default async function FeedPage({
   const followed = followRows.map((r) => r.trainerUserId).filter((id) => id !== userId);
   // A coach's own week belongs here too — Following answers "when can I train",
   // and what they teach is part of that. They just can't mark themselves going.
-  const trainerIds = me.handle ? [...followed, userId] : followed;
+  const trainerIds = isCoach ? [...followed, userId] : followed;
   const coaches = (
     trainerIds.length
       ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
@@ -119,7 +121,7 @@ export default async function FeedPage({
 
   return (
     <section
-      className={`screen${me.handle ? " hasnav" : ""}`}
+      className={`screen${isCoach ? " hasnav" : ""}`}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
@@ -129,7 +131,7 @@ export default async function FeedPage({
             photo: me.photo,
             color: avatarColor(me),
             initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: me.handle ? "/app?acct=1" : "/you",
+            href: isCoach ? "/app?acct=1" : "/you",
           }}
         />
 
@@ -161,7 +163,7 @@ export default async function FeedPage({
         )}
 
       </div>
-      {me.handle && <NavBar active="following" />}
+      {isCoach && <NavBar active="following" />}
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </section>
   );

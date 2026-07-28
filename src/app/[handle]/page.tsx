@@ -7,6 +7,7 @@ import { siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { PublicProfileView } from "@/components/PublicProfileView";
+import { MemberProfileView } from "@/components/MemberProfileView";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
   const title = `${user.name} · fittlist`;
-  const description = user.about?.trim() || `${user.name}'s coaching schedule, every studio in one link.`;
+  const description =
+    user.about?.trim() ||
+    (user.kind === "fan"
+      ? `${user.name} on fittlist.`
+      : `${user.name}'s coaching schedule, every studio in one link.`);
   const url = `${siteOrigin()}/${handle}`;
   return {
     title,
@@ -57,5 +62,10 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   }
   const isOwner = viewerId === user.id;
 
+  // A member has the same kind of link and no schedule behind it, so their
+  // profile is its own, much smaller page.
+  if (user.kind === "fan") {
+    return <MemberProfileView user={user} isOwner={isOwner} from={from} />;
+  }
   return <PublicProfileView user={user} isOwner={isOwner} initialTab="about" from={from} />;
 }

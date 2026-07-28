@@ -132,7 +132,14 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByPlaceholder("you@example.com").fill("member@example.com");
     await pg.getByPlaceholder("Password").fill("member-pass-123");
     await pg.getByRole("button", { name: "Create account" }).click();
-    // invited: no handle claim, straight to their week
+    // invited: through the same name-and-link claim a coach gets, then a
+    // member's own two-step setup, then their week
+    await pg.getByRole("button", { name: "Not now" }).click().catch(() => {});
+    await pg.getByText("Pick your link.").waitFor();
+    await pg.getByPlaceholder("Your name").fill("Member Person");
+    await pg.getByRole("button", { name: "Claim it" }).click();
+    await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
+    await pg.getByRole("button", { name: "Skip for now" }).click();
     await pg.waitForURL("**/feed");
     await pg.getByText("Nobody yet").waitFor();
     console.log("invited member signup ok");

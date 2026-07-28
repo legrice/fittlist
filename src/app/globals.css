@@ -2230,3 +2230,54 @@ button.ps-card { cursor: pointer; }
 .disfollow[disabled] { opacity: .55; }
 [data-mode="dark"] .discity.on { background: var(--ink); border-color: var(--ink); color: #191502; }
 [data-mode="dark"] .disfollow.on { color: var(--ink); }
+
+/* ===========================================================
+   A member's public profile. Same link shape as a coach's, far less behind
+   it: who they are and who they train with, and nothing to book.
+   =========================================================== */
+.memberpub { background: var(--paper); min-height: 100dvh; }
+.memberpub .profwrap {
+  max-width: 520px; margin: 0 auto;
+  padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+}
+.mempro-top { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
+.mempro-edit { text-decoration: none; }
+.mempro-id { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 18px; }
+.mempro-av {
+  width: 104px; height: 104px; border-radius: 999px; object-fit: cover; display: block;
+  background: #eae3d2;
+}
+.mempro-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px;
+  color: #fff;
+}
+.mempro-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px;
+  letter-spacing: -.02em; margin-top: 14px; overflow-wrap: anywhere;
+}
+.mempro-title { font-size: 14.5px; color: var(--ol); margin-top: 3px; }
+.mempro-loc {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; color: var(--ol); margin-top: 6px;
+}
+.mempro-about {
+  font-size: 14.5px; line-height: 1.55; color: var(--ink); margin-top: 18px; text-align: center;
+}
+.mempro-sec { margin-top: 30px; }
+.mempro-sec .prof-sec-h { display: flex; align-items: center; gap: 8px; }
+.mempro-n {
+  font-size: 12px; font-weight: 700; color: var(--ol);
+  background: var(--cl); border-radius: 999px; padding: 2px 9px;
+}
+.mempro-none { font-size: 13.5px; color: var(--ol); line-height: 1.5; }
+
+/* the photo picker inside the member profile sheet */
+.mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
+.mepho-img { width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block; background: #eae3d2; }
+.mepho-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; color: #fff;
+}
+.mepho-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mepho-actions .btn { width: auto; padding: 10px 18px; }

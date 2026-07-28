@@ -52,6 +52,7 @@ export default async function FollowersPage() {
         photo: null,
         color: "#6b6555",
         handle: null,
+        canFollow: false,
         following: false,
       };
     }
@@ -59,13 +60,13 @@ export default async function FollowersPage() {
     return {
       id: r.id,
       name,
-      sub: u.handle
-        ? [u.title?.trim(), u.location?.trim()].filter(Boolean).join(" · ") ||
-          `fittlist.co/${u.handle}`
-        : u.email,
+      sub:
+        [u.title?.trim(), u.location?.trim()].filter(Boolean).join(" · ") ||
+        (u.handle ? `fittlist.co/${u.handle}` : u.email),
       photo: u.photo,
       color: avatarColor(u),
       handle: u.handle,
+      canFollow: !!u.handle && u.kind === "coach",
       following: following.has(u.id),
     };
   });

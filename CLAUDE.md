@@ -64,6 +64,7 @@ node scripts/auth-smoke.mjs       # password recovery, the coach/follower choice
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/private-smoke.mjs    # public vs private classes
+node scripts/member-smoke.mjs     # a member's link, setup, profile and edits
 ```
 
 `NEXT_PUBLIC_ORIGIN=http://localhost:3000` matters for anything that follows an
@@ -83,6 +84,11 @@ must be literally `"true"` or `"coaches"`; `"1"` and `"yes"` are off.
 
 **The beta gate** covers everyone, coaches and members alike
 (`INVITE_ONLY !== "false"`).
+
+**A handle is not a coach badge.** Members claim one too, and `/{handle}`
+renders `MemberProfileView` instead of the coach page when `kind === "fan"`.
+Anything asking "is this a coach?" must test `kind`, not `handle`: that
+substitution was true for months and is now wrong in about six places.
 
 **Stacking contexts.** The account view is a positioned `z-40` layer and the tab
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab

@@ -8,9 +8,10 @@ import { createStudio } from "@/app/actions/studios";
 import type { StudioDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 
-const TOTAL = 3;
+
 
 export function OnboardingWizard({
+  kind = "coach",
   name,
   photo,
   title,
@@ -23,6 +24,9 @@ export function OnboardingWizard({
   studios: studiosProp,
   selectedStudioIds,
 }: {
+  /** A member sets up a photo and a bio and stops there. The rest of this
+   *  wizard is about being findable and bookable as a coach. */
+  kind?: "coach" | "fan";
   name: string;
   photo: string | null;
   title: string;
@@ -36,6 +40,8 @@ export function OnboardingWizard({
   selectedStudioIds: string[];
 }) {
   const router = useRouter();
+  const fan = kind === "fan";
+  const TOTAL = fan ? 2 : 3;
   const [step, setStep] = useState(1);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pTitle, setPTitle] = useState(title);
@@ -136,9 +142,9 @@ export function OnboardingWizard({
         setError(res.error ?? "Couldn't save. Try again.");
         return;
       }
-      await setCoachStudios([...selected]);
+      if (!fan) await setCoachStudios([...selected]);
       await completeOnboarding();
-      router.push("/app");
+      router.push(fan ? "/feed" : "/app");
       router.refresh();
     });
   };
@@ -166,7 +172,11 @@ export function OnboardingWizard({
         {step === 1 && (
           <>
             <h1>Add a photo.</h1>
-            <p>A friendly face makes your page feel like you. You can change it anytime.</p>
+            <p>
+              {fan
+                ? "So the coaches you follow know who you are. You can change it anytime."
+                : "A friendly face makes your page feel like you. You can change it anytime."}
+            </p>
             <div className="wizphoto">
               {pPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -204,16 +214,20 @@ export function OnboardingWizard({
         {step === 2 && (
           <>
             <h1>Tell people who you are.</h1>
-            <p>A tagline and a couple of lines. Add the ways you want to be reached.</p>
+            <p>
+              {fan
+                ? "A line about you, so a coach knows who just followed them."
+                : "A tagline and a couple of lines. Add the ways you want to be reached."}
+            </p>
             <label className="flabel" htmlFor="wTitle">
-              Title <span>· your role or tagline</span>
+              {fan ? "Tagline" : "Title"} <span>· {fan ? "optional" : "your role or tagline"}</span>
             </label>
             <input
               id="wTitle"
               className="editinput"
               value={pTitle}
               maxLength={80}
-              placeholder="Strength coach"
+              placeholder={fan ? "Lifts heavy, runs slow" : "Strength coach"}
               onChange={(e) => setPTitle(e.target.value)}
             />
             <label className="flabel" htmlFor="wAbout">
@@ -228,6 +242,8 @@ export function OnboardingWizard({
               placeholder="Coach at Ironbound Performance. Strength & conditioning, all levels."
               onChange={(e) => setPAbout(e.target.value)}
             />
+            {!fan && (
+            <>
             <label className="flabel" htmlFor="wInstagram">
               Instagram <span>· optional</span>
             </label>
@@ -296,6 +312,8 @@ export function OnboardingWizard({
               placeholder="+1 555 123 4567"
               onChange={(e) => setPWhatsapp(e.target.value)}
             />
+            </>
+            )}
           </>
         )}
 

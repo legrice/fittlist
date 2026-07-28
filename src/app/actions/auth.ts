@@ -77,7 +77,7 @@ export async function passwordAuth(
       .returning();
     await acceptInvite(email, created.id);
     await createSession(created.id);
-    return { ok: true, needsProfile: !fan, hasPasskey: false, fan };
+    return { ok: true, needsProfile: true, hasPasskey: false, fan };
   }
   if (!user.passwordHash) {
     return {
@@ -97,7 +97,7 @@ export async function passwordAuth(
     .where(eq(schema.credentials.userId, user.id));
   return {
     ok: true,
-    needsProfile: user.kind !== "fan" && !user.handle,
+    needsProfile: !user.handle,
     hasPasskey: passkeys.length > 0,
     fan: user.kind === "fan",
   };
@@ -270,7 +270,7 @@ export async function consumeMagicToken(
     .from(schema.credentials)
     .where(eq(schema.credentials.userId, user.id));
   return {
-    needsProfile: user.kind !== "fan" && !user.handle,
+    needsProfile: !user.handle,
     fan: user.kind === "fan",
     via: row.via,
     // An account with neither a password nor a passkey can only ever be reached
@@ -390,13 +390,13 @@ export async function finishPasskeyLogin(
     .where(eq(schema.credentials.id, cred.id));
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, cred.userId));
   await createSession(user.id);
-  return { ok: true, needsProfile: user.kind !== "fan" && !user.handle, fan: user.kind === "fan" };
+  return { ok: true, needsProfile: !user.handle, fan: user.kind === "fan" };
 }
 
 // "I'm here to train." An account arriving by magic link is a coach by default
-// — that's the column default, not a choice anyone made — so someone who only
-// wants to follow needs a way to say so before being asked to pick a URL.
-// Reversible: /you offers "Post your own classes", which claims a handle.
+// — that's the column default, not a choice anyone made — so ask first. They
+// still pick a name and a link afterwards: a member has a profile too, it just
+// has no schedule behind it. Reversible from /you, which offers coaching.
 export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired. Log in again." };
@@ -414,6 +414,10 @@ export async function claimProfile(
   nameRaw: string,
   handleRaw: string = "",
   via: string | null = null,
+  /** What they're claiming it as. A coach gets a page with a schedule; a member
+   *  gets the same link and profile without one. Defaults to coach, which is
+   *  what the "post your own classes" path wants. */
+  as: "coach" | "fan" = "coach",
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired. Log in again." };
@@ -436,13 +440,27 @@ export async function claimProfile(
   if (taken && taken.id !== userId) {
     return { ok: false, error: `fittlist.co/${chosen} is taken. Try another.` };
   }
-  // Claiming a handle is what makes someone a coach — a member who decides to
-  // post their own classes comes through here too, and stops being a "fan" the
-  // moment they do. Following, going marks and their week all carry over; the
-  // kind only decides where the app opens and what chrome they get.
+  // A member turning coach has already been through setup, but the member
+  // version of it: no title, no contact details, no studios. Reopen it so the
+  // coach steps actually run rather than being skipped as already done.
+  const [before] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const reopenSetup = as === "coach" && before?.kind === "fan";
+  // Everyone gets a handle: it's their profile's address, not a coach badge.
+  // `kind` is the thing that decides whether there's a schedule behind it,
+  // where the app opens, and what chrome they get. A member who later posts
+  // their own classes comes back through here as a coach and keeps everything.
   await db
     .update(schema.users)
-    .set({ name, handle: chosen, kind: "coach", ...(signupSource ? { signupSource } : {}) })
+    .set({
+      name,
+      handle: chosen,
+      kind: as,
+      ...(reopenSetup ? { onboardedAt: null } : {}),
+      ...(signupSource ? { signupSource } : {}),
+    })
     .where(eq(schema.users.id, userId));
   return { ok: true, handle: chosen };
 }

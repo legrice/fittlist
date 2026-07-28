@@ -22,16 +22,18 @@ export default async function Home({
   if (userId) {
     const db = await getDb();
     const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-    if (user?.handle) redirect("/app");
-    if (user?.kind === "fan") redirect("/feed");
+    // A handle is what "set up" means now, for both sides. Bouncing a fan to
+    // /feed on sight is what used to stop them ever reaching the claim step.
+    if (user?.handle) redirect(user.kind === "fan" ? "/feed" : "/app");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
-    // ask which they are before demanding a URL. Someone who only wants to
-    // follow a coach was being marched into claiming a page.
+    // ask which they are before demanding a URL. Someone who already answered
+    // goes straight to the claim step rather than being asked twice.
     if (user)
       return (
         <AuthFlow
-          startStage={fansEnabled() ? "role" : "claim"}
+          startStage={fansEnabled() && user.kind !== "fan" ? "role" : "claim"}
+          claimAs={user.kind === "fan" ? "fan" : "coach"}
           via={viaHandle}
           providers={providers}
           inviteOnly={inviteOnly()}

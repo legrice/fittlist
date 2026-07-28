@@ -43,6 +43,7 @@ export function AuthFlow({
   providers = { google: false, apple: false },
   inviteOnly = false,
   invited = false,
+  claimAs = "coach",
   fans = false,
 }: {
   startStage: "email" | "role" | "claim";
@@ -52,6 +53,9 @@ export function AuthFlow({
   /** They got here from a beta invite email, so they're already through the
    *  gate — say so, and don't ask them to queue for what they already have. */
   invited?: boolean;
+  /** Which side an already-signed-in visitor is claiming for. The server knows
+   *  it from users.kind; the client can't, on a fresh load. */
+  claimAs?: "coach" | "fan";
   fans?: boolean;
 }) {
   const router = useRouter();
@@ -61,7 +65,7 @@ export function AuthFlow({
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
-  const [role, setRole] = useState<"coach" | "fan">("coach");
+  const [role, setRole] = useState<"coach" | "fan">(claimAs);
   const [bio, setBio] = useState(false);
   // The "sent" screen doubles as password recovery; this picks the copy.
   const [resetMode, setResetMode] = useState(false);
@@ -95,11 +99,14 @@ export function AuthFlow({
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);
 
-  const pendingFan = useRef(false);
+  const pendingFan = useRef(claimAs === "fan");
+  // Everyone claims a name and a link. Only after that does the destination
+  // differ: a coach lands on their schedule, a member on their week.
   const proceed = (needsProfile: boolean, fan = false) => {
-    if (fan) router.push("/feed");
-    else if (needsProfile) setStage("claim");
-    else router.push("/app");
+    pendingFan.current = fan;
+    if (fan) setRole("fan");
+    if (needsProfile) setStage("claim");
+    else router.push(fan ? "/feed" : "/app");
   };
 
   const submitPassword = () => {
@@ -114,10 +121,10 @@ export function AuthFlow({
       setSheet(null);
       pendingProfile.current = !!res.needsProfile;
       pendingFan.current = !!res.fan;
-      // Offer to add a passkey right after signing in with a password. Fans
-      // skip the offer: the cookie-set rerender of "/" already redirects them
-      // to /feed, which would unmount the prompt mid-display anyway.
-      if (!res.fan && passkeyable && !res.hasPasskey) setBio(true);
+      // Offer to add a passkey right after signing in with a password. A fan
+      // with a profile still to claim stays on "/", so the prompt has somewhere
+      // to live; one who's already set up would be redirected out from under it.
+      if (passkeyable && !res.hasPasskey && (res.needsProfile || !res.fan)) setBio(true);
       else proceed(!!res.needsProfile, !!res.fan);
     });
   };
@@ -200,13 +207,18 @@ export function AuthFlow({
     if (!name.trim()) return;
     setError("");
     startTransition(async () => {
-      const res = await claimProfile(name, handle, via);
+      const asFan = fans && (role === "fan" || pendingFan.current);
+      const res = await claimProfile(name, handle, via, asFan ? "fan" : "coach");
       if (res.ok) router.push("/welcome");
       else setError(res.error ?? "Something went wrong.");
     });
   };
 
   const urlPreview = slug(handle.trim() || name) || "yourname";
+  // Which side the claim step is serving. `role` covers the signup sheet; the
+  // ref covers arriving here from a login or a magic link, where the sheet was
+  // never opened.
+  const claimingAsFan = fans && (role === "fan" || pendingFan.current);
 
   return (
     <section className="screen ob">
@@ -349,7 +361,9 @@ export function AuthFlow({
                     setError(res.error ?? "Something went wrong.");
                     return;
                   }
-                  router.push("/feed");
+                  setRole("fan");
+                  pendingFan.current = true;
+                  setStage("claim");
                 })
               }
             >
@@ -367,8 +381,9 @@ export function AuthFlow({
           <>
             <h1>Pick your link.</h1>
             <p>
-              This is the one link you share everywhere: your bio, your DMs, your business card.
-              Anyone who opens it sees your schedule and how to reach you.
+              {claimingAsFan
+                ? "Your profile lives here. It's how coaches and other members find you, and it's yours to share."
+                : "This is the one link you share everywhere: your bio, your DMs, your business card. Anyone who opens it sees your schedule and how to reach you."}
             </p>
             <input
               ref={nameRef}
@@ -393,7 +408,8 @@ export function AuthFlow({
               />
             </div>
             <div className="handlepreview">
-              Your page will live at <b>fittlist.co/{urlPreview}</b>
+              {claimingAsFan ? "Your profile will live at " : "Your page will live at "}
+              <b>fittlist.co/{urlPreview}</b>
             </div>
             <button className="btn" onClick={claim} disabled={pending}>
               {pending ? "Claiming…" : "Claim it"}

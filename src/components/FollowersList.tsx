@@ -12,14 +12,18 @@ export type FollowerRow = {
   sub: string;
   photo: string | null;
   color: string;
-  /** Set only for followers who have a page of their own; null otherwise. */
+  /** Set for anyone with a profile to open, member or coach; null otherwise. */
   handle: string | null;
+  /** Only a coach can be followed back today: following a member would promise
+   *  a week that doesn't exist yet. The row still links to their profile. */
+  canFollow: boolean;
   following: boolean;
 };
 
-// Who follows this coach. Everyone shows up — accounts and plain email
-// subscribers alike, since both get the digest — but only the ones with a page
-// of their own can be followed back, so that's the only row with a button.
+// Who follows this coach. Everyone shows up: accounts and plain email
+// subscribers alike, since both get the digest. Anyone with a profile links to
+// it; only a coach gets a Follow back button, because following a member would
+// promise a week that isn't there yet.
 export function FollowersList({ followers }: { followers: FollowerRow[] }) {
   const [follows, setFollows] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(followers.map((f) => [f.id, f.following])),
@@ -92,7 +96,7 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
               ) : (
                 <div className="disrow-main">{inner}</div>
               )}
-              {f.handle && (
+              {f.canFollow && (
                 <button
                   type="button"
                   className={`disfollow${follows[f.id] ? " on" : ""}`}

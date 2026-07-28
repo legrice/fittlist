@@ -128,6 +128,14 @@ await c3.close();
   await fp.screenshot({ path: OUT + "/shot-role-step.png" });
   // the heading renders a curly apostrophe, so match loosely
   await fp.getByRole("button", { name: /here to train/ }).click();
+  // a member claims a name and a link too; the copy just doesn't promise a page
+  await fp.getByText("Pick your link.").waitFor();
+  if (!(await fp.getByText("Your profile lives here").count()))
+    fail("a member should not be promised a coach page");
+  await fp.getByPlaceholder("Your name").fill("Just A Fan");
+  await fp.getByRole("button", { name: "Claim it" }).click();
+  await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
+  await fp.getByRole("button", { name: "Skip for now" }).click();
   await fp.waitForURL("**/feed");
   await fp.getByText("Nobody yet").waitFor();
   // and it stuck: going back to / sends them to their week, not to a claim step

@@ -22,6 +22,8 @@ export default async function DiscoverPage() {
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
+  // A member has a handle too now, so the coach shell keys off `kind`.
+  const isCoach = me.kind !== "fan" && !!me.handle;
 
   const unread = await unreadNotifications(userId);
   const rows = await db
@@ -100,7 +102,7 @@ export default async function DiscoverPage() {
 
   return (
     <section
-      className={`screen${me.handle ? " hasnav" : ""}`}
+      className={`screen${isCoach ? " hasnav" : ""}`}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
@@ -110,13 +112,13 @@ export default async function DiscoverPage() {
             photo: me.photo,
             color: avatarColor(me),
             initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: me.handle ? "/app?acct=1" : "/you",
+            href: isCoach ? "/app?acct=1" : "/you",
           }}
         />
         <div className="calbar-title">Discover</div>
         <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
       </div>
-      {me.handle && <NavBar active="discover" />}
+      {isCoach && <NavBar active="discover" />}
     </section>
   );
 }

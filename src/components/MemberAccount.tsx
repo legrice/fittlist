@@ -5,6 +5,7 @@ import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Icon } from "@/components/Icon";
 import { InviteFriends } from "@/components/InviteFriends";
+import { MemberProfileEditor } from "@/components/MemberProfileEditor";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
 
@@ -14,17 +15,27 @@ import { StartCoaching } from "@/components/StartCoaching";
 export function MemberAccount({
   name,
   email,
+  handle,
+  title,
+  about,
+  location,
   photo,
   color,
   look,
   goingCount,
+  openEditor = false,
 }: {
   name: string;
   email: string;
+  handle: string | null;
+  title: string;
+  about: string;
+  location: string;
   photo: string | null;
   color: string;
   look: string | null;
   goingCount: number;
+  openEditor?: boolean;
 }) {
   const [share, setShare] = useState(false);
   // Members sign up with an email and nothing else — there's no name step for
@@ -49,8 +60,31 @@ export function MemberAccount({
         )}
         <span className="memberid-txt">
           <span className="t">{shownName}</span>
-          <span className="s">{email}</span>
+          <span className="s">{handle ? `fittlist.co/${handle}` : email}</span>
         </span>
+      </div>
+
+      <div className="settingslist">
+        <MemberProfileEditor
+          name={name}
+          handle={handle}
+          title={title}
+          about={about}
+          location={location}
+          photo={photo}
+          color={color}
+          openOnMount={openEditor}
+        />
+        {handle && (
+          <a className="setrow" href={`/${handle}`}>
+            <span className="setrow-ic"><Icon name="north_east" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">View your profile</span>
+              <span className="s">How it looks to everyone else</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </a>
+        )}
       </div>
 
       <div className="settingslist">
