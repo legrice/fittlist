@@ -732,10 +732,13 @@ button.bl-band { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
-/* schedule header: fittlist logo + profile icon up top, "My Schedule" below */
+/* schedule header: fittlist logo + profile icon up top, "My Schedule" below.
+   Shared with Home and Discover, so the ground is the page ground (--paper)
+   rather than the poster theme's cream — the three tabs should read as one
+   surface, not three. --paper flips with dark mode, so this follows. */
 .brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--pg-cream);
+  background: var(--paper);
   margin: -14px -18px 0; padding: 16px 18px 12px;
   position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--line);
 }

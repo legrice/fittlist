@@ -29,7 +29,7 @@ export function NavBar({
         const cls = `navtab${active === t.id ? " on" : ""}`;
         const inner = (
           <>
-            <Icon name={t.icon} size={30} />
+            <Icon name={t.icon} size={26} />
             <span>{t.label}</span>
           </>
         );
