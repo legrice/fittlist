@@ -223,6 +223,7 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
+          home={showFanView ? "/feed" : "/app"}
           avatar={{
             photo,
             color: myAccent,
@@ -323,7 +324,7 @@ export function ScheduleScreen({
 
       {hasAnyClass && !adder.open && (
         <button className="fab" aria-label="Add class" onClick={() => setAdder({ open: true })}>
-          <Icon name="add" size={26} />
+          <Icon name="add" size={30} />
         </button>
       )}
 

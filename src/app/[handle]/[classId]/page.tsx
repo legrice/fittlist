@@ -184,9 +184,11 @@ export default async function EventPage({ params, searchParams }: Props) {
           )}
         </div>
 
-        <div className="evbook">
-          {c.links.length ? (
-            c.links.map((l, i) => (
+        {/* No booking link means nothing to say — an empty row beats a line of
+            filler where a button would be. */}
+        {c.links.length > 0 && (
+          <div className="evbook">
+            {c.links.map((l, i) => (
               <a
                 key={i}
                 className="btn si evbtn"
@@ -197,11 +199,9 @@ export default async function EventPage({ params, searchParams }: Props) {
                 Book via {l.label}
                 <Icon name="north_east" size={18} className="evbtn-ico" />
               </a>
-            ))
-          ) : (
-            <div className="evnobook">Just show up, no booking needed.</div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
         <EventActions
           googleUrl={googleUrl}
           icsHref={icsHref}

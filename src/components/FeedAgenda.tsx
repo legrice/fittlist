@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
-import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -38,7 +37,6 @@ export type FeedDay = { iso: string; label: string; items: FeedItem[] };
 // tap to focus, tap again to clear.
 export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: FeedDay[] }) {
   const [sel, setSel] = useState<string | null>(null);
-  const [share, setShare] = useState(false);
   const [goingOnly, setGoingOnly] = useState(false);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
@@ -133,18 +131,20 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
         </div>
       )}
 
+      {/* One switch: the week, or just what you committed to. Sharing those
+          classes lives in your account, not on top of the week. */}
       {goingCount > 0 && (
         <div className="goingbar">
           <button
             type="button"
-            className={`goingfilter${goingOnly ? " on" : ""}`}
+            className={`goingtoggle${goingOnly ? " on" : ""}`}
             aria-pressed={goingOnly}
             onClick={() => setGoingOnly(!goingOnly)}
           >
-            <Icon name="check" size={15} /> Going ({goingCount})
-          </button>
-          <button type="button" className="goingshare" onClick={() => setShare(true)}>
-            <Icon name="ios_share" size={16} /> Share my week
+            <span>Show going</span>
+            <span className={`switch${goingOnly ? " on" : ""}`} aria-hidden="true">
+              <span className="switch-knob" />
+            </span>
           </button>
         </div>
       )}
@@ -211,7 +211,6 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
         </div>
       )}
 
-      {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

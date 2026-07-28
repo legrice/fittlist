@@ -855,11 +855,15 @@ await fan.getByRole("button", { name: "You're going" }).waitFor();
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
 await fan.locator(".goingbar").waitFor();
-// "Going" filters the week down to what they committed to
-await fan.locator(".goingfilter").click();
+// "Show going" narrows the week down to what they committed to
+await expect(
+  fan.locator(".goingtoggle").innerText().then((t) => t.trim() === "Show going"),
+  "the going filter reads Show going",
+);
+await fan.locator(".goingtoggle").click();
 const goingRows = await fan.locator(".feedagenda .ps-event").count();
-if (goingRows !== 1) fail(`Going filter should show 1 row, got ${goingRows}`);
-await fan.locator(".goingfilter").click();
+if (goingRows !== 1) fail(`Show going should show 1 row, got ${goingRows}`);
+await fan.locator(".goingtoggle").click();
 
 // swiping a row sideways flips the same mark, without opening the class
 {
@@ -903,10 +907,20 @@ const myBuf = Buffer.from(await myStory.body());
 if (myBuf.length < 5000) fail("member story image suspiciously small");
 if (myBuf.readUInt32BE(16) !== 1080 || myBuf.readUInt32BE(20) !== 1920)
   fail("member story image is not 1080x1920");
-await fan.locator(".goingshare").click();
+// sharing them lives in the member's account, not on top of their week
+if (await fan.locator(".goingshare").count())
+  fail("Share my week should have moved off the feed");
+await fan.locator(".usericon").click();
+await fan.waitForURL("**/you");
+await fan.locator(".memberid").waitFor();
+await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
 await fan.getByRole("heading", { name: "Share my week" }).waitFor();
+await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
-console.log("going + share my week ok (1080x1920 png)");
+// the wordmark is the way back to the week from anywhere
+await fan.locator(".brandbar-home").click();
+await fan.waitForURL("**/feed");
+console.log("going + share my week ok (1080x1920 png, from the account)");
 
 // the merged weekly digest: one "Your week" email covering every coach they
 // follow, instead of one email per coach
@@ -1001,6 +1015,9 @@ await page.locator(".ps-event").first().click();
 await page.locator(".evname").waitFor();
 if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
   fail("a class opened from a coach's page should back into that page");
+// a class with no booking link says nothing rather than a line of filler
+if (await page.getByText("Just show up").count())
+  fail("the no-booking line should be gone");
 // a dark viewer sees someone else's page in dark, whatever that coach chose
 await setDark(page, true);
 await page.goto(BASE + "/sam");
@@ -1033,6 +1050,13 @@ await page.locator(".setrow", { hasText: "Your week" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+// a coach marks classes too, so they get the same share-what-I'm-attending row
+await openProfile(page);
+await page.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
+await page.locator(".sheet .storyimg").waitFor();
+await page.locator(".adderclose").click();
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("coach fan-view preview ok");
 
 // deleting a coach has to clear every row that points at them — follows they

@@ -14,6 +14,7 @@
   /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
      the original fittlist palette (à la the meetgen reference boards). */
   --cl: #f4efe1;           /* warm cream — headers, tags, accents */
+  --cl-d: #e9e1cc;         /* one step down: chips that need to read off the page */
   --paper: #faf8f2;        /* very light near-white ground for the main scroll */
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
@@ -526,7 +527,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   position: fixed; right: 18px; z-index: 20; background: var(--si); color: #fff;
   /* no bottom nav anymore - sit near the bottom, clearing the home indicator */
   bottom: calc(22px + env(safe-area-inset-bottom));
-  width: 56px; height: 56px; padding: 0; border-radius: 999px;
+  width: 68px; height: 68px; padding: 0; border-radius: 999px;
   box-shadow: 0 4px 14px rgba(23, 26, 31, .16);
   display: flex; align-items: center; justify-content: center;
 }
@@ -746,6 +747,7 @@ button.bl-band { cursor: pointer; }
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
+.brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
 .calbar-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 24px 0;
@@ -756,7 +758,7 @@ button.bl-band { cursor: pointer; }
 .dashlinks { display: flex; gap: 10px; }
 .dashlink {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 12px 6px; background: var(--cl); border-radius: 999px;
+  padding: 12px 6px; background: var(--cl-d); border-radius: 999px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
   color: var(--ink); white-space: nowrap;
 }
@@ -1448,7 +1450,6 @@ button.ps-card { cursor: pointer; }
 .evbook { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
 .evbtn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .evbtn-ico { position: relative; top: 1px; }
-.evnobook { font-size: 14px; font-weight: 600; color: var(--ol); }
 .evsec { margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--line); }
 .evsec-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
@@ -1690,6 +1691,7 @@ button.ps-card { cursor: pointer; }
   --ol: #a89f8a;
   --line: #35301f;
   --cl: #272115;
+  --cl-d: #322b1b;
   --sa: #3d3826;
   --si-soft: #3a2a1c;
   --soft-shadow: 0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.5);
@@ -2048,15 +2050,39 @@ button.ps-card { cursor: pointer; }
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
 .ps-agenda .ps-event.goingon .ps-accent { width: 5px; }
 /* "I'm going" lives on the class page; the week only reports it. */
-.goingbar { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
-.goingfilter, .goingshare {
-  display: flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 999px;
-  border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
+/* A member's account: who you are, then the switches. No public page, no QR,
+   no stats — those are a coach's. */
+.memberid {
+  display: flex; align-items: center; gap: 14px; margin: 18px 0 22px;
+}
+.memberid-av {
+  width: 58px; height: 58px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
+  background: #eae3d2;
+}
+.memberid-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
+  color: #fff;
+}
+.memberid-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.memberid-txt .t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px;
+  letter-spacing: -.02em; color: var(--ink);
+}
+.memberid-txt .s {
+  font-size: 13.5px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* "Show going" narrows the week to what you committed to — a switch, because
+   it's a view you turn on and leave on, not a button you press. */
+.goingbar { display: flex; margin: 0 0 14px; }
+.goingtoggle {
+  display: flex; align-items: center; gap: 10px; margin-left: auto;
+  padding: 8px 12px 8px 16px; border-radius: 999px;
+  border: none; background: var(--cl-d); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
 }
-.goingfilter.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.goingshare { margin-left: auto; background: var(--ink); border-color: var(--ink); color: var(--paper); }
-[data-mode="dark"] .goingfilter.on { color: #191502; }
 
 /* ---- discover (the directory) ---- */
 .dissearch {

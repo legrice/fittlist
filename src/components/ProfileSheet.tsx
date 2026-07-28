@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { startRegistration } from "@simplewebauthn/browser";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
+import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import {
   beginPasskeyRegistration,
   changeEmail as changeEmailAction,
@@ -86,6 +87,7 @@ export function ProfileSheet({
   const [leaving, setLeaving] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
+  const [myWeekOpen, setMyWeekOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
@@ -343,14 +345,26 @@ export function ProfileSheet({
             </button>
           )}
           {showFanView && (
-            <a className="setrow" href="/feed">
-              <span className="setrow-ic"><Icon name="favorite" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Your week</span>
-                <span className="s">Coaches you follow, as a member sees it</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-            </a>
+            <>
+              <a className="setrow" href="/feed">
+                <span className="setrow-ic"><Icon name="favorite" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Your week</span>
+                  <span className="s">Coaches you follow, as a member sees it</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
+              {/* The other half of "I'm going": once you've marked classes,
+                  this is where you post them. */}
+              <button className="setrow" onClick={() => setMyWeekOpen(true)}>
+                <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share classes you&rsquo;re attending</span>
+                  <span className="s">A story image of what you marked Going</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </>
           )}
           {isAdmin && (
             <a className="setrow" href="/admin">
@@ -544,6 +558,8 @@ export function ProfileSheet({
       />
 
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+
+      {myWeekOpen && <ShareMyWeekSheet onClose={() => setMyWeekOpen(false)} />}
 
       <Toast msg={toastMsg} on={toastOn} />
     </>

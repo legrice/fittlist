@@ -8,6 +8,7 @@ import { Wordmark } from "@/components/Wordmark";
 export function AppHeader({
   unread = 0,
   avatar,
+  home = "/feed",
 }: {
   unread?: number;
   avatar?: {
@@ -17,10 +18,15 @@ export function AppHeader({
     onClick?: () => void;
     href?: string;
   };
+  /** Where the wordmark goes. Home for anyone with the member side, the
+      schedule for a coach who doesn't have it yet. */
+  home?: string;
 }) {
   return (
     <div className="brandbar">
-      <Wordmark variant="ink" beta />
+      <Link className="brandbar-home" href={home} aria-label="Home">
+        <Wordmark variant="ink" beta />
+      </Link>
       <div className="brandbar-actions">
         <Link
           className="iconbtn inboxbtn"

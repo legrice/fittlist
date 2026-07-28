@@ -5,7 +5,6 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { unreadNotifications } from "@/lib/notify";
-import { logout } from "@/app/actions/auth";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
@@ -119,7 +118,7 @@ export default async function FeedPage() {
             photo: me.photo,
             color: avatarColor(me),
             initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: "/app?acct=1",
+            href: me.handle ? "/app?acct=1" : "/you",
           }}
         />
 
@@ -147,15 +146,6 @@ export default async function FeedPage() {
           />
         )}
 
-        {/* Coaches move between spaces with the bottom nav; fans have no
-            second space yet, so they keep the log-out here. */}
-        {!me.handle && (
-          <form action={logout}>
-            <button type="submit" className="logoutbtn">
-              Log out
-            </button>
-          </form>
-        )}
       </div>
       {me.handle && <NavBar active="home" />}
     </section>

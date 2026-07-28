@@ -110,7 +110,7 @@ export default async function DiscoverPage() {
             photo: me.photo,
             color: avatarColor(me),
             initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: "/app?acct=1",
+            href: me.handle ? "/app?acct=1" : "/you",
           }}
         />
         <div className="calbar-title">Discover</div>
