@@ -82,6 +82,34 @@ console.log("member setup ok (two steps, no studios, lands on their week)");
 }
 console.log("member tabs ok (Following and Discover, everywhere, no Schedule)");
 
+// The chrome lives in a layout above the loading boundary, so a tab that's
+// still loading keeps its header and its bar. Hold the response to see it.
+{
+  // times: 1 rather than unroute() later, which races the in-flight handler
+  await p.route(
+    "**/discover*",
+    async (r) => {
+      await new Promise((x) => setTimeout(x, 900));
+      await r.continue();
+    },
+    { times: 1 },
+  );
+  await p.locator(".navtab", { hasText: "Discover" }).click();
+  await p.waitForTimeout(350);
+  const mid = await p.evaluate(() => ({
+    tabs: document.querySelectorAll(".navtab").length,
+    avatar: !!document.querySelector(".usericon img, .usericon-initial"),
+    lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
+  }));
+  if (mid.tabs !== 2) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
+  await p.waitForURL("**/discover");
+  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.waitForURL("**/feed");
+}
+console.log("chrome survives the loading boundary ok");
+
 // follow the coach so the profile has a "trains with"
 await p.goto(BASE + "/carinacoach");
 await p.locator(".followpill").click();

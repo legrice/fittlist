@@ -3,12 +3,9 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
-import { unreadNotifications } from "@/lib/notify";
 import { runsOn, timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
-import { AppHeader } from "@/components/AppHeader";
-import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +22,6 @@ export default async function DiscoverPage() {
   // A member has a handle too now, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
 
-  const unread = await unreadNotifications(userId);
   const rows = await db
     .select()
     .from(schema.users)
@@ -101,24 +97,9 @@ export default async function DiscoverPage() {
   );
 
   return (
-    <section
-      className={"screen hasnav"}
-      data-mode={me.look === "dark" ? "dark" : undefined}
-    >
-      <div className="pad">
-        <AppHeader
-          unread={unread}
-          avatar={{
-            photo: me.photo,
-            color: avatarColor(me),
-            initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: isCoach ? "/app?acct=1" : "/you",
-          }}
-        />
-        <div className="calbar-title">Discover</div>
-        <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
-      </div>
-      <NavBar active="discover" coach={isCoach} />
-    </section>
+    <>
+      <div className="calbar-title">Discover</div>
+      <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack />
+    </>
   );
 }

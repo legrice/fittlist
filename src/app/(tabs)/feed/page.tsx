@@ -4,12 +4,9 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
-import { unreadNotifications } from "@/lib/notify";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
-import { AppHeader } from "@/components/AppHeader";
-import { NavBar } from "@/components/NavBar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
 export const dynamic = "force-dynamic";
@@ -66,7 +63,6 @@ export default async function FeedPage({
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
   // Classes this member marked "I'm going" to — a personal note, not a booking.
-  const unread = await unreadNotifications(userId);
   const goingRows = await db
     .select({
       classId: schema.attendances.classId,
@@ -120,21 +116,7 @@ export default async function FeedPage({
   const railCoaches = coaches.filter((c) => withClasses.has(c.id));
 
   return (
-    <section
-      className={"screen hasnav"}
-      data-mode={me.look === "dark" ? "dark" : undefined}
-    >
-      <div className="pad">
-        <AppHeader
-          unread={unread}
-          avatar={{
-            photo: me.photo,
-            color: avatarColor(me),
-            initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
-            href: isCoach ? "/app?acct=1" : "/you",
-          }}
-        />
-
+    <>
         {/* "Nobody yet" is for an empty tab, not an empty week: someone who
             follows coaches with nothing on gets the agenda's own message. */}
         {railCoaches.length === 0 && followed.length === 0 ? (
@@ -161,10 +143,7 @@ export default async function FeedPage({
             meId={userId}
           />
         )}
-
-      </div>
-      <NavBar active="following" coach={isCoach} />
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
-    </section>
+    </>
   );
 }

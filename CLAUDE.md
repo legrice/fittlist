@@ -90,6 +90,12 @@ renders `MemberProfileView` instead of the coach page when `kind === "fan"`.
 Anything asking "is this a coach?" must test `kind`, not `handle`: that
 substitution was true for months and is now wrong in about six places.
 
+**The tabbed shell is a layout, not per-page.** `/feed`, `/discover` and
+`/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
+and the tab bar once, and `loading.tsx` sits under it so a tab that's still
+loading keeps its chrome. Put them back in the pages and the bar unmounts on
+every navigation, which is the thing the layout exists to prevent.
+
 **Stacking contexts.** The account view is a positioned `z-40` layer and the tab
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`

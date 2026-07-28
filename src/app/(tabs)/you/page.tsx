@@ -3,11 +3,8 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
-import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
-import { AppHeader } from "@/components/AppHeader";
 import { MemberAccount } from "@/components/MemberAccount";
-import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
 
@@ -34,24 +31,10 @@ export default async function YouPage({
     .select({ id: schema.attendances.id })
     .from(schema.attendances)
     .where(eq(schema.attendances.userId, userId));
-  const unread = await unreadNotifications(userId);
 
   return (
-    <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
-      <div className="pad">
-        {/* The avatar stays put. Dropping it on the one screen you reach by
-            tapping it makes the header jump, and leaves you looking for the
-            thing you just used. */}
-        <AppHeader
-          unread={unread}
-          avatar={{
-            photo: me.photo,
-            color: avatarColor(me),
-            initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
-            href: "/you",
-          }}
-        />
-        <div className="calbar-title">You</div>
+    <>
+      <div className="calbar-title">You</div>
         <MemberAccount
           name={me.name}
           email={me.email}
@@ -65,10 +48,6 @@ export default async function YouPage({
           goingCount={going.length}
           openEditor={edit === "1"}
         />
-      </div>
-      {/* The account is reachable from either tab and is neither of them, so
-          the bar is there to get back out with nothing lit. */}
-      <NavBar active="none" coach={false} />
-    </section>
+    </>
   );
 }
