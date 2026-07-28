@@ -41,12 +41,16 @@ export function AuthFlow({
   via = null,
   providers = { google: false, apple: false },
   inviteOnly = false,
+  invited = false,
   fans = false,
 }: {
   startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
+  /** They got here from a beta invite email, so they're already through the
+   *  gate — say so, and don't ask them to queue for what they already have. */
+  invited?: boolean;
   fans?: boolean;
 }) {
   const router = useRouter();
@@ -56,6 +60,8 @@ export function AuthFlow({
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
   const [role, setRole] = useState<"coach" | "fan">("coach");
   const [bio, setBio] = useState(false);
+  // The "sent" screen doubles as password recovery; this picks the copy.
+  const [resetMode, setResetMode] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -113,7 +119,11 @@ export function AuthFlow({
     });
   };
 
-  const sendLink = () => {
+  // The same one-tap link, framed two ways. As "magic link" it's a way to skip
+  // typing a password; as "forgot password" it's the recovery path — and for an
+  // account that never set a password (invited by email, signed up with Google)
+  // it's the only way back in. Landing from the link offers to set one.
+  const sendLink = (reset = false) => {
     if (!email.trim()) {
       setError("Enter your email first.");
       return;
@@ -123,6 +133,7 @@ export function AuthFlow({
       const res = await requestMagicLink(email, via);
       if (res.ok) {
         setSheet(null);
+        setResetMode(reset);
         setStage("sent");
       } else setError(res.error ?? "Something went wrong.");
     });
@@ -204,18 +215,36 @@ export function AuthFlow({
             <div className="obhero">
               <span className="obmark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }} />
             </div>
-            <h1>
-              The link in bio,
-              <br />
-              built for coaches.
-            </h1>
-            <p>
-              Your classes across every studio, plus every way to book and reach you. One link in your
-              bio.
-            </p>
+            {invited ? (
+              <>
+                <div className="invitetag">You&rsquo;re in</div>
+                <h1>
+                  Welcome to the
+                  <br />
+                  fittlist beta.
+                </h1>
+                <p>
+                  Your invite is live. Sign up with the email address it was sent to and your page
+                  is yours. It&rsquo;s early days, things will move around, and what you tell us
+                  changes what gets built — that&rsquo;s the whole point of being here now.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1>
+                  The link in bio,
+                  <br />
+                  built for coaches.
+                </h1>
+                <p>
+                  Your classes across every studio, plus every way to book and reach you. One link
+                  in your bio.
+                </p>
+              </>
+            )}
 
             <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
-              Sign up with email
+              {invited ? "Claim your invite" : "Sign up with email"}
             </button>
             {(providers.google || providers.apple) && (
               <div className="obalts" style={{ marginTop: 12 }}>
@@ -235,7 +264,8 @@ export function AuthFlow({
             <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
               Already have an account? <b>Log in</b>
             </button>
-            {inviteOnly && (
+            {/* Someone holding an invite has nothing to queue for. */}
+            {inviteOnly && !invited && (
               <button className="obloginlink" onClick={openRequest}>
                 Not invited yet? <b>Request an invite</b>
               </button>
@@ -247,8 +277,18 @@ export function AuthFlow({
           <>
             <h1>Check your inbox.</h1>
             <p>
-              We emailed a one-tap sign-in link to <b>{email}</b>. Open it on this device and
-              you&rsquo;re in. It expires in 15 minutes.
+              {resetMode ? (
+                <>
+                  We emailed a sign-in link to <b>{email}</b>. Open it on this device and
+                  you&rsquo;ll be signed straight in — then you can set a new password so you
+                  don&rsquo;t need the email next time. It expires in 15 minutes.
+                </>
+              ) : (
+                <>
+                  We emailed a one-tap sign-in link to <b>{email}</b>. Open it on this device and
+                  you&rsquo;re in. It expires in 15 minutes.
+                </>
+              )}
             </p>
             <button className="btn ghost" onClick={() => setStage("landing")}>
               Back
@@ -305,7 +345,13 @@ export function AuthFlow({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
               <Icon name="close" size={16} />
             </button>
-            <h2>{sheet === "signup" ? "Sign up with email" : "Log in"}</h2>
+            <h2>
+              {sheet === "signup"
+                ? invited
+                  ? "Claim your invite"
+                  : "Sign up with email"
+                : "Log in"}
+            </h2>
             {fans && sheet === "signup" && (
               <div className="seg roleseg">
                 <button className={role === "coach" ? "sel" : ""} onClick={() => setRole("coach")}>
@@ -318,10 +364,12 @@ export function AuthFlow({
             )}
             <p className="lead">
               {sheet === "signup"
-                ? fans && role === "fan"
-                  ? "Follow your coaches and see all their schedules in one place."
+                ? invited
+                  ? "Use the email your invite was sent to, and pick a password you'll remember — it's how you get back in on any other browser."
                   : inviteOnly
                     ? "Invite-only beta. Use the email you were invited with."
+                    : fans && role === "fan"
+                    ? "Follow your coaches and see all their schedules in one place."
                     : "Pick any password and you're in."
                 : "Welcome back — enter your email and password."}
             </p>
@@ -344,16 +392,23 @@ export function AuthFlow({
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitPassword()}
             />
-            <button className="authmagic" onClick={sendLink} disabled={pending}>
+            <button className="authmagic" onClick={() => sendLink(false)} disabled={pending}>
               Email me a magic link instead
             </button>
+            {/* Recovery, said in the words people look for. Same link, but
+                someone who never set a password won't find it under "magic". */}
+            {sheet === "login" && (
+              <button className="authmagic" onClick={() => sendLink(true)} disabled={pending}>
+                Forgot your password?
+              </button>
+            )}
             {sheet === "login" && passkeyable && (
               <button className="obalt" style={{ marginTop: 6 }} onClick={usePasskeyLogin} disabled={pending}>
                 <Icon name="fingerprint" size={19} /> Use a passkey
               </button>
             )}
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
-            {inviteOnly && sheet === "signup" && (
+            {inviteOnly && !invited && sheet === "signup" && (
               <button className="authmagic" onClick={openRequest}>
                 Not invited yet? Request an invite
               </button>

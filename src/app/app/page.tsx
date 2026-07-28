@@ -10,13 +10,14 @@ import { unreadNotifications } from "@/lib/notify";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
+import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string }>;
+  searchParams: Promise<{ add?: string; setpw?: string }>;
 }) {
   const userId = (await getSessionUserId())!;
   const db = await getDb();
@@ -127,9 +128,11 @@ export default async function SchedulePage({
       }
     : { startTime: "06:00", durationMin: 50, studioId: studios[0]?.id ?? null };
 
-  const { add } = await searchParams;
+  const { add, setpw } = await searchParams;
 
   return (
+    <>
+    {setpw === "1" && !user?.passwordHash && <SetPasswordPrompt email={user?.email ?? ""} />}
     <ScheduleScreen
       classes={classes}
       hasAnyClass={hasAnyClass}
@@ -167,5 +170,6 @@ export default async function SchedulePage({
       myColor={user?.avatarColor ?? null}
       look={user?.look ?? null}
     />
+    </>
   );
 }

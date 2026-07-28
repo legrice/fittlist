@@ -286,10 +286,11 @@ export function ProfileSheet({
             <span className="n">{profileViews}</span>
             <span className="l">Profile views</span>
           </div>
-          <div className="acctstat">
+          {/* The only stat with somewhere to go: a number of people is a list. */}
+          <button className="acctstat" onClick={() => router.push("/followers")}>
             <span className="n">{subsCount}</span>
             <span className="l">Followers</span>
-          </div>
+          </button>
           <div className="acctstat">
             <span className="n">{requestCount}</span>
             <span className="l">Requests</span>

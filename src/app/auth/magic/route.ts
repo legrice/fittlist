@@ -8,18 +8,25 @@ export const dynamic = "force-dynamic";
 // cookie), then send the trainer where they need to go: straight to the app, or
 // back to the claim step if they haven't picked a handle yet.
 export async function GET(req: Request) {
-  const token = new URL(req.url).searchParams.get("token") ?? "";
+  const q = new URL(req.url).searchParams;
+  const token = q.get("token") ?? "";
   const result = await consumeMagicToken(token);
   const origin = siteOrigin();
   if (!result) {
-    return NextResponse.redirect(`${origin}/?expired=1`);
+    // A dead invite link still means they were invited — keep that on the
+    // landing page so they get "you're in", not "request an invite".
+    const inv = q.get("invited") === "1" ? "&invited=1" : "";
+    return NextResponse.redirect(`${origin}/?expired=1${inv}`);
   }
+  // Signed in by email alone: prompt for a password so the next browser, or the
+  // next device, isn't another trip through the inbox.
+  const setpw = result.noPassword ? "?setpw=1" : "";
   if (result.fan) {
-    return NextResponse.redirect(`${origin}/feed`);
+    return NextResponse.redirect(`${origin}/feed${setpw}`);
   }
   if (result.needsProfile) {
     const q = result.via ? `?via=${encodeURIComponent(result.via)}` : "";
     return NextResponse.redirect(`${origin}/${q}`);
   }
-  return NextResponse.redirect(`${origin}/app`);
+  return NextResponse.redirect(`${origin}/app${setpw}`);
 }

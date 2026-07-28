@@ -130,6 +130,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .obhero .obmark { position: relative; display: block; height: 66px; }
 .obhero .obmark svg { height: 100%; width: auto; display: block; }
+/* "You're in" — the difference between arriving with an invite and finding the
+   site. Sits above the headline, in the CTA orange so it reads as good news. */
+.invitetag {
+  display: inline-block; margin-bottom: 10px; padding: 6px 12px; border-radius: 999px;
+  background: var(--si); color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: .06em; text-transform: uppercase;
+}
 .ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
 .ob p b { color: var(--ink); font-weight: 700; }
@@ -1312,9 +1320,12 @@ button.ps-card { cursor: pointer; }
   margin-top: 12px; background: var(--line); border-radius: 16px; overflow: hidden;
   box-shadow: var(--soft-shadow);
 }
-.acctstats-grid .acctstat { background: #fff; padding: 15px 12px; align-items: flex-start; }
+.acctstats-grid .acctstat { background: #fff; padding: 15px 12px; align-items: center; text-align: center; }
 .acctstats-grid .acctstat + .acctstat { border-top: none; }
 .acctstats-grid .acctstat .l { color: var(--ol); font-size: 12px; }
+/* Followers is the one stat you can open — it has a list behind it. */
+.acctstats-grid button.acctstat { cursor: pointer; font: inherit; width: 100%; }
+.acctstats-grid button.acctstat:active { background: var(--cl); }
 .acctcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .acctcard {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
@@ -1592,6 +1603,8 @@ button.ps-card { cursor: pointer; }
   padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
+/* Followers: the back arrow sits above the title, same as a class page. */
+.folback { margin-bottom: 14px; }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
 .adminsub { font-size: 12.5px; color: var(--ol); margin-top: 2px; word-break: break-all; }

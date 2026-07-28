@@ -915,8 +915,9 @@ await fan.locator(".roleseg button", { hasText: "here to train" }).click();
 await fan.getByPlaceholder("you@example.com").fill("lindley@example.com");
 await fan.getByPlaceholder("Password").fill("smoke-pass-fan");
 await fan.getByRole("button", { name: "Create account" }).click();
-// fans skip the invite gate, the handle claim, AND the passkey offer: the
-// cookie-set rerender redirects them straight to the feed
+// fans skip the handle claim AND the passkey offer: the cookie-set rerender
+// redirects them straight to the feed. (They do go through the invite gate,
+// same as coaches — this suite runs with INVITE_ONLY=false.)
 await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
@@ -1317,6 +1318,83 @@ const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
 if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
   fail("a class the coach attends leaked onto their public page");
 console.log("coach following ok (separate from their schedule, never public)");
+
+// ---- the Followers stat opens the list of who they are, and coaches among
+// them can be followed back. Three shapes have to render: a coach (page, so a
+// Follow back button), a member (account, no page), and a plain email
+// subscriber (no account at all — the one that would blow up on a null user).
+{
+  const mailCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const mailPg = await mailCtx.newPage();
+  mailPg.setDefaultTimeout(10000);
+  await mailPg.goto(BASE + "/matt");
+  await mailPg.locator(".followpill").click();
+  await mailPg.locator("#ntEmail").fill("mailonly@example.com");
+  await mailPg.getByRole("button", { name: "Add me to the list" }).click();
+  await mailPg.locator(".sheet h2", { hasText: "on Matt" }).waitFor();
+  await mailCtx.close();
+}
+await anonPage.goto(BASE + "/matt");
+await anonPage.locator(".followpill").waitFor();
+if ((await anonPage.locator(".followpill").innerText()).trim() !== "Following") {
+  await anonPage.locator(".followpill").click();
+  await anonPage.locator(".followpill", { hasText: /^Following$/ }).waitFor();
+}
+await page.goto(BASE + "/app");
+await page.locator(".usericon").click();
+await page.locator(".acctwrap").waitFor();
+await page.locator(".acctstats button.acctstat", { hasText: "Followers" }).click();
+await page.waitForURL("**/followers");
+await page.getByRole("heading", { name: "Followers" }).waitFor();
+{
+  // the number on the stat is the number of rows behind it
+  const shown = await page.locator(".dislist .disrow").count();
+  if (shown < 3) fail("followers list is missing rows, got " + shown);
+  // an email-only subscriber is listed but has nobody to follow back
+  const emailRow = page.locator(".disrow", { hasText: "mailonly@example.com" });
+  await emailRow.waitFor();
+  if (await emailRow.locator(".disfollow").count())
+    fail("an email subscriber has no page — there's nothing to follow back");
+  // a member with an account but no page of their own: same, no button
+  const memberRow = page.locator(".disrow", { hasText: "lindley" });
+  await memberRow.waitFor();
+  if (await memberRow.locator(".disfollow").count())
+    fail("a member has no page — there's nothing to follow back");
+  // a coach who follows you can be followed back, right from the row. Matt
+  // already follows Sam by now, so unfollow first and watch it round-trip.
+  const samBtn = page.locator(".disrow", { hasText: "Sam" }).locator(".disfollow");
+  await samBtn.waitFor();
+  if ((await samBtn.innerText()).trim() === "Following") await samBtn.click();
+  await samBtn.filter({ hasText: "Follow back" }).waitFor();
+  await samBtn.click();
+  await page.locator(".disrow", { hasText: "Sam" }).locator(".disfollow.on").waitFor();
+}
+await page.screenshot({ path: SCRATCH + "/shot-followers.png", fullPage: true });
+// back returns to the profile it was opened from
+await page.locator(".folback .evback").click();
+await page.waitForURL((u) => u.pathname === "/app");
+await page.locator(".acctwrap").waitFor();
+await page.locator(".acctclose").click();
+console.log("followers list ok (email subscriber listed, coach can be followed back)");
+
+// the three stats read as a column: number centred over its label
+{
+  await page.goto(BASE + "/app");
+  await page.locator(".usericon").click();
+  await page.locator(".acctstat").first().waitFor();
+  const off = await page.locator(".acctstat").first().evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const n = el.querySelector(".n").getBoundingClientRect();
+    const l = el.querySelector(".l").getBoundingClientRect();
+    return {
+      n: Math.abs(n.left + n.width / 2 - (box.left + box.width / 2)),
+      l: Math.abs(l.left + l.width / 2 - (box.left + box.width / 2)),
+    };
+  });
+  if (off.n > 1.5 || off.l > 1.5) fail(`stats are not centred: ${JSON.stringify(off)}`);
+  await page.locator(".acctclose").click();
+}
+console.log("stats centred ok");
 
 // a coach can walk the member side from settings while the flag is dark
 await openProfile(page);

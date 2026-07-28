@@ -5,7 +5,10 @@
 //   FANS_ENABLED=coaches    every signed-in coach can follow, browse the
 //                           directory and keep a week — but the public signup
 //                           has no "I'm here to train" option yet
-//   FANS_ENABLED=true       fully public: members can sign up too
+//   FANS_ENABLED=true       members can sign up too — still behind INVITE_ONLY,
+//                           same beta gate the coaches go through
+//
+// The value is compared exactly: "1" and "yes" are not "true".
 
 export function fansEnabled(): boolean {
   return process.env.FANS_ENABLED === "true";

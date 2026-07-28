@@ -12,7 +12,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
 // Mint a 24h one-time sign-in link for an email and email it. Returns the URL.
-async function mintLink(email: string, subject: string, intro: string): Promise<string> {
+async function mintLink(
+  email: string,
+  subject: string,
+  intro: string,
+  /** Invites carry a fallback: the one-tap link only signs you in on the
+   *  browser that opens it, and mail apps open their own. */
+  invite = false,
+): Promise<string> {
   const token = randomBytes(32).toString("hex");
   const db = await getDb();
   await db.insert(schema.magicLinks).values({
@@ -21,12 +28,15 @@ async function mintLink(email: string, subject: string, intro: string): Promise<
     ip: "admin",
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
-  const url = `${siteOrigin()}/auth/magic?token=${token}`;
+  const url = `${siteOrigin()}/auth/magic?token=${token}&invited=1`;
+  const fallback = invite
+    ? `\n\nOpening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address — your invite is on it.`
+    : "";
   await sendMessage({
     to: email,
     kind: "magic_link",
     subject,
-    text: `${intro}\n\n${url}\n\nThis link works once and expires in 24 hours.`,
+    text: `${intro}\n\n${url}\n\nThis link works once and expires in 24 hours.${fallback}`,
   });
   return url;
 }
@@ -179,6 +189,7 @@ export async function adminInvite(
     email,
     "You're invited to the fittlist beta",
     "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+    true,
   );
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };
@@ -218,6 +229,7 @@ export async function adminActOnRequest(
     req.email,
     "You're invited to the fittlist beta",
     "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+    true,
   );
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };

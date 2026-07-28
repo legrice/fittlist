@@ -10,6 +10,7 @@ import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
+import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,13 @@ const WINDOW_DAYS = 14; // two weeks out is plenty for "when can I train next"
 
 // The fan home: one merged agenda across every followed coach, today first.
 // Phase 3 adds discovery. Dark until FANS_ENABLED=true.
-export default async function FeedPage() {
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ setpw?: string }>;
+}) {
   if (!(await fansVisible())) redirect("/");
+  const { setpw } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -156,6 +162,7 @@ export default async function FeedPage() {
 
       </div>
       {me.handle && <NavBar active="following" />}
+      {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </section>
   );
 }

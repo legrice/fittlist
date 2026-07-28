@@ -45,7 +45,15 @@ export async function passwordAuth(
   emailRaw: string,
   password: string,
   asFan = false,
-): Promise<{ ok: boolean; needsProfile?: boolean; hasPasskey?: boolean; fan?: boolean; error?: string }> {
+): Promise<{
+  ok: boolean;
+  needsProfile?: boolean;
+  hasPasskey?: boolean;
+  fan?: boolean;
+  /** The beta gate turned them away — callers can offer the waitlist instead. */
+  needsInvite?: boolean;
+  error?: string;
+}> {
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   if (!password) return { ok: false, error: "Enter your password." };
@@ -54,11 +62,11 @@ export async function passwordAuth(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
 
   if (!user) {
-    // No account yet: treat this as sign-up.
-    // Fans (when the fan side is enabled) skip the invite gate — the beta gate
-    // protects coach handles, not demand.
+    // No account yet: treat this as sign-up. The beta gate covers everyone —
+    // members as much as coaches. Everything is in beta until it isn't, and a
+    // member who joins now is exactly the feedback the beta is for.
     const fan = asFan && fansEnabled();
-    if (!fan && !(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
+    if (!(await emailInvited(email))) return { ok: false, needsInvite: true, error: INVITE_MSG };
     const problem = passwordProblem(password);
     if (problem) return { ok: false, error: problem };
     const passwordHash = await hashPassword(password);
@@ -66,14 +74,16 @@ export async function passwordAuth(
       .insert(schema.users)
       .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor() })
       .returning();
-    if (!fan) await acceptInvite(email, created.id);
+    await acceptInvite(email, created.id);
     await createSession(created.id);
     return { ok: true, needsProfile: !fan, hasPasskey: false, fan };
   }
   if (!user.passwordHash) {
     return {
       ok: false,
-      error: "This account has no password yet. Use a magic link, then add one in your account.",
+      error:
+        "This account doesn't have a password yet — you signed in by email or with Google. " +
+        "Tap “Forgot your password?” and we'll email you a link to get in and set one.",
     };
   }
   if (!(await verifyPassword(password, user.passwordHash))) {
@@ -205,7 +215,13 @@ export async function requestMagicLink(
 // token; otherwise creates the session and reports what to do next.
 export async function consumeMagicToken(
   token: string,
-): Promise<{ needsProfile: boolean; fan: boolean; via: string | null } | null> {
+): Promise<{
+  needsProfile: boolean;
+  fan: boolean;
+  via: string | null;
+  /** They can only get in by email right now — offer to fix that on arrival. */
+  noPassword: boolean;
+} | null> {
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const db = await getDb();
   const [row] = await db
@@ -238,7 +254,19 @@ export async function consumeMagicToken(
     await acceptInvite(row.email, user.id);
   }
   await createSession(user.id);
-  return { needsProfile: user.kind !== "fan" && !user.handle, fan: user.kind === "fan", via: row.via };
+  const [pk] = await db
+    .select({ id: schema.credentials.id })
+    .from(schema.credentials)
+    .where(eq(schema.credentials.userId, user.id));
+  return {
+    needsProfile: user.kind !== "fan" && !user.handle,
+    fan: user.kind === "fan",
+    via: row.via,
+    // An account with neither a password nor a passkey can only ever be reached
+    // through this inbox. That's how someone ends up locked out of their own
+    // page in a different browser, so offer the fix the moment they land.
+    noPassword: !user.passwordHash && !pk,
+  };
 }
 
 // ---- passkeys (WebAuthn): enroll while logged in, then sign in with biometrics

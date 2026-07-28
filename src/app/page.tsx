@@ -11,10 +11,12 @@ import { AuthFlow } from "@/components/AuthFlow";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ via?: string }>;
+  searchParams: Promise<{ via?: string; invited?: string }>;
 }) {
-  const { via } = await searchParams;
+  const { via, invited } = await searchParams;
   const viaHandle = via?.trim() || null;
+  // Arrived from a beta invite email rather than stumbling on the site.
+  const wasInvited = invited === "1";
   const providers = { google: googleConfigured(), apple: appleConfigured() };
   const userId = await getSessionUserId();
   if (userId) {
@@ -30,6 +32,7 @@ export default async function Home({
           via={viaHandle}
           providers={providers}
           inviteOnly={inviteOnly()}
+          invited={wasInvited}
           fans={fansEnabled()}
         />
       );
@@ -40,6 +43,7 @@ export default async function Home({
       via={viaHandle}
       providers={providers}
       inviteOnly={inviteOnly()}
+      invited={wasInvited}
       fans={fansEnabled()}
     />
   );

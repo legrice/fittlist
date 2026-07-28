@@ -78,7 +78,9 @@ export async function PublicProfileView({
         ? { href: "/feed", label: "Back to Following" }
         : from === "schedule"
           ? { href: "/app", label: "Back to your schedule" }
-          : null;
+          : from === "followers"
+            ? { href: "/followers", label: "Back to your followers" }
+            : null;
 
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))

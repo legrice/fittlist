@@ -85,10 +85,10 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await ctx.close();
 }
 
-// 4) Members are not part of the beta gate. With FANS_ENABLED=true the signup
-// sheet offers "I'm here to train", and that path skips invites entirely —
-// which is the whole point of opening the member side while coaches stay
-// invite-only. Skipped when the flag is dark, since the toggle isn't rendered.
+// 4) Members are in the beta too. With FANS_ENABLED=true the signup sheet
+// offers "I'm here to train", and that path goes through the same invite gate
+// the coaches do — everyone is in beta until the beta ends. Skipped when the
+// flag is dark, since the toggle isn't rendered.
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const pg = await ctx.newPage();
@@ -97,18 +97,45 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.getByRole("button", { name: "Sign up with email" }).click();
   const roleToggle = pg.locator(".roleseg button", { hasText: "here to train" });
   if (await roleToggle.count()) {
+    // a non-invited member is turned away exactly like a non-invited coach
     await roleToggle.click();
     await pg.getByPlaceholder("you@example.com").fill("member@example.com");
     await pg.getByPlaceholder("Password").fill("member-pass-123");
     await pg.getByRole("button", { name: "Create account" }).click();
-    // no invite wall, no handle claim — straight to their week
+    await pg.locator(".sheet .errorcopy", { hasText: /invite-only/i }).waitFor();
+    if (pg.url().includes("/feed")) fail("a non-invited member should not get an account");
+    console.log("non-invited member signup blocked ok");
+
+    // invite them (as admin), then the same signup goes through
+    const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const ad = await actx.newPage();
+    ad.setDefaultTimeout(15000);
+    await ad.goto(BASE + "/");
+    await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
+    await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
+    await ad.getByPlaceholder("Password").fill("admin-pass-123");
+    await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
+    await ad.goto(BASE + "/admin");
+    await ad.getByRole("button", { name: "Invites", exact: true }).click();
+    await ad.getByPlaceholder("coach@example.com").fill("member@example.com");
+    await ad.getByRole("button", { name: "Invite & email link" }).click();
+    await ad.locator(".adminlink input").waitFor();
+    await actx.close();
+    console.log("admin invited a member ok");
+
+    await pg.reload();
+    await pg.getByRole("button", { name: "Sign up with email" }).click();
+    await pg.locator(".roleseg button", { hasText: "here to train" }).click();
+    await pg.getByPlaceholder("you@example.com").fill("member@example.com");
+    await pg.getByPlaceholder("Password").fill("member-pass-123");
+    await pg.getByRole("button", { name: "Create account" }).click();
+    // invited: no handle claim, straight to their week
     await pg.waitForURL("**/feed");
     await pg.getByText("Nobody yet").waitFor();
-    if (await pg.getByText("Invite-only beta").count())
-      fail("a member signup should never hit the invite wall");
-    console.log("member signup ok (no invite needed)");
+    console.log("invited member signup ok");
 
-    // 5) And a member can become a coach later, without an invite either: the
+    // 5) And a member can become a coach later without a second invite: the
     // account offers it, the claim runs the same flow, and they land in setup.
     await pg.goto(BASE + "/you");
     await pg.locator(".memberid").waitFor();
@@ -128,6 +155,42 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   } else {
     console.log("member signup skipped — FANS_ENABLED is not true");
   }
+  await ctx.close();
+}
+
+// 6) Landing from a beta invite reads as "you're in", and never asks someone
+// holding an invite to queue for one. Organic landings still get the queue.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const pg = await ctx.newPage();
+  pg.setDefaultTimeout(15000);
+
+  await pg.goto(BASE + "/");
+  if (!(await pg.locator(".obloginlink", { hasText: "Request an invite" }).count()))
+    fail("an organic landing should offer the invite queue");
+  if (await pg.locator(".invitetag").count()) fail("no invite, no you're-in tag");
+
+  await pg.goto(BASE + "/?invited=1");
+  await pg.locator(".invitetag", { hasText: "You’re in" }).waitFor();
+  await pg.getByText("Welcome to the").waitFor();
+  if (await pg.locator(".obloginlink", { hasText: "Request an invite" }).count())
+    fail("someone holding an invite has nothing to request");
+  await pg.screenshot({ path: OUT + "/shot-invited-landing.png" });
+  await pg.getByRole("button", { name: "Claim your invite" }).click();
+  await pg.getByRole("heading", { name: "Claim your invite" }).waitFor();
+  if (await pg.locator(".sheet .authmagic", { hasText: "Request an invite" }).count())
+    fail("the signup sheet should drop the queue for an invited visitor");
+  if (await pg.getByText("Invite-only beta").count())
+    fail("don't gate-keep at someone who is already through the gate");
+  await pg.screenshot({ path: OUT + "/shot-invited-sheet.png" });
+  console.log("invited landing ok (you're in, no invite queue)");
+
+  // a dead invite link still lands them on the invited copy, not the queue
+  await pg.goto(BASE + "/auth/magic?token=" + "0".repeat(64) + "&invited=1");
+  await pg.locator(".invitetag").waitFor();
+  if (!(await pg.locator(".errorcopy", { hasText: /expired/i }).count()))
+    fail("an expired link should say so");
+  console.log("expired invite link keeps its invited framing ok");
   await ctx.close();
 }
 

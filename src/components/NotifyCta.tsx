@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { passwordAuth } from "@/app/actions/auth";
+import { requestInvite } from "@/app/actions/invites";
 import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -27,6 +28,9 @@ export function NotifyCta({
   // and got what they came for, so the account is an upgrade rather than a
   // toll gate. Asking before would be a question at the moment they said yes.
   const [offerAccount, setOfferAccount] = useState(false);
+  // The beta gate turned them away. They're already on the coach's email list,
+  // so this is a waitlist, not a wall — file the request and say so.
+  const [waitlisted, setWaitlisted] = useState(false);
   const [password, setPassword] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [following, setFollowing] = useState(account?.following ?? false);
@@ -93,6 +97,13 @@ export function NotifyCta({
       setError("");
       const res = await passwordAuth(email, password, true);
       if (!res.ok) {
+        if (res.needsInvite) {
+          // Don't make them fill in a second form to ask: they've already given
+          // the email, and asking is the whole content of the request.
+          await requestInvite("", email);
+          setWaitlisted(true);
+          return;
+        }
         setError(res.error ?? "Something went wrong.");
         return;
       }
@@ -139,12 +150,34 @@ export function NotifyCta({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
               <Icon name="close" size={16} />
             </button>
-            {offerAccount ? (
+            {waitlisted ? (
+              <>
+                <h2 style={{ marginTop: 10 }}>You&rsquo;re on the beta list</h2>
+                <p className="lead">
+                  Accounts are invite-only while we&rsquo;re in beta, so we&rsquo;ve put{" "}
+                  <b>{email}</b> in the queue. Nothing is lost in the meantime —
+                  {" "}{firstName}&rsquo;s schedule still lands in your inbox every week, and
+                  we&rsquo;ll email you the moment there&rsquo;s room.
+                </p>
+                <div className="publishwrap">
+                  <button
+                    className="btn si"
+                    onClick={() => {
+                      setWaitlisted(false);
+                      setOfferAccount(false);
+                      setOpen(false);
+                    }}
+                  >
+                    Got it
+                  </button>
+                </div>
+              </>
+            ) : offerAccount ? (
               <>
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on {firstName}&rsquo;s list</h2>
                 <p className="lead">
                   We&rsquo;re still in beta, and we&rsquo;re glad you want to follow {firstName}.
-                  Grab an account while you&rsquo;re here — every coach you follow lands in one
+                  Ask for an account while you&rsquo;re here — every coach you follow lands in one
                   week, and you can mark the classes you&rsquo;re going to.
                 </p>
                 <label className="flabel" htmlFor="ntPw">
