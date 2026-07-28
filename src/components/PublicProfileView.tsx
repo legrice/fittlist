@@ -6,6 +6,7 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
+import { studioPath } from "@/lib/studio";
 import { unreadNotifications } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { BackLink } from "@/components/BackLink";
@@ -167,19 +168,16 @@ export async function PublicProfileView({
         <div className="profstudios">
           <h2 className="prof-sec-h">Where I coach</h2>
           {coachStudios.map((s) => (
-            <a
-              key={s.id}
-              className="profstudio"
-              href={`https://maps.google.com/?q=${encodeURIComponent(`${s.name}, ${s.address}`)}`}
-              target="_blank"
-              rel="noopener nofollow"
-            >
+            <Link key={s.id} className="profstudio" href={studioPath(s)}>
               <span className="profstudio-ic"><Icon name="place" size={20} /></span>
               <span className="profstudio-txt">
                 <span className="nm">{s.name}</span>
                 <span className="ad">{s.address}</span>
               </span>
-            </a>
+              <span className="profstudio-chev">
+                <Icon name="chevron_right" size={20} />
+              </span>
+            </Link>
           ))}
         </div>
       )}

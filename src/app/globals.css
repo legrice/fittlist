@@ -972,7 +972,7 @@ button.ps-card { cursor: pointer; }
    and its own margins, so the wrap stops adding a second one. */
 .profwrap:has(> .brandbar) { padding-top: 0; }
 .profwrap > .brandbar { margin: 0 -18px; }
-.profback { margin: 14px 0 2px; }
+.profback { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0 2px; }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
@@ -1398,6 +1398,25 @@ button.ps-card { cursor: pointer; }
   background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
 }
 .owneredit:active { background: #efe8d8; }
+/* Gym types: a wrapped set of chips, several of which are usually true. */
+/* The gym types under a studio's name. */
+.studiotypes { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }
+.studiotype {
+  padding: 5px 11px; border-radius: 999px; background: var(--cl-d); color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12px;
+}
+/* A studio row on a coach's page opens the studio, so it gets a chevron. */
+.profstudio-chev { flex-shrink: 0; color: var(--ol); display: flex; align-items: center; }
+.typepick { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
+.typepick .chip { background: var(--card); cursor: pointer; }
+/* Same specificity as the rule above and declared after it, so a picked type
+   keeps its ink fill instead of going white-on-white. */
+.typepick .chip.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* The studio's photo placeholder in the editor is square, like the page's. */
+.editphoto-empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cl); color: var(--ol);
+}
 
 /* owner-only "you're previewing" bar with a way back to the account */
 .previewbar {

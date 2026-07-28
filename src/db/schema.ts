@@ -151,8 +151,19 @@ export const coachStudios = pgTable(
 export const studios = pgTable("studios", {
   id: uuid("id").primaryKey().defaultRandom(),
   seq: serial("seq").notNull().unique(),
+  // URL for the studio's own page. Derived from the name, unique across the
+  // directory; the id is the fallback for anything created before slugs.
+  slug: text("slug").unique(),
   name: text("name").notNull(),
   address: text("address").notNull(),
+  // What kind of gym it is — a studio is usually more than one thing.
+  types: jsonb("types").$type<string[]>().notNull().default([]),
+  photo: text("photo"),
+  about: text("about"),
+  contactEmail: text("contact_email"),
+  phone: text("phone"),
+  website: text("website"),
+  instagram: text("instagram"),
   createdByUserId: uuid("created_by_user_id").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

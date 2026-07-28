@@ -8,6 +8,7 @@ import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
 import { avatarColor } from "@/lib/avatar";
+import { studioPath } from "@/lib/studio";
 import { BackLink } from "@/components/BackLink";
 import { EventActions } from "@/components/EventActions";
 import { GoingButton } from "@/components/GoingButton";
@@ -68,9 +69,6 @@ export default async function EventPage({ params, searchParams }: Props) {
       : (new Date(`${askedIso}T00:00:00Z`).getUTCDay() + 6) % 7 === c.dayOfWeek
     : false;
   const whenIso = askedFits ? askedIso! : thisWeekIso;
-  const mapsUrl = studio
-    ? `https://maps.google.com/?q=${encodeURIComponent(`${studio.name}, ${studio.address}`)}`
-    : null;
 
   // "Add to calendar" targets. Google gets a prefilled template link; Apple and
   // Outlook get the downloadable .ics. Weekly classes carry a weekly recurrence.
@@ -166,13 +164,13 @@ export default async function EventPage({ params, searchParams }: Props) {
             </span>
           </div>
           {studio ? (
-            <a className="evfact" href={mapsUrl!} target="_blank" rel="noopener nofollow">
+            <Link className="evfact" href={studioPath(studio)}>
               <Icon name="place" size={20} />
               <span className="evfact-txt">
                 <span className="t">{studio.name}</span>
                 <span className="s">{studio.address}</span>
               </span>
-            </a>
+            </Link>
           ) : (
             c.location && (
               <div className="evfact">

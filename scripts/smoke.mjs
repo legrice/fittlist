@@ -1060,6 +1060,53 @@ await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'
 await setDark(page, false);
 console.log("viewer look wins on another coach's page ok");
 
+// ---- studios have their own page, and any coach can correct one
+await page.goto(BASE + "/matt");
+await page.locator(".profstudio", { hasText: "Ironbound Strength" }).click();
+await page.waitForURL("**/s/ironbound-strength");
+await page.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
+await page.getByRole("button", { name: "Edit studio" }).click();
+await page.getByRole("heading", { name: "Edit studio" }).waitFor();
+await page.locator(".typepick .chip", { hasText: "Strength" }).first().click();
+await page.locator(".typepick .chip", { hasText: "HYROX" }).click();
+await page.locator("#stAbout").fill("Platforms, a turf strip and a sled track.");
+await page.locator("#stEmail").fill("hello@ironbound.example");
+await page.locator("#stInsta").fill("@ironboundstrength");
+await page.getByRole("button", { name: "Save studio" }).click();
+await page.getByText("Studio updated").waitFor();
+await page.reload();
+{
+  const types = await page.locator(".studiotype").allInnerTexts();
+  if (types.join("|") !== "Strength|HYROX") fail("studio types didn't stick: " + types.join(","));
+}
+await page.getByText("Platforms, a turf strip").waitFor();
+// the @ comes off the handle, and contact rows render from what was saved
+await expect(
+  page.locator('.proflink[href="https://instagram.com/ironboundstrength"]').isVisible(),
+  "studio instagram link",
+);
+await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio email link");
+// renaming moves the slug, and the old address still resolves by id
+{
+  const before = page.url();
+  await page.getByRole("button", { name: "Edit studio" }).click();
+  await page.locator("#stName").fill("Ironbound Strength & Conditioning");
+  await page.getByRole("button", { name: "Save studio" }).click();
+  await page.waitForURL("**/s/ironbound-strength-conditioning");
+  if (page.url() === before) fail("renaming a studio should move its slug");
+  await page.getByRole("button", { name: "Edit studio" }).click();
+  await page.locator("#stName").fill("Ironbound Strength");
+  await page.getByRole("button", { name: "Save studio" }).click();
+  await page.waitForURL("**/s/ironbound-strength");
+}
+// a class points at the studio's page, not straight at a map
+await page.goto(BASE + "/matt/schedule");
+await page.locator(".ps-event").first().click();
+await page.locator(".evname").waitFor();
+await page.locator(".evfact", { hasText: "Ironbound Strength" }).click();
+await page.waitForURL("**/s/ironbound-strength");
+console.log("studio pages ok (edit, types, slug follows the name)");
+
 // opened from Discover, a coach's page keeps the header and gets a way back
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
