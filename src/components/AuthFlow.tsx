@@ -275,20 +275,22 @@ export function AuthFlow({
             <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
               {invited ? "Claim your invite" : "Sign up with email"}
             </button>
-            {/* The coach/follower choice lives inside the sheet, so say it out
-                here — otherwise the only hint that there are two ways in is a
-                toggle you have to open the sheet to find. */}
-            {fans && (
-              <div className="microcopy" style={{ marginTop: 10 }}>
-                Coaching, or here to train? You pick on the next screen.
-              </div>
-            )}
+            {/* Signing up and logging in are the two things most people are
+                here to do, so they sit together. Everything else is a fallback
+                and lives below them. */}
+            <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
+              Already have an account? <b>Log in</b>
+            </button>
             {/* Asking for an invite is a real action with a form behind it, so
-                it gets a button. As a second line of link text under "Already
-                have an account?" it read as more of the same sentence.
+                it gets a button rather than a second line of link text.
                 Someone holding an invite has nothing to queue for. */}
             {(providers.google || providers.apple || (inviteOnly && !invited)) && (
-              <div className="obalts" style={{ marginTop: 12 }}>
+              <div className="obalts" style={{ marginTop: 16 }}>
+                {inviteOnly && !invited && (
+                  <button className="obalt obrequest" onClick={openRequest}>
+                    <Icon name="mail" size={18} /> Request an invite
+                  </button>
+                )}
                 {providers.google && (
                   <a className="obalt google" href={`/api/google/login${viaQ}`}>
                     <GoogleG /> Continue with Google
@@ -299,19 +301,9 @@ export function AuthFlow({
                     <AppleLogo /> Continue with Apple
                   </a>
                 )}
-                {inviteOnly && !invited && (
-                  <button className="obalt obrequest" onClick={openRequest}>
-                    <Icon name="mail" size={18} /> Request an invite
-                  </button>
-                )}
               </div>
             )}
             {error && <div className="errorcopy">{error}</div>}
-            {/* The one text link left, so it reads as the quiet way out rather
-                than one of two competing offers. */}
-            <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
-              Already have an account? <b>Log in</b>
-            </button>
           </>
         )}
 

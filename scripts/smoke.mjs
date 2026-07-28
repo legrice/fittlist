@@ -84,10 +84,17 @@ page.setDefaultTimeout(10000);
 await page.goto(BASE + "/");
 // with the member side live the landing has to speak to both, not just coaches
 await expect(page.getByText("Not studios").isVisible(), "landing headline visible");
-await expect(
-  page.getByText("here to train").first().isVisible(),
-  "the landing names the choice, so it isn't hidden inside the sheet",
-);
+// signing up and logging in sit together; everything else is below them.
+// (The invite queue is only rendered when INVITE_ONLY is on, which this suite
+// turns off, so its position is checked in invite-smoke instead.)
+{
+  const order = await page.evaluate(() => {
+    const y = (sel) => document.querySelector(sel)?.getBoundingClientRect().top ?? null;
+    return { signup: y(".ob .btn"), login: y(".obloginlink") };
+  });
+  if (!(order.signup !== null && order.login !== null && order.signup < order.login))
+    fail(`log in should sit right under sign up: ${JSON.stringify(order)}`);
+}
 await page.getByRole("button", { name: "Sign up with email" }).click();
 await page.getByRole("heading", { name: "Sign up with email" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");

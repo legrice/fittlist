@@ -177,6 +177,15 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.goto(BASE + "/");
   if (!(await pg.locator(".obrequest", { hasText: "Request an invite" }).count()))
     fail("an organic landing should offer the invite queue");
+  // sign up, then log in, then the queue for people who can't do either yet
+  {
+    const order = await pg.evaluate(() => {
+      const y = (sel) => document.querySelector(sel)?.getBoundingClientRect().top ?? -1;
+      return { signup: y(".ob .btn"), login: y(".obloginlink"), request: y(".obrequest") };
+    });
+    if (!(order.signup < order.login && order.login < order.request))
+      fail(`landing actions out of order: ${JSON.stringify(order)}`);
+  }
   if (await pg.locator(".invitetag").count()) fail("no invite, no you're-in tag");
 
   await pg.goto(BASE + "/?invited=1");
