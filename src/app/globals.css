@@ -1525,7 +1525,7 @@ button.ps-card { cursor: pointer; }
 .ob .btn { background: var(--ink); color: var(--paper); }
 
 /* ===========================================================
-   Motion: page transitions + loading skeletons
+   Motion: page transitions
    =========================================================== */
 @keyframes slideUpIn {
   from { transform: translateY(100%); }
@@ -1543,7 +1543,6 @@ button.ps-card { cursor: pointer; }
   from { transform: translateX(0); }
   to   { transform: translateX(100%); }
 }
-@keyframes shimmer { 100% { transform: translateX(100%); } }
 
 /* public pages slide in from the right going forward; a "back" tap slides the
    current page out to the right and brings the next one in from the left. */
@@ -1551,25 +1550,10 @@ button.ps-card { cursor: pointer; }
 .page-slide.from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
 .page-slide.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
 
-/* shimmering placeholder blocks */
-.skel { position: relative; overflow: hidden; background: #e9e2d1; border-radius: 8px; }
-.skel::after {
-  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .65), transparent);
-  animation: shimmer 1.4s infinite;
-}
-.skel-line { height: 14px; }
-.skel-photo { width: 100%; aspect-ratio: 4 / 3; border-radius: 16px; margin-top: 20px; }
-.skel-pill { width: 128px; height: 42px; border-radius: 999px; }
-.skel-event { height: 84px; border-radius: 16px; }
-.skel-group { margin-top: 22px; }
-.skel-links { display: flex; gap: 10px; margin-top: 18px; }
-
 @media (prefers-reduced-motion: reduce) {
   .acctwrap, .acctwrap.acct-from-left,
   .settingspane.from-right, .settingspane.exit-right,
   .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
-  .skel::after { animation: none; }
 }
 
 /* ---- admin panel (/admin), mobile-first ---- */
