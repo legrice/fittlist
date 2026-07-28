@@ -1903,11 +1903,13 @@ button.ps-card { cursor: pointer; }
   color: #fff; background: var(--si);
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* feed header: title on the left, the way into the directory on the right */
-.feedhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.feedfind {
+/* Page header: title on the left, one secondary action across from it —
+   Share cal on the schedule, Find coaches on the following page. */
+.pagehead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pageaction {
   display: flex; align-items: center; gap: 4px; flex-shrink: 0; text-decoration: none;
-  font-weight: 600; font-size: 13.5px; color: var(--si);
+  border: none; background: none; padding: 0; cursor: pointer;
+  font-family: inherit; font-weight: 600; font-size: 13.5px; color: var(--si);
 }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.

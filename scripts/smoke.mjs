@@ -236,7 +236,10 @@ console.log("account + profile edit ok (back -> account)");
 
 // ---- the schedule keeps one tool: sharing the week. Your page and the QR
 // code moved under You, so the top stops being a scrolling shelf.
-await expect(page.locator(".dashlink", { hasText: "Share cal" }).isVisible(), "share quick link");
+await expect(
+  page.locator(".pagehead .pageaction", { hasText: "Share cal" }).isVisible(),
+  "share sits across from the title",
+);
 if (await page.locator(".dashlink", { hasText: "QR code" }).count())
   fail("QR should live under You once the bottom nav is on");
 if (await page.locator(".dashlink", { hasText: "Your page" }).count())
@@ -915,7 +918,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Your week" }).click();
 await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".pageaction", { hasText: "Share cal" }).waitFor();
 console.log("coach fan-view preview ok");
 
 await browser.close();

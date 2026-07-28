@@ -258,30 +258,36 @@ export function ScheduleScreen({
         {/* Dashboard strip: one-tap links to the actions coaches reach for
             most. (Stats live on the account page for now.) */}
         <div className="dashstrip">
-          <div className="dashlinks">
-            {/* Sharing the week is the growth loop, so it stays one tap from
-                the schedule. Your page and the QR code live under You. */}
-            <button className="dashlink" onClick={() => setShareOpen(true)}>
-              <Icon name="calendar_today" size={19} />
-              <span>Share cal</span>
-            </button>
-            {!showFanView && (
-              // Without the bottom nav there's nowhere else these live.
-              <>
-                <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
-                  <Icon name="account_circle" size={19} />
-                  <span>Your page</span>
-                </button>
-                <button className="dashlink" onClick={() => setQrOpen(true)}>
-                  <Icon name="qr_code_2" size={19} />
-                  <span>QR code</span>
-                </button>
-              </>
-            )}
-          </div>
+          {/* Without the bottom nav these have nowhere else to live. With it,
+              only Share cal remains and it moves up beside the title. */}
+          {!showFanView && (
+            <div className="dashlinks">
+              <button className="dashlink" onClick={() => setShareOpen(true)}>
+                <Icon name="calendar_today" size={19} />
+                <span>Share cal</span>
+              </button>
+              <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
+                <Icon name="account_circle" size={19} />
+                <span>Your page</span>
+              </button>
+              <button className="dashlink" onClick={() => setQrOpen(true)}>
+                <Icon name="qr_code_2" size={19} />
+                <span>QR code</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="calbar-title">Your schedule</div>
+        <div className="pagehead">
+          <div className="calbar-title">Your schedule</div>
+          {showFanView && (
+            // Sharing the week is the growth loop — one tap, across from the
+            // title, the same shape as Find coaches on the following page.
+            <button className="pageaction" onClick={() => setShareOpen(true)}>
+              <Icon name="calendar_today" size={17} /> Share cal
+            </button>
+          )}
+        </div>
 
         {!hasAnyClass ? (
           <div className="empty-block">

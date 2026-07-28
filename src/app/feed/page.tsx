@@ -110,10 +110,10 @@ export default async function FeedPage() {
         <div className="brandbar feedbar">
           <Wordmark variant="ink" beta />
         </div>
-        <div className="feedhead">
+        <div className="pagehead">
           <div className="calbar-title">Your week</div>
           {coaches.length > 0 && (
-            <Link className="feedfind" href="/discover">
+            <Link className="pageaction" href="/discover">
               <Icon name="search" size={17} /> Find coaches
             </Link>
           )}
