@@ -1919,19 +1919,13 @@ button.ps-card { cursor: pointer; }
 }
 .swatch.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
 
-/* A class the coach is attending, sitting in their own week next to the ones
-   they teach. Outlined rather than filled: it isn't their work. */
-.teachseg { flex: none; margin: 0 0 16px; background: var(--cl); }
-.ps-agenda .ps-event-going { background: transparent; }
-.ps-agenda .ps-event-going .ps-accent { background: var(--ol); opacity: .5; }
+/* Marks a class you're going to, in the week of the coaches you follow. */
 .ps-goingtag {
   margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--cl);
   color: var(--ol); font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
   vertical-align: middle;
 }
-.ps-agenda .ps-event-going .ps-enm { color: var(--ol); }
-.ps-agenda .ps-event-going .ps-etime { color: var(--ol); }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
 .ps-agenda .ps-event.goingon .ps-accent { width: 5px; }

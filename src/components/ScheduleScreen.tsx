@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
-import type { AttendingDto, ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
@@ -19,7 +19,6 @@ const MAX_WEEKS = 52;
 
 export function ScheduleScreen({
   classes,
-  attending,
   hasAnyClass,
   todayIso,
   studios,
@@ -57,7 +56,6 @@ export function ScheduleScreen({
   look,
 }: {
   classes: ClassDto[];
-  attending: AttendingDto[];
   hasAnyClass: boolean;
   todayIso: string;
   studios: StudioDto[];
@@ -102,10 +100,6 @@ export function ScheduleScreen({
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
-  // What you teach vs everything, including classes you're going to as a
-  // participant. Two roles, one timeline — so a 6:00 you teach and a 6:15 you
-  // wanted to attend collide visibly.
-  const [showAttending, setShowAttending] = useState(true);
   // The coach's own colour marks the classes they teach.
   const myAccent = avatarColor({ id: userId, avatarColor: myColor });
   const [toastMsg, toastOn, toast] = useToast();
@@ -188,15 +182,7 @@ export function ScheduleScreen({
   // window grows as the trainer scrolls (see the loader below).
   const days = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00Z`);
-    const out: {
-      iso: string;
-      label: string;
-      items: ClassDto[];
-      merged: (
-        | { kind: "teach"; at: number; c: ClassDto }
-        | { kind: "going"; at: number; a: AttendingDto }
-      )[];
-    }[] = [];
+    const out: { iso: string; label: string; items: ClassDto[] }[] = [];
     for (let i = 0; i < weeks * 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
@@ -205,18 +191,12 @@ export function ScheduleScreen({
       const items = classes
         .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-      const going = showAttending ? attending.filter((a) => a.iso === iso) : [];
-      if (items.length || going.length) {
-        // Teaching and attending share one chronological day.
-        const merged = [
-          ...items.map((c) => ({ kind: "teach" as const, at: timeToMinutes(c.startTime), c })),
-          ...going.map((a) => ({ kind: "going" as const, at: timeToMinutes(a.startTime), a })),
-        ].sort((x, y) => x.at - y.at);
-        out.push({ iso, label: fmtDayHeader(iso), items, merged }); // "Monday – Jul 20"
+      if (items.length) {
+        out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday – Jul 20"
       }
     }
     return out;
-  }, [classes, attending, showAttending, todayIso, weeks]);
+  }, [classes, todayIso, weeks]);
 
   // Load more weeks when the trainer nears the bottom (one load per render).
   const loadingRef = useRef(false);
@@ -290,6 +270,14 @@ export function ScheduleScreen({
               <Icon name="qr_code_2" size={19} />
               <span>QR code</span>
             </button>
+            {showFanView && (
+              // The other half of the app: coaches you follow and the classes
+              // you're going to. Kept out of your own schedule on purpose.
+              <Link className="dashlink" href="/feed">
+                <Icon name="groups" size={19} />
+                <span>Following</span>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -311,78 +299,12 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
-            {attending.length > 0 && (
-              // Only worth showing once they're actually attending something.
-              <div className="seg teachseg">
-                <button
-                  className={showAttending ? "sel" : ""}
-                  onClick={() => setShowAttending(true)}
-                >
-                  Everything
-                </button>
-                <button
-                  className={showAttending ? "" : "sel"}
-                  onClick={() => setShowAttending(false)}
-                >
-                  Just teaching
-                </button>
-              </div>
-            )}
             <div className="ps-week ps-agenda">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
                   <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
-                    {d.merged.map((row) => {
-                      if (row.kind === "going") {
-                        const a = row.a;
-                        const start = clockParts(a.startTime);
-                        return (
-                          <Link
-                            key={`${d.iso}-going-${a.classId}`}
-                            className="ps-event ps-event-going"
-                            href={`/${a.coachHandle}/${a.classId}?d=${a.iso}`}
-                          >
-                            <span
-                              className="ps-accent"
-                              style={{ background: a.coachColor }}
-                              aria-hidden="true"
-                            />
-                            <span className="ps-ebody">
-                              <span className="ps-enm">
-                                {a.name}
-                                <span className="ps-goingtag">Going</span>
-                              </span>
-                              <span className="ps-estudio ps-ecoach">
-                                {a.coachPhoto ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img className="ps-ecoachav" src={a.coachPhoto} alt="" />
-                                ) : (
-                                  <span
-                                    className="ps-ecoachav ps-ecoachav-empty"
-                                    style={{ background: a.coachColor }}
-                                    aria-hidden="true"
-                                  >
-                                    {(a.coachName.trim().charAt(0) || "?").toUpperCase()}
-                                  </span>
-                                )}
-                                <span className="ps-ecoach-txt">
-                                  {a.coachName.trim().split(/\s+/)[0]}
-                                  {a.where ? ` · ${a.where}` : ""}
-                                </span>
-                              </span>
-                            </span>
-                            <span className="ps-etimecol">
-                              <span className="ps-etime">
-                                {start.hm}
-                                <span className="ps-ap">{start.ap}</span>
-                              </span>
-                              <span className="ps-edur">{a.durationMin} min</span>
-                            </span>
-                          </Link>
-                        );
-                      }
-                      const c = row.c;
+                    {d.items.map((c) => {
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       const where = studio ? studio.name : c.location;
                       const start = clockParts(c.startTime);

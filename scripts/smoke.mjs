@@ -869,8 +869,8 @@ await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();
 console.log("directory opt-out ok (delisted, page still public)");
 
-// a coach following another coach: what they're attending shows in their own
-// week beside what they teach, and never on their public page
+// a coach following another coach: two separate spaces. Their own schedule
+// stays what they teach; following lives on /feed and never leaks publicly.
 await page.goto(BASE + "/sam");
 await page.locator(".notifybar .btn", { hasText: "Follow" }).click();
 await page.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
@@ -878,22 +878,23 @@ await page.goto(BASE + "/feed");
 await page.locator(".feedagenda .ps-event").first().click();
 await page.getByRole("button", { name: "I'm going" }).click();
 await page.getByRole("button", { name: "You're going" }).waitFor();
+// it shows on the following page
+await page.goto(BASE + "/feed");
+await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
+// but the coach's own schedule is only what they teach
 await page.goto(BASE + "/app");
-await page.locator(".ps-event-going").first().waitFor();
-await expect(
-  page.locator(".ps-event-going .ps-goingtag").first().isVisible(),
-  "Going tag on the coach's own week",
-);
-// "Just teaching" hides them; "Everything" brings them back
-await page.locator(".teachseg button", { hasText: "Just teaching" }).click();
-await page.locator(".ps-event-going").first().waitFor({ state: "detached" });
-await page.locator(".teachseg button", { hasText: "Everything" }).click();
-await page.locator(".ps-event-going").first().waitFor();
+await page.locator(".ps-event").first().waitFor();
+const ownWeek = await page.locator(".ps-week").innerText();
+if (/Conditioning/.test(ownWeek))
+  fail("a class the coach attends showed up on their own schedule");
+// with a quick link across to the other space
+await page.locator(".dashlink", { hasText: "Following" }).click();
+await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
 // what a coach attends is private: it must not leak onto their public page
 const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
 if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
   fail("a class the coach attends leaked onto their public page");
-console.log("coach attending ok (own week only, never public)");
+console.log("coach following ok (separate from their schedule, never public)");
 
 // a coach can walk the member side from settings while the flag is dark
 await openProfile(page);
