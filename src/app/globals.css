@@ -328,12 +328,6 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
-.notifybar {
-  position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper);
-  border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  z-index: 15;
-}
-.notifybar .btn { margin: 0; }
 .madewith { text-align: center; font-size: 12px; color: var(--ol); padding: 26px 0 8px; }
 .madewith .mw-logo { display: inline-flex; vertical-align: -3px; font-size: 14px; }
 .madewith a { color: var(--si); font-weight: 700; font-size: 12px; text-decoration: underline; }
@@ -562,7 +556,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .appshell .screen { min-height: 100%; }
 .sidenav { display: none; }
-.heronotify { display: none; }
 .weekgrid { display: block; }
 .daycol.nix { display: none; }
 .btn.cloudghost { background: transparent; color: #fff; border: 1.5px solid #c9c3ae; }
@@ -625,8 +618,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
     padding: 38px 30px; position: sticky; top: 0; min-height: 100vh;
   }
   .pub .pubhero .big { font-size: 34px; }
-  .heronotify { display: inline-flex; margin-top: 22px; width: auto; }
-  .notifybar { display: none; }
   .pub .pubbody { flex: 1; max-width: 640px; margin: 0 auto; padding: 26px 30px 60px; }
 
   /* sheets become centered modals */
@@ -993,12 +984,6 @@ button.ps-card { cursor: pointer; }
 }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
-.profshare {
-  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  width: 42px; height: 42px; border-radius: 999px; margin-top: 2px;
-  background: #fff; border: 1px solid var(--line); color: #191502;
-}
-.profshare:active { background: #efe8d8; }
 .profname {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 0;
@@ -1182,8 +1167,23 @@ button.ps-card { cursor: pointer; }
   margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
   padding: 10px calc(50vw - 50%) 8px;
 }
-.pubhead .profname { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pubhead .profshare { margin-top: 0; }
+/* The name wraps to a second line rather than truncating — it's the one thing
+   on the page that has to be readable in full. */
+.pubhead .profname {
+  flex: 1; min-width: 0; font-size: 30px; line-height: 1.05;
+  overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+/* Follow / Subscribe, beside the name. */
+.followpill {
+  flex-shrink: 0; padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--ink); color: var(--paper);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  transition: transform .08s;
+}
+.followpill:active { transform: scale(.97); }
+.followpill.on { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.followpill[disabled] { opacity: .55; pointer-events: none; }
 
 /* About / Schedule tab switcher on the public profile */
 .pubtabs {
@@ -1506,19 +1506,9 @@ button.ps-card { cursor: pointer; }
 .evctabtn { border-radius: 999px; padding: 15px 18px; font-size: 15px; }
 /* Marked: the same green the row tag and the swipe use. */
 .evctabtn.on { background: var(--go); color: #fff; }
-[data-theme="poster"] .heronotify { display: none; }
-[data-theme="poster"] .notifybar {
-  display: block; border-top: 1px solid var(--line);
-  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
-}
-[data-theme="poster"] .notifybar .btn.si {
-  background: var(--ink); color: var(--paper); border: none; box-shadow: var(--soft-shadow);
-}
 @media (min-width: 940px) {
   [data-theme="poster"].pub { flex-direction: column; }
   [data-theme="poster"] .pubhero { position: static; width: auto; }
-  [data-theme="poster"] .heronotify { display: none; }
-  [data-theme="poster"] .notifybar { display: block; }
 }
 
 /* poster: empty schedule state on the dark ground */
@@ -1792,14 +1782,12 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .acctavatar-empty { background: var(--si); color: #fff; }
 [data-mode="dark"] .usericon-initial { color: #fff; }
 /* ---- the coach's public page + event pages in dark ---- */
-[data-mode="dark"] .profshare,
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio,
 [data-mode="dark"] .ownerback,
 [data-mode="dark"] .owneredit {
   background: var(--card); color: var(--ink); border-color: var(--line);
 }
-[data-mode="dark"] .profshare:active,
 [data-mode="dark"] .proflink:active,
 [data-mode="dark"] .profstudio:active,
 [data-mode="dark"] .ownerback:active,
@@ -2027,7 +2015,6 @@ button.ps-card { cursor: pointer; }
 .hasnav .acctwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 /* On a coach's page the subscribe bar has to clear the nav, and the page
    itself needs room so the footer isn't stuck under it. */
-.pub.hasnav .notifybar { bottom: calc(62px + env(safe-area-inset-bottom)); }
 .pub.hasnav .profwrap { padding-bottom: 190px; }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
 @media (min-width: 940px) { .screen.hasnav .pad {

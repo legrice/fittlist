@@ -5,9 +5,9 @@ import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/a
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// Rendered once inside the public hero. The hero button shows on desktop
-// (.heronotify) and the fixed bottom bar on mobile (.notifybar) - one
-// instance, shared state, both fixed elements escape the hero's layout.
+// The one action a visitor can take on a coach's page, sitting beside their
+// name: Follow for a signed-in member, the email list for everyone else. The
+// sheet it opens travels with it.
 export function NotifyCta({
   trainerName,
   handle,
@@ -29,10 +29,10 @@ export function NotifyCta({
   const firstName = trainerName.trim().split(/\s+/)[0] || trainerName;
   const label = account
     ? following
-      ? "Following ✓"
-      : `Follow ${firstName}`
+      ? "Following"
+      : "Follow"
     : subscribed
-      ? "You're on the list ✓"
+      ? "On the list"
       : "Subscribe";
   const toggleFollow = () => {
     startTransition(async () => {
@@ -89,14 +89,14 @@ export function NotifyCta({
 
   return (
     <>
-      <button className={`btn heronotify ${subscribed ? "cloudghost" : "si"}`} onClick={onCta}>
+      <button
+        className={`followpill${following || subscribed ? " on" : ""}`}
+        disabled={pending}
+        aria-pressed={account ? following : subscribed}
+        onClick={onCta}
+      >
         {label}
       </button>
-      <div className="notifybar">
-        <button className={`btn ${subscribed ? "ghost" : "si"}`} onClick={onCta}>
-          {label}
-        </button>
-      </div>
 
       {open && (
         <div

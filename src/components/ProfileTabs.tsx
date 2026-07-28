@@ -16,7 +16,7 @@ export function ProfileTabs({
   title,
   location,
   trackSchedule,
-  share,
+  action,
   avail,
   about,
   contact,
@@ -28,7 +28,8 @@ export function ProfileTabs({
   title: string;
   location: string;
   trackSchedule: boolean;
-  share: ReactNode;
+  /** The single action beside the name: Follow, or the email list. */
+  action: ReactNode;
   avail: ReactNode | null;
   about: ReactNode;
   contact: ReactNode | null;
@@ -138,7 +139,7 @@ export function ProfileTabs({
     <>
       <div className="pubhead" ref={rowRef}>
         <h1 className="profname">{name}</h1>
-        {share}
+        {action}
       </div>
       {/* One line: "Strength coach in Jersey City, NJ" */}
       {(title.trim() || location.trim()) && (

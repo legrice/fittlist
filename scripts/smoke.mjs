@@ -341,7 +341,9 @@ await expect(
   page.locator(".profstudio", { hasText: "Ironbound Strength" }).isVisible(),
   "profile shows 'Where I coach' studio",
 );
-await expect(page.locator(".profshare").isVisible(), "profile share button");
+if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
+if (await page.locator(".pubhead .followpill").count())
+  fail("the owner has nobody to follow on their own page");
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
 await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");
 await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
@@ -380,14 +382,16 @@ console.log("profile + schedule tabs + event pages ok");
   const subPage = await subCtx.newPage();
   subPage.setDefaultTimeout(10000);
   await subPage.goto(BASE + "/matt");
-  await subPage.locator(".notifybar .btn").click();
+  // the one action lives beside the coach's name now, not in a bottom bar
+  if (await subPage.locator(".notifybar").count()) fail("the subscribe bar should be gone");
+  await subPage.locator(".pubhead .followpill").click();
   await subPage.locator(".sheet h2", { hasText: "schedule every week" }).waitFor();
   await subPage.locator("#ntEmail").fill("fan@example.com");
   await subPage.getByRole("button", { name: "Add me to the list" }).click();
   await subPage.getByText("You're on Matt's list").waitFor();
-  await expect(subPage.locator(".notifybar .btn").textContent().then(t => t.includes("You're on the list")), "cta flips to subscribed");
+  await expect(subPage.locator(".followpill").textContent().then((t) => t.trim() === "On the list"), "cta flips to subscribed");
 
-  await subPage.locator(".notifybar .btn").click();
+  await subPage.locator(".followpill").click();
   await subPage.getByRole("button", { name: "Unsubscribe" }).waitFor();
   await subPage.locator(".sheet .sheetclose").click();
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
@@ -775,7 +779,7 @@ await fan.locator(".dissearch-x").click();
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow").click();
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow.on").waitFor();
 await fan.goto(BASE + "/matt");
-await fan.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
+await fan.locator(".followpill", { hasText: "Following" }).waitFor();
 console.log("discover ok (search + inline follow)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
@@ -976,8 +980,8 @@ console.log("directory opt-out ok (delisted, page still public)");
 // a coach following another coach: two separate spaces. Their own schedule
 // stays what they teach; following lives on /feed and never leaks publicly.
 await page.goto(BASE + "/sam");
-await page.locator(".notifybar .btn", { hasText: "Follow" }).click();
-await page.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
+await page.locator(".followpill", { hasText: "Follow" }).click();
+await page.locator(".followpill", { hasText: "Following" }).waitFor();
 await page.goto(BASE + "/feed");
 // their own classes belong on their Home too, beside the ones they follow
 if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" }).count()))
@@ -1060,6 +1064,9 @@ console.log("viewer look wins on another coach's page ok");
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
+if (!(await page.locator(".pubhead .followpill").count()))
+  fail("Follow should sit beside the coach's name");
+if (await page.locator(".profshare").count()) fail("the share button should be gone");
 if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a coach's page opened from inside the app should keep the header");
 await page.getByRole("button", { name: "Back to Discover" }).click();

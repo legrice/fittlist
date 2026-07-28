@@ -16,7 +16,6 @@ import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { ProfileTabs } from "@/components/ProfileTabs";
-import { ShareProfileButton } from "@/components/ShareProfileButton";
 import { Wordmark } from "@/components/Wordmark";
 
 const WINDOW_DAYS = 31; // a continuous forward window — about a month
@@ -348,7 +347,12 @@ export async function PublicProfileView({
           title={user.title ?? ""}
           location={user.location ?? ""}
           trackSchedule={!isOwner}
-          share={<ShareProfileButton name={user.name} />}
+          action={
+            // The owner previewing their own page has nobody to follow.
+            !isOwner ? (
+              <NotifyCta trainerName={user.name} handle={handle} account={account} />
+            ) : null
+          }
           avail={
             user.availability ? (
               <div className={`availpill availpill-${user.availability}`}>
@@ -368,9 +372,6 @@ export async function PublicProfileView({
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
-      {/* The subscribe bar is for visitors; the owner previewing their own page
-          never sees it. */}
-      {!isOwner && <NotifyCta trainerName={user.name} handle={handle} account={account} />}
       {showNav && <NavBar active="discover" />}
     </div>
   );
