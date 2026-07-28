@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { useSlideBack } from "@/components/BackLink";
@@ -96,6 +96,16 @@ export function ProfileOwnerBar({
     };
     reader.readAsDataURL(file);
   };
+
+  // ?edit=1 arrives from the account tile's Edit profile — open straight into
+  // the editor rather than making them find the button again.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("edit")) {
+      openEdit();
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openEdit = () => {
     setPName(name);

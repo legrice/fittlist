@@ -197,10 +197,12 @@ export default async function StudioPage({ params, searchParams }: Props) {
           </>
         )}
 
-        <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
-          <Link href="/">Claim your page</Link>
-        </div>
+        {!signedIn && (
+          <div className="madewith">
+            Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
+            <Link href="/">Claim your page</Link>
+          </div>
+        )}
       </div>
     </div>
   );

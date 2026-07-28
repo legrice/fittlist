@@ -215,10 +215,13 @@ export default async function EventPage({ params, searchParams }: Props) {
           </section>
         )}
 
-        <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
-          <Link href={`/?via=${handle}`}>Claim your page</Link>
-        </div>
+        {/* Visitors only — anyone signed in already has an account. */}
+        {!viewerId && (
+          <div className="madewith">
+            Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
+            <Link href={`/?via=${handle}`}>Claim your page</Link>
+          </div>
+        )}
       </div>
       {/* The one commitment on this page sits under the thumb, pinned. */}
       {canGo && (

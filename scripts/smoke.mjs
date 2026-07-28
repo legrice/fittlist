@@ -347,7 +347,28 @@ if (await page.locator(".pubhead .followpill").count())
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
 await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");
 await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
-await expect(page.getByText("Made with").isVisible(), "made-with footer");
+if (await page.getByText("Made with").count())
+  fail("the made-with footer should be hidden from anyone signed in");
+// a logged-out visitor is who it's for, so it still shows for them
+{
+  // A bot-flagged UA keeps this check out of the visit counts asserted later.
+  const anon = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "facebookexternalhit/1.1",
+  });
+  const ap = await anon.newPage();
+  ap.setDefaultTimeout(10000);
+  await ap.goto(BASE + "/matt");
+  await ap.getByText("Made with").waitFor();
+  await anon.close();
+}
+// the account tile offers a direct way into the editor
+await openProfile(page);
+await page.locator(".accttile .tertiary", { hasText: "Edit profile" }).click();
+await page.locator(".editsheet, .sheet").first().waitFor();
+await page.getByRole("heading", { name: "Edit profile" }).waitFor();
+await page.locator(".sheet .sheetclose, .sheet .adderclose").first().click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 
 // ---- Schedule tab -> continuous public calendar, no navigation, URL updates

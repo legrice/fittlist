@@ -274,6 +274,11 @@ export function ProfileSheet({
             <span className="acctname">{firstName}</span>
             {title ? <span className="accttitle-sub">{title}</span> : null}
           </button>
+          {/* Editing shouldn't need a detour through the preview: this opens
+              the public page with the editor already up. */}
+          <button className="tertiary acctedit" onClick={() => router.push(`/${handle}?edit=1`)}>
+            Edit profile
+          </button>
         </div>
 
         <div className="acctstats acctstats-grid">

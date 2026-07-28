@@ -1265,19 +1265,30 @@ button.ps-card { cursor: pointer; }
 }
 .acctclose:active { background: #efe8d8; }
 .acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
+/* One column since the stats moved out: photo, name, title, then Edit. */
 .accttile {
-  display: flex; align-items: stretch; gap: 8px; margin-top: 18px; padding: 22px 18px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  margin-top: 18px; padding: 22px 18px;
   background: #fff; border-radius: 16px; box-shadow: var(--soft-shadow);
 }
 .acctid {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; text-align: center; gap: 4px; padding-right: 8px;
+  min-width: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; gap: 4px;
 }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
 .acctavatar-empty {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #cec6b0;
 }
+/* Tertiary: a plain typographic action, no fill and no border — quieter than
+   the ghost button, for a control that sits inside another surface. */
+.tertiary {
+  background: none; border: none; cursor: pointer; padding: 6px 8px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
+  color: var(--ol); text-decoration: underline; text-underline-offset: 3px;
+}
+.tertiary:active { color: var(--ink); }
+.acctedit { align-self: center; }
 .acctname {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
   color: #191502; margin-top: 8px; overflow-wrap: anywhere;

@@ -346,10 +346,14 @@ export async function PublicProfileView({
           contact={contact}
           schedule={schedule}
         />
-        <div className="madewith">
-          Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
-          <Link href={`/?via=${handle}`}>Claim your page</Link>
-        </div>
+        {/* The growth loop is aimed at visitors — someone already signed in
+            has an account, so it's noise on every page they open. */}
+        {!isOwner && !signedIn && (
+          <div className="madewith">
+            Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
+            <Link href={`/?via=${handle}`}>Claim your page</Link>
+          </div>
+        )}
       </div>
     </div>
   );
