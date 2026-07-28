@@ -25,10 +25,12 @@ export function DiscoverList({
   coaches,
   cities,
   backHref,
+  hideBack = false,
 }: {
   coaches: DiscoverCoach[];
   cities: string[];
   backHref: string;
+  hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [city, setCity] = useState<string | null>(null);
@@ -159,9 +161,12 @@ export function DiscoverList({
         </div>
       )}
 
-      <Link className="logoutbtn" href={backHref}>
-        {backHref === "/app" ? "Back to my schedule" : "Back to your week"}
-      </Link>
+      {/* Coaches have the bottom nav; fans need a way back. */}
+      {!hideBack && (
+        <Link className="logoutbtn" href={backHref}>
+          Back to your week
+        </Link>
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

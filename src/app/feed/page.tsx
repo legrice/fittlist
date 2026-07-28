@@ -9,6 +9,7 @@ import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
+import { NavBar } from "@/components/NavBar";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -101,7 +102,10 @@ export default async function FeedPage() {
   }
 
   return (
-    <section className="screen admin" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section
+      className={`screen admin${me.handle ? " hasnav" : ""}`}
+      data-mode={me.look === "dark" ? "dark" : undefined}
+    >
       <div className="pad">
         <div className="brandbar feedbar">
           <Wordmark variant="ink" beta />
@@ -139,13 +143,9 @@ export default async function FeedPage() {
           />
         )}
 
-        {/* A coach landing here is previewing the member side — give them the
-            way back rather than a log-out they didn't mean to tap. */}
-        {me.handle ? (
-          <Link className="logoutbtn" href="/app">
-            Back to my schedule
-          </Link>
-        ) : (
+        {/* Coaches move between spaces with the bottom nav; fans have no
+            second space yet, so they keep the log-out here. */}
+        {!me.handle && (
           <form action={logout}>
             <button type="submit" className="logoutbtn">
               Log out
@@ -153,6 +153,7 @@ export default async function FeedPage() {
           </form>
         )}
       </div>
+      {me.handle && <NavBar active="following" />}
     </section>
   );
 }

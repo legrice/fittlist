@@ -743,6 +743,8 @@ button.bl-band { cursor: pointer; }
    actions. (The stats glance lives on the account page for now.) */
 .dashstrip { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .dashlinks { display: flex; gap: 10px; }
+/* Alone (bottom nav on), Share cal shouldn't stretch into a full-width CTA. */
+.dashlinks .dashlink:only-child { flex: 0 0 auto; padding: 12px 20px; }
 .dashlink {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 6px; background: var(--cl); border-radius: 999px;
@@ -1907,6 +1909,28 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; gap: 4px; flex-shrink: 0; text-decoration: none;
   font-weight: 600; font-size: 13.5px; color: var(--si);
 }
+
+/* Bottom nav: the two halves of the app plus your identity, in thumb reach.
+   Only the coach shell, only once the member side is on. */
+.navbar {
+  /* above the account view (40) so You keeps the bar, below sheets (46) so a
+     takeover really takes over */
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+  display: flex; background: var(--card); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.navtab {
+  flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 9px 0 10px; text-decoration: none; color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
+}
+.navtab.on { color: var(--ink); }
+.navtab:active { background: var(--cl); }
+/* the FAB clears the bar rather than sitting on it */
+.hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
+.hasnav .acctwrap { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+[data-mode="dark"] .navtab:active { background: #2c2718; }
+@media (min-width: 940px) { .navbar { display: none; } }
 
 /* Avatar colour picker: sixty swatches, so a photo-less coach is still
    recognisable at a glance in a list of five. */

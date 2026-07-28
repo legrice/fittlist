@@ -234,16 +234,22 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
-// ---- dashboard quick links on the schedule
-await expect(page.locator(".dashlink", { hasText: "Your page" }).isVisible(), "your-page quick link");
+// ---- the schedule keeps one tool: sharing the week. Your page and the QR
+// code moved under You, so the top stops being a scrolling shelf.
 await expect(page.locator(".dashlink", { hasText: "Share cal" }).isVisible(), "share quick link");
-await expect(page.locator(".dashlink", { hasText: "QR code" }).isVisible(), "qr quick link");
-// the QR quick link opens the QR sheet right from the schedule
-await page.locator(".dashlink", { hasText: "QR code" }).click();
+if (await page.locator(".dashlink", { hasText: "QR code" }).count())
+  fail("QR should live under You once the bottom nav is on");
+if (await page.locator(".dashlink", { hasText: "Your page" }).count())
+  fail("Your page should live under You once the bottom nav is on");
+// and the QR is reachable from the account view
+await openProfile(page);
+await page.locator(".acctcard", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-console.log("dashboard quick links ok");
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+console.log("schedule tools ok (share stays, the rest moved under You)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
 // the public page (visitors see it too — it's a server-rendered attribute).
@@ -887,9 +893,17 @@ await page.locator(".ps-event").first().waitFor();
 const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
-// with a quick link across to the other space
-await page.locator(".dashlink", { hasText: "Following" }).click();
+// with the bottom nav to cross between the two spaces
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
+await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
+// You opens the account view with the bar still under it
+await page.locator(".navtab", { hasText: "You" }).click();
+await page.locator(".acctwrap").waitFor();
+await page.locator(".navtab.on", { hasText: "You" }).waitFor();
+await page.locator(".acctclose").click();
 // what a coach attends is private: it must not leak onto their public page
 const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
 if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
@@ -900,8 +914,8 @@ console.log("coach following ok (separate from their schedule, never public)");
 await openProfile(page);
 await page.locator(".setrow", { hasText: "Your week" }).click();
 await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
-await page.getByRole("link", { name: "Back to my schedule" }).click();
-await page.locator(".dashlink", { hasText: "Your page" }).waitFor();
+await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 console.log("coach fan-view preview ok");
 
 await browser.close();

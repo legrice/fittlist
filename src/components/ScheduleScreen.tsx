@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { ProfileSheet } from "@/components/ProfileSheet";
@@ -218,8 +219,8 @@ export function ScheduleScreen({
   }, []);
 
   return (
-    <section className="screen">
-      <div className="pad" style={{ paddingTop: 14, paddingBottom: 110 }}>
+    <section className={`screen${showFanView ? " hasnav" : ""}`}>
+      <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <div className="brandbar">
           <Wordmark variant="ink" beta />
           <div className="brandbar-actions">
@@ -258,25 +259,24 @@ export function ScheduleScreen({
             most. (Stats live on the account page for now.) */}
         <div className="dashstrip">
           <div className="dashlinks">
-            <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
-              <Icon name="account_circle" size={19} />
-              <span>Your page</span>
-            </button>
+            {/* Sharing the week is the growth loop, so it stays one tap from
+                the schedule. Your page and the QR code live under You. */}
             <button className="dashlink" onClick={() => setShareOpen(true)}>
               <Icon name="calendar_today" size={19} />
               <span>Share cal</span>
             </button>
-            <button className="dashlink" onClick={() => setQrOpen(true)}>
-              <Icon name="qr_code_2" size={19} />
-              <span>QR code</span>
-            </button>
-            {showFanView && (
-              // The other half of the app: coaches you follow and the classes
-              // you're going to. Kept out of your own schedule on purpose.
-              <Link className="dashlink" href="/feed">
-                <Icon name="groups" size={19} />
-                <span>Following</span>
-              </Link>
+            {!showFanView && (
+              // Without the bottom nav there's nowhere else these live.
+              <>
+                <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
+                  <Icon name="account_circle" size={19} />
+                  <span>Your page</span>
+                </button>
+                <button className="dashlink" onClick={() => setQrOpen(true)}>
+                  <Icon name="qr_code_2" size={19} />
+                  <span>QR code</span>
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -354,6 +354,17 @@ export function ScheduleScreen({
         <button className="fab" aria-label="Add class" onClick={() => setAdder({ open: true })}>
           +
         </button>
+      )}
+
+      {showFanView && (
+        <NavBar
+          active={profileOpen ? "you" : "schedule"}
+          onSchedule={() => setProfileOpen(false)}
+          onYou={() => {
+            setAcctAnim("up");
+            setProfileOpen(true);
+          }}
+        />
       )}
 
       {profileOpen && (

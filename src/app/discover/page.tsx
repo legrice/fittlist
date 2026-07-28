@@ -6,6 +6,7 @@ import { getSessionUserId } from "@/lib/session";
 import { timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
+import { NavBar } from "@/components/NavBar";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -96,14 +97,18 @@ export default async function DiscoverPage() {
   );
 
   return (
-    <section className="screen admin" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section
+      className={`screen admin${me.handle ? " hasnav" : ""}`}
+      data-mode={me.look === "dark" ? "dark" : undefined}
+    >
       <div className="pad">
         <div className="brandbar feedbar">
           <Wordmark variant="ink" beta />
         </div>
         <div className="calbar-title">Find coaches</div>
-        <DiscoverList coaches={coaches} cities={cities} backHref={me.handle ? "/app" : "/feed"} />
+        <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
       </div>
+      {me.handle && <NavBar active="following" />}
     </section>
   );
 }
