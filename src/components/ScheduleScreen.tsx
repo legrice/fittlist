@@ -341,7 +341,7 @@ export function ScheduleScreen({
                           <Link
                             key={`${d.iso}-going-${a.classId}`}
                             className="ps-event ps-event-going"
-                            href={`/${a.coachHandle}/${a.classId}`}
+                            href={`/${a.coachHandle}/${a.classId}?d=${a.iso}`}
                           >
                             <span
                               className="ps-accent"

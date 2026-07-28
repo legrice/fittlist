@@ -4,9 +4,11 @@ import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { fansVisible } from "@/lib/flags";
 import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
 import { BackLink } from "@/components/BackLink";
 import { EventActions } from "@/components/EventActions";
+import { GoingButton } from "@/components/GoingButton";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -14,10 +16,14 @@ export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Props = { params: Promise<{ handle: string; classId: string }> };
+type Props = {
+  params: Promise<{ handle: string; classId: string }>;
+  searchParams: Promise<{ d?: string }>;
+};
 
-export default async function EventPage({ params }: Props) {
+export default async function EventPage({ params, searchParams }: Props) {
   const { handle, classId } = await params;
+  const { d: dParam } = await searchParams;
   if (!UUID_RE.test(classId)) notFound();
 
   const db = await getDb();
@@ -30,7 +36,8 @@ export default async function EventPage({ params }: Props) {
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, user.id)));
   if (!c) notFound();
 
-  const isOwner = (await getSessionUserId()) === user.id;
+  const viewerId = await getSessionUserId();
+  const isOwner = viewerId === user.id;
   // Private client sessions aren't public; only the owner can open their page.
   if (!c.isPublic && !isOwner) notFound();
 
@@ -38,14 +45,27 @@ export default async function EventPage({ params }: Props) {
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, c.studioId))
     : [];
 
-  // A weekly class shows this week's date for its weekday; a one-off shows its own.
-  const whenIso =
+  // A weekly class shows this week's date for its weekday; a one-off shows its
+  // own. A ?d= from the schedule pins the occurrence that was tapped, so
+  // "next Wednesday" opens as next Wednesday rather than this one.
+  const thisWeekIso =
     c.specificDate ??
     (() => {
       const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
       d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
       return d.toISOString().slice(0, 10);
     })();
+  const askedIso =
+    dParam && /^\d{4}-\d{2}-\d{2}$/.test(dParam) && !Number.isNaN(Date.parse(dParam))
+      ? dParam
+      : null;
+  // Only honour a date this class actually falls on.
+  const askedFits = askedIso
+    ? c.specificDate
+      ? c.specificDate === askedIso
+      : (new Date(`${askedIso}T00:00:00Z`).getUTCDay() + 6) % 7 === c.dayOfWeek
+    : false;
+  const whenIso = askedFits ? askedIso! : thisWeekIso;
   const mapsUrl = studio
     ? `https://maps.google.com/?q=${encodeURIComponent(`${studio.name}, ${studio.address}`)}`
     : null;
@@ -67,6 +87,24 @@ export default async function EventPage({ params }: Props) {
   if (!c.specificDate) gcalParams.set("recur", `RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`);
   const googleUrl = `https://calendar.google.com/calendar/render?${gcalParams.toString()}`;
   const icsHref = `/api/cal/${handle}/${c.id}`;
+
+  // "I'm going" lives here rather than on the schedule rows — one tap into the
+  // class, then commit. Owners don't attend their own classes.
+  const canGo = !isOwner && !!viewerId && c.isPublic && (await fansVisible());
+  let going = false;
+  if (canGo) {
+    const [row] = await db
+      .select({ id: schema.attendances.id })
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, viewerId!),
+          eq(schema.attendances.classId, c.id),
+          eq(schema.attendances.occurrenceDate, whenIso),
+        ),
+      );
+    going = !!row;
+  }
 
   return (
     <div className="pub evpage" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
@@ -120,6 +158,14 @@ export default async function EventPage({ params }: Props) {
               <div className="evnobook">Just show up, no booking needed.</div>
             )}
           </div>
+          {canGo && (
+            <GoingButton
+              classId={c.id}
+              iso={whenIso}
+              initialGoing={going}
+              hasBooking={c.links.length > 0}
+            />
+          )}
           <EventActions
             googleUrl={googleUrl}
             icsHref={icsHref}

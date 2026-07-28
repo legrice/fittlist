@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 
@@ -39,10 +38,9 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
   const [share, setShare] = useState(false);
   const [goingOnly, setGoingOnly] = useState(false);
   // Keyed by class AND day: a weekly class is a different commitment each week.
-  const [going, setGoingMap] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(days.flatMap((d) => d.items.map((i) => [`${i.classId}|${d.iso}`, i.going]))),
+  const going: Record<string, boolean> = Object.fromEntries(
+    days.flatMap((d) => d.items.map((i) => [`${i.classId}|${d.iso}`, i.going])),
   );
-  const [, startTransition] = useTransition();
   const selCoach = sel ? coaches.find((c) => c.id === sel) : undefined;
 
   const shown = days
@@ -55,16 +53,6 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
     .filter((d) => d.items.length > 0);
 
   const goingCount = Object.values(going).filter(Boolean).length;
-
-  const toggleGoing = (classId: string, iso: string) => {
-    const key = `${classId}|${iso}`;
-    const next = !going[key];
-    setGoingMap((g) => ({ ...g, [key]: next })); // optimistic — the tap must land instantly
-    startTransition(async () => {
-      const res = await setGoing(classId, iso, next);
-      if (!res.ok) setGoingMap((g) => ({ ...g, [key]: !next }));
-    });
-  };
 
   const avatar = (photo: string | null, name: string, cls: string, color: string) =>
     photo ? (
@@ -147,18 +135,23 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
               <div className="ps-daycol">{d.label}</div>
               <div className="ps-daycards">
                 {d.items.map((i) => (
-                  <div
+                  <Link
                     key={`${d.iso}-${i.classId}`}
-                    className={`ps-event feedrow${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
+                    className={`ps-event${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
+                    href={`/${i.handle}/${i.classId}?d=${d.iso}`}
                   >
                     <span
                       className="ps-accent"
                       style={{ background: i.coachColor }}
                       aria-hidden="true"
                     />
-                    <Link className="feedrow-main" href={`/${i.handle}/${i.classId}`}>
-                      <span className="ps-ebody">
-                        <span className="ps-enm">{i.name}</span>
+                    <span className="ps-ebody">
+                        <span className="ps-enm">
+                          {i.name}
+                          {going[`${i.classId}|${d.iso}`] && (
+                            <span className="ps-goingtag">Going</span>
+                          )}
+                        </span>
                         <span className="ps-estudio ps-ecoach">
                           {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
                           <span className="ps-ecoach-txt">
@@ -167,25 +160,14 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                           </span>
                         </span>
                       </span>
-                      <span className="ps-etimecol">
-                        <span className="ps-etime">
-                          {i.hm}
-                          <span className="ps-ap">{i.ap}</span>
-                        </span>
-                        <span className="ps-edur">{i.durationMin} min</span>
+                    <span className="ps-etimecol">
+                      <span className="ps-etime">
+                        {i.hm}
+                        <span className="ps-ap">{i.ap}</span>
                       </span>
-                    </Link>
-                    <button
-                      type="button"
-                      className={`goingbtn${going[`${i.classId}|${d.iso}`] ? " on" : ""}`}
-                      aria-pressed={!!going[`${i.classId}|${d.iso}`]}
-                      onClick={() => toggleGoing(i.classId, d.iso)}
-                      title="A personal note — not a booking"
-                    >
-                      <Icon name={going[`${i.classId}|${d.iso}`] ? "check" : "add"} size={16} />
-                      {going[`${i.classId}|${d.iso}`] ? "Going" : "I'm going"}
-                    </button>
-                  </div>
+                      <span className="ps-edur">{i.durationMin} min</span>
+                    </span>
+                  </Link>
                 ))}
               </div>
             </div>

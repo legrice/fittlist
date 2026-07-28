@@ -790,12 +790,19 @@ console.log(
 // "I'm going" + the member's share image — the mirror of the coach's story
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event").first().waitFor();
-await fan.locator(".goingbtn").first().click();
-await fan.locator(".goingbtn.on").first().waitFor();
-await fan.locator(".goingbar").waitFor();
+// marking happens on the class itself now, not on the crowded week row
+if (await fan.locator(".feedagenda .goingbtn").count())
+  fail("the week should not carry an inline I'm going button");
+await fan.locator(".feedagenda .ps-event").first().click();
+await fan.getByRole("button", { name: "I'm going" }).click();
+await fan.getByRole("button", { name: "You're going" }).waitFor();
 // it survives a reload (the note is on the server, not just in the tab)
 await fan.reload();
-await fan.locator(".goingbtn.on").first().waitFor();
+await fan.getByRole("button", { name: "You're going" }).waitFor();
+// and the week reports it back
+await fan.goto(BASE + "/feed");
+await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
+await fan.locator(".goingbar").waitFor();
 // "Going" filters the week down to what they committed to
 await fan.locator(".goingfilter").click();
 const goingRows = await fan.locator(".feedagenda .ps-event").count();
@@ -868,8 +875,9 @@ await page.goto(BASE + "/sam");
 await page.locator(".notifybar .btn", { hasText: "Follow" }).click();
 await page.locator(".notifybar .btn", { hasText: "Following" }).waitFor();
 await page.goto(BASE + "/feed");
-await page.locator(".feedagenda .goingbtn").first().click();
-await page.locator(".feedagenda .goingbtn.on").first().waitFor();
+await page.locator(".feedagenda .ps-event").first().click();
+await page.getByRole("button", { name: "I'm going" }).click();
+await page.getByRole("button", { name: "You're going" }).waitFor();
 await page.goto(BASE + "/app");
 await page.locator(".ps-event-going").first().waitFor();
 await expect(
