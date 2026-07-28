@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
+import { RailArrows } from "@/components/RailArrows";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -46,6 +47,7 @@ export function FeedAgenda({
   meId?: string;
 }) {
   const [sel, setSel] = useState<string | null>(null);
+  const railRef = useRef<HTMLDivElement>(null);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
   const [swiped, setSwiped] = useState<Record<string, boolean>>({});
@@ -94,7 +96,8 @@ export function FeedAgenda({
     <>
       {/* No coach has anything coming up, so there is nothing to filter. */}
       {coaches.length > 0 && (
-      <div className={`feedstrip${sel ? " hassel" : ""}`}>
+      <div className="feedrail">
+      <div className={`feedstrip${sel ? " hassel" : ""}`} ref={railRef}>
         {/* "All" clears the filter — the way back to the merged week without
             having to remember which avatar is currently selected. */}
         <button
@@ -120,6 +123,8 @@ export function FeedAgenda({
             <span className="feedav-nm">{c.name.trim().split(/\s+/)[0]}</span>
           </button>
         ))}
+      </div>
+      <RailArrows railRef={railRef} />
       </div>
       )}
 

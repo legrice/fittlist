@@ -76,6 +76,10 @@ rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
   NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
 node scripts/feedback-smoke.mjs   # writing in, the reply, one thread per person
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/desktop-smoke.mjs    # header links and the coach-rail arrows
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -120,6 +124,16 @@ place that writes `users.location` means passing `knownLocations()` in too.
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
+
+**An unknown icon name renders a plain circle.** `Icon` falls back to Lucide's
+`Circle` rather than throwing, so a typo or a name that was never mapped ships
+as a blank button and nothing complains. Add the name to `ICONS` in
+`src/components/Icon.tsx` when you add the call site.
+
+**Desktop chrome is pointer-gated, not width-gated.** The bottom bar hides at
+940px and `HeaderNav` takes over; the coach-rail arrows key off
+`(hover: hover) and (pointer: fine)`, because "can't swipe" is a property of
+the pointer and a width breakpoint would put arrows on a tablet.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

@@ -2009,6 +2009,23 @@ button.ps-card { cursor: pointer; }
   margin: 18px -18px 8px; padding: 6px 18px 14px; scrollbar-width: none;
 }
 .feedstrip::-webkit-scrollbar { display: none; }
+/* The rail bleeds to the screen edge, so the arrows that page it have to
+   anchor to a box that doesn't scroll with it. */
+.feedrail { position: relative; }
+.railarrow {
+  position: absolute; top: 42px; transform: translateY(-50%);
+  display: none; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; cursor: pointer;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(30, 24, 12, .16);
+}
+.railarrow:hover { background: var(--cl); }
+/* The strip bleeds 18px past the rail on each side, so the arrows sit out
+   there with it: over the cut-off avatar, not over the one before it. */
+.railarrow-l { left: -14px; }
+.railarrow-r { right: -14px; }
+/* A finger swipes; a mouse can't, so this is for pointers that hover. */
+@media (hover: hover) and (pointer: fine) { .railarrow { display: flex; } }
 .feedav {
   display: flex; flex-direction: column; align-items: center; gap: 7px; flex-shrink: 0;
   background: none; border: none; padding: 0; cursor: pointer; color: var(--ink);
