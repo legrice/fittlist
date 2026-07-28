@@ -11,7 +11,8 @@ export type OutboundKind =
   | "welcome"
   | "announcement"
   | "weekly_schedule"
-  | "inquiry";
+  | "inquiry"
+  | "feedback";
 
 export interface SendArgs {
   to: string;

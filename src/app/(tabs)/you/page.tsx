@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { feedbackHost } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { MemberAccount } from "@/components/MemberAccount";
@@ -32,6 +33,8 @@ export default async function YouPage({
     .from(schema.attendances)
     .where(eq(schema.attendances.userId, userId));
 
+  const host = await feedbackHost();
+
   return (
     <>
       <div className="calbar-title">You</div>
@@ -47,6 +50,7 @@ export default async function YouPage({
           look={me.look}
           goingCount={going.length}
           openEditor={edit === "1"}
+          canSendFeedback={!!host && host.email.toLowerCase() !== me.email.toLowerCase()}
         />
     </>
   );

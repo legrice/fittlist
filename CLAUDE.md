@@ -71,6 +71,11 @@ node scripts/private-smoke.mjs    # public vs private classes
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/member-smoke.mjs     # a member's link, setup, profile and edits
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
+  NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
+node scripts/feedback-smoke.mjs   # writing in, the reply, one thread per person
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -115,6 +120,14 @@ place that writes `users.location` means passing `knownLocations()` in too.
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
+
+**Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
+(a visitor asking a coach about private sessions) or `"feedback"` (someone
+writing to us about the app), and the unique index is
+`(coach_user_id, requester_email, kind)`. The admin is also a coach, so without
+the kind their feedback and their real private-session requests would collapse
+into one thread. `feedbackHost()` picks the first `ADMIN_EMAILS` address with an
+account; no account means no door, and the settings row hides.
 
 **A `"use server"` file can only export async functions.** A constant in one
 500s every page that imports it.

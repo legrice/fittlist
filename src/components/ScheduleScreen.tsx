@@ -49,6 +49,7 @@ export function ScheduleScreen({
   hasPassword,
   passkeyCount,
   isAdmin,
+  canSendFeedback,
   showFanView,
   discoverable,
   userId,
@@ -85,6 +86,7 @@ export function ScheduleScreen({
   hasPassword: boolean;
   passkeyCount: number;
   isAdmin: boolean;
+  canSendFeedback: boolean;
   showFanView: boolean;
   discoverable: boolean;
   userId: string;
@@ -359,6 +361,7 @@ export function ScheduleScreen({
           hasPassword={hasPassword}
           passkeyCount={passkeyCount}
           isAdmin={isAdmin}
+          canSendFeedback={canSendFeedback}
           avatarColor={myAccent}
           showFanView={showFanView}
           discoverable={discoverable}

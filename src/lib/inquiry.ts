@@ -44,6 +44,30 @@ export async function emailCoachInquiry(opts: {
   });
 }
 
+/** Someone wrote in about the app. Goes to whoever ADMIN_EMAILS names first. */
+export async function emailFeedback(opts: { to: string; from: string; body: string }) {
+  await sendMessage({
+    to: opts.to,
+    kind: "feedback",
+    subject: `Feedback from ${opts.from}`,
+    text:
+      `${opts.from} sent feedback on fittlist:\n\n"${opts.body}"\n\n` +
+      `Reply from your inbox: ${siteOrigin()}/updates?tab=messages`,
+  });
+}
+
+/** Our reply to feedback. They have an account, so the link is the app itself. */
+export async function emailFeedbackReply(opts: { to: string; from: string; body: string }) {
+  await sendMessage({
+    to: opts.to,
+    kind: "feedback",
+    subject: "Re: your fittlist feedback",
+    text:
+      `${opts.from} replied to your feedback:\n\n"${opts.body}"\n\n` +
+      `Read and reply: ${siteOrigin()}/feedback`,
+  });
+}
+
 /** Coach reply → email the visitor with a link back into the thread. */
 export async function emailRequesterReply(opts: {
   to: string;

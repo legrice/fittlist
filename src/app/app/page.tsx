@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
+import { feedbackHost } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { coachAnalytics } from "@/lib/visits";
@@ -63,6 +64,7 @@ export default async function SchedulePage({
   // (photo, profile, studios) before they land on their schedule.
   if (user && !user.onboardedAt) redirect("/welcome");
   const gconn = await isGoogleConnected(userId);
+  const fbHost = await feedbackHost();
   const passkeyRows = await db
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
@@ -165,6 +167,7 @@ export default async function SchedulePage({
       hasPassword={!!user?.passwordHash}
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
+      canSendFeedback={!!fbHost && fbHost.email.toLowerCase() !== (user?.email ?? "").toLowerCase()}
       showFanView={await fansVisible()}
       discoverable={user?.discoverable ?? true}
       userId={userId}

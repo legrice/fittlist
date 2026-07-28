@@ -116,13 +116,18 @@ export const inquiryThreads = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     coachUserId: uuid("coach_user_id").notNull().references(() => users.id),
+    // "inquiry" (a visitor asking a coach about private sessions) or "feedback"
+    // (someone writing to us about the app). Same machinery, different room:
+    // the admin is also a coach, so without this their feedback and their real
+    // private-session requests would land in one thread.
+    kind: text("kind").notNull().default("inquiry"),
     requesterName: text("requester_name").notNull().default(""),
     requesterEmail: text("requester_email").notNull(), // normalized lowercase
     coachUnread: integer("coach_unread").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("inquiry_thread_coach_email").on(t.coachUserId, t.requesterEmail)],
+  (t) => [uniqueIndex("inquiry_thread_coach_email").on(t.coachUserId, t.requesterEmail, t.kind)],
 );
 
 export const inquiryMessages = pgTable("inquiry_messages", {

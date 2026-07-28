@@ -24,6 +24,9 @@ type Thread = {
   preview: string;
   unread: number;
   at: Date;
+  /** Someone writing in about the app, not a coach's private-session request.
+   *  Only the admin ever sees one, and only they need them told apart. */
+  feedback?: boolean;
 };
 
 const ICON: Record<string, string> = { follow: "person_add" };
@@ -124,7 +127,10 @@ export function UpdatesScreen({
               </span>
               <span className="inboxrow-main">
                 <span className="inboxrow-top">
-                  <span className="nm">{t.who}</span>
+                  <span className="nm">
+                    {t.who}
+                    {t.feedback && <span className="inboxrow-tag">feedback</span>}
+                  </span>
                   <span className="tm">{fmt(t.at)}</span>
                 </span>
                 <span className="inboxrow-preview">{t.preview}</span>

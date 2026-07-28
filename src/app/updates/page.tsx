@@ -51,6 +51,7 @@ export default async function UpdatesPage({
       preview: last ? `${last.fromCoach ? "You: " : ""}${last.body}` : "",
       unread: t.coachUnread,
       at: t.lastMessageAt,
+      feedback: t.kind === "feedback",
     };
   });
 

@@ -4,9 +4,11 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
+import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import {
   emailCoachInquiry,
+  emailFeedbackReply,
   emailRequesterReply,
   inquiryToken,
   verifyInquiryToken,
@@ -79,6 +81,35 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
     .select({ name: schema.users.name })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
+
+  // Feedback comes from someone with an account, so the reply belongs in the
+  // app: a bell and a thread they already know how to find. A private-session
+  // request comes from a visitor who has neither, and only has the token link.
+  if (thread.kind === "feedback") {
+    const [them] = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, thread.requesterEmail));
+    const from = coach?.name?.trim() || "fittlist";
+    if (them) {
+      await addNotification(them.id, {
+        type: "feedback_reply",
+        title: `${from} replied to your feedback`,
+        body,
+        href: "/feedback",
+      });
+    }
+    after(() =>
+      emailFeedbackReply({ to: thread.requesterEmail, from, body }).catch((err) =>
+        console.error("feedback reply email failed", err),
+      ),
+    );
+    revalidatePath(`/inbox/${threadId}`);
+    revalidatePath("/feedback");
+    revalidatePath("/updates");
+    return { ok: true };
+  }
+
   const token = await inquiryToken(threadId);
   after(() =>
     emailRequesterReply({ to: thread.requesterEmail, coachName: coach?.name ?? "Your coach", body, token }).catch(

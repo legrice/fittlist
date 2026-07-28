@@ -48,6 +48,7 @@ export function ProfileSheet({
   hasPassword,
   passkeyCount,
   isAdmin = false,
+  canSendFeedback = false,
   avatarColor,
   showFanView = false,
   discoverable = true,
@@ -75,6 +76,9 @@ export function ProfileSheet({
   hasPassword: boolean;
   passkeyCount: number;
   isAdmin?: boolean;
+  /** False when there's nobody behind the door: no admin account exists, or
+   *  you are the one it would go to. */
+  canSendFeedback?: boolean;
   /** The coach's own palette colour, so a photo-less avatar reads as theirs. */
   avatarColor: string;
   showFanView?: boolean;
@@ -356,6 +360,16 @@ export function ProfileSheet({
               member's move — a coach's share is their own schedule. */}
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
+          {canSendFeedback && (
+            <a className="setrow" href="/feedback">
+              <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
+              <span className="setrow-txt">
+                <span className="t">Send feedback</span>
+                <span className="s">Tell us what&rsquo;s broken or missing</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            </a>
+          )}
           {isAdmin && (
             <a className="setrow" href="/admin">
               <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>

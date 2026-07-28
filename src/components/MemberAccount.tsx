@@ -24,6 +24,7 @@ export function MemberAccount({
   look,
   goingCount,
   openEditor = false,
+  canSendFeedback = false,
 }: {
   name: string;
   email: string;
@@ -36,6 +37,9 @@ export function MemberAccount({
   look: string | null;
   goingCount: number;
   openEditor?: boolean;
+  /** False when nobody's behind the door: no admin account to write to, or
+   *  you are the admin. */
+  canSendFeedback?: boolean;
 }) {
   const [share, setShare] = useState(false);
   // Members sign up with an email and nothing else — there's no name step for
@@ -108,6 +112,16 @@ export function MemberAccount({
       <div className="settingslist">
         <StartCoaching handle={handle} />
         <InviteFriends />
+        {canSendFeedback && (
+          <a className="setrow" href="/feedback">
+            <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Send feedback</span>
+              <span className="s">Tell us what&rsquo;s broken or missing</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </a>
+        )}
       </div>
 
       <div className="settingslist">
