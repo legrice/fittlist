@@ -2281,3 +2281,30 @@ button.ps-card { cursor: pointer; }
 }
 .mepho-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .mepho-actions .btn { width: auto; padding: 10px 18px; }
+
+/* ===========================================================
+   Tap feedback. Every screen is force-dynamic, so a tap is a real round
+   trip; without these the press state ends with the finger and nothing
+   happens until the next page paints.
+   =========================================================== */
+.disrow:active, .refrow:active, .feedav:active,
+.brandbar-home:active, .mempro-edit:active { background: var(--cl); }
+.disrow:active { transition: background 0s; }
+.feedav:active, .brandbar-home:active, .mempro-edit:active { background: transparent; opacity: .6; }
+
+/* The spinner a Link shows while its navigation is in flight. Delayed, so a
+   fast one looks instant instead of flashing. */
+@keyframes tapspin { to { transform: rotate(360deg); } }
+@keyframes tapspin-in { from { opacity: 0; } to { opacity: 1; } }
+.tapspin {
+  flex-shrink: 0; width: 15px; height: 15px; border-radius: 999px;
+  border: 2px solid var(--sa); border-top-color: var(--ink);
+  animation: tapspin .6s linear infinite, tapspin-in .12s linear .18s both;
+}
+/* On a tab it sits over the icon rather than widening the row. */
+.navtab { position: relative; }
+.tapspin-tab { position: absolute; top: 6px; left: 50%; margin-left: -7.5px; }
+.navtab .tapspin-tab + span, .navtab.on .tapspin-tab { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .tapspin { animation: tapspin-in .12s linear .18s both; }
+}

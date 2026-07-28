@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
+import { LinkPending } from "@/components/LinkPending";
 import { useToast, Toast } from "@/components/Toast";
 
 export type DiscoverCoach = {
@@ -147,6 +148,7 @@ export function DiscoverList({
                       : "No classes posted yet"}
                   </span>
                 </span>
+                <LinkPending />
               </Link>
               <button
                 type="button"

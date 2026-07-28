@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
@@ -27,16 +27,12 @@ export async function MemberProfileView({
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, user.email), isNull(schema.subscribers.optedOutAt)));
   const ids = [...new Set(followRows.map((r) => r.trainerUserId))].filter((id) => id !== user.id);
+  // One query, not one per coach: this ran on every profile view.
   const coaches = (
-    await Promise.all(
-      ids.map(async (id) => {
-        const [c] = await db.select().from(schema.users).where(eq(schema.users.id, id));
-        return c;
-      }),
-    )
+    ids.length ? await db.select().from(schema.users).where(inArray(schema.users.id, ids)) : []
   )
-    .filter((c) => c && c.handle && c.kind === "coach")
-    .sort((a, b) => a!.name.localeCompare(b!.name));
+    .filter((c) => c.handle && c.kind === "coach")
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const backTo =
     from === "discover"
@@ -101,25 +97,25 @@ export async function MemberProfileView({
           ) : (
             <div className="dislist">
               {coaches.map((c) => (
-                <div key={c!.id} className="disrow">
-                  <a className="disrow-main" href={`/${c!.handle}`}>
-                    {c!.photo ? (
+                <div key={c.id} className="disrow">
+                  <a className="disrow-main" href={`/${c.handle}`}>
+                    {c.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img className="disrow-av" src={c!.photo} alt="" />
+                      <img className="disrow-av" src={c.photo} alt="" />
                     ) : (
                       <span
                         className="disrow-av disrow-av-empty"
                         style={{ background: avatarColor(c!) }}
                         aria-hidden="true"
                       >
-                        {(c!.name.trim().charAt(0) || "?").toUpperCase()}
+                        {(c.name.trim().charAt(0) || "?").toUpperCase()}
                       </span>
                     )}
                     <span className="disrow-txt">
-                      <span className="nm">{c!.name}</span>
+                      <span className="nm">{c.name}</span>
                       <span className="sub">
-                        {[c!.title?.trim(), c!.location?.trim()].filter(Boolean).join(" · ") ||
-                          `fittlist.co/${c!.handle}`}
+                        {[c.title?.trim(), c.location?.trim()].filter(Boolean).join(" · ") ||
+                          `fittlist.co/${c.handle}`}
                       </span>
                     </span>
                   </a>

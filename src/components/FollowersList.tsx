@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { LinkPending } from "@/components/LinkPending";
 import { Toast, useToast } from "@/components/Toast";
 
 export type FollowerRow = {
@@ -92,6 +93,7 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
               {f.handle ? (
                 <Link className="disrow-main" href={`/${f.handle}?from=followers`}>
                   {inner}
+                  <LinkPending />
                 </Link>
               ) : (
                 <div className="disrow-main">{inner}</div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { LinkPending } from "@/components/LinkPending";
 
 // "none" is the account: reachable from either tab, and neither of them.
 export type NavTab = "following" | "discover" | "schedule" | "none";
@@ -57,6 +58,7 @@ export function NavBar({
             aria-current={active === t.id ? "page" : undefined}
           >
             {inner}
+            <LinkPending className="tapspin-tab" />
           </Link>
         );
       })}
