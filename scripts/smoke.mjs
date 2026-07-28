@@ -917,7 +917,7 @@ await page.goto(BASE + "/");
 await page.getByRole("button", { name: "Already have an account? Log in" }).click();
 await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
-await page.getByRole("button", { name: "Email me a magic link instead" }).click();
+await page.getByRole("button", { name: "Email me a magic link" }).click();
 await page.getByText("Check your inbox.").waitFor();
 await new Promise((r) => setTimeout(r, 400));
 const magicUrl = [...readLog().matchAll(/\/auth\/magic\?token=[a-f0-9]{64}/g)].pop()[0];

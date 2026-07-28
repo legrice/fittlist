@@ -392,21 +392,25 @@ export function AuthFlow({
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitPassword()}
             />
-            <button className="authmagic" onClick={() => sendLink(false)} disabled={pending}>
-              Email me a magic link instead
-            </button>
-            {/* Recovery, said in the words people look for. Same link, but
-                someone who never set a password won't find it under "magic". */}
+            {/* Recovery, said in the words people look for, and sitting where
+                the problem is — right under the field they can't fill in. */}
             {sheet === "login" && (
-              <button className="authmagic" onClick={() => sendLink(true)} disabled={pending}>
+              <button className="authforgot" onClick={() => sendLink(true)} disabled={pending}>
                 Forgot your password?
               </button>
             )}
-            {sheet === "login" && passkeyable && (
-              <button className="obalt" style={{ marginTop: 6 }} onClick={usePasskeyLogin} disabled={pending}>
-                <Icon name="fingerprint" size={19} /> Use a passkey
+            {/* The other ways in, both as buttons: they're alternatives to the
+                password, not footnotes about it. */}
+            <div className="obalts" style={{ marginTop: 14 }}>
+              <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
+                <Icon name="alternate_email" size={19} /> Email me a magic link
               </button>
-            )}
+              {sheet === "login" && passkeyable && (
+                <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
+                  <Icon name="fingerprint" size={19} /> Use a passkey
+                </button>
+              )}
+            </div>
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
             {inviteOnly && !invited && sheet === "signup" && (
               <button className="authmagic" onClick={openRequest}>

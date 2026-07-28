@@ -44,7 +44,7 @@ p1.setDefaultTimeout(15000);
 await p1.goto(BASE + "/");
 await p1.getByRole("button", { name: "Sign up with email" }).click();
 await p1.getByPlaceholder("you@example.com").fill("nopw@example.com");
-await p1.getByRole("button", { name: "Email me a magic link instead" }).click();
+await p1.getByRole("button", { name: "Email me a magic link" }).click();
 await p1.getByText("Check your inbox").waitFor();
 await p1.goto(BASE + lastMagic());
 await p1.getByText("Pick your link.").waitFor();
@@ -69,7 +69,7 @@ await p2.screenshot({ path: OUT + "/shot-nopw-error.png" });
 console.log("passwordless login explains itself ok");
 
 // the recovery path, in the words they'd look for
-await p2.locator(".sheet .authmagic", { hasText: "Forgot your password?" }).click();
+await p2.locator(".sheet .authforgot", { hasText: "Forgot your password?" }).click();
 await p2.getByText("Check your inbox").waitFor();
 if (!(await p2.getByText("set a new password").count()))
   fail("the reset copy should promise a password, not just a sign-in");
