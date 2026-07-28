@@ -1,12 +1,61 @@
 "use server";
 
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, isNotNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { sendInviteLink } from "@/lib/invite-link";
+import { normalizeLocation } from "@/lib/location";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Rewrite every stored location into the canonical "City, ST".
+//
+// Rows written before normalization existed still show up as separate chips in
+// Discover. Two passes on purpose: the first canonicalizes everything that
+// already names a state, and only then does the second try to snap a bare city
+// onto the set that produces. Doing it in one pass would match against a list
+// that's still half-messy.
+export async function adminFixLocations(): Promise<{
+  ok: boolean;
+  changed?: { from: string; to: string }[];
+  stuck?: { email: string; location: string }[];
+  error?: string;
+}> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const rows = await db
+    .select({ id: schema.users.id, email: schema.users.email, location: schema.users.location })
+    .from(schema.users)
+    .where(isNotNull(schema.users.location));
+
+  const target = new Map<string, string>();
+  const leftover: typeof rows = [];
+  for (const r of rows) {
+    const res = normalizeLocation(r.location);
+    if (res.ok && res.value) target.set(r.id, res.value);
+    else leftover.push(r);
+  }
+  const canonical = [...new Set(target.values())];
+  const stuck: { email: string; location: string }[] = [];
+  for (const r of leftover) {
+    const res = normalizeLocation(r.location, canonical);
+    if (res.ok && res.value) target.set(r.id, res.value);
+    else stuck.push({ email: r.email, location: r.location! });
+  }
+
+  const changed: { from: string; to: string }[] = [];
+  for (const r of rows) {
+    const to = target.get(r.id);
+    if (!to || to === r.location) continue;
+    await db.update(schema.users).set({ location: to }).where(eq(schema.users.id, r.id));
+    changed.push({ from: r.location!, to });
+  }
+  revalidatePath("/admin");
+  revalidatePath("/discover");
+  return { ok: true, changed, stuck };
+}
 
 // Add a studio straight to the shared directory from the admin panel.
 export async function adminAddStudio(

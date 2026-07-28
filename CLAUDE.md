@@ -59,13 +59,22 @@ node scripts/smoke.mjs            # the main end-to-end pass
 rm -rf .data/pglite
 FANS_ENABLED=true NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
 node scripts/invite-smoke.mjs     # the beta gate, invites, referrals
+
+rm -rf .data/pglite
+FANS_ENABLED=true NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
 node scripts/auth-smoke.mjs       # password recovery, the coach/follower choice
 
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/private-smoke.mjs    # public vs private classes
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/member-smoke.mjs     # a member's link, setup, profile and edits
 ```
+
+One reset per script, not per group: each claims the same handles and emails,
+so a second script on a used database trips over the first one's account.
 
 `NEXT_PUBLIC_ORIGIN=http://localhost:3000` matters for anything that follows an
 emailed link: without it the redirect points at fittlist.co and leaves the

@@ -7,6 +7,7 @@ import {
   adminAddStudio,
   adminDeleteStudio,
   adminDeleteUser,
+  adminFixLocations,
   adminInvite,
   adminSendMagicLink,
 } from "@/app/actions/admin";
@@ -169,12 +170,15 @@ export function AdminPanel({
         </div>
 
         {tab === "coaches" ? (
-          <div className="admincards">
-            {shownCoaches.map((c) => (
-              <CoachCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
-            ))}
-            {!shownCoaches.length && <p className="adminempty">No coaches match.</p>}
-          </div>
+          <>
+            <FixLocations toast={toast} />
+            <div className="admincards">
+              {shownCoaches.map((c) => (
+                <CoachCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
+              ))}
+              {!shownCoaches.length && <p className="adminempty">No coaches match.</p>}
+            </div>
+          </>
         ) : tab === "invites" ? (
           <>
             {requests.length > 0 && (
@@ -264,6 +268,90 @@ function Stat({ n, label }: { n: number; label: string }) {
     <div className="adminstat">
       <span className="adminstat-n">{n}</span>
       <span className="adminstat-l">{label}</span>
+    </div>
+  );
+}
+
+// The one-tap version of scripts/fix-locations.mjs.
+//
+// Locations written before normalization existed still show up as their own
+// chips in Discover, and the fix is a script the admin can't run from a phone.
+// Same code, a button instead. It prints what it rewrote so it's obvious what
+// happened, and names anyone it couldn't place rather than guessing.
+function FixLocations({ toast }: { toast: (m: string) => void }) {
+  const [pending, start] = useTransition();
+  const [res, setRes] = useState<{
+    changed: { from: string; to: string }[];
+    stuck: { email: string; location: string }[];
+  } | null>(null);
+
+  const run = () =>
+    start(async () => {
+      const r = await adminFixLocations();
+      if (!r.ok) {
+        toast(r.error ?? "Couldn't tidy locations");
+        return;
+      }
+      const changed = r.changed ?? [];
+      const stuck = r.stuck ?? [];
+      setRes({ changed, stuck });
+      toast(
+        changed.length
+          ? `Rewrote ${changed.length} ${changed.length === 1 ? "location" : "locations"}`
+          : "Nothing to change",
+      );
+    });
+
+  if (!res) {
+    return (
+      <button className="btn ghost adminaddbtn" disabled={pending} onClick={run}>
+        {pending ? "Tidying…" : "Tidy up locations"}
+      </button>
+    );
+  }
+
+  return (
+    <div className="adminaddform">
+      <div className="adminsec-h">Locations</div>
+      {!res.changed.length && !res.stuck.length && (
+        <p className="fixnote">Every location is already in the same shape.</p>
+      )}
+      {res.changed.length > 0 && (
+        <div className="fixlist">
+          {res.changed.map((c, i) => (
+            <div className="fixrow" key={`${c.from}>${c.to}>${i}`}>
+              <span className="fixrow-was">{c.from}</span>
+              <span className="fixrow-ar">→</span>
+              <span className="fixrow-now">{c.to}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {res.stuck.length > 0 && (
+        <>
+          <p className="fixnote">
+            These name a city with no state, and no city on the list matches, so they were
+            left alone. They will sort themselves out the next time each person saves their
+            profile.
+          </p>
+          <div className="fixlist">
+            {res.stuck.map((s, i) => (
+              <div className="fixrow" key={`${s.email}>${i}`}>
+                <span className="fixrow-kept">{s.location}</span>
+                <span className="fixrow-who">{s.email}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="adminaddform-row">
+        <button className="btn si" disabled={pending} onClick={run}>
+          {pending ? "Tidying…" : "Run again"}
+        </button>
+        <button className="linktoggle" disabled={pending} onClick={() => setRes(null)}>
+          Done
+        </button>
+      </div>
     </div>
   );
 }

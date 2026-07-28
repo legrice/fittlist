@@ -1667,6 +1667,21 @@ button.ps-card { cursor: pointer; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
 .adminsec-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
 
+/* What "Tidy up locations" rewrote: the old string, then the one it became. */
+.fixlist { display: flex; flex-direction: column; gap: 2px; }
+.fixrow {
+  display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+  padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13.5px;
+}
+.fixrow:last-child { border-bottom: none; }
+.fixrow-was { color: var(--ol); text-decoration: line-through; }
+.fixrow-ar { color: var(--ol); flex-shrink: 0; }
+.fixrow-now { font-weight: 700; }
+/* Left alone rather than rewritten, so no strike-through. */
+.fixrow-kept { color: var(--ink); }
+.fixrow-who { color: var(--ol); font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.fixnote { font-size: 13px; line-height: 1.45; color: var(--ol); margin: 12px 0 8px; }
+
 /* Who's bringing people in. Tapping a row searches the invites below for that
    name, so the roll-up and the detail are the same view. */
 .reflist {
