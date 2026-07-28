@@ -102,13 +102,19 @@ console.log("member profile ok (name, tagline, bio, who they train with)");
 await p.goto(BASE + "/you");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
 await p.getByRole("heading", { name: "Your profile" }).waitFor();
+// a bare city is refused: Discover groups by the exact string, so
+// "Jersey City" and "Jersey City, NJ" would be two chips for one place
 await p.locator("#meLoc").fill("Jersey City");
+await p.getByRole("button", { name: "Save profile" }).click();
+await p.locator(".sheet .errorcopy", { hasText: /Add the state/ }).waitFor();
+// and any spelling of it lands on one canonical form
+await p.locator("#meLoc").fill("jersey city new jersey");
 await p.screenshot({ path: OUT + "/shot-member-editor.png" });
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
-await p.getByText("Jersey City").waitFor();
-console.log("member profile edit ok");
+await p.getByText("Jersey City, NJ").waitFor();
+console.log("member profile edit ok (location normalized to City, ST)");
 await ctx.close();
 await b.close();
 console.log("MEMBER CHECKS PASSED");

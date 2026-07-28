@@ -218,13 +218,13 @@ export function MemberProfileEditor({
             />
 
             <label className="flabel" htmlFor="meLoc">
-              Where you train <span>· optional</span>
+              Where you train <span>· city and state, optional</span>
             </label>
             <input
               id="meLoc"
               className="editinput"
               maxLength={80}
-              placeholder="Jersey City"
+              placeholder="Jersey City, NJ"
               value={pLocation}
               onChange={(e) => setPLocation(e.target.value)}
             />

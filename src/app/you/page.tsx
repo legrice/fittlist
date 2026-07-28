@@ -39,7 +39,18 @@ export default async function YouPage({
   return (
     <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
       <div className="pad">
-        <AppHeader unread={unread} />
+        {/* The avatar stays put. Dropping it on the one screen you reach by
+            tapping it makes the header jump, and leaves you looking for the
+            thing you just used. */}
+        <AppHeader
+          unread={unread}
+          avatar={{
+            photo: me.photo,
+            color: avatarColor(me),
+            initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
+            href: "/you",
+          }}
+        />
         <div className="calbar-title">You</div>
         <MemberAccount
           name={me.name}
