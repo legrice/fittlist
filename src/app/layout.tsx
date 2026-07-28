@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { siteOrigin } from "@/lib/format";
+import { NavTrack } from "@/components/NavTrack";
 import { ScrollLock } from "@/components/ScrollLock";
 import "./globals.css";
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ScrollLock />
+        <NavTrack />
         {children}
       </body>
     </html>

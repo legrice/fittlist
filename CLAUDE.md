@@ -85,6 +85,10 @@ node scripts/desktop-smoke.mjs    # header links and the coach-rail arrows
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/series-smoke.mjs     # the same class at two studios is two classes
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/nav-smoke.mjs        # back pops instead of piling onto history
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -133,6 +137,15 @@ every navigation, which is the thing the layout exists to prevent.
 the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
+
+**A "back" control has to pop, not push.** `useSlideBack` checks `pageBeneath()`
+(a small path stack kept in sessionStorage by `NavTrack`) and calls
+`router.back()` when the page underneath is where the control points. Pushing
+unconditionally is what trapped people between a coach page and a class page:
+both link to each other, so every tap grew history and the browser button could
+only walk the pile. A coach's page answers to two URLs, `/{handle}` and
+`/{handle}/schedule`, because the tabs rewrite the URL in place without a
+navigation, so compare with `samePage()` rather than `===`.
 
 **Stacking contexts.** The account view is a positioned `z-40` layer and the tab
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab

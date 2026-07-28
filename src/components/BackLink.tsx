@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { pageBeneath, samePage } from "@/components/NavTrack";
 
 // A "back" navigation: slide the current page out to the right, uncovering
 // what's beneath, and flag the previous page to enter from the left — the
@@ -9,8 +10,21 @@ export function useSlideBack() {
   const router = useRouter();
   // No href means we don't know the destination by name — walk the history
   // instead, which is literally "where you tapped this from".
+  //
+  // With one, we pop if the page beneath is that destination and push if it
+  // isn't. Pushing unconditionally is what made the coach page and a class
+  // page trap you: both of them link to each other, so every "back" tap added
+  // a step and the browser button could only walk back through the pile.
   return (href?: string) => {
-    const go = () => (href ? router.push(href) : router.back());
+    const go = () => {
+      if (!href) return router.back();
+      const beneath = pageBeneath();
+      // A destination carrying a query string is a different screen from the
+      // bare one ("/app?acct=1" opens the account overlay), so it never counts
+      // as already being underneath.
+      if (beneath && !href.includes("?") && samePage(beneath, href)) return router.back();
+      router.push(href);
+    };
     if (typeof window !== "undefined") {
       sessionStorage.setItem("fl-nav", "back");
       const el = document.querySelector(".page-slide");
