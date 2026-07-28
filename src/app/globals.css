@@ -1972,16 +1972,17 @@ button.ps-card { cursor: pointer; }
   position: relative; overflow: hidden; touch-action: pan-y;
   user-select: none; -webkit-user-select: none;
 }
+/* The row slides left, so the action is revealed against the right edge. */
 .swipeact {
-  position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
-  padding: 0 18px; background: var(--go); color: #fff;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end;
+  gap: 8px; padding: 0 18px; background: var(--go); color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
   transition: opacity .12s ease;
 }
 /* Already going: the swipe takes it back, so it shouldn't look like a yes. */
 .swipeact.undo { background: var(--sa); color: var(--ink); }
 /* Past the commit point — the release will land. */
-.swipeact.armed { padding-left: 24px; }
+.swipeact.armed { padding-right: 24px; }
 .swipefront { position: relative; background: var(--paper); }
 /* :active is press feedback for a tap; while the row is being dragged it just
    tints the thing you're sliding. */
@@ -2052,11 +2053,13 @@ button.ps-card { cursor: pointer; }
 .swatch.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
 
 /* Marks a class you're going to, in the week of the coaches you follow. */
+/* Sits at the top of the time column, level with the coach's name. Green,
+   because it's the same yes the swipe gives. */
 .ps-goingtag {
-  margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--cl);
-  color: var(--ol); font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  align-self: flex-end; margin-bottom: 3px; padding: 2px 8px; border-radius: 999px;
+  background: var(--go); color: #fff; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
@@ -2086,15 +2089,6 @@ button.ps-card { cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* "Show going" narrows the week to what you committed to — a switch, because
-   it's a view you turn on and leave on, not a button you press. */
-.goingbar { display: flex; margin: 0 0 14px; }
-.goingtoggle {
-  display: flex; align-items: center; gap: 10px; margin-left: auto;
-  padding: 8px 12px 8px 16px; border-radius: 999px;
-  border: none; background: var(--cl-d); color: var(--ink); cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
-}
 
 /* ---- discover (the directory) ---- */
 .dissearch {

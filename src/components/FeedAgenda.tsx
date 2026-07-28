@@ -37,7 +37,6 @@ export type FeedDay = { iso: string; label: string; items: FeedItem[] };
 // tap to focus, tap again to clear.
 export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: FeedDay[] }) {
   const [sel, setSel] = useState<string | null>(null);
-  const [goingOnly, setGoingOnly] = useState(false);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
   const [swiped, setSwiped] = useState<Record<string, boolean>>({});
@@ -69,15 +68,8 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
   };
 
   const shown = days
-    .map((d) => ({
-      ...d,
-      items: d.items.filter(
-        (i) => (!sel || i.coachId === sel) && (!goingOnly || going[`${i.classId}|${d.iso}`]),
-      ),
-    }))
+    .map((d) => ({ ...d, items: d.items.filter((i) => !sel || i.coachId === sel) }))
     .filter((d) => d.items.length > 0);
-
-  const goingCount = Object.values(going).filter(Boolean).length;
 
   const avatar = (photo: string | null, name: string, cls: string, color: string) =>
     photo ? (
@@ -131,24 +123,6 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
         </div>
       )}
 
-      {/* One switch: the week, or just what you committed to. Sharing those
-          classes lives in your account, not on top of the week. */}
-      {goingCount > 0 && (
-        <div className="goingbar">
-          <button
-            type="button"
-            className={`goingtoggle${goingOnly ? " on" : ""}`}
-            aria-pressed={goingOnly}
-            onClick={() => setGoingOnly(!goingOnly)}
-          >
-            <span>Show going</span>
-            <span className={`switch${goingOnly ? " on" : ""}`} aria-hidden="true">
-              <span className="switch-knob" />
-            </span>
-          </button>
-        </div>
-      )}
-
       {shown.length === 0 ? (
         <div className="empty-block">
           <h2>Nothing coming up</h2>
@@ -188,13 +162,14 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                             {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
                             <span className="ps-ecoach-txt">{i.coachName}</span>
                           </span>
-                          <span className="ps-enm">
-                            {i.name}
-                            {on && <span className="ps-goingtag">Going</span>}
-                          </span>
+                          <span className="ps-enm">{i.name}</span>
                           {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
                         </span>
                         <span className="ps-etimecol">
+                          {/* Level with the coach's name, above the time — the
+                              row reads who, then when, and Going sits with the
+                              commitment rather than in the class title. */}
+                          {on && <span className="ps-goingtag">Going</span>}
                           <span className="ps-etime">
                             {i.hm}
                             <span className="ps-ap">{i.ap}</span>

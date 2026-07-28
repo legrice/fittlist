@@ -6,9 +6,10 @@ import { Icon } from "@/components/Icon";
 const OPEN = 78; // drag this far and the release commits
 const MAX = 120; // past here the row stops following your finger
 
-// Swipe a class row sideways to flip whether you're going. The panel behind
-// says what the release will do, so the gesture is never a guess: green and a
-// check when it will mark you going, muted and an x when it will clear it.
+// Swipe a class row right-to-left to flip whether you're going. The panel
+// revealed behind says what the release will do, so the gesture is never a
+// guess: green and a check when it will mark you going, muted and an x when it
+// will clear it.
 //
 // Pointer events rather than touch: one code path for finger, pen and mouse.
 // The first 10px of movement decide who owns the gesture — more horizontal
@@ -52,7 +53,8 @@ export function SwipeGoing({
       setDragging(true);
     }
     if (!s.own) return;
-    setDx(Math.max(0, Math.min(mx, MAX)));
+    // Leftwards only, so dx is negative and the panel is revealed on the right.
+    setDx(Math.max(-MAX, Math.min(mx, 0)));
   };
 
   const end = () => {
@@ -61,7 +63,7 @@ export function SwipeGoing({
     setDragging(false);
     if (s?.own) {
       swallowClick.current = true;
-      if (dx >= OPEN) onToggle();
+      if (dx <= -OPEN) onToggle();
     }
     setDx(0);
   };
@@ -85,8 +87,8 @@ export function SwipeGoing({
       }}
     >
       <div
-        className={`swipeact${going ? " undo" : ""}${dx >= OPEN ? " armed" : ""}`}
-        style={{ opacity: dx > 4 ? 1 : 0 }}
+        className={`swipeact${going ? " undo" : ""}${dx <= -OPEN ? " armed" : ""}`}
+        style={{ opacity: dx < -4 ? 1 : 0 }}
         aria-hidden="true"
       >
         <Icon name={going ? "close" : "check"} size={19} />

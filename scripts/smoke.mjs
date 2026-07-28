@@ -855,18 +855,17 @@ await fan.getByRole("button", { name: "You're going" }).waitFor();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
-await fan.locator(".goingbar").waitFor();
-// "Show going" narrows the week down to what they committed to
-await expect(
-  fan.locator(".goingtoggle").innerText().then((t) => t.trim() === "Show going"),
-  "the going filter reads Show going",
-);
-await fan.locator(".goingtoggle").click();
-const goingRows = await fan.locator(".feedagenda .ps-event").count();
-if (goingRows !== 1) fail(`Show going should show 1 row, got ${goingRows}`);
-await fan.locator(".goingtoggle").click();
+if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
+// the Going tag sits at the top of the time column, not in the class name
+{
+  const where = await fan
+    .locator(".feedagenda .ps-event.goingon")
+    .first()
+    .evaluate((e) => e.querySelector(".ps-goingtag")?.parentElement?.className ?? "");
+  if (!where.includes("ps-etimecol")) fail("Going tag should live in the time column: " + where);
+}
 
-// swiping a row sideways flips the same mark, without opening the class
+// swiping a row right-to-left flips the same mark, without opening the class
 {
   const row = fan.locator(".feedagenda .swiperow").nth(1);
   await row.locator(".ps-event").waitFor();
@@ -874,10 +873,11 @@ await fan.locator(".goingtoggle").click();
   if (wasGoing) fail("expected the second row to be unmarked before the swipe");
   const box = await row.boundingBox();
   const y = box.y + box.height / 2;
-  await fan.mouse.move(box.x + 20, y);
+  const from = box.x + box.width - 20;
+  await fan.mouse.move(from, y);
   await fan.mouse.down();
   // past the 78px commit point, in steps so the drag is decided as horizontal
-  for (const step of [35, 70, 100, 120]) await fan.mouse.move(box.x + 20 + step, y, { steps: 3 });
+  for (const step of [35, 70, 100, 120]) await fan.mouse.move(from - step, y, { steps: 3 });
   await fan.mouse.up();
   await row.locator(".ps-event.goingon .ps-goingtag").waitFor();
   // and it's on the server, not just in the tab
@@ -890,16 +890,17 @@ await fan.locator(".goingtoggle").click();
   const row2 = fan.locator(".feedagenda .swiperow").nth(1);
   const b2 = await row2.boundingBox();
   const y2 = b2.y + b2.height / 2;
-  await fan.mouse.move(b2.x + 20, y2);
+  const from2 = b2.x + b2.width - 20;
+  await fan.mouse.move(from2, y2);
   await fan.mouse.down();
-  for (const step of [35, 70, 100, 120]) await fan.mouse.move(b2.x + 20 + step, y2, { steps: 3 });
+  for (const step of [35, 70, 100, 120]) await fan.mouse.move(from2 - step, y2, { steps: 3 });
   await fan.mouse.up();
   await row2.locator(".ps-event.goingon").waitFor({ state: "detached" });
   await fan.reload();
   const after = await fan.locator(".feedagenda .ps-event.goingon").count();
   if (after !== 1) fail(`swiping back should leave 1 marked, got ${after}`);
 }
-console.log("swipe to mark going ok (both ways, survives reload)");
+console.log("swipe to mark going ok (right-to-left, both ways, survives reload)");
 
 // the share image renders from their attendance, not a coach's schedule
 const myStory = await fan.request.get(`${BASE}/api/story/me?theme=paper`);
@@ -999,9 +1000,10 @@ await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor
   await mine.locator(".ps-event").waitFor();
   const box = await mine.boundingBox();
   const y = box.y + box.height / 2;
-  await page.mouse.move(box.x + 20, y);
+  const from = box.x + box.width - 20;
+  await page.mouse.move(from, y);
   await page.mouse.down();
-  for (const s of [35, 70, 100, 120]) await page.mouse.move(box.x + 20 + s, y, { steps: 3 });
+  for (const s of [35, 70, 100, 120]) await page.mouse.move(from - s, y, { steps: 3 });
   await page.mouse.up();
   await page.locator(".toast.on", { hasText: "You aren’t able to attend your own class" }).waitFor();
   if (await mine.locator(".ps-event.goingon").count())
