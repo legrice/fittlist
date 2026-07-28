@@ -510,6 +510,16 @@ console.log("profile + schedule tabs + event pages ok");
   await subPage.locator("#ntEmail").fill("fan@example.com");
   await subPage.getByRole("button", { name: "Add me to the list" }).click();
   await subPage.getByText("You're on Matt's list").waitFor();
+  // They got what they came for first; the account is offered on the way out,
+  // not asked for at the moment they said yes.
+  // the heading uses a curly apostrophe, the toast a straight one
+  await subPage.getByRole("heading", { name: /on Matt.s list/ }).waitFor();
+  await expect(
+    subPage.locator(".sheet .lead").textContent().then((t) => t.includes("still in beta")),
+    "the account offer keeps the beta framing",
+  );
+  await subPage.getByRole("button", { name: "Maybe later — just email me" }).click();
+  await subPage.waitForFunction(() => !document.querySelector(".sheet"));
   await expect(subPage.locator(".followpill").textContent().then((t) => t.trim() === "On the list"), "cta flips to subscribed");
 
   await subPage.locator(".followpill").click();
@@ -518,7 +528,30 @@ console.log("profile + schedule tabs + event pages ok");
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
   await subCtx.close();
 }
-console.log("subscribe ok (manage sheet has Unsubscribe)");
+{
+  const upCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (smoke upgrade bot)",
+  });
+  const up = await upCtx.newPage();
+  up.setDefaultTimeout(10000);
+  await up.goto(BASE + "/matt");
+  await up.locator(".pubhead .followpill").click();
+  await up.locator("#ntEmail").fill("upgrade@example.com");
+  await up.getByRole("button", { name: "Add me to the list" }).click();
+  await up.locator("#ntPw").fill("upgrade-pass-123");
+  await up.getByRole("button", { name: "Create my account" }).click();
+  // signed in, and the subscribe they just made already reads as a follow
+  await up.locator(".followpill", { hasText: "Following" }).waitFor({ timeout: 20000 });
+  await up.goto(BASE + "/feed");
+  await up.locator(".feedagenda .ps-event").first().waitFor();
+  // leave the fixture as we found it — later assertions count Matt's followers
+  await up.goto(BASE + "/matt");
+  await up.locator(".followpill", { hasText: "Following" }).click();
+  await up.locator(".followpill", { hasText: /^Follow$/ }).waitFor();
+  await upCtx.close();
+}
+console.log("subscribe ok (offer an account after, not before)");
 
 // ---- 404 for unclaimed handle
 const r = await page.goto(BASE + "/nobodyhere");
@@ -550,7 +583,9 @@ await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
-await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).isVisible(), "follow notification listed");
+// more than one person followed by now, so take the first rather than
+// tripping strict mode
+await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().isVisible(), "follow notification listed");
 await page.locator(".updateseg button", { hasText: "Messages" }).click();
 await page.getByText("No messages yet", { exact: false }).waitFor();
 await page.locator(".updateseg button", { hasText: "Notifications" }).click();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { passwordAuth } from "@/app/actions/auth";
 import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -12,13 +13,21 @@ export function NotifyCta({
   trainerName,
   handle,
   account = null,
+  canSignUp = false,
 }: {
   trainerName: string;
   handle: string;
   // Signed-in viewer (fan side): one-tap follow instead of the email sheet.
   account?: { following: boolean } | null;
+  // Member signups are open, so a fresh subscriber can be offered an account.
+  canSignUp?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Shown right after a successful subscribe: they've already given the email
+  // and got what they came for, so the account is an upgrade rather than a
+  // toll gate. Asking before would be a question at the moment they said yes.
+  const [offerAccount, setOfferAccount] = useState(false);
+  const [password, setPassword] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [following, setFollowing] = useState(account?.following ?? false);
   const [email, setEmail] = useState("");
@@ -69,8 +78,29 @@ export function NotifyCta({
         return;
       }
       setSubscribed(true);
-      setOpen(false);
+      if (canSignUp) {
+        setPassword("");
+        setOfferAccount(true);
+      } else {
+        setOpen(false);
+      }
       toast(`You're on ${firstName}'s list`);
+    });
+  };
+
+  const createAccount = () => {
+    startTransition(async () => {
+      setError("");
+      const res = await passwordAuth(email, password, true);
+      if (!res.ok) {
+        setError(res.error ?? "Something went wrong.");
+        return;
+      }
+      // A full reload rather than router.refresh(): they've gone from visitor
+      // to member, which changes what the whole page renders — the chrome, the
+      // footer, and this button's own starting state. Re-rendering the server
+      // components alone would leave the client state behind.
+      window.location.reload();
     });
   };
 
@@ -109,7 +139,54 @@ export function NotifyCta({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
               <Icon name="close" size={16} />
             </button>
-            {subscribed ? (
+            {offerAccount ? (
+              <>
+                <h2 style={{ marginTop: 10 }}>You&rsquo;re on {firstName}&rsquo;s list</h2>
+                <p className="lead">
+                  We&rsquo;re still in beta, and we&rsquo;re glad you want to follow {firstName}.
+                  Grab an account while you&rsquo;re here — every coach you follow lands in one
+                  week, and you can mark the classes you&rsquo;re going to.
+                </p>
+                <label className="flabel" htmlFor="ntPw">
+                  Pick a password <span>· for {email}</span>
+                </label>
+                <input
+                  type="password"
+                  id="ntPw"
+                  className="editinput"
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && createAccount()}
+                />
+                {error && (
+                  <p className="empty" style={{ paddingBottom: 0 }}>
+                    {error}
+                  </p>
+                )}
+                <div className="publishwrap">
+                  <button
+                    className="btn si"
+                    disabled={pending || password.length < 8}
+                    onClick={createAccount}
+                  >
+                    {pending ? "One sec…" : "Create my account"}
+                  </button>
+                  <button
+                    className="tertiary"
+                    style={{ display: "block", margin: "10px auto 0" }}
+                    disabled={pending}
+                    onClick={() => {
+                      setOfferAccount(false);
+                      setOpen(false);
+                    }}
+                  >
+                    Maybe later — just email me
+                  </button>
+                </div>
+              </>
+            ) : subscribed ? (
               <>
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on the list</h2>
                 <p className="lead">

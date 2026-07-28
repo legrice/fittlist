@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
 import { fmtTime, runsOn, siteOrigin, timeToMinutes } from "@/lib/format";
+import { fansEnabled } from "@/lib/flags";
 
 // All list email goes through here - the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
@@ -118,13 +119,22 @@ export async function sendWeeklyDigestForTrainer(
   if (!body) return 0; // nothing on the calendar this week — don't send
 
   const url = `fittlist.co/${trainer.handle}`;
+  // Everyone on this list subscribed by email and has no account (account
+  // follows get the merged digest instead), so every week is another chance to
+  // offer them one — at a point where they've already felt the value.
+  const joinNudge = fansEnabled()
+    ? `\n\nFollowing more than one coach? An account puts them all in one week: ${siteOrigin()}/`
+    : "";
   for (const sub of subs) {
     const unsub = await unsubFooter(sub.id);
     await sendMessage({
       to: sub.email,
       kind: "weekly_schedule",
       subject: `${trainer.name}'s classes this week`,
-      text: `${trainer.name}'s schedule this week:\n\n${body}\n\nFull schedule & booking: ${url}` + unsub.text,
+      text:
+        `${trainer.name}'s schedule this week:\n\n${body}\n\nFull schedule & booking: ${url}` +
+        joinNudge +
+        unsub.text,
       headers: unsub.headers,
     });
   }

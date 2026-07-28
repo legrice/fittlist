@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fansVisible } from "@/lib/flags";
+import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
@@ -329,7 +329,12 @@ export async function PublicProfileView({
           action={
             // The owner previewing their own page has nobody to follow.
             !isOwner ? (
-              <NotifyCta trainerName={user.name} handle={handle} account={account} />
+              <NotifyCta
+                trainerName={user.name}
+                handle={handle}
+                account={account}
+                canSignUp={fansEnabled()}
+              />
             ) : null
           }
           avail={
