@@ -17,6 +17,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -360,6 +361,7 @@ export function ProfileSheet({
               member's move — a coach's share is their own schedule. */}
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
+          <InstallApp />
           {canSendFeedback && (
             <a className="setrow setrow-hi" href="/feedback">
               <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>

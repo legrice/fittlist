@@ -4,6 +4,7 @@ import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Icon } from "@/components/Icon";
+import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
@@ -112,6 +113,7 @@ export function MemberAccount({
       <div className="settingslist">
         <StartCoaching handle={handle} />
         <InviteFriends />
+        <InstallApp />
         {canSendFeedback && (
           <a className="setrow setrow-hi" href="/feedback">
             <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
