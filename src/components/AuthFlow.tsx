@@ -243,7 +243,7 @@ export function AuthFlow({
                   Not studios.
                 </h1>
                 <p>
-                  Follow your favorite coaches and see every class they teach in one place.
+                  Coaches share one schedule. Members follow once and never miss a class.
                 </p>
               </>
             ) : (
