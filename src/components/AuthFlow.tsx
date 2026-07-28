@@ -95,6 +95,15 @@ export function AuthFlow({
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
   }, []);
+  // Arriving from a coach's page with a door already chosen: "?join=login"
+  // opens the log-in sheet, "?join=signup" the sign-up one. Tapping Log in on
+  // a profile and landing on the marketing page would just be a second tap.
+  useEffect(() => {
+    const join = search.get("join");
+    if (join === "login" || join === "signup") setSheet(join);
+    // Read once on arrival; changing the sheet afterwards is the user's job.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (stage === "claim") nameRef.current?.focus();
   }, [stage]);

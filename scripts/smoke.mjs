@@ -765,6 +765,33 @@ console.log("second coach has a class ok");
 await openProfile(page);
 const vis1 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
 if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch), got " + vis1);
+
+// A visitor lands knowing whose app this is and how to get in. The footer line
+// asks coaches to claim a page; this asks the person reading to join. Its own
+// context, and after the view count above, because every load here is a visit.
+{
+  const look = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const lp = await look.newPage();
+  lp.setDefaultTimeout(10000);
+  await lp.goto(BASE + "/matt");
+  const bar = lp.locator(".pubtop");
+  await bar.waitFor();
+  if (!(await bar.locator(".wordmark").isVisible()))
+    fail("no wordmark on a visitor's view of a profile");
+  const hrefs = await bar.locator("a").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  if (!hrefs.every((h) => h.includes("via=matt")))
+    fail(`a header link drops the coach's credit: ${JSON.stringify(hrefs)}`);
+  // The chosen door opens on arrival rather than dropping them on the pitch.
+  await bar.getByText("Sign up").click();
+  await lp.waitForURL(/join=signup/);
+  await lp.getByRole("heading", { name: "Sign up with email" }).waitFor();
+  await lp.goto(BASE + "/matt?x=1");
+  await lp.locator(".pubtop").getByText("Log in").click();
+  await lp.waitForURL(/join=login/);
+  await lp.getByRole("heading", { name: "Log in" }).waitFor();
+  await look.close();
+  console.log("visitor header ok (wordmark, both doors, credit kept)");
+}
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat labelled");
 console.log("visit stats ok");
 

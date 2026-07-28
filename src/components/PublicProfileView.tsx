@@ -15,6 +15,7 @@ import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
 
 const WINDOW_DAYS = 31; // a continuous forward window — about a month
@@ -314,6 +315,9 @@ export async function PublicProfileView({
         />
       )}
       <div className="profwrap">
+        {/* A visitor needs to know where they are and how to join. Someone
+            signed in has both already, and gets the back arrow instead. */}
+        {!signedIn && !isOwner && <PublicTopBar handle={handle} />}
         <ProfileTabs
           handle={handle}
           initialTab={initialTab}

@@ -1187,6 +1187,23 @@ button.ps-card { cursor: pointer; }
    away between them (hidden behind the name row). */
 /* The arrow sits on its own line above the name — sharing the row squeezed a
    long name between two controls. */
+/* The visitor's bar on a coach's page: whose app this is, and the way in.
+   Deliberately not sticky. The name and Follow row below it already pins, and
+   two stacked bars on a phone is most of the screen gone. */
+.pubtop {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 18px;
+}
+.pubtop-home { display: inline-flex; text-decoration: none; }
+.pubtop-wm { font-size: 19px; }
+.pubtop-act { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pubtop-login {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  color: var(--ol); text-decoration: none; padding: 9px 10px; border-radius: 999px;
+}
+.pubtop-login:active { background: var(--cl); }
+.pubtop-join { width: auto; padding: 9px 16px; font-size: 14px; }
+
 .pubhead {
   position: sticky; top: 0; z-index: 6; background: var(--paper);
   display: flex; flex-direction: column; align-items: stretch; gap: 8px;
