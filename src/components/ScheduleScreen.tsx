@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
@@ -13,7 +14,6 @@ import { ProfileSheet } from "@/components/ProfileSheet";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
-import { Wordmark } from "@/components/Wordmark";
 
 const INITIAL_WEEKS = 4;
 const MAX_WEEKS = 52;
@@ -221,46 +221,27 @@ export function ScheduleScreen({
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
-        <div className="brandbar">
-          <Wordmark variant="ink" beta />
-          <div className="brandbar-actions">
-            <Link
-              className="iconbtn inboxbtn"
-              aria-label={`Updates${updatesUnread ? `, ${updatesUnread} unread` : ""}`}
-              href="/updates"
-            >
-              <Icon name="notifications" size={20} />
-              {updatesUnread > 0 && <span className="inboxdot">{updatesUnread > 9 ? "9+" : updatesUnread}</span>}
-            </Link>
-            <button
-              className="usericon"
-              aria-label="My page"
-              onClick={() => {
-                setAcctAnim("up");
-                setProfileOpen(true);
-              }}
-            >
-              {photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="usericon-photo" src={photo} alt="" />
-              ) : (
-                <span
-                  className="usericon-initial"
-                  style={{ background: avatarColor({ id: userId, avatarColor: myColor }) }}
-                  aria-hidden="true"
-                >
-                  {(name.trim().charAt(0) || "?").toUpperCase()}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-        {/* Dashboard strip: one-tap links to the actions coaches reach for
-            most. (Stats live on the account page for now.) */}
-        <div className="dashstrip">
-          {/* Without the bottom nav these have nowhere else to live. With it,
-              only Share cal remains and it moves up beside the title. */}
-          {!showFanView && (
+        <AppHeader
+          unread={updatesUnread}
+          avatar={
+            showFanView
+              ? undefined
+              : {
+                  photo,
+                  color: myAccent,
+                  initial: (name.trim().charAt(0) || "?").toUpperCase(),
+                  onClick: () => {
+                    setAcctAnim("up");
+                    setProfileOpen(true);
+                  },
+                }
+          }
+        />
+
+        {/* Without the bottom nav these have nowhere else to live. With it,
+            only Share cal remains and it moves up beside the title. */}
+        {!showFanView && (
+          <div className="dashstrip">
             <div className="dashlinks">
               <button className="dashlink" onClick={() => setShareOpen(true)}>
                 <Icon name="calendar_today" size={19} />
@@ -275,8 +256,8 @@ export function ScheduleScreen({
                 <span>QR code</span>
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="pagehead">
           <div className="calbar-title">Your schedule</div>
@@ -365,6 +346,9 @@ export function ScheduleScreen({
       {showFanView && (
         <NavBar
           active={profileOpen ? "you" : "schedule"}
+          photo={photo}
+          color={myAccent}
+          initial={(name.trim().charAt(0) || "?").toUpperCase()}
           onSchedule={() => setProfileOpen(false)}
           onYou={() => {
             setAcctAnim("up");

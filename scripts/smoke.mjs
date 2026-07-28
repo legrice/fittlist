@@ -29,7 +29,7 @@ const waitSchedule = (pg, n, timeout = 10000) =>
 // The account page is a full-screen view reached from the header avatar.
 const openProfile = async (pg) => {
   await pg.goto(BASE + "/app");
-  await pg.locator(".usericon").click();
+  await pg.locator(".navtab", { hasText: "You" }).click();
   await pg.locator(".acctwrap").waitFor();
 };
 
@@ -181,10 +181,10 @@ console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- account page: full-screen view reached from the header avatar
 await expect(
-  page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
+  page.locator(".navtab .navav-empty").filter({ hasText: "M" }).isVisible(),
   "header shows avatar (initial fallback)",
 );
-await page.locator(".usericon").click();
+await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
 await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
@@ -256,7 +256,7 @@ console.log("schedule tools ok (share stays, the rest moved under You)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
 // the public page (visitors see it too — it's a server-rendered attribute).
-await page.locator(".usericon").click();
+await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".acctwrap").waitFor();
 await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -268,7 +268,7 @@ await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'
 console.log("dark page look ok (app + public)");
 // back to light for the rest of the run
 await page.goto(BASE + "/app");
-await page.locator(".usericon").click();
+await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".acctwrap").waitFor();
 await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -287,7 +287,7 @@ if (lightOk) {
   await page.reload();
   await page.getByText("Your schedule").waitFor();
   if (await page.locator('.appshell[data-mode="dark"]').count()) {
-    await page.locator(".usericon").click();
+    await page.locator(".navtab", { hasText: "You" }).click();
     await page.locator(".acctwrap").waitFor();
     await page.waitForTimeout(450);
     await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -739,12 +739,11 @@ await fan.getByPlaceholder("Password").fill("smoke-pass-fan");
 await fan.getByRole("button", { name: "Create account" }).click();
 // fans skip the invite gate, the handle claim, AND the passkey offer: the
 // cookie-set rerender redirects them straight to the feed
-await fan.locator(".calbar-title", { hasText: "Your week" }).waitFor();
 await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-await fan.locator(".calbar-title", { hasText: "Find coaches" }).waitFor();
+await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
@@ -865,7 +864,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Find coaches" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
-await fan.locator(".calbar-title", { hasText: "Find coaches" }).waitFor();
+await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -897,9 +896,11 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Following" }).click();
-await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
-await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
+await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".feedstrip").waitFor();
+await page.locator(".navtab.on", { hasText: "Home" }).waitFor();
+await page.locator(".navtab", { hasText: "Discover" }).click();
+await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
 // You opens the account view with the bar still under it
@@ -916,7 +917,7 @@ console.log("coach following ok (separate from their schedule, never public)");
 // a coach can walk the member side from settings while the flag is dark
 await openProfile(page);
 await page.locator(".setrow", { hasText: "Your week" }).click();
-await page.locator(".calbar-title", { hasText: "Your week" }).waitFor();
+await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".pageaction", { hasText: "Share cal" }).waitFor();
 console.log("coach fan-view preview ok");

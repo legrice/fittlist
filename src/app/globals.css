@@ -1914,6 +1914,10 @@ button.ps-card { cursor: pointer; }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.
    Only the coach shell, only once the member side is on. */
+.screen.hasnav .pad, .screen .pad.feedpad {
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 660px; margin: 0 auto;
+}
 .navbar {
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
@@ -1927,12 +1931,26 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
 .navtab.on { color: var(--ink); }
+/* Your face is the You tab. Dim until it's the current one. */
+.navav {
+  width: 22px; height: 22px; border-radius: 999px; object-fit: cover; display: block;
+  background: #eae3d2; opacity: .55; transition: opacity .12s;
+}
+.navav-empty {
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11px;
+}
+.navtab.on .navav { opacity: 1; box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--ink); }
 .navtab:active { background: var(--cl); }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .hasnav .acctwrap { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
-@media (min-width: 940px) { .navbar { display: none; } }
+@media (min-width: 940px) { .screen.hasnav .pad, .screen .pad.feedpad {
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  width: 100%; max-width: 660px; margin: 0 auto;
+}
+.navbar { display: none; } }
 
 /* Avatar colour picker: sixty swatches, so a photo-less coach is still
    recognisable at a glance in a list of five. */

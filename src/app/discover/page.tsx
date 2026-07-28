@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
+import { unreadNotifications } from "@/lib/notify";
 import { timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
+import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
-import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function DiscoverPage() {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
+  const unread = await unreadNotifications(userId);
   const rows = await db
     .select()
     .from(schema.users)
@@ -98,17 +100,15 @@ export default async function DiscoverPage() {
 
   return (
     <section
-      className={`screen admin${me.handle ? " hasnav" : ""}`}
+      className={`screen${me.handle ? " hasnav" : ""}`}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
-        <div className="brandbar feedbar">
-          <Wordmark variant="ink" beta />
-        </div>
-        <div className="calbar-title">Find coaches</div>
+        <AppHeader unread={unread} />
+        <div className="calbar-title">Discover</div>
         <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
       </div>
-      {me.handle && <NavBar active="following" />}
+      {me.handle && <NavBar active="discover" photo={me.photo} color={avatarColor(me)} initial={(me.name.trim().charAt(0) || "?").toUpperCase()} />}
     </section>
   );
 }

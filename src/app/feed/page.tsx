@@ -4,13 +4,13 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
+import { unreadNotifications } from "@/lib/notify";
 import { logout } from "@/app/actions/auth";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
-import { Icon } from "@/components/Icon";
+import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
-import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +54,7 @@ export default async function FeedPage() {
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
   // Classes this member marked "I'm going" to — a personal note, not a booking.
+  const unread = await unreadNotifications(userId);
   const goingRows = await db
     .select({
       classId: schema.attendances.classId,
@@ -103,21 +104,11 @@ export default async function FeedPage() {
 
   return (
     <section
-      className={`screen admin${me.handle ? " hasnav" : ""}`}
+      className={`screen${me.handle ? " hasnav" : ""}`}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
-        <div className="brandbar feedbar">
-          <Wordmark variant="ink" beta />
-        </div>
-        <div className="pagehead">
-          <div className="calbar-title">Your week</div>
-          {coaches.length > 0 && (
-            <Link className="pageaction" href="/discover">
-              <Icon name="search" size={17} /> Find coaches
-            </Link>
-          )}
-        </div>
+        <AppHeader unread={unread} />
 
         {coaches.length === 0 ? (
           <div className="empty-block">
@@ -153,7 +144,7 @@ export default async function FeedPage() {
           </form>
         )}
       </div>
-      {me.handle && <NavBar active="following" />}
+      {me.handle && <NavBar active="home" photo={me.photo} color={avatarColor(me)} initial={(me.name.trim().charAt(0) || "?").toUpperCase()} />}
     </section>
   );
 }
