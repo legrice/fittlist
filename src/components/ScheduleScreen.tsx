@@ -323,7 +323,7 @@ export function ScheduleScreen({
 
       {hasAnyClass && !adder.open && (
         <button className="fab" aria-label="Add class" onClick={() => setAdder({ open: true })}>
-          +
+          <Icon name="add" size={26} />
         </button>
       )}
 
