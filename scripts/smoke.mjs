@@ -782,6 +782,27 @@ await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor();
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
+// the rail only carries coaches with something in the week — a chip that can
+// only ever empty the screen doesn't belong there
+{
+  const chips = (await fan.locator(".feedav-nm").allInnerTexts())
+    .map((t) => t.trim())
+    .filter((t) => t !== "All");
+  const inWeek = await fan.locator(".feedagenda .ps-ecoach-txt").allInnerTexts();
+  for (const nm of chips)
+    if (!inWeek.some((c) => c.trim().startsWith(nm)))
+      fail(`${nm} is on the rail with no classes in the week`);
+}
+// each row reads coach, then class, then studio
+{
+  const order = await fan
+    .locator(".feedagenda .ps-event")
+    .first()
+    .locator(".ps-ebody > *")
+    .evaluateAll((els) => els.map((e) => e.className.split(" ")[0]));
+  if (order[0] !== "ps-ecoach" || order[1] !== "ps-enm")
+    fail("agenda row should read coach, then class name: " + order.join(","));
+}
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
 // photo-less coaches must be visually distinct — that's the whole point of the

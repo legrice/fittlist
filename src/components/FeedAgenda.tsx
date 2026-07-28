@@ -66,6 +66,8 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
 
   return (
     <>
+      {/* No coach has anything coming up, so there is nothing to filter. */}
+      {coaches.length > 0 && (
       <div className={`feedstrip${sel ? " hassel" : ""}`}>
         {/* "All" clears the filter — the way back to the merged week without
             having to remember which avatar is currently selected. */}
@@ -76,7 +78,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
           onClick={() => setSel(null)}
         >
           <span className="feedav-img feedav-all" aria-hidden="true">
-            <Icon name="groups" size={26} />
+            <Icon name="groups" size={30} />
           </span>
           <span className="feedav-nm">All</span>
         </button>
@@ -93,6 +95,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
           </button>
         ))}
       </div>
+      )}
 
       {selCoach && (
         <div className="feedfilterbar">
@@ -145,21 +148,19 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                       style={{ background: i.coachColor }}
                       aria-hidden="true"
                     />
+                    {/* Who first, then what, then where — on a merged week the
+                        coach is how you place the class. */}
                     <span className="ps-ebody">
-                        <span className="ps-enm">
-                          {i.name}
-                          {going[`${i.classId}|${d.iso}`] && (
-                            <span className="ps-goingtag">Going</span>
-                          )}
-                        </span>
-                        <span className="ps-estudio ps-ecoach">
-                          {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
-                          <span className="ps-ecoach-txt">
-                            {i.coachName.trim().split(/\s+/)[0]}
-                            {i.where ? ` · ${i.where}` : ""}
-                          </span>
-                        </span>
+                      <span className="ps-ecoach">
+                        {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
+                        <span className="ps-ecoach-txt">{i.coachName}</span>
                       </span>
+                      <span className="ps-enm">
+                        {i.name}
+                        {going[`${i.classId}|${d.iso}`] && <span className="ps-goingtag">Going</span>}
+                      </span>
+                      {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
+                    </span>
                     <span className="ps-etimecol">
                       <span className="ps-etime">
                         {i.hm}

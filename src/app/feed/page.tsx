@@ -102,6 +102,11 @@ export default async function FeedPage() {
     }
   }
 
+  // The rail filters the week, so a coach with nothing in it is a chip that
+  // can only ever empty the screen. They stay followed — just not on the rail.
+  const withClasses = new Set(days.flatMap((d) => d.items.map((i) => i.coachId)));
+  const railCoaches = coaches.filter((c) => withClasses.has(c.id));
+
   return (
     <section
       className={`screen${me.handle ? " hasnav" : ""}`}
@@ -131,7 +136,7 @@ export default async function FeedPage() {
           </div>
         ) : (
           <FeedAgenda
-            coaches={coaches.map((c) => ({
+            coaches={railCoaches.map((c) => ({
               id: c.id,
               handle: c.handle!,
               name: c.name,
