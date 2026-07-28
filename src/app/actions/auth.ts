@@ -380,9 +380,13 @@ export async function claimProfile(
   if (taken && taken.id !== userId) {
     return { ok: false, error: `fittlist.co/${chosen} is taken. Try another.` };
   }
+  // Claiming a handle is what makes someone a coach — a member who decides to
+  // post their own classes comes through here too, and stops being a "fan" the
+  // moment they do. Following, going marks and their week all carry over; the
+  // kind only decides where the app opens and what chrome they get.
   await db
     .update(schema.users)
-    .set({ name, handle: chosen, ...(signupSource ? { signupSource } : {}) })
+    .set({ name, handle: chosen, kind: "coach", ...(signupSource ? { signupSource } : {}) })
     .where(eq(schema.users.id, userId));
   return { ok: true, handle: chosen };
 }

@@ -5,6 +5,7 @@ import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Icon } from "@/components/Icon";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
+import { StartCoaching } from "@/components/StartCoaching";
 
 // A member's account. Smaller than a coach's by design: they have no public
 // page, no QR code, no stats — just who they are, the classes they marked
@@ -66,6 +67,11 @@ export function MemberAccount({
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
         </button>
+      </div>
+
+      {/* The member side is the front door; coaching is a door off it. */}
+      <div className="settingslist">
+        <StartCoaching name={name} />
       </div>
 
       <div className="settingslist">

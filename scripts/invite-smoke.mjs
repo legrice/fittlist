@@ -107,6 +107,24 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     if (await pg.getByText("Invite-only beta").count())
       fail("a member signup should never hit the invite wall");
     console.log("member signup ok (no invite needed)");
+
+    // 5) And a member can become a coach later, without an invite either: the
+    // account offers it, the claim runs the same flow, and they land in setup.
+    await pg.goto(BASE + "/you");
+    await pg.locator(".memberid").waitFor();
+    await pg.locator(".setrow", { hasText: "Post your own classes" }).click();
+    await pg.getByRole("heading", { name: "Post your own classes" }).waitFor();
+    await pg.locator("#scName").fill("Member Turned Coach");
+    await pg.locator("#scHandle").fill("membercoach");
+    await pg.getByRole("button", { name: "Claim it" }).click();
+    // straight into the setup wizard, never the invite wall
+    await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
+    await pg.getByRole("button", { name: "Skip for now" }).click();
+    await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
+    // and their page is live at the link they picked
+    const claimed = await pg.request.get(`${BASE}/membercoach`);
+    if (!claimed.ok()) fail("the claimed page should be live");
+    console.log("member -> coach ok (no invite, lands in setup)");
   } else {
     console.log("member signup skipped — FANS_ENABLED is not true");
   }
