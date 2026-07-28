@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { claimProfile } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
+import { LocationInput } from "@/components/LocationInput";
 import { slug } from "@/lib/format";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -220,14 +221,7 @@ export function MemberProfileEditor({
             <label className="flabel" htmlFor="meLoc">
               Where you train <span>· city and state, optional</span>
             </label>
-            <input
-              id="meLoc"
-              className="editinput"
-              maxLength={80}
-              placeholder="Jersey City, NJ"
-              value={pLocation}
-              onChange={(e) => setPLocation(e.target.value)}
-            />
+            <LocationInput id="meLoc" value={pLocation} onChange={setPLocation} />
 
             <label className="flabel" htmlFor="meAbout">
               About <span>· optional</span>

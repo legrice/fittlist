@@ -96,6 +96,12 @@ and the tab bar once, and `loading.tsx` sits under it so a tab that's still
 loading keeps its chrome. Put them back in the pages and the bar unmounts on
 every navigation, which is the thing the layout exists to prevent.
 
+**Locations are one string per place.** Discover groups by the exact value, so
+`normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
+the cities already in use. A bare city snaps onto its only match; with two
+matches it asks which, and with none it asks for the state. Adding another
+place that writes `users.location` means passing `knownLocations()` in too.
+
 **Stacking contexts.** The account view is a positioned `z-40` layer and the tab
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`

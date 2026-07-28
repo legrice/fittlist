@@ -6,6 +6,7 @@ import { getDb, schema } from "@/db";
 import { AVATAR_COLORS } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
 import { normalizeLocation } from "@/lib/location";
+import { knownLocations } from "@/app/actions/locations";
 
 // Instagram: accept a handle, an @handle, or a full URL - store the bare handle.
 function normalizeInstagram(raw: string): string | null {
@@ -90,7 +91,7 @@ export async function updateProfile(input: {
   const title = input.title.trim().slice(0, 80);
   const about = input.about.trim().slice(0, 600);
   // One canonical "City, ST" per place, so Discover groups them as one.
-  const loc = normalizeLocation(input.location);
+  const loc = normalizeLocation(input.location, await knownLocations());
   if (!loc.ok) return { ok: false, error: loc.error };
   const location = loc.value?.slice(0, 80) ?? null;
   const certifications = cleanChips(input.certifications, 40, 12);

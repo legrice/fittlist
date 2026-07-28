@@ -130,12 +130,12 @@ console.log("member profile ok (name, tagline, bio, who they train with)");
 await p.goto(BASE + "/you");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
 await p.getByRole("heading", { name: "Your profile" }).waitFor();
-// a bare city is refused: Discover groups by the exact string, so
-// "Jersey City" and "Jersey City, NJ" would be two chips for one place
-await p.locator("#meLoc").fill("Jersey City");
+// nothing to match against yet, so a bare city is refused rather than
+// starting a second pill for a place that might already have one
+await p.locator("#meLoc").fill("Hoboken");
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.locator(".sheet .errorcopy", { hasText: /Add the state/ }).waitFor();
-// and any spelling of it lands on one canonical form
+// any spelling lands on one canonical form
 await p.locator("#meLoc").fill("jersey city new jersey");
 await p.screenshot({ path: OUT + "/shot-member-editor.png" });
 await p.getByRole("button", { name: "Save profile" }).click();
@@ -143,6 +143,29 @@ await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
 await p.getByText("Jersey City, NJ").waitFor();
 console.log("member profile edit ok (location normalized to City, ST)");
+
+// Now that Jersey City, NJ exists, a bare "Jersey City" joins it instead of
+// making a second one. It's offered as a suggestion too.
+await p.goto(BASE + "/you");
+await p.locator(".setrow", { hasText: "Edit your profile" }).click();
+await p.getByRole("heading", { name: "Your profile" }).waitFor();
+{
+  // the list is fetched on mount, so wait for it rather than racing it
+  await p.locator("datalist option").first().waitFor({ state: "attached" });
+  if (!(await p.locator("#meLoc").getAttribute("list")))
+    fail("the location field should be wired to the suggestions");
+  const opts = await p
+    .locator("datalist option")
+    .evaluateAll((els) => els.map((e) => e.getAttribute("value")));
+  if (!opts.includes("Jersey City, NJ"))
+    fail(`Jersey City, NJ should be suggested, got ${JSON.stringify(opts)}`);
+}
+await p.locator("#meLoc").fill("jersey city");
+await p.getByRole("button", { name: "Save profile" }).click();
+await p.getByText("Profile saved").waitFor();
+await p.goto(BASE + "/member");
+await p.getByText("Jersey City, NJ").waitFor();
+console.log("bare city snaps to the one that exists ok");
 await ctx.close();
 await b.close();
 console.log("MEMBER CHECKS PASSED");

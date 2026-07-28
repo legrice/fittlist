@@ -51,14 +51,32 @@ export type LocationResult =
  * because "Jersey City" and "Jersey City, NJ" can't be merged later without
  * guessing which Jersey City was meant.
  */
-export function normalizeLocation(raw: string | null | undefined): LocationResult {
+export function normalizeLocation(
+  raw: string | null | undefined,
+  /** Locations already in use, canonical. A bare city that matches exactly one
+   *  of them snaps to it, so typing "Jersey City" joins the Jersey City, NJ
+   *  everyone else is in rather than starting a second one. */
+  known: string[] = [],
+): LocationResult {
   const input = (raw ?? "").trim().replace(/\s+/g, " ");
   if (!input) return { ok: true, value: null };
 
-  const ask = {
-    ok: false as const,
-    error: "Add the state too, like Jersey City, NJ.",
+  // Already exactly one of the known ones, whatever the casing.
+  const exact = known.find((k) => k.toLowerCase() === input.toLowerCase());
+  if (exact) return { ok: true, value: exact };
+
+  const askFor = (city: string) => {
+    const near = known.filter((k) => k.slice(0, k.lastIndexOf(",")).toLowerCase() === city.toLowerCase());
+    if (near.length === 1) return { ok: true as const, value: near[0] };
+    if (near.length > 1) {
+      return {
+        ok: false as const,
+        error: `Which one? ${near.slice(0, 3).join(", ")}.`,
+      };
+    }
+    return { ok: false as const, error: "Add the state too, like Jersey City, NJ." };
   };
+  const ask = askFor(input);
 
   // "City, Region" is the usual shape. Without a comma, try to peel a state off
   // the end so "Jersey City NJ" and "Jersey City New Jersey" still work.
@@ -82,6 +100,7 @@ export function normalizeLocation(raw: string | null | undefined): LocationResul
   }
 
   if (!city || !region) return ask;
+
 
   const key = region.toLowerCase().replace(/\./g, "");
   const code = STATES[key] ?? (CODES.has(key.toUpperCase()) ? key.toUpperCase() : null);

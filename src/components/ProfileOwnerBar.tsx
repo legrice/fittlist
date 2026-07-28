@@ -8,6 +8,7 @@ import { ChipsField } from "@/components/ChipsField";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
+import { LocationInput } from "@/components/LocationInput";
 import { Toast, useToast } from "@/components/Toast";
 
 // Shown at the top of the public profile page when the owner is viewing it:
@@ -263,15 +264,7 @@ export function ProfileOwnerBar({
             <label className="flabel" htmlFor="pLocation">
               Location <span>· city and state</span>
             </label>
-            <input
-              id="pLocation"
-              type="text"
-              className="editinput"
-              value={pLocation}
-              maxLength={80}
-              placeholder="Jersey City, NJ"
-              onChange={(e) => setPLocation(e.target.value)}
-            />
+            <LocationInput id="pLocation" value={pLocation} onChange={setPLocation} />
             <label className="flabel" htmlFor="pAbout">
               About <span>· a line or two about you</span>
             </label>
