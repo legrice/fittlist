@@ -1912,6 +1912,16 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; padding: 0; cursor: pointer;
   font-family: inherit; font-weight: 600; font-size: 13.5px; color: var(--si);
 }
+/* Share sits across from the title as a pill, arrow trailing — it sends you
+   out of the app, so it reads as an action rather than a link. */
+.sharepill {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 9px 15px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--cl); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
+}
+.sharepill:active { background: #e9e2d0; }
+[data-mode="dark"] .sharepill:active { background: #2c2718; }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.
    Only the coach shell, only once the member side is on. */

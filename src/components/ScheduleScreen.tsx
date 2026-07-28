@@ -245,7 +245,7 @@ export function ScheduleScreen({
             <div className="dashlinks">
               <button className="dashlink" onClick={() => setShareOpen(true)}>
                 <Icon name="calendar_today" size={19} />
-                <span>Share cal</span>
+                <span>Share</span>
               </button>
               <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
                 <Icon name="account_circle" size={19} />
@@ -264,8 +264,8 @@ export function ScheduleScreen({
           {showFanView && (
             // Sharing the week is the growth loop — one tap, across from the
             // title, the same shape as Find coaches on the following page.
-            <button className="pageaction" onClick={() => setShareOpen(true)}>
-              <Icon name="calendar_today" size={17} /> Share cal
+            <button className="sharepill" onClick={() => setShareOpen(true)}>
+              Share <Icon name="north_east" size={16} />
             </button>
           )}
         </div>

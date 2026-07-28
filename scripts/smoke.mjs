@@ -237,7 +237,7 @@ console.log("account + profile edit ok (back -> account)");
 // ---- the schedule keeps one tool: sharing the week. Your page and the QR
 // code moved under You, so the top stops being a scrolling shelf.
 await expect(
-  page.locator(".pagehead .pageaction", { hasText: "Share cal" }).isVisible(),
+  page.locator(".pagehead .sharepill", { hasText: "Share" }).isVisible(),
   "share sits across from the title",
 );
 if (await page.locator(".dashlink", { hasText: "QR code" }).count())
@@ -919,7 +919,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Your week" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".pageaction", { hasText: "Share cal" }).waitFor();
+await page.locator(".sharepill", { hasText: "Share" }).waitFor();
 console.log("coach fan-view preview ok");
 
 await browser.close();
