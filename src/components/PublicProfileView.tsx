@@ -7,6 +7,7 @@ import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
+import { NavBar } from "@/components/NavBar";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
@@ -30,20 +31,24 @@ export async function PublicProfileView({
   isOwner: boolean;
   initialTab: "about" | "schedule";
 }) {
+  // A signed-in coach browsing someone else's page needs a way out — without
+  // the nav they can only go back. Visitors never see app chrome.
   const handle = user.handle!;
   const db = await getDb();
 
   // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
   // the subscribe bar instead of the email sheet.
   let account: { following: boolean } | null = null;
+  let showNav = false;
   if (!isOwner && (await fansVisible())) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
-        .select({ email: schema.users.email })
+        .select({ email: schema.users.email, handle: schema.users.handle })
         .from(schema.users)
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
+        showNav = !!viewer.handle;
         const [row] = await db
           .select({ optedOutAt: schema.subscribers.optedOutAt })
           .from(schema.subscribers)
@@ -266,7 +271,11 @@ export async function PublicProfileView({
   );
 
   return (
-    <div className="pub profile" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
+    <div
+      className={`pub profile${showNav ? " hasnav" : ""}`}
+      data-theme={user.theme}
+      data-mode={user.look === "dark" ? "dark" : undefined}
+    >
       {isOwner && (
         <ProfileOwnerBar
           name={user.name}
@@ -318,6 +327,7 @@ export async function PublicProfileView({
       {/* The subscribe bar is for visitors; the owner previewing their own page
           never sees it. */}
       {!isOwner && <NotifyCta trainerName={user.name} handle={handle} account={account} />}
+      {showNav && <NavBar active="discover" />}
     </div>
   );
 }

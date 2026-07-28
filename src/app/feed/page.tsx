@@ -108,7 +108,15 @@ export default async function FeedPage() {
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
-        <AppHeader unread={unread} />
+        <AppHeader
+          unread={unread}
+          avatar={{
+            photo: me.photo,
+            color: avatarColor(me),
+            initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
+            href: "/app?acct=1",
+          }}
+        />
 
         {coaches.length === 0 ? (
           <div className="empty-block">
@@ -144,7 +152,7 @@ export default async function FeedPage() {
           </form>
         )}
       </div>
-      {me.handle && <NavBar active="home" photo={me.photo} color={avatarColor(me)} initial={(me.name.trim().charAt(0) || "?").toUpperCase()} />}
+      {me.handle && <NavBar active="home" />}
     </section>
   );
 }

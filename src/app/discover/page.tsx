@@ -104,11 +104,19 @@ export default async function DiscoverPage() {
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
-        <AppHeader unread={unread} />
+        <AppHeader
+          unread={unread}
+          avatar={{
+            photo: me.photo,
+            color: avatarColor(me),
+            initial: (me.name.trim().charAt(0) || "?").toUpperCase(),
+            href: "/app?acct=1",
+          }}
+        />
         <div className="calbar-title">Discover</div>
         <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
       </div>
-      {me.handle && <NavBar active="discover" photo={me.photo} color={avatarColor(me)} initial={(me.name.trim().charAt(0) || "?").toUpperCase()} />}
+      {me.handle && <NavBar active="discover" />}
     </section>
   );
 }

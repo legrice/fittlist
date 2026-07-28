@@ -29,7 +29,7 @@ const waitSchedule = (pg, n, timeout = 10000) =>
 // The account page is a full-screen view reached from the header avatar.
 const openProfile = async (pg) => {
   await pg.goto(BASE + "/app");
-  await pg.locator(".navtab", { hasText: "You" }).click();
+  await pg.locator(".usericon").click();
   await pg.locator(".acctwrap").waitFor();
 };
 
@@ -181,10 +181,10 @@ console.log("delete-in-sheet ok (confirm + cancel)");
 
 // ---- account page: full-screen view reached from the header avatar
 await expect(
-  page.locator(".navtab .navav-empty").filter({ hasText: "M" }).isVisible(),
+  page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
   "header shows avatar (initial fallback)",
 );
-await page.locator(".navtab", { hasText: "You" }).click();
+await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
 await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
@@ -256,7 +256,7 @@ console.log("schedule tools ok (share stays, the rest moved under You)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
 // the public page (visitors see it too — it's a server-rendered attribute).
-await page.locator(".navtab", { hasText: "You" }).click();
+await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -268,7 +268,7 @@ await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'
 console.log("dark page look ok (app + public)");
 // back to light for the rest of the run
 await page.goto(BASE + "/app");
-await page.locator(".navtab", { hasText: "You" }).click();
+await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await page.waitForTimeout(450); // let the slide-up animation finish
 await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -287,7 +287,7 @@ if (lightOk) {
   await page.reload();
   await page.getByText("Your schedule").waitFor();
   if (await page.locator('.appshell[data-mode="dark"]').count()) {
-    await page.locator(".navtab", { hasText: "You" }).click();
+    await page.locator(".usericon").click();
     await page.locator(".acctwrap").waitFor();
     await page.waitForTimeout(450);
     await page.locator(".setrow", { hasText: "Dark mode" }).click();
@@ -903,10 +903,35 @@ await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
-// You opens the account view with the bar still under it
-await page.locator(".navtab", { hasText: "You" }).click();
+// no dead ends: a class opened from Home goes back to Home, and a coach's
+// page carries the nav so you can leave it
+await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".feedagenda .ps-event").first().click();
+await page.locator(".evcard").waitFor();
+await expect(
+  page.locator(".evback", { hasText: "Home" }).isVisible(),
+  "class opened from Home goes back to Home",
+);
+await page.locator(".evback", { hasText: "Home" }).click();
+await page.locator(".feedstrip").waitFor();
+// a coach's own schedule still backs into their calendar
+await page.goto(BASE + "/sam/schedule");
+await page.locator(".ps-event").first().click();
+await page.locator(".evcard").waitFor();
+if (!(await page.locator(".evback", { hasText: "schedule" }).count()))
+  fail("a class opened from a coach's page should back into that page");
+// the coach's page itself has the nav
+await page.goto(BASE + "/sam");
+if ((await page.locator(".navbar .navtab").count()) !== 3)
+  fail("a coach's page needs the nav so you can't get trapped");
+await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
+console.log("no dead ends ok (back to Home, nav on coach pages)");
+
+// three tabs only, and the account opens from the header avatar
+if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
-await page.locator(".navtab.on", { hasText: "You" }).waitFor();
 await page.locator(".acctclose").click();
 // what a coach attends is private: it must not leak onto their public page
 const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();

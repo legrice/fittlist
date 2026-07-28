@@ -1,5 +1,6 @@
-// Filled Material Icons (classic "Material Icons" font, loaded in the root
-// layout). Ligature-based: the icon name is the text content.
+// Material Symbols Outlined (loaded in the root layout) — the modern outline
+// set, at weight 300 so strokes stay light next to Delight. Ligature-based:
+// the icon name is the text content.
 export function Icon({
   name,
   size = 18,
@@ -10,7 +11,7 @@ export function Icon({
   className?: string;
 }) {
   return (
-    <span className={`material-icons ${className}`} style={{ fontSize: size }} aria-hidden="true">
+    <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size }} aria-hidden="true">
       {name}
     </span>
   );

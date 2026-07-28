@@ -18,12 +18,12 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 type Props = {
   params: Promise<{ handle: string; classId: string }>;
-  searchParams: Promise<{ d?: string }>;
+  searchParams: Promise<{ d?: string; from?: string }>;
 };
 
 export default async function EventPage({ params, searchParams }: Props) {
   const { handle, classId } = await params;
-  const { d: dParam } = await searchParams;
+  const { d: dParam, from } = await searchParams;
   if (!UUID_RE.test(classId)) notFound();
 
   const db = await getDb();
@@ -119,9 +119,17 @@ export default async function EventPage({ params, searchParams }: Props) {
         </div>
       )}
       <div className="evwrap">
-        <BackLink className="evback" href={`/${handle}/schedule`}>
-          ← {user.name}&rsquo;s schedule
-        </BackLink>
+        {/* Back goes where you actually came from — off Home it returns to
+            Home, not into a coach's calendar you never opened. */}
+        {from === "home" ? (
+          <BackLink className="evback" href="/feed">
+            ← Home
+          </BackLink>
+        ) : (
+          <BackLink className="evback" href={`/${handle}/schedule`}>
+            ← {user.name}&rsquo;s schedule
+          </BackLink>
+        )}
         <div className="evcard">
           {c.classType && <span className="evtype">{c.classType}</span>}
           <h1 className="evname">{c.name}</h1>

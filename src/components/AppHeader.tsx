@@ -3,14 +3,20 @@ import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
 // The same header on every screen of the app: wordmark left, notifications
-// right. Identity lives in the You tab now — except with no bottom nav (the
-// coach beta), where the header avatar is still the only way into the account.
+// and your avatar right. The avatar takes a handler inside the app shell
+// (where the account is an overlay) and a link everywhere else.
 export function AppHeader({
   unread = 0,
   avatar,
 }: {
   unread?: number;
-  avatar?: { photo: string | null; color: string; initial: string; onClick: () => void };
+  avatar?: {
+    photo: string | null;
+    color: string;
+    initial: string;
+    onClick?: () => void;
+    href?: string;
+  };
 }) {
   return (
     <div className="brandbar">
@@ -24,9 +30,9 @@ export function AppHeader({
           <Icon name="notifications" size={20} />
           {unread > 0 && <span className="inboxdot">{unread > 9 ? "9+" : unread}</span>}
         </Link>
-        {avatar && (
-          <button className="usericon" aria-label="My page" onClick={avatar.onClick}>
-            {avatar.photo ? (
+        {avatar &&
+          (() => {
+            const face = avatar.photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className="usericon-photo" src={avatar.photo} alt="" />
             ) : (
@@ -37,9 +43,17 @@ export function AppHeader({
               >
                 {avatar.initial}
               </span>
-            )}
-          </button>
-        )}
+            );
+            return avatar.href ? (
+              <Link className="usericon" aria-label="My page" href={avatar.href}>
+                {face}
+              </Link>
+            ) : (
+              <button className="usericon" aria-label="My page" onClick={avatar.onClick}>
+                {face}
+              </button>
+            );
+          })()}
       </div>
     </div>
   );

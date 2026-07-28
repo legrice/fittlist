@@ -272,7 +272,10 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   overflow: hidden; flex-shrink: 0;
 }
 /* icons are decoration: never swallow the click, never blow out layout pre-font-load */
-.material-icons { pointer-events: none; max-width: 1.2em; overflow: hidden; }
+.material-symbols-outlined {
+  pointer-events: none; max-width: 1.2em; overflow: hidden;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
 .iconbtn:hover { border-color: var(--ink); color: var(--ink); }
 
 .btn {
@@ -1826,7 +1829,7 @@ button.ps-card { cursor: pointer; }
 }
 .stylepick-row:last-child { border-bottom: none; }
 .stylepick-row.sel { font-weight: 700; }
-.stylepick-row .material-icons { color: var(--si); }
+.stylepick-row .material-symbols-outlined { color: var(--si); }
 
 /* Admin invites: joined/pending filter */
 .invitefilter { flex: none; margin: 14px 0 12px; background: var(--card); box-shadow: var(--soft-shadow); }
@@ -1965,6 +1968,10 @@ button.ps-card { cursor: pointer; }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .hasnav .acctwrap { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+/* On a coach's page the subscribe bar has to clear the nav, and the page
+   itself needs room so the footer isn't stuck under it. */
+.pub.hasnav .notifybar { bottom: calc(62px + env(safe-area-inset-bottom)); }
+.pub.hasnav .profwrap { padding-bottom: 190px; }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
 @media (min-width: 940px) { .screen.hasnav .pad, .screen .pad.feedpad {
   padding: 14px 18px calc(40px + env(safe-area-inset-bottom));

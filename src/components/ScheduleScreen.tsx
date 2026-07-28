@@ -223,19 +223,15 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
-          avatar={
-            showFanView
-              ? undefined
-              : {
-                  photo,
-                  color: myAccent,
-                  initial: (name.trim().charAt(0) || "?").toUpperCase(),
-                  onClick: () => {
-                    setAcctAnim("up");
-                    setProfileOpen(true);
-                  },
-                }
-          }
+          avatar={{
+            photo,
+            color: myAccent,
+            initial: (name.trim().charAt(0) || "?").toUpperCase(),
+            onClick: () => {
+              setAcctAnim("up");
+              setProfileOpen(true);
+            },
+          }}
         />
 
         {/* Without the bottom nav these have nowhere else to live. With it,
@@ -344,17 +340,7 @@ export function ScheduleScreen({
       )}
 
       {showFanView && (
-        <NavBar
-          active={profileOpen ? "you" : "schedule"}
-          photo={photo}
-          color={myAccent}
-          initial={(name.trim().charAt(0) || "?").toUpperCase()}
-          onSchedule={() => setProfileOpen(false)}
-          onYou={() => {
-            setAcctAnim("up");
-            setProfileOpen(true);
-          }}
-        />
+        <NavBar active="schedule" onSchedule={() => setProfileOpen(false)} />
       )}
 
       {profileOpen && (

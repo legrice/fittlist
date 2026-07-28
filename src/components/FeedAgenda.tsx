@@ -138,7 +138,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                   <Link
                     key={`${d.iso}-${i.classId}`}
                     className={`ps-event${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
-                    href={`/${i.handle}/${i.classId}?d=${d.iso}`}
+                    href={`/${i.handle}/${i.classId}?d=${d.iso}&from=home`}
                   >
                     <span
                       className="ps-accent"
