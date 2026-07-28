@@ -35,7 +35,16 @@ export type FeedDay = { iso: string; label: string; items: FeedItem[] };
 // The fan feed: one chronological agenda across every followed coach, day by
 // day starting today. The avatar strip on top filters to a single coach —
 // tap to focus, tap again to clear.
-export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: FeedDay[] }) {
+export function FeedAgenda({
+  coaches,
+  days,
+  meId,
+}: {
+  coaches: FeedCoach[];
+  days: FeedDay[];
+  /** The viewer, when they're a coach — their own classes are in here too. */
+  meId?: string;
+}) {
   const [sel, setSel] = useState<string | null>(null);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
@@ -161,6 +170,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
                           <span className="ps-ecoach">
                             {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
                             <span className="ps-ecoach-txt">{i.coachName}</span>
+                            {i.coachId === meId && <span className="ps-youtag">You</span>}
                           </span>
                           <span className="ps-enm">{i.name}</span>
                           {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}

@@ -150,6 +150,7 @@ export default async function FeedPage() {
               color: avatarColor(c),
             }))}
             days={days}
+            meId={userId}
           />
         )}
 

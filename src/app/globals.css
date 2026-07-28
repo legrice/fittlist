@@ -329,7 +329,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
 .notifybar {
-  position: fixed; left: 0; right: 0; bottom: 0; background: var(--card);
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper);
   border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   z-index: 15;
 }
@@ -348,7 +348,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
      against this so it sits flush on the sheet's edge instead of floating
      above the padding box (which was leaving a gap under the save button). */
   --pad-b: calc(22px + env(safe-area-inset-bottom));
-  background: var(--card); color: var(--ink); width: 100%; border-radius: 16px 16px 0 0;
+  background: var(--paper); color: var(--ink); width: 100%; border-radius: 16px 16px 0 0;
   padding: 14px 20px var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
@@ -362,7 +362,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .sheetclose {
   position: absolute; top: 14px; right: 16px; z-index: 2;
   width: 38px; height: 38px; border-radius: 999px;
-  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
   display: flex; align-items: center; justify-content: center;
 }
 .sheetclose:active { background: #f3ecdf; }
@@ -936,7 +936,7 @@ button.ps-card { cursor: pointer; }
 }
 
 /* the adder sheet + controls - clean, like the calendar page */
-[data-theme="poster"] .sheet { background: var(--pg-cream); border: none; box-shadow: var(--soft-shadow-lg); }
+[data-theme="poster"] .sheet { border: none; box-shadow: var(--soft-shadow-lg); }
 [data-theme="poster"] .adder input[type=text], [data-theme="poster"] .adder input[type=url],
 [data-theme="poster"] .searchbox input, [data-theme="poster"] .linkrow input,
 [data-theme="poster"] .linkrow select, [data-theme="poster"] #ntEmail {
@@ -1204,7 +1204,7 @@ button.ps-card { cursor: pointer; }
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
-  background: var(--pg-cream); border-top: 1px solid var(--line);
+  background: var(--paper); border-top: 1px solid var(--line);
 }
 .profcta .btn { max-width: 520px; margin: 0 auto; }
 .pubback {
@@ -1248,7 +1248,7 @@ button.ps-card { cursor: pointer; }
 
 /* ---- account page (full-screen, reached from the header avatar) ---- */
 .acctwrap {
-  position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: var(--pg-cream);
+  position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: var(--paper);
   padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
   animation: slideUpIn .32s cubic-bezier(.22, .8, .28, 1);
 }
@@ -1503,7 +1503,7 @@ button.ps-card { cursor: pointer; }
 .evctabtn.on { background: var(--go); color: #fff; }
 [data-theme="poster"] .heronotify { display: none; }
 [data-theme="poster"] .notifybar {
-  display: block; background: var(--pg-cream); border-top: 1px solid var(--line);
+  display: block; border-top: 1px solid var(--line);
   padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
 }
 [data-theme="poster"] .notifybar .btn.si {
@@ -1558,7 +1558,7 @@ button.ps-card { cursor: pointer; }
 }
 
 /* ---- admin panel (/admin), mobile-first ---- */
-.admin { background: var(--cl); color: var(--ink); }
+.admin { background: var(--paper); color: var(--ink); }
 .admin .pad {
   padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
@@ -1739,15 +1739,12 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .appshell, .appshell[data-mode="dark"],
 [data-mode="dark"] .appshell .stage, .appshell[data-mode="dark"] .stage,
 [data-mode="dark"] .acctwrap { background: var(--paper); }
-/* poster-cream surfaces that live inside the app: the sticky header + adder card */
-[data-mode="dark"] .brandbar { background: var(--card); }
 [data-mode="dark"] .ps-card { background: var(--card); color: var(--ink); border-color: var(--line); }
 /* keep the QR frame white so the code always scans */
 [data-mode="dark"] .qrframe { background: #fff; }
 /* Bottom sheets: the poster skin pins the sheet to cream and the adder's
    cards/controls to white — repaint them like the light design (dark ground,
    slightly-lifted cards, bordered inputs). */
-[data-mode="dark"] .sheet { background: var(--paper); color: var(--ink); }
 [data-mode="dark"] .adder-card,
 [data-mode="dark"] .stat,
 [data-mode="dark"] .rowcta {
@@ -1805,8 +1802,6 @@ button.ps-card { cursor: pointer; }
    fill follows --ink — light in dark mode — so its label flips dark. */
 [data-mode="dark"] .seg button.sel { color: #191502; }
 [data-mode="dark"] .adminseg button.on { color: #191502; }
-/* the visitor subscribe bar is pinned to poster cream — repaint */
-[data-mode="dark"] .notifybar { background: var(--card); }
 
 /* ---- full-screen adder ---- */
 /* The New class sheet takes the whole screen; a sticky title bar keeps the
@@ -1817,12 +1812,10 @@ button.ps-card { cursor: pointer; }
 .sheet-full .publishwrap { margin-top: auto; }
 .adderhead {
   /* explicit bg per skin: inherit would read the transparent stage wrapper */
-  position: sticky; top: 0; z-index: 4; background: var(--card);
+  position: sticky; top: 0; z-index: 4; background: var(--paper);
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin: 0 -20px; padding: calc(20px + env(safe-area-inset-top)) 20px 16px;
 }
-[data-theme="poster"] .adderhead { background: var(--pg-cream); }
-[data-mode="dark"] .adderhead { background: var(--paper); }
 .adderhead h2 { margin: 0; padding-right: 0; }
 .adderhead .sheetclose { position: static; flex-shrink: 0; }
 /* Desktop keeps the centered-modal feel. */
@@ -1950,6 +1943,14 @@ button.ps-card { cursor: pointer; }
   color: #fff; background: var(--si);
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Your own classes sit in the same merged week as the coaches you follow — the
+   tag is how you tell at a glance which ones you teach. */
+.ps-youtag {
+  flex-shrink: 0; padding: 2px 7px; border-radius: 999px;
+  background: var(--cl-d); color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+}
 .ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 /* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
    the browser; only sideways movement reaches the component. */
