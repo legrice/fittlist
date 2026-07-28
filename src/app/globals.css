@@ -1929,10 +1929,15 @@ button.ps-card { cursor: pointer; }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.
    Only the coach shell, only once the member side is on. */
+/* Home and Discover sit outside the app shell, so nothing above them absorbs
+   the notch. The pad gives exactly the 14px the brandbar's negative margin
+   cancels, and the header carries the inset itself — otherwise a strip of page
+   background shows above it. */
 .screen.hasnav .pad, .screen .pad.feedpad {
-  padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
+.screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
 .navbar {
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
@@ -1962,7 +1967,7 @@ button.ps-card { cursor: pointer; }
 .hasnav .acctwrap { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
 @media (min-width: 940px) { .screen.hasnav .pad, .screen .pad.feedpad {
-  padding: calc(18px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
+  padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
 .navbar { display: none; } }
