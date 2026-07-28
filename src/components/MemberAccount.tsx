@@ -4,6 +4,7 @@ import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { Icon } from "@/components/Icon";
+import { InviteFriends } from "@/components/InviteFriends";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
 
@@ -72,6 +73,7 @@ export function MemberAccount({
       {/* The member side is the front door; coaching is a door off it. */}
       <div className="settingslist">
         <StartCoaching name={name} />
+        <InviteFriends />
       </div>
 
       <div className="settingslist">

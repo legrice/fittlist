@@ -47,6 +47,10 @@ await p1.getByPlaceholder("you@example.com").fill("nopw@example.com");
 await p1.getByRole("button", { name: "Email me a magic link" }).click();
 await p1.getByText("Check your inbox").waitFor();
 await p1.goto(BASE + lastMagic());
+// Arriving by link, `kind` is still the column default — so we ask rather than
+// marching them into claiming a URL they may not want.
+await p1.getByRole("heading", { name: "How will you use fittlist?" }).waitFor();
+await p1.getByRole("button", { name: "I coach classes" }).click();
 await p1.getByText("Pick your link.").waitFor();
 await p1.getByPlaceholder("Your name").fill("Nopw Coach");
 await p1.getByRole("button", { name: "Claim it" }).click();
@@ -96,6 +100,44 @@ await p3.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await p3.waitForURL("**/app");
 console.log("recovered password works in a fresh browser ok");
 await c3.close();
+
+// the other half of that choice: someone who only wants to follow a coach must
+// be able to say so, and never be asked to pick a URL
+{
+  const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const ad2 = await actx.newPage();
+  ad2.setDefaultTimeout(15000);
+  await ad2.goto(BASE + "/");
+  await ad2.locator(".obloginlink", { hasText: "Already have an account" }).click();
+  await ad2.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
+  await ad2.getByPlaceholder("Password").fill("admin-pass-123");
+  await ad2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await ad2.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await ad2.goto(BASE + "/admin");
+  await ad2.getByRole("button", { name: "Invites", exact: true }).click();
+  await ad2.getByPlaceholder("coach@example.com").fill("justafan@example.com");
+  await ad2.getByRole("button", { name: "Invite & email link" }).click();
+  await ad2.locator(".adminlink input").waitFor();
+  await actx.close();
+
+  const fctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const fp = await fctx.newPage();
+  fp.setDefaultTimeout(15000);
+  await fp.goto(BASE + lastMagic());
+  await fp.getByRole("heading", { name: "How will you use fittlist?" }).waitFor();
+  await fp.screenshot({ path: OUT + "/shot-role-step.png" });
+  // the heading renders a curly apostrophe, so match loosely
+  await fp.getByRole("button", { name: /here to train/ }).click();
+  await fp.waitForURL("**/feed");
+  await fp.getByText("Nobody yet").waitFor();
+  // and it stuck: going back to / sends them to their week, not to a claim step
+  await fp.goto(BASE + "/");
+  await fp.waitForURL("**/feed");
+  if (await fp.getByText("Pick your link.").count())
+    fail("a follower should never be asked to claim a URL");
+  console.log("follower path ok (asked, not assumed, and it sticks)");
+  await fctx.close();
+}
 
 // the role toggle: only rendered when FANS_ENABLED is exactly "true"
 const c4 = await browser.newContext({ viewport: { width: 390, height: 844 } });

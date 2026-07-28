@@ -1,57 +1,12 @@
 "use server";
 
-import { createHash, randomBytes } from "crypto";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
-import { siteOrigin } from "@/lib/format";
-import { sendMessage } from "@/lib/mailer";
-import { emailHtml } from "@/lib/email-html";
+import { sendInviteLink } from "@/lib/invite-link";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
-
-// Mint a 24h one-time sign-in link for an email and email it. Returns the URL.
-async function mintLink(
-  email: string,
-  subject: string,
-  intro: string,
-  /** Invites carry a fallback: the one-tap link only signs you in on the
-   *  browser that opens it, and mail apps open their own. */
-  invite = false,
-): Promise<string> {
-  const token = randomBytes(32).toString("hex");
-  const db = await getDb();
-  await db.insert(schema.magicLinks).values({
-    email,
-    tokenHash: sha256(token),
-    ip: "admin",
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  });
-  const url = `${siteOrigin()}/auth/magic?token=${token}&invited=1`;
-  const fallbackText = invite
-    ? `Opening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address — your invite is on it.`
-    : "";
-  const body = [
-    intro.replace(/:$/, "."),
-    `This link works once and expires in 24 hours. Once you're in, set a password — then you can sign in on any browser without waiting on an email.`,
-    ...(fallbackText ? [fallbackText] : []),
-  ];
-  await sendMessage({
-    to: email,
-    kind: "magic_link",
-    subject,
-    text: `${body.join("\n\n")}\n\n${url}`,
-    html: emailHtml({
-      heading: invite ? "You're invited to the fittlist beta" : "Sign in to fittlist",
-      body,
-      cta: { label: invite ? "Set up your page" : "Sign in", url },
-      footer: `This was sent to ${email} by fittlist. If you weren't expecting it, ignore it — nothing has been created for that address.`,
-    }),
-  });
-  return url;
-}
 
 // Add a studio straight to the shared directory from the admin panel.
 export async function adminAddStudio(
@@ -81,7 +36,11 @@ export async function adminSendMagicLink(
   const email = emailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
 
-  const url = await mintLink(email, "Your fittlist sign-in link", "Tap to sign in to fittlist:");
+  const url = await sendInviteLink({
+    email,
+    subject: "Sign in to fittlist",
+    intro: "Tap to sign in to fittlist:",
+  });
   return { ok: true, url, emailed: true };
 }
 
@@ -197,12 +156,13 @@ export async function adminInvite(
     .values({ email, label, invitedByUserId: admin.id })
     .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
 
-  const url = await mintLink(
-    email,
-    "You're invited to the fittlist beta",
-    "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
-    true,
-  );
+  const url = await sendInviteLink({
+    email: email,
+    subject: "You're invited to the fittlist beta",
+    intro:
+      "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+    invite: true,
+  });
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };
 }
@@ -237,12 +197,13 @@ export async function adminActOnRequest(
     .insert(schema.invites)
     .values({ email: req.email, label, invitedByUserId: admin.id })
     .onConflictDoUpdate({ target: schema.invites.email, set: { label } });
-  const url = await mintLink(
-    req.email,
-    "You're invited to the fittlist beta",
-    "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
-    true,
-  );
+  const url = await sendInviteLink({
+    email: req.email,
+    subject: "You're invited to the fittlist beta",
+    intro:
+      "You lucky duck. You've been invited to test out the beta version of fittlist before it's public. Tap to set up your page:",
+    invite: true,
+  });
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };
 }

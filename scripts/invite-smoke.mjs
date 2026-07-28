@@ -20,7 +20,9 @@ if (!(await p1.getByText("Invite-only beta").isVisible())) fail("signup sheet sh
 await p1.getByPlaceholder("you@example.com").fill("stranger@example.com");
 await p1.getByPlaceholder("Password").fill("stranger-pass-123");
 await p1.getByRole("button", { name: "Create account" }).click();
-await p1.getByText(/invite-only/i).waitFor();
+// wait for the ERROR, not the lead copy — the lead already says "invite-only",
+// so matching on that returns while the transition is still re-rendering
+await p1.locator(".sheet .errorcopy", { hasText: /invite-only/i }).waitFor();
 console.log("non-invited signup blocked ok");
 
 // open the request-an-invite modal from the signup sheet
@@ -192,6 +194,98 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     fail("an expired link should say so");
   console.log("expired invite link keeps its invited framing ok");
   await ctx.close();
+}
+
+// 7) Beta users bring the next beta users in, and the admin can see who
+// brought whom — the whole point of letting them invite at all.
+{
+  // riley signs in (invited in step 2) and invites someone of their own
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const pg = await ctx.newPage();
+  pg.setDefaultTimeout(15000);
+  await pg.goto(BASE + "/");
+  await pg.locator(".obloginlink", { hasText: "Already have an account" }).click();
+  await pg.getByPlaceholder("you@example.com").fill("riley@example.com");
+  await pg.getByPlaceholder("Password").fill("invited-pass-123");
+  await pg.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await pg.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await pg.getByText("Pick your link.").waitFor();
+  await pg.getByPlaceholder("Your name").fill("Riley Requestor");
+  await pg.getByRole("button", { name: "Claim it" }).click();
+  await pg.getByRole("button", { name: "Skip for now" }).click();
+  await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
+
+  await pg.locator(".usericon").click();
+  await pg.locator(".acctwrap").waitFor();
+  await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
+  const row = pg.locator(".setrow", { hasText: "Invite someone to the beta" });
+  // centre it rather than letting scrollIntoViewIfNeeded park it under the tabs
+  await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await row.locator(".s", { hasText: "invites left" }).waitFor();
+  await row.click();
+  await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
+  // an email that's already here doesn't burn an invite
+  await pg.locator("#ivEmail").fill("mattlegrice@gmail.com");
+  await pg.getByRole("button", { name: "Send the invite" }).click();
+  await pg.locator(".sheet .errorcopy", { hasText: /already have a fittlist account/ }).waitFor();
+  await pg.locator("#ivEmail").fill("friendofriley@example.com");
+  await pg.locator("#ivNote").fill("Coaches at Ironbound");
+  await pg.getByRole("button", { name: "Send the invite" }).click();
+  await pg.getByText("Invite sent to friendofriley@example.com").waitFor();
+  // the count comes down
+  await row.locator(".s").waitFor();
+  await pg.screenshot({ path: OUT + "/shot-invite-friend.png", fullPage: true });
+  console.log("beta user invited a friend ok");
+  await ctx.close();
+
+  // that invite works, and lands the same way ours does
+  const fctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const fp = await fctx.newPage();
+  fp.setDefaultTimeout(15000);
+  await fp.goto(BASE + "/");
+  await fp.getByRole("button", { name: "Sign up with email" }).click();
+  await fp.getByPlaceholder("you@example.com").fill("friendofriley@example.com");
+  await fp.getByPlaceholder("Password").fill("friend-pass-123");
+  await fp.getByRole("button", { name: "Create account" }).click();
+  await fp.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await fp.getByText("Pick your link.").waitFor();
+  console.log("a beta user's invite gets someone in ok");
+  await fctx.close();
+
+  // and the admin sees where they came from
+  const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const ad = await actx.newPage();
+  ad.setDefaultTimeout(15000);
+  await ad.goto(BASE + "/");
+  await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
+  await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
+  await ad.getByPlaceholder("Password").fill("admin-pass-123");
+  await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await ad.goto(BASE + "/admin");
+  await ad.getByRole("button", { name: "Invites", exact: true }).click();
+  const refRow = ad.locator(".refrow", { hasText: "Riley" });
+  await refRow.waitFor();
+  await ad.screenshot({ path: OUT + "/shot-admin-referrers.png", fullPage: true });
+  // the card carries the attribution too
+  const card = ad.locator(".admincard", { hasText: "friendofriley@example.com" });
+  await card.getByText("by Riley Requestor").waitFor();
+  // tapping a referrer narrows the list below to just their people
+  await refRow.click();
+  await ad.waitForFunction(
+    () => document.querySelectorAll(".admincard").length > 0,
+    null,
+    { timeout: 8000 },
+  );
+  {
+    const emails = await ad.locator(".admincard-nm").allInnerTexts();
+    if (!emails.some((e) => e.includes("friendofriley@example.com")))
+      fail("tapping a referrer should show the people they brought in");
+    if (emails.some((e) => e.includes("coach2@example.com")))
+      fail("tapping a referrer should exclude invites they had nothing to do with");
+  }
+  console.log("admin sees who invited whom ok");
+  await actx.close();
 }
 
 await browser.close();

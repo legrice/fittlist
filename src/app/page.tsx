@@ -24,11 +24,14 @@ export default async function Home({
     const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     if (user?.handle) redirect("/app");
     if (user?.kind === "fan") redirect("/feed");
-    // Signed in but never claimed a handle: resume onboarding at the claim step.
+    // Signed in but never claimed a handle. `kind` is "coach" by default — the
+    // column default, not a choice anyone made — so when members can sign up,
+    // ask which they are before demanding a URL. Someone who only wants to
+    // follow a coach was being marched into claiming a page.
     if (user)
       return (
         <AuthFlow
-          startStage="claim"
+          startStage={fansEnabled() ? "role" : "claim"}
           via={viaHandle}
           providers={providers}
           inviteOnly={inviteOnly()}

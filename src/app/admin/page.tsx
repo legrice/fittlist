@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { currentAdmin } from "@/lib/admin";
+import { adminEmails, currentAdmin } from "@/lib/admin";
 import { AdminPanel } from "@/components/AdminPanel";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ export default async function AdminPage() {
   // Don't reveal the route to non-admins (signed in or not).
   if (!admin) notFound();
 
+  const adminList = adminEmails();
   const db = await getDb();
   const [users, studios, classes, subs, creds, gconns, picked, invitesRows, requestRows] =
     await Promise.all([
@@ -95,6 +96,12 @@ export default async function AdminPage() {
   }));
 
   const userById = new Map(users.map((u) => [u.id, u]));
+  const nameOf = (id: string | null) => {
+    if (!id) return "";
+    const u = userById.get(id);
+    if (!u) return "";
+    return u.name.trim() || u.email.split("@")[0];
+  };
   const invites = invitesRows.map((i) => {
     const accepted = i.acceptedUserId ? userById.get(i.acceptedUserId) : undefined;
     return {
@@ -106,8 +113,33 @@ export default async function AdminPage() {
       acceptedOn: fmt(i.acceptedAt),
       acceptedName: accepted?.name || "",
       acceptedHandle: accepted?.handle ?? "",
+      invitedBy: nameOf(i.invitedByUserId),
+      invitedByAdmin: !!i.invitedByUserId && adminList.includes(
+        (userById.get(i.invitedByUserId)?.email ?? "").toLowerCase(),
+      ),
     };
   });
+
+  // Where people are coming from. One row per person who has brought anyone in,
+  // busiest first — the answer to "is this spreading, and through whom".
+  const byInviter = new Map<string, { name: string; admin: boolean; sent: number; joined: number }>();
+  for (const i of invitesRows) {
+    if (!i.invitedByUserId) continue;
+    const u = userById.get(i.invitedByUserId);
+    if (!u) continue;
+    const cur = byInviter.get(i.invitedByUserId) ?? {
+      name: u.name.trim() || u.email.split("@")[0],
+      admin: adminList.includes(u.email.toLowerCase()),
+      sent: 0,
+      joined: 0,
+    };
+    cur.sent += 1;
+    if (i.acceptedAt) cur.joined += 1;
+    byInviter.set(i.invitedByUserId, cur);
+  }
+  const referrers = [...byInviter.entries()]
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a, b) => b.joined - a.joined || b.sent - a.sent || a.name.localeCompare(b.name));
 
   const requests = requestRows
     .filter((r) => !r.handledAt)
@@ -129,6 +161,7 @@ export default async function AdminPage() {
       coaches={coaches}
       studios={studioRows}
       invites={invites}
+      referrers={referrers}
       requests={requests}
       stats={stats}
       dark={admin.look === "dark"}

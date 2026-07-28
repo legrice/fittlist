@@ -44,7 +44,11 @@ type Invite = {
   acceptedOn: string | null;
   acceptedName: string;
   acceptedHandle: string;
+  /** Who brought them in — empty for invites with no attribution. */
+  invitedBy: string;
+  invitedByAdmin: boolean;
 };
+type Referrer = { id: string; name: string; admin: boolean; sent: number; joined: number };
 type Request = { id: string; name: string; email: string; requested: string | null };
 type Stats = {
   coaches: number;
@@ -61,6 +65,7 @@ export function AdminPanel({
   coaches,
   studios,
   invites,
+  referrers,
   requests,
   stats,
   dark = false,
@@ -69,6 +74,7 @@ export function AdminPanel({
   coaches: Coach[];
   studios: Studio[];
   invites: Invite[];
+  referrers: Referrer[];
   requests: Request[];
   stats: Stats;
   dark?: boolean;
@@ -104,7 +110,10 @@ export function AdminPanel({
     let list = invites;
     if (s) {
       list = list.filter(
-        (i) => i.email.toLowerCase().includes(s) || i.label.toLowerCase().includes(s),
+        (i) =>
+          i.email.toLowerCase().includes(s) ||
+          i.label.toLowerCase().includes(s) ||
+          i.invitedBy.toLowerCase().includes(s),
       );
     }
     if (inviteFilter === "joined") list = list.filter((i) => i.accepted);
@@ -180,6 +189,34 @@ export function AdminPanel({
               </>
             )}
             <InviteForm toast={toast} />
+            {referrers.length > 0 && (
+              <>
+                <div className="adminsec-h">Where they came from</div>
+                <div className="reflist">
+                  {referrers.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="refrow"
+                      onClick={() => {
+                        setQ(r.name);
+                        setInviteFilter("all");
+                      }}
+                    >
+                      <span className="refrow-nm">
+                        {r.name}
+                        {r.admin && <span className="adminbadge">you</span>}
+                      </span>
+                      <span className="refrow-n">
+                        <b>{r.joined}</b> joined
+                        <span className="sep">/</span>
+                        {r.sent} invited
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="seg invitefilter">
               <button className={inviteFilter === "all" ? "sel" : ""} onClick={() => setInviteFilter("all")}>
                 All ({invites.length})
@@ -470,6 +507,7 @@ function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
       {i.label && <div className="admincard-sub">{i.label}</div>}
       <div className="adminmeta">
         {i.invited && <span>invited {i.invited}</span>}
+        {i.invitedBy && <span>by {i.invitedByAdmin ? "you" : i.invitedBy}</span>}
         {i.accepted ? (
           <span>
             {i.acceptedHandle ? `joined as /${i.acceptedHandle}` : "joined"}

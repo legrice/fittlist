@@ -1662,6 +1662,38 @@ button.ps-card { cursor: pointer; }
 .adminempty { font-size: 14px; color: var(--ol); padding: 14px 2px; }
 .adminsec-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--ol); margin: 4px 0 10px; }
 
+/* Who's bringing people in. Tapping a row searches the invites below for that
+   name, so the roll-up and the detail are the same view. */
+.reflist {
+  display: flex; flex-direction: column; background: var(--card); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden; margin-bottom: 18px;
+}
+.refrow {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line);
+}
+.refrow:last-child { border-bottom: none; }
+.refrow:active { background: var(--cl); }
+.refrow-nm {
+  display: flex; align-items: center; gap: 7px; min-width: 0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.refrow-n { flex-shrink: 0; font-size: 12.5px; color: var(--ol); }
+.refrow-n b { color: var(--ink); font-size: 14px; }
+.refrow-n .sep { margin: 0 5px; opacity: .5; }
+
+/* invite sheet: what you've already sent, so nobody double-invites a friend */
+.invsent { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.invsent-h { font-size: 12px; font-weight: 700; color: var(--ol); margin-bottom: 7px; }
+.invsent-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.invsent-row .e { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invsent-tag {
+  flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+  background: var(--cl-d); color: var(--ol);
+}
+.invsent-tag.on { background: var(--go); color: #fff; }
+
 /* centered confirmation modal (e.g. delete a class) */
 .confirm-scrim {
   position: fixed; inset: 0; background: rgba(23, 26, 31, .55); z-index: 60;

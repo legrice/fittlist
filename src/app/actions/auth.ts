@@ -393,6 +393,23 @@ export async function finishPasskeyLogin(
   return { ok: true, needsProfile: user.kind !== "fan" && !user.handle, fan: user.kind === "fan" };
 }
 
+// "I'm here to train." An account arriving by magic link is a coach by default
+// — that's the column default, not a choice anyone made — so someone who only
+// wants to follow needs a way to say so before being asked to pick a URL.
+// Reversible: /you offers "Post your own classes", which claims a handle.
+export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  // A claimed handle means they're already a coach with a live page; don't
+  // quietly demote them.
+  if (me.handle) return { ok: false, error: "You already have a page." };
+  await db.update(schema.users).set({ kind: "fan" }).where(eq(schema.users.id, userId));
+  return { ok: true };
+}
+
 export async function claimProfile(
   nameRaw: string,
   handleRaw: string = "",

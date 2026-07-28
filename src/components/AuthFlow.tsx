@@ -6,6 +6,7 @@ import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 import {
   beginPasskeyLogin,
   beginPasskeyRegistration,
+  chooseFan,
   claimProfile,
   finishPasskeyLogin,
   finishPasskeyRegistration,
@@ -18,7 +19,7 @@ import { brandIcon } from "@/lib/brand";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
-type Stage = "landing" | "sent" | "claim";
+type Stage = "landing" | "sent" | "role" | "claim";
 type SheetMode = "signup" | "login";
 
 const GoogleG = () => (
@@ -44,7 +45,7 @@ export function AuthFlow({
   invited = false,
   fans = false,
 }: {
-  startStage: "email" | "claim";
+  startStage: "email" | "role" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
@@ -55,7 +56,9 @@ export function AuthFlow({
 }) {
   const router = useRouter();
   const search = useSearchParams();
-  const [stage, setStage] = useState<Stage>(startStage === "claim" ? "claim" : "landing");
+  const [stage, setStage] = useState<Stage>(
+    startStage === "claim" ? "claim" : startStage === "role" ? "role" : "landing",
+  );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
   const [role, setRole] = useState<"coach" | "fan">("coach");
@@ -295,6 +298,41 @@ export function AuthFlow({
             </button>
             {error && <div className="errorcopy">{error}</div>}
             <div className="microcopy">The link works once. Request a new one any time.</div>
+          </>
+        )}
+
+        {stage === "role" && (
+          <>
+            <h1>How will you use fittlist?</h1>
+            <p>
+              You can change this later — following is free either way, and you can add a page of
+              your own whenever you want one.
+            </p>
+            <button className="btn" onClick={() => setStage("claim")} disabled={pending}>
+              I coach classes
+            </button>
+            <button
+              className="obalt"
+              style={{ marginTop: 12 }}
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const res = await chooseFan();
+                  if (!res.ok) {
+                    setError(res.error ?? "Something went wrong.");
+                    return;
+                  }
+                  router.push("/feed");
+                })
+              }
+            >
+              <Icon name="groups" size={19} /> I&rsquo;m here to train
+            </button>
+            {error && <div className="errorcopy">{error}</div>}
+            <div className="microcopy">
+              Coaches get a page at fittlist.co/yourname. Everyone else gets one week across every
+              coach they follow.
+            </div>
           </>
         )}
 

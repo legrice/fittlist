@@ -18,6 +18,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { InviteFriends } from "@/components/InviteFriends";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -366,6 +367,8 @@ export function ProfileSheet({
               </button>
             </>
           )}
+          {/* Beta users bring the next beta users in. */}
+          <InviteFriends />
           {isAdmin && (
             <a className="setrow" href="/admin">
               <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>
