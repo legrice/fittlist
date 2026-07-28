@@ -168,14 +168,14 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   pg.setDefaultTimeout(15000);
 
   await pg.goto(BASE + "/");
-  if (!(await pg.locator(".obloginlink", { hasText: "Request an invite" }).count()))
+  if (!(await pg.locator(".obrequest", { hasText: "Request an invite" }).count()))
     fail("an organic landing should offer the invite queue");
   if (await pg.locator(".invitetag").count()) fail("no invite, no you're-in tag");
 
   await pg.goto(BASE + "/?invited=1");
   await pg.locator(".invitetag", { hasText: "You’re in" }).waitFor();
   await pg.getByText("Welcome to the").waitFor();
-  if (await pg.locator(".obloginlink", { hasText: "Request an invite" }).count())
+  if (await pg.locator(".obrequest").count())
     fail("someone holding an invite has nothing to request");
   await pg.screenshot({ path: OUT + "/shot-invited-landing.png" });
   await pg.getByRole("button", { name: "Claim your invite" }).click();

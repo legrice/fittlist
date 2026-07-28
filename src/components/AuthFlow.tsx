@@ -271,7 +271,11 @@ export function AuthFlow({
                 Coaching, or here to train? You pick on the next screen.
               </div>
             )}
-            {(providers.google || providers.apple) && (
+            {/* Asking for an invite is a real action with a form behind it, so
+                it gets a button. As a second line of link text under "Already
+                have an account?" it read as more of the same sentence.
+                Someone holding an invite has nothing to queue for. */}
+            {(providers.google || providers.apple || (inviteOnly && !invited)) && (
               <div className="obalts" style={{ marginTop: 12 }}>
                 {providers.google && (
                   <a className="obalt google" href={`/api/google/login${viaQ}`}>
@@ -283,18 +287,19 @@ export function AuthFlow({
                     <AppleLogo /> Continue with Apple
                   </a>
                 )}
+                {inviteOnly && !invited && (
+                  <button className="obalt obrequest" onClick={openRequest}>
+                    <Icon name="mail" size={18} /> Request an invite
+                  </button>
+                )}
               </div>
             )}
             {error && <div className="errorcopy">{error}</div>}
+            {/* The one text link left, so it reads as the quiet way out rather
+                than one of two competing offers. */}
             <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
               Already have an account? <b>Log in</b>
             </button>
-            {/* Someone holding an invite has nothing to queue for. */}
-            {inviteOnly && !invited && (
-              <button className="obloginlink" onClick={openRequest}>
-                Not invited yet? <b>Request an invite</b>
-              </button>
-            )}
           </>
         )}
 
