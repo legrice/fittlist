@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fmtDateLong, fmtTime, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
+import { fmtDateLong, fmtTime, mondayOfCurrentWeek, runsOn, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
@@ -52,24 +52,33 @@ export default async function EventPage({ params, searchParams }: Props) {
   // A weekly class shows this week's date for its weekday; a one-off shows its
   // own. A ?d= from the schedule pins the occurrence that was tapped, so
   // "next Wednesday" opens as next Wednesday rather than this one.
-  const thisWeekIso =
-    c.specificDate ??
-    (() => {
-      const d = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
-      d.setUTCDate(d.getUTCDate() + c.dayOfWeek);
-      return d.toISOString().slice(0, 10);
-    })();
+  const dowOf = (iso: string) => (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
   const askedIso =
     dParam && /^\d{4}-\d{2}-\d{2}$/.test(dParam) && !Number.isNaN(Date.parse(dParam))
       ? dParam
       : null;
-  // Only honour a date this class actually falls on.
-  const askedFits = askedIso
-    ? c.specificDate
-      ? c.specificDate === askedIso
-      : (new Date(`${askedIso}T00:00:00Z`).getUTCDay() + 6) % 7 === c.dayOfWeek
-    : false;
-  const whenIso = askedFits ? askedIso! : thisWeekIso;
+  // Only honour a date this class actually runs on — which rules out a week
+  // past its end date, and a single week cancelled out of it.
+  const askedFits = askedIso ? runsOn(c, askedIso, dowOf(askedIso)) : false;
+  // Otherwise show the next date it does run. A saved link to a cancelled
+  // Friday should land on the following one, not on a class that isn't on.
+  const nextIso =
+    c.specificDate ??
+    (() => {
+      const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+      for (let i = 0; i < 366; i++) {
+        const d = new Date(start);
+        d.setUTCDate(start.getUTCDate() + i);
+        const iso = d.toISOString().slice(0, 10);
+        if (runsOn(c, iso, (d.getUTCDay() + 6) % 7)) return iso;
+      }
+      // Every occurrence is behind an end date: fall back to this week's slot
+      // so the page still renders something dated rather than nothing.
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() + c.dayOfWeek);
+      return d.toISOString().slice(0, 10);
+    })();
+  const whenIso = askedFits ? askedIso! : nextIso;
 
   // "Add to calendar" targets. Google gets a prefilled template link; Apple and
   // Outlook get the downloadable .ics. Weekly classes carry a weekly recurrence.

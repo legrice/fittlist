@@ -1,0 +1,1 @@
+ALTER TABLE "classes" ADD COLUMN "skip_dates" jsonb DEFAULT '[]'::jsonb NOT NULL;

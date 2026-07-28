@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
-import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, weeklyRule } from "@/lib/ics";
+import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
 
 // A single class as a downloadable .ics — the "Add to calendar" action on a
 // class page. Apple Calendar and Outlook both import this; weekly classes get
@@ -65,7 +65,8 @@ export async function GET(
     `DTSTART:${floatingStart(date, c.startTime)}`,
     `DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`,
   ];
-  if (!c.specificDate) lines.push(weeklyRule(c.dayOfWeek, c.endsOn));
+  if (!c.specificDate)
+    lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime));
   lines.push(fold(`SUMMARY:${esc(c.name)}`));
   const loc = studio ? `${studio.name}, ${studio.address}` : c.location ?? "";
   if (loc) lines.push(fold(`LOCATION:${esc(loc)}`));

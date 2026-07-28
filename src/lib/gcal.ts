@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { weeklyRule } from "@/lib/ics";
+import { recurrenceLines } from "@/lib/ics";
 import { decryptSecret } from "@/lib/crypto";
 import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 
@@ -197,7 +197,8 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
     };
     if (studio) event.location = `${studio.name}, ${studio.address}`;
     else if (c.location) event.location = c.location;
-    if (!c.specificDate) event.recurrence = [weeklyRule(c.dayOfWeek, c.endsOn)];
+    if (!c.specificDate)
+      event.recurrence = recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime);
 
     try {
       const res = await fetch(`${CAL}/events`, {

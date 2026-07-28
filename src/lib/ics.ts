@@ -46,3 +46,20 @@ export function weeklyRule(dayOfWeek: number, endsOn?: string | null): string {
   if (!endsOn) return `RRULE:${base}`;
   return `RRULE:${base};UNTIL=${endsOn.replace(/-/g, "")}T235959Z`;
 }
+
+/** The full recurrence for a standing class: the weekly rule, plus an EXDATE
+ *  for every single day cancelled out of it. Floating, to match DTSTART — an
+ *  EXDATE only cancels an occurrence when its value form matches. Returned as
+ *  lines because Google Calendar's `recurrence` is a list of them too. */
+export function recurrenceLines(
+  dayOfWeek: number,
+  endsOn: string | null | undefined,
+  skipDates: string[] | null | undefined,
+  startTime: string,
+): string[] {
+  const out = [weeklyRule(dayOfWeek, endsOn)];
+  if (skipDates?.length) {
+    out.push(`EXDATE:${skipDates.map((d) => floatingStart(d, startTime)).join(",")}`);
+  }
+  return out;
+}

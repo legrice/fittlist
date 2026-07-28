@@ -143,7 +143,7 @@ export function ScheduleScreen({
   // One bell for everything: unread notifications + unread messages.
   const updatesUnread = notifUnread + inboxUnread;
 
-  const edit = (c: ClassDto) => {
+  const edit = (c: ClassDto, onIso?: string) => {
     // A weekly class is stored as one row per day; editing it should load every
     // day it recurs on (its template's weekly rows), not just the tapped day. A
     // one-off is a single dated row.
@@ -172,6 +172,7 @@ export function ScheduleScreen({
         days,
         dayOfWeek: c.dayOfWeek,
         endsOn: c.endsOn,
+        occurrenceDate: onIso ?? null,
         specificDate: c.specificDate,
         classId: c.id,
       },
@@ -284,7 +285,7 @@ export function ScheduleScreen({
                           key={`${d.iso}-${c.id}`}
                           className={`ps-event${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
-                          onClick={() => edit(c)}
+                          onClick={() => edit(c, d.iso)}
                         >
                           <span
                             className="ps-accent"

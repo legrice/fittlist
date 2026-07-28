@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { mondayOfCurrentWeek } from "@/lib/format";
-import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, weeklyRule } from "@/lib/ics";
+import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
 
 // Per-coach iCalendar feed. A trainer (or anyone) subscribes to this URL in
 // Google/Apple/Outlook and their fittlist classes appear alongside everything
@@ -63,7 +63,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
     lines.push(`DTSTAMP:${stamp}`);
     lines.push(`DTSTART:${floatingStart(date, c.startTime)}`);
     lines.push(`DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`);
-    if (!c.specificDate) lines.push(weeklyRule(c.dayOfWeek, c.endsOn));
+    if (!c.specificDate)
+    lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime));
     lines.push(fold(`SUMMARY:${esc(c.name)}`));
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
     lines.push(fold(`DESCRIPTION:${desc}`));

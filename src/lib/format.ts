@@ -161,15 +161,26 @@ export function siteOrigin(): string {
 
 /** Does this class run on the given date? One-offs land on their own date; a
  *  standing weekly runs on its weekday until endsOn (inclusive), forever if
- *  that's null. ISO dates compare correctly as strings. */
+ *  that's null, minus any single dates cancelled out of it. ISO dates compare
+ *  correctly as strings.
+ *
+ *  Every screen that expands a recurrence goes through here — schedule, public
+ *  page, feed, digest, discover, .ics — so a skipped date disappears from all
+ *  of them at once. That's the whole reason skip_dates lives on the row. */
 export function runsOn(
-  c: { specificDate: string | null; dayOfWeek: number; endsOn?: string | null },
+  c: {
+    specificDate: string | null;
+    dayOfWeek: number;
+    endsOn?: string | null;
+    skipDates?: string[] | null;
+  },
   iso: string,
   dow: number,
 ): boolean {
   if (c.specificDate) return c.specificDate === iso;
   if (c.endsOn && iso > c.endsOn) return false;
-  return c.dayOfWeek === dow;
+  if (c.dayOfWeek !== dow) return false;
+  return !c.skipDates?.includes(iso);
 }
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

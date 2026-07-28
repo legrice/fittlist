@@ -187,17 +187,54 @@ await page.getByRole("button", { name: "Delete this class" }).click();
 // meant rather than saying "this class" and taking the whole recurring day.
 await page.getByRole("heading", { name: "This class repeats" }).waitFor();
 await expect(
-  page.locator(".confirm-modal p").textContent().then((t) => t.includes("Mon, Wed & Fri")),
-  "the repeat confirm names the days it runs",
+  page
+    .locator(".confirm-modal p")
+    .textContent()
+    .then((t) => t.includes("every Friday") && t.includes("Mon & Wed")),
+  "the repeat confirm names the day you opened and the others it runs",
 );
-if (!(await page.getByRole("button", { name: "Delete all 3 days" }).count()))
+if (!(await page.getByRole("button", { name: "All 3 days it runs" }).count()))
   fail("a repeating class should offer deleting the whole set");
+if (!(await page.getByRole("button", { name: /^Just / }).count()))
+  fail("a repeating class should offer cancelling the single date you opened");
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
+
+// ---- one week off, without touching the weeks either side. The row is one
+// class recurring across the calendar, so the count of rendered Fridays drops
+// by exactly one while the class itself stays.
+{
+  const fridayRow = page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first();
+  const cid = await fridayRow.getAttribute("data-cid");
+  const rowsFor = () => page.locator(`.ps-event[data-cid="${cid}"]`).count();
+  const before = await rowsFor();
+  await page.getByRole("button", { name: "Delete this class" }).click();
+  await page.getByRole("button", { name: /^Just / }).click();
+  await page.getByText("cancelled", { exact: false }).waitFor();
+  await page.waitForFunction(
+    ([id, n]) => document.querySelectorAll(`.ps-event[data-cid="${id}"]`).length === n - 1,
+    [cid, before],
+    { timeout: 10000 },
+  );
+  // and it's gone from the public page too — one predicate, every surface
+  const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
+  const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
+  await page.reload();
+  await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+  if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
+  if (pubFridays === 0) fail("cancelling one week should not empty the public page");
+  // the .ics tells subscribed calendars about it rather than silently differing
+  const ics = await (await page.request.get(`${BASE}/api/cal/matt`)).text();
+  if (!/EXDATE:\d{8}T\d{6}/.test(ics)) fail("a cancelled date needs an EXDATE in the feed");
+}
+console.log("cancel one occurrence ok (weeks either side survive, EXDATE in the feed)");
+
 // The edit step just before this can recreate rows with fresh ids mid-flight,
 // so a delete can occasionally hit a stale row id. Retry the whole flow once.
+await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
+await page.getByRole("heading", { name: "Edit class" }).waitFor();
 for (let attempt = 0; ; attempt++) {
   await page.getByRole("button", { name: "Delete this class" }).click();
-  await page.getByRole("button", { name: "Delete Friday only" }).click();
+  await page.getByRole("button", { name: "Every Friday" }).click();
   await page.getByText("Deleted", { exact: true }).waitFor();
   let done = false;
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
@@ -231,7 +268,7 @@ console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
   await page.locator(".ps-event", { hasText: "Temp Repeat" }).first().click();
   await page.getByRole("heading", { name: "Edit class" }).waitFor();
   await page.getByRole("button", { name: "Delete this class" }).click();
-  await page.getByRole("button", { name: "Delete all 2 days" }).click();
+  await page.getByRole("button", { name: "All 2 days it runs" }).click();
   await page.getByText("Deleted 2 days").waitFor();
   await waitSchedule(page, before, 20000);
   if (await page.locator(".ps-event", { hasText: "Temp Repeat" }).count())
@@ -281,7 +318,11 @@ console.log("delete-all ok (whole repeating set goes)");
   if ((await page.locator("#fEndsOn").inputValue()) !== endIso)
     fail("the end date did not round-trip into the editor");
   await page.getByRole("button", { name: "Delete this class" }).click();
-  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  // a standing class that only runs one weekday still splits two ways: this
+  // week off, or the Tuesday itself gone. There's no third "all days" option.
+  if (await page.getByRole("button", { name: /days it runs/ }).count())
+    fail("a one-weekday class has no whole-set option to offer");
+  await page.getByRole("button", { name: "Every Tuesday" }).click();
   await page.getByText("Deleted", { exact: true }).waitFor();
   await waitSchedule(page, before, 20000);
 }

@@ -33,6 +33,7 @@ export type AdderPrefill = {
   days?: number[]; // preselected (edit); empty for duplicate
   dayOfWeek?: number; // the weekday actually opened, for the delete choice
   endsOn?: string | null; // weekly only: last date it runs
+  occurrenceDate?: string | null; // the dated row actually tapped, for "just this one"
   specificDate?: string | null; // set = editing a one-off pinned to this date
   classId?: string; // set = edit this class in place
 };
@@ -246,16 +247,33 @@ export function Adder({
   const repeats = repeatDays.length > 1;
   const openedDay =
     prefill?.dayOfWeek !== undefined ? DAY_FULL[prefill.dayOfWeek] : "this day";
+  // A standing class opened on a specific date can lose just that date — "I'm
+  // off this Friday" — without touching the weeks either side of it.
+  const occurrence = prefill?.specificDate ? null : prefill?.occurrenceDate ?? null;
+  const occurrenceLabel = occurrence
+    ? new Date(`${occurrence}T00:00:00Z`).toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : "";
 
-  const doDelete = (scope: "one" | "all") => {
+  const doDelete = (scope: "occurrence" | "one" | "all") => {
     if (!prefill?.classId) return;
     startTransition(async () => {
-      const res = await deleteClass(prefill.classId!, scope);
+      const res = await deleteClass(prefill.classId!, scope, occurrence);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      onDeleted(res.count && res.count > 1 ? `Deleted ${res.count} days` : "Deleted");
+      onDeleted(
+        scope === "occurrence"
+          ? `${occurrenceLabel} cancelled`
+          : res.count && res.count > 1
+            ? `Deleted ${res.count} days`
+            : "Deleted",
+      );
     });
   };
 
@@ -705,7 +723,41 @@ export function Adder({
           onClick={(e) => { if (e.target === e.currentTarget && !pending) setConfirmDelete(false); }}
         >
           <div className="confirm-modal" role="dialog" aria-modal="true">
-            {repeats ? (
+            {occurrence ? (
+              // A standing class, opened on one date. Three intentions, widest
+              // last: this one day off, this weekday for good, the whole set.
+              <>
+                <h3>This class repeats</h3>
+                <p>
+                  It runs every {openedDay}
+                  {repeats ? ` (and ${fmtDays(repeatDays.filter((d) => d !== prefill?.dayOfWeek))})` : ""}.
+                  Taking one week off, or is it finished?
+                </p>
+                <button
+                  className="btn si"
+                  disabled={pending}
+                  onClick={() => doDelete("occurrence")}
+                >
+                  {pending ? "Cancelling…" : `Just ${occurrenceLabel}`}
+                </button>
+                <button
+                  className="btn ghost confirm-all"
+                  disabled={pending}
+                  onClick={() => doDelete("one")}
+                >
+                  {pending ? "Deleting…" : `Every ${openedDay}`}
+                </button>
+                {repeats && (
+                  <button
+                    className="btn ghost confirm-all"
+                    disabled={pending}
+                    onClick={() => doDelete("all")}
+                  >
+                    {pending ? "Deleting…" : `All ${repeatDays.length} days it runs`}
+                  </button>
+                )}
+              </>
+            ) : repeats ? (
               <>
                 <h3>This class repeats</h3>
                 <p>

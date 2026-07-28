@@ -121,6 +121,9 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const classType = cleanType(input.classType);
   const description = input.description?.trim().slice(0, 500) || null;
 
+  // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
+  // quietly put you back on the Friday you already said you were off.
+  const keptSkips = new Map<number, string[]>();
   if (replaceClassId) {
     const [existing] = await db
       .select({
@@ -135,7 +138,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       // Editing a weekly class replaces its whole recurring set (all its
       // weekly rows), so the selected days become the new set - one-off dated
       // instances of the same class are left untouched.
-      await db
+      const gone = await db
         .delete(schema.classes)
         .where(
           and(
@@ -143,7 +146,9 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
             eq(schema.classes.templateId, existing.templateId),
             isNull(schema.classes.specificDate),
           ),
-        );
+        )
+        .returning({ dayOfWeek: schema.classes.dayOfWeek, skipDates: schema.classes.skipDates });
+      for (const g of gone) if (g.skipDates.length) keptSkips.set(g.dayOfWeek, g.skipDates);
     } else {
       await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
     }
@@ -167,6 +172,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       dayOfWeek,
       specificDate: oneOff,
       endsOn,
+      skipDates: oneOff ? [] : (keptSkips.get(dayOfWeek) ?? []),
       startTime: input.startTime,
       durationMin,
       name,
@@ -233,7 +239,9 @@ export async function updateClass(classId: string, input: PublishInput): Promise
 // dated instances of the same class stay.
 export async function deleteClass(
   classId: string,
-  scope: "one" | "all" = "one",
+  scope: "occurrence" | "one" | "all" = "one",
+  /** Required for "occurrence": the single ISO date being cancelled. */
+  occurrenceDate?: string | null,
 ): Promise<{ ok: boolean; error?: string; count?: number }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
@@ -243,10 +251,39 @@ export async function deleteClass(
       id: schema.classes.id,
       templateId: schema.classes.templateId,
       specificDate: schema.classes.specificDate,
+      skipDates: schema.classes.skipDates,
     })
     .from(schema.classes)
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
   if (!row) return { ok: true, count: 0 };
+
+  // Cancelling a single date doesn't delete anything — the standing class keeps
+  // running, this one day is stamped out of it. A one-off has only the one
+  // occurrence, so cancelling it is just deleting it.
+  if (scope === "occurrence" && !row.specificDate) {
+    const iso = occurrenceDate?.trim() ?? "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return { ok: false, error: "Which date?" };
+    if (!row.skipDates.includes(iso)) {
+      await db
+        .update(schema.classes)
+        .set({ skipDates: [...row.skipDates, iso].sort() })
+        .where(eq(schema.classes.id, row.id));
+      // Nobody is going to a class that isn't on. Clearing the marks keeps the
+      // members' weeks and share images honest — they read attendances
+      // directly rather than through runsOn.
+      await db
+        .delete(schema.attendances)
+        .where(
+          and(
+            eq(schema.attendances.classId, row.id),
+            eq(schema.attendances.occurrenceDate, iso),
+          ),
+        );
+    }
+    syncGoogleAfter(userId);
+    revalidatePath("/app");
+    return { ok: true, count: 1 };
+  }
 
   let count = 1;
   if (scope === "all" && !row.specificDate && row.templateId) {

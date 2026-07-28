@@ -240,6 +240,10 @@ export const classes = pgTable(
     // Last date a standing weekly class runs (inclusive). null = no end, the
     // original behaviour. Ignored for one-offs, which are their own date.
     endsOn: date("ends_on"),
+    // ISO dates this weekly class does NOT run — "I'm off this Friday". Kept on
+    // the row rather than in an exceptions table so runsOn() sees them for free
+    // at every one of the places that expand a recurrence.
+    skipDates: jsonb("skip_dates").$type<string[]>().notNull().default([]),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),
