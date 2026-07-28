@@ -7,5 +7,9 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 shot-*.png
+# smoke-test screenshots: the suites write them to the repo root
+fb-*.png
+nav-*.png
+loc-*.png
 # where the test suites tell you to log the server, so it lands in the repo root
 server.log
