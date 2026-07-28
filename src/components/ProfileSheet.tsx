@@ -361,7 +361,7 @@ export function ProfileSheet({
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
           {canSendFeedback && (
-            <a className="setrow" href="/feedback">
+            <a className="setrow setrow-hi" href="/feedback">
               <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
               <span className="setrow-txt">
                 <span className="t">Send feedback</span>

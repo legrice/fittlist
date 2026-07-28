@@ -6,6 +6,7 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/desktop-smoke.mjs
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("DESKTOP FAIL: " + m); };
@@ -26,7 +27,7 @@ for (const [i, n] of names.entries()) {
   await p.getByText("Pick your link.").waitFor();
   await p.getByPlaceholder("Your name").fill(n);
   await p.getByRole("button", { name: "Claim it" }).click();
-  await p.getByRole("button", { name: "Skip for now" }).click();
+  await skipSetup(p);
   await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
   await p.getByRole("button", { name: "Add your first class" }).click();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(`${n} Class`);
@@ -68,14 +69,18 @@ await m.getByRole("button", { name: "Claim it" }).click();
 await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.getByRole("heading", { name: "Tell people who you are." }).waitFor();
+await fillLocation(m);
 await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 for (const n of names) {
   await m.goto(`${BASE}/discover`);
   const row = m.locator(".disrow", { hasText: n }).first();
   await row.waitFor();
+  // The button is a client component on a server-rendered list: clicking it
+  // before hydration does nothing, and a half-followed rail wouldn't overflow.
+  await m.waitForTimeout(400);
   await row.getByRole("button", { name: /Follow/ }).first().click();
-  await m.waitForTimeout(250);
+  await row.getByRole("button", { name: "Following" }).waitFor();
 }
 console.log("followed all eight ok");
 
@@ -96,12 +101,21 @@ await m.waitForTimeout(500);
   await m.locator(".headnav-l", { hasText: "Discover" }).click();
   await m.waitForURL(/\/discover/);
   await m.locator(".headnav-l.on", { hasText: "Discover" }).waitFor();
-  await m.goBack();
-  await m.locator(".feedstrip").waitFor();
-  await m.waitForTimeout(500);
+  await m.locator(".headnav-l", { hasText: "Following" }).click();
+  await m.waitForURL(/\/feed/);
+  await m.locator(".headnav-l.on", { hasText: "Following" }).waitFor();
+  await m.locator(".feedav").first().waitFor();
   console.log("header links navigate and light up ok");
 }
 
+// Nine avatars (All, plus the eight) is what makes the rail overflow, so a
+// missing arrow below should mean the arrow is broken, not the fixture.
+{
+  await m.locator(".feedav").first().waitFor();
+  const n = await m.locator(".feedav").count();
+  if (n !== names.length + 1)
+    fail(`expected ${names.length + 1} avatars in the rail, got ${n} at ${m.url()}`);
+}
 const rightArrow = m.locator(".railarrow-r");
 if (!(await rightArrow.isVisible())) fail("no right arrow with a rail that overflows");
 if (await m.locator(".railarrow-l").isVisible().catch(() => false))

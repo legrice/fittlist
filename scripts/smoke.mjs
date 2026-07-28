@@ -2,6 +2,7 @@
 // self-serve signup flow, which the invite-only beta gate would otherwise
 // block. The gate itself is covered by scripts/invite-smoke.mjs.
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 import fs from "fs";
 
 const SCRATCH = process.env.SMOKE_OUT ?? ".";
@@ -112,7 +113,7 @@ await page.getByRole("button", { name: "Claim it" }).click();
 // ---- setup wizard (photo -> info -> studios), skippable. Skip it and confirm
 // we land on the blank schedule with the add button (no auto-opened adder).
 await page.getByRole("heading", { name: "Add a photo." }).waitFor();
-await page.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(page);
 await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
 if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app should be Poster");
 console.log("setup wizard skippable, blank schedule ok");
@@ -743,7 +744,7 @@ await anonPage.getByPlaceholder("Your name").fill("Sam");
 await anonPage.getByRole("button", { name: "Claim it" }).click();
 // claiming a handle runs the setup wizard; skip it to land on the schedule
 await anonPage.getByRole("heading", { name: "Add a photo." }).waitFor();
-await anonPage.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(anonPage);
 await anonPage.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
 
@@ -978,7 +979,7 @@ await fan.getByRole("button", { name: "Claim it" }).click();
 await fan.getByRole("heading", { name: "Add a photo." }).waitFor();
 if ((await fan.locator(".wizdot").count()) !== 2)
   fail("a member's setup is two steps: photo, then who they are");
-await fan.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(fan);
 await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.

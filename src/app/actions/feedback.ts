@@ -84,6 +84,19 @@ export async function sendFeedback(bodyRaw: string): Promise<{ ok: boolean; erro
   return { ok: true };
 }
 
+// The prompt has been put in front of them. Recorded when it appears rather
+// than when it's answered, so ignoring it counts as an answer and the app
+// doesn't ask again on the next page load.
+export async function markFeedbackPrompted(): Promise<void> {
+  const userId = await getSessionUserId();
+  if (!userId) return;
+  const db = await getDb();
+  await db
+    .update(schema.users)
+    .set({ feedbackPromptedAt: new Date() })
+    .where(eq(schema.users.id, userId));
+}
+
 // The signed-in person's own feedback thread, if they've started one.
 export async function myFeedback(): Promise<FeedbackThread | null> {
   const userId = await getSessionUserId();

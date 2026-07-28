@@ -1234,7 +1234,11 @@ button.ps-card { cursor: pointer; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* Divider under About (Where I coach), then a titled Schedule section. */
 .pubpanel-sched { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 40px; }
-.sched-h { margin-bottom: 26px; }
+/* A section header that follows content rather than starting the page. It had
+   26px of air under it and none above, so it sat on the card before it and
+   floated off the one after. Same rhythm as .profstudios now: space above,
+   the label close to what it labels. */
+.sched-h { margin: 28px 0 10px; }
 
 .profcta {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
@@ -1400,6 +1404,8 @@ button.ps-card { cursor: pointer; }
 }
 .setrow {
   display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 16px; background: #fff;
+  /* Some rows are links and some are buttons. They're the same row. */
+  text-decoration: none; color: inherit;
 }
 .setrow + .setrow { border-top: 1px solid var(--line); }
 .setrow:active { background: #f3ecdf; }
@@ -1408,6 +1414,15 @@ button.ps-card { cursor: pointer; }
 .setrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502; }
 .setrow-txt .s { font-size: 12.5px; color: var(--ol); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setrow-chev { color: rgba(25, 21, 2, .3); flex-shrink: 0; display: flex; }
+/* One row that asks for something instead of offering it. The accent stripe
+   and the filled icon are the whole difference: it still reads as part of the
+   list, it just doesn't disappear into it. */
+.setrow-hi { box-shadow: inset 3px 0 0 var(--si); }
+.setrow-hi .setrow-ic {
+  width: 30px; height: 30px; border-radius: 999px; background: var(--si); color: #fff;
+  align-items: center; justify-content: center; margin: -3px -2px -3px -1px;
+}
+.setrow-hi .setrow-txt .t { color: var(--si); }
 
 /* settings sub-view slides in over the account page, back slides it out right */
 .settingspane { z-index: 41; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
@@ -1746,6 +1761,11 @@ button.ps-card { cursor: pointer; }
 /* Second choice on a repeating delete: same weight as the first, so neither
    reads as the safe default — they're different intentions, not degrees. */
 .confirm-modal .btn.confirm-all { margin-top: 10px; }
+/* The "how's it going?" prompt: a confirm modal that takes an answer, so the
+   copy reads left and the box gets room. */
+.fbmodal { text-align: left; max-width: 400px; }
+.fbmodal h3 { text-align: left; }
+.fbmodal-in { resize: none; margin-bottom: 14px; }
 .confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 .confirm-keep[disabled] { opacity: .5; }
 .adminremove { margin-top: 10px; font-weight: 700; font-size: 13px; color: #a8452a; }

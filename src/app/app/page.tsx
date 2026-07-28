@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
-import { feedbackHost } from "@/lib/feedback";
+import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { coachAnalytics } from "@/lib/visits";
@@ -11,6 +11,7 @@ import { unreadNotifications } from "@/lib/notify";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
+import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
 export const dynamic = "force-dynamic";
@@ -65,6 +66,7 @@ export default async function SchedulePage({
   if (user && !user.onboardedAt) redirect("/welcome");
   const gconn = await isGoogleConnected(userId);
   const fbHost = await feedbackHost();
+  const askFeedback = await feedbackPromptDue(userId);
   const passkeyRows = await db
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
@@ -174,6 +176,7 @@ export default async function SchedulePage({
       myColor={user?.avatarColor ?? null}
       look={user?.look ?? null}
     />
+    {askFeedback && fbHost && <FeedbackPrompt hostName={fbHost.name.trim() || "We"} />}
     </>
   );
 }

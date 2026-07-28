@@ -3,12 +3,21 @@
 //
 //   rm -rf .data/pglite
 //   INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
-//     NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
+//     FEEDBACK_PROMPT_AFTER_DAYS=0 NEXT_PUBLIC_ORIGIN=http://localhost:3000 \
+//     npm run start > server.log 2>&1 &
 //   node scripts/feedback-smoke.mjs
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("FEEDBACK FAIL: " + m); };
+/** Close the feedback prompt if this page happens to be showing one. */
+async function dismissPrompt(page) {
+  const modal = page.getByRole("dialog", { name: "Feedback" });
+  if (!(await modal.isVisible().catch(() => false))) return;
+  await modal.getByRole("button", { name: "Not right now" }).click();
+  await modal.waitFor({ state: "hidden" });
+}
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
 // the admin, who feedback goes to
@@ -24,7 +33,7 @@ await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await ad.getByText("Pick your link.").waitFor();
 await ad.getByPlaceholder("Your name").fill("Matt");
 await ad.getByRole("button", { name: "Claim it" }).click();
-await ad.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(ad);
 await ad.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("admin fixture ok");
 
@@ -53,10 +62,15 @@ await p.getByRole("button", { name: "Claim it" }).click();
 await p.getByRole("heading", { name: "Add a photo." }).waitFor();
 await p.getByRole("button", { name: "Continue" }).click();
 await p.getByRole("heading", { name: "Tell people who you are." }).waitFor();
+await fillLocation(p);
 await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 
 await p.goto(BASE + "/you");
+// This account is due the "how's it going?" prompt (the server reads
+// FEEDBACK_PROMPT_AFTER_DAYS=0), and it's modal: it covers the settings list
+// until it's answered. Close it and use the door under it.
+await dismissPrompt(p);
 const row = p.getByText("Send feedback").first();
 await row.waitFor();
 await row.click();
@@ -107,6 +121,53 @@ await ad.goto(BASE + "/updates?tab=messages");
 const rows = await ad.locator(".inboxrow").count();
 if (rows !== 1) fail(`expected one thread, got ${rows}`);
 console.log("one thread per person ok");
+
+// The prompt: a fresh account that has "been here a while" (the server reads
+// FEEDBACK_PROMPT_AFTER_DAYS=0, so onboarding counts) gets asked once.
+const c3 = await b.newContext({ viewport: { width: 390, height: 844 } });
+const q = await c3.newPage();
+q.setDefaultTimeout(15000);
+await q.goto(BASE + "/");
+await q.getByRole("button", { name: "Sign up with email" }).click();
+await q.locator(".roleseg button", { hasText: "here to train" }).click();
+await q.getByPlaceholder("you@example.com").fill("asked@example.com");
+await q.getByPlaceholder("Password").fill("member-pass-123");
+await q.getByRole("button", { name: "Create account" }).click();
+await q.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await q.getByText("Pick your link.").waitFor();
+await q.getByPlaceholder("Your name").fill("Dana");
+await q.getByRole("button", { name: "Claim it" }).click();
+await q.getByRole("heading", { name: "Add a photo." }).waitFor();
+await q.getByRole("button", { name: "Continue" }).click();
+await q.getByRole("heading", { name: "Tell people who you are." }).waitFor();
+await fillLocation(q);
+await q.getByRole("button", { name: "Finish setup" }).click();
+await q.waitForURL("**/feed");
+
+const modal = q.getByRole("dialog", { name: "Feedback" });
+await modal.waitFor();
+await q.screenshot({ path: OUT + "/shot-fb-5-prompt.png" });
+console.log("prompt shown ok");
+
+// Shown counts as asked: it doesn't come back on the next screen.
+await modal.getByRole("button", { name: "Not right now" }).click();
+await modal.waitFor({ state: "hidden" });
+await q.goto(BASE + "/discover");
+await q.waitForTimeout(900);
+if (await q.getByRole("dialog", { name: "Feedback" }).isVisible().catch(() => false))
+  fail("the prompt came back after being dismissed");
+await q.reload();
+await q.waitForTimeout(900);
+if (await q.getByRole("dialog", { name: "Feedback" }).isVisible().catch(() => false))
+  fail("the prompt came back on a reload");
+console.log("asked once ok");
+
+// And someone who already wrote in is never asked.
+await p.goto(BASE + "/feed");
+await p.waitForTimeout(900);
+if (await p.getByRole("dialog", { name: "Feedback" }).isVisible().catch(() => false))
+  fail("someone who already sent feedback got the prompt");
+console.log("no prompt for someone who already wrote in ok");
 
 await b.close();
 console.log("FEEDBACK CHECKS PASSED");

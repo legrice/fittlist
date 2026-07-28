@@ -91,9 +91,20 @@ export async function updateProfile(input: {
   const title = input.title.trim().slice(0, 80);
   const about = input.about.trim().slice(0, 600);
   // One canonical "City, ST" per place, so Discover groups them as one.
-  const loc = normalizeLocation(input.location, await knownLocations());
-  if (!loc.ok) return { ok: false, error: loc.error };
-  const location = loc.value?.slice(0, 80) ?? null;
+  //
+  // Only touched when the caller actually collected it. Passing it means the
+  // form showed the field, and the field is required: Discover filters by
+  // location, and a profile without one can't be found that way. Omitting it
+  // means the form was about something else (contact details, say) and the
+  // stored location is none of its business. It used to be written either
+  // way, so saving contact info quietly cleared the coach's city.
+  let location: string | null = null;
+  if (input.location !== undefined) {
+    const loc = normalizeLocation(input.location, await knownLocations());
+    if (!loc.ok) return { ok: false, error: loc.error };
+    if (!loc.value) return { ok: false, error: "Add your city, like Jersey City, NJ." };
+    location = loc.value.slice(0, 80);
+  }
   const certifications = cleanChips(input.certifications, 40, 12);
   const highlights = cleanChips(input.highlights, 60, 6);
   const availability =
@@ -110,7 +121,7 @@ export async function updateProfile(input: {
     name: string;
     title: string | null;
     about: string;
-    location: string | null;
+    location?: string | null;
     certifications: string[];
     highlights: string[];
     availability: string | null;
@@ -122,7 +133,8 @@ export async function updateProfile(input: {
     profileLinks?: { label: string; url: string }[];
     photo?: string | null;
     avatarColor?: string | null;
-  } = { name, title: title || null, about, location, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
+  } = { name, title: title || null, about, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
+  if (location !== null) set.location = location;
   if (input.profileLinks !== undefined) {
     // Labelled extra links: normalise the protocol, drop anything unparseable,
     // fall back to the host for a missing label, cap the list.

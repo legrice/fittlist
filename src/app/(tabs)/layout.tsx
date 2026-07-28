@@ -2,9 +2,11 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
+import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
   const unread = await unreadNotifications(userId);
+  // "How is it going?", once they have been here long enough to know.
+  const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
 
   return (
     <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
@@ -42,6 +46,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         {children}
       </div>
       <NavBar coach={isCoach} />
+      {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );
 }

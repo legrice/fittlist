@@ -76,6 +76,10 @@ export const users = pgTable("users", {
   // Set when the coach finishes (or skips) the post-signup setup wizard. Null =
   // they still need to run it; the app redirects them into /welcome until it's set.
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  // When we last put the "how's it going?" prompt in front of them. Set the
+  // moment it's shown, not when it's answered: a prompt they scrolled past is
+  // still a prompt they've seen, and asking again next page load is nagging.
+  feedbackPromptedAt: timestamp("feedback_prompted_at", { withTimezone: true }),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

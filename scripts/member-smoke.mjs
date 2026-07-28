@@ -5,6 +5,7 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/member-smoke.mjs
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("MEMBER FAIL: " + m); };
@@ -23,7 +24,7 @@ await co.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await co.getByText("Pick your link.").waitFor();
 await co.getByPlaceholder("Your name").fill("Carina Coach");
 await co.getByRole("button", { name: "Claim it" }).click();
-await co.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(co);
 await co.getByRole("heading", { name: "Your week is empty" }).waitFor();
 await c1.close();
 console.log("coach fixture ok");
@@ -60,6 +61,7 @@ if (await p.locator("#wInstagram").count()) fail("contact fields are a coach's")
 await p.locator("#wTitle").fill("Lifts heavy, runs slow");
 await p.locator("#wAbout").fill("Six mornings a week, mostly barbells.");
 await p.screenshot({ path: OUT + "/shot-member-wiz2.png" });
+await fillLocation(p);
 await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 console.log("member setup ok (two steps, no studios, lands on their week)");
@@ -112,6 +114,10 @@ console.log("chrome survives the loading boundary ok");
 
 // follow the coach so the profile has a "trains with"
 await p.goto(BASE + "/carinacoach");
+// The pill is a client component on a server-rendered page; clicking it before
+// hydration lands on nothing at all.
+await p.locator(".followpill").waitFor();
+await p.waitForTimeout(400);
 await p.locator(".followpill").click();
 await p.locator(".followpill", { hasText: "Following" }).waitFor();
 
@@ -141,7 +147,8 @@ await p.screenshot({ path: OUT + "/shot-member-editor.png" });
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
-await p.getByText("Jersey City, NJ").waitFor();
+// Scoped to their own line: the coaches they train with carry cities too.
+await p.locator(".mempro-loc", { hasText: "Jersey City, NJ" }).waitFor();
 console.log("member profile edit ok (location normalized to City, ST)");
 
 // Now that Jersey City, NJ exists, a bare "Jersey City" joins it instead of
@@ -164,7 +171,7 @@ await p.locator("#meLoc").fill("jersey city");
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
-await p.getByText("Jersey City, NJ").waitFor();
+await p.locator(".mempro-loc", { hasText: "Jersey City, NJ" }).waitFor();
 console.log("bare city snaps to the one that exists ok");
 await ctx.close();
 await b.close();

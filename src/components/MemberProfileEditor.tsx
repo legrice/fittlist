@@ -219,7 +219,7 @@ export function MemberProfileEditor({
             />
 
             <label className="flabel" htmlFor="meLoc">
-              Where you train <span>· city and state, optional</span>
+              Where you train <span>· city and state, required</span>
             </label>
             <LocationInput id="meLoc" value={pLocation} onChange={setPLocation} />
 

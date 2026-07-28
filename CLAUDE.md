@@ -74,8 +74,9 @@ node scripts/member-smoke.mjs     # a member's link, setup, profile and edits
 
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
-  NEXT_PUBLIC_ORIGIN=http://localhost:3000 npm run start > server.log 2>&1 &
-node scripts/feedback-smoke.mjs   # writing in, the reply, one thread per person
+  FEEDBACK_PROMPT_AFTER_DAYS=0 NEXT_PUBLIC_ORIGIN=http://localhost:3000 \
+  npm run start > server.log 2>&1 &
+node scripts/feedback-smoke.mjs   # writing in, the reply, the prompt
 
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
@@ -125,6 +126,13 @@ bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
 
+**The feedback prompt is modal, and "shown" counts as "asked".**
+`feedbackPromptDue()` gates it: onboarded, `FEEDBACK_PROMPT_AFTER_DAYS` old
+(3 by default, 0 in the suite), never written in, not asked in the last 60
+days. It renders in the tabs layout and on `/app`, over whatever is there, so
+a test that clicks through an account old enough to qualify has to dismiss it
+first.
+
 **An unknown icon name renders a plain circle.** `Icon` falls back to Lucide's
 `Circle` rather than throwing, so a typo or a name that was never mapped ships
 as a blank button and nothing complains. Add the name to `ICONS` in
@@ -134,6 +142,13 @@ as a blank button and nothing complains. Add the name to `ICONS` in
 940px and `HeaderNav` takes over; the coach-rail arrows key off
 `(hover: hover) and (pointer: fine)`, because "can't swipe" is a property of
 the pointer and a width breakpoint would put arrows on a tablet.
+
+**Location is required, everywhere it's asked.** The setup wizard won't finish
+without one (Skip lands on that step instead), and `updateProfile` rejects an
+empty one. It only touches the column when the caller passes it, though:
+passing means the form showed the field, omitting means the form was about
+something else. That distinction is load-bearing, because saving contact info
+used to write `location: null` and quietly clear the coach's city.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { LocationInput } from "@/components/LocationInput";
 import { updateProfile } from "@/app/actions/profile";
 import { completeOnboarding, setCoachStudios } from "@/app/actions/onboarding";
 import { createStudio } from "@/app/actions/studios";
@@ -16,6 +17,7 @@ export function OnboardingWizard({
   photo,
   title,
   about,
+  location,
   instagram,
   website,
   contactEmail,
@@ -31,6 +33,7 @@ export function OnboardingWizard({
   photo: string | null;
   title: string;
   about: string;
+  location: string;
   instagram: string;
   website: string;
   contactEmail: string;
@@ -42,10 +45,13 @@ export function OnboardingWizard({
   const router = useRouter();
   const fan = kind === "fan";
   const TOTAL = fan ? 2 : 3;
+  // Step 2 asks who you are, and that's where the city lives.
+  const LOCATION_STEP = 2;
   const [step, setStep] = useState(1);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
+  const [pLocation, setPLocation] = useState(location);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
   const [pEmail, setPEmail] = useState(contactEmail);
@@ -126,11 +132,17 @@ export function OnboardingWizard({
   // is optional, so this never blocks.
   const finish = () => {
     setError("");
+    if (!pLocation.trim()) {
+      setStep(LOCATION_STEP);
+      setError("Add your city first. It's how people find you.");
+      return;
+    }
     startTransition(async () => {
       const res = await updateProfile({
         name,
         title: pTitle,
         about: pAbout,
+        location: pLocation,
         instagram: pInstagram,
         website: pWebsite,
         contactEmail: pEmail,
@@ -151,6 +163,10 @@ export function OnboardingWizard({
 
   const next = () => {
     setError("");
+    if (step === LOCATION_STEP && !pLocation.trim()) {
+      setError("Add your city first. It's how people find you.");
+      return;
+    }
     if (step < TOTAL) setStep(step + 1);
     else finish();
   };
@@ -242,6 +258,12 @@ export function OnboardingWizard({
               placeholder="Coach at Ironbound Performance. Strength & conditioning, all levels."
               onChange={(e) => setPAbout(e.target.value)}
             />
+            {/* The one field here that isn't optional. Discover is organised by
+                city, so a profile without one can't be browsed to. */}
+            <label className="flabel" htmlFor="wLocation">
+              Location <span>· city and state, required</span>
+            </label>
+            <LocationInput id="wLocation" value={pLocation} onChange={setPLocation} />
             {!fan && (
             <>
             <label className="flabel" htmlFor="wInstagram">

@@ -1,6 +1,17 @@
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
+
+/** How long someone uses the app before we ask what they think. Long enough to
+ *  have an opinion, short enough that they still remember what annoyed them.
+ *  Overridable so a test doesn't have to wait three days. */
+export function promptAfterDays(): number {
+  const raw = Number(process.env.FEEDBACK_PROMPT_AFTER_DAYS);
+  return Number.isFinite(raw) && raw >= 0 ? raw : 3;
+}
+
+/** And how long before we'd ask a second time, having been ignored once. */
+const ASK_AGAIN_DAYS = 60;
 
 export type FeedbackHost = { id: string; name: string; email: string };
 
@@ -26,4 +37,47 @@ export async function feedbackHost(): Promise<FeedbackHost | null> {
     if (hit) return hit;
   }
   return null;
+}
+
+// Is it time to ask this person how it's going?
+//
+// Only once they've had the app long enough to have an opinion, only if
+// they've never written in, and only if we haven't already asked recently. A
+// prompt that fires on day one gets "seems fine"; one that fires every session
+// gets closed without reading.
+export async function feedbackPromptDue(userId: string): Promise<boolean> {
+  const host = await feedbackHost();
+  if (!host || host.id === userId) return false;
+
+  const db = await getDb();
+  const [me] = await db
+    .select({
+      email: schema.users.email,
+      onboardedAt: schema.users.onboardedAt,
+      createdAt: schema.users.createdAt,
+      promptedAt: schema.users.feedbackPromptedAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  // Still in the setup wizard: they haven't seen the app yet.
+  if (!me || !me.onboardedAt) return false;
+
+  const now = Date.now();
+  const day = 86_400_000;
+  const since = me.onboardedAt ?? me.createdAt;
+  if (now - since.getTime() < promptAfterDays() * day) return false;
+  if (me.promptedAt && now - me.promptedAt.getTime() < ASK_AGAIN_DAYS * day) return false;
+
+  // Already told us something: they know where the door is.
+  const [thread] = await db
+    .select({ id: schema.inquiryThreads.id })
+    .from(schema.inquiryThreads)
+    .where(
+      and(
+        eq(schema.inquiryThreads.coachUserId, host.id),
+        eq(schema.inquiryThreads.requesterEmail, me.email),
+        eq(schema.inquiryThreads.kind, "feedback"),
+      ),
+    );
+  return !thread;
 }

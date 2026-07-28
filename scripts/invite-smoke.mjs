@@ -3,6 +3,7 @@
 // the request and can invite (by request or by email), and invited emails can
 // then sign up.
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
@@ -51,7 +52,7 @@ await admin.getByText("Pick your link.").waitFor();
 await admin.getByPlaceholder("Your name").fill("Matt Admin");
 await admin.getByRole("button", { name: "Claim it" }).click();
 await admin.getByRole("heading", { name: "Add a photo." }).waitFor();
-await admin.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(admin);
 await admin.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
 await admin.goto(BASE + "/admin");
@@ -139,7 +140,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByPlaceholder("Your name").fill("Member Person");
     await pg.getByRole("button", { name: "Claim it" }).click();
     await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
-    await pg.getByRole("button", { name: "Skip for now" }).click();
+    await skipSetup(pg);
     await pg.waitForURL("**/feed");
     await pg.getByText("Nobody yet").waitFor();
     console.log("invited member signup ok");
@@ -234,7 +235,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.getByText("Pick your link.").waitFor();
   await pg.getByPlaceholder("Your name").fill("Riley Requestor");
   await pg.getByRole("button", { name: "Claim it" }).click();
-  await pg.getByRole("button", { name: "Skip for now" }).click();
+  await skipSetup(pg);
   await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
   await pg.locator(".usericon").click();

@@ -38,6 +38,7 @@ export default async function WelcomePage() {
       photo={user.photo}
       title={user.title ?? ""}
       about={user.about ?? ""}
+      location={user.location ?? ""}
       instagram={user.instagram ?? ""}
       website={user.website ?? ""}
       contactEmail={user.contactEmail ?? ""}

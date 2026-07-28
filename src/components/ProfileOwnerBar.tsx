@@ -262,7 +262,7 @@ export function ProfileOwnerBar({
               onChange={(e) => setPTitle(e.target.value)}
             />
             <label className="flabel" htmlFor="pLocation">
-              Location <span>· city and state</span>
+              Location <span>· city and state, required</span>
             </label>
             <LocationInput id="pLocation" value={pLocation} onChange={setPLocation} />
             <label className="flabel" htmlFor="pAbout">

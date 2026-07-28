@@ -113,7 +113,7 @@ export function MemberAccount({
         <StartCoaching handle={handle} />
         <InviteFriends />
         {canSendFeedback && (
-          <a className="setrow" href="/feedback">
+          <a className="setrow setrow-hi" href="/feedback">
             <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
             <span className="setrow-txt">
               <span className="t">Send feedback</span>

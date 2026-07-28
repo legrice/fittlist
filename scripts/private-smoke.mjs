@@ -2,6 +2,7 @@
 // Verifies: a private item shows on the coach's own schedule (badged, with its
 // free-form location) but is hidden from the public page.
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("PRIVATE SMOKE FAIL: " + m); };
@@ -20,7 +21,7 @@ await page.getByText("Pick your link.").waitFor();
 await page.getByPlaceholder("Your name").fill("Coach");
 await page.getByRole("button", { name: "Claim it" }).click();
 await page.getByRole("heading", { name: "Add a photo." }).waitFor();
-await page.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(page);
 await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
 // public class

@@ -8,6 +8,7 @@
 //   node scripts/auth-smoke.mjs
 // Leave INVITE_ONLY at its default — the gate is part of what's being tested.
 import { chromium } from "playwright";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 import fs from "fs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
@@ -29,7 +30,7 @@ await ad.getByRole("button", { name: "Create account" }).click();
 await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await ad.getByPlaceholder("Your name").fill("Matt Admin");
 await ad.getByRole("button", { name: "Claim it" }).click();
-await ad.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(ad);
 await ad.goto(BASE + "/admin");
 await ad.getByRole("button", { name: "Invites", exact: true }).click();
 await ad.getByPlaceholder("coach@example.com").fill("nopw@example.com");
@@ -54,7 +55,7 @@ await p1.getByRole("button", { name: "I coach classes" }).click();
 await p1.getByText("Pick your link.").waitFor();
 await p1.getByPlaceholder("Your name").fill("Nopw Coach");
 await p1.getByRole("button", { name: "Claim it" }).click();
-await p1.getByRole("button", { name: "Skip for now" }).click();
+await skipSetup(p1);
 await p1.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("passwordless account created ok");
 await c1.close();
@@ -135,7 +136,7 @@ await c3.close();
   await fp.getByPlaceholder("Your name").fill("Just A Fan");
   await fp.getByRole("button", { name: "Claim it" }).click();
   await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
-  await fp.getByRole("button", { name: "Skip for now" }).click();
+  await skipSetup(fp);
   await fp.waitForURL("**/feed");
   await fp.getByText("Nobody yet").waitFor();
   // and it stuck: going back to / sends them to their week, not to a claim step
