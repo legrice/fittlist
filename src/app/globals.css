@@ -1572,21 +1572,20 @@ button.ps-card { cursor: pointer; }
   from { transform: translateX(0); }
   to   { transform: translateX(100%); }
 }
-@keyframes slideOutLeft {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
 
-/* public pages slide in from the left going forward; a "back" tap slides the
-   current page out to the left and brings the previous one in from the right. */
-.page-slide { min-height: 100dvh; animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
-.page-slide.from-right { animation: slideInRight .3s cubic-bezier(.22, .8, .28, 1); }
-.page-slide.exit-left { animation: slideOutLeft .24s cubic-bezier(.4, 0, .7, 1) forwards; }
+/* Push and pop, the way a stack of cards behaves: opening a page slides it in
+   from the right, over what you were looking at. Going back sends it out to the
+   right again, uncovering the page underneath — so back always travels
+   left-to-right and forward always right-to-left. The account's settings
+   sub-views already moved this way; now every page agrees. */
+.page-slide { min-height: 100dvh; animation: slideInRight .3s cubic-bezier(.22, .8, .28, 1); }
+.page-slide.from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
+.page-slide.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   .acctwrap, .acctwrap.acct-from-left,
   .settingspane.from-right, .settingspane.exit-right,
-  .page-slide, .page-slide.from-right, .page-slide.exit-left { animation: none; }
+  .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
 }
 
 /* ---- admin panel (/admin), mobile-first ---- */

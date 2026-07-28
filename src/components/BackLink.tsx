@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 
-// A "back" navigation: slide the current public page out to the left, flag the
-// previous page to enter from the right, then navigate - the reverse of the
-// forward (slide-in-from-left) transition.
+// A "back" navigation: slide the current page out to the right, uncovering
+// what's beneath, and flag the previous page to enter from the left — the
+// mirror of the forward (slide-in-from-right) push.
 export function useSlideBack() {
   const router = useRouter();
   // No href means we don't know the destination by name — walk the history
@@ -16,7 +16,7 @@ export function useSlideBack() {
       const el = document.querySelector(".page-slide");
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (el && !reduce) {
-        el.classList.add("exit-left");
+        el.classList.add("exit-right");
         window.setTimeout(go, 210);
         return;
       }
