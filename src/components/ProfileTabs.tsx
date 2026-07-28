@@ -16,6 +16,7 @@ export function ProfileTabs({
   title,
   location,
   trackSchedule,
+  back,
   action,
   avail,
   about,
@@ -28,6 +29,8 @@ export function ProfileTabs({
   title: string;
   location: string;
   trackSchedule: boolean;
+  /** The way out, pinned in the same row as the name. */
+  back: ReactNode;
   /** The single action beside the name: Follow, or the email list. */
   action: ReactNode;
   avail: ReactNode | null;
@@ -137,7 +140,12 @@ export function ProfileTabs({
 
   return (
     <>
+      {/* Back, name and the one action ride together: the row stays pinned as
+          you scroll, so leaving and following never scroll out of reach. The
+          title and location below it are not pinned — they're context, not
+          controls. */}
       <div className="pubhead" ref={rowRef}>
+        {back}
         <h1 className="profname">{name}</h1>
         {action}
       </div>

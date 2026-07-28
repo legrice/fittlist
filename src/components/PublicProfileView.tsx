@@ -7,12 +7,10 @@ import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { studioPath } from "@/lib/studio";
-import { unreadNotifications } from "@/lib/notify";
-import { AppHeader } from "@/components/AppHeader";
+
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
-import { NavBar } from "@/components/NavBar";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
@@ -38,42 +36,24 @@ export async function PublicProfileView({
   /** Which tab sent them here, so the back arrow returns to it. */
   from?: string;
 }) {
-  // A signed-in viewer browsing someone else's page needs a way out and a way
-  // to tell where they are: they keep the app header, and coaches keep the nav.
-  // A visitor from outside sees none of it — this is a public page first.
+  // A profile behaves like a class page: no app header, no bottom tabs, just
+  // the page and a way back to wherever it was tapped from.
   const handle = user.handle!;
   const db = await getDb();
 
   // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
   // the subscribe bar instead of the email sheet.
   let account: { following: boolean } | null = null;
-  let showNav = false;
-  let viewerAvatar: { photo: string | null; color: string; initial: string; href: string } | null =
-    null;
-  let unread = 0;
+  let signedIn = false;
   if (!isOwner && (await fansVisible())) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
-        .select({
-          id: schema.users.id,
-          email: schema.users.email,
-          handle: schema.users.handle,
-          name: schema.users.name,
-          photo: schema.users.photo,
-          avatarColor: schema.users.avatarColor,
-        })
+        .select({ email: schema.users.email })
         .from(schema.users)
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
-        showNav = !!viewer.handle;
-        viewerAvatar = {
-          photo: viewer.photo,
-          color: avatarColor(viewer),
-          initial: (viewer.name.trim().charAt(0) || "?").toUpperCase(),
-          href: viewer.handle ? "/app?acct=1" : "/you",
-        };
-        unread = await unreadNotifications(viewerId);
+        signedIn = true;
         const [row] = await db
           .select({ optedOutAt: schema.subscribers.optedOutAt })
           .from(schema.subscribers)
@@ -89,12 +69,16 @@ export async function PublicProfileView({
   }
   // Only a tab we actually sent them from earns an arrow — someone who opened
   // this link from outside has nowhere in the app to go back to.
+  // A tab we know by name gets a named destination; anything else walks back
+  // through history, which is where they actually tapped from.
   const backTo =
-    viewerAvatar && from === "discover"
+    from === "discover"
       ? { href: "/discover", label: "Back to Discover" }
-      : viewerAvatar && from === "home"
+      : from === "home"
         ? { href: "/feed", label: "Back to Following" }
-        : null;
+        : from === "schedule"
+          ? { href: "/app", label: "Back to your schedule" }
+          : null;
 
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
@@ -303,7 +287,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${showNav ? " hasnav" : ""}`}
+      className="pub profile"
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -328,16 +312,6 @@ export async function PublicProfileView({
         />
       )}
       <div className="profwrap">
-        {/* Arrived from inside the app: keep the chrome, and give them the way
-            back to the tab they came from. */}
-        {viewerAvatar && <AppHeader unread={unread} avatar={viewerAvatar} />}
-        {backTo && (
-          <div className="profback">
-            <BackLink className="evback" href={backTo.href} label={backTo.label}>
-              <Icon name="arrow_back" size={21} />
-            </BackLink>
-          </div>
-        )}
         <ProfileTabs
           handle={handle}
           initialTab={initialTab}
@@ -345,6 +319,13 @@ export async function PublicProfileView({
           title={user.title ?? ""}
           location={user.location ?? ""}
           trackSchedule={!isOwner}
+          back={
+            signedIn ? (
+              <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
+                <Icon name="arrow_back" size={21} />
+              </BackLink>
+            ) : null
+          }
           action={
             // The owner previewing their own page has nobody to follow.
             !isOwner ? (
@@ -370,7 +351,6 @@ export async function PublicProfileView({
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
-      {showNav && <NavBar active="discover" />}
     </div>
   );
 }

@@ -8,13 +8,9 @@ import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
-import { unreadNotifications } from "@/lib/notify";
-import { avatarColor } from "@/lib/avatar";
-import { AppHeader } from "@/components/AppHeader";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
-import { NavBar } from "@/components/NavBar";
 import { StudioOwnerBar } from "@/components/StudioOwnerBar";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -71,72 +67,63 @@ export default async function StudioPage({ params, searchParams }: Props) {
   if (!s) notFound();
 
   const db = await getDb();
-  // Signed in, the page keeps the app chrome; a visitor from outside gets the
-  // public page on its own.
-  let viewerAvatar: { photo: string | null; color: string; initial: string; href: string } | null =
-    null;
-  let showNav = false;
+  // Like a class page: no app header, no bottom tabs. A signed-in viewer gets
+  // a way back; a coach also gets the edit button, because the directory is
+  // shared and anyone can correct an entry.
+  let signedIn = false;
   let canEdit = false;
-  let unread = 0;
   if (await fansVisible()) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
-      const [viewer] = await db.select().from(schema.users).where(eq(schema.users.id, viewerId));
+      const [viewer] = await db
+        .select({ handle: schema.users.handle })
+        .from(schema.users)
+        .where(eq(schema.users.id, viewerId));
       if (viewer) {
-        showNav = !!viewer.handle;
-        canEdit = !!viewer.handle; // shared directory: any coach can correct it
-        viewerAvatar = {
-          photo: viewer.photo,
-          color: avatarColor(viewer),
-          initial: (viewer.name.trim().charAt(0) || "?").toUpperCase(),
-          href: viewer.handle ? "/app?acct=1" : "/you",
-        };
-        unread = await unreadNotifications(viewerId);
+        signedIn = true;
+        canEdit = !!viewer.handle;
       }
     }
   }
 
+  // A tab we know by name gets a named destination; anything else walks back
+  // through history, which is where they actually tapped from.
   const backTo =
-    viewerAvatar && from === "discover"
+    from === "discover"
       ? { href: "/discover", label: "Back to Discover" }
-      : viewerAvatar && from === "home"
+      : from === "home"
         ? { href: "/feed", label: "Back to Following" }
-        : null;
+        : from === "schedule"
+          ? { href: "/app", label: "Back to your schedule" }
+          : null;
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
 
   return (
-    <div className={`pub profile${showNav ? " hasnav" : ""}`} data-mode={await viewerLook()}>
+    <div className="pub profile" data-mode={await viewerLook()}>
       <div className="profwrap">
-        {viewerAvatar && <AppHeader unread={unread} avatar={viewerAvatar} />}
-        {(backTo || canEdit) && (
-          <div className="profback">
-            {backTo ? (
-              <BackLink className="evback" href={backTo.href} label={backTo.label}>
-                <Icon name="arrow_back" size={21} />
-              </BackLink>
-            ) : (
-              <span />
-            )}
-            {canEdit && (
-              <StudioOwnerBar
-                id={s.id}
-                name={s.name}
-                address={s.address}
-                types={s.types}
-                about={s.about ?? ""}
-                photo={s.photo}
-                contactEmail={s.contactEmail ?? ""}
-                phone={s.phone ?? ""}
-                website={s.website ?? ""}
-                instagram={s.instagram ?? ""}
-              />
-            )}
-          </div>
-        )}
-
+        {/* Back, name and the one action ride together and stay pinned. */}
         <div className="pubhead">
+          {signedIn && (
+            <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
+              <Icon name="arrow_back" size={21} />
+            </BackLink>
+          )}
           <h1 className="profname">{s.name}</h1>
+          {canEdit && (
+            <StudioOwnerBar
+              id={s.id}
+              name={s.name}
+              address={s.address}
+              types={s.types}
+              about={s.about ?? ""}
+              photo={s.photo}
+              contactEmail={s.contactEmail ?? ""}
+              phone={s.phone ?? ""}
+              website={s.website ?? ""}
+              instagram={s.instagram ?? ""}
+            />
+          )}
         </div>
         {s.types.length > 0 && (
           <div className="studiotypes">
@@ -215,7 +202,6 @@ export default async function StudioPage({ params, searchParams }: Props) {
           <Link href="/">Claim your page</Link>
         </div>
       </div>
-      {showNav && <NavBar active="discover" />}
     </div>
   );
 }

@@ -85,5 +85,33 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await ctx.close();
 }
 
+// 4) Members are not part of the beta gate. With FANS_ENABLED=true the signup
+// sheet offers "I'm here to train", and that path skips invites entirely —
+// which is the whole point of opening the member side while coaches stay
+// invite-only. Skipped when the flag is dark, since the toggle isn't rendered.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const pg = await ctx.newPage();
+  pg.setDefaultTimeout(15000);
+  await pg.goto(BASE + "/");
+  await pg.getByRole("button", { name: "Sign up with email" }).click();
+  const roleToggle = pg.locator(".roleseg button", { hasText: "here to train" });
+  if (await roleToggle.count()) {
+    await roleToggle.click();
+    await pg.getByPlaceholder("you@example.com").fill("member@example.com");
+    await pg.getByPlaceholder("Password").fill("member-pass-123");
+    await pg.getByRole("button", { name: "Create account" }).click();
+    // no invite wall, no handle claim — straight to their week
+    await pg.waitForURL("**/feed");
+    await pg.getByText("Nobody yet").waitFor();
+    if (await pg.getByText("Invite-only beta").count())
+      fail("a member signup should never hit the invite wall");
+    console.log("member signup ok (no invite needed)");
+  } else {
+    console.log("member signup skipped — FANS_ENABLED is not true");
+  }
+  await ctx.close();
+}
+
 await browser.close();
 console.log("done");

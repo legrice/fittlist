@@ -1107,31 +1107,51 @@ await page.locator(".evfact", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 console.log("studio pages ok (edit, types, slug follows the name)");
 
-// opened from Discover, a coach's page keeps the header and gets a way back
+// a profile reads like a class page: no app header, no bottom tabs, one row
+// carrying back, the name and the one action — and that row stays pinned
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".pubhead .followpill").count()))
   fail("Follow should sit beside the coach's name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
-if (!(await page.locator(".profwrap > .brandbar").count()))
-  fail("a coach's page opened from inside the app should keep the header");
+if (await page.locator(".profwrap > .brandbar").count())
+  fail("a profile should not carry the app header");
+if (await page.locator(".navbar").count()) fail("a profile should not carry the bottom tabs");
+await expect(
+  page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position === "sticky"),
+  "the name row is pinned",
+);
+if (!(await page.locator(".pubhead .evback").count()))
+  fail("a signed-in viewer needs a way back off a profile");
 await page.getByRole("button", { name: "Back to Discover" }).click();
 await page.waitForURL("**/discover");
-// a link opened cold has nowhere in the app to go back to, so no arrow
-await page.goto(BASE + "/sam");
-await page.locator(".profname").waitFor();
-if (await page.locator(".profback").count())
-  fail("a directly-opened profile should not offer a back arrow");
+// the title and location below the name scroll away with the page
+await page.goto(BASE + "/matt");
+await page.locator(".proftitle").waitFor();
+await expect(
+  page.locator(".proftitle").evaluate((e) => getComputedStyle(e).position !== "sticky"),
+  "the title under the name is not pinned",
+);
+// following turns the pill green — the same yes as Going. Matt already
+// follows Sam by this point, so settle the state first rather than assuming.
+await page.goto(BASE + "/discover");
+await page.locator(".disrow-main", { hasText: "Sam" }).click();
+await page.locator(".followpill").waitFor();
+if ((await page.locator(".followpill").innerText()).trim() !== "Following") {
+  await page.locator(".followpill").click();
+  await page.locator(".followpill", { hasText: /^Following$/ }).waitFor();
+}
+{
+  const bg = await page.locator(".followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (bg !== "rgb(61, 139, 83)") fail("Following should be green, got " + bg);
+}
+console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// the coach's page itself has the nav
-if ((await page.locator(".navbar .navtab").count()) !== 3)
-  fail("a coach's page needs the nav so you can't get trapped");
-await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
-console.log("no dead ends ok (back to Following, nav on coach pages)");
-
-// three tabs only, and the account opens from the header avatar
+// three tabs only, and the account opens from the header avatar — back in the
+// app, since a profile carries neither
+await page.goto(BASE + "/app");
+await page.locator(".dashlinks").waitFor();
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
 await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();

@@ -7,18 +7,21 @@ import { useRouter } from "next/navigation";
 // forward (slide-in-from-left) transition.
 export function useSlideBack() {
   const router = useRouter();
-  return (href: string) => {
+  // No href means we don't know the destination by name — walk the history
+  // instead, which is literally "where you tapped this from".
+  return (href?: string) => {
+    const go = () => (href ? router.push(href) : router.back());
     if (typeof window !== "undefined") {
       sessionStorage.setItem("fl-nav", "back");
       const el = document.querySelector(".page-slide");
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (el && !reduce) {
         el.classList.add("exit-left");
-        window.setTimeout(() => router.push(href), 210);
+        window.setTimeout(go, 210);
         return;
       }
     }
-    router.push(href);
+    go();
   };
 }
 
@@ -28,7 +31,8 @@ export function BackLink({
   label,
   children,
 }: {
-  href: string;
+  /** Omit to go back through history rather than to a known page. */
+  href?: string;
   className?: string;
   /** Names the destination when the button itself is only an arrow. */
   label?: string;
