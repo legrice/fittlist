@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 
-export type NavTab = "home" | "discover" | "schedule";
+export type NavTab = "following" | "discover" | "schedule";
 
 // The whole app in thumb reach. Only the coach shell has it, and only once the
 // member side is switched on — before that there's nothing to switch between.
@@ -17,7 +17,7 @@ export function NavBar({
   onSchedule?: () => void;
 }) {
   const tabs: { id: NavTab; href: string; icon: string; label: string }[] = [
-    { id: "home", href: "/feed", icon: "home", label: "Home" },
+    { id: "following", href: "/feed", icon: "groups", label: "Following" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     { id: "schedule", href: "/app", icon: "calendar_today", label: "Schedule" },
   ];

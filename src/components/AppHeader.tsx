@@ -18,8 +18,8 @@ export function AppHeader({
     onClick?: () => void;
     href?: string;
   };
-  /** Where the wordmark goes. Home for anyone with the member side, the
-      schedule for a coach who doesn't have it yet. */
+  /** Where the wordmark goes. The Following tab for anyone with the member
+      side, the schedule for a coach who doesn't have it yet. */
   home?: string;
 }) {
   return (

@@ -1021,24 +1021,24 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Home" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 // no dead ends: a class opened from Home goes back to Home, and a coach's
 // page carries the nav so you can leave it
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
 await page.locator(".evname").waitFor();
 // the back control is an arrow in a circle, so the destination lives in its label
 await expect(
-  page.getByRole("button", { name: "Back to Home" }).isVisible(),
-  "class opened from Home goes back to Home",
+  page.getByRole("button", { name: "Back to Following" }).isVisible(),
+  "class opened from Following goes back to Following",
 );
-await page.getByRole("button", { name: "Back to Home" }).click();
+await page.getByRole("button", { name: "Back to Following" }).click();
 await page.locator(".feedstrip").waitFor();
 // a coach's own schedule still backs into their calendar
 await page.goto(BASE + "/sam/schedule");
@@ -1062,7 +1062,7 @@ if ((await page.locator(".navbar .navtab").count()) !== 3)
   fail("a coach's page needs the nav so you can't get trapped");
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
-console.log("no dead ends ok (back to Home, nav on coach pages)");
+console.log("no dead ends ok (back to Following, nav on coach pages)");
 
 // three tabs only, and the account opens from the header avatar
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");

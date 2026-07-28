@@ -44,7 +44,7 @@ export function GoingButton({
             : "Just for your own week. It isn't a booking."}
         </p>
         <button
-          className={`btn${on ? " ghost" : ""} evctabtn${on ? " on" : ""}`}
+          className={`btn evctabtn${on ? " on" : ""}`}
           disabled={pending}
           aria-pressed={on}
           onClick={toggle}
