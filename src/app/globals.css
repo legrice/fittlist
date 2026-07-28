@@ -1394,65 +1394,102 @@ button.ps-card { cursor: pointer; }
 .previewbar .pv-eye { vertical-align: -3px; margin-right: 3px; }
 .previewbar .previewback { color: var(--pg-green); text-decoration: none; font-weight: 700; white-space: nowrap; }
 
-/* per-event booking page */
-.evpage { min-height: 100dvh; }
+/* Per-class page. The class is the whole screen — no card floating on a
+   ground, no box to read around. Content sits directly on the page, sections
+   separated by hairlines, and the one commitment (I'm going) is pinned to the
+   bottom where the thumb is. Everything is token-coloured so dark mode needs
+   no second set of rules. */
+.evpage { min-height: 100dvh; background: var(--paper); }
+.evtopbar {
+  position: sticky; top: 0; z-index: 6; background: var(--paper);
+  padding: calc(12px + env(safe-area-inset-top)) 18px 10px;
+}
+/* An arrow in a circle: a real target, and unmistakably "back". */
+.evback {
+  width: 42px; height: 42px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); box-shadow: var(--soft-shadow);
+  transition: transform .08s;
+}
+.evback:active { transform: scale(.93); }
 .evwrap {
   max-width: 520px; margin: 0 auto;
-  padding: calc(20px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom));
+  padding: 6px 20px calc(30px + env(safe-area-inset-bottom));
 }
-.evback {
-  display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
-  color: var(--pg-day); text-decoration: none; margin-bottom: 18px;
-}
-.evcard {
-  background: #fff; border: none; border-radius: 16px; box-shadow: var(--soft-shadow);
-  padding: 22px 20px; color: #191502;
-}
+/* Clear the pinned CTA so the footer isn't stuck underneath it. */
+.evpage.hascta .evwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
 .evtype {
-  display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--pg-day); background: var(--si-soft); border-radius: 999px; padding: 5px 12px;
-  margin-bottom: 14px;
+  display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ol); margin-bottom: 8px;
 }
 .evname {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
-  color: var(--ink); margin-bottom: 12px;
+  color: var(--ink);
 }
-.evwhen {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 16px;
-  color: var(--ink); margin-top: 2px;
+/* Who teaches it — the page came from somewhere, and this is the way onward. */
+.evcoach {
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 16px;
+  color: var(--ink); text-decoration: none;
 }
-.evlen {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 14px;
-  color: var(--ol); margin-top: 2px;
+.evcoach-av { width: 30px; height: 30px; border-radius: 999px; object-fit: cover; flex-shrink: 0; }
+.evcoach-av-empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 13px;
 }
-.evdesc { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
-.evstudio { font-size: 16px; font-weight: 700; color: #191502; margin-top: 18px; }
-.evaddr { display: inline-block; font-size: 14px; font-weight: 600; color: #928b78; text-decoration: none; margin-top: 3px; border-bottom: 1.5px solid #cec6b0; }
-.evbook { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.evcoach-nm { font-size: 15px; font-weight: 700; }
+.evcoach .icon { color: var(--ol); }
+.evfacts { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+.evfact { display: flex; align-items: flex-start; gap: 12px; color: var(--ink); text-decoration: none; }
+.evfact .icon { color: var(--ol); margin-top: 1px; }
+.evfact-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.evfact-txt .t { font-size: 15.5px; font-weight: 700; line-height: 1.3; }
+.evfact-txt .s { font-size: 13.5px; color: var(--ol); line-height: 1.4; }
+.evbook { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
 .evbtn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .evbtn-ico { position: relative; top: 1px; }
-.evnobook { font-size: 14px; font-weight: 600; color: #6b6555; }
-/* Secondary action row: Add to calendar + Share */
+.evnobook { font-size: 14px; font-weight: 600; color: var(--ol); }
+.evsec { margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--line); }
+.evsec-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
+  letter-spacing: -.02em; color: var(--ink); margin-bottom: 10px;
+}
+.evdesc { font-size: 15px; line-height: 1.6; color: var(--ol); white-space: pre-wrap; }
+/* Secondary action row: Add to calendar + Share. Soft pills, no outlines —
+   they sit under the booking button and shouldn't compete with it. */
 .evactions { margin-top: 12px; display: flex; gap: 10px; }
 .evcal { position: relative; flex: 1 1 auto; min-width: 0; }
-.evactbtn {
+.evactions .btn.evactbtn {
   width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 12px 14px; font-size: 15px; white-space: nowrap;
+  padding: 12px 14px; font-size: 14.5px; white-space: nowrap;
+  background: var(--cl); color: var(--ink); border: none; border-radius: 999px;
 }
-.evshare { flex: 0 0 auto; width: auto; padding-left: 18px; padding-right: 18px; }
+/* Share hugs its label; Add to calendar takes the rest. Same specificity as
+   the rule above, declared after it, so the auto width wins. */
+.evactions .btn.evshare { flex: 0 0 auto; width: auto; padding-left: 18px; padding-right: 18px; }
 .evact-ico { position: relative; top: 1px; }
 .evcalmenu {
   position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 5;
-  background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
-  box-shadow: 0 6px 24px rgba(17, 17, 17, .12);
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  box-shadow: var(--soft-shadow-lg);
 }
 .evcalitem {
-  display: block; padding: 13px 16px; font-size: 15px; font-weight: 600; color: #191502;
+  display: block; padding: 13px 16px; font-size: 15px; font-weight: 600; color: var(--ink);
   text-decoration: none;
 }
-.evcalitem:active { background: #f3ecdf; }
+.evcalitem:active { background: var(--cl); }
 .evcalitem + .evcalitem { border-top: 1px solid var(--line); }
+/* The pinned commitment. */
+.evcta {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--paper); border-top: 1px solid var(--line);
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+}
+.evcta-inner { max-width: 520px; margin: 0 auto; }
+.evctanote { margin: 0 0 9px; font-size: 12px; color: var(--ol); text-align: center; }
+.evctabtn { border-radius: 999px; padding: 15px 18px; font-size: 15px; }
+.evctabtn.on { border-color: var(--line); }
 [data-theme="poster"] .heronotify { display: none; }
 [data-theme="poster"] .notifybar {
   display: block; background: var(--pg-cream); border-top: 1px solid var(--line);
@@ -1757,8 +1794,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio,
 [data-mode="dark"] .ownerback,
-[data-mode="dark"] .owneredit,
-[data-mode="dark"] .evcard {
+[data-mode="dark"] .owneredit {
   background: var(--card); color: var(--ink); border-color: var(--line);
 }
 [data-mode="dark"] .profshare:active,
@@ -1767,12 +1803,8 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .ownerback:active,
 [data-mode="dark"] .owneredit:active { background: #2c2718; }
 [data-mode="dark"] .profabout,
-[data-mode="dark"] .evdesc,
-[data-mode="dark"] .evnobook,
 [data-mode="dark"] .madewith { color: var(--ol); }
 [data-mode="dark"] .profphoto-empty { background: var(--cl); color: #6f6852; }
-[data-mode="dark"] .evstudio { color: var(--ink); }
-[data-mode="dark"] .evaddr { color: var(--ol); border-bottom-color: var(--line); }
 /* Segmented switchers (admin tabs, availability picker): the selected pill's
    fill follows --ink — light in dark mode — so its label flips dark. */
 [data-mode="dark"] .seg button.sel { color: #191502; }
@@ -2011,9 +2043,6 @@ button.ps-card { cursor: pointer; }
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
 .ps-agenda .ps-event.goingon .ps-accent { width: 5px; }
 /* "I'm going" lives on the class page; the week only reports it. */
-.evgoing { margin-top: 10px; }
-.evgoingbtn.on { border-color: var(--line); }
-.evgoingnote { margin: 8px 0 0; font-size: 12.5px; color: var(--ol); text-align: center; }
 .goingbar { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
 .goingfilter, .goingshare {
   display: flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 999px;

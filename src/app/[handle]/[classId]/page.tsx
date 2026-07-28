@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
+import { avatarColor } from "@/lib/avatar";
 import { BackLink } from "@/components/BackLink";
 import { EventActions } from "@/components/EventActions";
 import { GoingButton } from "@/components/GoingButton";
@@ -107,8 +108,17 @@ export default async function EventPage({ params, searchParams }: Props) {
     going = !!row;
   }
 
+  // Back goes where you actually came from — off Home it returns to Home, not
+  // into a coach's calendar you never opened.
+  const backHref = from === "home" ? "/feed" : `/${handle}/schedule`;
+  const backLabel = from === "home" ? "Back to Home" : `Back to ${user.name}’s schedule`;
+
   return (
-    <div className="pub evpage" data-theme={user.theme} data-mode={await viewerLook()}>
+    <div
+      className={`pub evpage${canGo ? " hascta" : ""}`}
+      data-theme={user.theme}
+      data-mode={await viewerLook()}
+    >
       {isOwner && (
         <div className="previewbar">
           <span>
@@ -119,74 +129,107 @@ export default async function EventPage({ params, searchParams }: Props) {
           </BackLink>
         </div>
       )}
+      <div className="evtopbar">
+        <BackLink className="evback" href={backHref} label={backLabel}>
+          <Icon name="arrow_back" size={21} />
+        </BackLink>
+      </div>
       <div className="evwrap">
-        {/* Back goes where you actually came from — off Home it returns to
-            Home, not into a coach's calendar you never opened. */}
-        {from === "home" ? (
-          <BackLink className="evback" href="/feed">
-            ← Home
-          </BackLink>
-        ) : (
-          <BackLink className="evback" href={`/${handle}/schedule`}>
-            ← {user.name}&rsquo;s schedule
-          </BackLink>
-        )}
-        <div className="evcard">
-          {c.classType && <span className="evtype">{c.classType}</span>}
-          <h1 className="evname">{c.name}</h1>
-          <div className="evwhen">
-            {fmtDateLong(whenIso)} · {fmtTime(c.startTime)}
-          </div>
-          <div className="evlen">{c.durationMin} min</div>
-          {c.description?.trim() && <p className="evdesc">{c.description}</p>}
-          {studio ? (
-            <>
-              <div className="evstudio">{studio.name}</div>
-              <a className="evaddr" href={mapsUrl!} target="_blank" rel="noopener nofollow">
-                {studio.address}
-              </a>
-            </>
+        {c.classType && <span className="evtype">{c.classType}</span>}
+        <h1 className="evname">{c.name}</h1>
+        <Link className="evcoach" href={`/${handle}`}>
+          {user.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="evcoach-av" src={user.photo} alt="" />
           ) : (
-            c.location && <div className="evstudio">{c.location}</div>
+            <span
+              className="evcoach-av evcoach-av-empty"
+              style={{ background: avatarColor(user) }}
+              aria-hidden="true"
+            >
+              {user.name.trim().charAt(0).toUpperCase() || "?"}
+            </span>
           )}
-          <div className="evbook">
-            {c.links.length ? (
-              c.links.map((l, i) => (
-                <a
-                  key={i}
-                  className="btn si evbtn"
-                  href={l.url}
-                  target="_blank"
-                  rel="noopener nofollow"
-                >
-                  Book via {l.label}
-                  <Icon name="north_east" size={18} className="evbtn-ico" />
-                </a>
-              ))
-            ) : (
-              <div className="evnobook">Just show up, no booking needed.</div>
-            )}
+          <span className="evcoach-nm">{user.name}</span>
+          <Icon name="chevron_right" size={16} />
+        </Link>
+
+        <div className="evfacts">
+          <div className="evfact">
+            <Icon name="event" size={20} />
+            <span className="evfact-txt">
+              <span className="t">{fmtDateLong(whenIso)}</span>
+              <span className="s">
+                {fmtTime(c.startTime)} · {c.durationMin} min
+              </span>
+            </span>
           </div>
-          {canGo && (
-            <GoingButton
-              classId={c.id}
-              iso={whenIso}
-              initialGoing={going}
-              hasBooking={c.links.length > 0}
-            />
+          {studio ? (
+            <a className="evfact" href={mapsUrl!} target="_blank" rel="noopener nofollow">
+              <Icon name="place" size={20} />
+              <span className="evfact-txt">
+                <span className="t">{studio.name}</span>
+                <span className="s">{studio.address}</span>
+              </span>
+            </a>
+          ) : (
+            c.location && (
+              <div className="evfact">
+                <Icon name="place" size={20} />
+                <span className="evfact-txt">
+                  <span className="t">{c.location}</span>
+                </span>
+              </div>
+            )
           )}
-          <EventActions
-            googleUrl={googleUrl}
-            icsHref={icsHref}
-            shareUrl={classUrl}
-            shareTitle={c.name}
-          />
         </div>
+
+        <div className="evbook">
+          {c.links.length ? (
+            c.links.map((l, i) => (
+              <a
+                key={i}
+                className="btn si evbtn"
+                href={l.url}
+                target="_blank"
+                rel="noopener nofollow"
+              >
+                Book via {l.label}
+                <Icon name="north_east" size={18} className="evbtn-ico" />
+              </a>
+            ))
+          ) : (
+            <div className="evnobook">Just show up, no booking needed.</div>
+          )}
+        </div>
+        <EventActions
+          googleUrl={googleUrl}
+          icsHref={icsHref}
+          shareUrl={classUrl}
+          shareTitle={c.name}
+        />
+
+        {c.description?.trim() && (
+          <section className="evsec">
+            <h2 className="evsec-h">Details</h2>
+            <p className="evdesc">{c.description}</p>
+          </section>
+        )}
+
         <div className="madewith">
           Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
           <Link href={`/?via=${handle}`}>Claim your page</Link>
         </div>
       </div>
+      {/* The one commitment on this page sits under the thumb, pinned. */}
+      {canGo && (
+        <GoingButton
+          classId={c.id}
+          iso={whenIso}
+          initialGoing={going}
+          hasBooking={c.links.length > 0}
+        />
+      )}
     </div>
   );
 }

@@ -806,6 +806,12 @@ await fan.locator(".feedagenda .ps-event").first().waitFor();
 if (await fan.locator(".feedagenda .goingbtn").count())
   fail("the week should not carry an inline I'm going button");
 await fan.locator(".feedagenda .ps-event").first().click();
+// the class fills the page and the going CTA is pinned to the bottom of it
+if (await fan.locator(".evcard").count()) fail("the class page should not be a card");
+await expect(
+  fan.locator(".evcta").evaluate((e) => getComputedStyle(e).position === "fixed"),
+  "the going CTA is pinned to the bottom",
+);
 await fan.getByRole("button", { name: "I'm going" }).click();
 await fan.getByRole("button", { name: "You're going" }).waitFor();
 // it survives a reload (the note is on the server, not just in the tab)
@@ -911,18 +917,19 @@ await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
 // page carries the nav so you can leave it
 await page.locator(".navtab", { hasText: "Home" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
-await page.locator(".evcard").waitFor();
+await page.locator(".evname").waitFor();
+// the back control is an arrow in a circle, so the destination lives in its label
 await expect(
-  page.locator(".evback", { hasText: "Home" }).isVisible(),
+  page.getByRole("button", { name: "Back to Home" }).isVisible(),
   "class opened from Home goes back to Home",
 );
-await page.locator(".evback", { hasText: "Home" }).click();
+await page.getByRole("button", { name: "Back to Home" }).click();
 await page.locator(".feedstrip").waitFor();
 // a coach's own schedule still backs into their calendar
 await page.goto(BASE + "/sam/schedule");
 await page.locator(".ps-event").first().click();
-await page.locator(".evcard").waitFor();
-if (!(await page.locator(".evback", { hasText: "schedule" }).count()))
+await page.locator(".evname").waitFor();
+if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
   fail("a class opened from a coach's page should back into that page");
 // a dark viewer sees someone else's page in dark, whatever that coach chose
 await setDark(page, true);

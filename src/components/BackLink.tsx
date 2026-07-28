@@ -25,15 +25,18 @@ export function useSlideBack() {
 export function BackLink({
   href,
   className,
+  label,
   children,
 }: {
   href: string;
   className?: string;
+  /** Names the destination when the button itself is only an arrow. */
+  label?: string;
   children: React.ReactNode;
 }) {
   const back = useSlideBack();
   return (
-    <button type="button" className={className} onClick={() => back(href)}>
+    <button type="button" className={className} aria-label={label} onClick={() => back(href)}>
       {children}
     </button>
   );
