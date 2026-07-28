@@ -1631,9 +1631,7 @@ button.ps-card { cursor: pointer; }
   background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
   transition: transform .18s ease, background .18s ease;
 }
-/* On a dark page a white knob on the green track glares; go dark instead. */
-[data-mode="dark"] .switch.on { background: #4ea567; }
-[data-mode="dark"] .switch.on .switch-knob { background: #14120d; }
+
 .switch.on .switch-knob { transform: translateX(18px); }
 
 /* ============================================================================

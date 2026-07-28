@@ -1,7 +1,7 @@
 "use server";
 
 import { createHash, randomBytes } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -106,10 +106,39 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     return { ok: false, error: "Can't delete an admin account." };
   }
 
-  // Rows the account owns — delete outright.
+  // Rows the account owns — delete outright, children before parents.
+  //
+  // Order matters: attendances point at both the account and its classes, and
+  // inquiry messages point at its threads, so those go first or the foreign
+  // keys refuse the delete. Every table with a users FK has to appear here —
+  // miss one and the whole delete fails with a constraint error.
+  const ownClasses = await db
+    .select({ id: schema.classes.id })
+    .from(schema.classes)
+    .where(eq(schema.classes.userId, id));
+  const ownClassIds = ownClasses.map((c) => c.id);
+  // "Going" marks: theirs, and anyone else's on the classes they taught.
+  await db.delete(schema.attendances).where(eq(schema.attendances.userId, id));
+  if (ownClassIds.length) {
+    await db.delete(schema.attendances).where(inArray(schema.attendances.classId, ownClassIds));
+  }
+  const ownThreads = await db
+    .select({ id: schema.inquiryThreads.id })
+    .from(schema.inquiryThreads)
+    .where(eq(schema.inquiryThreads.coachUserId, id));
+  const ownThreadIds = ownThreads.map((t) => t.id);
+  if (ownThreadIds.length) {
+    await db
+      .delete(schema.inquiryMessages)
+      .where(inArray(schema.inquiryMessages.threadId, ownThreadIds));
+  }
+  await db.delete(schema.inquiryThreads).where(eq(schema.inquiryThreads.coachUserId, id));
+  await db.delete(schema.notifications).where(eq(schema.notifications.userId, id));
   await db.delete(schema.classes).where(eq(schema.classes.userId, id));
   await db.delete(schema.classTemplates).where(eq(schema.classTemplates.userId, id));
+  // Their followers, and the coaches they themselves followed.
   await db.delete(schema.subscribers).where(eq(schema.subscribers.trainerUserId, id));
+  await db.delete(schema.subscribers).where(eq(schema.subscribers.userId, id));
   await db.delete(schema.pageVisits).where(eq(schema.pageVisits.trainerUserId, id));
   await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, id));
   await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));

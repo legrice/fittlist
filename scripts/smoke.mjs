@@ -958,5 +958,17 @@ await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".sharepill", { hasText: "Share" }).waitFor();
 console.log("coach fan-view preview ok");
 
+// deleting a coach has to clear every row that points at them — follows they
+// made, "going" marks on their classes, notifications, inquiry threads. Miss
+// one and Postgres refuses the whole delete on a foreign key.
+await page.goto(BASE + "/admin");
+await page.getByText("sam@example.com").waitFor();
+const samCard = page.locator(".admincard").filter({ hasText: "sam@example.com" });
+await samCard.getByRole("button", { name: "Delete user" }).click();
+await samCard.getByRole("button", { name: "Yes, delete" }).click();
+await page.getByText("Deleted Sam").waitFor();
+await page.waitForFunction(() => !document.body.innerText.includes("sam@example.com"));
+console.log("delete coach ok (follows, going marks, threads all cleared)");
+
 await browser.close();
 console.log("ALL SMOKE CHECKS PASSED");
