@@ -34,7 +34,6 @@ export function ProfileSheet({
   photo,
   subsCount,
   profileViews,
-  scheduleOpens,
   requestCount,
   email,
   instagram,
@@ -61,7 +60,6 @@ export function ProfileSheet({
   photo: string | null;
   subsCount: number;
   profileViews: number;
-  scheduleOpens: number;
   requestCount: number;
   email: string;
   instagram: string;
@@ -282,10 +280,6 @@ export function ProfileSheet({
           <div className="acctstat">
             <span className="n">{profileViews}</span>
             <span className="l">Profile views</span>
-          </div>
-          <div className="acctstat">
-            <span className="n">{scheduleOpens}</span>
-            <span className="l">Schedule opens</span>
           </div>
           <div className="acctstat">
             <span className="n">{subsCount}</span>

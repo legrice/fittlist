@@ -141,7 +141,6 @@ export default async function SchedulePage({
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
       profileViews={analytics.profileViews}
-      scheduleOpens={analytics.scheduleOpens}
       requestCount={requestCount}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}

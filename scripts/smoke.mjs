@@ -213,7 +213,8 @@ await page.locator(".usericon").click();
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
 await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
-if ((await page.locator(".acctstats .acctstat").count()) !== 4) fail("expected four analytics stats");
+if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three analytics stats");
+if (await page.getByText("Schedule opens").count()) fail("Schedule opens should be gone");
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
 await expect(page.locator(".acctstats .acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
 await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
@@ -413,7 +414,7 @@ console.log("desktop ok");
 // ---- my-page list count reflects subscriber
 await openProfile(page);
 await page.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
-const subN = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
+const subN = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
 if (subN.trim() !== "1") fail("follower count should be 1, got " + subN);
 console.log("stats ok");
 
@@ -483,7 +484,7 @@ console.log("opt-out honored ok");
 
 await openProfile(page);
 await page.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
-const subN2 = await page.locator(".acctstats .acctstat").nth(2).locator(".n").textContent();
+const subN2 = await page.locator(".acctstats .acctstat").nth(1).locator(".n").textContent();
 if (subN2.trim() !== "0") fail("followers should be 0 after unsubscribe, got " + subN2);
 console.log("opt-out honored ok");
 

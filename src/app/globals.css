@@ -1278,15 +1278,15 @@ button.ps-card { cursor: pointer; }
 .acctstat + .acctstat { border-top: 1px solid var(--line); }
 .acctstat .n { display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
 .acctstat .l { display: block; font-size: 13px; font-weight: 700; color: #6b6555; margin-top: 5px; }
-/* Analytics: a 2x2 grid of actionable numbers below the profile tile. */
+/* Analytics: three actionable numbers in one row below the profile tile. */
 .acctstats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; flex: none;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; flex: none;
   margin-top: 12px; background: var(--line); border-radius: 16px; overflow: hidden;
   box-shadow: var(--soft-shadow);
 }
-.acctstats-grid .acctstat { background: #fff; padding: 16px; align-items: flex-start; }
+.acctstats-grid .acctstat { background: #fff; padding: 15px 12px; align-items: flex-start; }
 .acctstats-grid .acctstat + .acctstat { border-top: none; }
-.acctstats-grid .acctstat .l { color: var(--ol); }
+.acctstats-grid .acctstat .l { color: var(--ol); font-size: 12px; }
 .acctcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .acctcard {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
@@ -1983,8 +1983,10 @@ button.ps-card { cursor: pointer; }
    the notch. The pad gives exactly the 14px the brandbar's negative margin
    cancels, and the header carries the inset itself — otherwise a strip of page
    background shows above it. */
-.screen.hasnav .pad, .screen .pad.feedpad {
-  padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
+/* The bar is fixed over the page, so the last class needs room to scroll all
+   the way clear of it — 40px left the final row half-buried. */
+.screen.hasnav .pad {
+  padding: 14px 18px calc(110px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
@@ -1992,7 +1994,7 @@ button.ps-card { cursor: pointer; }
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
-  display: flex; background: var(--card); border-top: 1px solid var(--line);
+  display: flex; background: var(--paper); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
 .navtab {
@@ -2010,7 +2012,7 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11px;
 }
-.navtab.on .navav { opacity: 1; box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--ink); }
+.navtab.on .navav { opacity: 1; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); }
 .navtab:active { background: var(--cl); }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
@@ -2022,7 +2024,7 @@ button.ps-card { cursor: pointer; }
 .pub.hasnav .notifybar { bottom: calc(62px + env(safe-area-inset-bottom)); }
 .pub.hasnav .profwrap { padding-bottom: 190px; }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
-@media (min-width: 940px) { .screen.hasnav .pad, .screen .pad.feedpad {
+@media (min-width: 940px) { .screen.hasnav .pad {
   padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }

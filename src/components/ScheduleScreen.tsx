@@ -30,7 +30,6 @@ export function ScheduleScreen({
   inboxUnread,
   notifUnread,
   profileViews,
-  scheduleOpens,
   requestCount,
   autoOpenAdder,
   handle,
@@ -67,7 +66,6 @@ export function ScheduleScreen({
   inboxUnread: number;
   notifUnread: number;
   profileViews: number;
-  scheduleOpens: number;
   requestCount: number;
   autoOpenAdder: boolean;
   handle: string;
@@ -341,7 +339,6 @@ export function ScheduleScreen({
           photo={photo}
           subsCount={subsCount}
           profileViews={profileViews}
-          scheduleOpens={scheduleOpens}
           requestCount={requestCount}
           email={email}
           instagram={instagram}
