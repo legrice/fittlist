@@ -1,52 +1,65 @@
 // Rasterise the app mark into the PNGs a home-screen install needs.
 //
-// One-off: the output is committed to public/. Run it again only if the mark
-// changes. Playwright is already a dev dependency, so no image toolchain.
+// The geometry comes from brandIcon() rather than a copy of it, so the icon on
+// a home screen can't drift from the mark in the header. That means running it
+// through tsx, since brand.ts is TypeScript:
 //
-//   node scripts/make-icons.mjs
+//   npx tsx scripts/make-icons.mjs
+//
+// The output is committed. Run it again only when the mark itself changes.
 import { chromium } from "playwright";
 import fs from "node:fs";
+import { brandIcon } from "../src/lib/brand.ts";
 
-const INK = "#191502";
-const PAPER = "#faf8f2";
-const ORANGE = "#DD583A";
+const ORANGE = "#dd6a35"; // --si, the accent the whole app is built around
+const WHITE = "#ffffff";
 
-/** The four bars, drawn to fill a 120 box. `scale` shrinks them inside it. */
-const mark = (scale) => `
-  <g transform="translate(60 60) scale(${scale}) translate(-60 -60)">
-    <rect x="18" y="20" width="36" height="22" rx="11" fill="${PAPER}"/>
-    <rect x="62" y="20" width="40" height="22" rx="11" fill="${PAPER}"/>
-    <rect x="18" y="49" width="66" height="22" rx="11" fill="${ORANGE}"/>
-    <rect x="18" y="78" width="28" height="22" rx="11" fill="${PAPER}"/>
-  </g>`;
+// brandIcon draws into a 112x100 box. Centre that in a square and size it:
+// `fill` is how much of the 120 box the mark's width takes.
+function square(size, radius, fill) {
+  // brandIcon carries its colour on the <svg> element, which is exactly the
+  // part being unwrapped, so the group has to carry it instead.
+  const inner = brandIcon(WHITE)
+    .replace(/^<svg[^>]*>/, "")
+    .replace(/<\/svg>$/, "");
+  const scale = fill / 112;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}">
+    <rect width="120" height="120" rx="${radius}" fill="${ORANGE}"/>
+    <g fill="${WHITE}" transform="translate(60 60) scale(${scale}) translate(-56 -50)">${inner}</g>
+  </svg>`;
+}
 
-// A plain icon may use its whole square; a maskable one gets cropped to a
-// circle on Android, so the mark shrinks into the safe zone and the ink runs
-// to the edge. An Apple touch icon is masked by iOS, so it's full-bleed too.
+// A plain icon may use its whole square. A maskable one gets cropped to
+// whatever shape the launcher likes, so its mark pulls into the safe zone and
+// the orange runs to the edge. An Apple touch icon is masked by iOS too, but
+// only ever to a rounded square, so it can sit closer to the edge.
 const ICONS = [
-  { file: "icon-192.png", size: 192, radius: 27, scale: 0.72 },
-  { file: "icon-512.png", size: 512, radius: 27, scale: 0.72 },
-  { file: "icon-192-maskable.png", size: 192, radius: 0, scale: 0.55 },
-  { file: "icon-512-maskable.png", size: 512, radius: 0, scale: 0.55 },
-  { file: "apple-touch-icon.png", size: 180, radius: 0, scale: 0.66 },
+  { file: "icon-192.png", size: 192, radius: 27, fill: 78 },
+  { file: "icon-512.png", size: 512, radius: 27, fill: 78 },
+  { file: "icon-192-maskable.png", size: 192, radius: 0, fill: 62 },
+  { file: "icon-512-maskable.png", size: 512, radius: 0, fill: 62 },
+  { file: "apple-touch-icon.png", size: 180, radius: 0, fill: 74 },
 ];
 
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
-for (const { file, size, radius, scale } of ICONS) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}">
-    <rect width="120" height="120" rx="${radius}" fill="${INK}"/>${mark(scale)}</svg>`;
+for (const { file, size, radius, fill } of ICONS) {
   const page = await browser.newPage({
     viewport: { width: size, height: size },
     deviceScaleFactor: 1,
   });
   await page.setContent(
-    `<body style="margin:0;background:transparent">${svg}</body>`,
+    `<body style="margin:0;background:transparent">${square(size, radius, fill)}</body>`,
     { waitUntil: "load" },
   );
   await page.screenshot({ path: `public/${file}`, omitBackground: radius > 0 });
   await page.close();
   console.log(`public/${file}  ${size}x${size}`);
 }
+
+// The browser favicon: same mark, same source, so the tab matches the app.
+fs.writeFileSync("src/app/icon.svg", `${square(120, 27, 78).replace(/\n\s+/g, "")}\n`);
+console.log("src/app/icon.svg");
+
 await browser.close();
-console.log(`\n${ICONS.length} icons written`);
 if (!fs.existsSync("public/icon-512.png")) throw new Error("icons missing");
+console.log(`\n${ICONS.length + 1} written`);
