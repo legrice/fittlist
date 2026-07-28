@@ -155,7 +155,7 @@ export function NotifyCta({
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on the beta list</h2>
                 <p className="lead">
                   Accounts are invite-only while we&rsquo;re in beta, so we&rsquo;ve put{" "}
-                  <b>{email}</b> in the queue. Nothing is lost in the meantime —
+                  <b>{email}</b> in the queue. Nothing is lost in the meantime:
                   {" "}{firstName}&rsquo;s schedule still lands in your inbox every week, and
                   we&rsquo;ll email you the moment there&rsquo;s room.
                 </p>
@@ -177,7 +177,7 @@ export function NotifyCta({
                 <h2 style={{ marginTop: 10 }}>You&rsquo;re on {firstName}&rsquo;s list</h2>
                 <p className="lead">
                   We&rsquo;re still in beta, and we&rsquo;re glad you want to follow {firstName}.
-                  Ask for an account while you&rsquo;re here — every coach you follow lands in one
+                  Ask for an account while you&rsquo;re here: every coach you follow lands in one
                   week, and you can mark the classes you&rsquo;re going to.
                 </p>
                 <label className="flabel" htmlFor="ntPw">
@@ -215,7 +215,7 @@ export function NotifyCta({
                       setOpen(false);
                     }}
                   >
-                    Maybe later — just email me
+                    Maybe later, just email me
                   </button>
                 </div>
               </>

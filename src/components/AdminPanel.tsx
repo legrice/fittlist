@@ -449,7 +449,7 @@ function InviteForm({ toast }: { toast: (m: string) => void }) {
       <input
         className="editinput"
         style={{ marginTop: 8 }}
-        placeholder="Note (name, gym) — optional"
+        placeholder="Optional note: name, gym"
         value={label}
         maxLength={120}
         onChange={(e) => setLabel(e.target.value)}

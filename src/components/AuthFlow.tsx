@@ -227,10 +227,10 @@ export function AuthFlow({
                   fittlist beta.
                 </h1>
                 <p>
-                  Your invite is live — sign up with the email address it was sent to
+                  Your invite is live. Sign up with the email address it was sent to
                   {fans ? ", whether you coach or you're here to train" : " and your page is yours"}.
                   It&rsquo;s early days, things will move around, and what you tell us changes what
-                  gets built — that&rsquo;s the whole point of being here now.
+                  gets built. That&rsquo;s the whole point of being here now.
                 </p>
               </>
             ) : fans ? (
@@ -244,7 +244,7 @@ export function AuthFlow({
                   Every coach you follow.
                 </h1>
                 <p>
-                  Coaches put their whole week — every studio, every way to book — behind one link.
+                  Coaches put their whole week, every studio and every way to book, behind one link.
                   Everyone else follows the coaches they train with, and gets that week in one
                   place.
                 </p>
@@ -308,7 +308,7 @@ export function AuthFlow({
               {resetMode ? (
                 <>
                   We emailed a sign-in link to <b>{email}</b>. Open it on this device and
-                  you&rsquo;ll be signed straight in — then you can set a new password so you
+                  you&rsquo;ll be signed straight in. Then you can set a new password so you
                   don&rsquo;t need the email next time. It expires in 15 minutes.
                 </>
               ) : (
@@ -330,7 +330,7 @@ export function AuthFlow({
           <>
             <h1>How will you use fittlist?</h1>
             <p>
-              You can change this later — following is free either way, and you can add a page of
+              You can change this later. Following is free either way, and you can add a page of
               your own whenever you want one.
             </p>
             <button className="btn" onClick={() => setStage("claim")} disabled={pending}>
@@ -365,7 +365,7 @@ export function AuthFlow({
           <>
             <h1>Pick your link.</h1>
             <p>
-              This is the one link you share everywhere &mdash; your bio, your DMs, your business card.
+              This is the one link you share everywhere: your bio, your DMs, your business card.
               Anyone who opens it sees your schedule and how to reach you.
             </p>
             <input
@@ -438,14 +438,14 @@ export function AuthFlow({
                         : "Your classes across every studio, behind one link people can follow."
                       : null,
                     invited
-                      ? "Use the email your invite was sent to, and pick a password you'll remember — it's how you get back in on any other browser."
+                      ? "Use the email your invite was sent to, and pick a password you'll remember. It's how you get back in on any other browser."
                       : inviteOnly
-                        ? "Invite-only beta — use the email you were invited with."
+                        ? "Invite-only beta. Use the email you were invited with."
                         : "Pick any password and you're in.",
                   ]
                     .filter(Boolean)
                     .join(" ")
-                : "Welcome back — enter your email and password."}
+                : "Welcome back. Enter your email and password."}
             </p>
             <input
               type="email"

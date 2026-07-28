@@ -40,7 +40,7 @@ export function GoingButton({
       <div className="evcta-inner">
         <p className="evctanote">
           {hasBooking
-            ? "Just for your own week — book above to reserve your spot."
+            ? "Just for your own week. Book above to reserve your spot."
             : "Just for your own week. It isn't a booking."}
         </p>
         <button

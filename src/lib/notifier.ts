@@ -87,7 +87,7 @@ function weekDigestText(
     out.push(`${WEEKDAY[dow]} ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`);
     for (const c of items) {
       const where = c.studioId ? studioById.get(c.studioId)?.name ?? "" : c.location ?? "";
-      out.push(`  ${fmtTime(c.startTime)}  ${c.name}${where ? ` — ${where}` : ""}`);
+      out.push(`  ${fmtTime(c.startTime)}  ${c.name}${where ? ` at ${where}` : ""}`);
     }
     out.push("");
   }
@@ -245,7 +245,7 @@ function mergedWeekText(
       const where = c.studioId ? studioById.get(c.studioId)?.name ?? "" : c.location ?? "";
       const coach = trainerById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "";
       out.push(
-        `  ${fmtTime(c.startTime)}  ${c.name} — ${coach}${where ? ` · ${where}` : ""}`,
+        `  ${fmtTime(c.startTime)}  ${c.name} with ${coach}${where ? ` · ${where}` : ""}`,
       );
     }
     out.push("");

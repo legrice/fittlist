@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const s = await findStudio(slug);
   if (!s) return { title: "fittlist" };
   const title = `${s.name} · fittlist`;
-  const description = s.about?.trim() || `${s.name} — ${s.address}`;
+  const description = s.about?.trim() || `${s.name}, ${s.address}`;
   return {
     title,
     description,

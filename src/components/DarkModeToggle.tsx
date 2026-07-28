@@ -30,7 +30,7 @@ export function DarkModeToggle({ initialOn }: { initialOn: boolean }) {
       <span className="setrow-ic"><Icon name={on ? "dark_mode" : "light_mode"} size={22} /></span>
       <span className="setrow-txt">
         <span className="t">Dark mode</span>
-        <span className="s">{on ? "On — your page and app" : "Off"}</span>
+        <span className="s">{on ? "On for your page and app" : "Off"}</span>
       </span>
       <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
         <span className="switch-knob" />

@@ -29,7 +29,7 @@ export function DiscoverableToggle({ initialOn }: { initialOn: boolean }) {
       <span className="setrow-txt">
         <span className="t">Listed in Find coaches</span>
         <span className="s">
-          {on ? "Members can find you in the directory" : "Off — only people with your link"}
+          {on ? "Members can find you in the directory" : "Off, only people with your link"}
         </span>
       </span>
       <span className={`switch${on ? " on" : ""}`} aria-hidden="true">

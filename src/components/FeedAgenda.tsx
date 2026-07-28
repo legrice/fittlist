@@ -138,7 +138,7 @@ export function FeedAgenda({
           <p>
             {selCoach
               ? `${selCoach.name} hasn’t posted upcoming classes yet.`
-              : "Your coaches haven’t posted upcoming classes yet — check back soon."}
+              : "Your coaches haven’t posted upcoming classes yet. Check back soon."}
           </p>
         </div>
       ) : (

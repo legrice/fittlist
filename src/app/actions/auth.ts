@@ -83,7 +83,7 @@ export async function passwordAuth(
     return {
       ok: false,
       error:
-        "This account doesn't have a password yet — you signed in by email or with Google. " +
+        "This account doesn't have a password yet. You signed in by email or with Google. " +
         "Tap “Forgot your password?” and we'll email you a link to get in and set one.",
     };
   }
@@ -204,19 +204,19 @@ export async function requestMagicLink(
   });
   const url = `${siteOrigin()}/auth/magic?token=${token}`;
   const lines = [
-    `You asked to sign in to fittlist as ${email}. Use the button below and you're in — no password needed.`,
+    `You asked to sign in to fittlist as ${email}. Use the button below and you're in, no password needed.`,
     "The link works once and expires in 15 minutes. Once you're in you can set a password, so next time you can sign in on any browser without waiting on an email.",
   ];
   await sendMessage({
     to: email,
     kind: "magic_link",
     subject: "Sign in to fittlist",
-    text: `${lines.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, you can ignore this email — nothing has changed on your account.`,
+    text: `${lines.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, you can ignore this email. Nothing has changed on your account.`,
     html: emailHtml({
       heading: "Sign in to fittlist",
       body: lines,
       cta: { label: "Sign in", url },
-      footer: `This was sent to ${email} because someone asked to sign in to fittlist with that address. If it wasn't you, ignore it — nothing has changed on the account.`,
+      footer: `This was sent to ${email} because someone asked to sign in to fittlist with that address. If it wasn't you, ignore it. Nothing has changed on the account.`,
     }),
   });
   return { ok: true };

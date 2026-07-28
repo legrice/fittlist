@@ -50,7 +50,7 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
       <div className="empty-block">
         <h2>No followers yet</h2>
         <p>
-          Share your link and your QR code. Anyone who follows you — in the app or by email — shows
+          Share your link and your QR code. Anyone who follows you, in the app or by email, shows
           up here.
         </p>
       </div>

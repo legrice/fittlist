@@ -32,11 +32,11 @@ export async function sendInviteLink({
   });
   const url = `${siteOrigin()}/auth/magic?token=${token}&invited=1`;
   const fallbackText = invite
-    ? `Opening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address — your invite is on it.`
+    ? `Opening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address. Your invite is on it.`
     : "";
   const body = [
     intro.replace(/:$/, "."),
-    "This link works once and expires in 24 hours. Once you're in, set a password — then you can sign in on any browser without waiting on an email.",
+    "This link works once and expires in 24 hours. Once you're in, set a password. Then you can sign in on any browser without waiting on an email.",
     ...(fallbackText ? [fallbackText] : []),
   ];
   await sendMessage({
@@ -48,7 +48,7 @@ export async function sendInviteLink({
       heading: invite ? "You're invited to the fittlist beta" : "Sign in to fittlist",
       body,
       cta: { label: invite ? "Set up your page" : "Sign in", url },
-      footer: `This was sent to ${email} by fittlist. If you weren't expecting it, ignore it — nothing has been created for that address.`,
+      footer: `This was sent to ${email} by fittlist. If you weren't expecting it, ignore it. Nothing has been created for that address.`,
     }),
   });
   return url;

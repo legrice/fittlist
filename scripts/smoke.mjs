@@ -564,7 +564,7 @@ console.log("profile + schedule tabs + event pages ok");
     subPage.locator(".sheet .lead").textContent().then((t) => t.includes("still in beta")),
     "the account offer keeps the beta framing",
   );
-  await subPage.getByRole("button", { name: "Maybe later — just email me" }).click();
+  await subPage.getByRole("button", { name: "Maybe later, just email me" }).click();
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
   await expect(subPage.locator(".followpill").textContent().then((t) => t.trim() === "On the list"), "cta flips to subscribed");
 
