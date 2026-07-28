@@ -1853,7 +1853,8 @@ button.ps-card { cursor: pointer; }
 /* avatar strip: every followed coach, tap to filter the agenda to one */
 .feedstrip {
   display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  margin: 2px -18px 4px; padding: 6px 18px 14px; scrollbar-width: none;
+  /* 10px + the 6px the selection ring needs = 16px clear of the header */
+  margin: 10px -18px 4px; padding: 6px 18px 14px; scrollbar-width: none;
 }
 .feedstrip::-webkit-scrollbar { display: none; }
 .feedav {
