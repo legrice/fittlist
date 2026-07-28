@@ -37,3 +37,12 @@ export function floatingEnd(dateStr: string, hhmm: string, mins: number): string
     `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00`
   );
 }
+
+/** The weekly rule for a standing class, ending on `endsOn` when it has one.
+ *  UNTIL is exclusive of nothing — it's inclusive — and floating dates want a
+ *  date-time in UTC, so the day is stamped at 23:59:59Z to cover it fully. */
+export function weeklyRule(dayOfWeek: number, endsOn?: string | null): string {
+  const base = `FREQ=WEEKLY;BYDAY=${BYDAY[dayOfWeek]}`;
+  if (!endsOn) return `RRULE:${base}`;
+  return `RRULE:${base};UNTIL=${endsOn.replace(/-/g, "")}T235959Z`;
+}

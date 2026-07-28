@@ -239,6 +239,71 @@ console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
 }
 console.log("delete-all ok (whole repeating set goes)");
 
+// ---- a weekly class can stop on a date, and stops everywhere at once
+{
+  const before = await scheduleClasses(page);
+  // an end date two weeks out, on a Tuesday class
+  const end = new Date();
+  end.setUTCDate(end.getUTCDate() + 14);
+  const endIso = end.toISOString().slice(0, 10);
+  const past = new Date();
+  past.setUTCDate(past.getUTCDate() - 1);
+
+  await page.getByRole("button", { name: "Add class" }).click();
+  await page.getByRole("heading", { name: "New class" }).waitFor();
+  await page.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
+  await page.locator("#fName").fill("Six Week Block");
+  await page.getByRole("button", { name: "Tu", exact: true }).click();
+  await page.getByRole("button", { name: "+ Add an end date" }).click();
+  // a date already gone is refused rather than silently stored
+  await page.locator("#fEndsOn").fill(past.toISOString().slice(0, 10));
+  await page.locator(".publishwrap .btn").click();
+  await page.getByText("already passed").waitFor();
+  await page.locator("#fEndsOn").fill(endIso);
+  await page.locator(".publishwrap .btn").click();
+  await page.getByText("Published", { exact: false }).waitFor();
+  await waitSchedule(page, before + 1, 20000);
+  await page.waitForTimeout(700);
+
+  // it shows now, and stops after the end date — the schedule runs a year out
+  const rows = await page.locator('.ps-event:has-text("Six Week Block")').count();
+  if (rows < 1) fail("a class with an end date should still show before it");
+  if (rows > 3) fail(`a class ending in 2 weeks showed ${rows} times`);
+  // and the .ics carries the same stop, so subscribed calendars agree
+  const ics = await (await page.request.get(`${BASE}/api/cal/matt`)).text();
+  if (!ics.includes(`UNTIL=${endIso.replace(/-/g, "")}T235959Z`))
+    fail("the calendar feed should carry the end date as UNTIL");
+
+  // the end date round-trips into the editor
+  await page.locator('.ps-event:has-text("Six Week Block")').first().click();
+  await page.getByRole("heading", { name: "Edit class" }).waitFor();
+  if ((await page.locator("#fEndsOn").inputValue()) !== endIso)
+    fail("the end date did not round-trip into the editor");
+  await page.getByRole("button", { name: "Delete this class" }).click();
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await page.getByText("Deleted", { exact: true }).waitFor();
+  await waitSchedule(page, before, 20000);
+}
+console.log("end date ok (stops the week and the feed, round-trips)");
+
+// ---- picking a saved class brings that coach's booking links with it
+{
+  await page.getByRole("button", { name: "Add class" }).click();
+  await page.getByRole("heading", { name: "New class" }).waitFor();
+  await page.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
+  await page.locator("#fName").click();
+  await page.locator(".namesug button", { hasText: "Barbell Strength" }).first().click();
+  await page.locator(".linkrow input").first().waitFor();
+  const url = await page.locator(".linkrow input").first().inputValue();
+  if (!url.includes("example.com/book"))
+    fail("a saved class should bring its booking link: " + url);
+  await page.locator(".adderclose").click();
+  await page.waitForFunction(() => !document.querySelector(".sheet"));
+}
+console.log("saved-class links carry over ok");
+
 // ---- account page: full-screen view reached from the header avatar
 await expect(
   page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),

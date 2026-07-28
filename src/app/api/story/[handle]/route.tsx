@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
-import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG - Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -66,7 +66,7 @@ export async function GET(
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
-      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length) {
       items.forEach((c) => c.studioId && usedStudioIds.add(c.studioId));

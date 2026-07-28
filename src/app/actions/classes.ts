@@ -22,6 +22,7 @@ export type PublishInput = {
   days: number[]; // 0 = Monday … 6 = Sunday
   // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
   specificDate?: string | null;
+  endsOn?: string | null; // weekly only: last date it runs
   startTime: string; // "HH:MM"
   durationMin: number;
   studioId?: string | null; // required for public; optional for private
@@ -90,6 +91,12 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // not the day pills. Weekly classes fan out across the selected days.
   const oneOff = input.specificDate?.trim() || null;
   if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return { ok: false, error: "Invalid date." };
+  // A one-off is its own date, so an end date only means something weekly.
+  const endsOn = oneOff ? null : input.endsOn?.trim() || null;
+  if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn))
+    return { ok: false, error: "Invalid end date." };
+  if (endsOn && endsOn < new Date().toISOString().slice(0, 10))
+    return { ok: false, error: "That end date has already passed." };
   const days = oneOff
     ? [dowOfDate(oneOff)]
     : [...new Set(input.days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
@@ -159,6 +166,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       templateId: template.id,
       dayOfWeek,
       specificDate: oneOff,
+      endsOn,
       startTime: input.startTime,
       durationMin,
       name,

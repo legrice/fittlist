@@ -5,7 +5,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { unreadNotifications } from "@/lib/notify";
-import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
 import { AppHeader } from "@/components/AppHeader";
@@ -76,7 +76,7 @@ export default async function FeedPage() {
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
-      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .flatMap((c) => {
         const coach = coachById.get(c.userId);

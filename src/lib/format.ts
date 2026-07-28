@@ -159,6 +159,19 @@ export function siteOrigin(): string {
   return process.env.NEXT_PUBLIC_ORIGIN || "https://fittlist.co";
 }
 
+/** Does this class run on the given date? One-offs land on their own date; a
+ *  standing weekly runs on its weekday until endsOn (inclusive), forever if
+ *  that's null. ISO dates compare correctly as strings. */
+export function runsOn(
+  c: { specificDate: string | null; dayOfWeek: number; endsOn?: string | null },
+  iso: string,
+  dow: number,
+): boolean {
+  if (c.specificDate) return c.specificDate === iso;
+  if (c.endsOn && iso > c.endsOn) return false;
+  return c.dayOfWeek === dow;
+}
+
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** [0, 2, 4] -> "Mon, Wed & Fri" */

@@ -109,6 +109,7 @@ export default async function StudioPage({ params, searchParams }: Props) {
               <Icon name="arrow_back" size={21} />
             </BackLink>
           )}
+          <div className="pubhead-row">
           <h1 className="profname">{s.name}</h1>
           {canEdit && (
             <StudioOwnerBar
@@ -124,6 +125,7 @@ export default async function StudioPage({ params, searchParams }: Props) {
               instagram={s.instagram ?? ""}
             />
           )}
+          </div>
         </div>
         {s.types.length > 0 && (
           <div className="studiotypes">

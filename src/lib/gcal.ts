@@ -1,5 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { weeklyRule } from "@/lib/ics";
 import { decryptSecret } from "@/lib/crypto";
 import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 
@@ -12,7 +13,7 @@ const AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN = "https://oauth2.googleapis.com/token";
 const CAL = "https://www.googleapis.com/calendar/v3/calendars/primary";
 const SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.events"];
-const BYDAY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+
 
 export function googleConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -196,7 +197,7 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
     };
     if (studio) event.location = `${studio.name}, ${studio.address}`;
     else if (c.location) event.location = c.location;
-    if (!c.specificDate) event.recurrence = [`RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`];
+    if (!c.specificDate) event.recurrence = [weeklyRule(c.dayOfWeek, c.endsOn)];
 
     try {
       const res = await fetch(`${CAL}/events`, {

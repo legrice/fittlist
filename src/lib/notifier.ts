@@ -2,7 +2,7 @@ import { eq, inArray, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
-import { fmtTime, siteOrigin, timeToMinutes } from "@/lib/format";
+import { fmtTime, runsOn, siteOrigin, timeToMinutes } from "@/lib/format";
 
 // All list email goes through here - the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
@@ -80,7 +80,7 @@ function weekDigestText(
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
-      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (!items.length) continue;
     out.push(`${WEEKDAY[dow]} ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`);
@@ -226,7 +226,7 @@ function mergedWeekText(
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
-      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (!items.length) continue;
     const head = i === 0 ? "Today" : i === 1 ? "Tomorrow" : `${WEEKDAY[dow]} ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;

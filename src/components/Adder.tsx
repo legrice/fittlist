@@ -32,6 +32,7 @@ export type AdderPrefill = {
   links: BookingLink[];
   days?: number[]; // preselected (edit); empty for duplicate
   dayOfWeek?: number; // the weekday actually opened, for the delete choice
+  endsOn?: string | null; // weekly only: last date it runs
   specificDate?: string | null; // set = editing a one-off pinned to this date
   classId?: string; // set = edit this class in place
 };
@@ -85,6 +86,8 @@ export function Adder({
   const [description, setDescription] = useState(prefill?.description ?? "");
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
+  // null = runs forever (the default); a string = the picker is showing.
+  const [endsOn, setEndsOn] = useState<string | null>(prefill?.endsOn ?? null);
   const [date, setDate] = useState(prefill?.specificDate ?? "");
   const initStart = prefill?.startTime ?? lastUsed.startTime;
   const initDur = prefill?.durationMin ?? lastUsed.durationMin;
@@ -131,6 +134,11 @@ export function Adder({
     setName(c.name);
     setClassType(c.classType ?? null);
     setDescription(c.description ?? "");
+    // The studio catalog is shared across coaches and deliberately carries no
+    // booking links — another coach's booking page isn't yours. But if this
+    // coach has run the class before, their own links come back with it.
+    const mine = templates.find((t) => t.name.toLowerCase() === c.name.toLowerCase());
+    if (mine?.links.length) setLinks(mine.links.map((l) => ({ ...l })));
   };
 
   // The Type dropdown: curated categories, any types already saved for this
@@ -207,6 +215,7 @@ export function Adder({
         description,
         days: [...days],
         specificDate: oneTime ? date : null,
+        endsOn: oneTime ? null : endsOn || null,
         startTime: time,
         durationMin,
         studioId,
@@ -472,6 +481,37 @@ export function Adder({
                     </button>
                   ))}
                 </div>
+                {/* Most weekly classes run indefinitely, so this stays out of
+                    the way until it's wanted — a term, a block, a cover. */}
+                {endsOn === null ? (
+                  <button className="tertiary endson-add" onClick={() => setEndsOn("")}>
+                    + Add an end date
+                  </button>
+                ) : (
+                  <>
+                    <label className="flabel" htmlFor="fEndsOn">
+                      Ends on <span>· last day it runs</span>
+                    </label>
+                    <div className="timegrid endson-row">
+                      <input
+                        id="fEndsOn"
+                        type="date"
+                        className="timeinput"
+                        min={new Date().toISOString().slice(0, 10)}
+                        value={endsOn}
+                        onChange={(e) => setEndsOn(e.target.value)}
+                        aria-label="Last day this class runs"
+                      />
+                      <button
+                        className="tertiary"
+                        onClick={() => setEndsOn(null)}
+                        aria-label="Remove the end date"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
 

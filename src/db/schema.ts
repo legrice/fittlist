@@ -237,6 +237,9 @@ export const classes = pgTable(
     // null = standing weekly (shows every week, link never stales); set = a
     // one-off pinned to this ISO date, shown only in the week it falls in.
     specificDate: date("specific_date"),
+    // Last date a standing weekly class runs (inclusive). null = no end, the
+    // original behaviour. Ignored for one-offs, which are their own date.
+    endsOn: date("ends_on"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     name: text("name").notNull(),

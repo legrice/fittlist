@@ -6,10 +6,11 @@ import { fmtDateLong, fmtTime, mondayOfCurrentWeek, siteOrigin } from "@/lib/for
 import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
-import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
+import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { avatarColor } from "@/lib/avatar";
 import { studioPath } from "@/lib/studio";
 import { BackLink } from "@/components/BackLink";
+import { CoachLink } from "@/components/CoachLink";
 import { EventActions } from "@/components/EventActions";
 import { GoingButton } from "@/components/GoingButton";
 import { Icon } from "@/components/Icon";
@@ -84,7 +85,7 @@ export default async function EventPage({ params, searchParams }: Props) {
     details: gcalDetails,
   });
   if (locationText) gcalParams.set("location", locationText);
-  if (!c.specificDate) gcalParams.set("recur", `RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[c.dayOfWeek]}`);
+  if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn));
   const googleUrl = `https://calendar.google.com/calendar/render?${gcalParams.toString()}`;
   const icsHref = `/api/cal/${handle}/${c.id}`;
 
@@ -136,7 +137,7 @@ export default async function EventPage({ params, searchParams }: Props) {
       <div className="evwrap">
         {c.classType && <span className="evtype">{c.classType}</span>}
         <h1 className="evname">{c.name}</h1>
-        <Link className="evcoach" href={`/${handle}`}>
+        <CoachLink className="evcoach" href={`/${handle}`}>
           {user.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img className="evcoach-av" src={user.photo} alt="" />
@@ -151,7 +152,7 @@ export default async function EventPage({ params, searchParams }: Props) {
           )}
           <span className="evcoach-nm">{user.name}</span>
           <Icon name="chevron_right" size={16} />
-        </Link>
+        </CoachLink>
 
         <div className="evfacts">
           <div className="evfact">

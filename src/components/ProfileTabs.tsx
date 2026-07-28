@@ -146,8 +146,10 @@ export function ProfileTabs({
           controls. */}
       <div className="pubhead" ref={rowRef}>
         {back}
-        <h1 className="profname">{name}</h1>
-        {action}
+        <div className="pubhead-row">
+          <h1 className="profname">{name}</h1>
+          {action}
+        </div>
       </div>
       {/* One line: "Strength coach in Jersey City, NJ" */}
       {(title.trim() || location.trim()) && (

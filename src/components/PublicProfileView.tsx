@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { studioPath } from "@/lib/studio";
 
@@ -108,7 +108,7 @@ export async function PublicProfileView({
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
-      .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+      .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
   }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AppHeader } from "@/components/AppHeader";
@@ -171,6 +171,7 @@ export function ScheduleScreen({
         links: c.links.map((l) => ({ ...l })),
         days,
         dayOfWeek: c.dayOfWeek,
+        endsOn: c.endsOn,
         specificDate: c.specificDate,
         classId: c.id,
       },
@@ -189,7 +190,7 @@ export function ScheduleScreen({
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7; // 0 = Monday
       const items = classes
-        .filter((c) => (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow))
+        .filter((c) => runsOn(c, iso, dow))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) {
         out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday – Jul 20"

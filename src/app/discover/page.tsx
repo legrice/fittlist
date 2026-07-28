@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { unreadNotifications } from "@/lib/notify";
-import { timeToMinutes } from "@/lib/format";
+import { runsOn, timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 import { AppHeader } from "@/components/AppHeader";
@@ -52,7 +52,7 @@ export default async function DiscoverPage() {
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
     for (const c of classRows) {
-      if (c.specificDate ? c.specificDate === iso : c.dayOfWeek === dow) {
+      if (runsOn(c, iso, dow)) {
         weekCount.set(c.userId, (weekCount.get(c.userId) ?? 0) + 1);
       }
     }

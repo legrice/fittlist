@@ -87,6 +87,7 @@ export default async function SchedulePage({
     templateId: c.templateId,
     dayOfWeek: c.dayOfWeek,
     specificDate: c.specificDate,
+    endsOn: c.endsOn,
     startTime: c.startTime,
     durationMin: c.durationMin,
     name: c.name,
