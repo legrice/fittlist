@@ -7,3 +7,5 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 shot-*.png
+# where the test suites tell you to log the server, so it lands in the repo root
+server.log
