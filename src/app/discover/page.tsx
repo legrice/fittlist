@@ -102,7 +102,7 @@ export default async function DiscoverPage() {
 
   return (
     <section
-      className={`screen${isCoach ? " hasnav" : ""}`}
+      className={"screen hasnav"}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
@@ -118,7 +118,7 @@ export default async function DiscoverPage() {
         <div className="calbar-title">Discover</div>
         <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack={!!me.handle} />
       </div>
-      {isCoach && <NavBar active="discover" />}
+      <NavBar active="discover" coach={isCoach} />
     </section>
   );
 }

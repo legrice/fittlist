@@ -64,6 +64,24 @@ await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 console.log("member setup ok (two steps, no studios, lands on their week)");
 
+// the bottom bar is theirs too, minus Schedule: they have no week to teach
+{
+  const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.trim());
+  if (onFeed.join(",") !== "Following,Discover")
+    fail(`a member's tabs should be Following and Discover, got ${onFeed.join(",")}`);
+  await p.locator(".navtab", { hasText: "Discover" }).click();
+  await p.waitForURL("**/discover");
+  if ((await p.locator(".navtab").count()) !== 2) fail("the bar should follow them to Discover");
+  await p.locator(".usericon").click();
+  await p.waitForURL("**/you");
+  if ((await p.locator(".navtab").count()) !== 2) fail("and to their account");
+  if (await p.locator(".navtab.on").count())
+    fail("the account is neither tab, so neither should be lit");
+  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.waitForURL("**/feed");
+}
+console.log("member tabs ok (Following and Discover, everywhere, no Schedule)");
+
 // follow the coach so the profile has a "trains with"
 await p.goto(BASE + "/carinacoach");
 await p.locator(".followpill").click();

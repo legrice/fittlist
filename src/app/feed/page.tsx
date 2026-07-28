@@ -121,7 +121,7 @@ export default async function FeedPage({
 
   return (
     <section
-      className={`screen${isCoach ? " hasnav" : ""}`}
+      className={"screen hasnav"}
       data-mode={me.look === "dark" ? "dark" : undefined}
     >
       <div className="pad">
@@ -163,7 +163,7 @@ export default async function FeedPage({
         )}
 
       </div>
-      {isCoach && <NavBar active="following" />}
+      <NavBar active="following" coach={isCoach} />
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </section>
   );

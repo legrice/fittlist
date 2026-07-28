@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 
-export type NavTab = "following" | "discover" | "schedule";
+// "none" is the account: reachable from either tab, and neither of them.
+export type NavTab = "following" | "discover" | "schedule" | "none";
 
-// The whole app in thumb reach. Only the coach shell has it, and only once the
-// member side is switched on — before that there's nothing to switch between.
+// The whole app in thumb reach. A member gets the two tabs that mean something
+// to them; Schedule is a coach's own week, and they don't have one.
 export function NavBar({
   active,
+  coach = true,
   onSchedule,
 }: {
   active: NavTab;
+  /** false drops the Schedule tab: a member has nothing behind it. */
+  coach?: boolean;
   // On the schedule screen the account is an overlay on the same route, so
   // Schedule closes it locally rather than routing.
   onSchedule?: () => void;
@@ -19,7 +23,9 @@ export function NavBar({
   const tabs: { id: NavTab; href: string; icon: string; label: string }[] = [
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    { id: "schedule", href: "/app", icon: "calendar_today", label: "Schedule" },
+    ...(coach
+      ? [{ id: "schedule" as const, href: "/app", icon: "calendar_today", label: "Schedule" }]
+      : []),
   ];
 
   return (

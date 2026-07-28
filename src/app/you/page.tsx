@@ -7,6 +7,7 @@ import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { MemberAccount } from "@/components/MemberAccount";
+import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export default async function YouPage({
   const unread = await unreadNotifications(userId);
 
   return (
-    <section className="screen" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
       <div className="pad">
         <AppHeader unread={unread} />
         <div className="calbar-title">You</div>
@@ -54,6 +55,9 @@ export default async function YouPage({
           openEditor={edit === "1"}
         />
       </div>
+      {/* The account is reachable from either tab and is neither of them, so
+          the bar is there to get back out with nothing lit. */}
+      <NavBar active="none" coach={false} />
     </section>
   );
 }
