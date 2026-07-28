@@ -356,6 +356,7 @@ export function ScheduleScreen({
           hasPassword={hasPassword}
           passkeyCount={passkeyCount}
           isAdmin={isAdmin}
+          avatarColor={myAccent}
           showFanView={showFanView}
           discoverable={discoverable}
           look={look}

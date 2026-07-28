@@ -786,8 +786,11 @@ button.bl-band { cursor: pointer; }
 }
 .usericon:active { opacity: .7; }
 .usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Fills the whole circle. As a bare inline span the avatar colour painted
+   behind the letter only, leaving a tinted glyph on the default grey disc. */
 .usericon-initial {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #191502;
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #fff;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* schedule: day sections with shadowed white class cards (containers, not lines) */
@@ -1294,9 +1297,11 @@ button.ps-card { cursor: pointer; }
   justify-content: center; text-align: center; gap: 4px;
 }
 .acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
+/* Filled with the coach's own palette colour, same as the header avatar and
+   every other photo-less face in the app. */
 .acctavatar-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #cec6b0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #fff;
 }
 /* Tertiary: a plain typographic action, no fill and no border — quieter than
    the ghost button, for a control that sits inside another surface. */
@@ -1802,8 +1807,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .secrow-txt .t,
 [data-mode="dark"] .setrow-ic,
 [data-mode="dark"] .setrow-txt .t,
-[data-mode="dark"] .usericon,
-[data-mode="dark"] .usericon-initial { color: var(--ink); }
+[data-mode="dark"] .usericon { color: var(--ink); }
 [data-mode="dark"] .acctstat .l,
 [data-mode="dark"] .acctcard-s { color: var(--ol); }
 [data-mode="dark"] .setrow-chev { color: rgba(243,239,227,.32); }
@@ -1862,11 +1866,10 @@ button.ps-card { cursor: pointer; }
 /* Log out was a white pill whose light ink text vanished — dark pill instead. */
 [data-mode="dark"] .logoutbtn { background: var(--card); color: var(--ink); border-color: var(--line); }
 [data-mode="dark"] .logoutbtn:active { background: #2c2718; }
-/* Initial-fallback avatar circles read as brand-orange chips on dark. */
-[data-mode="dark"] .usericon,
-[data-mode="dark"] .inboxrow-av,
-[data-mode="dark"] .acctavatar-empty { background: var(--si); color: #fff; }
-[data-mode="dark"] .usericon-initial { color: #fff; }
+/* Initial-fallback avatar circles read as brand-orange chips on dark. The
+   coach's own two (.usericon-initial, .acctavatar-empty) carry their palette
+   colour inline in both modes, so they aren't in this list. */
+[data-mode="dark"] .inboxrow-av { background: var(--si); color: #fff; }
 /* ---- the coach's public page + event pages in dark ---- */
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio,

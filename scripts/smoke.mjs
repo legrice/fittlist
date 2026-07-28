@@ -1437,20 +1437,37 @@ console.log("followers list ok (email subscriber listed, coach can be followed b
 }
 console.log("stats centred ok");
 
-// a coach can walk the member side from settings while the flag is dark
+// Settings holds only what has no other door. The Following tab already IS
+// the coach's week, and sharing what you're attending is a member's move, so
+// neither belongs in a coach's settings list.
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Your week" }).click();
+if (await page.locator(".setrow", { hasText: "Your week" }).count())
+  fail("the Following tab already is your week — settings shouldn't repeat it");
+if (await page.locator(".setrow", { hasText: "attending" }).count())
+  fail("a coach's share is their own schedule, not what they're going to");
+// the member side is still one tab away, and still theirs
+await page.locator(".acctclose").click();
+await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
-// a coach marks classes too, so they get the same share-what-I'm-attending row
+console.log("coach settings ok (no duplicate doors, member side still one tab away)");
+
+// the coach's own avatar fills with their palette colour rather than tinting
+// the letter on a grey disc
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
-await page.locator(".sheet .storyimg").waitFor();
-await page.locator(".adderclose").click();
+{
+  const av = await page.locator(".acctavatar-empty, .acctavatar").first().evaluate((el) => ({
+    empty: el.classList.contains("acctavatar-empty"),
+    bg: getComputedStyle(el).backgroundColor,
+  }));
+  if (av.empty && (av.bg === "rgb(234, 227, 210)" || av.bg === "rgba(0, 0, 0, 0)"))
+    fail("a photo-less account avatar should carry the coach's colour, got " + av.bg);
+}
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-console.log("coach fan-view preview ok");
+console.log("avatar colour ok (fills the circle)");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss
