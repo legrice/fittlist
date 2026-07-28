@@ -17,11 +17,21 @@ export interface SendArgs {
   to: string;
   subject: string;
   text: string;
+  /** HTML part. Send one wherever possible: a text-only mail carrying a bare
+   *  URL is what phishing looks like, and filters score it accordingly. */
+  html?: string;
   kind: OutboundKind;
   headers?: Record<string, string>;
 }
 
-export async function sendMessage({ to, subject, text, kind, headers }: SendArgs): Promise<void> {
+export async function sendMessage({
+  to,
+  subject,
+  text,
+  html,
+  kind,
+  headers,
+}: SendArgs): Promise<void> {
   let status = "sent";
   try {
     if (process.env.RESEND_API_KEY) {
@@ -36,6 +46,10 @@ export async function sendMessage({ to, subject, text, kind, headers }: SendArgs
           to: [to],
           subject,
           text,
+          ...(html ? { html } : {}),
+          // A transactional mail nobody can reply to is a spam signal, and an
+          // unanswerable sign-in email is bad manners besides.
+          ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}),
           ...(headers ? { headers } : {}),
         }),
       });

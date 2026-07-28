@@ -23,6 +23,7 @@ import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
 import { acceptInvite, emailInvited, INVITE_MSG } from "@/lib/invites";
+import { emailHtml } from "@/lib/email-html";
 import { fansEnabled } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
 
@@ -202,11 +203,21 @@ export async function requestMagicLink(
     expiresAt: new Date(Date.now() + MAGIC_TTL_MS),
   });
   const url = `${siteOrigin()}/auth/magic?token=${token}`;
+  const lines = [
+    `You asked to sign in to fittlist as ${email}. Use the button below and you're in — no password needed.`,
+    "The link works once and expires in 15 minutes. Once you're in you can set a password, so next time you can sign in on any browser without waiting on an email.",
+  ];
   await sendMessage({
     to: email,
     kind: "magic_link",
-    subject: "Your fittlist sign-in link",
-    text: `Tap to sign in to fittlist:\n\n${url}\n\nThis link works once and expires in 15 minutes. If you didn't request it, ignore this email.`,
+    subject: "Sign in to fittlist",
+    text: `${lines.join("\n\n")}\n\n${url}\n\nIf you didn't ask for this, you can ignore this email — nothing has changed on your account.`,
+    html: emailHtml({
+      heading: "Sign in to fittlist",
+      body: lines,
+      cta: { label: "Sign in", url },
+      footer: `This was sent to ${email} because someone asked to sign in to fittlist with that address. If it wasn't you, ignore it — nothing has changed on the account.`,
+    }),
   });
   return { ok: true };
 }

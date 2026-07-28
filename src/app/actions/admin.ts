@@ -7,6 +7,7 @@ import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { siteOrigin } from "@/lib/format";
 import { sendMessage } from "@/lib/mailer";
+import { emailHtml } from "@/lib/email-html";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
@@ -29,14 +30,25 @@ async function mintLink(
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
   const url = `${siteOrigin()}/auth/magic?token=${token}&invited=1`;
-  const fallback = invite
-    ? `\n\nOpening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address — your invite is on it.`
+  const fallbackText = invite
+    ? `Opening this in a different browser and it asks you to sign in? Go to ${siteOrigin()}/?invited=1 and sign up with this email address — your invite is on it.`
     : "";
+  const body = [
+    intro.replace(/:$/, "."),
+    `This link works once and expires in 24 hours. Once you're in, set a password — then you can sign in on any browser without waiting on an email.`,
+    ...(fallbackText ? [fallbackText] : []),
+  ];
   await sendMessage({
     to: email,
     kind: "magic_link",
     subject,
-    text: `${intro}\n\n${url}\n\nThis link works once and expires in 24 hours.${fallback}`,
+    text: `${body.join("\n\n")}\n\n${url}`,
+    html: emailHtml({
+      heading: invite ? "You're invited to the fittlist beta" : "Sign in to fittlist",
+      body,
+      cta: { label: invite ? "Set up your page" : "Sign in", url },
+      footer: `This was sent to ${email} by fittlist. If you weren't expecting it, ignore it — nothing has been created for that address.`,
+    }),
   });
   return url;
 }
