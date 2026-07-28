@@ -247,8 +247,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiznav .btn { flex: 1; }
 .wiznav .wizback { flex: 0 0 34%; }
 
-.empty-block { margin-top: 22px; border: 1.5px dashed var(--line); border-radius: 16px; padding: 28px 22px; text-align: center; }
-.empty-block .glyph { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; color: var(--ol); margin-bottom: 12px; letter-spacing: .2em; }
+.empty-block { margin-top: 22px; background: var(--card); border: 1.5px dashed var(--sa); border-radius: 16px; padding: 28px 22px; text-align: center; }
 .empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
@@ -1544,9 +1543,8 @@ button.ps-card { cursor: pointer; }
   [data-theme="poster"] .pubhero { position: static; width: auto; }
 }
 
-/* poster: empty schedule state on the dark ground */
-[data-theme="poster"] .empty-block { border-color: var(--pg-cream); }
-[data-theme="poster"] .empty-block .glyph { color: var(--pg-cream); }
+/* poster: empty schedule state on the dark ground. The block is a white card,
+   so only the text needs pulling back from the cream it would inherit. */
 [data-theme="poster"] .empty-block h2 { color: var(--ink); }
 [data-theme="poster"] .empty-block p { color: var(--ink); }
 

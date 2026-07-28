@@ -234,7 +234,7 @@ export async function PublicProfileView({
     <>
       <h2 className="prof-sec-h sched-h">Schedule</h2>
       {days.length === 0 ? (
-        <div className="empty-block" style={{ background: "#fff" }}>
+        <div className="empty-block">
           <h2>Nothing on the calendar</h2>
           <p>
             {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email

@@ -257,7 +257,6 @@ export function ScheduleScreen({
 
         {!hasAnyClass ? (
           <div className="empty-block">
-            <div className="glyph">MON–SUN</div>
             <h2>Your week is empty</h2>
             <p>
               Add the classes you coach, every studio in one schedule. Your link starts working with
