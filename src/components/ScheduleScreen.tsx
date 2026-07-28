@@ -225,6 +225,9 @@ export function ScheduleScreen({
         <AppHeader
           unread={updatesUnread}
           home={showFanView ? "/feed" : "/app"}
+          // Only where the bottom bar is: without the member side there are no
+          // tabs to show, on any width.
+          nav={showFanView ? { active: "schedule", onSchedule: () => setProfileOpen(false) } : undefined}
           avatar={{
             photo,
             color: myAccent,

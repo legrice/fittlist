@@ -2123,11 +2123,29 @@ button.ps-card { cursor: pointer; }
    itself needs room so the footer isn't stuck under it. */
 .pub.hasnav .profwrap { padding-bottom: 190px; }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
+/* The header's own copy of the tabs, for the width where the bottom bar hides.
+   Words only: an icon earns its keep in a 60px thumb target, not in a row of
+   links with room to say what they are. */
+.headnav { display: none; }
+.headnav-l {
+  position: relative; border: none; background: none; cursor: pointer;
+  padding: 6px 2px; text-decoration: none; color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
+  border-bottom: 2px solid transparent;
+}
+.headnav-l:hover { color: var(--ink); }
+.headnav-l.on { color: var(--ink); border-bottom-color: var(--ink); }
+.tapspin-head {
+  position: absolute; left: 50%; top: calc(100% + 5px); transform: translateX(-50%);
+  width: 12px; height: 12px; border-width: 1.5px;
+}
+
 @media (min-width: 940px) { .screen.hasnav .pad {
   padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
-.navbar { display: none; } }
+.navbar { display: none; }
+.headnav { display: flex; align-items: center; gap: 26px; } }
 
 /* Avatar colour picker: sixty swatches, so a photo-less coach is still
    recognisable at a glance in a list of five. */

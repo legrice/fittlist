@@ -31,6 +31,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
       <div className="pad">
         <AppHeader
           unread={unread}
+          nav={{ coach: isCoach }}
           avatar={{
             photo: me.photo,
             color: avatarColor(me),

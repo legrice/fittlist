@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { HeaderNav } from "@/components/HeaderNav";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
+import type { NavTab } from "@/lib/nav";
 
 // The same header on every screen of the app: wordmark left, notifications
 // and your avatar right. The avatar takes a handler inside the app shell
@@ -9,6 +11,7 @@ export function AppHeader({
   unread = 0,
   avatar,
   home = "/feed",
+  nav,
 }: {
   unread?: number;
   avatar?: {
@@ -21,12 +24,17 @@ export function AppHeader({
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
+  /** The tabs, as links in the middle of the header, on a screen too wide for
+   *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
+   *  it doesn't, so the two agree about whether this screen has tabs at all. */
+  nav?: { coach?: boolean; active?: NavTab; onSchedule?: () => void };
 }) {
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" beta />
       </Link>
+      {nav && <HeaderNav coach={nav.coach} active={nav.active} onSchedule={nav.onSchedule} />}
       <div className="brandbar-actions">
         <Link
           className="iconbtn inboxbtn"
