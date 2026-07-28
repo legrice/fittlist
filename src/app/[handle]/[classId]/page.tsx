@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
+import { viewerLook } from "@/lib/look";
 import { BYDAY, floatingEnd, floatingStart } from "@/lib/ics";
 import { BackLink } from "@/components/BackLink";
 import { EventActions } from "@/components/EventActions";
@@ -107,7 +108,7 @@ export default async function EventPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="pub evpage" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>
+    <div className="pub evpage" data-theme={user.theme} data-mode={await viewerLook()}>
       {isOwner && (
         <div className="previewbar">
           <span>

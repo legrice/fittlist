@@ -21,6 +21,7 @@
   --line: #e6dfcd;         /* warm cream dividers / input borders */
   --rule: #191502;         /* charcoal hairline rules */
   --si: #dd6a35;           /* pleasant warm-orange accent + CTA */
+  --go: #3d8b53;           /* "on" green for switches */
   --si-soft: #f7e6d6;
   --sa: #d6d1b3;
   --yellow: #f5f200;
@@ -272,10 +273,12 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   overflow: hidden; flex-shrink: 0;
 }
 /* icons are decoration: never swallow the click, never blow out layout pre-font-load */
-.material-symbols-outlined {
-  pointer-events: none; max-width: 1.2em; overflow: hidden;
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+/* Lucide renders inline SVG; the span just reserves the box and centres it. */
+.icon {
+  pointer-events: none; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
+.icon svg { display: block; }
 .iconbtn:hover { border-color: var(--ink); color: var(--ink); }
 
 .btn {
@@ -1622,11 +1625,15 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; width: 46px; height: 28px; border-radius: 999px; background: var(--sa);
   position: relative; transition: background .18s ease;
 }
-.switch.on { background: var(--ink); }
+.switch.on { background: var(--go); }
 .switch-knob {
   position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px;
-  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .18s ease;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  transition: transform .18s ease, background .18s ease;
 }
+/* On a dark page a white knob on the green track glares; go dark instead. */
+[data-mode="dark"] .switch.on { background: #4ea567; }
+[data-mode="dark"] .switch.on .switch-knob { background: #14120d; }
 .switch.on .switch-knob { transform: translateX(18px); }
 
 /* ============================================================================
@@ -1829,7 +1836,7 @@ button.ps-card { cursor: pointer; }
 }
 .stylepick-row:last-child { border-bottom: none; }
 .stylepick-row.sel { font-weight: 700; }
-.stylepick-row .material-symbols-outlined { color: var(--si); }
+.stylepick-row .icon { color: var(--si); }
 
 /* Admin invites: joined/pending filter */
 .invitefilter { flex: none; margin: 14px 0 12px; background: var(--card); box-shadow: var(--soft-shadow); }
@@ -1967,7 +1974,9 @@ button.ps-card { cursor: pointer; }
 .navtab:active { background: var(--cl); }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
-.hasnav .acctwrap { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+/* The nav is fixed over everything below it, so the account needs enough room
+   that its last row can always scroll clear of the bar. */
+.hasnav .acctwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 /* On a coach's page the subscribe bar has to clear the nav, and the page
    itself needs room so the footer isn't stuck under it. */
 .pub.hasnav .notifybar { bottom: calc(62px + env(safe-area-inset-bottom)); }

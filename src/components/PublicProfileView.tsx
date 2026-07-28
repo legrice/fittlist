@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
+import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
@@ -274,7 +275,7 @@ export async function PublicProfileView({
     <div
       className={`pub profile${showNav ? " hasnav" : ""}`}
       data-theme={user.theme}
-      data-mode={user.look === "dark" ? "dark" : undefined}
+      data-mode={await viewerLook()}
     >
       {isOwner && (
         <ProfileOwnerBar

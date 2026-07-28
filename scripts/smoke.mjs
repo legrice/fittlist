@@ -50,6 +50,31 @@ const addSaved = async (pg) => {
   });
 };
 
+// Flip dark mode from the account view. The toggle sets <html data-mode>
+// immediately; the .appshell attribute only lands after the server re-renders,
+// so reload for that rather than waiting on router.refresh() (which stalls
+// under load and made this the flakiest step in the suite).
+const setDark = async (pg, want) => {
+  await pg.goto(BASE + "/app");
+  await pg.locator(".usericon").click();
+  await pg.locator(".acctwrap").waitFor();
+  await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
+  const row = pg.locator(".setrow", { hasText: "Dark mode" });
+  await row.scrollIntoViewIfNeeded();
+  if ((await row.getAttribute("aria-pressed")) === String(want)) return;
+  await row.click();
+  await pg.waitForFunction(
+    (w) => (document.documentElement.getAttribute("data-mode") === "dark") === w,
+    want,
+  );
+  await pg.goto(BASE + "/app"); // server truth
+  await pg.waitForFunction(
+    (w) => !!document.querySelector('.appshell[data-mode="dark"]') === w,
+    want,
+    { timeout: 20000 },
+  );
+};
+
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
@@ -256,46 +281,25 @@ console.log("schedule tools ok (share stays, the rest moved under You)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
 // the public page (visitors see it too — it's a server-rendered attribute).
-await page.locator(".usericon").click();
-await page.locator(".acctwrap").waitFor();
-await page.waitForTimeout(450); // let the slide-up animation finish
-await page.locator(".setrow", { hasText: "Dark mode" }).click();
-await page.waitForFunction(() => document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 25000 });
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await setDark(page, true);
 await page.goto(BASE + "/matt");
 await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'));
-console.log("dark page look ok (app + public)");
+// dark is the VIEWER's preference: a logged-out visitor to the same page gets
+// light, and a signed-in dark viewer gets dark on someone else's page
+// bot UA so this check doesn't register as a profile view and skew the stats
+const lightCtx = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  userAgent: "facebookexternalhit/1.1",
+});
+const lightPage = await lightCtx.newPage();
+await lightPage.goto(BASE + "/matt");
+await lightPage.locator(".pub").waitFor();
+if (await lightPage.locator('.pub[data-mode="dark"]').count())
+  fail("a logged-out visitor should see the page in light");
+await lightCtx.close();
+console.log("dark page look ok (viewer's preference, light when logged out)");
 // back to light for the rest of the run
-await page.goto(BASE + "/app");
-await page.locator(".usericon").click();
-await page.locator(".acctwrap").waitFor();
-await page.waitForTimeout(450); // let the slide-up animation finish
-await page.locator(".setrow", { hasText: "Dark mode" }).click();
-let lightOk = true;
-try {
-  await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 12000 });
-} catch {
-  lightOk = false;
-}
-if (lightOk) {
-  await page.locator(".acctclose").click();
-  await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-} else {
-  // The action's refresh occasionally stalls under load. Reload for server
-  // truth and re-tap only if the setting genuinely didn't land.
-  await page.reload();
-  await page.getByText("Your schedule").waitFor();
-  if (await page.locator('.appshell[data-mode="dark"]').count()) {
-    await page.locator(".usericon").click();
-    await page.locator(".acctwrap").waitFor();
-    await page.waitForTimeout(450);
-    await page.locator(".setrow", { hasText: "Dark mode" }).click();
-    await page.waitForFunction(() => !document.querySelector('.appshell[data-mode="dark"]'), null, { timeout: 15000 });
-    await page.locator(".acctclose").click();
-    await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-  }
-}
+await setDark(page, false);
 console.log("light restored ok");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
@@ -920,6 +924,13 @@ await page.locator(".ps-event").first().click();
 await page.locator(".evcard").waitFor();
 if (!(await page.locator(".evback", { hasText: "schedule" }).count()))
   fail("a class opened from a coach's page should back into that page");
+// a dark viewer sees someone else's page in dark, whatever that coach chose
+await setDark(page, true);
+await page.goto(BASE + "/sam");
+await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'));
+await setDark(page, false);
+console.log("viewer look wins on another coach's page ok");
+
 // the coach's page itself has the nav
 await page.goto(BASE + "/sam");
 if ((await page.locator(".navbar .navtab").count()) !== 3)

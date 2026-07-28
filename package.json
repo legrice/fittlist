@@ -16,6 +16,7 @@
     "@simplewebauthn/server": "^13.3.2",
     "drizzle-orm": "^0.41.0",
     "jose": "^5.9.6",
+    "lucide-react": "^1.27.0",
     "next": "^15.3.2",
     "pg": "^8.14.1",
     "qrcode": "^1.5.4",
