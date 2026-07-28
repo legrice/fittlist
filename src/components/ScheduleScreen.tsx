@@ -194,7 +194,7 @@ export function ScheduleScreen({
         .filter((c) => runsOn(c, iso, dow))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) {
-        out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday – Jul 20"
+        out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday — Jul 20"
       }
     }
     return out;

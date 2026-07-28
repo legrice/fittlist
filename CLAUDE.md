@@ -22,8 +22,13 @@ When you'd reach for one, use the punctuation that fits the job it was doing:
 
 A hyphen is not a substitute; it reads as a typo. Rewrite the sentence.
 
-En dashes are fine where they're correct: date and time ranges (`Mon – Jul 20`).
-The middot separator (`·`) used in labels and sub-lines is also fine.
+**The one exception is the date header**, which reads `Wednesday — July 24`.
+A date is a label, not a sentence, and the dash is its shape rather than
+punctuation. It lives in `fmtDayHeader` and carries a `check-copy-ignore`
+pragma; a line with that marker (or a comment above it carrying it) is skipped.
+Adding another exemption should feel like a decision, not a convenience.
+
+The middot separator (`·`) used in labels and sub-lines is fine too.
 
 Otherwise: plain words, short sentences, no exclamation marks, no "simply" or
 "just" telling someone a thing is easy. Say what happens, not how they should

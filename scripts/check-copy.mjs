@@ -6,6 +6,11 @@
 // Comments are exempt: they're for us, not for anyone using the app. Everything
 // else in src/ is fair game — JSX text, string literals, email bodies.
 //
+// A line carrying `check-copy-ignore` (in the line itself or the comment above
+// it) is skipped. There is one: the date header, "Wednesday — July 24", where a
+// dash is the label's shape rather than punctuation in a sentence. Adding more
+// exemptions should feel like a decision, not a convenience.
+//
 // An em dash almost always wants to be something else, and which one depends on
 // what it was doing:
 //   joining two independent clauses  ->  a full stop, or a semicolon
@@ -17,6 +22,7 @@ import fs from "fs";
 import path from "path";
 
 const ROOT = "src";
+const PRAGMA = "check-copy-ignore";
 const BAD = [
   ["—", "em dash"],
   ["&mdash;", "&mdash; entity"],
@@ -78,6 +84,11 @@ for (const file of walk(ROOT)) {
   const lines = stripComments(fs.readFileSync(file, "utf8")).split("\n");
   const raw = fs.readFileSync(file, "utf8").split("\n");
   lines.forEach((line, idx) => {
+    // Match the pragma against the ORIGINAL line and the one above it: the
+    // stripper has already blanked the comment it lives in.
+    const exempt =
+      raw[idx].includes(PRAGMA) || (idx > 0 && raw[idx - 1].includes(PRAGMA));
+    if (exempt) return;
     for (const [needle, label] of BAD) {
       if (line.includes(needle)) hits.push({ file, line: idx + 1, label, text: raw[idx].trim() });
     }

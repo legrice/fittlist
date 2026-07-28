@@ -248,7 +248,9 @@ export function fmtDayHeader(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   const weekday = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
   const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-  return `${weekday} – ${md}`;
+  // The one em dash in the product. A date is a label, not a sentence, and
+  // this is the shape it's wanted in. check-copy-ignore
+  return `${weekday} — ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.
