@@ -6,6 +6,9 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
+import { unreadNotifications } from "@/lib/notify";
+import { AppHeader } from "@/components/AppHeader";
+import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NavBar } from "@/components/NavBar";
@@ -27,13 +30,17 @@ export async function PublicProfileView({
   user,
   isOwner,
   initialTab,
+  from,
 }: {
   user: UserRow;
   isOwner: boolean;
   initialTab: "about" | "schedule";
+  /** Which tab sent them here, so the back arrow returns to it. */
+  from?: string;
 }) {
-  // A signed-in coach browsing someone else's page needs a way out — without
-  // the nav they can only go back. Visitors never see app chrome.
+  // A signed-in viewer browsing someone else's page needs a way out and a way
+  // to tell where they are: they keep the app header, and coaches keep the nav.
+  // A visitor from outside sees none of it — this is a public page first.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -41,15 +48,32 @@ export async function PublicProfileView({
   // the subscribe bar instead of the email sheet.
   let account: { following: boolean } | null = null;
   let showNav = false;
+  let viewerAvatar: { photo: string | null; color: string; initial: string; href: string } | null =
+    null;
+  let unread = 0;
   if (!isOwner && (await fansVisible())) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
-        .select({ email: schema.users.email, handle: schema.users.handle })
+        .select({
+          id: schema.users.id,
+          email: schema.users.email,
+          handle: schema.users.handle,
+          name: schema.users.name,
+          photo: schema.users.photo,
+          avatarColor: schema.users.avatarColor,
+        })
         .from(schema.users)
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
         showNav = !!viewer.handle;
+        viewerAvatar = {
+          photo: viewer.photo,
+          color: avatarColor(viewer),
+          initial: (viewer.name.trim().charAt(0) || "?").toUpperCase(),
+          href: viewer.handle ? "/app?acct=1" : "/you",
+        };
+        unread = await unreadNotifications(viewerId);
         const [row] = await db
           .select({ optedOutAt: schema.subscribers.optedOutAt })
           .from(schema.subscribers)
@@ -63,6 +87,15 @@ export async function PublicProfileView({
       }
     }
   }
+  // Only a tab we actually sent them from earns an arrow — someone who opened
+  // this link from outside has nowhere in the app to go back to.
+  const backTo =
+    viewerAvatar && from === "discover"
+      ? { href: "/discover", label: "Back to Discover" }
+      : viewerAvatar && from === "home"
+        ? { href: "/feed", label: "Back to Following" }
+        : null;
+
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
   ).filter((c) => c.isPublic); // private client sessions never appear publicly
@@ -298,6 +331,16 @@ export async function PublicProfileView({
         />
       )}
       <div className="profwrap">
+        {/* Arrived from inside the app: keep the chrome, and give them the way
+            back to the tab they came from. */}
+        {viewerAvatar && <AppHeader unread={unread} avatar={viewerAvatar} />}
+        {backTo && (
+          <div className="profback">
+            <BackLink className="evback" href={backTo.href} label={backTo.label}>
+              <Icon name="arrow_back" size={21} />
+            </BackLink>
+          </div>
+        )}
         <ProfileTabs
           handle={handle}
           initialTab={initialTab}

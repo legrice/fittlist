@@ -1056,8 +1056,21 @@ await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'
 await setDark(page, false);
 console.log("viewer look wins on another coach's page ok");
 
-// the coach's page itself has the nav
+// opened from Discover, a coach's page keeps the header and gets a way back
+await page.goto(BASE + "/discover");
+await page.locator(".disrow-main", { hasText: "Sam" }).click();
+await page.locator(".profname").waitFor();
+if (!(await page.locator(".profwrap > .brandbar").count()))
+  fail("a coach's page opened from inside the app should keep the header");
+await page.getByRole("button", { name: "Back to Discover" }).click();
+await page.waitForURL("**/discover");
+// a link opened cold has nowhere in the app to go back to, so no arrow
 await page.goto(BASE + "/sam");
+await page.locator(".profname").waitFor();
+if (await page.locator(".profback").count())
+  fail("a directly-opened profile should not offer a back arrow");
+
+// the coach's page itself has the nav
 if ((await page.locator(".navbar .navtab").count()) !== 3)
   fail("a coach's page needs the nav so you can't get trapped");
 await page.locator(".navtab", { hasText: "Schedule" }).click();

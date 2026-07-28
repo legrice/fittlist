@@ -126,7 +126,7 @@ export function FeedAgenda({
       {selCoach && (
         <div className="feedfilterbar">
           <span className="feedfilter-txt">Classes with {selCoach.name}</span>
-          <Link href={`/${selCoach.handle}`} className="feedfilter-link">
+          <Link href={`/${selCoach.handle}?from=home`} className="feedfilter-link">
             View page <Icon name="chevron_right" size={16} />
           </Link>
         </div>

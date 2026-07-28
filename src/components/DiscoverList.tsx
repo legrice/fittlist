@@ -123,7 +123,7 @@ export function DiscoverList({
         <div className="dislist">
           {shown.map((c) => (
             <div key={c.id} className="disrow">
-              <Link className="disrow-main" href={`/${c.handle}`}>
+              <Link className="disrow-main" href={`/${c.handle}?from=discover`}>
                 {c.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img className="disrow-av" src={c.photo} alt="" />

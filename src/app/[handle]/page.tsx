@@ -10,7 +10,10 @@ import { PublicProfileView } from "@/components/PublicProfileView";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ handle: string }> };
+type Props = {
+  params: Promise<{ handle: string }>;
+  searchParams: Promise<{ from?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
@@ -36,8 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const { handle } = await params;
+  const { from } = await searchParams;
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
@@ -53,5 +57,5 @@ export default async function ProfilePage({ params }: Props) {
   }
   const isOwner = viewerId === user.id;
 
-  return <PublicProfileView user={user} isOwner={isOwner} initialTab="about" />;
+  return <PublicProfileView user={user} isOwner={isOwner} initialTab="about" from={from} />;
 }
