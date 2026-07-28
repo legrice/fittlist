@@ -1934,7 +1934,9 @@ button.ps-card { cursor: pointer; }
 .linksfield-add[disabled] { opacity: .45; }
 
 /* ---- fan side (flag-gated) ---- */
-.roleseg { flex: none; margin: 2px 0 14px; background: var(--cl); }
+/* Full width, so it has to start below the close button rather than beside it
+   — the heading clears that with padding-right, but this can't. */
+.roleseg { flex: none; margin: 24px 0 14px; background: var(--cl); }
 .feedbar { position: static; margin: -14px -18px 0; }
 /* avatar strip: every followed coach, tap to filter the agenda to one */
 .feedstrip {

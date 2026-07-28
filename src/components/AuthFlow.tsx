@@ -403,7 +403,7 @@ export function AuthFlow({
                 password, not footnotes about it. */}
             <div className="obalts" style={{ marginTop: 14 }}>
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
-                <Icon name="alternate_email" size={19} /> Email me a magic link
+                <Icon name="auto_awesome" size={19} /> Email me a magic link
               </button>
               {sheet === "login" && passkeyable && (
                 <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
