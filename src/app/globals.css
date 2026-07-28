@@ -1954,6 +1954,26 @@ button.ps-card { cursor: pointer; }
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+/* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
+   the browser; only sideways movement reaches the component. */
+.swiperow {
+  position: relative; overflow: hidden; touch-action: pan-y;
+  user-select: none; -webkit-user-select: none;
+}
+.swipeact {
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
+  padding: 0 18px; background: var(--go); color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  transition: opacity .12s ease;
+}
+/* Already going: the swipe takes it back, so it shouldn't look like a yes. */
+.swipeact.undo { background: var(--sa); color: var(--ink); }
+/* Past the commit point — the release will land. */
+.swipeact.armed { padding-left: 24px; }
+.swipefront { position: relative; background: var(--paper); }
+/* :active is press feedback for a tap; while the row is being dragged it just
+   tints the thing you're sliding. */
+.swiperow.dragging .ps-event:active { background: transparent; }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.
    Only the coach shell, only once the member side is on. */

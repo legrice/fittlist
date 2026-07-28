@@ -860,6 +860,42 @@ await fan.locator(".goingfilter").click();
 const goingRows = await fan.locator(".feedagenda .ps-event").count();
 if (goingRows !== 1) fail(`Going filter should show 1 row, got ${goingRows}`);
 await fan.locator(".goingfilter").click();
+
+// swiping a row sideways flips the same mark, without opening the class
+{
+  const row = fan.locator(".feedagenda .swiperow").nth(1);
+  await row.locator(".ps-event").waitFor();
+  const wasGoing = await row.locator(".ps-event.goingon").count();
+  if (wasGoing) fail("expected the second row to be unmarked before the swipe");
+  const box = await row.boundingBox();
+  const y = box.y + box.height / 2;
+  await fan.mouse.move(box.x + 20, y);
+  await fan.mouse.down();
+  // past the 78px commit point, in steps so the drag is decided as horizontal
+  for (const step of [35, 70, 100, 120]) await fan.mouse.move(box.x + 20 + step, y, { steps: 3 });
+  await fan.mouse.up();
+  await row.locator(".ps-event.goingon .ps-goingtag").waitFor();
+  // and it's on the server, not just in the tab
+  await fan.reload();
+  const marked = await fan.locator(".feedagenda .ps-event.goingon").count();
+  if (marked !== 2) fail(`swipe should have marked a second class, got ${marked} marked`);
+  // a swipe must not also open the class
+  if (!fan.url().endsWith("/feed")) fail("swiping navigated: " + fan.url());
+  // swipe the same row again to take it back
+  const row2 = fan.locator(".feedagenda .swiperow").nth(1);
+  const b2 = await row2.boundingBox();
+  const y2 = b2.y + b2.height / 2;
+  await fan.mouse.move(b2.x + 20, y2);
+  await fan.mouse.down();
+  for (const step of [35, 70, 100, 120]) await fan.mouse.move(b2.x + 20 + step, y2, { steps: 3 });
+  await fan.mouse.up();
+  await row2.locator(".ps-event.goingon").waitFor({ state: "detached" });
+  await fan.reload();
+  const after = await fan.locator(".feedagenda .ps-event.goingon").count();
+  if (after !== 1) fail(`swiping back should leave 1 marked, got ${after}`);
+}
+console.log("swipe to mark going ok (both ways, survives reload)");
+
 // the share image renders from their attendance, not a coach's schedule
 const myStory = await fan.request.get(`${BASE}/api/story/me?theme=paper`);
 if (!myStory.ok()) fail("member story image failed: " + myStory.status());

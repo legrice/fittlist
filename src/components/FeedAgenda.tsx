@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
+import { SwipeGoing } from "@/components/SwipeGoing";
+import { Toast, useToast } from "@/components/Toast";
 
 export type FeedCoach = {
   id: string;
@@ -37,11 +40,35 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
   const [sel, setSel] = useState<string | null>(null);
   const [share, setShare] = useState(false);
   const [goingOnly, setGoingOnly] = useState(false);
+  // What the swipes changed, laid over what the server sent. Keeping the two
+  // apart means a refresh can't wipe a mark the member just made.
+  const [swiped, setSwiped] = useState<Record<string, boolean>>({});
+  const [toastMsg, toastOn, toast] = useToast();
+  const [, startTransition] = useTransition();
   // Keyed by class AND day: a weekly class is a different commitment each week.
   const going: Record<string, boolean> = Object.fromEntries(
-    days.flatMap((d) => d.items.map((i) => [`${i.classId}|${d.iso}`, i.going])),
+    days.flatMap((d) =>
+      d.items.map((i) => {
+        const k = `${i.classId}|${d.iso}`;
+        return [k, swiped[k] ?? i.going];
+      }),
+    ),
   );
   const selCoach = sel ? coaches.find((c) => c.id === sel) : undefined;
+
+  // Swipe commits straight away and shows the result; if the server refuses,
+  // the row goes back where it was and says why.
+  const toggleGoing = (classId: string, iso: string, next: boolean) => {
+    const k = `${classId}|${iso}`;
+    setSwiped((s) => ({ ...s, [k]: next }));
+    startTransition(async () => {
+      const res = await setGoing(classId, iso, next);
+      if (!res.ok) {
+        setSwiped((s) => ({ ...s, [k]: !next }));
+        toast(res.error ?? "Something went wrong.");
+      }
+    });
+  };
 
   const shown = days
     .map((d) => ({
@@ -137,39 +164,47 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
             <div key={d.iso} className="ps-daygroup">
               <div className="ps-daycol">{d.label}</div>
               <div className="ps-daycards">
-                {d.items.map((i) => (
-                  <Link
-                    key={`${d.iso}-${i.classId}`}
-                    className={`ps-event${going[`${i.classId}|${d.iso}`] ? " goingon" : ""}`}
-                    href={`/${i.handle}/${i.classId}?d=${d.iso}&from=home`}
-                  >
-                    <span
-                      className="ps-accent"
-                      style={{ background: i.coachColor }}
-                      aria-hidden="true"
-                    />
-                    {/* Who first, then what, then where — on a merged week the
-                        coach is how you place the class. */}
-                    <span className="ps-ebody">
-                      <span className="ps-ecoach">
-                        {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
-                        <span className="ps-ecoach-txt">{i.coachName}</span>
-                      </span>
-                      <span className="ps-enm">
-                        {i.name}
-                        {going[`${i.classId}|${d.iso}`] && <span className="ps-goingtag">Going</span>}
-                      </span>
-                      {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
-                    </span>
-                    <span className="ps-etimecol">
-                      <span className="ps-etime">
-                        {i.hm}
-                        <span className="ps-ap">{i.ap}</span>
-                      </span>
-                      <span className="ps-edur">{i.durationMin} min</span>
-                    </span>
-                  </Link>
-                ))}
+                {d.items.map((i) => {
+                  const on = going[`${i.classId}|${d.iso}`];
+                  return (
+                    <SwipeGoing
+                      key={`${d.iso}-${i.classId}`}
+                      going={on}
+                      onToggle={() => toggleGoing(i.classId, d.iso, !on)}
+                    >
+                      <Link
+                        className={`ps-event${on ? " goingon" : ""}`}
+                        href={`/${i.handle}/${i.classId}?d=${d.iso}&from=home`}
+                      >
+                        <span
+                          className="ps-accent"
+                          style={{ background: i.coachColor }}
+                          aria-hidden="true"
+                        />
+                        {/* Who first, then what, then where — on a merged week
+                            the coach is how you place the class. */}
+                        <span className="ps-ebody">
+                          <span className="ps-ecoach">
+                            {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
+                            <span className="ps-ecoach-txt">{i.coachName}</span>
+                          </span>
+                          <span className="ps-enm">
+                            {i.name}
+                            {on && <span className="ps-goingtag">Going</span>}
+                          </span>
+                          {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
+                        </span>
+                        <span className="ps-etimecol">
+                          <span className="ps-etime">
+                            {i.hm}
+                            <span className="ps-ap">{i.ap}</span>
+                          </span>
+                          <span className="ps-edur">{i.durationMin} min</span>
+                        </span>
+                      </Link>
+                    </SwipeGoing>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -177,6 +212,7 @@ export function FeedAgenda({ coaches, days }: { coaches: FeedCoach[]; days: Feed
       )}
 
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }
