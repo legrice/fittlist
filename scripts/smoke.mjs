@@ -194,7 +194,7 @@ for (let attempt = 0; ; attempt++) {
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
   if (!done) {
     await page.reload();
-    await page.getByText("Your schedule").waitFor();
+    await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
     done = (await scheduleClasses(page)) === 2;
   }
   if (done) break;
@@ -259,17 +259,30 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
-// ---- the schedule keeps one tool: sharing the week. Your page and the QR
-// code moved under You, so the top stops being a scrolling shelf.
-await expect(
-  page.locator(".pagehead .sharepill", { hasText: "Share" }).isVisible(),
-  "share sits across from the title",
-);
-if (await page.locator(".dashlink", { hasText: "QR code" }).count())
-  fail("QR should live under You once the bottom nav is on");
-if (await page.locator(".dashlink", { hasText: "Your page" }).count())
-  fail("Your page should live under You once the bottom nav is on");
-// and the QR is reachable from the account view
+// ---- the top of the schedule is three tools, no title: the tab bar already
+// says which space you're in.
+await page.goto(BASE + "/app");
+{
+  const pills = (await page.locator(".dashlinks .dashlink").allInnerTexts()).map((t) => t.trim());
+  const want = ["Your page", "Share cal", "QR code"];
+  if (pills.join("|") !== want.join("|"))
+    fail("schedule tools should be " + want.join(", ") + ", got " + pills.join(", "));
+}
+if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
+  fail("the schedule title should be gone");
+// each pill goes where it says
+await page.locator(".dashlink", { hasText: "QR code" }).click();
+await page.locator(".sheet .qrframe").waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+await page.locator(".dashlink", { hasText: "Share cal" }).click();
+await page.locator(".sheet .storyimg").waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+await page.locator(".dashlink", { hasText: "Your page" }).click();
+await page.waitForURL("**/matt");
+await page.goto(BASE + "/app");
+// and the QR is still reachable from the account view
 await openProfile(page);
 await page.locator(".acctcard", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
@@ -277,7 +290,7 @@ await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-console.log("schedule tools ok (share stays, the rest moved under You)");
+console.log("schedule tools ok (three pills, no title)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
 // the public page (visitors see it too — it's a server-rendered attribute).
@@ -407,7 +420,7 @@ console.log("stats ok");
 // ---- that follow dropped a notification; the single Updates bell carries the
 // combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
-await page.getByText("Your schedule").waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
@@ -418,7 +431,7 @@ await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
-await page.getByText("Your schedule").waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 if (await page.locator('a[href="/updates"] .inboxdot').count())
   fail("updates badge should clear after opening the feed");
 console.log("updates (notifications + messages) ok");
@@ -714,7 +727,7 @@ const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
 if (![301, 302, 303, 307, 308].includes(magicRes.status()))
   fail("magic link should redirect after setting the session, got " + magicRes.status());
 await page.goto(BASE + "/app");
-await page.getByText("Your schedule").waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
@@ -727,7 +740,7 @@ await page.getByRole("button", { name: "Already have an account? Log in" }).clic
 await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
 await page.waitForURL(BASE + "/app");
-await page.getByText("Your schedule").waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -933,7 +946,7 @@ await page.locator(".navtab.on", { hasText: "Home" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 // no dead ends: a class opened from Home goes back to Home, and a coach's
 // page carries the nav so you can leave it
 await page.locator(".navtab", { hasText: "Home" }).click();
@@ -964,7 +977,7 @@ await page.goto(BASE + "/sam");
 if ((await page.locator(".navbar .navtab").count()) !== 3)
   fail("a coach's page needs the nav so you can't get trapped");
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".calbar-title", { hasText: "Your schedule" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 console.log("no dead ends ok (back to Home, nav on coach pages)");
 
 // three tabs only, and the account opens from the header avatar
@@ -983,7 +996,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Your week" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".sharepill", { hasText: "Share" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
 console.log("coach fan-view preview ok");
 
 // deleting a coach has to clear every row that points at them — follows they

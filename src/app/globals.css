@@ -750,10 +750,8 @@ button.bl-band { cursor: pointer; }
 }
 /* Dashboard strip under the header: quick links to the most-reached-for
    actions. (The stats glance lives on the account page for now.) */
-.dashstrip { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.dashstrip { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 22px; }
 .dashlinks { display: flex; gap: 10px; }
-/* Alone (bottom nav on), Share cal shouldn't stretch into a full-width CTA. */
-.dashlinks .dashlink:only-child { flex: 0 0 auto; padding: 12px 20px; }
 .dashlink {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 6px; background: var(--cl); border-radius: 999px;
@@ -1955,24 +1953,6 @@ button.ps-card { cursor: pointer; }
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-/* Page header: title on the left, one secondary action across from it —
-   Share cal on the schedule, Find coaches on the following page. */
-.pagehead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.pageaction {
-  display: flex; align-items: center; gap: 4px; flex-shrink: 0; text-decoration: none;
-  border: none; background: none; padding: 0; cursor: pointer;
-  font-family: inherit; font-weight: 600; font-size: 13.5px; color: var(--si);
-}
-/* Share sits across from the title as a pill, arrow trailing — it sends you
-   out of the app, so it reads as an action rather than a link. */
-.sharepill {
-  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
-  padding: 9px 15px; border-radius: 999px; border: none; cursor: pointer;
-  background: var(--cl); color: var(--ink);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
-}
-.sharepill:active { background: #e9e2d0; }
-[data-mode="dark"] .sharepill:active { background: #2c2718; }
 
 /* Bottom nav: the two halves of the app plus your identity, in thumb reach.
    Only the coach shell, only once the member side is on. */

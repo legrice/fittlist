@@ -234,36 +234,24 @@ export function ScheduleScreen({
           }}
         />
 
-        {/* Without the bottom nav these have nowhere else to live. With it,
-            only Share cal remains and it moves up beside the title. */}
-        {!showFanView && (
-          <div className="dashstrip">
-            <div className="dashlinks">
-              <button className="dashlink" onClick={() => setShareOpen(true)}>
-                <Icon name="calendar_today" size={19} />
-                <span>Share</span>
-              </button>
-              <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
-                <Icon name="account_circle" size={19} />
-                <span>Your page</span>
-              </button>
-              <button className="dashlink" onClick={() => setQrOpen(true)}>
-                <Icon name="qr_code_2" size={19} />
-                <span>QR code</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="pagehead">
-          <div className="calbar-title">Your schedule</div>
-          {showFanView && (
-            // Sharing the week is the growth loop — one tap, across from the
-            // title, the same shape as Find coaches on the following page.
-            <button className="sharepill" onClick={() => setShareOpen(true)}>
-              Share <Icon name="north_east" size={16} />
+        {/* The three things a coach reaches for from their week — the title
+            said nothing the tab bar doesn't already say, so the tools get the
+            space instead. */}
+        <div className="dashstrip">
+          <div className="dashlinks">
+            <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
+              <Icon name="account_circle" size={19} />
+              <span>Your page</span>
             </button>
-          )}
+            <button className="dashlink" onClick={() => setShareOpen(true)}>
+              <Icon name="calendar_today" size={19} />
+              <span>Share cal</span>
+            </button>
+            <button className="dashlink" onClick={() => setQrOpen(true)}>
+              <Icon name="qr_code_2" size={19} />
+              <span>QR code</span>
+            </button>
+          </div>
         </div>
 
         {!hasAnyClass ? (
