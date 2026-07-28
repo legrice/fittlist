@@ -227,9 +227,26 @@ export function AuthFlow({
                   fittlist beta.
                 </h1>
                 <p>
-                  Your invite is live. Sign up with the email address it was sent to and your page
-                  is yours. It&rsquo;s early days, things will move around, and what you tell us
-                  changes what gets built — that&rsquo;s the whole point of being here now.
+                  Your invite is live — sign up with the email address it was sent to
+                  {fans ? ", whether you coach or you're here to train" : " and your page is yours"}.
+                  It&rsquo;s early days, things will move around, and what you tell us changes what
+                  gets built — that&rsquo;s the whole point of being here now.
+                </p>
+              </>
+            ) : fans ? (
+              // Both sides of the product, said in parallel. "For coaches and
+              // the people who train with them" would be true and tell nobody
+              // what they'd actually get.
+              <>
+                <h1>
+                  Every class you teach.
+                  <br />
+                  Every coach you follow.
+                </h1>
+                <p>
+                  Coaches put their whole week — every studio, every way to book — behind one link.
+                  Everyone else follows the coaches they train with, and gets that week in one
+                  place.
                 </p>
               </>
             ) : (
@@ -249,6 +266,14 @@ export function AuthFlow({
             <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
               {invited ? "Claim your invite" : "Sign up with email"}
             </button>
+            {/* The coach/follower choice lives inside the sheet, so say it out
+                here — otherwise the only hint that there are two ways in is a
+                toggle you have to open the sheet to find. */}
+            {fans && (
+              <div className="microcopy" style={{ marginTop: 10 }}>
+                Coaching, or here to train? You pick on the next screen.
+              </div>
+            )}
             {(providers.google || providers.apple) && (
               <div className="obalts" style={{ marginTop: 12 }}>
                 {providers.google && (
@@ -400,15 +425,26 @@ export function AuthFlow({
                 </button>
               </div>
             )}
+            {/* Two sentences, built rather than picked: what this role gets,
+                then how to get in. The old chain let the beta gate swallow the
+                role copy, so someone who tapped "I'm here to train" was never
+                told what following would do for them. */}
             <p className="lead">
               {sheet === "signup"
-                ? invited
-                  ? "Use the email your invite was sent to, and pick a password you'll remember — it's how you get back in on any other browser."
-                  : inviteOnly
-                    ? "Invite-only beta. Use the email you were invited with."
-                    : fans && role === "fan"
-                    ? "Follow your coaches and see all their schedules in one place."
-                    : "Pick any password and you're in."
+                ? [
+                    fans
+                      ? role === "fan"
+                        ? "Follow the coaches you train with and get their whole week in one place."
+                        : "Your classes across every studio, behind one link people can follow."
+                      : null,
+                    invited
+                      ? "Use the email your invite was sent to, and pick a password you'll remember — it's how you get back in on any other browser."
+                      : inviteOnly
+                        ? "Invite-only beta — use the email you were invited with."
+                        : "Pick any password and you're in.",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
                 : "Welcome back — enter your email and password."}
             </p>
             <input

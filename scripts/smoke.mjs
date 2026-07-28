@@ -82,7 +82,12 @@ page.setDefaultTimeout(10000);
 
 // ---- auth: sign up with email (bottom sheet) -> biometric prompt -> pick URL
 await page.goto(BASE + "/");
-await expect(page.getByText("built for coaches").isVisible(), "landing headline visible");
+// with the member side live the landing has to speak to both, not just coaches
+await expect(page.getByText("Every coach you follow").isVisible(), "landing headline visible");
+await expect(
+  page.getByText("here to train").first().isVisible(),
+  "the landing names the choice, so it isn't hidden inside the sheet",
+);
 await page.getByRole("button", { name: "Sign up with email" }).click();
 await page.getByRole("heading", { name: "Sign up with email" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
@@ -717,7 +722,7 @@ await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Twitterbot/1.
 
 // Growth loop: sign up through the made-with footer, attributed to matt
 await anonPage.locator(".madewith").getByText("Claim your page").click();
-await anonPage.getByText("built for coaches").waitFor();
+await anonPage.getByRole("button", { name: "Sign up with email" }).waitFor();
 if (!anonPage.url().includes("via=matt")) fail("footer click lost via param: " + anonPage.url());
 await anonPage.getByRole("button", { name: "Sign up with email" }).click();
 await anonPage.getByRole("heading", { name: "Sign up with email" }).waitFor();
@@ -909,7 +914,7 @@ if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("session cookie should be cleared after logout");
 // a fresh load of /app now bounces to the signed-out landing
 await page.goto(BASE + "/app");
-await page.getByText("built for coaches").waitFor();
+await page.getByRole("button", { name: "Sign up with email" }).waitFor();
 console.log("logout ok");
 
 // ---- magic link: request one from the login sheet, follow the URL, land in /app
