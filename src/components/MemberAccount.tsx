@@ -106,7 +106,7 @@ export function MemberAccount({
 
       {/* The member side is the front door; coaching is a door off it. */}
       <div className="settingslist">
-        <StartCoaching name={name} />
+        <StartCoaching handle={handle} />
         <InviteFriends />
       </div>
 

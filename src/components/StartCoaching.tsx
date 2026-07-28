@@ -1,35 +1,34 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { claimProfile } from "@/app/actions/auth";
+import { startCoaching } from "@/app/actions/auth";
 import { Icon } from "@/components/Icon";
-import { slug } from "@/lib/format";
 
-// A member deciding to post their own classes. Same claim the coach signup
-// runs — pick a name and a URL — so there's one way to become a coach rather
-// than two that can drift. Everything they've built as a member (who they
-// follow, the classes they marked Going) comes with them.
-export function StartCoaching({ name }: { name: string }) {
+// A member deciding to post their own classes. They already picked a name and
+// a link when they signed up, so there's nothing left to ask: this says what
+// changes and does it. Everything they've built as a member, who they follow
+// and the classes they marked Going, stays exactly where it is.
+export function StartCoaching({ handle }: { handle: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pName, setPName] = useState(name);
-  const [pHandle, setPHandle] = useState("");
+  const [mounted, setMounted] = useState(false);
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
 
-  const preview = slug(pHandle.trim() || pName) || "yourname";
+  useEffect(() => setMounted(true), []);
 
-  const claim = () =>
+  const go = () =>
     start(async () => {
       setErr("");
-      const res = await claimProfile(pName, pHandle);
+      const res = await startCoaching();
       if (!res.ok) {
         setErr(res.error ?? "Something went wrong.");
         return;
       }
-      // /app sends them into the setup wizard, since they've never run it.
       router.push("/app");
+      router.refresh();
     });
 
   return (
@@ -40,14 +39,15 @@ export function StartCoaching({ name }: { name: string }) {
         </span>
         <span className="setrow-txt">
           <span className="t">Post your own classes</span>
-          <span className="s">Get a page and a schedule people can follow</span>
+          <span className="s">Add a schedule to the page you already have</span>
         </span>
         <span className="setrow-chev">
           <Icon name="chevron_right" size={20} />
         </span>
       </button>
 
-      {open && (
+      {/* Portalled: the account view traps stacking under the tab bar. */}
+      {open && mounted && createPortal(
         <div
           className="sheet-scrim"
           onClick={(e) => {
@@ -64,42 +64,35 @@ export function StartCoaching({ name }: { name: string }) {
             </button>
             <h2>Post your own classes</h2>
             <p className="lead">
-              You keep everything you follow. This adds a page of your own, at a link you pick.
+              A Schedule tab appears at the bottom of the app, and that&rsquo;s where you add the
+              classes you teach. They show up on the page you already have
+              {handle ? `, at fittlist.co/${handle}` : ""}.
             </p>
-            <label className="flabel" htmlFor="scName">
-              Your name
-            </label>
-            <input
-              id="scName"
-              className="editinput"
-              placeholder="Your name"
-              value={pName}
-              onChange={(e) => setPName(e.target.value)}
-            />
-            <label className="flabel" htmlFor="scHandle">
-              Your link <span>· leave blank to use your name</span>
-            </label>
-            <input
-              id="scHandle"
-              className="editinput"
-              autoCapitalize="none"
-              autoCorrect="off"
-              placeholder={slug(pName) || "yourname"}
-              value={pHandle}
-              onChange={(e) => setPHandle(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && claim()}
-            />
-            <p className="durnote" style={{ marginTop: 8 }}>
-              fittlist.co/{preview}
+            <p className="lead">
+              Nothing else changes. The coaches you follow and the classes you marked Going stay
+              exactly where they are.
             </p>
-            {err && <div className="errorcopy" style={{ textAlign: "left" }}>{err}</div>}
+            {err && (
+              <div className="errorcopy" style={{ textAlign: "left" }}>
+                {err}
+              </div>
+            )}
             <div className="publishwrap nostick">
-              <button className="btn si" disabled={pending || !pName.trim()} onClick={claim}>
-                {pending ? "One sec…" : "Claim it"}
+              <button className="btn si" disabled={pending} onClick={go}>
+                {pending ? "One sec…" : "Add my Schedule tab"}
+              </button>
+              <button
+                className="tertiary"
+                style={{ display: "block", margin: "10px auto 0" }}
+                disabled={pending}
+                onClick={() => setOpen(false)}
+              >
+                Not now
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

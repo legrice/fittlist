@@ -410,6 +410,23 @@ export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
   return { ok: true };
 }
 
+// A member who already has a name and a link deciding to post classes. Nothing
+// to ask for: everything a coach needs from the claim step, they did at signup.
+// Flipping `kind` is the whole change, and it adds the Schedule tab.
+export async function startCoaching(): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  if (me.kind !== "fan") return { ok: true }; // already a coach; nothing to do
+  if (!me.handle) {
+    return { ok: false, error: "Set up your profile first, so your page has a link." };
+  }
+  await db.update(schema.users).set({ kind: "coach" }).where(eq(schema.users.id, userId));
+  return { ok: true };
+}
+
 export async function claimProfile(
   nameRaw: string,
   handleRaw: string = "",

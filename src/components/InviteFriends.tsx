@@ -101,7 +101,7 @@ export function InviteFriends() {
             <p className="lead">
               {none
                 ? "You've used all your invites for now. Tell us who else should be in and we'll open more up."
-                : "They'll get an email with a link that sets up their page. Coaches get the most out of it, but anyone who wants to follow one is welcome."}
+                : "They'll get an email with a link to create their page. Coaches can create and share their schedules, and anyone can follow along."}
             </p>
             <label className="flabel" htmlFor="ivEmail">
               Their email

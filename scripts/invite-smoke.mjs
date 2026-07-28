@@ -144,23 +144,29 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByText("Nobody yet").waitFor();
     console.log("invited member signup ok");
 
-    // 5) And a member can become a coach later without a second invite: the
-    // account offers it, the claim runs the same flow, and they land in setup.
+    // 5) And a member can become a coach later without a second invite. They
+    // already have a name and a link, so there's nothing to ask for: the modal
+    // says what changes and does it.
     await pg.goto(BASE + "/you");
     await pg.locator(".memberid").waitFor();
     await pg.locator(".setrow", { hasText: "Post your own classes" }).click();
     await pg.getByRole("heading", { name: "Post your own classes" }).waitFor();
-    await pg.locator("#scName").fill("Member Turned Coach");
-    await pg.locator("#scHandle").fill("membercoach");
-    await pg.getByRole("button", { name: "Claim it" }).click();
-    // straight into the setup wizard, never the invite wall
-    await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
-    await pg.getByRole("button", { name: "Skip for now" }).click();
+    if ((await pg.locator(".sheet input").count()) !== 0)
+      fail("they already picked a name and a link; don't ask again");
+    await pg.getByRole("button", { name: "Add my Schedule tab" }).click();
+    // straight to their new schedule, never the invite wall
     await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
-    // and their page is live at the link they picked
-    const claimed = await pg.request.get(`${BASE}/membercoach`);
-    if (!claimed.ok()) fail("the claimed page should be live");
-    console.log("member -> coach ok (no invite, lands in setup)");
+    // the Schedule tab the modal promised is really there
+    {
+      const tabs = (await pg.locator(".navtab").allInnerTexts()).map((t) => t.trim());
+      if (!tabs.includes("Schedule")) fail(`no Schedule tab after converting: ${tabs.join(",")}`);
+    }
+    // and the page they already had is still theirs, now with a schedule on it
+    const claimed = await pg.request.get(`${BASE}/memberperson`);
+    if (!claimed.ok()) fail("the page they already had should still be live");
+    if (!(await claimed.text()).includes("pubtab"))
+      fail("their page should have a schedule on it now");
+    console.log("member -> coach ok (no re-ask, keeps their link, gains the tab)");
   } else {
     console.log("member signup skipped — FANS_ENABLED is not true");
   }
