@@ -83,7 +83,7 @@ page.setDefaultTimeout(10000);
 // ---- auth: sign up with email (bottom sheet) -> biometric prompt -> pick URL
 await page.goto(BASE + "/");
 // with the member side live the landing has to speak to both, not just coaches
-await expect(page.getByText("Every coach you follow").isVisible(), "landing headline visible");
+await expect(page.getByText("Not studios").isVisible(), "landing headline visible");
 await expect(
   page.getByText("here to train").first().isVisible(),
   "the landing names the choice, so it isn't hidden inside the sheet",

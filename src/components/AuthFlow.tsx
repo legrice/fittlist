@@ -234,19 +234,16 @@ export function AuthFlow({
                 </p>
               </>
             ) : fans ? (
-              // Both sides of the product, said in parallel. "For coaches and
-              // the people who train with them" would be true and tell nobody
-              // what they'd actually get.
+              // The thing that makes this different from a studio's app: you
+              // follow the person, and their whole week comes with them.
               <>
                 <h1>
-                  Every class you teach.
+                  Follow coaches.
                   <br />
-                  Every coach you follow.
+                  Not studios.
                 </h1>
                 <p>
-                  Coaches put their whole week, every studio and every way to book, behind one link.
-                  Everyone else follows the coaches they train with, and gets that week in one
-                  place.
+                  Follow your favorite coaches and see every class they teach in one place.
                 </p>
               </>
             ) : (
