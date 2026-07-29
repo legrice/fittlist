@@ -225,19 +225,24 @@ export function AdminPanel({
               Lands in Updates, from fittlist, with the megaphone. One person, one side, or
               everyone. In-app only; nothing is emailed.
             </p>
-            <div className="seg invitefilter">
-              <button className={audience === "everyone" ? "sel" : ""} onClick={() => setAudience("everyone")}>
-                Everyone
-              </button>
-              <button className={audience === "coaches" ? "sel" : ""} onClick={() => setAudience("coaches")}>
-                Coaches
-              </button>
-              <button className={audience === "members" ? "sel" : ""} onClick={() => setAudience("members")}>
-                Members
-              </button>
-              <button className={audience === "one" ? "sel" : ""} onClick={() => setAudience("one")}>
-                One person
-              </button>
+            {/* A dropdown, not a segmented row: four labels didn't fit a
+                phone. Same pill the Discover city picker uses. */}
+            <label className="flabel" htmlFor="msgTo">To</label>
+            <div className="discitysel msgto">
+              <Icon name="expand_more" size={18} className="discitysel-ic" />
+              <select
+                id="msgTo"
+                className="discitysel-in"
+                value={audience}
+                onChange={(e) =>
+                  setAudience(e.target.value as "everyone" | "coaches" | "members" | "one")
+                }
+              >
+                <option value="everyone">Everyone</option>
+                <option value="coaches">Coaches</option>
+                <option value="members">Members</option>
+                <option value="one">One person</option>
+              </select>
             </div>
             {audience === "one" && (
               <input

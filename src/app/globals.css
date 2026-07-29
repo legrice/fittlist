@@ -1304,6 +1304,9 @@ button.ps-card { cursor: pointer; }
 .admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 999px; }
 .reportlist { display: flex; flex-direction: column; gap: 12px; }
+/* The megaphone's audience, as a dropdown. It borrows the Discover pill,
+   which is flex:1 there; here it stands alone and needs its own height. */
+.msgto { height: 46px; margin-bottom: 4px; }
 /* The admin's tab row as glyphs: five labelled pills didn't fit a phone. */
 .adminseg-icons { display: flex; }
 .adminseg-icons button {
