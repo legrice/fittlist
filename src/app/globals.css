@@ -606,7 +606,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   .tabbar { display: none; }
   .appshell .appbar .wordmark { visibility: hidden; }
   /* The column keeps its max width but sits centered in the window. */
-  .pad { padding: 30px 38px; max-width: 1000px; width: 100%; margin: 0 auto; }
+  .pad { padding: 30px 38px; max-width: 660px; width: 100%; margin: 0 auto; }
   /* Full-bleed header: pull the sticky brandbar out to the window edges, then
      pad its content back in so the lockup stays aligned with the column. The
      stage clips the vw overhang (scrollbar width) so no horizontal scroll. */
@@ -1015,7 +1015,7 @@ button.ps-card { cursor: pointer; }
 /* trainer profile (ClassPass-style landing): photo, name, about, View schedule */
 .profile { display: flex; flex-direction: column; min-height: 100dvh; }
 .profwrap {
-  flex: 1; width: 100%; max-width: 520px; margin: 0 auto;
+  flex: 1; width: 100%; max-width: 660px; margin: 0 auto;
   padding: calc(18px + env(safe-area-inset-top)) 18px 120px;
 }
 /* Signed in, a profile carries the tab bar, so the last row has to clear it. */
@@ -1189,7 +1189,7 @@ button.ps-card { cursor: pointer; }
    later in this file, so the strip behind it went white too and the whole
    bottom of the screen stopped matching the page. */
 .weekcal .setrow {
-  max-width: 624px; margin: 0 auto; border-radius: 999px;
+  max-width: 660px; margin: 0 auto; border-radius: 999px;
   background: var(--card); border: 1px solid var(--line);
 }
 .weekcal .setrow:active { background: #f3ecdf; }
@@ -1394,7 +1394,7 @@ button.ps-card { cursor: pointer; }
 .chattop-ways a { font-size: 12px; color: var(--ol); text-decoration: none; }
 .chattop-ways a + a::before { content: "· "; }
 .chatbody { flex: 1; overflow-y: auto; padding: 18px; }
-.chat { display: flex; flex-direction: column; gap: 10px; max-width: 620px; margin: 0 auto; }
+.chat { display: flex; flex-direction: column; gap: 10px; max-width: 660px; margin: 0 auto; }
 .chatmsg { display: flex; }
 .chatmsg.mine { justify-content: flex-end; }
 .chatbubble {
@@ -1410,12 +1410,12 @@ button.ps-card { cursor: pointer; }
 }
 .chatreply textarea { resize: none; }
 .chatreply .btn { align-self: flex-end; width: auto; padding: 11px 26px; }
-.chatscreen-pub { max-width: 620px; margin: 0 auto; }
+.chatscreen-pub { max-width: 660px; margin: 0 auto; }
 .chatfoot { display: flex; justify-content: center; padding: 14px; }
 
 /* Feedback: the same thread view, with an empty state that does the asking.
    A blank box gets you "love it"; naming what's useful gets you the bug. */
-.fbintro { flex: 1; padding: 26px 20px; max-width: 620px; margin: 0 auto; }
+.fbintro { flex: 1; padding: 26px 20px; max-width: 660px; margin: 0 auto; }
 .fbintro p { font-size: 15px; line-height: 1.5; color: var(--ink); }
 .fbintro-s { margin-top: 12px; color: var(--ol); font-size: 14px; }
 .fbsent { text-align: center; font-size: 13px; color: var(--go); padding: 0 16px 4px; }
@@ -1564,7 +1564,7 @@ button.ps-card { cursor: pointer; }
   padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
   background: var(--paper); border-top: 1px solid var(--line);
 }
-.profcta .btn { max-width: 520px; margin: 0 auto; }
+.profcta .btn { max-width: 660px; margin: 0 auto; }
 .pubback {
   display: inline-block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--pg-day); text-decoration: none; margin-bottom: 12px;
@@ -1614,7 +1614,7 @@ button.ps-card { cursor: pointer; }
 .acctwrap.acct-from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
 /* returning from the public preview: the account is simply already there */
 .acctwrap.acct-noanim { animation: none; }
-.acctwrap > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.acctwrap > * { max-width: 660px; margin-left: auto; margin-right: auto; }
 .accttop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .acctclose {
   width: 38px; height: 38px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
@@ -1827,7 +1827,7 @@ button.ps-card { cursor: pointer; }
   background: var(--paper); border-top: 1px solid var(--line); border-radius: 0;
   padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
 }
-.settingspane .publishwrap .btn { max-width: 560px; margin: 0 auto; }
+.settingspane .publishwrap .btn { max-width: 660px; margin: 0 auto; }
 
 /* adder: class Type dropdown */
 .typeselect {
@@ -1899,7 +1899,7 @@ button.ps-card { cursor: pointer; }
 }
 .evback:active { transform: scale(.93); }
 .evwrap {
-  max-width: 520px; margin: 0 auto;
+  max-width: 660px; margin: 0 auto;
   padding: 6px 20px calc(30px + env(safe-area-inset-bottom));
 }
 /* Clear the pinned CTA so the footer isn't stuck underneath it. */
@@ -1970,7 +1970,7 @@ button.ps-card { cursor: pointer; }
   background: var(--paper); border-top: 1px solid var(--line);
   padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
 }
-.evcta-inner { max-width: 520px; margin: 0 auto; }
+.evcta-inner { max-width: 660px; margin: 0 auto; }
 .evctanote { margin: 0 0 9px; font-size: 12px; color: var(--ol); text-align: center; }
 .evctabtn { border-radius: 999px; padding: 15px 18px; font-size: 15px; }
 /* Marked: the same green the row tag and the swipe use. */
@@ -2625,6 +2625,10 @@ button.ps-card { cursor: pointer; }
 /* The bar is fixed over the page, so the last class needs room to scroll all
    the way clear of it — 40px left the final row half-buried. */
 .screen.hasnav .pad {
+  /* 660px is THE column. Every screen's main column uses it (profile, class
+     page, settings, chat, admin, the tabs), so nothing jumps width when you
+     move between them on a desktop. Making the app properly desktop-shaped
+     is a later project; being consistent isn't. */
   padding: 14px 18px calc(110px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
@@ -2880,7 +2884,7 @@ button.ps-card { cursor: pointer; }
    =========================================================== */
 .memberpub { background: var(--paper); min-height: 100dvh; }
 .memberpub .profwrap {
-  max-width: 520px; margin: 0 auto;
+  max-width: 660px; margin: 0 auto;
   padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
 }
 .mempro-top { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
