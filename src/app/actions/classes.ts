@@ -123,7 +123,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       return {
         ok: false,
         error:
-          "Publishing classes is for coaches. Add classes you attend to Your week, or switch to coaching in settings.",
+          "Publishing classes is for coaches. Add classes you attend to Your week, or ask to become one in settings.",
       };
     }
   }

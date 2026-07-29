@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -176,11 +176,33 @@ export default async function AdminPage() {
   };
 
   const [reports, duplicates] = await Promise.all([listReports(), listDuplicateSlots()]);
+  const coachAskRows = await db
+    .select({
+      id: schema.coachRequests.id,
+      note: schema.coachRequests.note,
+      createdAt: schema.coachRequests.createdAt,
+      name: schema.users.name,
+      email: schema.users.email,
+      handle: schema.users.handle,
+    })
+    .from(schema.coachRequests)
+    .leftJoin(schema.users, eq(schema.users.id, schema.coachRequests.userId))
+    .where(isNull(schema.coachRequests.handledAt))
+    .orderBy(desc(schema.coachRequests.createdAt));
+  const coachAsks = coachAskRows.map((r) => ({
+    id: r.id,
+    note: r.note,
+    asked: fmt(r.createdAt),
+    name: r.name?.trim() || r.email || "?",
+    email: r.email ?? "",
+    handle: r.handle ?? "",
+  }));
 
   return (
     <AdminPanel
       adminEmail={admin.email}
       reports={reports}
+      coachAsks={coachAsks}
       duplicates={duplicates}
       people={people}
       studios={studioRows}

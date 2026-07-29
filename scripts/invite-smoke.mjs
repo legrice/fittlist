@@ -145,17 +145,38 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByText("Nobody yet").waitFor();
     console.log("invited member signup ok");
 
-    // 5) And a member can become a coach later without a second invite. They
-    // already have a name and a link, so there's nothing to ask for: the modal
-    // says what changes and does it.
+    // 5) Becoming a coach is an ask now, answered in admin: the self-serve
+    // switch was how ghost inventory got into the directory.
     await pg.goto(BASE + "/you");
     await pg.locator(".memberid").waitFor();
-    await pg.locator(".setrow", { hasText: "Post your own classes" }).click();
-    await pg.getByRole("heading", { name: "Post your own classes" }).waitFor();
-    if ((await pg.locator(".sheet input").count()) !== 0)
-      fail("they already picked a name and a link; don't ask again");
-    await pg.getByRole("button", { name: "Add my Schedule tab" }).click();
-    // straight to their new schedule, never the invite wall
+    await pg.locator(".setrow", { hasText: "Become a coach" }).click();
+    await pg.getByRole("heading", { name: "Become a coach" }).waitFor();
+    await pg.locator("#crNote").fill("Kettlebells at Ironbound");
+    await pg.getByRole("button", { name: "Ask to become a coach" }).click();
+    await pg.locator(".setrow .s", { hasText: "Asked. We'll be in touch" }).waitFor();
+    console.log("member asked to coach ok");
+
+    // the admin answers it (fresh context; the earlier one is closed)
+    const adCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const ad2 = await adCtx.newPage();
+    ad2.setDefaultTimeout(15000);
+    await ad2.goto(BASE + "/");
+    await ad2.locator(".obloginlink", { hasText: "Already have an account" }).click();
+    await ad2.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
+    await ad2.getByPlaceholder("Password").fill("admin-pass-123");
+    await ad2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad2.getByRole("button", { name: "Not now" }).click().catch(() => {});
+    await ad2.goto(BASE + "/admin");
+    await ad2.getByRole("heading", { name: "Wants to coach" }).waitFor();
+    const askCard = ad2.locator(".admincard", { hasText: "Kettlebells at Ironbound" });
+    await askCard.waitFor();
+    await askCard.getByRole("button", { name: "Make them a coach" }).click();
+    await ad2.getByText("is a coach now").waitFor();
+    await adCtx.close();
+    console.log("admin approved the ask ok");
+
+    // approved: the schedule side opens up
+    await pg.goto(BASE + "/app");
     await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
     // the Schedule tab the modal promised is really there
     {

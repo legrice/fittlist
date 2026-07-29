@@ -410,21 +410,61 @@ export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
   return { ok: true };
 }
 
-// A member who already has a name and a link deciding to post classes. Nothing
-// to ask for: everything a coach needs from the claim step, they did at signup.
-// Flipping `kind` is the whole change, and it adds the Schedule tab.
-export async function startCoaching(): Promise<{ ok: boolean; error?: string }> {
+// A member asking to post classes. It used to be a self-serve switch, and the
+// switch is how ghost inventory got in: anyone could flip it and publish.
+// Becoming a coach is an approval now; this files the ask and tells the admin,
+// and adminSetKind is the only thing that flips the flag.
+export async function requestCoaching(
+  noteRaw = "",
+): Promise<{ ok: boolean; pending?: boolean; error?: string }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired. Log in again." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return { ok: false, error: "Session expired. Log in again." };
-  if (me.kind !== "fan") return { ok: true }; // already a coach; nothing to do
+  if (me.kind !== "fan") return { ok: true }; // already a coach; nothing to ask
   if (!me.handle) {
     return { ok: false, error: "Set up your profile first, so your page has a link." };
   }
-  await db.update(schema.users).set({ kind: "coach" }).where(eq(schema.users.id, userId));
-  return { ok: true };
+  const open = await db
+    .select({ id: schema.coachRequests.id })
+    .from(schema.coachRequests)
+    .where(and(eq(schema.coachRequests.userId, userId), isNull(schema.coachRequests.handledAt)));
+  if (open.length) return { ok: true, pending: true };
+
+  await db.insert(schema.coachRequests).values({
+    userId,
+    note: noteRaw.trim().slice(0, 300),
+  });
+  // Tell whoever runs the place, in their Updates.
+  try {
+    const { feedbackHost } = await import("@/lib/feedback");
+    const host = await feedbackHost();
+    if (host) {
+      const { addNotification } = await import("@/lib/notify");
+      await addNotification(host.id, {
+        type: "coach_request",
+        title: "Wants to coach",
+        body: `${me.name.trim() || me.email} asked to become a coach`,
+        actorUserId: userId,
+      });
+    }
+  } catch (err) {
+    console.error("coach request notification failed", err);
+  }
+  return { ok: true, pending: true };
+}
+
+/** Is there an unanswered ask from this member? Drives the settings row copy. */
+export async function coachRequestPending(): Promise<boolean> {
+  const userId = await getSessionUserId();
+  if (!userId) return false;
+  const db = await getDb();
+  const open = await db
+    .select({ id: schema.coachRequests.id })
+    .from(schema.coachRequests)
+    .where(and(eq(schema.coachRequests.userId, userId), isNull(schema.coachRequests.handledAt)));
+  return open.length > 0;
 }
 
 export async function claimProfile(

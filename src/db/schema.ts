@@ -120,6 +120,19 @@ export const invites = pgTable("invites", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Members asking to coach. Becoming a coach used to be a self-serve switch,
+// which is also how member-recreated classes got into the directory: anyone
+// could flip the flag and publish. Now the flag is the admin's to flip
+// (adminSetKind), and this is the queue in front of it. handledAt covers both
+// outcomes; approval is visible in users.kind, not here.
+export const coachRequests = pgTable("coach_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  note: text("note").notNull().default(""),
+  handledAt: timestamp("handled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Coaches who hit the invite-only wall and asked to be let in. The admin sees
 // these and can invite them with one tap.
 export const inviteRequests = pgTable("invite_requests", {

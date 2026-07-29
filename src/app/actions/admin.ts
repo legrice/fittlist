@@ -121,6 +121,43 @@ export async function adminDeleteInvite(id: string): Promise<{ ok: boolean; erro
   return { ok: true };
 }
 
+// Answer a member's ask to coach. Approving flips their kind (same rules as
+// adminSetKind) and tells them; dismissing just closes the ask, quietly.
+export async function adminAnswerCoachRequest(
+  requestId: string,
+  approve: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const [req] = await db
+    .select()
+    .from(schema.coachRequests)
+    .where(eq(schema.coachRequests.id, requestId));
+  if (!req) return { ok: false, error: "Request not found." };
+  if (req.handledAt) return { ok: true };
+
+  if (approve) {
+    await db.update(schema.users).set({ kind: "coach" }).where(eq(schema.users.id, req.userId));
+    try {
+      const { addNotification } = await import("@/lib/notify");
+      await addNotification(req.userId, {
+        type: "coach_approved",
+        title: "You're a coach now",
+        body: "Your schedule is live the moment you add your first class.",
+      });
+    } catch (err) {
+      console.error("coach approval notification failed", err);
+    }
+  }
+  await db
+    .update(schema.coachRequests)
+    .set({ handledAt: new Date() })
+    .where(eq(schema.coachRequests.id, requestId));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Mint a one-time sign-in link for a coach and email it. Returns the URL too so
 // the admin can copy it and send it any way they like (handy while email
 // delivery is still flaky in beta). Admin links last 24h, not the usual 15 min.
@@ -200,8 +237,9 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // Class reports in both directions too: ones they filed, ones about their classes.
   await db.delete(schema.classReports).where(eq(schema.classReports.reporterUserId, id));
   await db.delete(schema.classReports).where(eq(schema.classReports.coachUserId, id));
-  // Their own private week entries.
+  // Their own private week entries, and any ask to coach.
   await db.delete(schema.personalClasses).where(eq(schema.personalClasses.userId, id));
+  await db.delete(schema.coachRequests).where(eq(schema.coachRequests.userId, id));
   // "Going" marks: theirs, and anyone else's on the classes they taught.
   await db.delete(schema.attendances).where(eq(schema.attendances.userId, id));
   if (ownClassIds.length) {

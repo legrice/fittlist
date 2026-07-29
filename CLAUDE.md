@@ -241,7 +241,10 @@ the only way to get their week into the app, so `publishClasses` now refuses a
 public class from a `kind === "fan"` account, and members get
 `personal_classes` instead: name, weekday, time, place and a free-text coach
 name, living only in their own week. There is deliberately no column that
-could make one public, so the wall can't be left open. The named coach is an
+could make one public, so the wall can't be left open. Becoming a coach is an
+ask, not a switch: `requestCoaching` files it, the admin's People tab answers
+it, and `adminSetKind`/`adminAnswerCoachRequest` are the only things that flip
+`users.kind`. The named coach is an
 invite lead ("Is Jenny on fittlist?"), not a users reference: naming your
 coach is not putting them on the platform. The admin Reports tab lists
 same-studio-same-time classes under two accounts, which is what the old leak

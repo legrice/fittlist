@@ -38,7 +38,15 @@ type Thread = {
 // Names reached through this table hide from any audit that greps literal
 // <Icon name="...">, so every type here must exist in ICONS or it ships as
 // the blank circle.
-const ICON: Record<string, string> = { follow: "person_add", announce: "campaign" };
+// Every notification type needs a row here, or its icon falls back to a blank
+// circle (the Icon component's typo guard).
+const ICON: Record<string, string> = {
+  follow: "person_add",
+  announce: "campaign",
+  class_cancelled: "event",
+  coach_request: "person_add",
+  coach_approved: "check",
+};
 
 function fmt(d: Date | string) {
   const date = new Date(d);

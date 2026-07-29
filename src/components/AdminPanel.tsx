@@ -11,6 +11,7 @@ import {
   adminFixLocations,
   adminInvite,
   adminDeleteInvite,
+  adminAnswerCoachRequest,
   adminSendMagicLink,
   adminSetKind,
 } from "@/app/actions/admin";
@@ -75,6 +76,7 @@ type Stats = {
 export function AdminPanel({
   adminEmail,
   reports,
+  coachAsks,
   duplicates,
   people,
   studios,
@@ -86,6 +88,7 @@ export function AdminPanel({
 }: {
   adminEmail: string;
   reports: ReportedClass[];
+  coachAsks: { id: string; note: string; asked: string | null; name: string; email: string; handle: string }[];
   duplicates: DuplicateSlot[];
   people: Person[];
   studios: Studio[];
@@ -106,6 +109,19 @@ export function AdminPanel({
   // Dismissed reports leave the list at once; the action's revalidate catches
   // the next load up.
   const [handled, setHandled] = useState<Record<string, boolean>>({});
+  // Answered coach asks leave the queue at once.
+  const [askDone, setAskDone] = useState<Record<string, boolean>>({});
+  const answerAsk = (id: string, approve: boolean, name: string) => {
+    setAskDone((h) => ({ ...h, [id]: true }));
+    adminAnswerCoachRequest(id, approve).then((res) => {
+      if (!res.ok) {
+        setAskDone((h) => ({ ...h, [id]: false }));
+        toast(res.error ?? "Couldn't do that");
+        return;
+      }
+      toast(approve ? `${name} is a coach now` : "Closed, quietly");
+    });
+  };
   const [side, setSide] = useState<"all" | "coach" | "member">("all");
   const [q, setQ] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
@@ -379,6 +395,45 @@ export function AdminPanel({
           </div>
         )}
 
+        {tab === "message" || tab === "reports" ? null : tab === "people" ? (
+          <>
+            {coachAsks.filter((a) => !askDone[a.id]).length > 0 && (
+              <div className="reportlist" style={{ marginBottom: 14 }}>
+                <h2 className="brandh">Wants to coach</h2>
+                {coachAsks
+                  .filter((a) => !askDone[a.id])
+                  .map((a) => (
+                    <div key={a.id} className="admincard">
+                      <div className="admincard-h">
+                        {a.handle ? (
+                          <a className="admincard-nm" href={`/${a.handle}`} target="_blank" rel="noopener">
+                            {a.name}
+                          </a>
+                        ) : (
+                          <span className="admincard-nm">{a.name}</span>
+                        )}
+                        {a.asked && <span className="adminbadge warn">{a.asked}</span>}
+                      </div>
+                      <div className="admincard-sub">{a.email}</div>
+                      {a.note && <p className="adminsub">&ldquo;{a.note}&rdquo;</p>}
+                      <div className="admincard-actions">
+                        <button
+                          className="btn si"
+                          style={{ width: "auto", padding: "9px 16px", fontSize: 13, borderRadius: 999 }}
+                          onClick={() => answerAsk(a.id, true, a.name)}
+                        >
+                          Make them a coach
+                        </button>
+                        <button className="btn ghost" onClick={() => answerAsk(a.id, false, a.name)}>
+                          Not now
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
+        ) : null}
         {tab === "message" || tab === "reports" ? null : tab === "people" ? (
           <>
             {/* Both sides live in one table, so this is the only place the
