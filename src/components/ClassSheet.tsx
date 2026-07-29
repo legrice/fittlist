@@ -113,10 +113,24 @@ export function ClassSheet({
           <>
             {c.classType && <span className="evtype">{c.classType}</span>}
             <h2 className="classsheet-nm">{c.name}</h2>
-            <Link className="classsheet-who" href={`/${c.handle}`}>
-              with {c.coachName}
-              <Icon name="chevron_right" size={15} />
-            </Link>
+            {/* Whose class it is, as a face and a name. Not a link: you got
+                here from their schedule, and a sheet that can navigate away is
+                a sheet you have to find your way back into. */}
+            <div className="classsheet-who">
+              {c.coachPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="classsheet-av" src={c.coachPhoto} alt="" />
+              ) : (
+                <span
+                  className="classsheet-av classsheet-av-empty"
+                  style={{ background: c.coachColor }}
+                  aria-hidden="true"
+                >
+                  {(c.coachName.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )}
+              {c.coachName}
+            </div>
 
             <div className="evfacts classsheet-facts">
               <div className="evfact">
@@ -172,7 +186,7 @@ export function ClassSheet({
             <div className="publishwrap classsheet-do">
               {c.canAdd && (
                 <button
-                  className={`btn ${added ? "ghost" : "si"} classsheet-add`}
+                  className={`classsheet-add${added ? " on" : ""}`}
                   disabled={pending}
                   onClick={toggle}
                 >

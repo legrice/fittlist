@@ -1226,6 +1226,9 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.locator(".weekbtn").click();
   await fan.waitForURL(/\/week/);
   await fan.getByRole("heading", { name: "Your week" }).waitFor();
+  // Reached from the header, but still inside the app: the tabs come with it.
+  if (!(await fan.locator(".navbar").count()))
+    fail("your week should keep the bottom tabs");
   const rows = fan.locator(".weekrow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
   // The row carries what you'd need to decide: what, when, where, whose.
@@ -1255,6 +1258,18 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.locator(".feedagenda .ps-event").first().click();
   await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
   await fan.getByRole("button", { name: "Added to your week" }).waitFor();
+  // The add pill goes green, the same yes Following gives.
+  {
+    const bg = await fan.locator(".classsheet-add.on").evaluate((e) => getComputedStyle(e).backgroundColor);
+    if (bg !== "rgb(61, 139, 83)") fail("Added should be green, got " + bg);
+  }
+  // Whose class it is, as a face and a name, and not a link out of the sheet.
+  await fan.locator(".classsheet-who .classsheet-av").waitFor();
+  if (await fan.locator(".classsheet-who a").count())
+    fail("the coach line in the sheet shouldn't navigate away");
+  if ((await fan.locator(".classsheet-who").innerText()).toLowerCase().startsWith("with"))
+    fail("the coach line should just be the name");
+  await fan.locator(".classsheet .sheetclose").click();
   await fan.goto(BASE + "/feed");
 }
 console.log("your week ok (count ahead, rows leave, points at a real calendar)");

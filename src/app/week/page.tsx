@@ -16,14 +16,18 @@ export default async function WeekPage() {
   if (!userId) redirect("/");
   const db = await getDb();
   const [me] = await db
-    .select({ look: schema.users.look })
+    .select({ look: schema.users.look, kind: schema.users.kind, handle: schema.users.handle })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
+  // A member has nothing behind the Schedule tab, same rule as everywhere else.
+  const isCoach = me?.kind !== "fan" && !!me?.handle;
 
   const days = await myWeek(userId);
   return (
     <div className="appshell" data-mode={me?.look === "dark" ? "dark" : undefined}>
-      <WeekScreen days={days} header={<AppChrome userId={userId} />} />
+      {/* Your week is reached from the header, not the tab bar, but it's still
+          inside the app: leaving it shouldn't mean finding the back button. */}
+      <WeekScreen days={days} header={<AppChrome userId={userId} />} coach={isCoach} />
     </div>
   );
 }

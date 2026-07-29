@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
+import { NavBar } from "@/components/NavBar";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -18,10 +19,13 @@ import { Toast, useToast } from "@/components/Toast";
 export function WeekScreen({
   days,
   header,
+  coach = true,
 }: {
   days: WeekDay[];
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
+  /** false drops the Schedule tab: a member has nothing behind it. */
+  coach?: boolean;
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -52,8 +56,8 @@ export function WeekScreen({
   const left = shown.reduce((n, d) => n + d.items.length, 0);
 
   return (
-    <section className="screen">
-      <div className="pad" style={{ paddingTop: 14, paddingBottom: 140 }}>
+    <section className="screen hasnav">
+      <div className="pad" style={{ paddingTop: 14, paddingBottom: 150 }}>
         {header}
         <div className="admintop pagetop">
           <div>
@@ -163,6 +167,7 @@ export function WeekScreen({
         </div>
       )}
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
+      <NavBar coach={coach} />
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

@@ -1173,8 +1173,17 @@ button.ps-card { cursor: pointer; }
   font-size: 26px; line-height: 1.1; letter-spacing: -.02em; margin: 10px 0 0; color: var(--ink);
 }
 .classsheet-who {
-  display: inline-flex; align-items: center; gap: 3px; margin-top: 8px;
-  font-size: 14px; font-weight: 600; color: var(--ol); text-decoration: none;
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--ol);
+}
+.classsheet-av {
+  width: 26px; height: 26px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
+  background: #eae3d2; display: block;
+}
+.classsheet-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
 }
 .classsheet-facts { margin-top: 18px; }
 .classsheet-desc { margin-top: 16px; }
@@ -1182,7 +1191,18 @@ button.ps-card { cursor: pointer; }
 /* The add is the point of the sheet, so it gets the footer to itself and Share
    sits under it as the quieter second thing. */
 .classsheet-do { display: flex; flex-direction: column; }
-.classsheet-add { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* Same pill as the profile's actions, and the same green yes as Following: one
+   language for "this is done" across the app. */
+.classsheet-add {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  padding: 15px 22px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
+  background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink);
+  transition: transform .08s;
+}
+.classsheet-add:active { transform: scale(.97); }
+.classsheet-add.on { background: var(--go); color: #fff; border-color: var(--go); }
+.classsheet-add[disabled] { opacity: .6; }
 .classsheet-share {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   width: 100%; margin-top: 10px; padding: 6px;

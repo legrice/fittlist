@@ -3,6 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, mondayOfCurrentWeek, runsOn, siteOrigin } from "@/lib/format";
+import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
@@ -17,6 +18,8 @@ export type ClassDetail = {
   id: string;
   handle: string;
   coachName: string;
+  coachPhoto: string | null;
+  coachColor: string;
   name: string;
   classType: string | null;
   description: string | null;
@@ -101,6 +104,8 @@ export async function classDetail(
     id: c.id,
     handle,
     coachName: user.name,
+    coachPhoto: user.photo,
+    coachColor: avatarColor(user),
     name: c.name,
     classType: c.classType,
     description: c.description,
