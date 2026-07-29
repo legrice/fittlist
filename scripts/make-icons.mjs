@@ -14,18 +14,22 @@ import { brandIcon } from "../src/lib/brand.ts";
 const ORANGE = "#dd6a35"; // --si, the accent the whole app is built around
 const WHITE = "#ffffff";
 
-// brandIcon draws into a 112x100 box. Centre that in a square and size it:
-// `fill` is how much of the 120 box the mark's width takes.
+// brandIcon draws into a 112x100 viewBox, but its ink only spans x 2..96 and
+// y 4..96. Centring on the viewBox middle (56) rather than the ink middle (49)
+// pushed the mark ~6% of its width to the left, which is visible once it's the
+// only thing on an orange square. `fill` is how much of the 120 box the mark's
+// ink takes across.
+const INK = { cx: 49, cy: 50, w: 94 };
 function square(size, radius, fill) {
   // brandIcon carries its colour on the <svg> element, which is exactly the
   // part being unwrapped, so the group has to carry it instead.
   const inner = brandIcon(WHITE)
     .replace(/^<svg[^>]*>/, "")
     .replace(/<\/svg>$/, "");
-  const scale = fill / 112;
+  const scale = fill / INK.w;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="${size}" height="${size}">
     <rect width="120" height="120" rx="${radius}" fill="${ORANGE}"/>
-    <g fill="${WHITE}" transform="translate(60 60) scale(${scale}) translate(-56 -50)">${inner}</g>
+    <g fill="${WHITE}" transform="translate(60 60) scale(${scale}) translate(${-INK.cx} ${-INK.cy})">${inner}</g>
   </svg>`;
 }
 
@@ -34,11 +38,11 @@ function square(size, radius, fill) {
 // the orange runs to the edge. An Apple touch icon is masked by iOS too, but
 // only ever to a rounded square, so it can sit closer to the edge.
 const ICONS = [
-  { file: "icon-192.png", size: 192, radius: 27, fill: 78 },
-  { file: "icon-512.png", size: 512, radius: 27, fill: 78 },
-  { file: "icon-192-maskable.png", size: 192, radius: 0, fill: 62 },
-  { file: "icon-512-maskable.png", size: 512, radius: 0, fill: 62 },
-  { file: "apple-touch-icon.png", size: 180, radius: 0, fill: 74 },
+  { file: "icon-192.png", size: 192, radius: 27, fill: 66 },
+  { file: "icon-512.png", size: 512, radius: 27, fill: 66 },
+  { file: "icon-192-maskable.png", size: 192, radius: 0, fill: 52 },
+  { file: "icon-512-maskable.png", size: 512, radius: 0, fill: 52 },
+  { file: "apple-touch-icon.png", size: 180, radius: 0, fill: 62 },
 ];
 
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
@@ -57,7 +61,7 @@ for (const { file, size, radius, fill } of ICONS) {
 }
 
 // The browser favicon: same mark, same source, so the tab matches the app.
-fs.writeFileSync("src/app/icon.svg", `${square(120, 27, 78).replace(/\n\s+/g, "")}\n`);
+fs.writeFileSync("src/app/icon.svg", `${square(120, 27, 66).replace(/\n\s+/g, "")}\n`);
 console.log("src/app/icon.svg");
 
 await browser.close();
