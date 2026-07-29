@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
+import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
@@ -67,6 +68,7 @@ export default async function SchedulePage({
   const gconn = await isGoogleConnected(userId);
   const fbHost = await feedbackHost();
   const askFeedback = await feedbackPromptDue(userId);
+  const invitesLeft = await invitesBannerCount();
   const passkeyRows = await db
     .select({ id: schema.credentials.id })
     .from(schema.credentials)
@@ -175,6 +177,7 @@ export default async function SchedulePage({
       discoverable={user?.discoverable ?? true}
       userId={userId}
       myColor={user?.avatarColor ?? null}
+      invitesLeft={invitesLeft}
       look={user?.look ?? null}
     />
     {askFeedback && fbHost && <FeedbackPrompt hostName={fbHost.name.trim() || "We"} />}

@@ -80,6 +80,10 @@ export const users = pgTable("users", {
   // moment it's shown, not when it's answered: a prompt they scrolled past is
   // still a prompt they've seen, and asking again next page load is nagging.
   feedbackPromptedAt: timestamp("feedback_prompted_at", { withTimezone: true }),
+  // When they closed the "you have invites" banner. On the account rather than
+  // in localStorage so dismissing it on a phone also dismisses it on a laptop:
+  // a banner you have to swat once per device is a banner nobody thanks you for.
+  invitesBannerAt: timestamp("invites_banner_at", { withTimezone: true }),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

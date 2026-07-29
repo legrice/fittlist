@@ -3,7 +3,7 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
-import { INVITES_PER_USER } from "@/lib/invites";
+import { INVITES_PER_USER, inviteOnly } from "@/lib/invites";
 import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 
@@ -28,6 +28,45 @@ export async function requestInvite(
       set: { name, handledAt: null },
     });
   return { ok: true };
+}
+
+// Is there anything for the banner to say? Invites only mean something while
+// the beta gate is up: with self-serve signups open, telling someone they have
+// five invites is telling them about a door that isn't locked.
+export async function invitesBannerCount(): Promise<number> {
+  if (!inviteOnly()) return 0;
+  const userId = await getSessionUserId();
+  if (!userId) return 0;
+  const db = await getDb();
+  const [me] = await db
+    .select({
+      email: schema.users.email,
+      onboardedAt: schema.users.onboardedAt,
+      dismissed: schema.users.invitesBannerAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  // Mid-setup, or they've already closed it.
+  if (!me || !me.onboardedAt || me.dismissed) return 0;
+  // Admins have no cap, so there's no number to announce.
+  if (adminEmails().includes(me.email.toLowerCase())) return 0;
+  const rows = await db
+    .select({ id: schema.invites.id })
+    .from(schema.invites)
+    .where(eq(schema.invites.invitedByUserId, userId));
+  return Math.max(0, INVITES_PER_USER - rows.length);
+}
+
+// Closing it is permanent. The settings row is the door that stays; this was
+// only ever there to say the door exists.
+export async function dismissInvitesBanner(): Promise<void> {
+  const userId = await getSessionUserId();
+  if (!userId) return;
+  const db = await getDb();
+  await db
+    .update(schema.users)
+    .set({ invitesBannerAt: new Date() })
+    .where(eq(schema.users.id, userId));
 }
 
 /** How many invites this user has left, and how their existing ones are doing. */

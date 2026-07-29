@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "invites_banner_at" timestamp with time zone;

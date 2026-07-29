@@ -10,6 +10,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
+import { InvitesBanner } from "@/components/InvitesBanner";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
@@ -50,6 +51,7 @@ export function ScheduleScreen({
   passkeyCount,
   isAdmin,
   canSendFeedback,
+  invitesLeft,
   showFanView,
   discoverable,
   userId,
@@ -87,6 +89,7 @@ export function ScheduleScreen({
   passkeyCount: number;
   isAdmin: boolean;
   canSendFeedback: boolean;
+  invitesLeft: number;
   showFanView: boolean;
   discoverable: boolean;
   userId: string;
@@ -242,6 +245,8 @@ export function ScheduleScreen({
             },
           }}
         />
+
+        {invitesLeft > 0 && <InvitesBanner left={invitesLeft} />}
 
         {/* The three things a coach reaches for from their week — the title
             said nothing the tab bar doesn't already say, so the tools get the

@@ -238,6 +238,23 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await skipSetup(pg);
   await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
+  // The banner is how anyone finds out they can invite at all: the settings row
+  // has always been there and nobody goes looking in settings for a thing they
+  // don't know exists.
+  {
+    const bar = pg.locator(".invbanner");
+    await bar.waitFor();
+    const txt = await bar.innerText();
+    if (!/You have \d+ beta invite/.test(txt)) fail(`the banner doesn't say the count: ${txt}`);
+    // One tap to the sheet, not a trip through settings.
+    await pg.locator(".invbanner-main").click();
+    await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
+    await pg.locator(".sheetclose").click();
+    await pg.waitForTimeout(400);
+    await pg.screenshot({ path: OUT + "/shot-invite-banner.png" });
+    console.log("invites banner ok (count, and one tap to the sheet)");
+  }
+
   await pg.locator(".usericon").click();
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
@@ -259,6 +276,32 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await row.locator(".s").waitFor();
   await pg.screenshot({ path: OUT + "/shot-invite-friend.png", fullPage: true });
   console.log("beta user invited a friend ok");
+
+  // Closing it is permanent, and permanent means the account rather than this
+  // browser: a banner you swat once per device is a banner nobody thanks you for.
+  {
+    await pg.keyboard.press("Escape").catch(() => {});
+    await pg.goto(BASE + "/app");
+    await pg.locator(".invbanner-x").click();
+    await pg.waitForTimeout(900);
+    await pg.reload();
+    await pg.waitForTimeout(700);
+    if (await pg.locator(".invbanner").count()) fail("the banner came back after being dismissed");
+    const other = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const op = await other.newPage();
+    op.setDefaultTimeout(15000);
+    await op.goto(BASE + "/");
+    await op.getByRole("button", { name: /Log in/i }).first().click();
+    await op.getByPlaceholder("you@example.com").fill("riley@example.com");
+    await op.getByPlaceholder("Password").fill("invited-pass-123");
+    await op.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await op.waitForURL(/\/app/);
+    await op.waitForTimeout(900);
+    if (await op.locator(".invbanner").count())
+      fail("the dismissal stayed in the browser instead of on the account");
+    await other.close();
+    console.log("banner dismissal sticks, and follows the account ok");
+  }
   await ctx.close();
 
   // that invite works, and lands the same way ours does

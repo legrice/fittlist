@@ -2,11 +2,13 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
+import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +31,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   const unread = await unreadNotifications(userId);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
+  const invitesLeft = await invitesBannerCount();
 
   return (
     <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
@@ -43,6 +46,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
             href: isCoach ? "/app?acct=1" : "/you",
           }}
         />
+        {invitesLeft > 0 && <InvitesBanner left={invitesLeft} />}
         {children}
       </div>
       <NavBar coach={isCoach} />

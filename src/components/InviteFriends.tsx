@@ -6,11 +6,17 @@ import { inviteFriend, myInvites } from "@/app/actions/invites";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// A settings row that lets a beta user bring people in. Everyone in a closed
-// beta knows someone who should be in it, and asking them to email us about it
-// loses most of them.
-export function InviteFriends() {
-  const [open, setOpen] = useState(false);
+// The invite sheet, on its own so more than one thing can open it: the settings
+// row below, and the banner that tells people the row exists.
+export function InviteSheet({
+  onClose,
+  onSent,
+}: {
+  onClose: () => void;
+  /** Fired before the sheet closes. The confirmation lives with whoever opened
+   *  it: a toast rendered in here goes away with the sheet and is never seen. */
+  onSent?: (email: string) => void;
+}) {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
@@ -18,12 +24,8 @@ export function InviteFriends() {
   const [sent, setSent] = useState<{ email: string; joined: boolean }[]>([]);
   const [pending, start] = useTransition();
   const [mounted, setMounted] = useState(false);
-  const [toastMsg, toastOn, toast] = useToast();
 
   useEffect(() => setMounted(true), []);
-
-  // Load the count lazily — the row reads fine without it, and this keeps a
-  // query off the schedule's render path.
   useEffect(() => {
     let live = true;
     myInvites().then((r) => {
@@ -36,15 +38,7 @@ export function InviteFriends() {
     };
   }, []);
 
-  const unlimited = left === -1;
   const none = left === 0;
-  const sub = unlimited
-    ? "Send someone a beta invite"
-    : left === null
-      ? "Send someone a beta invite"
-      : none
-        ? "You've used all your invites for now"
-        : `${left} invite${left === 1 ? "" : "s"} left`;
 
   const send = () =>
     start(async () => {
@@ -59,42 +53,25 @@ export function InviteFriends() {
       setLeft(res.left !== undefined && Number.isFinite(res.left) ? res.left! : left);
       setEmail("");
       setNote("");
-      setOpen(false);
-      toast(`Invite sent to ${to}`);
+      onSent?.(to);
+      onClose();
     });
 
   return (
     <>
-      <button className="setrow" onClick={() => setOpen(true)}>
-        <span className="setrow-ic">
-          <Icon name="groups" size={22} />
-        </span>
-        <span className="setrow-txt">
-          <span className="t">Invite someone to the beta</span>
-          <span className="s">{sub}</span>
-        </span>
-        <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
-        </span>
-      </button>
-
       {/* Portalled to the body on purpose. The account view is a positioned
           z-40 layer, so it traps its children's stacking — a sheet rendered
           inside it sits UNDER the z-45 tab bar, and its bottom button can't be
           tapped at all. */}
-      {open && mounted && createPortal(
+      {mounted && createPortal(
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget && !pending) setOpen(false);
+            if (e.target === e.currentTarget && !pending) onClose();
           }}
         >
           <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setOpen(false)}
-            >
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
               <Icon name="close" size={16} />
             </button>
             <h2>Invite someone to the beta</h2>
@@ -159,6 +136,58 @@ export function InviteFriends() {
           </div>
         </div>,
         document.body,
+      )}
+    </>
+  );
+}
+
+// A settings row that lets a beta user bring people in. Everyone in a closed
+// beta knows someone who should be in it, and asking them to email us about it
+// loses most of them.
+export function InviteFriends() {
+  const [open, setOpen] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
+  const [toastMsg, toastOn, toast] = useToast();
+
+  // Load the count lazily — the row reads fine without it, and this keeps a
+  // query off the schedule's render path.
+  useEffect(() => {
+    let live = true;
+    myInvites().then((r) => live && setLeft(Number.isFinite(r.left) ? r.left : -1));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const sub =
+    left === null || left === -1
+      ? "Send someone a beta invite"
+      : left === 0
+        ? "You've used all your invites for now"
+        : `${left} invite${left === 1 ? "" : "s"} left`;
+
+  return (
+    <>
+      <button className="setrow" onClick={() => setOpen(true)}>
+        <span className="setrow-ic">
+          <Icon name="groups" size={22} />
+        </span>
+        <span className="setrow-txt">
+          <span className="t">Invite someone to the beta</span>
+          <span className="s">{sub}</span>
+        </span>
+        <span className="setrow-chev">
+          <Icon name="chevron_right" size={20} />
+        </span>
+      </button>
+      {open && (
+        <InviteSheet
+          onClose={() => setOpen(false)}
+          onSent={(to) => {
+            setLeft((n) => (typeof n === "number" && n > 0 ? n - 1 : n));
+            toast(`Invite sent to ${to}`);
+          }}
+        />
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>

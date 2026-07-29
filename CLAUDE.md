@@ -178,6 +178,15 @@ bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
 
+**The invites banner is announced once, then never again.**
+`invitesBannerCount()` returns 0 unless the beta gate is up, they're onboarded,
+they have invites left, and they haven't closed it. The dismissal is
+`users.invites_banner_at`, on the account rather than in localStorage, so
+swatting it on a phone also clears it on a laptop. `InviteSheet` is exported
+separately from `InviteFriends` so the banner and the settings row open the
+same sheet; the success toast belongs to whoever opened it, because a toast
+rendered inside the sheet unmounts with it and is never seen.
+
 **The feedback prompt is modal, and "shown" counts as "asked".**
 `feedbackPromptDue()` gates it: onboarded, `FEEDBACK_PROMPT_AFTER_DAYS` old
 (3 by default, 0 in the suite), never written in, not asked in the last 60
