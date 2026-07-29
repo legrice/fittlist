@@ -2,6 +2,7 @@ import { desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
+import { listReports } from "@/app/actions/reports";
 import { AdminPanel } from "@/components/AdminPanel";
 
 export const dynamic = "force-dynamic";
@@ -172,9 +173,12 @@ export default async function AdminPage() {
     requests: requests.length,
   };
 
+  const reports = await listReports();
+
   return (
     <AdminPanel
       adminEmail={admin.email}
+      reports={reports}
       people={people}
       studios={studioRows}
       invites={invites}

@@ -150,6 +150,9 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // Blocks in both directions: they blocked someone, someone blocked them.
   await db.delete(schema.blocks).where(eq(schema.blocks.blockerUserId, id));
   await db.delete(schema.blocks).where(eq(schema.blocks.blockedUserId, id));
+  // Class reports in both directions too: ones they filed, ones about their classes.
+  await db.delete(schema.classReports).where(eq(schema.classReports.reporterUserId, id));
+  await db.delete(schema.classReports).where(eq(schema.classReports.coachUserId, id));
   // "Going" marks: theirs, and anyone else's on the classes they taught.
   await db.delete(schema.attendances).where(eq(schema.attendances.userId, id));
   if (ownClassIds.length) {

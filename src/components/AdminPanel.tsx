@@ -12,6 +12,7 @@ import {
   adminInvite,
   adminSendMagicLink,
 } from "@/app/actions/admin";
+import { dismissReports, type ReportedClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -71,6 +72,7 @@ type Stats = {
 
 export function AdminPanel({
   adminEmail,
+  reports,
   people,
   studios,
   invites,
@@ -80,6 +82,7 @@ export function AdminPanel({
   dark = false,
 }: {
   adminEmail: string;
+  reports: ReportedClass[];
   people: Person[];
   studios: Studio[];
   invites: Invite[];
@@ -88,7 +91,7 @@ export function AdminPanel({
   stats: Stats;
   dark?: boolean;
 }) {
-  const [tab, setTab] = useState<"people" | "studios" | "invites" | "message">("people");
+  const [tab, setTab] = useState<"people" | "studios" | "invites" | "message" | "reports">("people");
   // The megaphone: a note from fittlist into people's Updates feeds.
   const [audience, setAudience] = useState<"everyone" | "coaches" | "members" | "one">("everyone");
   const [msgTarget, setMsgTarget] = useState("");
@@ -96,6 +99,9 @@ export function AdminPanel({
   const [msgBody, setMsgBody] = useState("");
   const [msgBusy, setMsgBusy] = useState(false);
   const [msgDone, setMsgDone] = useState("");
+  // Dismissed reports leave the list at once; the action's revalidate catches
+  // the next load up.
+  const [handled, setHandled] = useState<Record<string, boolean>>({});
   const [side, setSide] = useState<"all" | "coach" | "member">("all");
   const [q, setQ] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
@@ -179,9 +185,12 @@ export function AdminPanel({
           <button className={tab === "message" ? "on" : ""} onClick={() => { setTab("message"); setQ(""); }}>
             Message
           </button>
+          <button className={tab === "reports" ? "on" : ""} onClick={() => { setTab("reports"); setQ(""); }}>
+            Reports{reports.length > 0 ? ` (${reports.length})` : ""}
+          </button>
         </div>
 
-        {tab !== "message" && (
+        {tab !== "message" && tab !== "reports" && (
         <div className="searchbox adminsearch">
           <span className="mag"><Icon name="search" size={17} /></span>
           <input
@@ -271,7 +280,56 @@ export function AdminPanel({
           </div>
         )}
 
-        {tab === "message" ? null : tab === "people" ? (
+        {tab === "reports" && (
+          <div className="reportlist">
+            {reports.filter((r) => !handled[r.seriesId]).length === 0 ? (
+              <div className="empty-block">
+                <h2>Nothing reported</h2>
+                <p>When someone flags a class as not right, it lands here, worst first.</p>
+              </div>
+            ) : (
+              reports.filter((r) => !handled[r.seriesId]).map((r) => (
+                <div key={r.seriesId} className="admincard">
+                  <div className="admincard-h">
+                    <span className="admincard-nm">
+                      {r.className ?? "A deleted class"} · {r.coachName}
+                    </span>
+                    {/* Two or more people saying the same thing is the signal. */}
+                    <span className={`reportcount${r.count > 1 ? " hot" : ""}`}>
+                      {r.count} {r.count === 1 ? "report" : "reports"}
+                    </span>
+                  </div>
+                  <p className="adminsub">{r.reasons.join(" · ")}</p>
+                  {r.notes.length > 0 && <p className="adminsub">&ldquo;{r.notes[0]}&rdquo;</p>}
+                  <p className="adminsub">By {r.reporters.join(", ")}</p>
+                  <div className="admincard-actions">
+                    {r.classHref && (
+                      <a className="btn ghost" href={r.classHref} target="_blank" rel="noopener">
+                        Open the class
+                      </a>
+                    )}
+                    {r.coachHandle && (
+                      <a className="btn ghost" href={`/${r.coachHandle}`} target="_blank" rel="noopener">
+                        The coach
+                      </a>
+                    )}
+                    <button
+                      className="btn ghost"
+                      onClick={() => {
+                        setHandled((h) => ({ ...h, [r.seriesId]: true }));
+                        dismissReports(r.seriesId);
+                      }}
+                    >
+                      Handled
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "message" || tab === "reports" ? null : tab === "people" ? (
           <>
             {/* Both sides live in one table, so this is the only place the
                 difference shows without reading every card. */}

@@ -298,6 +298,29 @@ export const classes = pgTable(
 // the blocked person, because a notice is an invitation to make a new account
 // and a fight. From their side the coach's page simply stops existing, which is
 // what a deleted account looks like too, so it isn't a signal.
+// "This class isn't right": not a real class, wrong time, wrong place. Keyed
+// on the seriesId rather than a class row, because an edit deletes and
+// reinserts the rows and a delete removes them; the report is about the class
+// as a person understands it, and the series is that. No FK on the series (it
+// has no table), so nothing here can make an edit fail. One report per person
+// per class; a second tap changes nothing, which is also what it should do.
+export const classReports = pgTable(
+  "class_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    seriesId: uuid("series_id").notNull(),
+    // Denormalised so the admin list renders without chasing class rows that
+    // may already be gone. Both are users FKs: adminDeleteUser must clear
+    // reports in both directions.
+    coachUserId: uuid("coach_user_id").notNull().references(() => users.id),
+    reporterUserId: uuid("reporter_user_id").notNull().references(() => users.id),
+    reason: text("reason").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("class_reports_once").on(t.seriesId, t.reporterUserId)],
+);
+
 export const blocks = pgTable(
   "blocks",
   {

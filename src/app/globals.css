@@ -1282,6 +1282,26 @@ button.ps-card { cursor: pointer; }
 }
 .brandshape-lbl { font-size: 12px; color: var(--ol); text-align: center; }
 .evgone { text-align: left; margin: 18px 0 0; padding: 0; }
+/* Report a class: a quiet line under Share, and a thanks where it stood. */
+.classsheet-report {
+  display: block; margin: 4px auto 0; padding: 8px 12px; background: none; border: 0;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--ol); cursor: pointer;
+}
+.classsheet-report:active { color: var(--ink); }
+.classsheet-reported {
+  text-align: center; font-size: 13px; font-weight: 600; color: var(--go); padding: 8px 0 0;
+}
+.reportreasons { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+/* Admin: the count is the signal, and two or more turns it orange. */
+.reportcount {
+  flex-shrink: 0; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  background: var(--cl-d); color: var(--ink);
+}
+.reportcount.hot { background: var(--si); color: #fff; }
+.admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 999px; }
+.reportlist { display: flex; flex-direction: column; gap: 12px; }
 /* A long class description, capped. The fade tells you there's more without a
    hard edge mid-word, and Read more sits over the bottom of it so the control
    is where the text stops rather than below a gap. */

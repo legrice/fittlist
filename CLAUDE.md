@@ -235,6 +235,15 @@ lookup table (`ICON[n.type]` in `UpdatesScreen`) hide from any audit that only
 greps literal `<Icon name="...">`, which is how every notification row rendered
 a blank circle for months.
 
+**A class report points at the `seriesId`, not a class row.** `class_reports`
+is how someone flags a class that isn't right, and a report keyed on a class
+row would hit the same wall as a Going mark: edits delete and reinsert rows.
+The series survives an edit, has no table and so no foreign key, and is what a
+person means by "this class" anyway. The cost is two denormalised columns
+(`coach_user_id`, `reporter_user_id`), both users FKs, both cleared in
+`adminDeleteUser`. Reports on a deleted class keep rendering in `/admin` as "A
+deleted class", which is on purpose: the report is still a fact about a coach.
+
 **Adding a users foreign key means editing `adminDeleteUser`.** It deletes rows
 the account owns and de-attributes shared ones, in an order the foreign keys
 allow; a new reference that isn't listed there makes deleting any user fail

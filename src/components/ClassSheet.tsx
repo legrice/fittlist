@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
+import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -38,6 +39,21 @@ export function ClassSheet({
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reported, setReported] = useState(false);
+
+  const sendReport = (reason: string) => {
+    if (!c || pending) return;
+    start(async () => {
+      const res = await reportClass(c.id, reason);
+      setReportOpen(false);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that");
+        return;
+      }
+      setReported(true);
+    });
+  };
 
   useEffect(() => {
     let live = true;
@@ -218,7 +234,45 @@ export function ClassSheet({
               <button className="classsheet-share" onClick={share}>
                 <Icon name="ios_share" size={18} /> Share this class
               </button>
+              {/* Quiet on purpose: a moderation control shouldn't compete with
+                  the add button, but it has to exist, because a class that
+                  isn't real is somebody else's wasted trip. */}
+              {c.canAdd && !reported && (
+                <button className="classsheet-report" onClick={() => setReportOpen(true)}>
+                  Report this class
+                </button>
+              )}
+              {reported && <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>}
             </div>
+            {reportOpen && (
+              <div
+                className="sheet-scrim"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setReportOpen(false);
+                }}
+              >
+                <div className="sheet confirmsheet">
+                  <h2>What&rsquo;s wrong with it?</h2>
+                  <p className="lead">
+                    This goes to fittlist, not to the coach. If it checks out, nothing changes.
+                  </p>
+                  <div className="reportreasons">
+                    {["Not a real class", "Wrong time or place", "Not at this gym", "Something else"].map(
+                      (r) => (
+                        <button
+                          key={r}
+                          className="btn ghost reportreason"
+                          disabled={pending}
+                          onClick={() => sendReport(r)}
+                        >
+                          {r}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
