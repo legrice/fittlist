@@ -10,6 +10,7 @@ import {
   adminDeleteUser,
   adminFixLocations,
   adminInvite,
+  adminDeleteInvite,
   adminSendMagicLink,
   adminSetKind,
 } from "@/app/actions/admin";
@@ -175,22 +176,34 @@ export function AdminPanel({
           <Stat n={stats.requests} label="Requests" />
         </div>
 
-        <div className="adminseg">
-          <button className={tab === "people" ? "on" : ""} onClick={() => { setTab("people"); setQ(""); }}>
-            People
-          </button>
-          <button className={tab === "invites" ? "on" : ""} onClick={() => { setTab("invites"); setQ(""); }}>
-            Invites
-          </button>
-          <button className={tab === "studios" ? "on" : ""} onClick={() => { setTab("studios"); setQ(""); }}>
-            Studios
-          </button>
-          <button className={tab === "message" ? "on" : ""} onClick={() => { setTab("message"); setQ(""); }}>
-            Message
-          </button>
-          <button className={tab === "reports" ? "on" : ""} onClick={() => { setTab("reports"); setQ(""); }}>
-            Reports{reports.length > 0 ? ` (${reports.length})` : ""}
-          </button>
+        {/* Icons, not words: five labelled pills didn't fit a phone, and the
+            admin is one person who knows what the glyphs mean. */}
+        <div className="adminseg adminseg-icons">
+          {(
+            [
+              { id: "people", icon: "groups", label: "People" },
+              { id: "invites", icon: "person_add", label: "Invites" },
+              { id: "studios", icon: "place", label: "Studios" },
+              { id: "message", icon: "campaign", label: "Message" },
+              { id: "reports", icon: "flag", label: "Reports" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.id}
+              className={tab === t.id ? "on" : ""}
+              aria-label={t.label}
+              title={t.label}
+              onClick={() => {
+                setTab(t.id);
+                setQ("");
+              }}
+            >
+              <Icon name={t.icon} size={20} />
+              {t.id === "reports" && reports.length > 0 && (
+                <span className="inboxdot">{reports.length > 9 ? "9+" : reports.length}</span>
+              )}
+            </button>
+          ))}
         </div>
 
         {tab !== "message" && tab !== "reports" && (
@@ -803,6 +816,20 @@ function InviteForm({ toast }: { toast: (m: string) => void }) {
 function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
   const [pending, start] = useTransition();
   const [link, setLink] = useState<string | null>(null);
+  const [gone, setGone] = useState(false);
+
+  const removeInvite = () =>
+    start(async () => {
+      const res = await adminDeleteInvite(i.id);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't delete that");
+        return;
+      }
+      setGone(true);
+      toast(`Deleted the invite for ${i.email}`);
+    });
+
+  if (gone) return null;
 
   const resend = () =>
     start(async () => {
@@ -833,6 +860,17 @@ function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
           <span className="adminbadge">joined</span>
         ) : (
           <span className="adminbadge warn">pending</span>
+        )}
+        {/* Pending only: an accepted invite is the referral record. */}
+        {!i.accepted && (
+          <button
+            className="disblock"
+            aria-label={`Delete the invite for ${i.email}`}
+            disabled={pending}
+            onClick={removeInvite}
+          >
+            <Icon name="close" size={16} />
+          </button>
         )}
       </div>
       {i.label && <div className="admincard-sub">{i.label}</div>}

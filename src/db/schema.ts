@@ -94,6 +94,10 @@ export const users = pgTable("users", {
   // Minted the first time they ask for it, then permanent, so a link that's
   // out in the world never stops working.
   inviteCode: text("invite_code").unique(),
+  // When they last changed their handle. Null = never (the claim at signup
+  // doesn't count). One change per 90 days: a handle is an address people
+  // write down, and an address that keeps moving breaks every link out there.
+  handleChangedAt: timestamp("handle_changed_at", { withTimezone: true }),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

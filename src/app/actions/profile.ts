@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { AVATAR_COLORS } from "@/lib/avatar";
+import { fmtDateLong, RESERVED_HANDLES, slug } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { normalizeLocation } from "@/lib/location";
 import { knownLocations } from "@/app/actions/locations";
@@ -269,4 +270,80 @@ export async function setStoryPrefs(input: {
   if (input.showPhoto !== undefined) prefs.showPhoto = !!input.showPhoto;
   await db.update(schema.users).set({ storyPrefs: prefs }).where(eq(schema.users.id, userId));
   return { ok: true };
+}
+
+
+const HANDLE_CHANGE_DAYS = 90;
+
+/** Where changing your link stands: the handle, and when it can next change. */
+export async function handleStatus(): Promise<{
+  handle: string | null;
+  /** ISO date they can change again, or null if they can right now. */
+  lockedUntil: string | null;
+}> {
+  const userId = await getSessionUserId();
+  if (!userId) return { handle: null, lockedUntil: null };
+  const db = await getDb();
+  const [me] = await db
+    .select({ handle: schema.users.handle, changedAt: schema.users.handleChangedAt })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return { handle: null, lockedUntil: null };
+  const until = me.changedAt
+    ? new Date(me.changedAt.getTime() + HANDLE_CHANGE_DAYS * 864e5)
+    : null;
+  return {
+    handle: me.handle,
+    lockedUntil: until && until.getTime() > Date.now() ? until.toISOString().slice(0, 10) : null,
+  };
+}
+
+// Change the handle: the address every printed QR code and bio link points at.
+// Once per 90 days, because an address that keeps moving breaks every link out
+// there; the claim at signup doesn't count against it. The old handle 404s the
+// moment this lands, on purpose: quietly forwarding it would mean hoarding
+// every name anyone ever had.
+export async function changeHandle(
+  handleRaw: string,
+): Promise<{ ok: boolean; handle?: string; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const db = await getDb();
+  const [me] = await db
+    .select({ handle: schema.users.handle, changedAt: schema.users.handleChangedAt })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me?.handle) return { ok: false, error: "Claim your link first." };
+
+  if (me.changedAt) {
+    const until = new Date(me.changedAt.getTime() + HANDLE_CHANGE_DAYS * 864e5);
+    if (until.getTime() > Date.now()) {
+      return {
+        ok: false,
+        error: `You changed your link recently. You can change it again on ${fmtDateLong(
+          until.toISOString().slice(0, 10),
+        )}.`,
+      };
+    }
+  }
+
+  const chosen = slug(handleRaw.trim());
+  if (!chosen || handleRaw.trim().length === 0)
+    return { ok: false, error: "Type the link you want." };
+  if (chosen === me.handle) return { ok: false, error: "That's already your link." };
+  if (RESERVED_HANDLES.has(chosen)) return { ok: false, error: "That one isn't available." };
+  const [taken] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.handle, chosen));
+  if (taken && taken.id !== userId)
+    return { ok: false, error: `fittlist.co/${chosen} is taken. Try another.` };
+
+  await db
+    .update(schema.users)
+    .set({ handle: chosen, handleChangedAt: new Date() })
+    .where(eq(schema.users.id, userId));
+  // The handle is in every header's You tab and most cached pages.
+  revalidatePath("/", "layout");
+  return { ok: true, handle: chosen };
 }

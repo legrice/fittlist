@@ -106,6 +106,21 @@ export async function adminSetKind(
   return { ok: true };
 }
 
+// Clear a stale invite. Pending only: an accepted one is the referral record
+// ("who brought whom"), and deleting it would quietly rewrite history. The
+// email loses its gate pass; if they never used it, nothing else changes.
+export async function adminDeleteInvite(id: string): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const [inv] = await db.select().from(schema.invites).where(eq(schema.invites.id, id));
+  if (!inv) return { ok: false, error: "Invite not found." };
+  if (inv.acceptedAt) return { ok: false, error: "They already joined; the invite is history now." };
+  await db.delete(schema.invites).where(eq(schema.invites.id, id));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Mint a one-time sign-in link for a coach and email it. Returns the URL too so
 // the admin can copy it and send it any way they like (handy while email
 // delivery is still flaky in beta). Admin links last 24h, not the usual 15 min.

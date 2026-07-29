@@ -1304,6 +1304,16 @@ button.ps-card { cursor: pointer; }
 .admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 999px; }
 .reportlist { display: flex; flex-direction: column; gap: 12px; }
+/* The admin's tab row as glyphs: five labelled pills didn't fit a phone. */
+.adminseg-icons { display: flex; }
+.adminseg-icons button {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: visible; padding: 11px 0;
+}
+.adminseg-icons .inboxdot {
+  position: absolute; top: 2px; right: calc(50% - 22px); min-width: 17px; height: 17px;
+  font-size: 10px;
+}
 /* Which side of the app this person is on. Members share the page shape now,
    so the page itself stopped saying it. */
 .kindtag {

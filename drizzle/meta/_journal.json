@@ -330,6 +330,13 @@
       "when": 1785364617035,
       "tag": "0046_charming_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1785367733244,
+      "tag": "0047_giant_black_panther",
+      "breakpoints": true
     }
   ]
 }

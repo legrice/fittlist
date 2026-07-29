@@ -20,6 +20,7 @@ import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { MessagesToggle } from "@/components/MessagesToggle";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
+import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -416,6 +417,7 @@ export function ProfileSheet({
           {/* Out of Edit profile and up here: the state of your books changes
               far more often than your bio, and it decides whether anyone can
               ask you at all. The row says where it stands without opening. */}
+          <ChangeHandle />
           {/* Quiet, and quietly reachable: the only place a block is visible. */}
           <a className="setrow" href="/blocked">
             <span className="setrow-ic"><Icon name="public_off" size={22} /></span>

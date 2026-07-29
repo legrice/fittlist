@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -70,6 +71,7 @@ export function MemberAccount({
       </div>
 
       <div className="settingslist">
+          <ChangeHandle />
         <MemberProfileEditor
           name={name}
           handle={handle}

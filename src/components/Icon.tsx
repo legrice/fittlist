@@ -42,6 +42,7 @@ import {
   X,
   Ellipsis,
   Megaphone,
+  Flag,
   Palette,
   Settings,
 } from "lucide-react";
@@ -55,6 +56,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   add: Plus,
   admin_panel_settings: ShieldUser,
   palette: Palette,
+  flag: Flag,
   campaign: Megaphone,
   more_horiz: Ellipsis,
   settings: Settings,
