@@ -1550,7 +1550,9 @@ button.ps-card { cursor: pointer; }
   font-size: 15px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-.pubtab.sel { color: var(--ink); background: var(--cl); }
+/* Same fill as the three-dot beside the name: the header's controls read as
+   one family. */
+.pubtab.sel { color: var(--ink); background: var(--cl-d); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -2887,6 +2889,8 @@ button.ps-card { cursor: pointer; }
   max-width: 660px; margin: 0 auto;
   padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
 }
+/* Signed in it carries the tab bar, so the bottom has to clear it. */
+.memberpub.hasnav .profwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 .mempro-top { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
 .mempro-edit { text-decoration: none; }
 .mempro-id { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 18px; }

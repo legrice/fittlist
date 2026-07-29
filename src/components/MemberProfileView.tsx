@@ -1,9 +1,10 @@
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
-import { BackLink } from "@/components/BackLink";
+import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -17,35 +18,26 @@ import { MemberProfileActions } from "@/components/MemberProfileActions";
 export async function MemberProfileView({
   user,
   isOwner,
+  viewerId = null,
   from,
 }: {
   user: typeof schema.users.$inferSelect;
   isOwner: boolean;
+  /** Signed in, a member profile is an app screen like any other, so it gets
+   *  the header and the tabs. This was the one page that didn't. */
+  viewerId?: string | null;
   from?: string;
 }) {
-  const backTo =
-    from === "discover"
-      ? { href: "/discover", label: "Back to Discover" }
-      : from === "home"
-        ? { href: "/feed", label: "Back to Following" }
-        : from === "followers"
-          ? { href: "/followers", label: "Back to your followers" }
-          : null;
-
+  void from; // back arrows left profiles; the tabs are the way around now
   const name = user.name.trim() || user.email.split("@")[0];
   const initial = (name.charAt(0) || "?").toUpperCase();
 
   return (
-    <div className="pub memberpub" data-mode={await viewerLook()}>
+    <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
+        {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={user.handle ?? ""} />}
         <div className="mempro-top">
-          {backTo ? (
-            <BackLink className="evback" href={backTo.href} label={backTo.label}>
-              <Icon name="arrow_back" size={21} />
-            </BackLink>
-          ) : (
-            <span />
-          )}
+          <span />
           {isOwner && <MemberProfileActions />}
         </div>
 

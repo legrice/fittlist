@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, inArray, isNotNull } from "drizzle-orm";
+import { eq, inArray, isNotNull, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -265,4 +265,56 @@ export async function adminActOnRequest(
   });
   revalidatePath("/admin");
   return { ok: true, url, emailed: true };
+}
+
+// A note from fittlist itself, into the Updates feed. One person by handle or
+// email, all coaches, all members, or everyone. In-app only: an announcement
+// is app news, and app news belongs where the bell already points. No actor,
+// so it renders with the megaphone rather than a face; the megaphone IS the
+// fittlist account.
+export async function adminBroadcast(
+  audience: "everyone" | "coaches" | "members" | "one",
+  targetRaw: string,
+  titleRaw: string,
+  bodyRaw: string,
+): Promise<{ ok: boolean; sent?: number; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const title = titleRaw.trim().slice(0, 80);
+  const body = bodyRaw.trim().slice(0, 500);
+  if (!title) return { ok: false, error: "Give it a title." };
+
+  const db = await getDb();
+  let targets: { id: string }[];
+  if (audience === "one") {
+    const t = targetRaw.trim().toLowerCase().replace(/^@/, "");
+    if (!t) return { ok: false, error: "Whose handle or email?" };
+    targets = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(or(eq(schema.users.handle, t), eq(schema.users.email, t)));
+    if (!targets.length) return { ok: false, error: "Nobody by that handle or email." };
+  } else {
+    const rows = await db
+      .select({ id: schema.users.id, kind: schema.users.kind })
+      .from(schema.users);
+    targets = rows.filter((r) =>
+      audience === "coaches" ? r.kind !== "fan" : audience === "members" ? r.kind === "fan" : true,
+    );
+  }
+  // Not to yourself: you wrote it.
+  targets = targets.filter((t) => t.id !== admin.id);
+  if (!targets.length) return { ok: false, error: "Nobody to send that to." };
+
+  await db.insert(schema.notifications).values(
+    targets.map((t) => ({
+      userId: t.id,
+      type: "announce",
+      title,
+      body,
+    })),
+  );
+  // The bell badge is in every header, so everything cached goes.
+  revalidatePath("/", "layout");
+  return { ok: true, sent: targets.length };
 }

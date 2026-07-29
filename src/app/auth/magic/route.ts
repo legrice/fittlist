@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { consumeMagicToken } from "@/app/actions/auth";
+import { fansEnabled } from "@/lib/flags";
 import { siteOrigin } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -28,5 +29,7 @@ export async function GET(req: Request) {
     const q = result.via ? `?via=${encodeURIComponent(result.via)}` : "";
     return NextResponse.redirect(`${origin}/${q}`);
   }
-  return NextResponse.redirect(`${origin}/app${setpw}`);
+  // Following is home for coaches too now; /feed also renders the
+  // set-a-password prompt.
+  return NextResponse.redirect(`${origin}${fansEnabled() ? "/feed" : "/app"}${setpw}`);
 }

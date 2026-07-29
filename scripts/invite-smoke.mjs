@@ -296,9 +296,10 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await skipSetup(st);
     console.log("a stranger signed up from a share link ok");
 
-    // And Riley can see it happened.
+    // And Riley can see it happened. The URL still says settings is open, so
+    // the reload lands straight back in it: that's the refresh behavior, not
+    // a step to repeat.
     await pg.reload();
-    await pg.locator(".settingsbtn").click();
     await pg.locator(".acctwrap").waitFor();
     await pg.waitForTimeout(450);
     const row2 = pg.locator(".setrow", { hasText: "Invite people to the beta" });
@@ -350,7 +351,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await op.getByPlaceholder("you@example.com").fill("riley@example.com");
     await op.getByPlaceholder("Password").fill("invited-pass-123");
     await op.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
-    await op.waitForURL(/\/app/);
+    await op.waitForURL(/\/feed/);
     await op.waitForTimeout(900);
     if (await op.locator(".invbanner").count())
       fail("the dismissal stayed in the browser instead of on the account");

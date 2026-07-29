@@ -21,6 +21,7 @@ export function WeekScreen({
   header,
   coach = true,
   face,
+  youHref,
 }: {
   days: WeekDay[];
   /** The app header, built on the server and handed down. */
@@ -29,6 +30,9 @@ export function WeekScreen({
   coach?: boolean;
   /** Your own face, for the You tab. */
   face?: { photo: string | null; color: string; initial: string };
+  /** Where You goes: a coach's public page. Without it the tab fell back to
+   *  /app, which surfaced the bare schedule from this one screen. */
+  youHref?: string;
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -173,7 +177,7 @@ export function WeekScreen({
         </div>
       )}
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
-      <NavBar coach={coach} face={face} />
+      <NavBar coach={coach} face={face} youHref={youHref} />
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

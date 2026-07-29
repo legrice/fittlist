@@ -116,11 +116,11 @@ export async function followTrainer(handle: string): Promise<{ ok: boolean; erro
     .returning();
 
   if (isNew) {
-    try {
-      await sendWelcome(trainer, row);
-    } catch (err) {
-      console.error("welcome email failed", err);
-    }
+    // No confirmation email. They tapped Follow in the app, on purpose, and
+    // an inbox full of "you followed X" after picking six coaches on Discover
+    // reads as noise about their own actions. The email-only subscribe path
+    // keeps its welcome email: there it's the receipt, and it carries the
+    // unsubscribe link that is that person's only control.
     try {
       await addNotification(trainer.id, {
         type: "follow",

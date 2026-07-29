@@ -35,7 +35,10 @@ type Thread = {
 // Only reached when a notification has no face to show. `person_add` was not
 // in the icon map for months, so every row here rendered Icon's blank-circle
 // fallback and nobody noticed.
-const ICON: Record<string, string> = { follow: "person_add" };
+// Names reached through this table hide from any audit that greps literal
+// <Icon name="...">, so every type here must exist in ICONS or it ships as
+// the blank circle.
+const ICON: Record<string, string> = { follow: "person_add", announce: "campaign" };
 
 function fmt(d: Date | string) {
   const date = new Date(d);
@@ -74,7 +77,7 @@ export function UpdatesScreen({
           <h1>Updates</h1>
           <p className="adminsub">Follows, requests, and messages</p>
         </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/app">
+        <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
           <Icon name="close" size={18} />
         </Link>
       </div>

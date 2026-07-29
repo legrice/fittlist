@@ -98,7 +98,7 @@ await p3.getByPlaceholder("you@example.com").fill("nopw@example.com");
 await p3.getByPlaceholder("Password").fill("brand-new-pass-9");
 await p3.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
 await p3.getByRole("button", { name: "Not now" }).click().catch(() => {});
-await p3.waitForURL("**/app");
+await p3.waitForURL("**/feed");
 console.log("recovered password works in a fresh browser ok");
 await c3.close();
 

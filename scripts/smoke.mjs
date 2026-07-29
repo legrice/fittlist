@@ -571,29 +571,49 @@ await page.waitForURL((u) => u.pathname === "/matt");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
-// ---- a tap opens the class from the bottom, with the schedule still behind it
+// ---- the owner's tap is an edit: your own class, from your own page, opens
+// the editor rather than the visitor sheet. (The visitor sheet is asserted
+// from the anonymous context below.)
 await page.locator(".ps-event").first().click();
-await page.locator(".classsheet").waitFor();
-// The sheet opens first and fills a beat later, so wait for the content.
-await page.locator(".classsheet-nm", { hasText: "Barbell Strength" }).waitFor();
-await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "sheet shows address");
-await expect(page.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "sheet shows booking link");
-await expect(page.locator(".evtype", { hasText: "Strength" }).isVisible(), "sheet shows class type");
-await expect(page.getByText("Barbell club for all levels").isVisible(), "sheet shows description");
-// The list is still there underneath — that's the point of a sheet.
-if (!(await page.locator(".ps-event").count())) fail("the schedule should stay behind the sheet");
-await page.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
-await page.locator(".classsheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".classsheet"));
-// The page behind the sheet is still a real URL anyone can be sent to.
+await page.waitForURL(/\/app/);
+await page.getByRole("heading", { name: /Edit class/ }).waitFor();
+await page.getByRole("button", { name: "Close", exact: true }).click().catch(() => {});
+await page.locator(".adder .sheetclose, .sheetclose").first().click().catch(() => {});
+await page.goto(BASE + "/matt");
+await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+console.log("owner tap opens the editor ok");
+
+// ---- for a visitor, a tap opens the class from the bottom, list still behind
 {
-  const href = await page.locator(".ps-event").first().getAttribute("href");
+  // Bot UA, same trick as the subscribe context: this helper visit must not
+  // land in the profile-view counts asserted further down.
+  const sheetCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (smoke sheet bot)",
+  });
+  const sp = await sheetCtx.newPage();
+  sp.setDefaultTimeout(10000);
+  await sp.goto(BASE + "/matt");
+  await sp.locator(".ps-event").first().click();
+  await sp.locator(".classsheet").waitFor();
+  // The sheet opens first and fills a beat later, so wait for the content.
+  await sp.locator(".classsheet-nm", { hasText: "Barbell Strength" }).waitFor();
+  await expect(sp.getByText("143 Newark Ave, Jersey City").isVisible(), "sheet shows address");
+  await expect(sp.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "sheet shows booking link");
+  await expect(sp.locator(".evtype", { hasText: "Strength" }).isVisible(), "sheet shows class type");
+  await expect(sp.getByText("Barbell club for all levels").isVisible(), "sheet shows description");
+  // The list is still there underneath — that's the point of a sheet.
+  if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the sheet");
+  await sp.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
+  await sp.locator(".classsheet .sheetclose").click();
+  await sp.waitForFunction(() => !document.querySelector(".classsheet"));
+  // The page behind the sheet is still a real URL anyone can be sent to.
+  const href = await sp.locator(".ps-event").first().getAttribute("href");
   if (!href || !/\/matt\/[0-9a-f-]{36}/.test(href))
     fail("a class row should still link at its own page: " + href);
-  await page.goto(BASE + href);
-  await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
-  await page.locator(".evback").click();
-  await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+  await sp.goto(BASE + href);
+  await sp.getByRole("heading", { name: "Barbell Strength" }).waitFor();
+  await sheetCtx.close();
 }
 console.log("class sheet ok (opens over the list, the page is still shareable)");
 
@@ -1068,8 +1088,8 @@ await page.waitForURL(BASE + "/");
 await page.getByRole("button", { name: "Already have an account? Log in" }).click();
 await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
-await page.waitForURL(BASE + "/app");
-await page.locator(".fab").waitFor();
+// Every login lands on Following now; /app stopped being anyone's front door.
+await page.waitForURL(BASE + "/feed");
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1537,12 +1557,22 @@ await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio ema
   await page.waitForURL("**/s/ironbound-strength");
 }
 // a class points at the studio's page, not straight at a map — in the sheet
-// as well as on the page behind it
-await page.goto(BASE + "/matt/schedule");
-await page.locator(".ps-event").first().click();
-await page.locator(".classsheet-nm").waitFor();
-await page.locator(".classsheet .evfact", { hasText: "Ironbound Strength" }).click();
-await page.waitForURL("**/s/ironbound-strength");
+// as well as on the page behind it. The owner's own rows open the editor now,
+// so the sheet is asserted from a fresh visitor context.
+{
+  const stCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (smoke studio bot)",
+  });
+  const st = await stCtx.newPage();
+  st.setDefaultTimeout(10000);
+  await st.goto(BASE + "/matt/schedule");
+  await st.locator(".ps-event").first().click();
+  await st.locator(".classsheet-nm").waitFor();
+  await st.locator(".classsheet .evfact", { hasText: "Ironbound Strength" }).click();
+  await st.waitForURL("**/s/ironbound-strength");
+  await stCtx.close();
+}
 console.log("studio pages ok (edit, types, slug follows the name)");
 
 // a profile reads like a class page: no app header, no bottom tabs, a back

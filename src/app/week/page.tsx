@@ -45,6 +45,7 @@ export default async function WeekPage() {
         days={days}
         header={<AppChrome userId={userId} />}
         coach={isCoach}
+        youHref={isCoach && me?.handle ? `/${me.handle}` : "/you"}
         face={{
           photo: me?.photo ?? null,
           color: me ? avatarColor(me) : "#dd6a35",

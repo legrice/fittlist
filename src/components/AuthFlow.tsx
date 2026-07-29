@@ -120,7 +120,7 @@ export function AuthFlow({
     pendingFan.current = fan;
     if (fan) setRole("fan");
     if (needsProfile) setStage("claim");
-    else router.push(fan ? "/feed" : "/app");
+    else router.push(fans || fan ? "/feed" : "/app");
   };
 
   const submitPassword = () => {

@@ -21,6 +21,20 @@ import { Wordmark } from "@/components/Wordmark";
 
 const WINDOW_DAYS = 31; // a continuous forward window — about a month
 
+// The visitor's sheet-opener, or nothing: the owner's rows link straight to
+// the editor, and wrapping them would intercept the tap into the wrong thing.
+function MaybeOpener({
+  isOwner,
+  handle,
+  children,
+}: {
+  isOwner: boolean;
+  handle: string;
+  children: React.ReactNode;
+}) {
+  return isOwner ? <>{children}</> : <ClassOpener handle={handle}>{children}</ClassOpener>;
+}
+
 type UserRow = typeof schema.users.$inferSelect;
 
 // The public page: an identity header and one section under it. One URL per
@@ -255,10 +269,12 @@ export async function PublicProfileView({
           </p>
         </div>
       ) : (
-        // Server-rendered rows, wrapped so an ordinary tap opens the class from
-        // the bottom instead of navigating. The href stays real: a crawler, a
-        // cold load and a cmd-click all still get the page.
-        <ClassOpener handle={handle}>
+        // Server-rendered rows. For a visitor they're wrapped so an ordinary
+        // tap opens the class from the bottom instead of navigating, with the
+        // href staying real for crawlers, cold loads and cmd-clicks. For the
+        // owner a tap opens the editor instead: this is your class, and the
+        // one thing you'd do with it from here is change it.
+        <MaybeOpener isOwner={isOwner} handle={handle}>
         <div className="ps-week ps-agenda">
           {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
@@ -274,7 +290,7 @@ export async function PublicProfileView({
                     className="ps-event"
                     data-cid={c.id}
                     data-d={d.iso}
-                    href={`/${handle}/${c.id}?d=${d.iso}`}
+                    href={isOwner ? `/app?edit=${c.id}&d=${d.iso}` : `/${handle}/${c.id}?d=${d.iso}`}
                   >
                     <span
                       className="ps-accent"
@@ -304,7 +320,7 @@ export async function PublicProfileView({
           </div>
           ))}
         </div>
-        </ClassOpener>
+        </MaybeOpener>
       )}
     </>
   );
@@ -394,6 +410,15 @@ export async function PublicProfileView({
               there. */}
           {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
         </ProfileTabs>
+        {/* The one thing a coach does most from their own week, back under the
+            thumb. Only on the schedule section: About and Contact aren't
+            places you add a class from. */}
+        {isOwner && tab === "schedule" && (
+          <Link className="fab" href="/app?add=1">
+            <Icon name="add" size={20} />
+            Add class
+          </Link>
+        )}
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (

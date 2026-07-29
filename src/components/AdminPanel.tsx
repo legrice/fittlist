@@ -6,6 +6,7 @@ import {
   adminActOnRequest,
   adminAddStudio,
   adminDeleteStudio,
+  adminBroadcast,
   adminDeleteUser,
   adminFixLocations,
   adminInvite,
@@ -87,7 +88,14 @@ export function AdminPanel({
   stats: Stats;
   dark?: boolean;
 }) {
-  const [tab, setTab] = useState<"people" | "studios" | "invites">("people");
+  const [tab, setTab] = useState<"people" | "studios" | "invites" | "message">("people");
+  // The megaphone: a note from fittlist into people's Updates feeds.
+  const [audience, setAudience] = useState<"everyone" | "coaches" | "members" | "one">("everyone");
+  const [msgTarget, setMsgTarget] = useState("");
+  const [msgTitle, setMsgTitle] = useState("");
+  const [msgBody, setMsgBody] = useState("");
+  const [msgBusy, setMsgBusy] = useState(false);
+  const [msgDone, setMsgDone] = useState("");
   const [side, setSide] = useState<"all" | "coach" | "member">("all");
   const [q, setQ] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
@@ -144,7 +152,7 @@ export function AdminPanel({
             <h1>Admin</h1>
             <p className="adminsub">Signed in as {adminEmail}</p>
           </div>
-          <Link className="adminback" href="/app">
+          <Link className="adminback" href="/feed">
             <Icon name="arrow_back" size={18} /> App
           </Link>
         </div>
@@ -168,8 +176,12 @@ export function AdminPanel({
           <button className={tab === "studios" ? "on" : ""} onClick={() => { setTab("studios"); setQ(""); }}>
             Studios
           </button>
+          <button className={tab === "message" ? "on" : ""} onClick={() => { setTab("message"); setQ(""); }}>
+            Message
+          </button>
         </div>
 
+        {tab !== "message" && (
         <div className="searchbox adminsearch">
           <span className="mag"><Icon name="search" size={17} /></span>
           <input
@@ -180,8 +192,86 @@ export function AdminPanel({
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
+        )}
 
-        {tab === "people" ? (
+        {tab === "message" && (
+          <div className="admincard msgcard">
+            <p className="lead">
+              Lands in Updates, from fittlist, with the megaphone. One person, one side, or
+              everyone. In-app only; nothing is emailed.
+            </p>
+            <div className="seg invitefilter">
+              <button className={audience === "everyone" ? "sel" : ""} onClick={() => setAudience("everyone")}>
+                Everyone
+              </button>
+              <button className={audience === "coaches" ? "sel" : ""} onClick={() => setAudience("coaches")}>
+                Coaches
+              </button>
+              <button className={audience === "members" ? "sel" : ""} onClick={() => setAudience("members")}>
+                Members
+              </button>
+              <button className={audience === "one" ? "sel" : ""} onClick={() => setAudience("one")}>
+                One person
+              </button>
+            </div>
+            {audience === "one" && (
+              <input
+                type="text"
+                className="editinput"
+                placeholder="Their handle or email"
+                autoCapitalize="none"
+                value={msgTarget}
+                onChange={(e) => setMsgTarget(e.target.value)}
+              />
+            )}
+            <label className="flabel" htmlFor="msgTitle">Title</label>
+            <input
+              id="msgTitle"
+              type="text"
+              className="editinput"
+              maxLength={80}
+              placeholder="Scheduled downtime tonight"
+              value={msgTitle}
+              onChange={(e) => setMsgTitle(e.target.value)}
+            />
+            <label className="flabel" htmlFor="msgBody">Message</label>
+            <textarea
+              id="msgBody"
+              className="abouttext"
+              rows={4}
+              maxLength={500}
+              placeholder="What they should know, in a sentence or two."
+              value={msgBody}
+              onChange={(e) => setMsgBody(e.target.value)}
+            />
+            {msgDone && <p className="adminsub" style={{ marginTop: 10 }}>{msgDone}</p>}
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={msgBusy || !msgTitle.trim()}
+                onClick={() => {
+                  setMsgBusy(true);
+                  setMsgDone("");
+                  adminBroadcast(audience, msgTarget, msgTitle, msgBody).then((res) => {
+                    setMsgBusy(false);
+                    if (!res.ok) {
+                      setMsgDone(res.error ?? "Something went wrong.");
+                      return;
+                    }
+                    setMsgDone(`Sent to ${res.sent} ${res.sent === 1 ? "person" : "people"}.`);
+                    setMsgTitle("");
+                    setMsgBody("");
+                    setMsgTarget("");
+                  });
+                }}
+              >
+                {msgBusy ? "Sending…" : "Send it"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tab === "message" ? null : tab === "people" ? (
           <>
             {/* Both sides live in one table, so this is the only place the
                 difference shows without reading every card. */}

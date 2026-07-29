@@ -6,6 +6,7 @@ import { appleConfigured, appleEmail, appleExchange } from "@/lib/apple";
 import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { siteOrigin } from "@/lib/format";
+import { fansEnabled } from "@/lib/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -49,5 +50,5 @@ export async function POST(req: Request) {
   }
   await createSession(user.id);
   if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-  return Response.redirect(`${siteOrigin()}/app`, 302);
+  return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/feed" : "/app"}`, 302);
 }

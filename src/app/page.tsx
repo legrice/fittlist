@@ -32,7 +32,11 @@ export default async function Home({
     const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
     // A handle is what "set up" means now, for both sides. Bouncing a fan to
     // /feed on sight is what used to stop them ever reaching the claim step.
-    if (user?.handle) redirect(user.kind === "fan" ? "/feed" : "/app");
+    // Following is home for everyone with the member side on. Coaches used to
+    // land on /app, which since the one-shell change is the bare editable
+    // schedule: every login and every visit to the root surfaced a page with
+    // no identity, in what read as random places.
+    if (user?.handle) redirect(fansEnabled() ? "/feed" : "/app");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered

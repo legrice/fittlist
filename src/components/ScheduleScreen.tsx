@@ -123,6 +123,21 @@ export function ScheduleScreen({
     }
   }, [autoOpenAdder]);
 
+  // ?edit=<classId> arrives from tapping a class on your own public page: the
+  // one thing you'd do with your class from there is change it, and this is
+  // where the editor lives.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get("edit");
+    if (!editId) return;
+    const c = classes.find((x) => x.id === editId);
+    if (c) edit(c, params.get("d") ?? undefined);
+    window.history.replaceState(null, "", "/app");
+    // Once, on arrival. `classes` and `edit` are fresh on mount, which is the
+    // only render this can fire on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Coming back from the profile preview reopens the account page. Clear any
   // leftover slide-direction flag now that we're back on the schedule.
   //
