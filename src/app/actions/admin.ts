@@ -164,6 +164,13 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   }
   await db.delete(schema.inquiryThreads).where(eq(schema.inquiryThreads.coachUserId, id));
   await db.delete(schema.notifications).where(eq(schema.notifications.userId, id));
+  // Notifications ABOUT them, on someone else's feed. De-attributed rather than
+  // deleted: "someone followed your schedule" is still true, it just loses the
+  // face and falls back to the icon.
+  await db
+    .update(schema.notifications)
+    .set({ actorUserId: null })
+    .where(eq(schema.notifications.actorUserId, id));
   await db.delete(schema.classes).where(eq(schema.classes.userId, id));
   await db.delete(schema.classTemplates).where(eq(schema.classTemplates.userId, id));
   // Their followers, and the coaches they themselves followed.

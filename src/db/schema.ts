@@ -319,6 +319,10 @@ export const notifications = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => users.id), // the coach who receives it
+    // Who it's about, when it's about a person. Null for an email subscriber
+    // with no account, and for anything that isn't somebody doing something.
+    // It's a reference rather than a copied photo so the face stays current.
+    actorUserId: uuid("actor_user_id").references(() => users.id),
     type: text("type").notNull(), // "follow" (more later)
     title: text("title").notNull(),
     body: text("body").notNull().default(""),

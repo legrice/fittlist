@@ -640,6 +640,18 @@ await page.getByRole("heading", { name: "Updates" }).waitFor();
 // more than one person followed by now, so take the first rather than
 // tripping strict mode
 await expect(page.locator(".notifrow .nm", { hasText: "New follower" }).first().isVisible(), "follow notification listed");
+{
+  // Only the email subscriber so far, and they have no account, so this row
+  // falls back to an icon. For months that icon was Icon's blank-circle
+  // fallback, because person_add was never in the map.
+  const icons = await page.locator(".notifrow-ic").count();
+  if (!icons) fail("a follow from a plain email subscriber should fall back to an icon");
+  const blank = await page
+    .locator(".notifrow-ic svg")
+    .evaluateAll((els) => els.filter((e) => e.querySelectorAll("*").length === 1).length);
+  if (blank) fail(`${blank} notification icons are the blank-circle fallback`);
+  console.log("notification icon ok (a real glyph, not the fallback circle)");
+}
 await page.locator(".updateseg button", { hasText: "Messages" }).click();
 await page.getByText("No messages yet", { exact: false }).waitFor();
 await page.locator(".updateseg button", { hasText: "Notifications" }).click();
@@ -1068,6 +1080,17 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
     fail("agenda row should read coach, then class name: " + order.join(","));
 }
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
+
+// Now someone with an account has followed, so the coach sees a face rather
+// than a badge: "New follower" is more use when you can tell who.
+{
+  await page.goto(BASE + "/updates");
+  await page.locator(".notifrow").first().waitFor();
+  await page.waitForTimeout(400);
+  const faces = await page.locator(".notifrow-av").count();
+  if (!faces) fail("a follow from an account should show that person's avatar");
+  console.log(`follower faces on the updates feed ok (${faces})`);
+}
 
 // photo-less coaches must be visually distinct — that's the whole point of the
 // palette, so no two listed coaches may share a colour

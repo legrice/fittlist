@@ -43,10 +43,17 @@ export async function subscribe(
   // Drop a "someone followed you" note into the coach's activity feed. Best
   // effort — a feed hiccup should never fail the subscribe itself.
   try {
+    // An email subscriber may still have an account under that address, and if
+    // they do the coach should see their face rather than their email.
+    const [account] = await db
+      .select({ id: schema.users.id, name: schema.users.name })
+      .from(schema.users)
+      .where(eq(schema.users.email, email));
     await addNotification(trainer.id, {
       type: "follow",
       title: "New follower",
-      body: `${email} followed your schedule`,
+      body: `${account?.name?.trim() || email} followed your schedule`,
+      actorUserId: account?.id ?? null,
     });
   } catch (err) {
     console.error("follow notification failed", err);
@@ -114,6 +121,7 @@ export async function followTrainer(handle: string): Promise<{ ok: boolean; erro
         type: "follow",
         title: "New follower",
         body: `${me.name.trim() || me.email} followed your schedule`,
+        actorUserId: me.id,
       });
     } catch (err) {
       console.error("follow notification failed", err);

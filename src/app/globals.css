@@ -1840,6 +1840,16 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; gap: 12px; padding: 14px 2px; text-decoration: none;
   color: var(--ink); border-bottom: 1px solid var(--line); -webkit-tap-highlight-color: transparent;
 }
+/* A face where we have one. Same size as the icon chip it replaces, so a feed
+   with both in it still lines up. */
+.notifrow-av {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; object-fit: cover;
+  display: block; background: #eae3d2;
+}
+.notifrow-av-empty {
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px;
+}
 .notifrow-ic {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: var(--cl);
   border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--si);

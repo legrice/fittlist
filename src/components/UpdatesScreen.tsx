@@ -16,6 +16,9 @@ type Notif = {
   href: string | null;
   readAt: Date | null;
   createdAt: Date;
+  /** The person it's about, when there is one. A follow from an email
+   *  subscriber with no account has none, and falls back to the icon. */
+  actor?: { name: string; photo: string | null; color: string; handle: string | null } | null;
 };
 
 type Thread = {
@@ -29,6 +32,9 @@ type Thread = {
   feedback?: boolean;
 };
 
+// Only reached when a notification has no face to show. `person_add` was not
+// in the icon map for months, so every row here rendered Icon's blank-circle
+// fallback and nobody noticed.
 const ICON: Record<string, string> = { follow: "person_add" };
 
 function fmt(d: Date | string) {
@@ -88,9 +94,24 @@ export function UpdatesScreen({
             {notifications.map((n) => {
               const inner = (
                 <>
-                  <span className="notifrow-ic" aria-hidden="true">
-                    <Icon name={ICON[n.type] ?? "notifications"} size={20} />
-                  </span>
+                  {n.actor ? (
+                    n.actor.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="notifrow-av" src={n.actor.photo} alt="" />
+                    ) : (
+                      <span
+                        className="notifrow-av notifrow-av-empty"
+                        style={{ background: n.actor.color }}
+                        aria-hidden="true"
+                      >
+                        {(n.actor.name.trim().charAt(0) || "?").toUpperCase()}
+                      </span>
+                    )
+                  ) : (
+                    <span className="notifrow-ic" aria-hidden="true">
+                      <Icon name={ICON[n.type] ?? "notifications"} size={20} />
+                    </span>
+                  )}
                   <span className="notifrow-main">
                     <span className="notifrow-top">
                       <span className="nm">{n.title}</span>

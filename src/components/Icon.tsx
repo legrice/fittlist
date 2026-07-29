@@ -38,6 +38,7 @@ import {
   Sparkles,
   Sun,
   Users,
+  UserRoundPlus,
   X,
 } from "lucide-react";
 
@@ -79,6 +80,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   notifications: Bell,
   open_in_new: ExternalLink,
   phone_iphone: Smartphone,
+  person_add: UserRoundPlus,
   place: MapPin,
   public: Globe,
   public_off: GlobeLock,

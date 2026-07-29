@@ -1,6 +1,7 @@
 import { desc, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
 import { listNotifications, markNotificationsRead } from "@/lib/notify";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
@@ -23,7 +24,18 @@ export default async function UpdatesPage({
     .from(schema.users)
     .where(eq(schema.users.id, userId));
 
-  const rows = await listNotifications(userId);
+  const rows = (await listNotifications(userId)).map((n) => ({
+    ...n,
+    // A face when we know whose, so "New follower" is someone rather than a badge.
+    actor: n.actorId
+      ? {
+          name: n.actorName ?? "",
+          photo: n.actorPhoto,
+          color: avatarColor({ id: n.actorId, avatarColor: n.actorColor }),
+          handle: n.actorHandle,
+        }
+      : null,
+  }));
   // Landing here is the "I've seen these" signal — clear the unread badge.
   // Message unreads stay per-thread and clear when a thread is opened.
   await markNotificationsRead(userId);

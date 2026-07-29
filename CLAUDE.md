@@ -220,7 +220,16 @@ first.
 **An unknown icon name renders a plain circle.** `Icon` falls back to Lucide's
 `Circle` rather than throwing, so a typo or a name that was never mapped ships
 as a blank button and nothing complains. Add the name to `ICONS` in
-`src/components/Icon.tsx` when you add the call site.
+`src/components/Icon.tsx` when you add the call site. Names reached through a
+lookup table (`ICON[n.type]` in `UpdatesScreen`) hide from any audit that only
+greps literal `<Icon name="...">`, which is how every notification row rendered
+a blank circle for months.
+
+**Adding a users foreign key means editing `adminDeleteUser`.** It deletes rows
+the account owns and de-attributes shared ones, in an order the foreign keys
+allow; a new reference that isn't listed there makes deleting any user fail
+outright. `notifications.actor_user_id` is de-attributed rather than deleted,
+so "someone followed your schedule" survives its subject leaving.
 
 **Desktop chrome is pointer-gated, not width-gated.** The bottom bar hides at
 940px and `HeaderNav` takes over; the coach-rail arrows key off

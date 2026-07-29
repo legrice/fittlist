@@ -281,6 +281,13 @@
       "when": 1785284968373,
       "tag": "0039_polite_imperial_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1785293686396,
+      "tag": "0040_clever_logan",
+      "breakpoints": true
     }
   ]
 }
