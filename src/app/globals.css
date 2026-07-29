@@ -837,8 +837,10 @@ button.bl-band { cursor: pointer; }
   color: var(--ol); white-space: nowrap;
 }
 .ps-ebody { display: flex; flex-direction: column; min-width: 0; }
+/* 600 rather than 700: the name is the thing you read, not the thing that
+   shouts. The time beside it is still 700, so the row keeps a hierarchy. */
 .ps-enm {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px; line-height: 1.15;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 17px; line-height: 1.15;
   letter-spacing: -.015em; color: var(--ink);
 }
 .ps-estudio { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 2px; }
