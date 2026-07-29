@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
-import { listNotifications, markNotificationsRead } from "@/lib/notify";
+import { listNotifications } from "@/lib/notify";
+import { markUpdatesSeen } from "@/app/actions/notifications";
+import { MarkSeen } from "@/components/MarkSeen";
 import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 
@@ -37,9 +39,9 @@ export default async function UpdatesPage({
         }
       : null,
   }));
-  // Landing here is the "I've seen these" signal — clear the unread badge.
-  // Message unreads stay per-thread and clear when a thread is opened.
-  await markNotificationsRead(userId);
+  // Landing here is the "I've seen these" signal — the badge clears from the
+  // client once the page is up (see MarkSeen). Message unreads stay
+  // per-thread and clear when a thread is opened.
 
   const threadRows = await db
     .select()
@@ -70,6 +72,7 @@ export default async function UpdatesPage({
 
   return (
     <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
+      <MarkSeen action={markUpdatesSeen} />
       <UpdatesScreen
         notifications={rows}
         threads={threads}

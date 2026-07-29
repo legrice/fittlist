@@ -23,21 +23,28 @@ export default async function DiscoverPage() {
   // A member has a handle too now, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
 
-  const allRows = await db
-    .select()
-    .from(schema.users)
-    .where(
-      and(
-        isNotNull(schema.users.handle),
-        eq(schema.users.kind, "coach"),
-        eq(schema.users.discoverable, true),
-      ),
-    );
   // Blocked in either direction: not on the list. Discover is where someone
   // who was removed would go looking, so it has to be the same nothing the
   // profile is, and it drops the ones you removed too so you aren't handed
-  // them back as a suggestion.
-  const hidden = await hiddenFrom(userId);
+  // them back as a suggestion. The three loads only need the viewer, so they
+  // run together.
+  const [allRows, hidden, followRows] = await Promise.all([
+    db
+      .select()
+      .from(schema.users)
+      .where(
+        and(
+          isNotNull(schema.users.handle),
+          eq(schema.users.kind, "coach"),
+          eq(schema.users.discoverable, true),
+        ),
+      ),
+    hiddenFrom(userId),
+    db
+      .select({ trainerUserId: schema.subscribers.trainerUserId })
+      .from(schema.subscribers)
+      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+  ]);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
   const ids = rows.map((r) => r.id);
@@ -70,10 +77,6 @@ export default async function DiscoverPage() {
     if (cur === undefined || t < cur) soonest.set(c.userId, t);
   }
 
-  const followRows = await db
-    .select({ trainerUserId: schema.subscribers.trainerUserId })
-    .from(schema.subscribers)
-    .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
   const following = new Set(followRows.map((r) => r.trainerUserId));
 
   const coaches: DiscoverCoach[] = rows

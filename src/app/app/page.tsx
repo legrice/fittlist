@@ -68,32 +68,47 @@ export default async function SchedulePage({
   // First run after claiming a handle: send them through the setup wizard
   // (photo, profile, studios) before they land on their schedule.
   if (user && !user.onboardedAt) redirect("/welcome");
-  const gconn = await isGoogleConnected(userId);
-  const fbHost = await feedbackHost();
-  const askFeedback = await feedbackPromptDue(userId);
-  const invitesLeft = await invitesBannerCount();
-  const passkeyRows = await db
-    .select({ id: schema.credentials.id })
-    .from(schema.credentials)
-    .where(eq(schema.credentials.userId, userId));
-  const customTypeRows = await db
-    .select({ name: schema.customClassTypes.name })
-    .from(schema.customClassTypes)
-    .orderBy(schema.customClassTypes.name);
+  // All independent, so they load together: awaited one by one they stacked
+  // nine round trips onto every open of the schedule.
+  const [
+    gconn,
+    fbHost,
+    askFeedback,
+    invitesLeft,
+    passkeyRows,
+    customTypeRows,
+    inboxRows,
+    analytics,
+    notifUnread,
+    week,
+  ] = await Promise.all([
+    isGoogleConnected(userId),
+    feedbackHost(),
+    feedbackPromptDue(userId),
+    invitesBannerCount(),
+    db
+      .select({ id: schema.credentials.id })
+      .from(schema.credentials)
+      .where(eq(schema.credentials.userId, userId)),
+    db
+      .select({ name: schema.customClassTypes.name })
+      .from(schema.customClassTypes)
+      .orderBy(schema.customClassTypes.name),
+    db
+      .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
+      .from(schema.inquiryThreads)
+      .where(eq(schema.inquiryThreads.coachUserId, userId)),
+    coachAnalytics(userId),
+    unreadNotifications(userId),
+    // A coach follows people too, so they get the same shortlist.
+    weekCount(userId),
+  ]);
   const customTypes = customTypeRows.map((r) => r.name);
-  const inboxRows = await db
-    .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
-    .from(schema.inquiryThreads)
-    .where(eq(schema.inquiryThreads.coachUserId, userId));
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
   // Requests are inquiries only. The admin is a coach too, so their feedback
   // threads live on this table and were being counted as people who had asked
   // them about private sessions.
   const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
-  const analytics = await coachAnalytics(userId);
-  const notifUnread = await unreadNotifications(userId);
-  // A coach follows people too, so they get the same shortlist.
-  const week = await weekCount(userId);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.

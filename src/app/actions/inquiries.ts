@@ -84,6 +84,29 @@ export async function sendInquiry(
 }
 
 // COACH — reply to a thread they own; emails the visitor a link back.
+// COACH — opening a thread clears its unread. An action rather than a side
+// effect of the page render, so the list pages and the header badge can be
+// revalidated out of the client router's cache.
+export async function markThreadRead(threadId: string): Promise<void> {
+  const userId = await getSessionUserId();
+  if (!userId) return;
+  const db = await getDb();
+  const cleared = await db
+    .update(schema.inquiryThreads)
+    .set({ coachUnread: 0 })
+    .where(
+      and(
+        eq(schema.inquiryThreads.id, threadId),
+        eq(schema.inquiryThreads.coachUserId, userId),
+        sql`${schema.inquiryThreads.coachUnread} > 0`,
+      ),
+    )
+    .returning({ id: schema.inquiryThreads.id });
+  // The badge is in every header, so everything cached goes. Only when
+  // something actually changed: reopening a read thread busts nothing.
+  if (cleared.length) revalidatePath("/", "layout");
+}
+
 export async function replyToInquiry(threadId: string, bodyRaw: string): Promise<Result> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };

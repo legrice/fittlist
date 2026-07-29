@@ -31,36 +31,46 @@ export default async function FeedPage({
   // A member has a handle too now, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
 
-  const followRows = await db
-    .select({ trainerUserId: schema.subscribers.trainerUserId })
-    .from(schema.subscribers)
-    .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
   // Blocking drops the follow, so a blocked coach shouldn't be in here at all.
   // Filtering anyway costs one query and covers the follow that was written
-  // between the block and its cleanup.
-  const hidden = await hiddenFrom(userId);
+  // between the block and its cleanup. In parallel with the follows and the
+  // marks: all three only need the viewer.
+  const [followRows, hidden, goingRows] = await Promise.all([
+    db
+      .select({ trainerUserId: schema.subscribers.trainerUserId })
+      .from(schema.subscribers)
+      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+    hiddenFrom(userId),
+    db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(eq(schema.attendances.userId, userId)),
+  ]);
   const followed = followRows
     .map((r) => r.trainerUserId)
     .filter((id) => id !== userId && !hidden.has(id));
   // A coach's own week belongs here too — Following answers "when can I train",
   // and what they teach is part of that. They just can't mark themselves going.
   const trainerIds = isCoach ? [...followed, userId] : followed;
-  const coaches = (
+  // Coaches and their classes both key off the same id list, so they load
+  // together. Private sessions stay out of the classes: this is the
+  // member-facing week even when you're looking at your own — the full
+  // schedule, private included, lives behind the gear.
+  const [coachRows, allClassRows] = await Promise.all([
     trainerIds.length
-      ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
-      : []
-  ).filter((c) => !!c.handle);
+      ? db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
+      : Promise.resolve([]),
+    trainerIds.length
+      ? db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerIds))
+      : Promise.resolve([]),
+  ]);
+  const coaches = coachRows.filter((c) => !!c.handle);
   coaches.sort((a, b) => a.name.localeCompare(b.name));
   const coachById = new Map(coaches.map((c) => [c.id, c]));
-
-  // Their public classes, merged into one forward window. Private sessions stay
-  // out of it: this is the member-facing week even when you're looking at your
-  // own — the full schedule, private included, is the Schedule tab.
-  const classRows = trainerIds.length
-    ? (
-        await db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerIds))
-      ).filter((c) => c.isPublic)
-    : [];
+  const classRows = allClassRows.filter((c) => c.isPublic);
   const studioIds = [...new Set(classRows.map((c) => c.studioId))].filter(
     (id): id is string => !!id,
   );
@@ -70,13 +80,6 @@ export default async function FeedPage({
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
   // Classes this member marked "I'm going" to — a personal note, not a booking.
-  const goingRows = await db
-    .select({
-      classId: schema.attendances.classId,
-      occurrenceDate: schema.attendances.occurrenceDate,
-    })
-    .from(schema.attendances)
-    .where(eq(schema.attendances.userId, userId));
   const going = new Set(goingRows.map((g) => `${g.classId}|${g.occurrenceDate}`));
 
   const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);

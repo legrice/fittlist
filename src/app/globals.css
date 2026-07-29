@@ -2917,6 +2917,18 @@ button.ps-card { cursor: pointer; }
 .brandbar-home:active, .mempro-edit:active { background: var(--cl); }
 .disrow:active { transition: background 0s; }
 .feedav:active, .brandbar-home:active, .mempro-edit:active { background: transparent; opacity: .6; }
+/* The ones that were still silent under a finger. */
+.pubtab:active { background: var(--cl-d); }
+.weekrow-main:active { opacity: .6; }
+.feedfilter-link:active, .authforgot:active, .authmagic:active, .calcopy:active,
+.linktoggle:active, .descmore:active, .obloginlink:active { opacity: .55; }
+.disnear:active, .discitysel:active { background: var(--cl); }
+/* Pressed is now, not eased into: a press state that fades in arrives after
+   the finger has already left. Release still eases back via each control's
+   own transition. */
+.pubtab:active, .navtab:active, .setrow:active, .acctcard:active, .proflink:active,
+.ps-event:active, .inboxrow:active, .obalt:active, .weekcal .setrow:active,
+.brandbar-actions .iconbtn:active, .disnear:active { transition: none; }
 
 /* The spinner a Link shows while its navigation is in flight. Delayed, so a
    fast one looks instant instead of flashing. */

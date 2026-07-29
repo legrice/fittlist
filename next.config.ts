@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
+  experimental: {
+    // Let the client router reuse a dynamic page it rendered in the last 30
+    // seconds instead of round-tripping to the server again. Every screen is
+    // force-dynamic, so without this each tab tap re-rendered a page you were
+    // just looking at; with it, hopping between tabs is instant and the data
+    // is at most half a minute old, which for a weekly schedule is nothing.
+    // Mutations still bust it: server actions call revalidatePath.
+    staleTimes: { dynamic: 30 },
+  },
   // Files read off disk at runtime must be listed here or serverless
   // bundles omit them: drizzle/ (migrations run on boot, every route
   // touches the DB) and the story-image fonts.

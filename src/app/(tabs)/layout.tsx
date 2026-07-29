@@ -29,11 +29,17 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
 
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const unread = await unreadNotifications(userId);
-  const week = await weekCount(userId);
+  // In parallel: these are independent, and this layout runs on every tab
+  // switch, so awaiting them one by one stacked four round trips onto every
+  // tap of the bar.
+  const [unread, week, promptDue, invitesLeft] = await Promise.all([
+    unreadNotifications(userId),
+    weekCount(userId),
+    feedbackPromptDue(userId),
+    invitesBannerCount(),
+  ]);
   // "How is it going?", once they have been here long enough to know.
-  const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
-  const invitesLeft = await invitesBannerCount();
+  const askFeedback = promptDue ? await feedbackHost() : null;
   const youHref = isCoach ? `/${me.handle}` : "/you";
   const face = {
     photo: me.photo,

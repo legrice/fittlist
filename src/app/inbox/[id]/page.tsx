@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import { markThreadRead } from "@/app/actions/inquiries";
 import { ChatMessages } from "@/components/ChatMessages";
+import { MarkSeen } from "@/components/MarkSeen";
 import { Icon } from "@/components/Icon";
 import { InquiryReply } from "@/components/InquiryReply";
 
@@ -35,10 +37,8 @@ export default async function InboxThreadPage({
     .from(schema.users)
     .where(eq(schema.users.id, userId));
 
-  // Opening the thread clears the coach's unread count.
-  if (thread.coachUnread > 0) {
-    await db.update(schema.inquiryThreads).set({ coachUnread: 0 }).where(eq(schema.inquiryThreads.id, id));
-  }
+  // Opening the thread clears the coach's unread count, from the client once
+  // the page is up (see MarkSeen for why not during this render).
 
   const messages = await db
     .select()
@@ -48,6 +48,7 @@ export default async function InboxThreadPage({
 
   return (
     <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
+      {thread.coachUnread > 0 && <MarkSeen action={markThreadRead.bind(null, id)} />}
       <div className="chattop">
         {/* Back where you came from. Opened from Requests, the messages tab is
             not the page underneath, and sending someone there is the shuffle
