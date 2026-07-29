@@ -94,7 +94,7 @@ export function MemberAccount({
       </div>
 
       <div className="settingslist">
-        {/* The other half of "I'm going": once you've marked classes, this is
+        {/* The other half of adding: once your week has classes in it, this is
             where you post them. */}
         <MyCalendar />
         <button className="setrow" onClick={() => setShare(true)}>
@@ -103,8 +103,8 @@ export function MemberAccount({
             <span className="t">Share classes you&rsquo;re attending</span>
             <span className="s">
               {goingCount > 0
-                ? `A story image of the ${goingCount} class${goingCount === 1 ? "" : "es"} you marked Going`
-                : "Mark a class Going and it lands here"}
+                ? `A story image of the ${goingCount} class${goingCount === 1 ? "" : "es"} in your week`
+                : "Add a class to your week and it lands here"}
             </span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>

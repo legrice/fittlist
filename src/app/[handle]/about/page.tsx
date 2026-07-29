@@ -18,13 +18,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
-  const title = `${user.name}'s schedule · fittlist`;
-  const description = `${user.name}'s coaching schedule, every studio in one link.`;
-  // The schedule is the bare handle now. This URL still resolves, because
-  // people have already sent it, and points search engines at the canonical one.
-  const url = `${siteOrigin()}/${handle}`;
-  // A coach's page answers to two URLs and people share both, so the card has
-  // to be on both. Same card: it's the same person either way.
+  const title = `About ${user.name} · fittlist`;
+  const description = `Who ${user.name} is and where they coach.`;
+  const url = `${siteOrigin()}/${handle}/about`;
+  // Every URL a coach's page answers to carries the same card. It's the same
+  // person whichever section you were sent to.
   const image = `${siteOrigin()}/api/og/${handle}`;
   return {
     title,
@@ -42,18 +40,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// /{handle}/schedule, kept alive: it was the shareable schedule link before the
-// schedule became the bare handle, and links in the wild don't get to break.
-export default async function SchedulePage({ params, searchParams }: Props) {
+// The About tab, as its own page. The bare handle is the schedule now, so this
+// is where the bio, the focus list, the certifications and the studios live.
+export default async function AboutPage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
-  // A member claims a handle too, and has no schedule behind it. /{handle}
-  // already routes them to their own page; this one has nothing to show.
+  // A member claims a handle too, and has no coach profile behind it.
   if (user.kind === "fan") notFound();
 
   const isOwner = (await getSessionUserId()) === user.id;
-  return <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />;
+  return <PublicProfileView user={user} isOwner={isOwner} tab="about" from={from} />;
 }

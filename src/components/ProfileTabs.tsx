@@ -55,10 +55,13 @@ export function ProfileTabs({
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
   }, [tab, trackSchedule, handle]);
 
+  // Schedule is the bare handle: it's what the link is for, and an About page
+  // a coach hasn't filled in is an awkward first thing to land on. /schedule
+  // still resolves, because people have already sent that link.
   const tabLink = (t: ProfileTab, label: string) => (
     <Link
       key={t}
-      href={t === "about" ? `/${handle}` : `/${handle}/${t}`}
+      href={t === "schedule" ? `/${handle}` : `/${handle}/${t}`}
       aria-current={tab === t ? "page" : undefined}
       className={`pubtab${tab === t ? " sel" : ""}`}
       // Switching sections shouldn't throw you back to the top of a page you
@@ -86,9 +89,9 @@ export function ProfileTabs({
         {actions}
       </div>
       <div className="pubtabs" aria-label="Profile sections">
+        {tabLink("schedule", "Schedule")}
         {tabLink("about", "About")}
         {hasContact && tabLink("contact", "Contact")}
-        {tabLink("schedule", "Schedule")}
       </div>
       <div className="pubpanel">{children}</div>
     </>

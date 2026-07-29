@@ -6,10 +6,10 @@ import { Icon } from "@/components/Icon";
 const OPEN = 78; // drag this far and the release commits
 const MAX = 120; // past here the row stops following your finger
 
-// Swipe a class row right-to-left to flip whether you're going. The panel
-// revealed behind says what the release will do, so the gesture is never a
-// guess: green and a check when it will mark you going, muted and an x when it
-// will clear it.
+// Swipe a class row right-to-left to add it to your week or take it back out.
+// The panel revealed behind says what the release will do, so the gesture is
+// never a guess: green and a check when it will add, muted and an x when it
+// will remove.
 //
 // Pointer events rather than touch: one code path for finger, pen and mouse.
 // The first 10px of movement decide who owns the gesture — more horizontal
@@ -92,7 +92,7 @@ export function SwipeGoing({
         aria-hidden="true"
       >
         <Icon name={going ? "close" : "check"} size={19} />
-        <span>{going ? "Not going" : "I'm going"}</span>
+        <span>{going ? "Remove" : "Add to your week"}</span>
       </div>
       <div
         className="swipefront"

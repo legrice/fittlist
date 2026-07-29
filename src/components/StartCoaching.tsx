@@ -69,7 +69,7 @@ export function StartCoaching({ handle }: { handle: string | null }) {
               {handle ? `, at fittlist.co/${handle}` : ""}.
             </p>
             <p className="lead">
-              Nothing else changes. The coaches you follow and the classes you marked Going stay
+              Nothing else changes. The coaches you follow and the classes in your week stay
               exactly where they are.
             </p>
             {err && (

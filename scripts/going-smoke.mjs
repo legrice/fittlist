@@ -157,7 +157,7 @@ await m.waitForTimeout(900);
 const notifs = (await m.locator(".notifrow").allInnerTexts()).join(" | ");
 if (!/cancelled HYROX/.test(notifs))
   fail(`nobody told the member their class was cancelled: ${notifs}`);
-if (!/marked this one Going/.test(notifs)) fail("the cancellation doesn't say why they got it");
+if (!/in your week/.test(notifs)) fail("the cancellation doesn't say why they got it");
 console.log("the member is told their class was cancelled ok");
 await b.close();
 console.log("GOING CHECKS PASSED");

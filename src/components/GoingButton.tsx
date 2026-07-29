@@ -50,7 +50,7 @@ export function GoingButton({
           onClick={toggle}
         >
           <Icon name={on ? "check" : "add"} size={18} />
-          {on ? "You're going" : "I'm going"}
+          {on ? "Added to your week" : "Add to your week"}
         </button>
         {err && <p className="err">{err}</p>}
       </div>

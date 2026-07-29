@@ -22,9 +22,10 @@ const WINDOW_DAYS = 31; // a continuous forward window — about a month
 
 type UserRow = typeof schema.users.$inferSelect;
 
-// The public page: an identity header and one section under it. Three URLs,
-// one per tab: /{handle}, /{handle}/contact, /{handle}/schedule. A coach can
-// send someone straight to the schedule and they land on it.
+// The public page: an identity header and one section under it. One URL per
+// tab: /{handle} is the schedule, /{handle}/about and /{handle}/contact are the
+// other two. The schedule is the bare handle because it's what the link is for,
+// and a half-filled About is an awkward first thing to land on.
 export async function PublicProfileView({
   user,
   isOwner,
@@ -372,9 +373,10 @@ export async function PublicProfileView({
           }
         >
           {/* One section, the one they asked for. Contact can vanish (no
-              details and no open door), so it falls back to About rather than
-              rendering an empty page under a tab that isn't there. */}
-          {tab === "schedule" ? schedule : tab === "contact" && contact ? contact : about}
+              details and no open door), so it falls back to the schedule
+              rather than rendering an empty page under a tab that isn't
+              there. */}
+          {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
         </ProfileTabs>
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}

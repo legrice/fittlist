@@ -479,7 +479,13 @@ await setDark(page, false);
 console.log("light restored ok");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
+// The bare handle is the schedule now: it's what the link is for, and a
+// half-filled About is an awkward first thing to land on.
 await page.goto(BASE + "/matt");
+await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
+if (await page.locator(".profabout").count())
+  fail("the bare handle should open the schedule, not About");
+await page.goto(BASE + "/matt/about");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
 await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible(), "profile shows title");
 // Location gets its own line under the name rather than being folded into the
@@ -510,12 +516,17 @@ await expect(
   page.locator('.proflink[href^="tel:"]').isVisible(),
   "contact shows call contact button",
 );
-await page.goto(BASE + "/matt");
+await page.goto(BASE + "/matt/about");
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
 if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
-await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");
+await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active on /about");
+// Schedule leads: it's the thing the page exists to surface.
+{
+  const order = await page.locator(".pubtab").allInnerTexts();
+  if (order[0].trim() !== "Schedule") fail("Schedule should lead the tabs, got " + order.join(", "));
+}
 await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
 if (await page.getByText("Made with").count())
   fail("the made-with footer should be hidden from anyone signed in");
@@ -544,7 +555,7 @@ await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 // ---- Schedule is its own URL, so a tab is a real navigation you can share
 await page.locator(".pubtab", { hasText: "Schedule" }).click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
-await page.waitForURL("**/matt/schedule");
+await page.waitForURL((u) => u.pathname === "/matt");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
@@ -1154,12 +1165,12 @@ console.log(
     (avColors.length < 2 ? " — only one coach is listed, so this is a weak check" : ""),
 );
 
-// "I'm going" + the member's share image — the mirror of the coach's story
+// Adding a class + the member's share image — the mirror of the coach's story
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event").first().waitFor();
 // marking happens on the class itself now, not on the crowded week row
 if (await fan.locator(".feedagenda .goingbtn").count())
-  fail("the week should not carry an inline I'm going button");
+  fail("the week should not carry an inline add button");
 await fan.locator(".feedagenda .ps-event").first().click();
 // the class fills the page and the going CTA is pinned to the bottom of it
 if (await fan.locator(".evcard").count()) fail("the class page should not be a card");
@@ -1167,11 +1178,11 @@ await expect(
   fan.locator(".evcta").evaluate((e) => getComputedStyle(e).position === "fixed"),
   "the going CTA is pinned to the bottom",
 );
-await fan.getByRole("button", { name: "I'm going" }).click();
-await fan.getByRole("button", { name: "You're going" }).waitFor();
+await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
+await fan.getByRole("button", { name: "Added to your week" }).waitFor();
 // it survives a reload (the note is on the server, not just in the tab)
 await fan.reload();
-await fan.getByRole("button", { name: "You're going" }).waitFor();
+await fan.getByRole("button", { name: "Added to your week" }).waitFor();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
@@ -1304,8 +1315,8 @@ if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" 
   fail("a coach's own classes should show on their Home");
 await page.locator(".feedav", { hasText: "Matt" }).waitFor();
 await page.locator(".feedagenda .ps-event", { hasText: "Conditioning" }).first().click();
-await page.getByRole("button", { name: "I'm going" }).click();
-await page.getByRole("button", { name: "You're going" }).waitFor();
+await page.getByRole("button", { name: "Add to your week", exact: true }).click();
+await page.getByRole("button", { name: "Added to your week" }).waitFor();
 // it shows on the following page
 await page.goto(BASE + "/feed");
 await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
@@ -1377,7 +1388,7 @@ await setDark(page, false);
 console.log("viewer look wins on another coach's page ok");
 
 // ---- studios have their own page, and any coach can correct one
-await page.goto(BASE + "/matt");
+await page.goto(BASE + "/matt/about");
 await page.locator(".coachstudio", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 await page.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
@@ -1464,7 +1475,7 @@ await page.locator(".pubtab.sel").waitFor();
   const hrefs = await page
     .locator(".pubtabs a")
     .evaluateAll((els) => els.map((e) => new URL(e.href).pathname));
-  const want = ["/matt", "/matt/contact", "/matt/schedule"];
+  const want = ["/matt", "/matt/about", "/matt/contact"];
   if (hrefs.join("|") !== want.join("|"))
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
   // Landing on a section URL renders that section and only that section.
@@ -1475,10 +1486,14 @@ await page.locator(".pubtab.sel").waitFor();
     fail("the contact URL should not carry the schedule");
   if (await page.locator(".profabout").count())
     fail("the contact URL should not carry the bio");
-  // And back to About.
-  await page.locator(".pubtab", { hasText: "About" }).click();
+  // And back to the schedule, which is the bare handle.
+  await page.locator(".pubtab", { hasText: "Schedule" }).click();
   await page.waitForURL((u) => u.pathname === "/matt");
-  await page.locator(".profabout").waitFor();
+  await page.locator(".ps-event").first().waitFor();
+  // The old /schedule link still resolves: people have already sent it.
+  await page.goto(BASE + "/matt/schedule");
+  await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
+  await page.locator(".ps-event").first().waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
 // following turns the pill green — the same yes as Going. Matt already
@@ -1682,6 +1697,7 @@ await page.getByPlaceholder("e.g. NASM CPT").fill("NASM CPT");
 await page.getByPlaceholder("e.g. NASM CPT").press("Enter");
 await page.locator(".sheet .publishwrap .btn").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
+await page.goto(BASE + "/matt/about");
 await page.getByText("NASM CPT").first().waitFor();
 console.log("availability moved to settings ok");
 
@@ -1696,7 +1712,7 @@ await page.locator("#cEmail").waitFor();
 await page.locator("#cEmail").fill("matt@coach.example.com");
 await page.getByRole("button", { name: "Save contact info" }).click();
 await page.getByText("Contact info saved").waitFor();
-await page.goto(BASE + "/matt");
+await page.goto(BASE + "/matt/about");
 await page.getByText("NASM CPT").first().waitFor();
 // The owner never sees their own Request button, so availability is checked
 // where it's stated. That it's still on is what lets the visitor below ask.

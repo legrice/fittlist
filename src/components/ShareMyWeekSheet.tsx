@@ -156,7 +156,7 @@ export function ShareMyWeekSheet({ onClose }: { onClose: () => void }) {
           )}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" src={storyUrl} alt="Story image of the classes I'm going to this week" />
+        <img className="storyimg" src={storyUrl} alt="Story image of the classes in my week" />
         {err && <p className="err">{err}</p>}
         <div className="publishwrap">
           {canShareFiles ? (

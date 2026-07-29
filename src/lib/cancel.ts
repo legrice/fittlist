@@ -43,7 +43,7 @@ export async function notifyCancelled(
     await addNotification(p.userId, {
       type: "class_cancelled",
       title: `${coach} cancelled ${cls.className}`,
-      body: `${day}, ${cls.time}. You had marked this one Going.`,
+      body: `${day}, ${cls.time}. It was in your week.`,
       href: "/feed",
     }).catch(() => {});
     await sendMessage({
