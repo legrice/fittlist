@@ -18,6 +18,7 @@ export function NavBar({
   active,
   coach = true,
   face,
+  youHref,
   onYou,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
@@ -29,6 +30,8 @@ export function NavBar({
   /** Photo or initial for the You tab. Without it the tab falls back to its
    *  icon, which is what a screen that doesn't know who you are should do. */
   face?: NavFace;
+  /** Where You goes. A coach's public page; defaults by role. */
+  youHref?: string;
   // On the schedule screen settings is an overlay on the same route, so You
   // closes it locally rather than routing.
   onYou?: () => void;
@@ -37,7 +40,7 @@ export function NavBar({
 
   return (
     <nav className="navbar" aria-label="Main">
-      {navTabs(coach).map((t) => {
+      {navTabs(coach, youHref).map((t) => {
         const local = t.id === "you" ? onYou : undefined;
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;

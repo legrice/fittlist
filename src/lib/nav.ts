@@ -22,14 +22,16 @@ export type NavItem = {
  * which shell it was in. Both sides have a page of their own now, so both get
  * the tab; only where it points differs.
  */
-export function navTabs(coach: boolean): NavItem[] {
+export function navTabs(coach: boolean, youHref?: string): NavItem[] {
   return [
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    // Your own page. It carries your face rather than an icon: it's the one
-    // tab that is a person rather than a place, and a photo says "this is you"
-    // faster than any glyph.
-    { id: "you", href: coach ? "/app" : "/you", icon: "account_circle", label: "You", face: true },
+    // Your own page, as everyone else sees it. It carries your face rather
+    // than an icon: it's the one tab that is a person rather than a place. A
+    // coach's is their public profile (the caller passes the handle URL in),
+    // so the tab answers "what does my page look like" in one tap; the
+    // editable week stays behind the settings gear and the three-dot menu.
+    { id: "you", href: youHref ?? (coach ? "/app" : "/you"), icon: "account_circle", label: "You", face: true },
   ];
 }
 

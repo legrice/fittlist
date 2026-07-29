@@ -121,7 +121,15 @@ export async function PublicProfileView({
 
   const about = (
     <>
-      {user.about?.trim() && <p className="profabout">{user.about}</p>}
+      {user.about?.trim() && (
+        <div className="profsec aboutsec">
+          {/* Labelled like the sections after it. Without the label the bio
+              floated as bare text and Coaching focus read as the page's first
+              real section. */}
+          <h2 className="prof-sec-h">About</h2>
+          <p className="profabout">{user.about}</p>
+        </div>
+      )}
       {user.highlights.length > 0 && (
         <div className="profsec focussec">
           <h2 className="prof-sec-h">Coaching focus</h2>
@@ -311,7 +319,13 @@ export async function PublicProfileView({
         {/* Signed in, this is still the app, so it keeps the app's header: the
             way home, the bell, your week. A stranger gets the wordmark and one
             way in instead, because none of those mean anything to them yet. */}
-        {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={handle} />}
+        {/* Your own page is the You tab, so it lights up here; the pathname is
+            a handle, which the bar can't read on its own. */}
+        {viewerId ? (
+          <AppChrome userId={viewerId} bar active={isOwner ? "you" : undefined} />
+        ) : (
+          <PublicTopBar handle={handle} />
+        )}
         <ProfileTabs
           handle={handle}
           tab={tab}

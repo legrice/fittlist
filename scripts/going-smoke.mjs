@@ -97,11 +97,12 @@ const stillGoing = await m.locator(".ps-event.goingon").count();
 if (stillGoing !== 1) fail(`editing the class dropped the Going mark (${stillGoing} left)`);
 console.log("an edit keeps the Going marks ok");
 
-// --- copy week as text
-await co.goto(BASE + "/app");
-await co.waitForTimeout(600);
+// --- copy week as text, from the three-dot menu on their own page
+await co.goto(BASE + "/carina");
+await co.locator(".ownermore").waitFor();
 await c1.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
-await co.getByRole("button", { name: "Copy week" }).click();
+await co.locator(".ownermore").click();
+await co.getByRole("button", { name: "Copy your week" }).click();
 await co.getByText("Week copied", { exact: false }).waitFor();
 const pasted = await co.evaluate(() => navigator.clipboard.readText());
 if (!/HYROX/.test(pasted)) fail("the copied week has no classes in it");

@@ -269,7 +269,7 @@ export function ScheduleScreen({
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "you", onYou: () => setProfileOpen(false) } : undefined}
+          nav={showFanView ? { active: "you", youHref: `/${handle}` } : undefined}
           // The face is the You tab now, so the corner holds settings. Two
           // taps on the same picture, one of which quietly meant "account",
           // was the confusing part.
@@ -361,7 +361,7 @@ export function ScheduleScreen({
       {showFanView && (
         <NavBar
           active="you"
-          onYou={() => setProfileOpen(false)}
+          youHref={`/${handle}`}
           face={{
             photo,
             color: myAccent,

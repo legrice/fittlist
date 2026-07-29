@@ -34,6 +34,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
   const invitesLeft = await invitesBannerCount();
+  const youHref = isCoach ? `/${me.handle}` : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -46,7 +47,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           weekCount={week}
-          nav={{ coach: isCoach }}
+          nav={{ coach: isCoach, youHref }}
           // The same corner for everyone: your week, the bell, settings. The
           // face left it when it became the You tab.
           settingsHref={isCoach ? "/app?acct=1" : "/you"}
@@ -54,7 +55,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} face={face} />
+      <NavBar coach={isCoach} face={face} youHref={youHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

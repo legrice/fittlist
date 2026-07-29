@@ -5,6 +5,7 @@ import { unreadNotifications } from "@/lib/notify";
 import { weekCount } from "@/lib/week";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
+import type { NavTab } from "@/lib/nav";
 
 // The app shell, for the screens that aren't the tabbed layout or the coach's
 // schedule. Those two build it themselves because they already hold the counts;
@@ -14,7 +15,16 @@ import { NavBar } from "@/components/NavBar";
 // `bar` renders the bottom tabs as well. It's a second element rather than a
 // wrapper because these screens all lay themselves out differently, and the
 // header goes at the top of their column while the bar is fixed to the window.
-export async function AppChrome({ userId, bar = false }: { userId: string; bar?: boolean }) {
+export async function AppChrome({
+  userId,
+  bar = false,
+  active,
+}: {
+  userId: string;
+  bar?: boolean;
+  /** Light a tab the pathname alone can't name: your own profile is You. */
+  active?: NavTab;
+}) {
   const db = await getDb();
   const [me] = await db
     .select({
@@ -32,6 +42,9 @@ export async function AppChrome({ userId, bar = false }: { userId: string; bar?:
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const [unread, week] = await Promise.all([unreadNotifications(userId), weekCount(userId)]);
+  // A coach's You is their public page, so the tab shows them what the link
+  // shows everyone else.
+  const youHref = isCoach ? `/${me.handle}` : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -52,7 +65,7 @@ export async function AppChrome({ userId, bar = false }: { userId: string; bar?:
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} />
+      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} />
     </>
   );
 }

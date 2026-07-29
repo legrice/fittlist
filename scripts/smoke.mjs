@@ -1459,7 +1459,11 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".fab").waitFor();
+// You is your public page now, seen exactly as a visitor sees it.
+await page.locator(".profname").waitFor();
+await page.locator(".navtab.on", { hasText: "You" }).waitFor();
+await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
 await page.locator(".navtab", { hasText: "Following" }).click();
@@ -1750,7 +1754,7 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".fab").waitFor();
+await page.locator(".profname").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting

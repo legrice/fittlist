@@ -37,14 +37,14 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; onYou?: () => void };
+  nav?: { coach?: boolean; active?: NavTab; youHref?: string; onYou?: () => void };
 }) {
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" beta />
       </Link>
-      {nav && <HeaderNav coach={nav.coach} active={nav.active} onYou={nav.onYou} />}
+      {nav && <HeaderNav coach={nav.coach} active={nav.active} youHref={nav.youHref} onYou={nav.onYou} />}
       <div className="brandbar-actions">
         {/* Your week: the classes you've added, always one tap away. It sits
             here rather than as a bubble that appears on add, because a control

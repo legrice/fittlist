@@ -14,12 +14,15 @@ import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 export function HeaderNav({
   coach = true,
   active,
+  youHref,
   onYou,
 }: {
   coach?: boolean;
   /** Passed on the schedule, where the account is an overlay on the same route
    *  and the link has to stay lit while it's open. */
   active?: NavTab;
+  /** Where You goes. A coach's public page; defaults by role. */
+  youHref?: string;
   /** There, You closes the overlay rather than routing. */
   onYou?: () => void;
 }) {
@@ -27,7 +30,7 @@ export function HeaderNav({
 
   return (
     <nav className="headnav" aria-label="Main">
-      {navTabs(coach).map((t) => {
+      {navTabs(coach, youHref).map((t) => {
         const cls = `headnav-l${here === t.id ? " on" : ""}`;
         const current = here === t.id ? "page" : undefined;
         return t.id === "you" && onYou ? (
