@@ -23,8 +23,12 @@ export default async function WeekPage() {
   const isCoach = me?.kind !== "fan" && !!me?.handle;
 
   const days = await myWeek(userId);
+  // No .appshell wrapper: that's `height: 100dvh; overflow: hidden` and expects
+  // a .stage child to do the scrolling. Wrapped in one without a stage, a week
+  // with more classes than fit simply got clipped and the page wouldn't move.
+  // Every other standalone screen (/requests, /followers) scrolls the document.
   return (
-    <div className="appshell" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <div data-mode={me?.look === "dark" ? "dark" : undefined}>
       {/* Your week is reached from the header, not the tab bar, but it's still
           inside the app: leaving it shouldn't mean finding the back button. */}
       <WeekScreen days={days} header={<AppChrome userId={userId} />} coach={isCoach} />

@@ -1160,7 +1160,25 @@ button.ps-card { cursor: pointer; }
   background: var(--cl); color: var(--ol);
 }
 .weekrow-x:active { background: var(--cl-d); }
-.weekcal { margin-top: 26px; }
+/* Share my week is pinned, not parked at the end of the list. A week with
+   enough classes in it pushed the button off the bottom, which is exactly the
+   week you'd most want to share. It sits above the tab bar, which is fixed
+   too, so the two stack rather than overlapping. */
+.weekcal {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 44;
+  margin: 0; border-radius: 0; box-shadow: none;
+  background: var(--paper); border-top: 1px solid var(--line);
+  padding: 10px 18px calc(10px + 62px + env(safe-area-inset-bottom));
+}
+.weekcal .setrow {
+  max-width: 624px; margin: 0 auto; border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line);
+}
+/* No tab bar (desktop, where the header carries the nav): the strip only has
+   its own padding to clear. */
+@media (min-width: 940px) {
+  .weekcal { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+}
 
 /* A class, from the bottom up. The list stays behind it, so adding reads as
    picking something up rather than going somewhere. */

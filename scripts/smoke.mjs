@@ -1229,6 +1229,18 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // Reached from the header, but still inside the app: the tabs come with it.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
+  // Share my week is pinned, so a long week can't push it off the bottom. The
+  // page also has to actually scroll: wrapped in .appshell without a .stage it
+  // was clipped at the viewport and nothing moved.
+  {
+    const bar = await fan.locator(".weekcal").evaluate((e) => getComputedStyle(e).position);
+    if (bar !== "fixed") fail("Share my week should be pinned, got " + bar);
+    const clipped = await fan.evaluate(
+      () => getComputedStyle(document.querySelector(".weekcal").closest("div[data-mode], body"))
+        .overflow === "hidden",
+    );
+    if (clipped) fail("your week is inside a clipped shell, so it can never scroll");
+  }
   const rows = fan.locator(".weekrow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
   // The row carries what you'd need to decide: what, when, where, whose.

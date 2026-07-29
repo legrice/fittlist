@@ -57,7 +57,7 @@ export function WeekScreen({
 
   return (
     <section className="screen hasnav">
-      <div className="pad" style={{ paddingTop: 14, paddingBottom: 150 }}>
+      <div className="pad" style={{ paddingTop: 14, paddingBottom: 186 }}>
         {header}
         <div className="admintop pagetop">
           <div>
@@ -123,22 +123,25 @@ export function WeekScreen({
                 </div>
               ))}
             </div>
-            {/* A coach shares their week as a story image; this is the same
-                move from the other side. The calendar feed lives on the account
-                page until the Google integration lands. */}
-            <div className="settingslist weekcal">
-              <button className="setrow" onClick={() => setShare(true)}>
-                <span className="setrow-ic"><Icon name="share" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share my week</span>
-                  <span className="s">A story image of what you&rsquo;re training this week</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-            </div>
           </>
         )}
       </div>
+      {/* A coach shares their week as a story image; this is the same move from
+          the other side. Pinned rather than parked at the end of the list: a
+          week with enough classes in it pushed the button off the bottom, and
+          that's the week you'd most want to share. */}
+      {shown.length > 0 && (
+        <div className="settingslist weekcal">
+          <button className="setrow" onClick={() => setShare(true)}>
+            <span className="setrow-ic"><Icon name="share" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Share my week</span>
+              <span className="s">A story image of what you&rsquo;re training this week</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </button>
+        </div>
+      )}
       {confirm && (
         <div
           className="sheet-scrim"
