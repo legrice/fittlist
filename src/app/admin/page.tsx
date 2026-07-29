@@ -19,7 +19,9 @@ export default async function AdminPage() {
   const db = await getDb();
   const [users, studios, classes, subs, creds, gconns, picked, invitesRows, requestRows] =
     await Promise.all([
-    db.select().from(schema.users).orderBy(schema.users.createdAt),
+    // Newest first: the person you're looking for in a beta is almost always
+    // the one who just signed up.
+    db.select().from(schema.users).orderBy(desc(schema.users.createdAt)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select({
