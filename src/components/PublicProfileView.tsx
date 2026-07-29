@@ -116,20 +116,19 @@ export async function PublicProfileView({
     if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
   }
 
+  // The face moved up into the header, above the name, so About starts with
+  // what they actually wrote.
+  const avatar = user.photo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="profav" src={user.photo} alt={user.name} />
+  ) : (
+    <div className="profav profav-empty" style={{ background: avatarColor(user) }} aria-hidden="true">
+      {user.name.trim().charAt(0).toUpperCase() || "?"}
+    </div>
+  );
+
   const about = (
     <>
-      {user.photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="profphoto" src={user.photo} alt={user.name} />
-      ) : (
-        <div
-          className="profphoto profphoto-empty"
-          style={{ background: avatarColor(user) }}
-          aria-hidden="true"
-        >
-          {user.name.trim().charAt(0).toUpperCase() || "?"}
-        </div>
-      )}
       {user.about?.trim() && <p className="profabout">{user.about}</p>}
       {user.highlights.length > 0 && (
         <div className="profsec focussec">
@@ -193,7 +192,10 @@ export async function PublicProfileView({
     user.website ||
     user.profileLinks.length
   );
-  const canRequest = !isOwner && !!user.availability;
+  // The header's Message pill is the main door. This one stays for the person
+  // who scrolled to Contact looking for exactly this, and only while the coach
+  // is taking private clients.
+  const canRequest = !isOwner && !!user.availability && user.messagesOpen;
   const contact = hasContact || canRequest ? (
     <>
       <h2 className="prof-sec-h sched-h">Contact</h2>
@@ -341,15 +343,22 @@ export async function PublicProfileView({
               </BackLink>
             ) : null
           }
-          action={
-            // The owner previewing their own page has nobody to follow.
+          avatar={avatar}
+          actions={
+            // The owner previewing their own page has nobody to follow and
+            // nobody to write to.
             !isOwner ? (
-              <NotifyCta
-                trainerName={user.name}
-                handle={handle}
-                account={account}
-                canSignUp={fansEnabled()}
-              />
+              <div className="profacts">
+                {user.messagesOpen && (
+                  <RequestSessionButton handle={handle} coachName={user.name} variant="pill" />
+                )}
+                <NotifyCta
+                  trainerName={user.name}
+                  handle={handle}
+                  account={account}
+                  canSignUp={fansEnabled()}
+                />
+              </div>
             ) : null
           }
           avail={

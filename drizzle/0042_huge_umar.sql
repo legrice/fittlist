@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "messages_open" boolean DEFAULT true NOT NULL;

@@ -199,6 +199,18 @@ export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
+// Whether anyone can write to this coach from their page. Off takes the Message
+// button away; threads already started stay where they are, because the coach
+// turning the door off is not a reason to lose what people already said.
+export async function setMessagesOpen(on: boolean): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const db = await getDb();
+  await db.update(schema.users).set({ messagesOpen: on }).where(eq(schema.users.id, userId));
+  revalidatePath("/app");
+  return { ok: true };
+}
+
 export async function setLook(look: string): Promise<{ ok: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };

@@ -42,6 +42,7 @@ export default async function SchedulePage({
         theme: schema.users.theme,
         look: schema.users.look,
         discoverable: schema.users.discoverable,
+        messagesOpen: schema.users.messagesOpen,
         avatarColor: schema.users.avatarColor,
         handle: schema.users.handle,
         name: schema.users.name,
@@ -180,6 +181,7 @@ export default async function SchedulePage({
       canSendFeedback={!!fbHost && fbHost.email.toLowerCase() !== (user?.email ?? "").toLowerCase()}
       showFanView={await fansVisible()}
       discoverable={user?.discoverable ?? true}
+      messagesOpen={user?.messagesOpen ?? true}
       userId={userId}
       myColor={user?.avatarColor ?? null}
       invitesLeft={invitesLeft}

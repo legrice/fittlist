@@ -58,6 +58,11 @@ export const users = pgTable("users", {
   // Listed in the Find coaches directory. Their page stays public either way —
   // this is only about being browsable by people who weren't sent the link.
   discoverable: boolean("discoverable").notNull().default(true),
+  // Whether the Message button appears on their public page. Separate from
+  // availability, which says whether they're taking private clients: "my books
+  // are full" and "don't write to me" are different sentences, and a coach who
+  // is full still wants to hear from the person asking about a class.
+  messagesOpen: boolean("messages_open").notNull().default(true),
   // Their pick from AVATAR_COLORS, behind the initial when there's no photo.
   // Null means "derive one from my id" — everyone looks distinct from day one.
   avatarColor: text("avatar_color"),

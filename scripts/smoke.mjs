@@ -400,7 +400,7 @@ await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
 await page.reload();
 const shownAvatar = await page
-  .locator(".profphoto-empty")
+  .locator(".profav-empty")
   .evaluate((e) => getComputedStyle(e).backgroundColor);
 if (shownAvatar !== pickedColor)
   fail(`avatar colour didn't stick: picked ${pickedColor}, page shows ${shownAvatar}`);
@@ -482,6 +482,9 @@ console.log("light restored ok");
 await page.goto(BASE + "/matt");
 await expect(page.locator("h1.profname", { hasText: "Matt" }).isVisible(), "profile shows name");
 await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible(), "profile shows title");
+// Location gets its own line under the name rather than being folded into the
+// title as "Strength coach in Jersey City, NJ".
+await expect(page.locator(".profwhere", { hasText: "Jersey City" }).isVisible(), "profile shows where");
 await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
 await expect(
   page.locator('.proflink[href="https://instagram.com/mattlifts"]').isVisible(),
@@ -504,7 +507,7 @@ await expect(
   "profile shows 'Where I coach' studio",
 );
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
-if (await page.locator(".pubhead .followpill").count())
+if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
 await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
 await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active by default");
@@ -567,7 +570,7 @@ console.log("profile + schedule tabs + event pages ok");
   await subPage.goto(BASE + "/matt");
   // the one action lives beside the coach's name now, not in a bottom bar
   if (await subPage.locator(".notifybar").count()) fail("the subscribe bar should be gone");
-  await subPage.locator(".pubhead .followpill").click();
+  await subPage.locator(".profacts .followpill").click();
   await subPage.locator(".sheet h2", { hasText: "schedule every week" }).waitFor();
   await subPage.locator("#ntEmail").fill("fan@example.com");
   await subPage.getByRole("button", { name: "Add me to the list" }).click();
@@ -598,7 +601,7 @@ console.log("profile + schedule tabs + event pages ok");
   const up = await upCtx.newPage();
   up.setDefaultTimeout(10000);
   await up.goto(BASE + "/matt");
-  await up.locator(".pubhead .followpill").click();
+  await up.locator(".profacts .followpill").click();
   await up.locator("#ntEmail").fill("upgrade@example.com");
   await up.getByRole("button", { name: "Add me to the list" }).click();
   await up.locator("#ntPw").fill("upgrade-pass-123");
@@ -1406,32 +1409,42 @@ await page.locator(".evfact", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 console.log("studio pages ok (edit, types, slug follows the name)");
 
-// a profile reads like a class page: no app header, no bottom tabs, one row
-// carrying back, the name and the one action — and that row stays pinned
+// a profile reads like a class page: no app header, no bottom tabs, a back
+// arrow above the identity block, and the tab pills pin instead of the name
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
-if (!(await page.locator(".pubhead .followpill").count()))
-  fail("Follow should sit beside the coach's name");
+if (!(await page.locator(".profacts .followpill").count()))
+  fail("Follow should sit in the actions row under the name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
 if (await page.locator(".profwrap > .brandbar").count())
   fail("a profile should not carry the app header");
 if (await page.locator(".navbar").count()) fail("a profile should not carry the bottom tabs");
+// The identity block scrolls; the tabs are what you still need once you're
+// reading a section, so they're the only thing pinned.
 await expect(
-  page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position === "sticky"),
-  "the name row is pinned",
+  page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position !== "sticky"),
+  "the identity block scrolls away",
+);
+await expect(
+  page.locator(".pubtabs").evaluate((e) => getComputedStyle(e).position === "sticky"),
+  "the tab pills are pinned",
 );
 if (!(await page.locator(".pubhead .evback").count()))
   fail("a signed-in viewer needs a way back off a profile");
 await page.getByRole("button", { name: "Back to Discover" }).click();
 await page.waitForURL("**/discover");
-// the title and location below the name scroll away with the page
+// the selected tab is a filled pill, not an underline
 await page.goto(BASE + "/matt");
-await page.locator(".proftitle").waitFor();
-await expect(
-  page.locator(".proftitle").evaluate((e) => getComputedStyle(e).position !== "sticky"),
-  "the title under the name is not pinned",
-);
+await page.locator(".pubtab.sel").waitFor();
+{
+  const t = await page.locator(".pubtab.sel").evaluate((e) => {
+    const cs = getComputedStyle(e);
+    return { bg: cs.backgroundColor, radius: parseFloat(cs.borderTopLeftRadius) };
+  });
+  if (t.radius < 20) fail("the selected tab should be a pill, radius " + t.radius);
+  if (t.bg === "rgba(0, 0, 0, 0)") fail("the selected tab should be filled");
+}
 // following turns the pill green — the same yes as Going. Matt already
 // follows Sam by this point, so settle the state first rather than assuming.
 await page.goto(BASE + "/discover");
@@ -1676,8 +1689,10 @@ console.log("saving contact info leaves the rest alone ok");
   await vp.getByRole("button", { name: "Send message" }).click();
   await vp.getByRole("heading", { name: "Message sent" }).waitFor();
 
+  // The header's Message pill is the main door, and it opens the same composer.
   await vp.goto(BASE + "/matt");
-  await vp.getByRole("button", { name: "Request private session" }).click();
+  await vp.locator(".profacts .actpill-primary", { hasText: "Message" }).click();
+  await vp.getByRole("heading", { name: "Message Matt" }).waitFor();
   await vp.locator("#rqName").fill("Theo Nophone");
   await vp.locator("#rqEmail").fill("theo@example.com");
   await vp.locator("#rqMsg").fill("Do you take beginners?");
@@ -1685,7 +1700,53 @@ console.log("saving contact info leaves the rest alone ok");
   await vp.getByRole("heading", { name: "Message sent" }).waitFor();
   await visitor.close();
 }
-console.log("private session requests sent ok (with a phone and without)");
+console.log("private session requests sent ok (Contact CTA and the Message pill)");
+
+// ---- Messages is a switch of its own. Availability says whether you're taking
+// private clients; this says whether anyone can write to you at all, and a
+// coach whose books are full still wants the question about Tuesday's class.
+await openProfile(page);
+await page.waitForTimeout(450);
+{
+  const row = page.locator(".setrow", { hasText: "Messages" });
+  await row.scrollIntoViewIfNeeded();
+  if ((await row.getAttribute("aria-pressed")) !== "true") fail("messages should start on");
+  await row.click();
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll(".setrow")]
+        .find((r) => r.textContent?.includes("Messages"))
+        ?.getAttribute("aria-pressed") === "false",
+  );
+}
+await page.locator(".acctclose").click();
+{
+  const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const vp = await visitor.newPage();
+  vp.setDefaultTimeout(10000);
+  await vp.goto(BASE + "/matt");
+  await vp.locator(".profacts").waitFor();
+  if (await vp.locator(".actpill-primary", { hasText: "Message" }).count())
+    fail("messages off should take the Message pill off the page");
+  if (await vp.getByRole("button", { name: "Request private session" }).count())
+    fail("messages off should close the Contact door too");
+  // Following is unaffected: not writing to someone is not not following them.
+  if (!(await vp.locator(".profacts .followpill").count()))
+    fail("Follow should survive messages being off");
+  await visitor.close();
+}
+// back on, so the rest of the suite has a door to knock at
+await openProfile(page);
+await page.waitForTimeout(450);
+await page.locator(".setrow", { hasText: "Messages" }).click();
+await page.waitForFunction(
+  () =>
+    [...document.querySelectorAll(".setrow")]
+      .find((r) => r.textContent?.includes("Messages"))
+      ?.getAttribute("aria-pressed") === "true",
+);
+await page.locator(".acctclose").click();
+console.log("messages switch ok (takes both doors off, leaves Follow alone)");
 
 // ---- Requests is its own room: a list of people, what they asked, and how to
 // reach them. It used to be reachable only through the messages tab, which made

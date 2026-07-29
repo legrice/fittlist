@@ -251,6 +251,14 @@ What to Expect list, and their availability, which also took the Request private
 session button off their public page. Any field a single screen owns needs the
 same guard, or the screen that doesn't show it will erase it.
 
+**Availability and Messages are two switches, not one.** `users.availability`
+(`"accepting"` / `"waitlist"` / null) is a status: are you taking private
+clients, shown as a pill on your page. `users.messages_open` decides whether
+anyone can write to you at all, and it is what gates the Message pill in the
+profile header and the Request private session button under Contact. A coach
+whose books are full still wants the question about Tuesday's class, so "full"
+must not mean "unreachable".
+
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone
 writing to us about the app), and the unique index is

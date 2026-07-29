@@ -17,6 +17,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { MessagesToggle } from "@/components/MessagesToggle";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { MyCalendar } from "@/components/MyCalendar";
@@ -55,6 +56,7 @@ export function ProfileSheet({
   avatarColor,
   showFanView = false,
   discoverable = true,
+  messagesOpen = true,
   look,
   onClose,
 }: {
@@ -87,6 +89,7 @@ export function ProfileSheet({
   avatarColor: string;
   showFanView?: boolean;
   discoverable?: boolean;
+  messagesOpen?: boolean;
   look: string | null;
   onClose: () => void;
 }) {
@@ -122,9 +125,9 @@ export function ProfileSheet({
   const [cWebsite, setCWebsite] = useState(website);
   const [contactSaving, setContactSaving] = useState(false);
 
-  // Availability: whether the coach is taking private clients. It sets what a
-  // visitor can do (the Request button only exists while it's on), so it saves
-  // on the tap rather than waiting for a Save button.
+  // Availability: whether the coach is taking private clients. A status, shown
+  // as a pill on their page; whether anyone can write to them is the Messages
+  // switch, a separate question. Saves on the tap.
   const [avail, setAvail] = useState<string | null>(availability);
   const [availSaving, setAvailSaving] = useState(false);
 
@@ -460,6 +463,7 @@ export function ProfileSheet({
 
         {/* Page look: themes the app and the coach's public page. */}
         <div className="settingslist">
+          <MessagesToggle initialOn={messagesOpen} />
           {showFanView && <DiscoverableToggle initialOn={discoverable} />}
           <DarkModeToggle initialOn={look === "dark"} />
         </div>
@@ -558,15 +562,15 @@ export function ProfileSheet({
           {view === "availability" && (
             <>
               <p className="settings-lead">
-                Whether you are taking private clients. Accepting and Waitlist both show on your
-                page with a Request private session button; Hidden takes the button off, and
-                nobody can ask.
+                Whether you are taking private clients, shown as a line on your page. Hidden
+                says nothing either way. Whether people can write to you is the Messages switch,
+                further down.
               </p>
               <div className="availpick">
                 {[
                   { id: "accepting", t: "Accepting", s: "Taking new private clients" },
-                  { id: "waitlist", t: "Waitlist", s: "Full, but people can still ask" },
-                  { id: null, t: "Hidden", s: "No button, no requests" },
+                  { id: "waitlist", t: "Waitlist", s: "Full, with a list" },
+                  { id: null, t: "Hidden", s: "Your page says nothing about it" },
                 ].map((o) => {
                   const on = avail === o.id;
                   return (

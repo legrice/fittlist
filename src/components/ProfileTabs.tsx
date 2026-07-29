@@ -4,11 +4,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Tab = "about" | "contact" | "schedule";
 
-// The public profile header + About/Contact/Schedule sections. All render in
-// one continuous scroll: the name row sticks to the top, the tabs stick just
-// beneath it, and the title scrolls away between. The tabs are scroll anchors —
-// tapping one glides to that section — and a scroll-spy keeps the active tab in
-// sync with whatever section is under the sticky header.
+// The public profile header + About/Contact/Schedule sections, in one
+// continuous scroll. The identity block (face, name, where, what, then the
+// actions) scrolls away; the tab pills stick to the top, because once you're
+// reading a section the tabs are the only control you still want. They double
+// as scroll anchors, and a scroll-spy keeps the active pill in sync with
+// whatever section is under them.
 export function ProfileTabs({
   handle,
   initialTab,
@@ -17,7 +18,8 @@ export function ProfileTabs({
   location,
   trackSchedule,
   back,
-  action,
+  avatar,
+  actions,
   avail,
   about,
   contact,
@@ -29,40 +31,38 @@ export function ProfileTabs({
   title: string;
   location: string;
   trackSchedule: boolean;
-  /** The way out, pinned in the same row as the name. */
+  /** The way out, on its own line above the identity block. */
   back: ReactNode;
-  /** The single action beside the name: Follow, or the email list. */
-  action: ReactNode;
+  /** The face: photo or coloured initial, above the name. */
+  avatar: ReactNode;
+  /** The row of pills under the name: Message, Follow. */
+  actions: ReactNode;
   avail: ReactNode | null;
   about: ReactNode;
   contact: ReactNode | null;
   schedule: ReactNode;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
-  const rowRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const schedRef = useRef<HTMLDivElement>(null);
-  const [rowH, setRowH] = useState(0);
   const [tabsH, setTabsH] = useState(0);
   const didInitScroll = useRef(false);
   const trackedSchedule = useRef(false);
 
-  // The tabs stick right below the name row, so their offset tracks its height;
-  // the two heights together define where a scrolled-to section should land.
+  // Only the tabs pin now, so they're the whole sticky offset: how far down a
+  // scrolled-to section has to land to clear them.
   useEffect(() => {
     const measure = () => {
-      if (rowRef.current) setRowH(rowRef.current.offsetHeight);
       if (tabsRef.current) setTabsH(tabsRef.current.offsetHeight);
     };
     measure();
     const ro = new ResizeObserver(measure);
-    if (rowRef.current) ro.observe(rowRef.current);
     if (tabsRef.current) ro.observe(tabsRef.current);
     return () => ro.disconnect();
   }, []);
 
-  const offset = rowH + tabsH;
+  const offset = tabsH;
 
   const goTo = (t: Tab, smooth = true) => {
     const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
@@ -140,27 +140,22 @@ export function ProfileTabs({
 
   return (
     <>
-      {/* Back, name and the one action ride together: the row stays pinned as
-          you scroll, so leaving and following never scroll out of reach. The
-          title and location below it are not pinned — they're context, not
-          controls. */}
-      <div className="pubhead" ref={rowRef}>
+      {/* Who this is, top to bottom: face, name, where, what. Then the things
+          you can do about it. The block scrolls away; only the tabs pin, which
+          is what you need once you're reading a section. */}
+      <div className="pubhead">
         {back}
-        <div className="pubhead-row">
-          <h1 className="profname">{name}</h1>
-          {action}
-        </div>
+        {avatar}
+        <h1 className="profname">{name}</h1>
+        {/* Location and title on their own lines. Joined into "Strength coach in
+            Jersey City, NJ" they made one long line that wrapped to two anyway,
+            and the city is the thing people scan for. */}
+        {location.trim() && <p className="profwhere">{location.trim()}</p>}
+        {title.trim() && <p className="proftitle">{title.trim()}</p>}
+        {avail}
+        {actions}
       </div>
-      {/* One line: "Strength coach in Jersey City, NJ" */}
-      {(title.trim() || location.trim()) && (
-        <p className="proftitle">
-          {title.trim() && location.trim()
-            ? `${title.trim()} in ${location.trim()}`
-            : title.trim() || location.trim()}
-        </p>
-      )}
-      {avail}
-      <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: rowH }}>
+      <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: 0 }}>
         {tabBtn("about", "About")}
         {contact && tabBtn("contact", "Contact")}
         {tabBtn("schedule", "Schedule")}
