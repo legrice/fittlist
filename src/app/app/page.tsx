@@ -9,6 +9,7 @@ import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { coachAnalytics } from "@/lib/visits";
 import { unreadNotifications } from "@/lib/notify";
+import { weekCount } from "@/lib/week";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
@@ -91,6 +92,8 @@ export default async function SchedulePage({
   const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
   const analytics = await coachAnalytics(userId);
   const notifUnread = await unreadNotifications(userId);
+  // A coach follows people too, so they get the same shortlist.
+  const week = await weekCount(userId);
 
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
@@ -157,6 +160,7 @@ export default async function SchedulePage({
       subsCount={subRows.length}
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
+      weekCount={week}
       profileViews={analytics.profileViews}
       requestCount={requestCount}
       autoOpenAdder={add === "1"}

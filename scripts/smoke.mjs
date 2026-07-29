@@ -1196,6 +1196,41 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if (!where.includes("ps-etimecol")) fail("Going tag should live in the time column: " + where);
 }
 
+// ---- Your week: the shortlist behind the header icon. Not a calendar — only
+// what they added, every row can leave, and the count is what's still ahead.
+{
+  await fan.goto(BASE + "/feed");
+  const dot = fan.locator(".weekbtn .weekdot");
+  await dot.waitFor();
+  if ((await dot.innerText()).trim() !== "1") fail("the week count should be 1, got " + (await dot.innerText()));
+  await fan.locator(".weekbtn").click();
+  await fan.waitForURL(/\/week/);
+  await fan.getByRole("heading", { name: "Your week" }).waitFor();
+  const rows = fan.locator(".weekrow");
+  if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
+  // The row carries what you'd need to decide: what, when, where, whose.
+  const txt = await rows.first().innerText();
+  for (const bit of ["Barbell Strength", "min", "Matt"])
+    if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
+  // The door to a real calendar, so the screen says what it isn't.
+  await fan.locator(".weekcal .setrow", { hasText: "calendar" }).waitFor();
+  // Every row can leave.
+  await rows.first().locator(".weekrow-x").click();
+  await fan.getByText("Removed from your week").waitFor();
+  await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
+  // The badge goes with it: the count is state, not a running total.
+  await fan.goto(BASE + "/feed");
+  await fan.locator(".weekbtn").waitFor();
+  if (await fan.locator(".weekbtn .weekdot").count())
+    fail("an empty week should carry no count");
+  // Put it back for the checks below.
+  await fan.locator(".feedagenda .ps-event").first().click();
+  await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
+  await fan.getByRole("button", { name: "Added to your week" }).waitFor();
+  await fan.goto(BASE + "/feed");
+}
+console.log("your week ok (count ahead, rows leave, points at a real calendar)");
+
 // swiping a row right-to-left flips the same mark, without opening the class
 {
   const row = fan.locator(".feedagenda .swiperow").nth(1);

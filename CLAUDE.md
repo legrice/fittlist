@@ -269,6 +269,17 @@ profile header and the Request private session button under Contact. A coach
 whose books are full still wants the question about Tuesday's class, so "full"
 must not mean "unreachable".
 
+**Your week is a shortlist, not a calendar.** `/week`, behind the header icon,
+lists only the classes someone added, from today forward, and empties itself as
+the week passes. Three things keep it from reading as "fittlist wants to be your
+calendar now": it is short and partial, every row can leave, and the bottom of
+it points at their real calendar via the `.ics` feed. Don't add a month grid,
+empty days, or a time gutter. The badge counts what's still ahead
+(`weekCount()`), not everything ever added: a number that only grows is a
+scoreboard rather than something you can act on. Following is everything from
+the coaches you follow; Your week is the ones you picked. Those have to stay
+legibly different.
+
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone
 writing to us about the app), and the unique index is
@@ -284,3 +295,21 @@ account; no account means no door, and the settings row hides.
 
 **A `"use server"` file can only export async functions.** A constant in one
 500s every page that imports it.
+
+## Not yet, and deliberately
+
+Two things are coming that today's shapes should leave room for. Neither is
+built; don't build them until they're asked for, but don't paint them out
+either.
+
+**Teams.** A run club with six coaches, followed once instead of six times, with
+a team version of the profile and a merged team schedule. Anything that assumes
+a class belongs to exactly one `users` row, or that "follow" only ever points at
+a person, is the kind of assumption that will need unpicking. `subscribers` and
+`classes.userId` are the two places to be careful.
+
+**Categories.** Kettlebell, run club, and the rest, followable in their own
+right so someone can see what's coming up near them by the kind of thing it is.
+`classes.classType` and `customClassTypes` are the seed of this; they're free
+text per coach today, so a shared vocabulary is the missing piece. Discover
+already groups by exact location string, which is the model to follow.

@@ -9,11 +9,15 @@ import type { NavTab } from "@/lib/nav";
 // (where the account is an overlay) and a link everywhere else.
 export function AppHeader({
   unread = 0,
+  weekCount,
   avatar,
   home = "/feed",
   nav,
 }: {
   unread?: number;
+  /** How many added classes are still ahead. Undefined hides the icon
+   *  entirely, for anyone who has no week to keep. */
+  weekCount?: number;
   avatar?: {
     photo: string | null;
     color: string;
@@ -36,6 +40,21 @@ export function AppHeader({
       </Link>
       {nav && <HeaderNav coach={nav.coach} active={nav.active} onSchedule={nav.onSchedule} />}
       <div className="brandbar-actions">
+        {/* Your week: the classes you've added, always one tap away. It sits
+            here rather than as a bubble that appears on add, because a control
+            that only exists just after you used it can't answer "what have I
+            got so far?". The count is what's still ahead, not everything you
+            ever added: a number that only grows is a scoreboard. */}
+        {weekCount !== undefined && (
+          <Link
+            className="iconbtn inboxbtn weekbtn"
+            aria-label={`Your week${weekCount ? `, ${weekCount} classes` : ", empty"}`}
+            href="/week"
+          >
+            <Icon name="event_available" size={20} />
+            {weekCount > 0 && <span className="inboxdot weekdot">{weekCount > 9 ? "9+" : weekCount}</span>}
+          </Link>
+        )}
         <Link
           className="iconbtn inboxbtn"
           aria-label={`Updates${unread ? `, ${unread} unread` : ""}`}

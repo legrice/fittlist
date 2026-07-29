@@ -5,6 +5,7 @@ import { avatarColor } from "@/lib/avatar";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
+import { weekCount } from "@/lib/week";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
@@ -29,6 +30,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // A member has a handle too, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
   const unread = await unreadNotifications(userId);
+  const week = await weekCount(userId);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
   const invitesLeft = await invitesBannerCount();
@@ -38,6 +40,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
       <div className="pad">
         <AppHeader
           unread={unread}
+          weekCount={week}
           nav={{ coach: isCoach }}
           avatar={{
             photo: me.photo,

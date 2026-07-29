@@ -1117,6 +1117,40 @@ button.ps-card { cursor: pointer; }
   border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
 }
+/* Your week's count is a state, not an alert: nothing is wrong, you just have
+   four classes coming. Green, the same yes the add gives. */
+.weekdot { background: var(--go); }
+
+/* Your week (/week): the shortlist. A list, not a calendar — no grid, no empty
+   days, and every row can leave. */
+.weeklist { display: flex; flex-direction: column; gap: 26px; }
+.weekday { display: flex; flex-direction: column; }
+.weekday .ps-daycol {
+  font-weight: 400; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+}
+.weekrow {
+  display: flex; align-items: center; gap: 12px; padding: 14px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.weekrow-accent { align-self: stretch; width: 3px; border-radius: 2px; flex-shrink: 0; }
+.weekrow-main {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;
+  text-decoration: none; color: inherit;
+}
+.weekrow-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 18px;
+  color: var(--ink); letter-spacing: .004em;
+}
+.weekrow-sub { font-size: 13px; color: var(--ol); }
+.weekrow-who { font-size: 13px; font-weight: 600; color: var(--ol); }
+.weekrow-x {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cl); color: var(--ol);
+}
+.weekrow-x:active { background: var(--cl-d); }
+.weekcal { margin-top: 26px; }
 
 /* Updates screen: Notifications | Messages toggle. The track gets the card
    colour so it reads against the cream page (the base .seg cream blends in). */
