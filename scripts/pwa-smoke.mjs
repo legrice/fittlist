@@ -4,8 +4,10 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/pwa-smoke.mjs
 import { chromium, devices } from "playwright";
+import fs from "node:fs";
 import { skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
+const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("PWA FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const c = await b.newContext({ viewport: { width: 390, height: 844 } });
@@ -121,7 +123,53 @@ if (!(await row.isVisible())) fail("an iPhone should be told how to install");
 await row.click();
 await q.getByText(/Add to Home Screen/).waitFor();
 console.log("iOS gets the Share sheet instructions ok");
-await q.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-install.png" });
+await q.screenshot({ path: OUT + "/shot-install.png" });
+
+// ---- installed only: the tab bar as a floating glass pill.
+//
+// The point of the check is the gate, not the look. An --app window reports
+// display-mode: standalone the same way a home-screen launch does; a plain
+// launch() does not keep that window, so this needs a persistent context.
+{
+  const tab = await p.locator(".navbar").evaluate((el) => ({
+    standalone: matchMedia("(display-mode: standalone)").matches,
+    radius: getComputedStyle(el).borderRadius,
+    blur: getComputedStyle(el).backdropFilter,
+  }));
+  if (tab.standalone) fail("a browser tab is reporting itself as installed");
+  if (tab.radius !== "0px" || tab.blur !== "none")
+    fail(`the browser tab got the installed bar: ${JSON.stringify(tab)}`);
+
+  const profile = `${OUT}/.pw-app-profile`;
+  fs.rmSync(profile, { recursive: true, force: true });
+  const ac = await chromium.launchPersistentContext(profile, {
+    executablePath: "/opt/pw-browsers/chromium",
+    viewport: { width: 390, height: 844 },
+    args: [`--app=${BASE}/app`],
+  });
+  try {
+    await ac.addCookies((await c.storageState()).cookies);
+    const ap = ac.pages()[0] ?? (await ac.newPage());
+    ap.setDefaultTimeout(15000);
+    await ap.goto(BASE + "/app");
+    await ap.locator(".navbar").waitFor();
+    await ap.waitForTimeout(600);
+    const app = await ap.locator(".navbar").evaluate((el) => ({
+      standalone: matchMedia("(display-mode: standalone)").matches,
+      radius: getComputedStyle(el).borderRadius,
+      blur: getComputedStyle(el).backdropFilter,
+      left: getComputedStyle(el).left,
+    }));
+    if (!app.standalone) fail("the app window did not report standalone");
+    if (app.radius === tab.radius || app.blur === "none")
+      fail(`installed and browser look the same: ${JSON.stringify(app)}`);
+    if (app.left === "0px") fail("the installed bar is still edge to edge");
+    console.log(`installed tab bar ok (${app.radius} radius, ${app.left} inset, blurred)`);
+  } finally {
+    await ac.close();
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+}
 
 await b.close();
 console.log("PWA CHECKS PASSED");

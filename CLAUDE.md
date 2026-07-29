@@ -164,6 +164,16 @@ only walk the pile. A coach's page answers to two URLs, `/{handle}` and
 `/{handle}/schedule`, because the tabs rewrite the URL in place without a
 navigation, so compare with `samePage()` rather than `===`.
 
+**`@media (display-mode: standalone)` is how the installed app differs from
+the browser.** It matches on a home-screen launch and not in a tab, so it's the
+one place to style the app as an app: the tab bar is a floating glass pill
+there and stays edge-to-edge in a browser, where it would otherwise sit above
+Safari's own toolbar as a second competing bar. The glass has something to blur
+because the bar is fixed over a scrolling list; the bottom padding on `.pad`
+only guarantees the last row can clear it. Test it with a persistent context
+and `--app=`: a plain `launch()` discards that window, and CDP cannot emulate
+the feature.
+
 **The service worker caches static assets and nothing else.** Every screen is
 force-dynamic and behind a session, so caching a page would serve one account's
 schedule to whoever opens the app next. `public/sw.js` handles only `/fonts/*`
