@@ -26,10 +26,13 @@ export function WeekScreen({
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [share, setShare] = useState(false);
+  // Removing is one tap next to a list of things you meant to do, so it asks.
+  const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string } | null>(null);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
   const remove = (classId: string, iso: string, key: string) => {
+    setConfirm(null);
     setGone((g) => ({ ...g, [key]: true }));
     start(async () => {
       const res = await setGoing(classId, iso, false);
@@ -104,7 +107,9 @@ export function WeekScreen({
                         <button
                           className="weekrow-x"
                           aria-label={`Remove ${i.name}`}
-                          onClick={() => remove(i.classId, i.iso, key)}
+                          onClick={() =>
+                            setConfirm({ classId: i.classId, iso: i.iso, key, name: i.name })
+                          }
                         >
                           <Icon name="close" size={16} />
                         </button>
@@ -130,6 +135,33 @@ export function WeekScreen({
           </>
         )}
       </div>
+      {confirm && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirm(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Take it out of your week?</h2>
+            <p className="lead">
+              {confirm.name} comes off your list. You can add it back from the coach&rsquo;s
+              schedule any time.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                onClick={() => remove(confirm.classId, confirm.iso, confirm.key)}
+              >
+                Remove it
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setConfirm(null)}>
+                Keep it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
       <Toast msg={toastMsg} on={toastOn} />
     </section>

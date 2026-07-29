@@ -79,13 +79,17 @@ export function ProfileTabs({
       <div className="pubhead">
         {back}
         {avatar}
-        <h1 className="profname">{name}</h1>
+        {/* The badge rides with the name and wraps under it when the name is
+            long, rather than being pushed down the page by the lines between. */}
+        <div className="profname-row">
+          <h1 className="profname">{name}</h1>
+          {avail}
+        </div>
         {/* Location and title on their own lines. Joined into "Strength coach in
             Jersey City, NJ" they made one long line that wrapped to two anyway,
             and the city is the thing people scan for. */}
         {location.trim() && <p className="profwhere">{location.trim()}</p>}
         {title.trim() && <p className="proftitle">{title.trim()}</p>}
-        {avail}
         {actions}
       </div>
       <div className="pubtabs" aria-label="Profile sections">

@@ -527,6 +527,7 @@ await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "Abo
   const order = await page.locator(".pubtab").allInnerTexts();
   if (order[0].trim() !== "Schedule") fail("Schedule should lead the tabs, got " + order.join(", "));
 }
+
 await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
 if (await page.getByText("Made with").count())
   fail("the made-with footer should be hidden from anyone signed in");
@@ -1234,8 +1235,15 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
   await fan.locator(".weekcal .setrow", { hasText: "Share my week" }).waitFor();
-  // Every row can leave.
+  // Every row can leave, and it asks first: this is a list of things you meant
+  // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
+  await fan.locator(".confirmsheet").waitFor();
+  await fan.getByRole("button", { name: "Keep it" }).click();
+  await fan.waitForFunction(() => !document.querySelector(".confirmsheet"));
+  if ((await rows.count()) !== 1) fail("Keep it should leave the class where it was");
+  await rows.first().locator(".weekrow-x").click();
+  await fan.getByRole("button", { name: "Remove it" }).click();
   await fan.getByText("Removed from your week").waitFor();
   await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
   // The badge goes with it: the count is state, not a running total.
@@ -1503,8 +1511,10 @@ await page.locator(".profname").waitFor();
 if (!(await page.locator(".profacts .followpill").count()))
   fail("Follow should sit in the actions row under the name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
-if (await page.locator(".profwrap > .brandbar").count())
-  fail("a profile should not carry the app header");
+// Signed in, this is still the app, so the header comes with it. The bottom
+// tabs don't: a profile is a place you went, not one of the three you live in.
+if (!(await page.locator(".profwrap > .brandbar").count()))
+  fail("a signed-in viewer should get the app header on a profile");
 if (await page.locator(".navbar").count()) fail("a profile should not carry the bottom tabs");
 // Nothing pins: each tab is its own page, so there is no long scroll to keep
 // a control in reach of.
@@ -1737,6 +1747,15 @@ await page.waitForTimeout(450); // the account slides up
   await page.locator(".availopt", { hasText: "Accepting" }).click();
   await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
   await page.locator(".settingstop .acctclose").click();
+}
+// And it shows on the page as a badge beside the name, not a pill two lines
+// down: it answers the question a visitor is already asking.
+{
+  await page.goto(BASE + "/matt");
+  const badge = page.locator(".profname-row .availbadge");
+  await badge.waitFor();
+  if (!(await badge.innerText()).includes("Open for clients"))
+    fail("the status badge should say the status, got " + (await badge.innerText()));
 }
 // Back on the account, the row reports it without being opened.
 await page.goto(BASE + "/app");

@@ -14,6 +14,7 @@ import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
+import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -48,8 +49,10 @@ export async function PublicProfileView({
   // the subscribe bar instead of the email sheet.
   let account: { following: boolean } | null = null;
   let signedIn = false;
+  // Who's looking, for the app header. The owner gets it too: previewing your
+  // own page shouldn't drop you out of the app.
+  const viewerId = await getSessionUserId();
   if (!isOwner && (await fansVisible())) {
-    const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
         .select({ email: schema.users.email })
@@ -337,9 +340,10 @@ export async function PublicProfileView({
         />
       )}
       <div className="profwrap">
-        {/* A visitor needs to know where they are and how to join. Someone
-            signed in has both already, and gets the back arrow instead. */}
-        {!signedIn && !isOwner && <PublicTopBar handle={handle} />}
+        {/* Signed in, this is still the app, so it keeps the app's header: the
+            way home, the bell, your week. A stranger gets the wordmark and one
+            way in instead, because none of those mean anything to them yet. */}
+        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={handle} />}
         <ProfileTabs
           handle={handle}
           tab={tab}
@@ -373,14 +377,15 @@ export async function PublicProfileView({
               </div>
             ) : null
           }
+          // Beside the name rather than under the title: it's a badge on the
+          // person, the same shape as a verification mark, and it answers the
+          // question a visitor is already asking.
           avail={
             user.availability ? (
-              <div className={`availpill availpill-${user.availability}`}>
+              <span className={`availbadge availbadge-${user.availability}`}>
                 <span className="availdot" aria-hidden="true" />
-                {user.availability === "accepting"
-                  ? "Accepting new clients"
-                  : "Waitlist for new clients"}
-              </div>
+                {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
+              </span>
             ) : null
           }
         >

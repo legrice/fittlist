@@ -1058,15 +1058,20 @@ button.ps-card { cursor: pointer; }
 .profstudios { margin-top: 26px; }
 .profsec { margin-top: 26px; }
 
-/* Availability pill (public) — sits under the title/location line */
-.availpill {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-  padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+/* The coach's status, as a badge beside their name. It answers the question a
+   visitor is already asking, so it sits with who they are rather than under
+   two lines of context. */
+.profname-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.availbadge {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  padding: 6px 12px; border-radius: 999px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
   border: 1px solid var(--line); background: var(--cl); color: var(--ink);
 }
-.availdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.availpill-accepting .availdot { background: #3f9d5a; }
-.availpill-waitlist .availdot { background: #d98a2b; }
+.availdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.availbadge-accepting .availdot { background: #3f9d5a; }
+.availbadge-waitlist .availdot { background: #d98a2b; }
 
 /* Certifications (public): same bullet-list style as Coaching focus, ruled off
    underneath to close the section. */
@@ -1113,7 +1118,7 @@ button.ps-card { cursor: pointer; }
 .brandbar-actions { display: flex; align-items: center; gap: 10px; }
 .inboxbtn {
   position: relative; width: 38px; height: 38px; border-radius: 999px;
-  background: var(--cl); border: 1px solid var(--line); color: var(--ink);
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
   /* the unread badge overhangs the circle — don't let .iconbtn's clip cut it */
   overflow: visible;
 }
@@ -1159,6 +1164,9 @@ button.ps-card { cursor: pointer; }
 
 /* A class, from the bottom up. The list stays behind it, so adding reads as
    picking something up rather than going somewhere. */
+/* An ask, not a screen: it sits low and stays small, so the list it's about is
+   still visible behind it. */
+.confirmsheet { max-width: 460px; }
 .classsheet-wait { min-height: 220px; }
 .classsheet-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
@@ -2133,6 +2141,9 @@ button.ps-card { cursor: pointer; }
 /* pill / avatar chrome */
 [data-mode="dark"] .usericon,
 [data-mode="dark"] .inboxrow-av { background: var(--cl); }
+/* The header circles are white in light mode, so in dark they take the card
+   fill rather than staying white and punching a hole in the bar. */
+[data-mode="dark"] .inboxbtn { background: var(--card); }
 /* press states (were warm cream) */
 [data-mode="dark"] .setrow:active,
 [data-mode="dark"] .acctcard:active,
