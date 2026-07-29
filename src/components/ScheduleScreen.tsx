@@ -209,18 +209,6 @@ export function ScheduleScreen({
     return out;
   }, [classes, todayIso, weeks]);
 
-  // The public page URL, straight to the clipboard. Same copy as the QR sheet's
-  // row, hoisted up because it's the one thing a coach does over and over.
-  const copyLink = async () => {
-    const url = `${window.location.origin}/${handle}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Link copied, ready to paste");
-    } catch {
-      toast(url);
-    }
-  };
-
   // The next seven days as pasteable text. Public classes only: a private
   // client session is not for the group chat.
   const copyWeek = async () => {
@@ -293,19 +281,9 @@ export function ScheduleScreen({
             instead. */}
         <div className="dashstrip">
           <div className="dashlinks">
-            {/* No Requests pill here. A pill that says "Requests" and opens a
-                message thread promises a queue and delivers a chat; the room it
-                should open doesn't exist yet. */}
             <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
               <Icon name="account_circle" size={19} />
               <span>Your profile</span>
-            </button>
-            {/* The link is the product. It was two taps down inside the QR
-                sheet, which is the wrong place for the thing people paste into
-                a bio, a story, a reply. */}
-            <button className="dashlink" onClick={copyLink}>
-              <Icon name="link" size={19} />
-              <span>Copy link</span>
             </button>
             {/* "Share cal" read like the calendar feed. It opens the story
                 image, which is what the sheet behind it is called. */}
@@ -323,6 +301,11 @@ export function ScheduleScreen({
               <Icon name="content_copy" size={19} />
               <span>Copy week</span>
             </button>
+            {/* Requests goes here, at the end, when it has a room of its own.
+                A pill that says "Requests" and opens a message thread promises a
+                queue and delivers a chat. These five are all things you do with
+                your week; a request is someone else's move, so it sits after
+                them rather than leading. */}
           </div>
         </div>
 

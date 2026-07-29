@@ -419,7 +419,7 @@ console.log("account + profile edit ok (back -> account)");
 await page.goto(BASE + "/app");
 {
   const pills = (await page.locator(".dashlinks .dashlink").allInnerTexts()).map((t) => t.trim());
-  const want = ["Your profile", "Copy link", "Share week", "QR code", "Copy week"];
+  const want = ["Your profile", "Share week", "QR code", "Copy week"];
   if (pills.join("|") !== want.join("|"))
     fail("schedule tools should be " + want.join(", ") + ", got " + pills.join(", "));
 }
@@ -434,14 +434,6 @@ await page.locator(".dashlink", { hasText: "Share week" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-// Copy link puts the public URL on the clipboard. Where the browser refuses
-// the write it toasts the URL instead, so either way the toast carries it.
-await page.locator(".dashlink", { hasText: "Copy link" }).click();
-await page.locator(".toast.on").waitFor();
-{
-  const msg = await page.locator(".toast").innerText();
-  if (!/Link copied|\/matt/.test(msg)) fail("Copy link should confirm or show the link, got " + msg);
-}
 await page.locator(".dashlink", { hasText: "Your profile" }).click();
 await page.waitForURL("**/matt");
 await page.goto(BASE + "/app");
