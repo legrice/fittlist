@@ -881,13 +881,13 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-event:active { background: #f3ecdf; }
 .ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
 .ps-agenda .ps-ebody { gap: 5px; }
-/* 500 and a touch of positive tracking: the name reads better open and light
-   than tight and heavy, and it stops competing with the time. The sizes went up
-   2px with the extra row padding and came back down again; the air was the part
-   worth keeping. */
+/* A touch of positive tracking, against the base rule's negative: the name reads
+   better open than tight. The weight and the size both went a step away and came
+   back (500, and 2px up on everything in the row); the air the padding gives is
+   the part that helped. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-weight: 500; font-size: 18.5px; line-height: 1.2; letter-spacing: .004em;
+  font-size: 18.5px; line-height: 1.2; letter-spacing: .004em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
