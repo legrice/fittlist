@@ -71,5 +71,5 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   if (user.kind === "fan") {
     return <MemberProfileView user={user} isOwner={isOwner} from={from} />;
   }
-  return <PublicProfileView user={user} isOwner={isOwner} initialTab="about" from={from} />;
+  return <PublicProfileView user={user} isOwner={isOwner} tab="about" from={from} />;
 }

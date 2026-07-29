@@ -487,25 +487,30 @@ await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible
 await expect(page.locator(".profwhere", { hasText: "Jersey City" }).isVisible(), "profile shows where");
 await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
 await expect(
-  page.locator('.proflink[href="https://instagram.com/mattlifts"]').isVisible(),
-  "profile shows instagram link",
-);
-await expect(
-  page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
-  "profile shows website link",
-);
-await expect(
-  page.locator('.proflink[href="mailto:matt@ironbound.co"]').isVisible(),
-  "profile shows email contact button",
-);
-await expect(
-  page.locator('.proflink[href^="tel:"]').isVisible(),
-  "profile shows call contact button",
-);
-await expect(
   page.locator(".coachstudio", { hasText: "Ironbound Strength" }).isVisible(),
   "profile shows 'Where I coach' studio",
 );
+// The ways to reach them live on their own URL now, not under the bio.
+if (await page.locator(".proflink").count())
+  fail("contact links belong on /matt/contact, not on About");
+await page.goto(BASE + "/matt/contact");
+await expect(
+  page.locator('.proflink[href="https://instagram.com/mattlifts"]').isVisible(),
+  "contact shows instagram link",
+);
+await expect(
+  page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
+  "contact shows website link",
+);
+await expect(
+  page.locator('.proflink[href="mailto:matt@ironbound.co"]').isVisible(),
+  "contact shows email contact button",
+);
+await expect(
+  page.locator('.proflink[href^="tel:"]').isVisible(),
+  "contact shows call contact button",
+);
+await page.goto(BASE + "/matt");
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
 if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
@@ -536,7 +541,7 @@ await page.locator(".sheet .sheetclose, .sheet .adderclose").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-profile.png", fullPage: true });
 
-// ---- Schedule tab -> continuous public calendar, no navigation, URL updates
+// ---- Schedule is its own URL, so a tab is a real navigation you can share
 await page.locator(".pubtab", { hasText: "Schedule" }).click();
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
 await page.waitForURL("**/matt/schedule");
@@ -942,8 +947,10 @@ console.log("one-off future ok");
 
 // the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
-// deep-link scrolls to the schedule; the scroll-spy marks the tab active once settled
+// The URL is the section: landing here renders the week, no scrolling involved.
 await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
+if (await page.locator(".profabout").count())
+  fail("the schedule URL should render the schedule, not the whole profile");
 await page.waitForFunction(() => document.querySelectorAll(".ps-event").length > 0);
 const pubCount = await eventCount(page);
 if (pubCount < 1) fail(`public schedule should render events, got ${pubCount}`);
@@ -1427,15 +1434,15 @@ if (await page.locator(".profshare").count()) fail("the share button should be g
 if (await page.locator(".profwrap > .brandbar").count())
   fail("a profile should not carry the app header");
 if (await page.locator(".navbar").count()) fail("a profile should not carry the bottom tabs");
-// The identity block scrolls; the tabs are what you still need once you're
-// reading a section, so they're the only thing pinned.
+// Nothing pins: each tab is its own page, so there is no long scroll to keep
+// a control in reach of.
 await expect(
   page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position !== "sticky"),
-  "the identity block scrolls away",
+  "the identity block is not pinned",
 );
 await expect(
-  page.locator(".pubtabs").evaluate((e) => getComputedStyle(e).position === "sticky"),
-  "the tab pills are pinned",
+  page.locator(".pubtabs").evaluate((e) => getComputedStyle(e).position !== "sticky"),
+  "the tabs are not pinned",
 );
 if (!(await page.locator(".pubhead .evback").count()))
   fail("a signed-in viewer needs a way back off a profile");
@@ -1452,6 +1459,28 @@ await page.locator(".pubtab.sel").waitFor();
   if (t.radius < 20) fail("the selected tab should be a pill, radius " + t.radius);
   if (t.bg === "rgba(0, 0, 0, 0)") fail("the selected tab should be filled");
 }
+// ---- each tab is a link with its own URL, so a coach can send someone to one
+{
+  const hrefs = await page
+    .locator(".pubtabs a")
+    .evaluateAll((els) => els.map((e) => new URL(e.href).pathname));
+  const want = ["/matt", "/matt/contact", "/matt/schedule"];
+  if (hrefs.join("|") !== want.join("|"))
+    fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
+  // Landing on a section URL renders that section and only that section.
+  await page.goto(BASE + "/matt/contact");
+  await page.locator(".pubtab.sel", { hasText: "Contact" }).waitFor();
+  await page.locator('.proflink[href^="mailto:"]').waitFor();
+  if (await page.locator(".ps-event").count())
+    fail("the contact URL should not carry the schedule");
+  if (await page.locator(".profabout").count())
+    fail("the contact URL should not carry the bio");
+  // And back to About.
+  await page.locator(".pubtab", { hasText: "About" }).click();
+  await page.waitForURL((u) => u.pathname === "/matt");
+  await page.locator(".profabout").waitFor();
+}
+console.log("profile tabs are links ok (three URLs, one section each)");
 // following turns the pill green — the same yes as Going. Matt already
 // follows Sam by this point, so settle the state first rather than assuming.
 await page.goto(BASE + "/discover");
@@ -1685,7 +1714,8 @@ console.log("saving contact info leaves the rest alone ok");
   const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const vp = await visitor.newPage();
   vp.setDefaultTimeout(10000);
-  await vp.goto(BASE + "/matt");
+  // The Contact tab's CTA, on its own URL now.
+  await vp.goto(BASE + "/matt/contact");
   await vp.getByRole("button", { name: "Request private session" }).click();
   await vp.locator("#rqName").fill("Priya Visitor");
   await vp.locator("#rqEmail").fill("priya@example.com");
@@ -1735,8 +1765,10 @@ await page.locator(".acctclose").click();
   await vp.locator(".profacts").waitFor();
   if (await vp.locator(".actpill-primary", { hasText: "Message" }).count())
     fail("messages off should take the Message pill off the page");
+  await vp.goto(BASE + "/matt/contact");
   if (await vp.getByRole("button", { name: "Request private session" }).count())
     fail("messages off should close the Contact door too");
+  await vp.goto(BASE + "/matt");
   // Following is unaffected: not writing to someone is not not following them.
   if (!(await vp.locator(".profacts .followpill").count()))
     fail("Follow should survive messages being off");

@@ -18,11 +18,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
-  const title = `${user.name}'s schedule · fittlist`;
-  const description = `${user.name}'s coaching schedule, every studio in one link.`;
-  const url = `${siteOrigin()}/${handle}/schedule`;
-  // A coach's page answers to two URLs and people share both, so the card has
-  // to be on both. Same card: it's the same person either way.
+  const title = `Contact ${user.name} · fittlist`;
+  const description = `How to reach ${user.name}.`;
+  const url = `${siteOrigin()}/${handle}/contact`;
+  // Every URL a coach's page answers to carries the same card. It's the same
+  // person whichever section you were sent to.
   const image = `${siteOrigin()}/api/og/${handle}`;
   return {
     title,
@@ -40,18 +40,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// The Schedule tab, as its own page. A coach can send someone straight here
-// and they land on the week rather than at the top of the profile.
-export default async function SchedulePage({ params, searchParams }: Props) {
+// The Contact tab, as its own page. Falls back to About inside the view when
+// the coach has nothing to show here, so the URL never renders a blank section.
+export default async function ContactPage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
-  // A member claims a handle too, and has no schedule behind it. /{handle}
-  // already routes them to their own page; this one has nothing to show.
+  // A member's link has no coach page behind it, so no Contact section either.
   if (user.kind === "fan") notFound();
 
   const isOwner = (await getSessionUserId()) === user.id;
-  return <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />;
+  return <PublicProfileView user={user} isOwner={isOwner} tab="contact" from={from} />;
 }

@@ -42,11 +42,14 @@ await p.locator(".publishwrap .btn").click();
 await p.waitForTimeout(900);
 console.log("coach fixture ok");
 
-// A visitor, arriving at the profile the way anyone does: from a link.
+// A visitor, arriving at the schedule the way anyone does: from a link. Each
+// tab is its own URL now, so the classes live at /sarah/schedule; tapping the
+// coach's name from a class goes to /sarah, which samePage() treats as the
+// same screen, so it pops rather than pushing a fourth entry.
 const v = await b.newContext({ viewport: { width: 390, height: 844 } });
 const q = await v.newPage();
 q.setDefaultTimeout(15000);
-await q.goto(BASE + "/sarah");
+await q.goto(BASE + "/sarah/schedule");
 await q.locator(".ps-event").first().waitFor();
 const depth0 = await q.evaluate(() => history.length);
 
@@ -75,7 +78,7 @@ if (/\/sarah\/[0-9a-f-]{36}/.test(q.url()))
 console.log("back from the profile leaves, it doesn't bounce ok");
 
 // The in-app back arrow on a class page pops too.
-await q.goto(BASE + "/sarah");
+await q.goto(BASE + "/sarah/schedule");
 await q.locator(".ps-event").first().waitFor();
 await q.locator(".ps-event").first().click();
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
@@ -98,7 +101,7 @@ console.log("the class page back arrow pops ok");
 const cold = await b.newContext({ viewport: { width: 390, height: 844 } });
 const r = await cold.newPage();
 r.setDefaultTimeout(15000);
-await q.goto(BASE + "/sarah");
+await q.goto(BASE + "/sarah/schedule");
 await q.locator(".ps-event").first().click();
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
 const classUrl = q.url();

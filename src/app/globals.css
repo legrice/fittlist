@@ -1303,10 +1303,12 @@ button.ps-card { cursor: pointer; }
 .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
 .followpill[disabled] { opacity: .55; pointer-events: none; }
 
-/* About / Contact / Schedule, as a scrolling rail of pills. */
+/* About / Contact / Schedule, as a scrolling rail of pills. Each one is a link
+   to its own URL, so they don't pin: the page under them is one section, not a
+   scroll with three stops. */
 .pubtabs {
-  position: sticky; z-index: 5; background: var(--paper);
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--line);
   /* Full bleed: stretch to the window edges and pad the content back to the
      column, so a pill can sit half off the screen rather than stopping short. */
   margin: 22px calc(50% - 50vw) 0;
@@ -1314,17 +1316,14 @@ button.ps-card { cursor: pointer; }
 }
 .pubtabs::-webkit-scrollbar { display: none; }
 .pubtab {
-  flex: 0 0 auto; padding: 11px 20px; border-radius: 999px;
+  flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 15px; color: var(--ol); background: transparent;
+  font-size: 15px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 .pubtab.sel { color: var(--ink); background: var(--cl); }
-.pubpanel { padding-top: 20px; }
-.pubpanel .profphoto { margin-top: 0; }
+.pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
-/* Divider under About (Where I coach), then a titled Schedule section. */
-.pubpanel-sched { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 40px; }
 /* A section header that follows content rather than starting the page. It had
    26px of air under it and none above, so it sat on the card before it and
    floated off the one after. Same rhythm as .profstudios now: space above,

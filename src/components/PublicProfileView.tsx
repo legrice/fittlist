@@ -14,7 +14,7 @@ import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
-import { ProfileTabs } from "@/components/ProfileTabs";
+import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -22,18 +22,18 @@ const WINDOW_DAYS = 31; // a continuous forward window — about a month
 
 type UserRow = typeof schema.users.$inferSelect;
 
-// The whole public page: an identity header, an About / Schedule tab switcher,
-// and a persistent "get email updates" bar. Shared by /{handle} (About first)
-// and /{handle}/schedule (Schedule first) so both are one page, no navigation.
+// The public page: an identity header and one section under it. Three URLs,
+// one per tab: /{handle}, /{handle}/contact, /{handle}/schedule. A coach can
+// send someone straight to the schedule and they land on it.
 export async function PublicProfileView({
   user,
   isOwner,
-  initialTab,
+  tab,
   from,
 }: {
   user: UserRow;
   isOwner: boolean;
-  initialTab: "about" | "schedule";
+  tab: ProfileTab;
   /** Which tab sent them here, so the back arrow returns to it. */
   from?: string;
 }) {
@@ -180,11 +180,10 @@ export async function PublicProfileView({
     </>
   );
 
-  // Contact gets its own tab/section: the private-session request plus the
-  // ways to reach the coach, stacked as full-width rows. The request button
-  // only exists while the coach is taking clients (accepting/waitlist) —
-  // availability hidden means no inquiries.
-  const hasContact = !!(
+  // Contact is its own page: the private-session request plus the ways to
+  // reach the coach, stacked as full-width rows. No "Contact" heading on it,
+  // because the tab you tapped to get here already says that.
+  const hasContactDetails = !!(
     user.contactEmail ||
     user.phone ||
     user.whatsapp ||
@@ -196,9 +195,9 @@ export async function PublicProfileView({
   // who scrolled to Contact looking for exactly this, and only while the coach
   // is taking private clients.
   const canRequest = !isOwner && !!user.availability && user.messagesOpen;
-  const contact = hasContact || canRequest ? (
+  const hasContact = hasContactDetails || canRequest;
+  const contact = hasContact ? (
     <>
-      <h2 className="prof-sec-h sched-h">Contact</h2>
       {canRequest && <RequestSessionButton handle={handle} coachName={user.name} />}
       <div className="contactlist">
         {user.contactEmail && (
@@ -247,7 +246,6 @@ export async function PublicProfileView({
 
   const schedule = (
     <>
-      <h2 className="prof-sec-h sched-h">Schedule</h2>
       {days.length === 0 ? (
         <div className="empty-block">
           <h2>Nothing on the calendar</h2>
@@ -331,10 +329,11 @@ export async function PublicProfileView({
         {!signedIn && !isOwner && <PublicTopBar handle={handle} />}
         <ProfileTabs
           handle={handle}
-          initialTab={initialTab}
+          tab={tab}
           name={user.name}
           title={user.title ?? ""}
           location={user.location ?? ""}
+          hasContact={hasContact}
           trackSchedule={!isOwner}
           back={
             signedIn ? (
@@ -371,10 +370,12 @@ export async function PublicProfileView({
               </div>
             ) : null
           }
-          about={about}
-          contact={contact}
-          schedule={schedule}
-        />
+        >
+          {/* One section, the one they asked for. Contact can vanish (no
+              details and no open door), so it falls back to About rather than
+              rendering an empty page under a tab that isn't there. */}
+          {tab === "schedule" ? schedule : tab === "contact" && contact ? contact : about}
+        </ProfileTabs>
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (

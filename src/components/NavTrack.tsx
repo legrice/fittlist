@@ -38,13 +38,14 @@ export function pageBeneath(): string | null {
 /**
  * One screen, whatever it's calling itself.
  *
- * A coach's page answers to both "/sarah" and "/sarah/schedule": the tabs are
- * anchors in one scroll and switching them rewrites the URL in place, without
- * a navigation. So the URL recorded when you arrived and the URL a back
- * control points at can name the same screen and still not match as strings.
+ * A coach's page answers to "/sarah", "/sarah/contact" and "/sarah/schedule".
+ * They're separate routes now, but they're still one screen wearing three
+ * URLs: the header is identical and only the section below it differs. A back
+ * control pointing at "/sarah" should pop off any of them rather than pushing
+ * a fourth entry onto the pile.
  */
 export function samePage(a: string, b: string): boolean {
-  const bare = (u: string) => u.replace(/\/schedule$/, "") || "/";
+  const bare = (u: string) => u.replace(/\/(schedule|contact)$/, "") || "/";
   return a === b || bare(a) === bare(b);
 }
 

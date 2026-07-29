@@ -173,9 +173,16 @@ place that writes `users.location` means passing `knownLocations()` in too.
 `router.back()` when the page underneath is where the control points. Pushing
 unconditionally is what trapped people between a coach page and a class page:
 both link to each other, so every tap grew history and the browser button could
-only walk the pile. A coach's page answers to two URLs, `/{handle}` and
-`/{handle}/schedule`, because the tabs rewrite the URL in place without a
-navigation, so compare with `samePage()` rather than `===`.
+only walk the pile. A coach's page answers to three URLs, so compare with
+`samePage()` rather than `===`.
+
+**A coach's profile is three routes, one per tab:** `/{handle}` (About),
+`/{handle}/contact`, `/{handle}/schedule`. The tabs are links, not scroll
+anchors, so a coach can send someone straight to their week. `PublicProfileView`
+takes a `tab` and renders that section only; the header above it is identical on
+all three, which is why `samePage()` treats them as one screen for back
+controls. Adding a fourth section means a route, a `ProfileTab` value, a branch
+in the view, and `samePage()`'s regex.
 
 **`@media (display-mode: standalone)` is how the installed app differs from
 the browser.** It matches on a home-screen launch and not in a tab, so it's the

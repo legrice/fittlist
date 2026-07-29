@@ -1,35 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useEffect, useRef, type ReactNode } from "react";
 
-type Tab = "about" | "contact" | "schedule";
+export type ProfileTab = "about" | "contact" | "schedule";
 
-// The public profile header + About/Contact/Schedule sections, in one
-// continuous scroll. The identity block (face, name, where, what, then the
-// actions) scrolls away; the tab pills stick to the top, because once you're
-// reading a section the tabs are the only control you still want. They double
-// as scroll anchors, and a scroll-spy keeps the active pill in sync with
-// whatever section is under them.
+// The public profile header and one section under it.
+//
+// The tabs are links, not scroll anchors. Every section has its own URL, so a
+// coach can send someone straight to fittlist.co/{handle}/schedule and they
+// land on the schedule rather than at the top of a long page with an implied
+// instruction to scroll. It also means the section survives a reload, a share
+// and the back button, none of which a replaceState-on-scroll managed.
 export function ProfileTabs({
   handle,
-  initialTab,
+  tab,
   name,
   title,
   location,
+  hasContact,
   trackSchedule,
   back,
   avatar,
   actions,
   avail,
-  about,
-  contact,
-  schedule,
+  children,
 }: {
   handle: string;
-  initialTab: "about" | "schedule";
+  tab: ProfileTab;
   name: string;
   title: string;
   location: string;
+  /** No contact details and no way to write to them means no Contact tab. */
+  hasContact: boolean;
   trackSchedule: boolean;
   /** The way out, on its own line above the identity block. */
   back: ReactNode;
@@ -38,111 +41,38 @@ export function ProfileTabs({
   /** The row of pills under the name: Message, Follow. */
   actions: ReactNode;
   avail: ReactNode | null;
-  about: ReactNode;
-  contact: ReactNode | null;
-  schedule: ReactNode;
+  children: ReactNode;
 }) {
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const contactRef = useRef<HTMLDivElement>(null);
-  const schedRef = useRef<HTMLDivElement>(null);
-  const [tabsH, setTabsH] = useState(0);
-  const didInitScroll = useRef(false);
-  const trackedSchedule = useRef(false);
+  const tracked = useRef(false);
 
-  // Only the tabs pin now, so they're the whole sticky offset: how far down a
-  // scrolled-to section has to land to clear them.
+  // Count one "schedule open" per visit. It used to fire when the scroll-spy
+  // reached the schedule section; landing on the URL is the event now.
   useEffect(() => {
-    const measure = () => {
-      if (tabsRef.current) setTabsH(tabsRef.current.offsetHeight);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (tabsRef.current) ro.observe(tabsRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  const offset = tabsH;
-
-  const goTo = (t: Tab, smooth = true) => {
-    const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
-    if (t === "schedule") schedRef.current?.scrollIntoView({ behavior, block: "start" });
-    else if (t === "contact") contactRef.current?.scrollIntoView({ behavior, block: "start" });
-    else window.scrollTo({ top: 0, behavior });
-  };
-
-  const select = (t: Tab) => {
-    setTab(t);
-    goTo(t);
-    window.history.replaceState(null, "", t === "schedule" ? `/${handle}/schedule` : `/${handle}`);
-  };
-
-  // Arriving at /{handle}/schedule lands you on the schedule once heights are
-  // measured (so the sticky offset is correct).
-  useEffect(() => {
-    if (initialTab === "schedule" && offset > 0 && !didInitScroll.current) {
-      didInitScroll.current = true;
-      goTo("schedule", false);
-    }
-    // Run once heights are known; goTo/initialTab are stable enough here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offset]);
-
-  // Scroll-spy: whichever section sits under the sticky header is "active".
-  useEffect(() => {
-    let raf = 0;
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const sched = schedRef.current;
-        if (!sched) return;
-        const line = offset + 16;
-        if (sched.getBoundingClientRect().top <= line) {
-          setTab("schedule");
-          return;
-        }
-        const contactEl = contactRef.current;
-        if (contactEl && contactEl.getBoundingClientRect().top <= line) {
-          setTab("contact");
-          return;
-        }
-        setTab("about");
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [offset]);
-
-  // Count one "schedule open" per visit, the first time the schedule is viewed.
-  useEffect(() => {
-    if (tab !== "schedule" || !trackSchedule || trackedSchedule.current) return;
-    trackedSchedule.current = true;
+    if (tab !== "schedule" || !trackSchedule || tracked.current) return;
+    tracked.current = true;
     const url = `/api/track/schedule/${handle}`;
     if (typeof navigator !== "undefined" && navigator.sendBeacon) navigator.sendBeacon(url);
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
   }, [tab, trackSchedule, handle]);
 
-  const tabBtn = (t: Tab, label: string) => (
-    <button
-      role="tab"
-      aria-selected={tab === t}
+  const tabLink = (t: ProfileTab, label: string) => (
+    <Link
+      key={t}
+      href={t === "about" ? `/${handle}` : `/${handle}/${t}`}
+      aria-current={tab === t ? "page" : undefined}
       className={`pubtab${tab === t ? " sel" : ""}`}
-      onClick={() => select(t)}
+      // Switching sections shouldn't throw you back to the top of a page you
+      // are already partway down; the header above is identical either way.
+      scroll={false}
     >
       {label}
-    </button>
+    </Link>
   );
 
   return (
     <>
       {/* Who this is, top to bottom: face, name, where, what. Then the things
-          you can do about it. The block scrolls away; only the tabs pin, which
-          is what you need once you're reading a section. */}
+          you can do about it, then the section you asked for. */}
       <div className="pubhead">
         {back}
         {avatar}
@@ -155,22 +85,12 @@ export function ProfileTabs({
         {avail}
         {actions}
       </div>
-      <div className="pubtabs" role="tablist" aria-label="Profile sections" ref={tabsRef} style={{ top: 0 }}>
-        {tabBtn("about", "About")}
-        {contact && tabBtn("contact", "Contact")}
-        {tabBtn("schedule", "Schedule")}
+      <div className="pubtabs" aria-label="Profile sections">
+        {tabLink("about", "About")}
+        {hasContact && tabLink("contact", "Contact")}
+        {tabLink("schedule", "Schedule")}
       </div>
-      <div className="pubpanel" style={{ scrollMarginTop: offset }}>
-        {about}
-      </div>
-      {contact && (
-        <div className="pubpanel pubpanel-sched" ref={contactRef} style={{ scrollMarginTop: offset }}>
-          {contact}
-        </div>
-      )}
-      <div className="pubpanel pubpanel-sched" ref={schedRef} style={{ scrollMarginTop: offset }}>
-        {schedule}
-      </div>
+      <div className="pubpanel">{children}</div>
     </>
   );
 }
