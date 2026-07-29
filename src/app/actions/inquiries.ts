@@ -36,9 +36,23 @@ export async function sendInquiry(
 
   const [thread] = await db
     .insert(schema.inquiryThreads)
-    .values({ coachUserId: coach.id, requesterName: name, requesterEmail: email, coachUnread: 1 })
+    // kind is spelled out on both sides. The unique index gained it when
+    // feedback moved onto these tables, and a two-column ON CONFLICT no longer
+    // matches any index: every request 500'd on "no unique or exclusion
+    // constraint matching the ON CONFLICT specification".
+    .values({
+      coachUserId: coach.id,
+      kind: "inquiry",
+      requesterName: name,
+      requesterEmail: email,
+      coachUnread: 1,
+    })
     .onConflictDoUpdate({
-      target: [schema.inquiryThreads.coachUserId, schema.inquiryThreads.requesterEmail],
+      target: [
+        schema.inquiryThreads.coachUserId,
+        schema.inquiryThreads.requesterEmail,
+        schema.inquiryThreads.kind,
+      ],
       set: {
         requesterName: name || sql`${schema.inquiryThreads.requesterName}`,
         coachUnread: sql`${schema.inquiryThreads.coachUnread} + 1`,

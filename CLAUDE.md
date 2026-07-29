@@ -248,7 +248,10 @@ used to write `location: null` and quietly clear the coach's city.
 writing to us about the app), and the unique index is
 `(coach_user_id, requester_email, kind)`. The admin is also a coach, so without
 the kind their feedback and their real private-session requests would collapse
-into one thread. `feedbackHost()` picks the first `ADMIN_EMAILS` address with an
+into one thread. Every upsert has to name all three columns: `sendInquiry` was
+left naming two, which matches no index, and each request 500'd on "no unique or
+exclusion constraint matching the ON CONFLICT specification" until the smoke
+suite started sending one. `feedbackHost()` picks the first `ADMIN_EMAILS` address with an
 account; no account means no door, and the settings row hides.
 
 **A `"use server"` file can only export async functions.** A constant in one

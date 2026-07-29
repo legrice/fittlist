@@ -232,7 +232,7 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
   const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
-  await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+  await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
   if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
@@ -253,7 +253,7 @@ for (let attempt = 0; ; attempt++) {
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
   if (!done) {
     await page.reload();
-    await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+    await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
     done = (await scheduleClasses(page)) === 2;
   }
   if (done) break;
@@ -419,7 +419,7 @@ console.log("account + profile edit ok (back -> account)");
 await page.goto(BASE + "/app");
 {
   const pills = (await page.locator(".dashlinks .dashlink").allInnerTexts()).map((t) => t.trim());
-  const want = ["Your page", "Share cal", "QR code", "Copy week"];
+  const want = ["Your profile", "Copy link", "Share week", "QR code", "Copy week"];
   if (pills.join("|") !== want.join("|"))
     fail("schedule tools should be " + want.join(", ") + ", got " + pills.join(", "));
 }
@@ -430,11 +430,19 @@ await page.locator(".dashlink", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".dashlink", { hasText: "Share cal" }).click();
+await page.locator(".dashlink", { hasText: "Share week" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".dashlink", { hasText: "Your page" }).click();
+// Copy link puts the public URL on the clipboard. Where the browser refuses
+// the write it toasts the URL instead, so either way the toast carries it.
+await page.locator(".dashlink", { hasText: "Copy link" }).click();
+await page.locator(".toast.on").waitFor();
+{
+  const msg = await page.locator(".toast").innerText();
+  if (!/Link copied|\/matt/.test(msg)) fail("Copy link should confirm or show the link, got " + msg);
+}
+await page.locator(".dashlink", { hasText: "Your profile" }).click();
 await page.waitForURL("**/matt");
 await page.goto(BASE + "/app");
 // and the QR is still reachable from the account view
@@ -633,7 +641,7 @@ console.log("stats ok");
 // ---- that follow dropped a notification; the single Updates bell carries the
 // combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
@@ -658,7 +666,7 @@ await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 if (await page.locator('a[href="/updates"] .inboxdot').count())
   fail("updates badge should clear after opening the feed");
 console.log("updates (notifications + messages) ok");
@@ -981,7 +989,7 @@ const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
 if (![301, 302, 303, 307, 308].includes(magicRes.status()))
   fail("magic link should redirect after setting the session, got " + magicRes.status());
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
@@ -994,7 +1002,7 @@ await page.getByRole("button", { name: "Already have an account? Log in" }).clic
 await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
 await page.waitForURL(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1300,7 +1308,7 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 // no dead ends: a class opened from Home goes back to Home, and a coach's
 // page carries the nav so you can leave it
 await page.locator(".navtab", { hasText: "Following" }).click();
@@ -1527,7 +1535,7 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".dashlink", { hasText: "Share cal" }).waitFor();
+await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting
@@ -1544,6 +1552,54 @@ await openProfile(page);
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("avatar colour ok (fills the circle)");
+
+// ---- a visitor asks about private sessions. The unique index on the thread
+// table gained a `kind` column when feedback moved onto it, and the insert here
+// still named two of the three, so every request died on "no unique or
+// exclusion constraint matching the ON CONFLICT specification". Nothing tested
+// the send, so nothing said so.
+await page.goto(BASE + "/matt?edit=1");
+await page.locator(".availseg button", { hasText: "Accepting" }).click();
+await page.locator(".sheet .btn.si").first().click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+{
+  const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const vp = await visitor.newPage();
+  vp.setDefaultTimeout(10000);
+  await vp.goto(BASE + "/matt");
+  await vp.getByRole("button", { name: "Request private session" }).click();
+  await vp.locator("#rqName").fill("Priya Visitor");
+  await vp.locator("#rqEmail").fill("priya@example.com");
+  await vp.locator("#rqMsg").fill("Any Saturday mornings free for 1:1?");
+  await vp.getByRole("button", { name: "Send message" }).click();
+  await vp.getByRole("heading", { name: "Message sent" }).waitFor();
+  await visitor.close();
+}
+console.log("private session request sent ok");
+
+// It shows up as a pill at the top of the coach's week, lit while unread, and
+// the pill is only there because a request is.
+await page.goto(BASE + "/app");
+{
+  const pill = page.locator(".dashlink", { hasText: "Requests" });
+  await pill.waitFor();
+  if (!(await pill.getAttribute("class")).includes("hot"))
+    fail("an unread request should light the Requests pill");
+  const n = (await pill.locator(".dashlink-n").innerText()).trim();
+  if (n !== "1") fail("the Requests pill should count 1, got " + n);
+  const first = (await page.locator(".dashlink").first().innerText()).trim();
+  if (!first.startsWith("Requests")) fail("Requests should lead the rail, got " + first);
+  await pill.click();
+  await page.waitForURL(/tab=messages/);
+  await page.locator(".inboxrow").first().click();
+  await page.waitForURL(/\/inbox\/.+/);
+  await page.goto(BASE + "/app");
+  const read = page.locator(".dashlink", { hasText: "Requests" });
+  await read.waitFor();
+  if ((await read.getAttribute("class")).includes("hot"))
+    fail("a request that's been read should not still be lit");
+}
+console.log("requests pill ok (appears with the request, lit until read)");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss

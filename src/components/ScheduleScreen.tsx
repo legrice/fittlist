@@ -209,6 +209,18 @@ export function ScheduleScreen({
     return out;
   }, [classes, todayIso, weeks]);
 
+  // The public page URL, straight to the clipboard. Same copy as the QR sheet's
+  // row, hoisted up because it's the one thing a coach does over and over.
+  const copyLink = async () => {
+    const url = `${window.location.origin}/${handle}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Link copied, ready to paste");
+    } catch {
+      toast(url);
+    }
+  };
+
   // The next seven days as pasteable text. Public classes only: a private
   // client session is not for the group chat.
   const copyWeek = async () => {
@@ -276,18 +288,40 @@ export function ScheduleScreen({
 
         {invitesLeft > 0 && <InvitesBanner left={invitesLeft} />}
 
-        {/* The three things a coach reaches for from their week — the title
-            said nothing the tab bar doesn't already say, so the tools get the
-            space instead. */}
+        {/* The things a coach reaches for from their week — the title said
+            nothing the tab bar doesn't already say, so the tools get the space
+            instead. */}
         <div className="dashstrip">
           <div className="dashlinks">
+            {/* Someone waiting on an answer goes first, and only when there is
+                one: a pill that's always there is a label, but one that appears
+                the day a request lands is the app telling you something. */}
+            {requestCount > 0 && (
+              <button
+                className={`dashlink${inboxUnread > 0 ? " hot" : ""}`}
+                onClick={() => router.push("/updates?tab=messages")}
+              >
+                <Icon name="mail" size={19} />
+                <span>Requests</span>
+                <span className="dashlink-n">{inboxUnread > 0 ? inboxUnread : requestCount}</span>
+              </button>
+            )}
             <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
               <Icon name="account_circle" size={19} />
-              <span>Your page</span>
+              <span>Your profile</span>
             </button>
+            {/* The link is the product. It was two taps down inside the QR
+                sheet, which is the wrong place for the thing people paste into
+                a bio, a story, a reply. */}
+            <button className="dashlink" onClick={copyLink}>
+              <Icon name="link" size={19} />
+              <span>Copy link</span>
+            </button>
+            {/* "Share cal" read like the calendar feed. It opens the story
+                image, which is what the sheet behind it is called. */}
             <button className="dashlink" onClick={() => setShareOpen(true)}>
               <Icon name="calendar_today" size={19} />
-              <span>Share cal</span>
+              <span>Share week</span>
             </button>
             <button className="dashlink" onClick={() => setQrOpen(true)}>
               <Icon name="qr_code_2" size={19} />
