@@ -178,12 +178,12 @@ export function FeedAgenda({
                             {i.coachId === meId && <span className="ps-youtag">You</span>}
                           </span>
                           <span className="ps-enm">{i.name}</span>
-                          {i.where && (
-                            <span className="ps-estudio ps-ewhere">
-                              <Icon name="place" size={13} className="ps-estudio-ic" />
-                              <span className="ps-ewhere-txt">{i.where}</span>
-                            </span>
-                          )}
+                          {/* No pin here. A merged row already carries the
+                              coach's face above the class name, and a second
+                              glyph on the line under it is one mark too many.
+                              Your own schedule keeps its pin: nothing else on
+                              that row competes for the eye. */}
+                          {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
                         </span>
                         <span className="ps-etimecol">
                           {/* Level with the coach's name, above the time — the

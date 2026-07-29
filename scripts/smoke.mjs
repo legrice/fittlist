@@ -425,6 +425,14 @@ await page.goto(BASE + "/app");
 }
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
+// Your own week keeps the pin. Only the merged one drops it, where the coach's
+// face is already doing the marking.
+{
+  const where = page.locator(".ps-agenda .ps-estudio").first();
+  await where.waitFor();
+  if (!(await where.locator(".icon svg").count()))
+    fail("your own schedule should still mark the studio with a pin");
+}
 // each pill goes where it says
 await page.locator(".dashlink", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
@@ -492,7 +500,7 @@ await expect(
   "profile shows call contact button",
 );
 await expect(
-  page.locator(".profstudio", { hasText: "Ironbound Strength" }).isVisible(),
+  page.locator(".coachstudio", { hasText: "Ironbound Strength" }).isVisible(),
   "profile shows 'Where I coach' studio",
 );
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
@@ -1058,12 +1066,14 @@ await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
 await fan.locator(".feedagenda .ps-event").first().waitFor();
 const feedRows = await fan.locator(".feedagenda .ps-event").count();
 if (feedRows < 1) fail("feed agenda has no class rows");
-// where a class is reads the same in a merged week as on the coach's own
-// schedule: a pin, then the studio, and the name still truncates on its own
+// A merged row already carries the coach's face; the studio goes under the
+// class name as plain text, with no pin competing with it. The coach's own
+// schedule keeps its pin, checked on /app further down.
 {
   const where = fan.locator(".feedagenda .ps-ewhere").first();
   await where.waitFor();
-  if (!(await where.locator(".icon svg").count())) fail("the merged week lost its place pin");
+  if (await where.locator(".icon svg").count()) fail("the merged week should have no place pin");
+  if (!(await where.innerText()).trim()) fail("the merged week lost the studio name");
 }
 // tap the avatar to filter to that coach, then clear it
 await fan.locator(".feedav", { hasText: "Matt" }).click();
@@ -1351,7 +1361,7 @@ console.log("viewer look wins on another coach's page ok");
 
 // ---- studios have their own page, and any coach can correct one
 await page.goto(BASE + "/matt");
-await page.locator(".profstudio", { hasText: "Ironbound Strength" }).click();
+await page.locator(".coachstudio", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 await page.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
 await page.getByRole("button", { name: "Edit studio" }).click();

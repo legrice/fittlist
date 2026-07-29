@@ -155,14 +155,24 @@ export async function PublicProfileView({
         <div className="profstudios">
           <h2 className="prof-sec-h">Where I coach</h2>
           {coachStudios.map((s) => (
-            <Link key={s.id} className="profstudio" href={studioPath(s)}>
-              <span className="profstudio-ic"><Icon name="place" size={20} /></span>
-              <span className="profstudio-txt">
+            // A place is somewhere with a face, same as a person. The card
+            // around each one made a list of two look like a form; the photo
+            // carries the row instead, and an initial stands in without one.
+            <Link key={s.id} className="coachstudio" href={studioPath(s)}>
+              {s.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="coachstudio-av" src={s.photo} alt="" />
+              ) : (
+                <span className="coachstudio-av coachstudio-av-empty" aria-hidden="true">
+                  {(s.name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )}
+              <span className="coachstudio-txt">
                 <span className="nm">{s.name}</span>
                 <span className="ad">{s.address}</span>
               </span>
-              <span className="profstudio-chev">
-                <Icon name="chevron_right" size={20} />
+              <span className="coachstudio-chev">
+                <Icon name="chevron_right" size={18} />
               </span>
             </Link>
           ))}
