@@ -25,16 +25,22 @@ export type DiscoverCoach = {
 export function DiscoverList({
   coaches,
   cities,
+  myCity = null,
   backHref,
   hideBack = false,
 }: {
   coaches: DiscoverCoach[];
   cities: string[];
+  /** The viewer's own city, which is what "near you" means for now. */
+  myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
-  const [city, setCity] = useState<string | null>(null);
+  // Near you is the default view when it would show anything: someone opening
+  // Discover is asking "who's around here", not "who is on fittlist".
+  const nearCity = myCity && cities.includes(myCity) ? myCity : null;
+  const [city, setCity] = useState<string | null>(nearCity);
   const [follows, setFollows] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(coaches.map((c) => [c.id, c.following])),
   );
@@ -89,36 +95,54 @@ export function DiscoverList({
         )}
       </div>
 
+      {/* Near you, then everywhere else. A row of city chips was fine at six
+          cities and unreadable at sixty, so the long list moved into a picker
+          and the one city that matters most got its own button. */}
       {cities.length > 1 && (
-        <div className="discities">
-          <button
-            type="button"
-            className={`discity${city === null ? " on" : ""}`}
-            onClick={() => setCity(null)}
-          >
-            All cities
-          </button>
-          {cities.map((c) => (
+        <div className="disfilter">
+          {nearCity && (
             <button
-              key={c}
               type="button"
-              className={`discity${city === c ? " on" : ""}`}
-              onClick={() => setCity(city === c ? null : c)}
+              className={`disnear${city === nearCity ? " on" : ""}`}
+              onClick={() => setCity(city === nearCity ? null : nearCity)}
             >
-              {c}
+              <Icon name="place" size={17} /> Near you
             </button>
-          ))}
+          )}
+          <div className="discitysel">
+            <Icon name="expand_more" size={18} className="discitysel-ic" />
+            <select
+              className="discitysel-in"
+              aria-label="Filter by city"
+              value={city ?? ""}
+              onChange={(e) => setCity(e.target.value || null)}
+            >
+              <option value="">All cities</option>
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>No coaches yet</h2>
+          <h2>{city && !q ? `Nobody in ${city} yet` : "No coaches yet"}</h2>
           <p>
-            {q || city
+            {q
               ? "Nothing matches that. Try another name or city."
-              : "The directory fills up as coaches publish their schedules."}
+              : city
+                ? "Nobody has published a schedule there. Switch to All cities to see everyone."
+                : "The directory fills up as coaches publish their schedules."}
           </p>
+          {city && !q && (
+            <button className="btn ghost" onClick={() => setCity(null)}>
+              Show all cities
+            </button>
+          )}
         </div>
       ) : (
         <div className="dislist">

@@ -37,6 +37,7 @@ export function ClassSheet({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -161,7 +162,19 @@ export function ClassSheet({
                 ))}
             </div>
 
-            {c.description?.trim() && <p className="evdesc classsheet-desc">{c.description}</p>}
+            {c.description?.trim() && (
+              // Four lines, then Read more. A coach who writes a paragraph about
+              // their class pushed the add button off the bottom of the sheet,
+              // which is the one thing the sheet is for.
+              <div className={`classsheet-descwrap${moreOpen ? " open" : ""}`}>
+                <p className="evdesc classsheet-desc">{c.description}</p>
+                {!moreOpen && (
+                  <button className="descmore" onClick={() => setMoreOpen(true)}>
+                    Read more
+                  </button>
+                )}
+              </div>
+            )}
 
             {c.links.length > 0 && (
               <div className="evbook classsheet-book">

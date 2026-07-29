@@ -131,7 +131,7 @@ export function WeekScreen({
           week with enough classes in it pushed the button off the bottom, and
           that's the week you'd most want to share. */}
       {shown.length > 0 && (
-        <div className="settingslist weekcal">
+        <div className="weekcal">
           <button className="setrow" onClick={() => setShare(true)}>
             <span className="setrow-ic"><Icon name="share" size={22} /></span>
             <span className="setrow-txt">

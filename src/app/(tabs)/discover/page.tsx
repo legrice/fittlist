@@ -106,7 +106,13 @@ export default async function DiscoverPage() {
   return (
     <>
       <div className="calbar-title">Discover</div>
-      <DiscoverList coaches={coaches} cities={cities} backHref="/feed" hideBack />
+      <DiscoverList
+        coaches={coaches}
+        cities={cities}
+        myCity={me.location?.trim() || null}
+        backHref="/feed"
+        hideBack
+      />
     </>
   );
 }

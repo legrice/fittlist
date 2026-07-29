@@ -468,6 +468,16 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </a>
           )}
+          {isAdmin && (
+            <a className="setrow" href="/brand">
+              <span className="setrow-ic"><Icon name="palette" size={22} /></span>
+              <span className="setrow-txt">
+                <span className="t">Brand</span>
+                <span className="s">The mark, colour, type and voice</span>
+              </span>
+              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            </a>
+          )}
         </div>
 
         {/* Page look: themes the app and the coach's public page. */}
