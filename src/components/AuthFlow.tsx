@@ -518,6 +518,27 @@ export function AuthFlow({
                 {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
               </button>
             </div>
+            {/* The other door, under the button. Someone who opened Log in from
+                a coach's page and has never been here before had nothing to tap
+                but the close button: the way to sign up was back where they
+                came from. Each sheet names the one it isn't. */}
+            <button
+              className="obloginlink authswitch"
+              onClick={() => {
+                setError("");
+                setSheet(sheet === "signup" ? "login" : "signup");
+              }}
+            >
+              {sheet === "signup" ? (
+                <>
+                  Already have an account? <b>Log in</b>
+                </>
+              ) : (
+                <>
+                  Don&rsquo;t have an account? <b>Sign up</b>
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

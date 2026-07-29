@@ -817,16 +817,23 @@ if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch
   const hrefs = await bar.locator("a").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
   if (!hrefs.every((h) => h.includes("via=matt")))
     fail(`a header link drops the coach's credit: ${JSON.stringify(hrefs)}`);
-  // The chosen door opens on arrival rather than dropping them on the pitch.
-  await bar.getByText("Sign up").click();
-  await lp.waitForURL(/join=signup/);
-  await lp.getByRole("heading", { name: "Sign up with email" }).waitFor();
-  await lp.goto(BASE + "/matt?x=1");
-  await lp.locator(".pubtop").getByText("Log in").click();
+  // One door up here, and it opens on arrival rather than dropping them on the
+  // pitch. Two side by side made the visitor pick before reading anything, and
+  // sat right above Message and Follow.
+  if (await bar.getByText("Sign up").count())
+    fail("the visitor bar carries one door; sign up lives inside the sheet");
+  await bar.getByText("Log in").click();
   await lp.waitForURL(/join=login/);
   await lp.getByRole("heading", { name: "Log in" }).waitFor();
+  // The other door is under the button, so someone who has never been here
+  // isn't stuck with only the close button.
+  await lp.locator(".authswitch").getByText("Sign up").click();
+  await lp.getByRole("heading", { name: "Sign up with email" }).waitFor();
+  // And back the other way.
+  await lp.locator(".authswitch").getByText("Log in").click();
+  await lp.getByRole("heading", { name: "Log in" }).waitFor();
   await look.close();
-  console.log("visitor header ok (wordmark, both doors, credit kept)");
+  console.log("visitor header ok (one door, the sheet carries the other, credit kept)");
 }
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat labelled");
 console.log("visit stats ok");

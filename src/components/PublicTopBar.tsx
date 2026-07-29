@@ -11,9 +11,11 @@ import { Wordmark } from "@/components/Wordmark";
 // Both carry `via`, so a coach gets the credit for anyone who joins off their
 // page. That attribution is the growth loop; a door without it is a leak.
 //
-// Sign up is outlined rather than filled, because Subscribe sits directly
-// under it and that is the page's actual job. Two solid pills in a column read
-// as one decision with two answers.
+// One door, not two. Log in and Sign up side by side made the visitor pick a
+// side before they had read anything, and the pair sat directly above Message
+// and Follow, so the top of a coach's page was four controls deep. The log-in
+// sheet carries "Don't have an account? Sign up", which is where that choice
+// actually belongs: at the point someone has decided to come in.
 export function PublicTopBar({ handle }: { handle: string }) {
   const via = `via=${encodeURIComponent(handle)}`;
   return (
@@ -21,14 +23,9 @@ export function PublicTopBar({ handle }: { handle: string }) {
       <Link className="pubtop-home" href={`/?${via}`} aria-label="fittlist, home">
         <Wordmark variant="ink" className="wordmark pubtop-wm" />
       </Link>
-      <div className="pubtop-act">
-        <Link className="pubtop-login" href={`/?${via}&join=login`}>
-          Log in
-        </Link>
-        <Link className="btn ghost pubtop-join" href={`/?${via}&join=signup`}>
-          Sign up
-        </Link>
-      </div>
+      <Link className="pubtop-login" href={`/?${via}&join=login`}>
+        Log in
+      </Link>
     </div>
   );
 }
