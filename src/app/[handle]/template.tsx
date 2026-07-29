@@ -5,9 +5,10 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { samePage } from "@/components/NavTrack";
 
 // Wrapping the public [handle] segment in a template makes it re-mount on each
-// navigation, so the page slides in. Forward navigations enter from the right
-// (the base animation); a "back" tap sets a flag so this page enters from the
-// left instead - the reverse motion.
+// navigation, so the page crossfades in (it used to slide, which claimed a
+// journey on every arrival; see .page-slide). The back-flag plumbing stays,
+// because the classes still distinguish the two directions if a directional
+// motion ever comes back.
 //
 // Except between the tabs of one profile. Those are separate routes now, so the
 // template remounts and would slide the whole page for what reads as switching

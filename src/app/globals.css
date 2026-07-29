@@ -1840,11 +1840,13 @@ button.ps-card { cursor: pointer; }
    their page (add class, edit profile, share, QR, copy week, requests) lives
    in the sheet behind it. */
 .ownermore {
-  width: 38px; height: 38px; border-radius: 999px; background: var(--cl);
+  /* One step darker than the tab pills, so it reads as a button beside the
+     name rather than another highlight. */
+  width: 38px; height: 38px; border-radius: 999px; background: var(--cl-d);
   border: 0; color: var(--ink);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
-.ownermore:active { background: var(--cl-d); }
+.ownermore:active { background: var(--sa); }
 .ownermenu { margin-top: 14px; }
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
@@ -2011,17 +2013,25 @@ button.ps-card { cursor: pointer; }
    right again, uncovering the page underneath — so back always travels
    left-to-right and forward always right-to-left. The account's settings
    sub-views already moved this way; now every page agrees. */
-.page-slide { min-height: 100dvh; animation: slideInRight .3s cubic-bezier(.22, .8, .28, 1); }
+/* A crossfade, not a slide. The slide claimed a journey on every arrival,
+   and tapping your own tab is not a journey; the fade just says the content
+   changed. Short on purpose: at .3s a fade reads as loading, at .16s it
+   reads as response. */
+.page-slide { min-height: 100dvh; animation: pageFade .16s ease-out; }
+@keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
 /* Switching tabs within one profile: the header above is identical, so nothing
-   moves. A slide there would say you went somewhere. */
+   moves at all. Even a fade there would flicker the parts that didn't change. */
 .page-slide.no-slide { animation: none; }
-.page-slide.from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
+.page-slide.from-left { animation: pageFade .16s ease-out; }
 .page-slide.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
+/* The tabbed screens' content, same fade. The chrome around it lives in the
+   layout and never re-mounts, so only the list swaps. */
+.tab-fade { animation: pageFade .16s ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   .acctwrap, .acctwrap.acct-from-left,
   .settingspane.from-right, .settingspane.exit-right,
-  .page-slide, .page-slide.from-left, .page-slide.exit-right { animation: none; }
+  .page-slide, .page-slide.from-left, .page-slide.exit-right, .tab-fade { animation: none; }
 }
 
 /* ---- admin panel (/admin), mobile-first ---- */
