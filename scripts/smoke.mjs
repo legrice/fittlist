@@ -1053,6 +1053,13 @@ await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
 await fan.locator(".feedagenda .ps-event").first().waitFor();
 const feedRows = await fan.locator(".feedagenda .ps-event").count();
 if (feedRows < 1) fail("feed agenda has no class rows");
+// where a class is reads the same in a merged week as on the coach's own
+// schedule: a pin, then the studio, and the name still truncates on its own
+{
+  const where = fan.locator(".feedagenda .ps-ewhere").first();
+  await where.waitFor();
+  if (!(await where.locator(".icon svg").count())) fail("the merged week lost its place pin");
+}
 // tap the avatar to filter to that coach, then clear it
 await fan.locator(".feedav", { hasText: "Matt" }).click();
 await fan.locator(".feedfilterbar", { hasText: "Classes with Matt" }).waitFor();

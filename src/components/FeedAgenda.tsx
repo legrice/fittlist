@@ -178,7 +178,12 @@ export function FeedAgenda({
                             {i.coachId === meId && <span className="ps-youtag">You</span>}
                           </span>
                           <span className="ps-enm">{i.name}</span>
-                          {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
+                          {i.where && (
+                            <span className="ps-estudio ps-ewhere">
+                              <Icon name="place" size={13} className="ps-estudio-ic" />
+                              <span className="ps-ewhere-txt">{i.where}</span>
+                            </span>
+                          )}
                         </span>
                         <span className="ps-etimecol">
                           {/* Level with the coach's name, above the time — the

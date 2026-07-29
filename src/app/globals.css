@@ -2202,7 +2202,11 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
 }
-.ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+/* The merged week carries the same pin as a coach's own schedule. The ellipsis
+   moves onto the text: with the pin inside, truncating the whole row would clip
+   the icon before the name it belongs to. */
+.ps-agenda .ps-ewhere { display: inline-flex; min-width: 0; }
+.ps-ewhere-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
    the browser; only sideways movement reaches the component. */
 .swiperow {
