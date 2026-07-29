@@ -184,6 +184,9 @@ export function ClassSheet({
                 sits beside it: passing a class to someone is the other thing
                 you'd want to do from here, and it links at the real page. */}
             <div className="publishwrap classsheet-do">
+              {c.past && !added && (
+                <p className="classsheet-gone">This one has already run.</p>
+              )}
               {c.canAdd && (
                 <button
                   className={`classsheet-add${added ? " on" : ""}`}

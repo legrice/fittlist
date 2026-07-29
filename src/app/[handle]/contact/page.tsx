@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
+import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { PublicProfileView } from "@/components/PublicProfileView";
 
@@ -51,6 +52,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // A member's link has no coach page behind it, so no Contact section either.
   if (user.kind === "fan") notFound();
 
-  const isOwner = (await getSessionUserId()) === user.id;
-  return <PublicProfileView user={user} isOwner={isOwner} tab="contact" from={from} />;
+  const viewerId = await getSessionUserId();
+  if (await isBlocked(user.id, viewerId)) notFound();
+  return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="contact" from={from} />;
 }

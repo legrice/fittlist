@@ -2,8 +2,9 @@
 
 import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { fmtDateLong, fmtTime, mondayOfCurrentWeek, runsOn, siteOrigin } from "@/lib/format";
+import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
+import { isBlocked } from "@/lib/blocks";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
@@ -36,6 +37,8 @@ export type ClassDetail = {
   /** Whether this viewer can add it: signed in, not theirs, and public. */
   canAdd: boolean;
   added: boolean;
+  /** It's been and gone: say so rather than showing a button that fails. */
+  past: boolean;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -58,6 +61,8 @@ export async function classDetail(
   const viewerId = await getSessionUserId();
   const isOwner = viewerId === user.id;
   if (!c.isPublic && !isOwner) return null;
+  // Blocked: as far as they're concerned this class doesn't exist.
+  if (await isBlocked(user.id, viewerId)) return null;
 
   const [studio] = c.studioId
     ? await db.select().from(schema.studios).where(eq(schema.studios.id, c.studioId))
@@ -71,20 +76,28 @@ export async function classDetail(
   const nextIso =
     c.specificDate ??
     (() => {
-      const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+      // From today, and skipping any occurrence whose end time has gone by: a
+      // link with no date on it should open on one you could still turn up to.
+      // Starting at this week's Monday meant a Monday class opened on Monday
+      // for the rest of the week, with no way to add it.
+      const start = new Date(`${todayIso()}T00:00:00Z`);
       for (let i = 0; i < 366; i++) {
         const day = new Date(start);
         day.setUTCDate(start.getUTCDate() + i);
         const iso = day.toISOString().slice(0, 10);
-        if (runsOn(c, iso, (day.getUTCDay() + 6) % 7)) return iso;
+        if (runsOn(c, iso, (day.getUTCDay() + 6) % 7) && !occurrenceEnded(iso, c.startTime, c.durationMin))
+          return iso;
       }
-      const day = new Date(start);
-      day.setUTCDate(start.getUTCDate() + c.dayOfWeek);
-      return day.toISOString().slice(0, 10);
+      // Every occurrence is behind an end date. Fall back to today so the
+      // sheet still renders something dated rather than nothing.
+      return todayIso();
     })();
   const whenIso = fits ? asked! : nextIso;
 
-  const canAdd = !isOwner && !!viewerId && c.isPublic && (await fansVisible());
+  // Already run: there's nothing to add. A shared link carries its date, so an
+  // old one opens on the day it named, and that day can be behind us.
+  const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
+  const canAdd = !isOwner && !!viewerId && c.isPublic && !past && (await fansVisible());
   let added = false;
   if (canAdd) {
     const [row] = await db
@@ -123,5 +136,6 @@ export async function classDetail(
     shareUrl: `${siteOrigin()}/${handle}/${c.id}?d=${whenIso}`,
     canAdd,
     added,
+    past,
   };
 }

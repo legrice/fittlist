@@ -2,7 +2,8 @@ import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
-import { fmtDateLong, fmtTime, mondayOfCurrentWeek, runsOn, siteOrigin } from "@/lib/format";
+import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
+import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
@@ -41,6 +42,7 @@ export default async function EventPage({ params, searchParams }: Props) {
   if (!c) notFound();
 
   const viewerId = await getSessionUserId();
+  if (await isBlocked(user.id, viewerId)) notFound();
   const isOwner = viewerId === user.id;
   // Private client sessions aren't public; only the owner can open their page.
   if (!c.isPublic && !isOwner) notFound();
@@ -62,21 +64,27 @@ export default async function EventPage({ params, searchParams }: Props) {
   const askedFits = askedIso ? runsOn(c, askedIso, dowOf(askedIso)) : false;
   // Otherwise show the next date it does run. A saved link to a cancelled
   // Friday should land on the following one, not on a class that isn't on.
+  // The scan starts today rather than at this week's Monday, and skips an
+  // occurrence whose end time has gone by: a link with no date on it should
+  // open on one you could still turn up to. From Monday, a Monday class opened
+  // on Monday for the rest of the week, with no way to add it.
   const nextIso =
     c.specificDate ??
     (() => {
-      const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+      const start = new Date(`${todayIso()}T00:00:00Z`);
       for (let i = 0; i < 366; i++) {
         const d = new Date(start);
         d.setUTCDate(start.getUTCDate() + i);
         const iso = d.toISOString().slice(0, 10);
-        if (runsOn(c, iso, (d.getUTCDay() + 6) % 7)) return iso;
+        if (
+          runsOn(c, iso, (d.getUTCDay() + 6) % 7) &&
+          !occurrenceEnded(iso, c.startTime, c.durationMin)
+        )
+          return iso;
       }
-      // Every occurrence is behind an end date: fall back to this week's slot
-      // so the page still renders something dated rather than nothing.
-      const d = new Date(start);
-      d.setUTCDate(start.getUTCDate() + c.dayOfWeek);
-      return d.toISOString().slice(0, 10);
+      // Every occurrence is behind an end date: fall back to today so the page
+      // still renders something dated rather than nothing.
+      return todayIso();
     })();
   const whenIso = askedFits ? askedIso! : nextIso;
 
@@ -100,7 +108,10 @@ export default async function EventPage({ params, searchParams }: Props) {
 
   // "I'm going" lives here rather than on the schedule rows — one tap into the
   // class, then commit. Owners don't attend their own classes.
-  const canGo = !isOwner && !!viewerId && c.isPublic && (await fansVisible());
+  // Already run: nothing to add. A shared link carries its date, so an old one
+  // opens on the day it named, and that day can be behind us.
+  const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
+  const canGo = !isOwner && !!viewerId && c.isPublic && !past && (await fansVisible());
   let going = false;
   if (canGo) {
     const [row] = await db
@@ -224,6 +235,8 @@ export default async function EventPage({ params, searchParams }: Props) {
             <p className="evdesc">{c.description}</p>
           </section>
         )}
+
+        {past && !isOwner && <p className="classsheet-gone evgone">This one has already run.</p>}
 
         {/* Visitors only — anyone signed in already has an account. */}
         {!viewerId && (

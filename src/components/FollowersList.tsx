@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { blockPerson } from "@/app/actions/blocks";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -19,6 +22,8 @@ export type FollowerRow = {
    *  a week that doesn't exist yet. The row still links to their profile. */
   canFollow: boolean;
   following: boolean;
+  /** Present for account followers: blocking needs someone to block. */
+  userId: string | null;
 };
 
 // Who follows this coach. Everyone shows up: accounts and plain email
@@ -26,12 +31,16 @@ export type FollowerRow = {
 // it; only a coach gets a Follow back button, because following a member would
 // promise a week that isn't there yet.
 export function FollowersList({ followers }: { followers: FollowerRow[] }) {
+  const router = useRouter();
   const [follows, setFollows] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(followers.map((f) => [f.id, f.following])),
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+  const [gone, setGone] = useState<Record<string, boolean>>({});
+  // Blocking asks, because it is quiet and one-sided and easy to fat-finger.
+  const [confirm, setConfirm] = useState<FollowerRow | null>(null);
 
   const toggle = (f: FollowerRow) => {
     if (!f.handle) return;
@@ -50,6 +59,25 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
     });
   };
 
+  const block = (f: FollowerRow) => {
+    setConfirm(null);
+    if (!f.userId) return;
+    setGone((g) => ({ ...g, [f.id]: true }));
+    startTransition(async () => {
+      const res = await blockPerson(f.userId!);
+      if (!res.ok) {
+        setGone((g) => ({ ...g, [f.id]: false }));
+        toast(res.error ?? "Couldn't do that");
+        return;
+      }
+      // No "they've been told" here, because they haven't been.
+      toast("Removed. They can't see your page any more");
+      router.refresh();
+    });
+  };
+
+  const shown = followers.filter((f) => !gone[f.id]);
+
   if (followers.length === 0) {
     return (
       <div className="empty-block">
@@ -65,7 +93,7 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
   return (
     <>
       <div className="dislist">
-        {followers.map((f) => {
+        {shown.map((f) => {
           const initial = (f.name.trim().charAt(0) || "?").toUpperCase();
           const avatar = f.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -108,10 +136,50 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
                   {follows[f.id] ? "Following" : "Follow back"}
                 </button>
               )}
+              {/* Quiet on purpose. Nothing is sent, and nothing on their side
+                  says why: the page just stops being there. */}
+              {f.userId && (
+                <button
+                  type="button"
+                  className="disblock"
+                  aria-label={`Remove ${f.name}`}
+                  onClick={() => setConfirm(f)}
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              )}
             </div>
           );
         })}
       </div>
+      {confirm && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirm(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Remove {confirm.name.trim().split(/\s+/)[0]}?</h2>
+            <p className="lead">
+              They stop following you and your page stops loading for them. They aren&rsquo;t
+              told, and nothing on their side says why. You can undo it in settings.
+            </p>
+            <div className="publishwrap nostick">
+              <button className="btn si" onClick={() => block(confirm)}>
+                Remove them
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                onClick={() => setConfirm(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

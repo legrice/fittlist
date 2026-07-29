@@ -289,6 +289,23 @@ export const classes = pgTable(
   (t) => [index("classes_user").on(t.userId)],
 );
 
+// Someone a coach doesn't want on their page. Quiet on purpose: nothing tells
+// the blocked person, because a notice is an invitation to make a new account
+// and a fight. From their side the coach's page simply stops existing, which is
+// what a deleted account looks like too, so it isn't a signal.
+export const blocks = pgTable(
+  "blocks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Who did the blocking, and who they blocked. Directional: blocking someone
+    // says nothing about whether they blocked you.
+    blockerUserId: uuid("blocker_user_id").notNull().references(() => users.id),
+    blockedUserId: uuid("blocked_user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("blocks_pair").on(t.blockerUserId, t.blockedUserId)],
+);
+
 export const subscribers = pgTable(
   "subscribers",
   {

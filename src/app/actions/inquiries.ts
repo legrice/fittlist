@@ -4,6 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
+import { isBlocked } from "@/lib/blocks";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import {
@@ -35,6 +36,11 @@ export async function sendInquiry(
   const db = await getDb();
   const [coach] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!coach) return { ok: false, error: "Page not found." };
+  // Blocking has to close the message door as well as the page, or it only
+  // stops the reading and not the writing.
+  if (await isBlocked(coach.id, await getSessionUserId())) {
+    return { ok: false, error: "Page not found." };
+  }
 
   const [thread] = await db
     .insert(schema.inquiryThreads)

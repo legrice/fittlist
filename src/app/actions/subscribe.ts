@@ -93,6 +93,11 @@ export async function followTrainer(handle: string): Promise<{ ok: boolean; erro
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!trainer) return { ok: false, error: "Page not found." };
   if (trainer.id === userId) return { ok: false, error: "That's your own page." };
+  // Blocked people can't reach this page, but the action is a POST and the URL
+  // is guessable, so the guard lives here too. Same wording as a page that
+  // isn't there.
+  const { isBlocked } = await import("@/lib/blocks");
+  if (await isBlocked(trainer.id, userId)) return { ok: false, error: "Page not found." };
 
   const [existing] = await db
     .select()

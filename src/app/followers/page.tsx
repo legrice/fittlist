@@ -55,6 +55,9 @@ export default async function FollowersPage() {
         handle: null,
         canFollow: false,
         following: false,
+        // No account, so nobody to block. Unsubscribing them is the digest's
+        // own job and lives on their end of the email.
+        userId: null,
       };
     }
     const name = u.name.trim() || u.email.split("@")[0];
@@ -69,6 +72,7 @@ export default async function FollowersPage() {
       handle: u.handle,
       canFollow: !!u.handle && u.kind === "coach",
       following: following.has(u.id),
+      userId: u.id,
     };
   });
 

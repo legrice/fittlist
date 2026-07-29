@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
+import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { looksLikeBot, recordVisit } from "@/lib/visits";
 import { PublicProfileView } from "@/components/PublicProfileView";
@@ -57,6 +58,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
 
   // The profile is the shared landing - count the visit (not the owner, not bots).
   const [viewerId, hdrs] = await Promise.all([getSessionUserId(), headers()]);
+  // Blocked: the page simply isn't there. Same shape as a deleted account, so
+  // it says nothing about why, and there's nothing to argue with.
+  if (await isBlocked(user.id, viewerId)) notFound();
   if (viewerId !== user.id && !looksLikeBot(hdrs.get("user-agent"))) {
     try {
       await recordVisit(user.id);

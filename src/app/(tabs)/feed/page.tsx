@@ -3,8 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
@@ -34,7 +35,13 @@ export default async function FeedPage({
     .select({ trainerUserId: schema.subscribers.trainerUserId })
     .from(schema.subscribers)
     .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
-  const followed = followRows.map((r) => r.trainerUserId).filter((id) => id !== userId);
+  // Blocking drops the follow, so a blocked coach shouldn't be in here at all.
+  // Filtering anyway costs one query and covers the follow that was written
+  // between the block and its cleanup.
+  const hidden = await hiddenFrom(userId);
+  const followed = followRows
+    .map((r) => r.trainerUserId)
+    .filter((id) => id !== userId && !hidden.has(id));
   // A coach's own week belongs here too — Following answers "when can I train",
   // and what they teach is part of that. They just can't mark themselves going.
   const trainerIds = isCoach ? [...followed, userId] : followed;
@@ -81,6 +88,11 @@ export default async function FeedPage({
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
       .filter((c) => runsOn(c, iso, dow))
+      // Forward only, by the clock and not just the date: this answers "when
+      // can I train next", and this morning's class is not an answer. It also
+      // means every row on the list is one you can still add, which is the
+      // rule the swipe and the sheet both enforce on the way in.
+      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .flatMap((c) => {
         const coach = coachById.get(c.userId);

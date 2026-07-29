@@ -412,6 +412,15 @@ export function ProfileSheet({
           {/* Out of Edit profile and up here: the state of your books changes
               far more often than your bio, and it decides whether anyone can
               ask you at all. The row says where it stands without opening. */}
+          {/* Quiet, and quietly reachable: the only place a block is visible. */}
+          <a className="setrow" href="/blocked">
+            <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Removed people</span>
+              <span className="s">Who can&rsquo;t see your page</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </a>
           <button className="setrow" onClick={() => openView("availability")}>
             <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
             <span className="setrow-txt">

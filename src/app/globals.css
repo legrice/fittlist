@@ -1187,6 +1187,19 @@ button.ps-card { cursor: pointer; }
 /* An ask, not a screen: it sits low and stays small, so the list it's about is
    still visible behind it. */
 .confirmsheet { max-width: 460px; }
+/* Removing a follower. Quiet in the interface too: a small x, not a red button
+   with a warning label. */
+.disblock {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cl); color: var(--ol);
+}
+.disblock:active { background: var(--cl-d); }
+/* A class that's been and gone: say so where the button would have been. */
+.classsheet-gone {
+  text-align: center; font-size: 13px; font-weight: 600; color: var(--ol); padding: 4px 0 10px;
+}
+.evgone { text-align: left; margin: 18px 0 0; padding: 0; }
 .classsheet-wait { min-height: 220px; }
 .classsheet-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;

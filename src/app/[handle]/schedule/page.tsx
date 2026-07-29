@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
+import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { PublicProfileView } from "@/components/PublicProfileView";
 
@@ -54,6 +55,7 @@ export default async function SchedulePage({ params, searchParams }: Props) {
   // already routes them to their own page; this one has nothing to show.
   if (user.kind === "fan") notFound();
 
-  const isOwner = (await getSessionUserId()) === user.id;
-  return <PublicProfileView user={user} isOwner={isOwner} tab="schedule" from={from} />;
+  const viewerId = await getSessionUserId();
+  if (await isBlocked(user.id, viewerId)) notFound();
+  return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="schedule" from={from} />;
 }

@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, isNotNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
+import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { runsOn, timeToMinutes } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
@@ -22,7 +23,7 @@ export default async function DiscoverPage() {
   // A member has a handle too now, so the coach shell keys off `kind`.
   const isCoach = me.kind !== "fan" && !!me.handle;
 
-  const rows = await db
+  const allRows = await db
     .select()
     .from(schema.users)
     .where(
@@ -32,6 +33,12 @@ export default async function DiscoverPage() {
         eq(schema.users.discoverable, true),
       ),
     );
+  // Blocked in either direction: not on the list. Discover is where someone
+  // who was removed would go looking, so it has to be the same nothing the
+  // profile is, and it drops the ones you removed too so you aren't handed
+  // them back as a suggestion.
+  const hidden = await hiddenFrom(userId);
+  const rows = allRows.filter((r) => !hidden.has(r.id));
 
   const ids = rows.map((r) => r.id);
   const classRows = ids.length
