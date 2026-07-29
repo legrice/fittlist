@@ -2,9 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
+import { ClassSheet } from "@/components/ClassSheet";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -46,12 +48,15 @@ export function FeedAgenda({
   /** The viewer, when they're a coach — their own classes are in here too. */
   meId?: string;
 }) {
+  const router = useRouter();
   const [sel, setSel] = useState<string | null>(null);
   const railRef = useRef<HTMLDivElement>(null);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
   const [swiped, setSwiped] = useState<Record<string, boolean>>({});
   const [toastMsg, toastOn, toast] = useToast();
+  // Tapping a row opens the class from the bottom, so the week stays behind it.
+  const [open, setOpen] = useState<{ handle: string; classId: string; iso: string } | null>(null);
   const [, startTransition] = useTransition();
   // Keyed by class AND day: a weekly class is a different commitment each week.
   const going: Record<string, boolean> = Object.fromEntries(
@@ -160,9 +165,9 @@ export function FeedAgenda({
                       going={on}
                       onToggle={() => toggleGoing(i.classId, d.iso, !on)}
                     >
-                      <Link
+                      <button
                         className={`ps-event${on ? " goingon" : ""}`}
-                        href={`/${i.handle}/${i.classId}?d=${d.iso}&from=home`}
+                        onClick={() => setOpen({ handle: i.handle, classId: i.classId, iso: d.iso })}
                       >
                         <span
                           className="ps-accent"
@@ -196,7 +201,7 @@ export function FeedAgenda({
                           </span>
                           <span className="ps-edur">{i.durationMin} min</span>
                         </span>
-                      </Link>
+                      </button>
                     </SwipeGoing>
                   );
                 })}
@@ -206,6 +211,20 @@ export function FeedAgenda({
         </div>
       )}
 
+      {open && (
+        <ClassSheet
+          handle={open.handle}
+          classId={open.classId}
+          iso={open.iso}
+          onClose={() => setOpen(null)}
+          // The row behind reflects the change without a round trip; the
+          // header count needs the server, so refresh for that.
+          onChanged={(nowOn) => {
+            setSwiped((sw) => ({ ...sw, [`${open.classId}|${open.iso}`]: nowOn }));
+            router.refresh();
+          }}
+        />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

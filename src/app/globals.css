@@ -101,7 +101,7 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
+h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
 .daylabel {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
@@ -138,7 +138,12 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12px;
   letter-spacing: .06em; text-transform: uppercase;
 }
-.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
+/* Headings and buttons sit at 600. 700 was doing the shouting for a typeface
+   that doesn't need it, and at these sizes the lighter weight reads cleaner
+   without giving up any of the hierarchy. */
+.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
+/* The one line the landing is built around, so it gets the room. */
+.ob h1.ob-hero { font-size: 46px; letter-spacing: -.035em; margin-bottom: 14px; }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
 .ob p b { color: var(--ink); font-weight: 700; }
 .ob input {
@@ -267,7 +272,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wiznav .wizback { flex: 0 0 34%; }
 
 .empty-block { margin-top: 22px; background: var(--card); border: 1.5px dashed var(--sa); border-radius: 16px; padding: 28px 22px; text-align: center; }
-.empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
+.empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
@@ -302,7 +307,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--ink); color: #fff; font-weight: 700; font-size: 14px;
+  background: var(--ink); color: #fff; font-weight: 600; font-size: 14px;
   padding: 14px 18px; border-radius: 16px; width: 100%; transition: transform .08s;
   text-decoration: none;
 }
@@ -378,7 +383,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: flex; align-items: center; justify-content: center;
 }
 .sheetclose:active { background: #f3ecdf; }
-.sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
+.sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
 .sheet p.lead { font-size: 13px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
@@ -790,7 +795,7 @@ button.bl-band { cursor: pointer; }
 .dashlink {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
   color: var(--ink); white-space: nowrap;
 }
 .dashlink:active { background: var(--cl); }
@@ -1023,7 +1028,7 @@ button.ps-card { cursor: pointer; }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
 .profname {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 0;
 }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
@@ -1151,6 +1156,32 @@ button.ps-card { cursor: pointer; }
 }
 .weekrow-x:active { background: var(--cl-d); }
 .weekcal { margin-top: 26px; }
+
+/* A class, from the bottom up. The list stays behind it, so adding reads as
+   picking something up rather than going somewhere. */
+.classsheet-wait { min-height: 220px; }
+.classsheet-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
+  font-size: 26px; line-height: 1.1; letter-spacing: -.02em; margin: 10px 0 0; color: var(--ink);
+}
+.classsheet-who {
+  display: inline-flex; align-items: center; gap: 3px; margin-top: 8px;
+  font-size: 14px; font-weight: 600; color: var(--ol); text-decoration: none;
+}
+.classsheet-facts { margin-top: 18px; }
+.classsheet-desc { margin-top: 16px; }
+.classsheet-book { margin-top: 16px; }
+/* The add is the point of the sheet, so it gets the footer to itself and Share
+   sits under it as the quieter second thing. */
+.classsheet-do { display: flex; flex-direction: column; }
+.classsheet-add { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.classsheet-share {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 10px; padding: 6px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  color: var(--ol);
+}
+.classsheet-share:active { color: var(--ink); }
 
 /* Updates screen: Notifications | Messages toggle. The track gets the card
    colour so it reads against the cream page (the base .seg cream blends in). */
@@ -1295,7 +1326,7 @@ button.ps-card { cursor: pointer; }
 .pubtop-login {
   flex-shrink: 0; text-decoration: none; padding: 11px 22px; border-radius: 999px;
   background: var(--ink); color: var(--paper);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   transition: transform .08s;
 }
 .pubtop-login:active { transform: scale(.97); }
@@ -1323,8 +1354,9 @@ button.ps-card { cursor: pointer; }
    reports a state is outlined. */
 .profacts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .actpill, .followpill {
-  flex-shrink: 0; padding: 13px 24px; border-radius: 999px; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px 22px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   transition: transform .08s;
   border: 1.5px solid var(--line); background: transparent; color: var(--ink);
 }
@@ -1351,7 +1383,7 @@ button.ps-card { cursor: pointer; }
 .pubtabs::-webkit-scrollbar { display: none; }
 .pubtab {
   flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
   font-size: 15px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1426,7 +1458,7 @@ button.ps-card { cursor: pointer; }
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .acctclose:active { background: #efe8d8; }
-.acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
+.acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
 /* One column since the stats moved out: photo, name, title, then Edit. */
 .accttile {
   display: flex; flex-direction: column; align-items: stretch; gap: 6px;
@@ -1713,7 +1745,7 @@ button.ps-card { cursor: pointer; }
   color: var(--ol); margin-bottom: 8px;
 }
 .evname {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: .95; letter-spacing: -.035em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 40px; line-height: .95; letter-spacing: -.035em;
   color: var(--ink);
 }
 /* Who teaches it — the page came from somewhere, and this is the way onward. */
@@ -1817,6 +1849,9 @@ button.ps-card { cursor: pointer; }
    left-to-right and forward always right-to-left. The account's settings
    sub-views already moved this way; now every page agrees. */
 .page-slide { min-height: 100dvh; animation: slideInRight .3s cubic-bezier(.22, .8, .28, 1); }
+/* Switching tabs within one profile: the header above is identical, so nothing
+   moves. A slide there would say you went somewhere. */
+.page-slide.no-slide { animation: none; }
 .page-slide.from-left { animation: slideInLeft .3s cubic-bezier(.22, .8, .28, 1); }
 .page-slide.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
 
@@ -1835,7 +1870,9 @@ button.ps-card { cursor: pointer; }
 /* Followers: the back arrow sits above the title, same as a class page. */
 .folback { margin-bottom: 14px; }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
+/* A page title that follows the app header rather than starting the page. */
+.pagetop { margin-top: 20px; }
+.admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.03em; }
 .adminsub { font-size: 12px; color: var(--ol); margin-top: 2px; word-break: break-all; }
 .adminback {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; text-decoration: none;

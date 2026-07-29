@@ -14,6 +14,7 @@ import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
+import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
@@ -256,6 +257,10 @@ export async function PublicProfileView({
           </p>
         </div>
       ) : (
+        // Server-rendered rows, wrapped so an ordinary tap opens the class from
+        // the bottom instead of navigating. The href stays real: a crawler, a
+        // cold load and a cmd-click all still get the page.
+        <ClassOpener handle={handle}>
         <div className="ps-week ps-agenda">
           {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
@@ -266,7 +271,13 @@ export async function PublicProfileView({
                 const where = s ? s.name : c.location;
                 const start = clockParts(c.startTime);
                 return (
-                  <Link key={`${d.iso}-${c.id}`} className="ps-event" data-cid={c.id} href={`/${handle}/${c.id}`}>
+                  <Link
+                    key={`${d.iso}-${c.id}`}
+                    className="ps-event"
+                    data-cid={c.id}
+                    data-d={d.iso}
+                    href={`/${handle}/${c.id}?d=${d.iso}`}
+                  >
                     <span
                       className="ps-accent"
                       style={{ background: avatarColor(user) }}
@@ -295,6 +306,7 @@ export async function PublicProfileView({
           </div>
           ))}
         </div>
+        </ClassOpener>
       )}
     </>
   );

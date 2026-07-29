@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,7 @@ export default async function RequestsPage() {
   return (
     <section className="screen admin" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="pad">
+        <AppChrome userId={userId} />
         <div className="folback">
           <BackLink className="evback" href="/app?acct=1" label="Back to your account">
             <Icon name="arrow_back" size={21} />

@@ -84,7 +84,7 @@ page.setDefaultTimeout(10000);
 // ---- auth: sign up with email (bottom sheet) -> biometric prompt -> pick URL
 await page.goto(BASE + "/");
 // with the member side live the landing has to speak to both, not just coaches
-await expect(page.getByText("Not studios").isVisible(), "landing headline visible");
+await expect(page.getByText("Find your fit").isVisible(), "landing headline visible");
 // signing up and logging in sit together; everything else is below them.
 // (The invite queue is only rendered when INVITE_ONLY is on, which this suite
 // turns off, so its position is checked in invite-smoke instead.)
@@ -559,17 +559,31 @@ await page.waitForURL((u) => u.pathname === "/matt");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
-// ---- each event taps through to its own booking page
+// ---- a tap opens the class from the bottom, with the schedule still behind it
 await page.locator(".ps-event").first().click();
-await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
-await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "event page shows address");
-await expect(page.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "event page shows booking link");
-await expect(page.locator(".evtype", { hasText: "Strength" }).isVisible(), "event page shows class type");
-await expect(page.getByText("Barbell club for all levels").isVisible(), "event page shows description");
-await page.screenshot({ path: SCRATCH + "/shot-event-page.png" });
-await page.locator(".evback").click();
-await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
-console.log("profile + schedule tabs + event pages ok");
+await page.locator(".classsheet").waitFor();
+// The sheet opens first and fills a beat later, so wait for the content.
+await page.locator(".classsheet-nm", { hasText: "Barbell Strength" }).waitFor();
+await expect(page.getByText("143 Newark Ave, Jersey City").isVisible(), "sheet shows address");
+await expect(page.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "sheet shows booking link");
+await expect(page.locator(".evtype", { hasText: "Strength" }).isVisible(), "sheet shows class type");
+await expect(page.getByText("Barbell club for all levels").isVisible(), "sheet shows description");
+// The list is still there underneath — that's the point of a sheet.
+if (!(await page.locator(".ps-event").count())) fail("the schedule should stay behind the sheet");
+await page.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
+await page.locator(".classsheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".classsheet"));
+// The page behind the sheet is still a real URL anyone can be sent to.
+{
+  const href = await page.locator(".ps-event").first().getAttribute("href");
+  if (!href || !/\/matt\/[0-9a-f-]{36}/.test(href))
+    fail("a class row should still link at its own page: " + href);
+  await page.goto(BASE + href);
+  await page.getByRole("heading", { name: "Barbell Strength" }).waitFor();
+  await page.locator(".evback").click();
+  await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
+}
+console.log("class sheet ok (opens over the list, the page is still shareable)");
 
 // Subscribing is a visitor action — the owner previewing their own page never
 // sees the subscribe bar, so do this from a fresh anonymous context.
@@ -1171,18 +1185,23 @@ await fan.locator(".feedagenda .ps-event").first().waitFor();
 // marking happens on the class itself now, not on the crowded week row
 if (await fan.locator(".feedagenda .goingbtn").count())
   fail("the week should not carry an inline add button");
+// The class opens from the bottom, so the week is still behind it and the add
+// reads as picking something up rather than going somewhere.
 await fan.locator(".feedagenda .ps-event").first().click();
-// the class fills the page and the going CTA is pinned to the bottom of it
-if (await fan.locator(".evcard").count()) fail("the class page should not be a card");
-await expect(
-  fan.locator(".evcta").evaluate((e) => getComputedStyle(e).position === "fixed"),
-  "the going CTA is pinned to the bottom",
-);
+await fan.locator(".classsheet-nm").waitFor();
+if (!(await fan.locator(".feedagenda .ps-event").count()))
+  fail("the week should stay behind the sheet");
 await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
 await fan.getByRole("button", { name: "Added to your week" }).waitFor();
-// it survives a reload (the note is on the server, not just in the tab)
+// Reopening it says the same thing: the add is on the server, not in the tab.
+await fan.locator(".classsheet .sheetclose").click();
+await fan.waitForFunction(() => !document.querySelector(".classsheet"));
 await fan.reload();
+await fan.locator(".feedagenda .ps-event").first().click();
 await fan.getByRole("button", { name: "Added to your week" }).waitFor();
+// Share is here too, so a class can be passed on without leaving the sheet.
+await fan.locator(".classsheet-share").waitFor();
+await fan.locator(".classsheet .sheetclose").click();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
@@ -1212,8 +1231,9 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   const txt = await rows.first().innerText();
   for (const bit of ["Barbell Strength", "min", "Matt"])
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
-  // The door to a real calendar, so the screen says what it isn't.
-  await fan.locator(".weekcal .setrow", { hasText: "calendar" }).waitFor();
+  // A coach shares their week as an image; this is the same move from the
+  // other side, and it's the only thing on the screen that isn't a class.
+  await fan.locator(".weekcal .setrow", { hasText: "Share my week" }).waitFor();
   // Every row can leave.
   await rows.first().locator(".weekrow-x").click();
   await fan.getByText("Removed from your week").waitFor();
@@ -1394,24 +1414,29 @@ await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
-// no dead ends: a class opened from Home goes back to Home, and a coach's
-// page carries the nav so you can leave it
+// No dead ends. A class opened from a list is a sheet, so closing it is the
+// whole way back: you never left.
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
-await page.locator(".evname").waitFor();
-// the back control is an arrow in a circle, so the destination lives in its label
-await expect(
-  page.getByRole("button", { name: "Back to Following" }).isVisible(),
-  "class opened from Following goes back to Following",
-);
-await page.getByRole("button", { name: "Back to Following" }).click();
+await page.locator(".classsheet-nm").waitFor();
+await page.locator(".classsheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".classsheet"));
 await page.locator(".feedstrip").waitFor();
-// a coach's own schedule still backs into their calendar
+if (!page.url().endsWith("/feed")) fail("opening a class shouldn't navigate: " + page.url());
+// The page behind it still exists for a link somebody was sent, and still
+// backs into where it came from.
+{
+  const href = await page.locator(".feedagenda .ps-event").first().getAttribute("href");
+  if (href) fail("a feed row opens a sheet, so it shouldn't be a link: " + href);
+}
 await page.goto(BASE + "/sam/schedule");
-await page.locator(".ps-event").first().click();
+{
+  const href = await page.locator(".ps-event").first().getAttribute("href");
+  await page.goto(BASE + href);
+}
 await page.locator(".evname").waitFor();
 if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
-  fail("a class opened from a coach's page should back into that page");
+  fail("a class page opened cold should back into the coach's page");
 // a class with no booking link says nothing rather than a line of filler
 if (await page.getByText("Just show up").count())
   fail("the no-booking line should be gone");
@@ -1461,11 +1486,12 @@ await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio ema
   await page.getByRole("button", { name: "Save studio" }).click();
   await page.waitForURL("**/s/ironbound-strength");
 }
-// a class points at the studio's page, not straight at a map
+// a class points at the studio's page, not straight at a map — in the sheet
+// as well as on the page behind it
 await page.goto(BASE + "/matt/schedule");
 await page.locator(".ps-event").first().click();
-await page.locator(".evname").waitFor();
-await page.locator(".evfact", { hasText: "Ironbound Strength" }).click();
+await page.locator(".classsheet-nm").waitFor();
+await page.locator(".classsheet .evfact", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 console.log("studio pages ok (edit, types, slug follows the name)");
 

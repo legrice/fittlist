@@ -50,10 +50,13 @@ export function UpdatesScreen({
   notifications,
   threads,
   initialTab,
+  header,
 }: {
   notifications: Notif[];
   threads: Thread[];
   initialTab: "notifications" | "messages";
+  /** The app header, built on the server and handed down. */
+  header?: React.ReactNode;
 }) {
   const [tab, setTab] = useState<"notifications" | "messages">(initialTab);
 
@@ -65,7 +68,8 @@ export function UpdatesScreen({
 
   return (
     <div className="pad">
-      <div className="admintop">
+      {header}
+      <div className="admintop pagetop">
         <div>
           <h1>Updates</h1>
           <p className="adminsub">Follows, requests, and messages</p>

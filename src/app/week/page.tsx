@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { myWeek } from "@/lib/week";
+import { AppChrome } from "@/components/AppChrome";
 import { WeekScreen } from "@/components/WeekScreen";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function WeekPage() {
   const days = await myWeek(userId);
   return (
     <div className="appshell" data-mode={me?.look === "dark" ? "dark" : undefined}>
-      <WeekScreen days={days} />
+      <WeekScreen days={days} header={<AppChrome userId={userId} />} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { avatarColor } from "@/lib/avatar";
 import { BackLink } from "@/components/BackLink";
 import { FollowersList, type FollowerRow } from "@/components/FollowersList";
+import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,7 @@ export default async function FollowersPage() {
   return (
     <section className="screen admin" data-mode={me.look === "dark" ? "dark" : undefined}>
       <div className="pad">
+        <AppChrome userId={userId} />
         <div className="folback">
           <BackLink className="evback" href="/app?acct=1" label="Back to your profile">
             <Icon name="arrow_back" size={21} />

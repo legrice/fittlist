@@ -136,6 +136,8 @@ export function NotifyCta({
         aria-pressed={account ? following : subscribed}
         onClick={onCta}
       >
+        {/* A tick on the yes state, so the pill reports rather than offers. */}
+        {(following || subscribed) && <Icon name="check" size={17} />}
         {label}
       </button>
 

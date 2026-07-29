@@ -6,18 +6,26 @@ import { useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
-import { MyCalendar } from "@/components/MyCalendar";
+import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // The classes you added, and nothing else.
 //
 // Deliberately not a calendar: no month grid, no empty days, no time gutter.
-// It's a shortlist that empties itself as the week passes, every row can leave,
-// and the row at the bottom points at your real calendar. Those three things
-// are what stop it reading as "fittlist wants to be your calendar now".
-export function WeekScreen({ days }: { days: WeekDay[] }) {
+// It's a shortlist that empties itself as the week passes, and every row can
+// leave. That, and the fact that it only ever holds what you picked, is what
+// stops it reading as "fittlist wants to be your calendar now".
+export function WeekScreen({
+  days,
+  header,
+}: {
+  days: WeekDay[];
+  /** The app header, built on the server and handed down. */
+  header?: React.ReactNode;
+}) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
+  const [share, setShare] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -43,7 +51,8 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
   return (
     <section className="screen">
       <div className="pad" style={{ paddingTop: 14, paddingBottom: 140 }}>
-        <div className="admintop">
+        {header}
+        <div className="admintop pagetop">
           <div>
             <h1>Your week</h1>
             <p className="adminsub">
@@ -105,14 +114,23 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
                 </div>
               ))}
             </div>
-            {/* The sentence that settles what this screen is: your calendar is
-                over there, this is the list of what you picked. */}
+            {/* A coach shares their week as a story image; this is the same
+                move from the other side. The calendar feed lives on the account
+                page until the Google integration lands. */}
             <div className="settingslist weekcal">
-              <MyCalendar />
+              <button className="setrow" onClick={() => setShare(true)}>
+                <span className="setrow-ic"><Icon name="share" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share my week</span>
+                  <span className="s">A story image of what you&rsquo;re training this week</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
             </div>
           </>
         )}
       </div>
+      {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

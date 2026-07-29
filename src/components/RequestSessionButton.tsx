@@ -49,7 +49,9 @@ export function RequestSessionButton({
         onClick={() => { setSent(false); setError(""); setOpen(true); }}
       >
         {variant === "pill" ? (
-          "Message"
+          <>
+            <Icon name="chat_bubble" size={17} /> Message
+          </>
         ) : (
           <>
             <Icon name="send" size={18} /> Request private session

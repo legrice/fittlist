@@ -258,13 +258,12 @@ export function AuthFlow({
               // The thing that makes this different from a studio's app: you
               // follow the person, and their whole week comes with them.
               <>
-                <h1>
-                  Follow coaches.
-                  <br />
-                  Not studios.
-                </h1>
+                {/* Three words that work for both sides: a member finds a coach
+                    who suits them, a coach finds the people who suit them. */}
+                <h1 className="ob-hero">Find your fit</h1>
                 <p>
-                  Coaches share one schedule. Members follow once and never miss a class.
+                  Follow coaches. Build your schedule. Stay connected to your local fitness
+                  community.
                 </p>
               </>
             ) : (

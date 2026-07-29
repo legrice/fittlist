@@ -269,11 +269,21 @@ profile header and the Request private session button under Contact. A coach
 whose books are full still wants the question about Tuesday's class, so "full"
 must not mean "unreachable".
 
+**A class opens as a sheet from a list, and as a page from a link.**
+`ClassSheet` pulls up over whatever list you tapped, so adding reads as picking
+something up rather than going somewhere; `/{handle}/{classId}` stays because a
+link someone was sent has to open something real, and the sheet's Share button
+points at exactly that. A server-rendered list keeps real `href`s and wraps in
+`ClassOpener`, which catches the ordinary tap and lets a modified click through.
+`classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
+the next date it runs) can't drift between them.
+
 **Your week is a shortlist, not a calendar.** `/week`, behind the header icon,
 lists only the classes someone added, from today forward, and empties itself as
 the week passes. Three things keep it from reading as "fittlist wants to be your
 calendar now": it is short and partial, every row can leave, and the bottom of
-it points at their real calendar via the `.ics` feed. Don't add a month grid,
+it offers Share my week rather than a calendar export (the `.ics` feed lives on
+the account page until the Google Calendar work lands). Don't add a month grid,
 empty days, or a time gutter. The badge counts what's still ahead
 (`weekCount()`), not everything ever added: a number that only grows is a
 scoreboard rather than something you can act on. Following is everything from

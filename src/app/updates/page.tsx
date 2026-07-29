@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { getSessionUserId } from "@/lib/session";
 import { listNotifications, markNotificationsRead } from "@/lib/notify";
+import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +74,7 @@ export default async function UpdatesPage({
         notifications={rows}
         threads={threads}
         initialTab={tab === "messages" ? "messages" : "notifications"}
+        header={<AppChrome userId={userId} />}
       />
     </section>
   );

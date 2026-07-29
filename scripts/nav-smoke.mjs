@@ -53,34 +53,31 @@ await q.goto(BASE + "/sarah/schedule");
 await q.locator(".ps-event").first().waitFor();
 const depth0 = await q.evaluate(() => history.length);
 
-// profile -> class -> coach name -> class -> coach name
+// Tapping a class opens a sheet, so the round trip that used to pile up history
+// doesn't happen at all: you never leave the schedule. Three opens and closes
+// should leave history exactly where it started.
 for (let i = 0; i < 3; i++) {
   await q.locator(".ps-event").first().click();
-  await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
-  await q.locator(".evcoach").waitFor();
-  await q.waitForTimeout(350);
-  await q.locator(".evcoach").click();
-  await q.waitForURL(/\/sarah(\/schedule)?$/);
-  await q.locator(".ps-event").first().waitFor();
-  await q.waitForTimeout(350);
+  await q.locator(".classsheet-nm").waitFor();
+  await q.locator(".classsheet .sheetclose").click();
+  await q.waitForFunction(() => !document.querySelector(".classsheet"));
+  await q.waitForTimeout(200);
 }
 const depth1 = await q.evaluate(() => history.length);
-console.log(`history after three round trips: ${depth0} -> ${depth1}`);
-if (depth1 > depth0 + 1)
-  fail(`each round trip piled onto history (${depth0} -> ${depth1}); back can never escape`);
+console.log(`history after three opens: ${depth0} -> ${depth1}`);
+if (depth1 !== depth0)
+  fail(`opening a class as a sheet should not touch history (${depth0} -> ${depth1})`);
+if (!/\/sarah\/schedule$/.test(q.url())) fail(`the sheet navigated: ${q.url()}`);
+console.log("a class opens over the schedule, history untouched ok");
 
-// And one back tap from the profile leaves the coach entirely, rather than
-// dropping onto the class page again.
-await q.goBack();
-await q.waitForTimeout(700);
-if (/\/sarah\/[0-9a-f-]{36}/.test(q.url()))
-  fail(`back from the profile landed on a class page again: ${q.url()}`);
-console.log("back from the profile leaves, it doesn't bounce ok");
-
-// The in-app back arrow on a class page pops too.
+// The class page still exists for a link somebody was sent, and its back arrow
+// still has to pop when the profile is the page beneath it.
 await q.goto(BASE + "/sarah/schedule");
 await q.locator(".ps-event").first().waitFor();
-await q.locator(".ps-event").first().click();
+{
+  const href = await q.locator(".ps-event").first().getAttribute("href");
+  await q.goto(BASE + href);
+}
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
 await q.waitForTimeout(350);
 await q.locator(".evback").click();
@@ -102,7 +99,10 @@ const cold = await b.newContext({ viewport: { width: 390, height: 844 } });
 const r = await cold.newPage();
 r.setDefaultTimeout(15000);
 await q.goto(BASE + "/sarah/schedule");
-await q.locator(".ps-event").first().click();
+{
+  const href = await q.locator(".ps-event").first().getAttribute("href");
+  await q.goto(BASE + href);
+}
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
 const classUrl = q.url();
 await r.goto(classUrl);
