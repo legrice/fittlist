@@ -1093,7 +1093,6 @@ button.ps-card { cursor: pointer; }
   font-weight: 700; font-size: 14px;
 }
 .chipsfield-add:disabled { opacity: .4; }
-.availseg { margin-top: 2px; }
 
 /* Request private session — CTA + composer */
 .reqbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; }
@@ -1449,7 +1448,13 @@ button.ps-card { cursor: pointer; }
   /* Some rows are links and some are buttons. They're the same row. */
   text-decoration: none; color: inherit;
 }
-.setrow + .setrow { border-top: 1px solid var(--line); }
+/* Every row but the first gets a divider. This was `.setrow + .setrow`, which
+   needs the rows to be siblings with nothing between them, and three of them
+   come from components that render a Toast alongside the row: an always-present
+   element that broke the adjacency and silently dropped the line. Keying on
+   position in the list instead means a row can bring whatever it likes. */
+.settingslist > .setrow { border-top: 1px solid var(--line); }
+.settingslist > .setrow:first-child { border-top: 0; }
 .setrow:active { background: #f3ecdf; }
 .setrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .setrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -1503,12 +1508,34 @@ button.ps-card { cursor: pointer; }
 .setrow-hi .setrow-txt .t { color: var(--si); }
 
 /* settings sub-view slides in over the account page, back slides it out right */
-.settingspane { z-index: 41; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+/* Above the tab bar (z-45), not below it. A sub-view is a whole screen with its
+   own back arrow, and its save bar is fixed to the bottom of the window: at
+   z-41 the tab bar sat on top of that bar and swallowed the taps, so a coach
+   with the member side on could open Contact info and never save it. */
+.settingspane { z-index: 46; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .settingspane.from-right { animation: slideInRight .28s cubic-bezier(.22, .8, .28, 1); }
 .settingspane.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
 .settingstop { justify-content: flex-start; gap: 10px; }
 .settings-h { font-size: 24px; }
 .settings-lead { font-size: 14px; color: var(--ol); line-height: 1.5; margin: 6px 2px 16px; }
+/* Availability: three states, each with what it does to the public page. Rows
+   rather than a segmented control, because "Hidden" needs a sentence and a
+   three-up seg has room for a word. Saves on the tap; there's nothing to
+   compose, so a Save button would only be a second chance to forget. */
+.availpick { background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: var(--soft-shadow); }
+.availopt {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 15px 16px; background: var(--card); color: var(--ink);
+}
+.availopt + .availopt { border-top: 1px solid var(--line); }
+.availopt:active { background: var(--cl); }
+.availopt:disabled { opacity: .6; }
+.availopt-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.availopt-txt .t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+}
+.availopt-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; }
+.availopt.sel .t, .availopt.sel .icon { color: var(--si); }
 /* Save bar: full-bleed light strip pinned to the bottom of the window. */
 .settingspane .publishwrap {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;

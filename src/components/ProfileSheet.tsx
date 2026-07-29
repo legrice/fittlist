@@ -23,7 +23,7 @@ import { MyCalendar } from "@/components/MyCalendar";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-type View = "home" | "security" | "contact" | "gcal";
+type View = "home" | "security" | "contact" | "gcal" | "availability";
 
 // The trainer's account page. Home shows the profile tile, the two feature
 // cards, and a settings list. Each settings row opens a sub-view that slides in
@@ -44,6 +44,7 @@ export function ProfileSheet({
   phone,
   whatsapp,
   about,
+  availability,
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -72,6 +73,7 @@ export function ProfileSheet({
   phone: string;
   whatsapp: string;
   about: string;
+  availability: string | null;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -119,6 +121,12 @@ export function ProfileSheet({
   const [cInstagram, setCInstagram] = useState(instagram);
   const [cWebsite, setCWebsite] = useState(website);
   const [contactSaving, setContactSaving] = useState(false);
+
+  // Availability: whether the coach is taking private clients. It sets what a
+  // visitor can do (the Request button only exists while it's on), so it saves
+  // on the tap rather than waiting for a Save button.
+  const [avail, setAvail] = useState<string | null>(availability);
+  const [availSaving, setAvailSaving] = useState(false);
 
   useEffect(() => {
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
@@ -241,6 +249,30 @@ export function ProfileSheet({
     })();
   };
 
+  const pickAvail = (next: string | null) => {
+    if (availSaving || next === avail) return;
+    const was = avail;
+    setAvail(next);
+    setAvailSaving(true);
+    (async () => {
+      // name/title/about are what updateProfile always requires; availability is
+      // the only field this screen is allowed to touch.
+      const res = await updateProfile({
+        name,
+        title,
+        about,
+        instagram,
+        website,
+        availability: next,
+      });
+      if (!res.ok) {
+        setAvail(was);
+        toast(res.error ?? "Couldn't save");
+      } else router.refresh();
+      setAvailSaving(false);
+    })();
+  };
+
   const copyCal = async () => {
     try {
       await navigator.clipboard.writeText(webcalUrl);
@@ -252,8 +284,20 @@ export function ProfileSheet({
 
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
   const firstName = name.trim().split(/\s+/)[0] || name;
+  const AVAIL_LABEL: Record<string, string> = {
+    accepting: "Accepting new clients",
+    waitlist: "Waitlist only",
+  };
+  const availLabel = (avail && AVAIL_LABEL[avail]) || "Not shown on your page";
+
   const viewTitle =
-    view === "security" ? "Login & security" : view === "contact" ? "Contact info" : "Google Calendar";
+    view === "security"
+      ? "Login & security"
+      : view === "contact"
+        ? "Contact info"
+        : view === "availability"
+          ? "Availability"
+          : "Google Calendar";
 
   return (
     <>
@@ -359,6 +403,17 @@ export function ProfileSheet({
             <span className="setrow-txt">
               <span className="t">Contact info</span>
               <span className="s">How people reach you</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </button>
+          {/* Out of Edit profile and up here: the state of your books changes
+              far more often than your bio, and it decides whether anyone can
+              ask you at all. The row says where it stands without opening. */}
+          <button className="setrow" onClick={() => openView("availability")}>
+            <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Availability</span>
+              <span className="s">{availLabel}</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
@@ -496,6 +551,40 @@ export function ProfileSheet({
                 <button className="btn si" onClick={saveContact} disabled={contactSaving}>
                   {contactSaving ? "Saving…" : "Save contact info"}
                 </button>
+              </div>
+            </>
+          )}
+
+          {view === "availability" && (
+            <>
+              <p className="settings-lead">
+                Whether you are taking private clients. Accepting and Waitlist both show on your
+                page with a Request private session button; Hidden takes the button off, and
+                nobody can ask.
+              </p>
+              <div className="availpick">
+                {[
+                  { id: "accepting", t: "Accepting", s: "Taking new private clients" },
+                  { id: "waitlist", t: "Waitlist", s: "Full, but people can still ask" },
+                  { id: null, t: "Hidden", s: "No button, no requests" },
+                ].map((o) => {
+                  const on = avail === o.id;
+                  return (
+                    <button
+                      key={o.t}
+                      className={`availopt${on ? " sel" : ""}`}
+                      aria-pressed={on}
+                      disabled={availSaving}
+                      onClick={() => pickAvail(o.id)}
+                    >
+                      <span className="availopt-txt">
+                        <span className="t">{o.t}</span>
+                        <span className="s">{o.s}</span>
+                      </span>
+                      {on && <Icon name="check" size={18} />}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}

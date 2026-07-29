@@ -105,12 +105,6 @@ export async function updateProfile(input: {
     if (!loc.value) return { ok: false, error: "Add your city, like Jersey City, NJ." };
     location = loc.value.slice(0, 80);
   }
-  const certifications = cleanChips(input.certifications, 40, 12);
-  const highlights = cleanChips(input.highlights, 60, 6);
-  const availability =
-    input.availability === "accepting" || input.availability === "waitlist"
-      ? input.availability
-      : null;
   const instagram = normalizeInstagram(input.instagram);
   const website = normalizeWebsite(input.website);
   const contactEmail = normalizeEmail(input.contactEmail ?? "");
@@ -122,9 +116,9 @@ export async function updateProfile(input: {
     title: string | null;
     about: string;
     location?: string | null;
-    certifications: string[];
-    highlights: string[];
-    availability: string | null;
+    certifications?: string[];
+    highlights?: string[];
+    availability?: string | null;
     instagram: string | null;
     website: string | null;
     contactEmail: string | null;
@@ -133,8 +127,21 @@ export async function updateProfile(input: {
     profileLinks?: { label: string; url: string }[];
     photo?: string | null;
     avatarColor?: string | null;
-  } = { name, title: title || null, about, certifications, highlights, availability, instagram, website, contactEmail, phone, whatsapp };
+  } = { name, title: title || null, about, instagram, website, contactEmail, phone, whatsapp };
   if (location !== null) set.location = location;
+  // Same rule as location, and for the same reason: passing a field means the
+  // form collected it, omitting it means the form was about something else.
+  // These three were written on every call, so saving contact info wiped a
+  // coach's certifications, their What to Expect list, and their availability,
+  // which also took the "Request private session" button off their page.
+  if (input.certifications !== undefined) set.certifications = cleanChips(input.certifications, 40, 12);
+  if (input.highlights !== undefined) set.highlights = cleanChips(input.highlights, 60, 6);
+  if (input.availability !== undefined) {
+    set.availability =
+      input.availability === "accepting" || input.availability === "waitlist"
+        ? input.availability
+        : null;
+  }
   if (input.profileLinks !== undefined) {
     // Labelled extra links: normalise the protocol, drop anything unparseable,
     // fall back to the host for a missing label, cap the list.

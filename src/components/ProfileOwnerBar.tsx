@@ -20,7 +20,6 @@ export function ProfileOwnerBar({
   location,
   certifications,
   highlights,
-  availability,
   instagram,
   website,
   contactEmail,
@@ -37,7 +36,6 @@ export function ProfileOwnerBar({
   location: string;
   certifications: string[];
   highlights: string[];
-  availability: string | null;
   instagram: string;
   website: string;
   contactEmail: string;
@@ -58,7 +56,6 @@ export function ProfileOwnerBar({
   const [pLocation, setPLocation] = useState(location);
   const [pCerts, setPCerts] = useState<string[]>(certifications);
   const [pHighlights, setPHighlights] = useState<string[]>(highlights);
-  const [pAvailability, setPAvailability] = useState<string | null>(availability);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
   const [pEmail, setPEmail] = useState(contactEmail);
@@ -115,7 +112,6 @@ export function ProfileOwnerBar({
     setPLocation(location);
     setPCerts(certifications);
     setPHighlights(highlights);
-    setPAvailability(availability);
     setPInstagram(instagram);
     setPWebsite(website);
     setPEmail(contactEmail);
@@ -136,7 +132,6 @@ export function ProfileOwnerBar({
         location: pLocation,
         certifications: pCerts,
         highlights: pHighlights,
-        availability: pAvailability,
         instagram: pInstagram,
         website: pWebsite,
         contactEmail: pEmail,
@@ -277,32 +272,10 @@ export function ProfileOwnerBar({
               placeholder="Coach at three studios across Jersey City. Strength &amp; conditioning, all levels."
               onChange={(e) => setPAbout(e.target.value)}
             />
-            <label className="flabel">
-              Availability <span>· taking new private clients?</span>
-            </label>
-            <div className="seg availseg">
-              <button
-                type="button"
-                className={pAvailability === "accepting" ? "sel" : ""}
-                onClick={() => setPAvailability(pAvailability === "accepting" ? null : "accepting")}
-              >
-                Accepting
-              </button>
-              <button
-                type="button"
-                className={pAvailability === "waitlist" ? "sel" : ""}
-                onClick={() => setPAvailability(pAvailability === "waitlist" ? null : "waitlist")}
-              >
-                Waitlist
-              </button>
-              <button
-                type="button"
-                className={!pAvailability ? "sel" : ""}
-                onClick={() => setPAvailability(null)}
-              >
-                Hidden
-              </button>
-            </div>
+            {/* Availability moved to its own settings row. It is a switch you
+                flip when your books change, not something you edit alongside
+                your bio, and it was the only control in here that changed what
+                a visitor could do rather than what they read. */}
             <label className="flabel">
               Certifications <span>· optional</span>
             </label>

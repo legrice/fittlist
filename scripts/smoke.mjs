@@ -1541,6 +1541,23 @@ if (await page.locator(".setrow .t", { hasText: /^Your week$/ }).count())
   fail("the Following tab already is your week — settings shouldn't repeat it");
 if (await page.locator(".setrow", { hasText: "attending" }).count())
   fail("a coach's share is their own schedule, not what they're going to");
+// Every row but the first has a divider. Three rows come from components that
+// render a Toast beside the row, and the old `.setrow + .setrow` rule needed
+// them to be adjacent, so those three lost their line without a word.
+{
+  const lines = await page.locator(".settingslist").first().evaluate((list) =>
+    [...list.querySelectorAll(":scope > .setrow")].map((r, i) => ({
+      row: r.querySelector(".t")?.textContent ?? "?",
+      top: getComputedStyle(r).borderTopWidth,
+      first: i === 0,
+    })),
+  );
+  if (lines.length < 4) fail("expected a settings list with several rows");
+  for (const l of lines) {
+    if (l.first && l.top !== "0px") fail(`the first row shouldn't have a divider: ${l.row}`);
+    if (!l.first && l.top === "0px") fail(`${l.row} is missing its divider`);
+  }
+}
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
@@ -1570,10 +1587,70 @@ console.log("avatar colour ok (fills the circle)");
 // still named two of the three, so every request died on "no unique or
 // exclusion constraint matching the ON CONFLICT specification". Nothing tested
 // the send, so nothing said so.
+// Availability lives in settings now, not in Edit profile: it decides whether
+// anyone can ask at all, which is a switch rather than a bio field. It saves on
+// the tap, and the row underneath says where it stands without opening.
+await openProfile(page);
+await page.waitForTimeout(450); // the account slides up
+{
+  const row = page.locator(".setrow", { hasText: "Availability" });
+  await row.scrollIntoViewIfNeeded();
+  if (!(await row.innerText()).includes("Not shown"))
+    fail("a new coach's availability should start hidden");
+  await row.click();
+  await page.locator(".availpick").waitFor();
+  await page.locator(".availopt", { hasText: "Accepting" }).click();
+  await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
+  await page.locator(".settingstop .acctclose").click();
+}
+// Back on the account, the row reports it without being opened.
+await page.goto(BASE + "/app");
+await openProfile(page);
+await page.waitForTimeout(450);
+{
+  const row = page.locator(".setrow", { hasText: "Availability" });
+  await row.scrollIntoViewIfNeeded();
+  if (!(await row.innerText()).includes("Accepting new clients"))
+    fail("the row should report the choice, got " + (await row.innerText()));
+}
+// And it's gone from Edit profile, where it used to be. Add a certification
+// while we're in there: the next check needs something that can be wiped.
 await page.goto(BASE + "/matt?edit=1");
-await page.locator(".availseg button", { hasText: "Accepting" }).click();
-await page.locator(".sheet .btn.si").first().click();
+await page.locator(".sheet").waitFor();
+if (await page.locator(".sheet .availseg").count())
+  fail("availability should have left the profile editor");
+await page.getByPlaceholder("e.g. NASM CPT").fill("NASM CPT");
+await page.getByPlaceholder("e.g. NASM CPT").press("Enter");
+await page.locator(".sheet .publishwrap .btn").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
+await page.getByText("NASM CPT").first().waitFor();
+console.log("availability moved to settings ok");
+
+// Saving one screen must not wipe another. updateProfile wrote availability,
+// certifications and highlights on every call, so saving contact info cleared
+// all three: the certifications vanished and the coach's page quietly lost its
+// Request private session button. Same trap that ate the location once.
+await openProfile(page);
+await page.waitForTimeout(450);
+await page.locator(".setrow", { hasText: "Contact info" }).click();
+await page.locator("#cEmail").waitFor();
+await page.locator("#cEmail").fill("matt@coach.example.com");
+await page.getByRole("button", { name: "Save contact info" }).click();
+await page.getByText("Contact info saved").waitFor();
+await page.goto(BASE + "/matt");
+await page.getByText("NASM CPT").first().waitFor();
+// The owner never sees their own Request button, so availability is checked
+// where it's stated. That it's still on is what lets the visitor below ask.
+await openProfile(page);
+await page.waitForTimeout(450);
+{
+  const row = page.locator(".setrow", { hasText: "Availability" });
+  await row.scrollIntoViewIfNeeded();
+  if (!(await row.innerText()).includes("Accepting new clients"))
+    fail("saving contact info cleared availability: " + (await row.innerText()));
+}
+await page.locator(".acctclose").click();
+console.log("saving contact info leaves the rest alone ok");
 {
   const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const vp = await visitor.newPage();

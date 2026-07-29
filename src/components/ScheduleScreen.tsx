@@ -45,6 +45,7 @@ export function ScheduleScreen({
   phone,
   whatsapp,
   about,
+  availability,
   googleConfigured,
   googleConnected,
   googleEmail,
@@ -83,6 +84,7 @@ export function ScheduleScreen({
   phone: string;
   whatsapp: string;
   about: string;
+  availability: string | null;
   googleConfigured: boolean;
   googleConnected: boolean;
   googleEmail: string | null;
@@ -403,6 +405,7 @@ export function ScheduleScreen({
           phone={phone}
           whatsapp={whatsapp}
           about={about}
+          availability={availability}
           googleConfigured={googleConfigured}
           googleConnected={googleConnected}
           googleEmail={googleEmail}

@@ -243,6 +243,14 @@ passing means the form showed the field, omitting means the form was about
 something else. That distinction is load-bearing, because saving contact info
 used to write `location: null` and quietly clear the coach's city.
 
+**`updateProfile` only writes the optional fields a caller actually passes.**
+`location`, `certifications`, `highlights` and `availability` are all guarded on
+`!== undefined`. The last three were not, and `updateProfile` runs from three
+different screens, so saving Contact info wiped a coach's certifications, their
+What to Expect list, and their availability, which also took the Request private
+session button off their public page. Any field a single screen owns needs the
+same guard, or the screen that doesn't show it will erase it.
+
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone
 writing to us about the app), and the unique index is

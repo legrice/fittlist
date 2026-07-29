@@ -53,6 +53,7 @@ export default async function SchedulePage({
         contactEmail: schema.users.contactEmail,
         phone: schema.users.phone,
         whatsapp: schema.users.whatsapp,
+        availability: schema.users.availability,
         photo: schema.users.photo,
         passwordHash: schema.users.passwordHash,
         onboardedAt: schema.users.onboardedAt,
@@ -169,6 +170,7 @@ export default async function SchedulePage({
       phone={user?.phone ?? ""}
       whatsapp={user?.whatsapp ?? ""}
       about={user?.about ?? ""}
+      availability={user?.availability ?? null}
       googleConfigured={googleConfigured()}
       googleConnected={gconn.connected}
       googleEmail={gconn.email}

@@ -302,7 +302,6 @@ export async function PublicProfileView({
           location={user.location ?? ""}
           certifications={user.certifications}
           highlights={user.highlights}
-          availability={user.availability}
           instagram={user.instagram ?? ""}
           website={user.website ?? ""}
           contactEmail={user.contactEmail ?? ""}
