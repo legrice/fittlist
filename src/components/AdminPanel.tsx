@@ -11,6 +11,7 @@ import {
   adminFixLocations,
   adminInvite,
   adminSendMagicLink,
+  adminSetKind,
 } from "@/app/actions/admin";
 import { dismissReports, type DuplicateSlot, type ReportedClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
@@ -572,6 +573,8 @@ function PersonCard({
   const [pending, start] = useTransition();
   const [link, setLink] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
+  // Which side the card says they're on; flips in place when the admin flips it.
+  const [kindShown, setKindShown] = useState(c.kind === "coach" ? "coach" : "member");
   const isSelf = c.email.toLowerCase() === adminEmail.toLowerCase();
 
   const sendLink = () =>
@@ -638,8 +641,8 @@ function PersonCard({
         {/* Which side they're on, first, because it changes what the rest of
             the card means: a member with 0 classes is normal, a coach with 0
             classes is someone who signed up and never posted. */}
-        <span className={`adminbadge ${c.kind === "coach" ? "kind-coach" : "kind-member"}`}>
-          {c.kind}
+        <span className={`adminbadge ${kindShown === "coach" ? "kind-coach" : "kind-member"}`}>
+          {kindShown}
         </span>
         {!c.onboarded && <span className="adminbadge warn">setup pending</span>}
         {c.hasPassword && <span className="adminbadge">password</span>}
@@ -654,6 +657,30 @@ function PersonCard({
       ) : (
         <button className="btn ghost adminaction" disabled={pending} onClick={sendLink}>
           {pending ? "Creating…" : "Send sign-in link"}
+        </button>
+      )}
+      {!isSelf && (
+        <button
+          className="btn ghost adminaction"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              const to = kindShown === "coach" ? "fan" : "coach";
+              const res = await adminSetKind(c.id, to);
+              if (!res.ok) {
+                toast(res.error ?? "Couldn't change that");
+                return;
+              }
+              setKindShown(to === "fan" ? "member" : "coach");
+              toast(
+                to === "fan"
+                  ? `${c.name} is a member now; their public classes are unpublished`
+                  : `${c.name} is a coach now`,
+              );
+            })
+          }
+        >
+          {kindShown === "coach" ? "Make them a member" : "Make them a coach"}
         </button>
       )}
       {!isSelf &&

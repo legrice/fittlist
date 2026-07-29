@@ -277,6 +277,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 19px; margin-bottom: 8px; }
 .empty-block p { font-size: 13px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
+/* Stacked actions breathe; inline-blocks were sitting on each other. */
+.empty-block .btn + .btn { margin-top: 10px; margin-left: 8px; }
 
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);
@@ -1302,11 +1304,23 @@ button.ps-card { cursor: pointer; }
 .admincard-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .admincard-actions .btn { width: auto; padding: 9px 14px; font-size: 13px; border-radius: 999px; }
 .reportlist { display: flex; flex-direction: column; gap: 12px; }
+/* Which side of the app this person is on. Members share the page shape now,
+   so the page itself stopped saying it. */
+.kindtag {
+  flex-shrink: 0; padding: 5px 11px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .02em;
+}
 /* Your own class: the add sheet's day row and time/length pair. */
 .ownday { margin-top: 4px; }
 .ownday button { flex: 1; padding: 10px 0; }
 .ownrow { display: flex; gap: 10px; }
 .ownrow > div { flex: 1; min-width: 0; }
+/* iOS gives a time input an intrinsic width and centres its text, which let
+   the Starts box run underneath the field beside it. Pin both to their half. */
+.ownrow input { width: 100%; min-width: 0; text-align: left; }
+.ownrow input::-webkit-date-and-time-value { text-align: left; }
 /* The invite lead under the list: quiet, but a whole sentence, because the
    ask is a favor and a favor needs a reason. */
 .weekinvite {

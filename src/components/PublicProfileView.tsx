@@ -396,12 +396,18 @@ export async function PublicProfileView({
             ) : null
           }
           avail={
-            user.availability ? (
-              <span className={`availbadge availbadge-${user.availability}`}>
-                <span className="availdot" aria-hidden="true" />
-                {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
-              </span>
-            ) : null
+            <>
+              {/* Says which side of the app this person is on. Members have
+                  the same shape of page now, so the page itself no longer
+                  answers it. */}
+              <span className="kindtag">Coach</span>
+              {user.availability ? (
+                <span className={`availbadge availbadge-${user.availability}`}>
+                  <span className="availdot" aria-hidden="true" />
+                  {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
+                </span>
+              ) : null}
+            </>
           }
         >
           {/* One section, the one they asked for. Contact can vanish (no

@@ -74,6 +74,38 @@ export async function adminAddStudio(
   return { ok: true };
 }
 
+// Flip which side of the app an account is on. Member -> coach is the same
+// thing Start coaching does, done for them. Coach -> member also unpublishes
+// their public classes: the coach-only gate guards the door, and demoting
+// somebody who walked through it earlier must not leave their inventory
+// standing in the directory. Their rows stay (private), so flipping them back
+// restores nothing silently; they republish on purpose.
+export async function adminSetKind(
+  id: string,
+  kind: "coach" | "fan",
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  if (id === admin.id) return { ok: false, error: "You can't change your own account." };
+  const db = await getDb();
+  const [u] = await db
+    .select({ email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, id));
+  if (!u) return { ok: false, error: "User not found." };
+  if (adminEmails().includes(u.email.toLowerCase()))
+    return { ok: false, error: "Can't change an admin account." };
+  await db.update(schema.users).set({ kind }).where(eq(schema.users.id, id));
+  if (kind === "fan") {
+    await db
+      .update(schema.classes)
+      .set({ isPublic: false })
+      .where(eq(schema.classes.userId, id));
+  }
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Mint a one-time sign-in link for a coach and email it. Returns the URL too so
 // the admin can copy it and send it any way they like (handy while email
 // delivery is still flaky in beta). Admin links last 24h, not the usual 15 min.

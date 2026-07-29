@@ -46,7 +46,15 @@ export function WeekScreen({
   const [pName, setPName] = useState("");
   const [pDay, setPDay] = useState(0);
   const [pTime, setPTime] = useState("18:00");
-  const [pDur, setPDur] = useState("60");
+  const [pEnd, setPEnd] = useState("19:00");
+  // A public class already sits at that day and time; offer the real one.
+  const [match, setMatch] = useState<{
+    classId: string;
+    name: string;
+    coachName: string;
+    handle: string;
+    iso: string;
+  } | null>(null);
   const [pWhere, setPWhere] = useState("");
   const [pWith, setPWith] = useState("");
   const [pBusy, setPBusy] = useState(false);
@@ -80,28 +88,67 @@ export function WeekScreen({
     .flatMap((d) => d.items)
     .find((i) => i.personal && i.coachName.trim())?.coachName.trim();
 
-  const saveOwn = () => {
+  // Duration comes from the two times; nobody thinks in minutes.
+  const minutesBetween = (a: string, b: string) => {
+    const [ah, am] = a.split(":").map(Number);
+    const [bh, bm] = b.split(":").map(Number);
+    return bh * 60 + bm - (ah * 60 + am);
+  };
+
+  const saveOwn = (force = false) => {
     if (pBusy || !pName.trim()) return;
+    const durationMin = minutesBetween(pTime, pEnd);
+    if (durationMin <= 0) {
+      toast("It ends before it starts");
+      return;
+    }
     setPBusy(true);
     start(async () => {
       const res = await addPersonalClass({
         name: pName,
         dayOfWeek: pDay,
         startTime: pTime,
-        durationMin: Number(pDur) || 60,
+        durationMin,
         location: pWhere,
         withWho: pWith,
+        force,
       });
+      setPBusy(false);
+      if (!res.ok) {
+        if (res.match) {
+          // The match stands alone; two stacked sheets read as a collision.
+          // The form state stays, so "Add mine anyway" has everything.
+          setAddOpen(false);
+          setMatch(res.match);
+          return;
+        }
+        toast(res.error ?? "Couldn't add that");
+        return;
+      }
+      setAddOpen(false);
+      setMatch(null);
+      setPName("");
+      setPWhere("");
+      setPWith("");
+      toast("Added to your week");
+      router.refresh();
+    });
+  };
+
+  const addTheRealOne = () => {
+    if (!match || pBusy) return;
+    setPBusy(true);
+    start(async () => {
+      const res = await setGoing(match.classId, match.iso, true);
       setPBusy(false);
       if (!res.ok) {
         toast(res.error ?? "Couldn't add that");
         return;
       }
+      setMatch(null);
       setAddOpen(false);
       setPName("");
-      setPWhere("");
-      setPWith("");
-      toast("Added to your week");
+      toast(`Added ${match.name} with ${match.coachName.trim().split(/\s+/)[0]}`);
       router.refresh();
     });
   };
@@ -271,16 +318,13 @@ export function WeekScreen({
                 />
               </div>
               <div>
-                <label className="flabel" htmlFor="ownDur">Minutes</label>
+                <label className="flabel" htmlFor="ownEnd">Ends</label>
                 <input
-                  id="ownDur"
-                  type="number"
+                  id="ownEnd"
+                  type="time"
                   className="editinput"
-                  min={5}
-                  max={600}
-                  step={5}
-                  value={pDur}
-                  onChange={(e) => setPDur(e.target.value)}
+                  value={pEnd}
+                  onChange={(e) => setPEnd(e.target.value)}
                 />
               </div>
             </div>
@@ -305,8 +349,40 @@ export function WeekScreen({
               onChange={(e) => setPWith(e.target.value)}
             />
             <div className="publishwrap nostick">
-              <button className="btn si" disabled={pBusy || !pName.trim()} onClick={saveOwn}>
+              <button className="btn si" disabled={pBusy || !pName.trim()} onClick={() => saveOwn()}>
                 {pBusy ? "Adding…" : "Add to your week"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {match && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMatch(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>That class is on fittlist</h2>
+            <p className="lead">
+              {match.name} with {match.coachName} runs then. Add the real one and it stays up to
+              date when the coach changes it.
+            </p>
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pBusy} onClick={addTheRealOne}>
+                Add {match.name}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={pBusy}
+                onClick={() => {
+                  setMatch(null);
+                  saveOwn(true);
+                }}
+              >
+                Add mine anyway
               </button>
             </div>
           </div>
