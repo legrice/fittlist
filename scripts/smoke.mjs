@@ -419,7 +419,7 @@ console.log("account + profile edit ok (back -> account)");
 await page.goto(BASE + "/app");
 {
   const pills = (await page.locator(".dashlinks .dashlink").allInnerTexts()).map((t) => t.trim());
-  const want = ["Your page", "Share cal", "QR code"];
+  const want = ["Your page", "Share cal", "QR code", "Copy week"];
   if (pills.join("|") !== want.join("|"))
     fail("schedule tools should be " + want.join(", ") + ", got " + pills.join(", "));
 }
@@ -1492,7 +1492,9 @@ console.log("stats centred ok");
 // the coach's week, and sharing what you're attending is a member's move, so
 // neither belongs in a coach's settings list.
 await openProfile(page);
-if (await page.locator(".setrow", { hasText: "Your week" }).count())
+// Exact: the row this guards against was literally titled "Your week", and a
+// substring match also catches rows that merely mention one.
+if (await page.locator(".setrow .t", { hasText: /^Your week$/ }).count())
   fail("the Following tab already is your week — settings shouldn't repeat it");
 if (await page.locator(".setrow", { hasText: "attending" }).count())
   fail("a coach's share is their own schedule, not what they're going to");

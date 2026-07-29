@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
@@ -9,6 +9,7 @@ import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
+import { humanTime, notifyCancelled } from "@/lib/cancel";
 
 // Mirror the schedule to Google after the response is sent, so publishing stays
 // snappy. No-ops unless the trainer connected Google.
@@ -125,6 +126,9 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.
   const keptSkips = new Map<number, string[]>();
+  // Who was coming, by weekday, so the rewrite below can put them back. -1 is
+  // the one-off / single-day case, which has no weekday to key on.
+  const keptGoing = new Map<number, { userId: string; occurrenceDate: string }[]>();
   // The set this save belongs to.
   //
   // A new weekly class joins an existing one when it is the same class in the
@@ -175,6 +179,36 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       // class NAME, so a coach teaching the same class at two studios shares
       // one template across both. Deleting by template took the other studio's
       // class with it and rewrote it as this one.
+      // Editing replaces the rows, so anything pointing at them has to be
+      // carried over first. Going marks are the reason: they reference the row
+      // by id, so the delete below would fail on the foreign key, and a coach
+      // changing a description could not save at all once anyone was coming.
+      const old = await db
+        .select({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek })
+        .from(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, userId),
+            eq(schema.classes.seriesId, existing.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+      const oldIds = old.map((o) => o.id);
+      const dayOfOldId = new Map(old.map((o) => [o.id, o.dayOfWeek]));
+      if (oldIds.length) {
+        const marks = await db
+          .select()
+          .from(schema.attendances)
+          .where(inArray(schema.attendances.classId, oldIds));
+        for (const m of marks) {
+          const dow = dayOfOldId.get(m.classId);
+          if (dow === undefined) continue;
+          const list = keptGoing.get(dow) ?? [];
+          list.push({ userId: m.userId, occurrenceDate: m.occurrenceDate });
+          keptGoing.set(dow, list);
+        }
+        await db.delete(schema.attendances).where(inArray(schema.attendances.classId, oldIds));
+      }
       const gone = await db
         .delete(schema.classes)
         .where(
@@ -187,6 +221,16 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
         .returning({ dayOfWeek: schema.classes.dayOfWeek, skipDates: schema.classes.skipDates });
       for (const g of gone) if (g.skipDates.length) keptSkips.set(g.dayOfWeek, g.skipDates);
     } else {
+      const marks = await db
+        .select()
+        .from(schema.attendances)
+        .where(eq(schema.attendances.classId, existing.id));
+      for (const m of marks) {
+        const list = keptGoing.get(-1) ?? [];
+        list.push({ userId: m.userId, occurrenceDate: m.occurrenceDate });
+        keptGoing.set(-1, list);
+      }
+      await db.delete(schema.attendances).where(eq(schema.attendances.classId, existing.id));
       await db.delete(schema.classes).where(eq(schema.classes.id, existing.id));
     }
   }
@@ -202,7 +246,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     })
     .returning();
 
-  await db.insert(schema.classes).values(
+  const inserted = await db.insert(schema.classes).values(
     days.map((dayOfWeek) => ({
       userId,
       templateId: template.id,
@@ -221,7 +265,23 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       isPublic,
       links,
     })),
-  );
+  ).returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek });
+
+  // Put the Going marks back on the rows that replaced the ones they were on.
+  // A day that no longer runs has nowhere to put them, and those people are
+  // told about it by the caller.
+  if (keptGoing.size) {
+    const idForDay = new Map(inserted.map((r) => [r.dayOfWeek, r.id]));
+    const rows: { userId: string; classId: string; occurrenceDate: string }[] = [];
+    for (const [dow, marks] of keptGoing) {
+      const classId = dow === -1 ? inserted[0]?.id : idForDay.get(dow);
+      if (!classId) continue;
+      for (const m of marks) {
+        rows.push({ userId: m.userId, classId, occurrenceDate: m.occurrenceDate });
+      }
+    }
+    if (rows.length) await db.insert(schema.attendances).values(rows).onConflictDoNothing();
+  }
 
   // Log this class into the shared per-studio catalog (deduped by studio +
   // normalized name). Public + studio only: private sessions must never leak
@@ -285,15 +345,50 @@ export async function deleteClass(
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
   const [row] = await db
-    .select({
-      id: schema.classes.id,
-      seriesId: schema.classes.seriesId,
-      specificDate: schema.classes.specificDate,
-      skipDates: schema.classes.skipDates,
-    })
+    .select()
     .from(schema.classes)
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
   if (!row) return { ok: true, count: 0 };
+
+  const [coach] = await db
+    .select({ name: schema.users.name })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  let where = row.location;
+  if (row.studioId) {
+    const [st] = await db
+      .select({ name: schema.studios.name })
+      .from(schema.studios)
+      .where(eq(schema.studios.id, row.studioId));
+    where = st?.name ?? null;
+  }
+  const about = {
+    coachName: coach?.name ?? "",
+    className: row.name,
+    time: humanTime(row.startTime),
+    where,
+  };
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Everyone who said they were coming to these classes, and their email.
+  // They have to go regardless: a Going mark points at the class row, so the
+  // delete below fails on the foreign key while any survive. Until this, a
+  // coach simply could not delete a class once anyone had marked it.
+  const clearGoing = async (classIds: string[]) => {
+    if (!classIds.length) return [] as { userId: string; email: string; date: string }[];
+    const marks = await db
+      .select({
+        userId: schema.attendances.userId,
+        date: schema.attendances.occurrenceDate,
+        email: schema.users.email,
+      })
+      .from(schema.attendances)
+      .innerJoin(schema.users, eq(schema.users.id, schema.attendances.userId))
+      .where(inArray(schema.attendances.classId, classIds));
+    await db.delete(schema.attendances).where(inArray(schema.attendances.classId, classIds));
+    // Only the ones still to come. Nobody needs telling that last Tuesday is off.
+    return marks.filter((m) => m.date >= today);
+  };
 
   // Cancelling a single date doesn't delete anything — the standing class keeps
   // running, this one day is stamped out of it. A one-off has only the one
@@ -308,7 +403,22 @@ export async function deleteClass(
         .where(eq(schema.classes.id, row.id));
       // Nobody is going to a class that isn't on. Clearing the marks keeps the
       // members' weeks and share images honest — they read attendances
-      // directly rather than through runsOn.
+      // directly rather than through runsOn. And whoever was coming gets told,
+      // which is the whole point of having let them mark it.
+      const told = await db
+        .select({
+          userId: schema.attendances.userId,
+          date: schema.attendances.occurrenceDate,
+          email: schema.users.email,
+        })
+        .from(schema.attendances)
+        .innerJoin(schema.users, eq(schema.users.id, schema.attendances.userId))
+        .where(
+          and(
+            eq(schema.attendances.classId, row.id),
+            eq(schema.attendances.occurrenceDate, iso),
+          ),
+        );
       await db
         .delete(schema.attendances)
         .where(
@@ -317,6 +427,9 @@ export async function deleteClass(
             eq(schema.attendances.occurrenceDate, iso),
           ),
         );
+      if (told.length && iso >= today) {
+        after(() => notifyCancelled(about, told));
+      }
     }
     syncGoogleAfter(userId);
     revalidatePath("/app");
@@ -325,6 +438,17 @@ export async function deleteClass(
 
   let count = 1;
   if (scope === "all" && !row.specificDate) {
+    const doomed = await db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, userId),
+          eq(schema.classes.seriesId, row.seriesId),
+          isNull(schema.classes.specificDate),
+        ),
+      );
+    const told = await clearGoing(doomed.map((d) => d.id));
     const gone = await db
       .delete(schema.classes)
       .where(
@@ -336,8 +460,11 @@ export async function deleteClass(
       )
       .returning({ id: schema.classes.id });
     count = gone.length;
+    if (told.length) after(() => notifyCancelled(about, told));
   } else {
+    const told = await clearGoing([row.id]);
     await db.delete(schema.classes).where(eq(schema.classes.id, row.id));
+    if (told.length) after(() => notifyCancelled(about, told));
   }
 
   syncGoogleAfter(userId);

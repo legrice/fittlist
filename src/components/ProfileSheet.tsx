@@ -19,6 +19,7 @@ import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
+import { MyCalendar } from "@/components/MyCalendar";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -359,6 +360,8 @@ export function ProfileSheet({
               The Following tab already is your week, so the row was a second
               door to the same room, and sharing what you're going to is a
               member's move — a coach's share is their own schedule. */}
+          {/* A coach follows people too: their own week plus everyone else's. */}
+          {showFanView && <MyCalendar />}
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
           <InstallApp />

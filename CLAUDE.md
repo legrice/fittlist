@@ -92,6 +92,10 @@ node scripts/nav-smoke.mjs        # back pops instead of piling onto history
 
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/going-smoke.mjs      # Going marks through an edit, a delete, a cancel
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/pwa-smoke.mjs        # manifest, icons, the worker, the install row
 ```
 
@@ -109,6 +113,15 @@ to expand a recurrence: schedule, public page, feed, digest, Discover, story
 image, `.ics`. A weekly class is one row per weekday sharing a `templateId`;
 `skipDates` cancels single occurrences. Change it there and everything agrees.
 Callers must load full class rows, or the column silently goes missing.
+
+**A Going mark points at a class row, so anything that replaces that row has
+to deal with it first.** Editing a weekly class deletes and reinserts its rows,
+and deleting one removes them; both used to hit the `attendances` foreign key
+and fail outright, so a coach could not edit or delete a class the moment
+anyone said they were coming. `save()` now carries the marks across by weekday
+and `deleteClass()` clears them, and a delete tells whoever was coming
+(`notifyCancelled`) rather than dropping them silently. Anything else that
+rewrites `classes` rows needs the same care.
 
 **A series is not a template.** `classes.seriesId` identifies one recurring
 class: all its weekday rows share it, and editing or deleting "the whole thing"

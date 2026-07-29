@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
+import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AppHeader } from "@/components/AppHeader";
@@ -145,6 +146,7 @@ export function ScheduleScreen({
   }, [toast]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
+
   // One bell for everything: unread notifications + unread messages.
   const updatesUnread = notifUnread + inboxUnread;
 
@@ -207,6 +209,32 @@ export function ScheduleScreen({
     return out;
   }, [classes, todayIso, weeks]);
 
+  // The next seven days as pasteable text. Public classes only: a private
+  // client session is not for the group chat.
+  const copyWeek = async () => {
+    const week = days.slice(0, 7).map((d) => ({
+      iso: d.iso,
+      items: d.items
+        .filter((c) => c.isPublic)
+        .map((c) => ({
+          name: c.name,
+          startTime: c.startTime,
+          where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
+        })),
+    }));
+    const text = weekAsText(week, `${name.trim() || "My"} week on fittlist`);
+    if (!text.trim()) {
+      toast("Nothing on the calendar to copy");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n\nfittlist.co/${handle}`);
+      toast("Week copied, ready to paste");
+    } catch {
+      toast("Couldn't copy that");
+    }
+  };
+
   // Load more weeks when the trainer nears the bottom (one load per render).
   const loadingRef = useRef(false);
   useEffect(() => {
@@ -264,6 +292,12 @@ export function ScheduleScreen({
             <button className="dashlink" onClick={() => setQrOpen(true)}>
               <Icon name="qr_code_2" size={19} />
               <span>QR code</span>
+            </button>
+            {/* The share image is for a story. This is for the group chat,
+                where an image is no use and a coach ends up typing it out. */}
+            <button className="dashlink" onClick={copyWeek}>
+              <Icon name="content_copy" size={19} />
+              <span>Copy week</span>
             </button>
           </div>
         </div>
