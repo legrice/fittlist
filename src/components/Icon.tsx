@@ -41,6 +41,7 @@ import {
   UserRoundPlus,
   X,
   Palette,
+  Settings,
 } from "lucide-react";
 
 // Lucide, drawn inline as SVG. Call sites keep the old Material names — this
@@ -52,6 +53,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   add: Plus,
   admin_panel_settings: ShieldUser,
   palette: Palette,
+  settings: Settings,
   alternate_email: AtSign,
   arrow_back: ArrowLeft,
   auto_awesome: Sparkles,

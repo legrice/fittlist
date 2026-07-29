@@ -160,7 +160,8 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     // the Schedule tab the modal promised is really there
     {
       const tabs = (await pg.locator(".navtab").allInnerTexts()).map((t) => t.trim());
-      if (!tabs.includes("Schedule")) fail(`no Schedule tab after converting: ${tabs.join(",")}`);
+      // The You tab reads as their initial over the label, so match loosely.
+      if (!tabs.some((t) => t.includes("You"))) fail(`no You tab after converting: ${tabs.join(",")}`);
     }
     // and the page they already had is still theirs, now with a schedule on it
     const claimed = await pg.request.get(`${BASE}/memberperson`);
@@ -258,7 +259,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   }
 
   // The invite is a link now, not an address we have to be told in advance.
-  await pg.locator(".usericon").click();
+  await pg.locator(".settingsbtn").click();
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
   const row = pg.locator(".setrow", { hasText: "Invite people to the beta" });
@@ -297,7 +298,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
 
     // And Riley can see it happened.
     await pg.reload();
-    await pg.locator(".usericon").click();
+    await pg.locator(".settingsbtn").click();
     await pg.locator(".acctwrap").waitFor();
     await pg.waitForTimeout(450);
     const row2 = pg.locator(".setrow", { hasText: "Invite people to the beta" });

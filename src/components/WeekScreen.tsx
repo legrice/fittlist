@@ -20,12 +20,15 @@ export function WeekScreen({
   days,
   header,
   coach = true,
+  face,
 }: {
   days: WeekDay[];
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
   /** false drops the Schedule tab: a member has nothing behind it. */
   coach?: boolean;
+  /** Your own face, for the You tab. */
+  face?: { photo: string | null; color: string; initial: string };
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -170,7 +173,7 @@ export function WeekScreen({
         </div>
       )}
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
-      <NavBar coach={coach} />
+      <NavBar coach={coach} face={face} />
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

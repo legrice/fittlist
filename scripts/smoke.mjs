@@ -30,7 +30,7 @@ const waitSchedule = (pg, n, timeout = 10000) =>
 // The account page is a full-screen view reached from the header avatar.
 const openProfile = async (pg) => {
   await pg.goto(BASE + "/app");
-  await pg.locator(".usericon").click();
+  await pg.locator(".settingsbtn, .usericon").first().click();
   await pg.locator(".acctwrap").waitFor();
 };
 
@@ -57,7 +57,7 @@ const addSaved = async (pg) => {
 // under load and made this the flakiest step in the suite).
 const setDark = async (pg, want) => {
   await pg.goto(BASE + "/app");
-  await pg.locator(".usericon").click();
+  await pg.locator(".settingsbtn, .usericon").first().click();
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
   const row = pg.locator(".setrow", { hasText: "Dark mode" });
@@ -358,12 +358,13 @@ console.log("end date ok (stops the week and the feed, round-trips)");
 }
 console.log("saved-class links carry over ok");
 
-// ---- account page: full-screen view reached from the header avatar
+// ---- account page: full-screen view reached from the header settings icon.
+// A coach's face is the You tab now, so the corner is settings.
 await expect(
-  page.locator(".usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
-  "header shows avatar (initial fallback)",
+  page.locator(".navtab.on .navav-empty").filter({ hasText: "M" }).isVisible(),
+  "the You tab carries their face (initial fallback)",
 );
-await page.locator(".usericon").click();
+await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
 await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
@@ -1333,7 +1334,7 @@ if (myBuf.readUInt32BE(16) !== 1080 || myBuf.readUInt32BE(20) !== 1920)
 // sharing them lives in the member's account, not on top of their week
 if (await fan.locator(".goingshare").count())
   fail("Share my week should have moved off the feed");
-await fan.locator(".usericon").click();
+await fan.locator(".navtab", { hasText: "You" }).click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
@@ -1447,7 +1448,7 @@ await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
-await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
@@ -1617,7 +1618,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 await page.goto(BASE + "/app");
 await page.locator(".dashlinks").waitFor();
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
-await page.locator(".usericon").click();
+await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();
 // what a coach attends is private: it must not leak onto their public page
@@ -1648,7 +1649,7 @@ if ((await anonPage.locator(".followpill").innerText()).trim() !== "Following") 
   await anonPage.locator(".followpill", { hasText: /^Following$/ }).waitFor();
 }
 await page.goto(BASE + "/app");
-await page.locator(".usericon").click();
+await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctstats button.acctstat", { hasText: "Followers" }).click();
 await page.waitForURL("**/followers");
@@ -1690,7 +1691,7 @@ console.log("followers list ok (email subscriber listed, coach can be followed b
 // the three stats read as a column: number centred over its label
 {
   await page.goto(BASE + "/app");
-  await page.locator(".usericon").click();
+  await page.locator(".settingsbtn").click();
   await page.locator(".acctstat").first().waitFor();
   const off = await page.locator(".acctstat").first().evaluate((el) => {
     const box = el.getBoundingClientRect();
@@ -1738,7 +1739,7 @@ await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
-await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 

@@ -11,10 +11,16 @@ export function AppHeader({
   unread = 0,
   weekCount,
   avatar,
+  settingsHref,
+  onSettings,
   home = "/feed",
   nav,
 }: {
   unread?: number;
+  /** Settings, for anyone whose face is already the You tab. A link where the
+   *  account is its own route, a handler where it's an overlay. */
+  settingsHref?: string;
+  onSettings?: () => void;
   /** How many added classes are still ahead. Undefined hides the icon
    *  entirely, for anyone who has no week to keep. */
   weekCount?: number;
@@ -31,14 +37,14 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; onSchedule?: () => void };
+  nav?: { coach?: boolean; active?: NavTab; onYou?: () => void };
 }) {
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" beta />
       </Link>
-      {nav && <HeaderNav coach={nav.coach} active={nav.active} onSchedule={nav.onSchedule} />}
+      {nav && <HeaderNav coach={nav.coach} active={nav.active} onYou={nav.onYou} />}
       <div className="brandbar-actions">
         {/* Your week: the classes you've added, always one tap away. It sits
             here rather than as a bubble that appears on add, because a control
@@ -63,6 +69,16 @@ export function AppHeader({
           <Icon name="notifications" size={20} />
           {unread > 0 && <span className="inboxdot">{unread > 9 ? "9+" : unread}</span>}
         </Link>
+        {(settingsHref || onSettings) &&
+          (settingsHref ? (
+            <Link className="iconbtn settingsbtn" aria-label="Settings" href={settingsHref}>
+              <Icon name="settings" size={20} />
+            </Link>
+          ) : (
+            <button className="iconbtn settingsbtn" aria-label="Settings" onClick={onSettings}>
+              <Icon name="settings" size={20} />
+            </button>
+          ))}
         {avatar &&
           (() => {
             const face = avatar.photo ? (

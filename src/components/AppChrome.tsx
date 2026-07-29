@@ -32,25 +32,27 @@ export async function AppChrome({ userId, bar = false }: { userId: string; bar?:
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const [unread, week] = await Promise.all([unreadNotifications(userId), weekCount(userId)]);
+  const face = {
+    photo: me.photo,
+    color: avatarColor(me),
+    initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
+  };
 
   const header = (
     <AppHeader
       unread={unread}
       weekCount={week}
       home={isCoach ? "/app" : "/feed"}
-      avatar={{
-        photo: me.photo,
-        color: avatarColor(me),
-        initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
-        href: isCoach ? "/app?acct=1" : "/you",
-      }}
+      // The same corner for everyone: your week, the bell, settings. The face
+      // left it when it became the You tab.
+      settingsHref={isCoach ? "/app?acct=1" : "/you"}
     />
   );
   if (!bar) return header;
   return (
     <>
       {header}
-      <NavBar coach={isCoach} />
+      <NavBar coach={isCoach} face={face} />
     </>
   );
 }

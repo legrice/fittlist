@@ -92,8 +92,9 @@ await m.waitForTimeout(500);
 {
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
-  if (labels.join("|") !== "Following|Discover")
-    fail(`a member's header links should be Following and Discover, got ${labels}`);
+  // The same three everyone gets; only where You points differs.
+  if (labels.join("|") !== "Following|Discover|You")
+    fail(`a member's header links should be Following, Discover and You, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();

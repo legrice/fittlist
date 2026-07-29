@@ -105,7 +105,7 @@ await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
 // Desktop Chrome with no install prompt and no iOS: the row stays away rather
 // than pointing at a button that isn't there.
-await p.locator(".usericon").click();
+await p.locator(".settingsbtn").click();
 await p.waitForTimeout(700);
 if (await p.getByText("Add to home screen").isVisible().catch(() => false))
   fail("the install row showed on a browser with nothing to install with");
@@ -116,7 +116,7 @@ const ios = await b.newContext({ ...devices["iPhone 13"], storageState: await c.
 const q = await ios.newPage();
 q.setDefaultTimeout(15000);
 await q.goto(BASE + "/app");
-await q.locator(".usericon").click();
+await q.locator(".settingsbtn").click();
 await q.waitForTimeout(700);
 const row = q.getByText("Add to home screen");
 if (!(await row.isVisible())) fail("an iPhone should be told how to install");

@@ -34,6 +34,11 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = (await feedbackPromptDue(userId)) ? await feedbackHost() : null;
   const invitesLeft = await invitesBannerCount();
+  const face = {
+    photo: me.photo,
+    color: avatarColor(me),
+    initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
+  };
 
   return (
     <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
@@ -42,17 +47,14 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           unread={unread}
           weekCount={week}
           nav={{ coach: isCoach }}
-          avatar={{
-            photo: me.photo,
-            color: avatarColor(me),
-            initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
-            href: isCoach ? "/app?acct=1" : "/you",
-          }}
+          // The same corner for everyone: your week, the bell, settings. The
+          // face left it when it became the You tab.
+          settingsHref={isCoach ? "/app?acct=1" : "/you"}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} />
+      <NavBar coach={isCoach} face={face} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

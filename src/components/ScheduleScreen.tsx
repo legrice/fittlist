@@ -269,15 +269,13 @@ export function ScheduleScreen({
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "schedule", onSchedule: () => setProfileOpen(false) } : undefined}
-          avatar={{
-            photo,
-            color: myAccent,
-            initial: (name.trim().charAt(0) || "?").toUpperCase(),
-            onClick: () => {
-              setAcctAnim("up");
-              setProfileOpen(true);
-            },
+          nav={showFanView ? { active: "you", onYou: () => setProfileOpen(false) } : undefined}
+          // The face is the You tab now, so the corner holds settings. Two
+          // taps on the same picture, one of which quietly meant "account",
+          // was the confusing part.
+          onSettings={() => {
+            setAcctAnim("up");
+            setProfileOpen(true);
           }}
         />
 
@@ -390,7 +388,15 @@ export function ScheduleScreen({
       )}
 
       {showFanView && (
-        <NavBar active="schedule" onSchedule={() => setProfileOpen(false)} />
+        <NavBar
+          active="you"
+          onYou={() => setProfileOpen(false)}
+          face={{
+            photo,
+            color: myAccent,
+            initial: (name.trim().charAt(0) || "?").toUpperCase(),
+          }}
+        />
       )}
 
       {profileOpen && (
