@@ -735,7 +735,20 @@ if (!ogHtml.includes('property="og:title"') || !ogHtml.includes("Matt"))
   fail("og:title missing from profile page");
 if (!ogHtml.includes('property="og:url"')) fail("og:url missing");
 if (!ogHtml.includes("/?via=matt")) fail("footer link not attributed with ?via=matt");
-console.log("og tags + attributed footer ok");
+// og:image has to be a URL an unfurler can fetch. The photo lives on the
+// account as a data URL, and pointing the tag at the column shared a profile
+// with no image at all: scrapers fetch over HTTP, they don't decode a data URI.
+{
+  const tag = ogHtml.match(/property="og:image"\s+content="([^"]+)"/);
+  if (!tag) fail("og:image missing from profile page");
+  if (tag[1].startsWith("data:")) fail("og:image is a data URL, which unfurls to nothing");
+  if (!tag[1].includes("/api/og/matt")) fail("og:image should be the card route, got " + tag[1]);
+  const card = await anon.request.get(BASE + "/api/og/matt");
+  if (!card.ok()) fail("the link preview card is " + card.status());
+  if (card.headers()["content-type"] !== "image/png")
+    fail("the card should be a png, got " + card.headers()["content-type"]);
+}
+console.log("og tags + link preview card + attributed footer ok");
 
 await anon.request.get(BASE + "/matt", { headers: { "user-agent": "facebookexternalhit/1.1" } });
 await anon.request.get(BASE + "/matt", { headers: { "user-agent": "Twitterbot/1.0" } });

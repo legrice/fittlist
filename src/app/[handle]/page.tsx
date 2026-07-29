@@ -28,6 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? `${user.name} on fittlist.`
       : `${user.name}'s coaching schedule, every studio in one link.`);
   const url = `${siteOrigin()}/${handle}`;
+  // The card is a real URL that composes the photo in. users.photo is a data
+  // URL, and an unfurler fetches og:image over HTTP rather than decoding it, so
+  // pointing the tag at the column shared a profile with no image at all.
+  const image = `${siteOrigin()}/api/og/${handle}`;
   return {
     title,
     description,
@@ -38,9 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url,
       siteName: "fittlist",
       type: "profile",
-      images: user.photo ? [{ url: user.photo }] : undefined,
+      images: [{ url: image, width: 1200, height: 630, alt: user.name }],
     },
-    twitter: { card: user.photo ? "summary_large_image" : "summary", title, description },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 

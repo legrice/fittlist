@@ -18,9 +18,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
+  const title = `${user.name}'s schedule · fittlist`;
+  const description = `${user.name}'s coaching schedule, every studio in one link.`;
+  const url = `${siteOrigin()}/${handle}/schedule`;
+  // A coach's page answers to two URLs and people share both, so the card has
+  // to be on both. Same card: it's the same person either way.
+  const image = `${siteOrigin()}/api/og/${handle}`;
   return {
-    title: `${user.name}'s schedule · fittlist`,
-    alternates: { canonical: `${siteOrigin()}/${handle}/schedule` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "fittlist",
+      type: "profile",
+      images: [{ url: image, width: 1200, height: 630, alt: user.name }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
