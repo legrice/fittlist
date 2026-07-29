@@ -247,7 +247,7 @@ export async function GET(req: Request) {
           <span style={{ fontWeight: 600, fontSize: 40 }}>fittlist.co</span>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={markUri} alt="" width={62} height={55} />
+            <img src={markUri} alt="" width={56} height={57} />
             <span style={{ fontWeight: 800, fontSize: 50, color: t.fg, letterSpacing: -2 }}>
               FittList
             </span>

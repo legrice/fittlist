@@ -53,7 +53,9 @@ a { color: inherit; }
 }
 /* lockup: red block mark + "FittList"; sized by font-size on the outer class */
 .wm { display: inline-flex; align-items: center; gap: .32em; line-height: 1; font-size: 20px; }
-.wm .wm-ico { display: block; height: .82em; flex-shrink: 0; }
+/* The mark's ink runs the full height of its box, where the old one carried
+   about 8% of padding, so it sits a touch shorter to read the same size. */
+.wm .wm-ico { display: block; height: .76em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
 .wm .wm-text { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
 .wm .wm-beta {
@@ -128,7 +130,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   background: repeating-radial-gradient(circle at 50% 50%,
     rgba(247, 242, 232, .055) 0 1.5px, transparent 1.5px 17px);
 }
-.obhero .obmark { position: relative; display: block; height: 66px; }
+.obhero .obmark { position: relative; display: block; height: 61px; }
 .obhero .obmark svg { height: 100%; width: auto; display: block; }
 /* "You're in" — the difference between arriving with an invite and finding the
    site. Sits above the headline, in the CTA orange so it reads as good news. */

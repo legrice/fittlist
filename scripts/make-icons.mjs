@@ -14,12 +14,10 @@ import { brandIcon } from "../src/lib/brand.ts";
 const ORANGE = "#dd6a35"; // --si, the accent the whole app is built around
 const WHITE = "#ffffff";
 
-// brandIcon draws into a 112x100 viewBox, but its ink only spans x 2..96 and
-// y 4..96. Centring on the viewBox middle (56) rather than the ink middle (49)
-// pushed the mark ~6% of its width to the left, which is visible once it's the
-// only thing on an orange square. `fill` is how much of the 120 box the mark's
-// ink takes across.
-const INK = { cx: 49, cy: 50, w: 94 };
+// brandIcon's ink fills its 134x136 viewBox exactly, so the centre is the box
+// centre. Scale by the larger side, so the mark fits its share of the square in
+// both directions; `fill` is how much of the 120 box it takes up.
+const INK = { cx: 67, cy: 68, w: 136 };
 function square(size, radius, fill) {
   // brandIcon carries its colour on the <svg> element, which is exactly the
   // part being unwrapped, so the group has to carry it instead.

@@ -156,7 +156,7 @@ export async function GET(
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={markUri} alt="" width={50} height={44} />
+            <img src={markUri} alt="" width={45} height={46} />
             <span style={{ fontWeight: 800, fontSize: 44, letterSpacing: -1.5 }}>FittList</span>
           </div>
         </div>
