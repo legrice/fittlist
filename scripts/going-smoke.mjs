@@ -111,23 +111,14 @@ if (!/Ironbound/.test(pasted)) fail("the copied week doesn't say where");
 if (!pasted.includes("fittlist.co/carina")) fail("the copied week drops the link");
 console.log("week copies as text ok");
 
-// --- the member's calendar feed
+// --- the member's calendar feed is hidden for now (the subscribe flow needs
+// work), so settings must NOT offer it; the endpoint stays for old links.
 await m.goto(BASE + "/you");
 await m.waitForTimeout(700);
 await m.getByRole("button", { name: "Not right now" }).click().catch(() => {});
-const calRow = m.getByText("Add classes to your calendar");
-await calRow.click();
-await m.waitForTimeout(400);
-const href = await m.locator('a:has-text("Add to calendar")').getAttribute("href");
-if (!href?.startsWith("webcal://")) fail(`the calendar link should subscribe, got ${href}`);
-const ics = await m.request.get(href.replace("webcal://", "http://"));
-const body = await ics.text();
-if (!ics.ok()) fail(`the member calendar feed returned ${ics.status()}`);
-const events = (body.match(/BEGIN:VEVENT/g) ?? []).length;
-if (events < 1) fail("the member calendar feed is empty");
-// A merged week is several people's classes, so the title has to say whose.
-if (!body.includes("SUMMARY:HYROX with Carina")) fail("the feed doesn't name the coach");
-console.log(`member calendar feed ok (${events} events, coach named)`);
+if (await m.getByText("Add classes to your calendar").count())
+  fail("the calendar feed row should be hidden");
+console.log("calendar feed door hidden ok");
 
 // The token is the key, so a wrong one gets nothing.
 const bad = await m.request.get(BASE + "/api/cal/me/not-a-real-token");

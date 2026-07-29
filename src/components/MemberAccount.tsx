@@ -7,7 +7,6 @@ import { Icon } from "@/components/Icon";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
-import { MyCalendar } from "@/components/MyCalendar";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
 
@@ -96,7 +95,6 @@ export function MemberAccount({
       <div className="settingslist">
         {/* The other half of adding: once your week has classes in it, this is
             where you post them. */}
-        <MyCalendar />
         <button className="setrow" onClick={() => setShare(true)}>
           <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
           <span className="setrow-txt">
