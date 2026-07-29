@@ -12,9 +12,18 @@ export const metadata: Metadata = {
     "Claim your page, publish the classes you coach across every studio, share one permanent link.",
   openGraph: {
     title: "fittlist",
-    description: "One link in your bio. Always your current week, every studio you coach at.",
+    description: "Follow coaches. Build your schedule. Stay connected to your local fitness community.",
     siteName: "fittlist",
     type: "website",
+    // The site's own card. Profile pages override this with theirs, so it only
+    // shows where the link is fittlist.co itself.
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "fittlist" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "fittlist",
+    description: "Follow coaches. Build your schedule. Stay connected to your local fitness community.",
+    images: ["/api/og"],
   },
   // Installed on a home screen, iOS reads these rather than the manifest.
   appleWebApp: {
