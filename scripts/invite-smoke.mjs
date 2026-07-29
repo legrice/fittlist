@@ -245,14 +245,16 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     const bar = pg.locator(".invbanner");
     await bar.waitFor();
     const txt = await bar.innerText();
-    if (!/You have \d+ beta invite/.test(txt)) fail(`the banner doesn't say the count: ${txt}`);
+    // Nobody is capped any more, so the banner points at the door rather than
+    // rationing it. A count would only come back if BETA_INVITES_PER_USER did.
+    if (!/Bring people in/.test(txt)) fail(`the banner doesn't offer to invite: ${txt}`);
     // One tap to the sheet, not a trip through settings.
     await pg.locator(".invbanner-main").click();
     await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
     await pg.locator(".sheetclose").click();
     await pg.waitForTimeout(400);
     await pg.screenshot({ path: OUT + "/shot-invite-banner.png" });
-    console.log("invites banner ok (count, and one tap to the sheet)");
+    console.log("invites banner ok (offers the door, one tap to the sheet)");
   }
 
   await pg.locator(".usericon").click();
@@ -261,7 +263,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   const row = pg.locator(".setrow", { hasText: "Invite someone to the beta" });
   // centre it rather than letting scrollIntoViewIfNeeded park it under the tabs
   await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await row.locator(".s", { hasText: "invites left" }).waitFor();
+  await row.locator(".s", { hasText: "Send someone a beta invite" }).waitFor();
   await row.click();
   await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
   // an email that's already here doesn't burn an invite

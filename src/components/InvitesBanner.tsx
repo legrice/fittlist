@@ -38,7 +38,7 @@ export function InvitesBanner({ left }: { left: number }) {
           </span>
           <span className="invbanner-txt">
             <b>
-              You have {left} beta invite{left === 1 ? "" : "s"}
+              {left < 0 ? "Bring people in" : `You have ${left} beta invite${left === 1 ? "" : "s"}`}
             </b>
             <span>Know a coach who should be in here?</span>
           </span>

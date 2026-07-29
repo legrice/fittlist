@@ -1538,11 +1538,15 @@ await page.locator(".profname").waitFor();
 if (!(await page.locator(".profacts .followpill").count()))
   fail("Follow should sit in the actions row under the name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
-// Signed in, this is still the app, so the header comes with it. The bottom
-// tabs don't: a profile is a place you went, not one of the three you live in.
+// Signed in, this is still the app, so the whole shell comes with it: the
+// header above and the tabs below. There's no back arrow any more, because the
+// tab bar is the way out and it doesn't depend on how you arrived.
 if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a signed-in viewer should get the app header on a profile");
-if (await page.locator(".navbar").count()) fail("a profile should not carry the bottom tabs");
+if (!(await page.locator(".navbar").count()))
+  fail("a signed-in viewer should get the tab bar on a profile");
+if (await page.locator(".pubhead .evback").count())
+  fail("a profile shouldn't carry a back arrow now the tabs are there");
 // Nothing pins: each tab is its own page, so there is no long scroll to keep
 // a control in reach of.
 await expect(
@@ -1553,9 +1557,8 @@ await expect(
   page.locator(".pubtabs").evaluate((e) => getComputedStyle(e).position !== "sticky"),
   "the tabs are not pinned",
 );
-if (!(await page.locator(".pubhead .evback").count()))
-  fail("a signed-in viewer needs a way back off a profile");
-await page.getByRole("button", { name: "Back to Discover" }).click();
+// The way off a profile is the tab bar, which is there however you arrived.
+await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.waitForURL("**/discover");
 // the selected tab is a filled pill, not an underline
 await page.goto(BASE + "/matt");

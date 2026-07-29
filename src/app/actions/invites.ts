@@ -3,7 +3,7 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
-import { INVITES_PER_USER, inviteOnly } from "@/lib/invites";
+import { INVITES_PER_USER, invitesCapped, inviteOnly } from "@/lib/invites";
 import { sendInviteLink } from "@/lib/invite-link";
 import { getSessionUserId } from "@/lib/session";
 
@@ -50,6 +50,9 @@ export async function invitesBannerCount(): Promise<number> {
   if (!me || !me.onboardedAt || me.dismissed) return 0;
   // Admins have no cap, so there's no number to announce.
   if (adminEmails().includes(me.email.toLowerCase())) return 0;
+  // Nor does anyone else now. -1 means "you can invite, we're not counting":
+  // the banner still says the door exists, it just doesn't ration it.
+  if (!invitesCapped()) return -1;
   const rows = await db
     .select({ id: schema.invites.id })
     .from(schema.invites)
@@ -84,7 +87,7 @@ export async function myInvites(): Promise<{
     .from(schema.invites)
     .where(eq(schema.invites.invitedByUserId, userId))
     .orderBy(sql`${schema.invites.createdAt} desc`);
-  const unlimited = !!me && adminEmails().includes(me.email.toLowerCase());
+  const unlimited = !invitesCapped() || (!!me && adminEmails().includes(me.email.toLowerCase()));
   const total = unlimited ? Infinity : INVITES_PER_USER;
   return {
     left: unlimited ? Infinity : Math.max(0, INVITES_PER_USER - rows.length),
@@ -110,7 +113,7 @@ export async function inviteFriend(
   if (!me) return { ok: false, error: "Log in first." };
   if (email === me.email) return { ok: false, error: "That's your own email." };
 
-  const unlimited = adminEmails().includes(me.email.toLowerCase());
+  const unlimited = !invitesCapped() || adminEmails().includes(me.email.toLowerCase());
   const mine = await db
     .select({ id: schema.invites.id })
     .from(schema.invites)

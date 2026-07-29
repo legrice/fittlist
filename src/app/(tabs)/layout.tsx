@@ -49,7 +49,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
             href: isCoach ? "/app?acct=1" : "/you",
           }}
         />
-        {invitesLeft > 0 && <InvitesBanner left={invitesLeft} />}
+        {invitesLeft !== 0 && <InvitesBanner left={invitesLeft} />}
         {children}
       </div>
       <NavBar coach={isCoach} />

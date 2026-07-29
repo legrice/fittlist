@@ -8,7 +8,6 @@ import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { studioPath } from "@/lib/studio";
 
-import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -37,11 +36,13 @@ export async function PublicProfileView({
   user: UserRow;
   isOwner: boolean;
   tab: ProfileTab;
-  /** Which tab sent them here, so the back arrow returns to it. */
+  /** Which tab sent them here. Kept for the class links below; there's no back
+   *  arrow any more, because the tab bar is the way out. */
   from?: string;
 }) {
-  // A profile behaves like a class page: no app header, no bottom tabs, just
-  // the page and a way back to wherever it was tapped from.
+  // A profile is a screen of the app like any other: the header above it and
+  // the tab bar below. It used to carry a back arrow instead, which meant the
+  // only way off a coach's page was the one route you arrived by.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -73,20 +74,6 @@ export async function PublicProfileView({
       }
     }
   }
-  // Only a tab we actually sent them from earns an arrow — someone who opened
-  // this link from outside has nowhere in the app to go back to.
-  // A tab we know by name gets a named destination; anything else walks back
-  // through history, which is where they actually tapped from.
-  const backTo =
-    from === "discover"
-      ? { href: "/discover", label: "Back to Discover" }
-      : from === "home"
-        ? { href: "/feed", label: "Back to Following" }
-        : from === "schedule"
-          ? { href: "/app", label: "Back to your schedule" }
-          : from === "followers"
-            ? { href: "/followers", label: "Back to your followers" }
-            : null;
 
   const classRows = (
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
@@ -316,7 +303,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className="pub profile"
+      className={`pub profile${viewerId ? " hasnav" : ""}`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -343,7 +330,7 @@ export async function PublicProfileView({
         {/* Signed in, this is still the app, so it keeps the app's header: the
             way home, the bell, your week. A stranger gets the wordmark and one
             way in instead, because none of those mean anything to them yet. */}
-        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={handle} />}
+        {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={handle} />}
         <ProfileTabs
           handle={handle}
           tab={tab}
@@ -352,13 +339,6 @@ export async function PublicProfileView({
           location={user.location ?? ""}
           hasContact={hasContact}
           trackSchedule={!isOwner}
-          back={
-            signedIn ? (
-              <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
-                <Icon name="arrow_back" size={21} />
-              </BackLink>
-            ) : null
-          }
           avatar={avatar}
           actions={
             // The owner previewing their own page has nobody to follow and

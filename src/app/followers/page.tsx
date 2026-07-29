@@ -75,9 +75,9 @@ export default async function FollowersPage() {
   const n = followers.length;
 
   return (
-    <section className="screen admin" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
       <div className="pad">
-        <AppChrome userId={userId} />
+        <AppChrome userId={userId} bar />
         <div className="folback">
           <BackLink className="evback" href="/app?acct=1" label="Back to your profile">
             <Icon name="arrow_back" size={21} />

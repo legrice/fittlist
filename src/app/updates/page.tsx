@@ -69,12 +69,12 @@ export default async function UpdatesPage({
   });
 
   return (
-    <section className="screen admin" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <UpdatesScreen
         notifications={rows}
         threads={threads}
         initialTab={tab === "messages" ? "messages" : "notifications"}
-        header={<AppChrome userId={userId} />}
+        header={<AppChrome userId={userId} bar />}
       />
     </section>
   );

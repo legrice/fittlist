@@ -7,10 +7,13 @@ import { adminEmails } from "@/lib/admin";
 export const INVITE_MSG =
   "Fittlist is invite-only during beta. Use the email you were invited with, or request an invite below.";
 
-// How many people one beta user may bring in. Small on purpose: the point of a
-// closed beta is that it stays small enough to talk to everyone in it, and a
-// handful each still doubles the room. Admins are not capped.
-export const INVITES_PER_USER = Number(process.env.BETA_INVITES_PER_USER || 5);
+// How many people one beta user may bring in. Nobody is capped: the gate is
+// still on, so every account still arrives through someone, but rationing how
+// many friends a coach can bring was a brake on the only thing that grows this.
+// The number stays configurable, so a cap can come back without new plumbing;
+// 0 means no limit.
+export const INVITES_PER_USER = Number(process.env.BETA_INVITES_PER_USER || 0);
+export const invitesCapped = () => INVITES_PER_USER > 0;
 
 // Invite gating is on unless explicitly disabled (INVITE_ONLY=false opens
 // self-serve signups when the beta ends).

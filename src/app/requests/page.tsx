@@ -66,9 +66,9 @@ export default async function RequestsPage() {
   for (const m of msgs) if (!m.fromCoach && !theirs.has(m.threadId)) theirs.set(m.threadId, m.body);
 
   return (
-    <section className="screen admin" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="pad">
-        <AppChrome userId={userId} />
+        <AppChrome userId={userId} bar />
         <div className="folback">
           <BackLink className="evback" href="/app?acct=1" label="Back to your account">
             <Icon name="arrow_back" size={21} />

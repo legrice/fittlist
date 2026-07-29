@@ -20,7 +20,6 @@ export function ProfileTabs({
   location,
   hasContact,
   trackSchedule,
-  back,
   avatar,
   actions,
   avail,
@@ -34,8 +33,6 @@ export function ProfileTabs({
   /** No contact details and no way to write to them means no Contact tab. */
   hasContact: boolean;
   trackSchedule: boolean;
-  /** The way out, on its own line above the identity block. */
-  back: ReactNode;
   /** The face: photo or coloured initial, above the name. */
   avatar: ReactNode;
   /** The row of pills under the name: Message, Follow. */
@@ -77,7 +74,6 @@ export function ProfileTabs({
       {/* Who this is, top to bottom: face, name, where, what. Then the things
           you can do about it, then the section you asked for. */}
       <div className="pubhead">
-        {back}
         {avatar}
         {/* The badge rides with the name and wraps under it when the name is
             long, rather than being pushed down the page by the lines between. */}

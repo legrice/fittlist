@@ -281,7 +281,7 @@ export function ScheduleScreen({
           }}
         />
 
-        {invitesLeft > 0 && <InvitesBanner left={invitesLeft} />}
+        {invitesLeft !== 0 && <InvitesBanner left={invitesLeft} />}
 
         {/* The things a coach reaches for from their week — the title said
             nothing the tab bar doesn't already say, so the tools get the space
