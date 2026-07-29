@@ -30,6 +30,9 @@ export default async function AdminPage() {
     db
       .select({
         trainerUserId: schema.subscribers.trainerUserId,
+        // Follows are keyed on the email, not the account: a plain email
+        // subscriber has no user row at all.
+        email: schema.subscribers.email,
         optedOutAt: schema.subscribers.optedOutAt,
       })
       .from(schema.subscribers),
@@ -61,18 +64,28 @@ export default async function AdminPage() {
     if (!coachesByStudio.has(p.studioId)) coachesByStudio.set(p.studioId, new Set());
     coachesByStudio.get(p.studioId)!.add(p.userId);
   }
+  // Two different numbers that both live in `subscribers`: how many people
+  // follow you, and how many coaches you follow. A coach cares about the
+  // first, a member only has the second.
   const subCountByUser = new Map<string, number>();
+  const followingByEmail = new Map<string, number>();
   for (const s of subs) {
     if (s.optedOutAt) continue;
     subCountByUser.set(s.trainerUserId, (subCountByUser.get(s.trainerUserId) ?? 0) + 1);
+    const e = s.email.toLowerCase();
+    followingByEmail.set(e, (followingByEmail.get(e) ?? 0) + 1);
   }
   const passkeyUsers = new Set(creds.map((c) => c.userId));
   const googleUsers = new Set(gconns.map((g) => g.userId));
 
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-  const coaches = users.map((u) => ({
+  const people = users.map((u) => ({
     id: u.id,
+    // The one thing that decides which side someone is on. Not the handle:
+    // members claim those too, which is exactly how this panel ended up
+    // calling every account a coach.
+    kind: u.kind === "fan" ? ("member" as const) : ("coach" as const),
     name: u.name || "(no name)",
     handle: u.handle ?? "",
     email: u.email,
@@ -81,6 +94,7 @@ export default async function AdminPage() {
     onboarded: !!u.onboardedAt,
     classCount: classCountByUser.get(u.id) ?? 0,
     subCount: subCountByUser.get(u.id) ?? 0,
+    followingCount: followingByEmail.get(u.email.toLowerCase()) ?? 0,
     hasPassword: !!u.passwordHash,
     hasPasskey: passkeyUsers.has(u.id),
     hasGoogle: googleUsers.has(u.id),
@@ -146,7 +160,10 @@ export default async function AdminPage() {
     .map((r) => ({ id: r.id, name: r.name, email: r.email, requested: fmt(r.createdAt) }));
 
   const stats = {
-    coaches: users.filter((u) => u.handle).length,
+    // A coach is kind, not handle. Counting handles quietly added every member
+    // to the coach total from the day members started claiming links.
+    coaches: users.filter((u) => u.kind !== "fan").length,
+    members: users.filter((u) => u.kind === "fan").length,
     studios: studios.length,
     classes: classes.length,
     subscribers: subs.filter((s) => !s.optedOutAt).length,
@@ -158,7 +175,7 @@ export default async function AdminPage() {
   return (
     <AdminPanel
       adminEmail={admin.email}
-      coaches={coaches}
+      people={people}
       studios={studioRows}
       invites={invites}
       referrers={referrers}

@@ -14,8 +14,11 @@ import {
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-type Coach = {
+type Person = {
   id: string;
+  /** Which side of the app they're on. A handle doesn't say: members have
+   *  those too, so this is the only thing that answers "is this a coach?". */
+  kind: "coach" | "member";
   name: string;
   handle: string;
   email: string;
@@ -23,7 +26,10 @@ type Coach = {
   lastSeen: string | null;
   onboarded: boolean;
   classCount: number;
+  /** People following them. */
   subCount: number;
+  /** Coaches they follow. */
+  followingCount: number;
   hasPassword: boolean;
   hasPasskey: boolean;
   hasGoogle: boolean;
@@ -53,6 +59,7 @@ type Referrer = { id: string; name: string; admin: boolean; sent: number; joined
 type Request = { id: string; name: string; email: string; requested: string | null };
 type Stats = {
   coaches: number;
+  members: number;
   studios: number;
   classes: number;
   subscribers: number;
@@ -63,7 +70,7 @@ type Stats = {
 
 export function AdminPanel({
   adminEmail,
-  coaches,
+  people,
   studios,
   invites,
   referrers,
@@ -72,7 +79,7 @@ export function AdminPanel({
   dark = false,
 }: {
   adminEmail: string;
-  coaches: Coach[];
+  people: Person[];
   studios: Studio[];
   invites: Invite[];
   referrers: Referrer[];
@@ -80,20 +87,24 @@ export function AdminPanel({
   stats: Stats;
   dark?: boolean;
 }) {
-  const [tab, setTab] = useState<"coaches" | "studios" | "invites">("coaches");
+  const [tab, setTab] = useState<"people" | "studios" | "invites">("people");
+  const [side, setSide] = useState<"all" | "coach" | "member">("all");
   const [q, setQ] = useState("");
   const [toastMsg, toastOn, toast] = useToast();
 
-  const shownCoaches = useMemo(() => {
+  const shownPeople = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return coaches;
-    return coaches.filter(
-      (c) =>
-        c.name.toLowerCase().includes(s) ||
-        c.email.toLowerCase().includes(s) ||
-        c.handle.toLowerCase().includes(s),
-    );
-  }, [coaches, q]);
+    let list = side === "all" ? people : people.filter((c) => c.kind === side);
+    if (s) {
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(s) ||
+          c.email.toLowerCase().includes(s) ||
+          c.handle.toLowerCase().includes(s),
+      );
+    }
+    return list;
+  }, [people, q, side]);
 
   const shownStudios = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -123,7 +134,7 @@ export function AdminPanel({
   }, [invites, q, inviteFilter]);
 
   const searchPlaceholder =
-    tab === "coaches" ? "Search name, email, or handle" : tab === "studios" ? "Search studios" : "Search invites";
+    tab === "people" ? "Search name, email, or handle" : tab === "studios" ? "Search studios" : "Search invites";
 
   return (
     <section className="screen admin" data-mode={dark ? "dark" : undefined}>
@@ -140,6 +151,7 @@ export function AdminPanel({
 
         <div className="adminstats">
           <Stat n={stats.coaches} label="Coaches" />
+          <Stat n={stats.members} label="Members" />
           <Stat n={stats.studios} label="Studios" />
           <Stat n={stats.classes} label="Classes" />
           <Stat n={stats.pendingInvites} label="Invites pending" />
@@ -147,8 +159,8 @@ export function AdminPanel({
         </div>
 
         <div className="adminseg">
-          <button className={tab === "coaches" ? "on" : ""} onClick={() => { setTab("coaches"); setQ(""); }}>
-            Coaches
+          <button className={tab === "people" ? "on" : ""} onClick={() => { setTab("people"); setQ(""); }}>
+            People
           </button>
           <button className={tab === "invites" ? "on" : ""} onClick={() => { setTab("invites"); setQ(""); }}>
             Invites
@@ -169,14 +181,27 @@ export function AdminPanel({
           />
         </div>
 
-        {tab === "coaches" ? (
+        {tab === "people" ? (
           <>
+            {/* Both sides live in one table, so this is the only place the
+                difference shows without reading every card. */}
+            <div className="seg invitefilter">
+              <button className={side === "all" ? "sel" : ""} onClick={() => setSide("all")}>
+                All ({people.length})
+              </button>
+              <button className={side === "coach" ? "sel" : ""} onClick={() => setSide("coach")}>
+                Coaches ({stats.coaches})
+              </button>
+              <button className={side === "member" ? "sel" : ""} onClick={() => setSide("member")}>
+                Members ({stats.members})
+              </button>
+            </div>
             <FixLocations toast={toast} />
             <div className="admincards">
-              {shownCoaches.map((c) => (
-                <CoachCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
+              {shownPeople.map((c) => (
+                <PersonCard key={c.id} c={c} toast={toast} adminEmail={adminEmail} />
               ))}
-              {!shownCoaches.length && <p className="adminempty">No coaches match.</p>}
+              {!shownPeople.length && <p className="adminempty">Nobody matches.</p>}
             </div>
           </>
         ) : tab === "invites" ? (
@@ -356,12 +381,12 @@ function FixLocations({ toast }: { toast: (m: string) => void }) {
   );
 }
 
-function CoachCard({
+function PersonCard({
   c,
   toast,
   adminEmail,
 }: {
-  c: Coach;
+  c: Person;
   toast: (m: string) => void;
   adminEmail: string;
 }) {
@@ -421,10 +446,22 @@ function CoachCard({
       <div className="adminmeta">
         {c.joined && <span>joined {c.joined}</span>}
         <span>last seen {c.lastSeen ?? "never"}</span>
-        <span>{c.classCount} {c.classCount === 1 ? "class" : "classes"}</span>
-        <span>{c.subCount} subs</span>
+        {c.kind === "coach" && (
+          <span>{c.classCount} {c.classCount === 1 ? "class" : "classes"}</span>
+        )}
+        <span>
+          {c.kind === "coach"
+            ? `${c.subCount} subs`
+            : `following ${c.followingCount}`}
+        </span>
       </div>
       <div className="adminbadges">
+        {/* Which side they're on, first, because it changes what the rest of
+            the card means: a member with 0 classes is normal, a coach with 0
+            classes is someone who signed up and never posted. */}
+        <span className={`adminbadge ${c.kind === "coach" ? "kind-coach" : "kind-member"}`}>
+          {c.kind}
+        </span>
         {!c.onboarded && <span className="adminbadge warn">setup pending</span>}
         {c.hasPassword && <span className="adminbadge">password</span>}
         {c.hasPasskey && <span className="adminbadge">passkey</span>}

@@ -1792,6 +1792,10 @@ button.ps-card { cursor: pointer; }
 .fbmodal-in { resize: none; margin-bottom: 14px; }
 .confirm-keep { display: block; margin: 14px auto 0; color: var(--ol); text-decoration: underline; font-size: 13px; }
 .confirm-keep[disabled] { opacity: .5; }
+/* Coach or member, on the card. Colour rather than wording, so the eye can
+   sort a mixed list without reading it. */
+.adminbadge.kind-coach { background: var(--ink); color: var(--paper); }
+.adminbadge.kind-member { background: var(--si); color: #fff; }
 .adminremove { margin-top: 10px; font-weight: 700; font-size: 13px; color: #a8452a; }
 .admindanger { margin-top: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--si-soft); }
 .admindanger p { font-size: 13px; color: #8a3c22; line-height: 1.45; margin-bottom: 10px; }

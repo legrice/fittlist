@@ -1525,6 +1525,36 @@ console.log("avatar colour ok (fills the circle)");
 // one and Postgres refuses the whole delete on a foreign key.
 await page.goto(BASE + "/admin");
 await page.getByText("sam@example.com").waitFor();
+
+// Coaches and members are one table, so the panel has to say which is which.
+// The count used to be "has a handle", which quietly counted every member as
+// a coach from the day members started claiming links.
+{
+  const stats = await page.locator(".adminstats .adminstat").allInnerTexts();
+  const read = (label) => {
+    const hit = stats.find((t) => t.toLowerCase().includes(label));
+    return hit ? Number(hit.split("\n")[0]) : null;
+  };
+  const coaches = read("coaches");
+  const members = read("members");
+  if (members === null) fail("the admin doesn't count members at all");
+  if (!(coaches > 0 && members > 0))
+    fail(`this run has both, the panel says ${coaches} coaches and ${members} members`);
+
+  const filter = page.locator(".invitefilter").first();
+  await filter.getByText(`Coaches (${coaches})`).click();
+  await page.waitForTimeout(300);
+  const coachBadges = await page.locator(".admincard .adminbadge.kind-member").count();
+  if (coachBadges) fail("a member turned up under the Coaches filter");
+  await filter.getByText(`Members (${members})`).click();
+  await page.waitForTimeout(300);
+  const memberBadges = await page.locator(".admincard .adminbadge.kind-coach").count();
+  if (memberBadges) fail("a coach turned up under the Members filter");
+  await filter.getByText(/^All /).click();
+  await page.waitForTimeout(300);
+  console.log(`admin tells the two sides apart ok (${coaches} coaches, ${members} members)`);
+}
+
 const samCard = page.locator(".admincard").filter({ hasText: "sam@example.com" });
 await samCard.getByRole("button", { name: "Delete user" }).click();
 await samCard.getByRole("button", { name: "Yes, delete" }).click();

@@ -128,7 +128,14 @@ must be literally `"true"` or `"coaches"`; `"1"` and `"yes"` are off.
 **A handle is not a coach badge.** Members claim one too, and `/{handle}`
 renders `MemberProfileView` instead of the coach page when `kind === "fan"`.
 Anything asking "is this a coach?" must test `kind`, not `handle`: that
-substitution was true for months and is now wrong in about six places.
+substitution was true for months, and `/admin` was still counting handles as
+coaches long after it stopped being true.
+
+**"Member" is the word for someone who isn't a coach.** The column is
+`users.kind` and its value is still `"fan"`, which is the odd one out and a
+migration nobody needs yet; everything a person reads says member. Not
+"follower": that names a relationship rather than a population, and a coach
+who follows two coaches is one too, so it can't be counted.
 
 **The tabbed shell is a layout, not per-page.** `/feed`, `/discover` and
 `/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
