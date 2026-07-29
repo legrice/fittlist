@@ -150,7 +150,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .ob input:focus { outline: none; border-color: var(--si); }
 .ob .btn { background: var(--ink); color: var(--paper); box-shadow: var(--soft-shadow); }
 .ob .microcopy {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; letter-spacing: .07em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 10px; letter-spacing: .07em;
   color: var(--ol); margin-top: 14px; text-align: center;
 }
 .ob .errorcopy { font-size: 13px; color: #c0472b; margin-top: 12px; text-align: center; }
@@ -174,7 +174,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 /* landing: "log in" link + in-sheet magic-link link */
 .obloginlink { display: block; width: 100%; text-align: center; margin-top: 18px; font-size: 14px; color: var(--ol); }
 .obloginlink b { color: var(--si); font-weight: 700; }
-.authmagic { display: block; width: 100%; text-align: center; margin-top: 14px; font-size: 13.5px; font-weight: 600; color: var(--si); }
+.authmagic { display: block; width: 100%; text-align: center; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--si); }
 /* "Forgot your password?" — under the field it's about, quiet enough not to
    compete with the ways in below it, underlined so it still reads as a link. */
 .authforgot {
@@ -213,7 +213,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wizdot { width: 22px; height: 5px; border-radius: 999px; background: var(--line); transition: background .2s; }
 .wizdot.done { background: var(--sa); }
 .wizdot.on { background: var(--ink); }
-.wizskip { font-size: 13.5px; font-weight: 600; color: var(--ol); }
+.wizskip { font-size: 13px; font-weight: 600; color: var(--ol); }
 .wizskip:active { color: var(--ink); }
 .wiz h1 {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 29px;
@@ -245,14 +245,14 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .wizstudio-txt { flex: 1; min-width: 0; }
 .wizstudio-txt .nm { display: block; font-weight: 700; font-size: 15px; color: var(--ink); }
-.wizstudio-txt .ad { display: block; font-size: 12.5px; color: var(--ol); margin-top: 1px; }
+.wizstudio-txt .ad { display: block; font-size: 12px; color: var(--ol); margin-top: 1px; }
 .wizstudio-tick {
   width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
   border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center;
   color: #fff;
 }
 .wizstudio.on .wizstudio-tick { background: var(--ink); border-color: var(--ink); }
-.wizempty { font-size: 13.5px; color: var(--ol); padding: 14px 4px; }
+.wizempty { font-size: 13px; color: var(--ol); padding: 14px 4px; }
 .wizaddnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 4px; display: inline-block; }
 .wizadd { margin-top: 14px; }
 .wizadd-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
@@ -265,7 +265,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 
 .empty-block { margin-top: 22px; background: var(--card); border: 1.5px dashed var(--sa); border-radius: 16px; padding: 28px 22px; text-align: center; }
 .empty-block h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px; margin-bottom: 8px; }
-.empty-block p { font-size: 13.5px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
+.empty-block p { font-size: 13px; color: var(--ol); line-height: 1.45; margin-bottom: 18px; }
 .empty-block .btn { width: auto; padding: 12px 22px; }
 
 .class-card {
@@ -279,8 +279,8 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .class-card .time { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 60px; }
 .class-card .body { flex: 1; min-width: 0; }
 .class-card .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-.class-card .meta { font-size: 12.5px; color: var(--ol); }
-.loctag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; margin-top: 6px; }
+.class-card .meta { font-size: 12px; color: var(--ol); }
+.loctag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; margin-top: 6px; }
 .loctag .swd { width: 7px; height: 7px; border-radius: 2px; }
 .editrow { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .iconbtn {
@@ -311,7 +311,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .statgrid { display: flex; gap: 8px; margin: 14px 0 4px; }
 .stat { flex: 1; background: var(--cl); border-radius: 16px; padding: 12px; text-align: center; }
 .stat .n { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px; }
-.stat .l { font-size: 10.5px; color: var(--ol); margin-top: 2px; }
+.stat .l { font-size: 10px; color: var(--ol); margin-top: 2px; }
 .stat .d { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 9px; color: var(--si); margin-top: 2px; }
 .linkcard { background: var(--ink); color: #fff; border-radius: 16px; padding: 16px; margin-top: 14px; }
 .linkcard .url { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 14px; word-break: break-all; margin: 5px 0 12px; }
@@ -323,10 +323,10 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   text-decoration: none;
 }
 .rowcta .ig { font-size: 22px; }
-.rowcta .t { font-weight: 700; font-size: 14.5px; }
+.rowcta .t { font-weight: 700; font-size: 14px; }
 .rowcta .s { font-size: 12px; color: var(--ol); margin-top: 2px; }
-.gcal-off { margin-left: auto; flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: var(--si); padding: 6px 4px; }
-.calcopy { display: block; width: 100%; text-align: center; margin-top: 12px; padding: 6px; font-size: 12.5px; font-weight: 600; color: var(--ol); text-decoration: underline; }
+.gcal-off { margin-left: auto; flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--si); padding: 6px 4px; }
+.calcopy { display: block; width: 100%; text-align: center; margin-top: 12px; padding: 6px; font-size: 12px; font-weight: 600; color: var(--ol); text-decoration: underline; }
 .logoutbtn {
   display: block; box-sizing: border-box; text-align: center; text-decoration: none;
   width: 100%; margin-top: 18px; padding: 13px; border-radius: 16px;
@@ -340,9 +340,9 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
 .pub .pubhero .big { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1; }
-.pub .pubhero .gyms { font-size: 13.5px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
+.pub .pubhero .gyms { font-size: 13px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
-.booklink { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
+.booklink { display: inline-block; font-size: 12px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
 .madewith { text-align: center; font-size: 12px; color: var(--ol); padding: 26px 0 8px; }
 .madewith .mw-logo { display: inline-flex; vertical-align: -3px; font-size: 14px; }
 .madewith a { color: var(--si); font-weight: 700; font-size: 12px; text-decoration: underline; }
@@ -376,7 +376,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .sheetclose:active { background: #f3ecdf; }
 .sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
-.sheet p.lead { font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
+.sheet p.lead { font-size: 13px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 .sheet .backbtn { font-weight: 600; font-size: 14px; color: var(--si); padding: 2px 0 10px; display: inline-block; }
 
 /* THE ADDER */
@@ -396,7 +396,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .adder-card > .flabel:first-child { margin-top: 12px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.chip { font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
+.chip { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
 .chip:hover { border-color: var(--ink); }
 .chip.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
 .namesug {
@@ -416,13 +416,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .namesug .sub {
-  font-size: 12.5px; color: var(--ol); font-weight: 400;
+  font-size: 12px; color: var(--ol); font-weight: 400;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .modetoggle { display: flex; gap: 6px; margin-top: 8px; }
 .modetoggle button {
   flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 999px;
-  font-size: 12.5px; font-weight: 700; color: var(--ink);
+  font-size: 12px; font-weight: 700; color: var(--ink);
 }
 .modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .daypick { display: flex; gap: 5px; }
@@ -454,7 +454,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .timegrid.two input.timeinput { width: 100%; min-width: 0; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
 .durnote {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: var(--ol);
   margin-top: 8px;
 }
 .studio-sel {
@@ -464,7 +464,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .studio-sel:hover { border-color: var(--ink); }
 .studio-sel-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .studio-sel .nm {
-  font-weight: 700; font-size: 14.5px; display: block;
+  font-weight: 700; font-size: 14px; display: block;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .studio-sel .nm.placeholder {
@@ -509,7 +509,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .studio-list { height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
 .studio-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; padding: 13px 2px; border-bottom: 1px solid var(--line); }
 .studio-row .swd { width: 12px; height: 12px; border-radius: 16px; flex-shrink: 0; }
-.studio-row .nm { font-weight: 700; font-size: 14.5px; }
+.studio-row .nm { font-weight: 700; font-size: 14px; }
 .studio-row .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .studio-row .tick { margin-left: auto; color: var(--si); font-weight: 700; }
 .addnew { color: var(--si); font-weight: 700; font-size: 14px; padding: 14px 2px; display: inline-block; }
@@ -557,7 +557,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   transition: opacity .2s, transform .2s; z-index: 60; white-space: nowrap;
 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-.empty { color: var(--ol); font-size: 13.5px; padding: 14px 0; }
+.empty { color: var(--ol); font-size: 13px; padding: 14px 0; }
 
 /* app shell - the stage is the scroll container, not the body */
 .appshell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -619,9 +619,9 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   .weekgrid .class-card { flex-direction: column; align-items: stretch; gap: 7px; padding: 11px 12px; }
   .weekgrid .class-card .rail { width: 100%; height: 4px; align-self: auto; }
   .weekgrid .class-card .time { min-width: 0; }
-  .weekgrid .class-card .name { font-size: 13.5px; }
-  .weekgrid .class-card .meta { font-size: 11.5px; }
-  .weekgrid .loctag { font-size: 10.5px; padding: 2px 6px; }
+  .weekgrid .class-card .name { font-size: 13px; }
+  .weekgrid .class-card .meta { font-size: 11px; }
+  .weekgrid .loctag { font-size: 10px; padding: 2px 6px; }
   .weekgrid .editrow { margin-left: 0; gap: 5px; }
   .weekgrid .iconbtn { width: 26px; height: 26px; font-size: 11px; }
   .fab { right: 34px; bottom: 30px; }
@@ -658,7 +658,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .linktag {
   position: absolute; right: 8px; display: inline-flex; align-items: center; gap: 3px;
   background: var(--si-soft); color: var(--pg-day); border-radius: 999px; padding: 4px 9px;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11px;
   pointer-events: none; max-width: 55%; white-space: nowrap; overflow: hidden;
 }
 .linkrow input {
@@ -705,7 +705,7 @@ button.bl-band { cursor: pointer; }
 .bl-loc { font-size: 13px; font-weight: 700; margin-top: 2px; opacity: .82; }
 .bl-book {
   display: inline-block; margin-top: 8px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 12.5px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
+  font-size: 12px; color: var(--bfg); border-bottom: 2px solid var(--bfg); text-decoration: none;
 }
 .bl-edit {
   margin-left: auto; align-self: flex-start; width: 32px; height: 32px; border-radius: 9px;
@@ -784,7 +784,7 @@ button.bl-band { cursor: pointer; }
 .dashlink {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 12px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12px;
   color: var(--ink); white-space: nowrap;
 }
 .dashlink:active { background: var(--cl); }
@@ -880,18 +880,19 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-event:hover { box-shadow: none; }
 .ps-agenda .ps-event:active { background: #f3ecdf; }
 .ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
-.ps-agenda .ps-ebody { gap: 5px; }
+/* The name and the studio are one thing, so they sit close; the air belongs
+   between rows, which is what the padding above is for. */
+.ps-agenda .ps-ebody { gap: 3px; }
 /* A touch of positive tracking, against the base rule's negative: the name reads
-   better open than tight. The weight and the size both went a step away and came
-   back (500, and 2px up on everything in the row); the air the padding gives is
-   the part that helped. */
+   better open than tight. That's the only change here that stuck; the weight and
+   the size both went a step away and came back. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-size: 18.5px; line-height: 1.2; letter-spacing: .004em;
+  font-size: 18px; line-height: 1.2; letter-spacing: .004em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
-  font-size: 13.5px; font-weight: 500; color: var(--ol); min-width: 0;
+  font-size: 13px; font-weight: 500; color: var(--ol); min-width: 0;
 }
 .ps-agenda .ps-estudio-ic { color: var(--ol); flex-shrink: 0; }
 /* Time and length sit on the bottom of the row, so the duration lines up with
@@ -911,7 +912,7 @@ button.bl-band { cursor: pointer; }
  padding: 14px 16px;
 }
 button.ps-card { cursor: pointer; }
-.ps-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
+.ps-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; line-height: 1.05; text-transform: uppercase; letter-spacing: -.01em; }
 .ps-sub { font-size: 13px; font-weight: 700; margin-top: 5px; color: #6b6555; }
 .ps-addr { font-size: 12px; font-weight: 600; margin-top: 2px; color: #8a8472; }
 .ps-book {
@@ -1049,7 +1050,7 @@ button.ps-card { cursor: pointer; }
 /* Availability pill (public) — sits under the title/location line */
 .availpill {
   display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-  padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+  padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
   border: 1px solid var(--line); background: var(--cl); color: var(--ink);
 }
 .availdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -1078,7 +1079,7 @@ button.ps-card { cursor: pointer; }
 .chipsfield-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
   border-radius: 999px; background: var(--cl); border: 1px solid var(--line);
-  font-size: 13.5px; font-weight: 600; color: var(--ink);
+  font-size: 13px; font-weight: 600; color: var(--ink);
 }
 .chipsfield-chip button {
   display: inline-flex; align-items: center; justify-content: center; color: var(--ol);
@@ -1134,7 +1135,7 @@ button.ps-card { cursor: pointer; }
 .inboxrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .inboxrow-top .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inboxrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
-.inboxrow-preview { font-size: 13.5px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inboxrow-preview { font-size: 13px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inboxrow.unread .inboxrow-preview { color: var(--ink); font-weight: 600; }
 .inboxrow-badge {
   flex-shrink: 0; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
@@ -1152,7 +1153,7 @@ button.ps-card { cursor: pointer; }
 .chatback { width: 38px; height: 38px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); flex-shrink: 0; }
 .chattop-txt { display: flex; flex-direction: column; min-width: 0; }
 .chattop-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chattop-sub { font-size: 12.5px; color: var(--ol); text-decoration: none; }
+.chattop-sub { font-size: 12px; color: var(--ol); text-decoration: none; }
 .chatbody { flex: 1; overflow-y: auto; padding: 18px; }
 .chat { display: flex; flex-direction: column; gap: 10px; max-width: 620px; margin: 0 auto; }
 .chatmsg { display: flex; }
@@ -1181,7 +1182,7 @@ button.ps-card { cursor: pointer; }
 .fbsent { text-align: center; font-size: 13px; color: var(--go); padding: 0 16px 4px; }
 /* Only the admin sees this, and only to tell a bug report from a booking. */
 .inboxrow-tag {
-  margin-left: 7px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+  margin-left: 7px; font-size: 10px; font-weight: 700; letter-spacing: .03em;
   text-transform: uppercase; padding: 2px 6px; border-radius: 999px;
   background: var(--cl-d); color: var(--ol); vertical-align: middle;
 }
@@ -1199,7 +1200,7 @@ button.ps-card { cursor: pointer; }
 .profstudio-ic { color: var(--pg-day); display: flex; flex-shrink: 0; }
 .profstudio-txt { min-width: 0; display: flex; flex-direction: column; }
 .profstudio-txt .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
-.profstudio-txt .ad { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
+.profstudio-txt .ad { font-size: 12px; color: var(--ol); margin-top: 1px; }
 
 /* Public profile: sticky name + share row, then sticky tabs; title scrolls
    away between them (hidden behind the name row). */
@@ -1294,8 +1295,8 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
 }
 .profrow-info { flex: 1; min-width: 0; }
-.profrow-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
-.profrow-sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profrow-name { font-weight: 700; font-size: 15px; color: var(--ink); }
+.profrow-sub { font-size: 12px; color: var(--ol); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profrow-edit {
   flex-shrink: 0; font-weight: 700; font-size: 13px; color: var(--ink);
   border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 16px;
@@ -1359,7 +1360,7 @@ button.ps-card { cursor: pointer; }
    the ghost button, for a control that sits inside another surface. */
 .tertiary {
   background: none; border: none; cursor: pointer; padding: 6px 8px;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: var(--ol); text-decoration: underline; text-underline-offset: 3px;
 }
 .tertiary:active { color: var(--ink); }
@@ -1372,7 +1373,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
   color: #191502; margin-top: 8px; overflow-wrap: anywhere;
 }
-.accttitle-sub { font-size: 13.5px; font-weight: 500; color: var(--ol); margin-top: 1px; }
+.accttitle-sub { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 1px; }
 /* the 3 stats split the tile height evenly so both columns balance */
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
@@ -1400,7 +1401,7 @@ button.ps-card { cursor: pointer; }
 .acctcard:active { background: #f3ecdf; }
 .acctcard-ic { color: #191502; margin-bottom: 24px; }
 .acctcard-t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
-.acctcard-s { font-size: 12.5px; color: #928b78; line-height: 1.35; }
+.acctcard-s { font-size: 12px; color: #928b78; line-height: 1.35; }
 /* The QR card spans the full row and lays out horizontally. */
 .acctcard-wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 14px; padding: 16px; }
 .acctcard-wide .acctcard-ic { margin-bottom: 0; }
@@ -1424,8 +1425,8 @@ button.ps-card { cursor: pointer; }
 .secrow + .secrow { border-top: 1px solid var(--line); }
 .secrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .secrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.secrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px; color: #191502; }
-.secrow-txt .s { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
+.secrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; color: #191502; }
+.secrow-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .secbtn {
   flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: #191502; background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 18px;
@@ -1447,7 +1448,7 @@ button.ps-card { cursor: pointer; }
 .setrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .setrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .setrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502; }
-.setrow-txt .s { font-size: 12.5px; color: var(--ol); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setrow-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .setrow-chev { color: rgba(25, 21, 2, .3); flex-shrink: 0; display: flex; }
 /* "You have invites": said once, at the top, then never again. */
 .invbanner {
@@ -1469,7 +1470,7 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
 }
 .invbanner-txt span {
-  font-size: 12.5px; color: var(--ol); margin-top: 1px;
+  font-size: 12px; color: var(--ol); margin-top: 1px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .invbanner-x {
@@ -1482,7 +1483,7 @@ button.ps-card { cursor: pointer; }
 .installhow {
   padding: 12px 16px 14px; background: var(--cl); border-top: 1px solid var(--line);
 }
-.installhow p { font-size: 13.5px; line-height: 1.5; color: var(--ol); }
+.installhow p { font-size: 13px; line-height: 1.5; color: var(--ol); }
 .installhow b { color: var(--ink); }
 
 /* One row that asks for something instead of offering it. The accent stripe
@@ -1592,7 +1593,7 @@ button.ps-card { cursor: pointer; }
 .evpage.hascta .evwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
 .evtype {
   display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
   color: var(--ol); margin-bottom: 8px;
 }
 .evname {
@@ -1615,8 +1616,8 @@ button.ps-card { cursor: pointer; }
 .evfact { display: flex; align-items: flex-start; gap: 12px; color: var(--ink); text-decoration: none; }
 .evfact .icon { color: var(--ol); margin-top: 1px; }
 .evfact-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.evfact-txt .t { font-size: 15.5px; font-weight: 700; line-height: 1.3; }
-.evfact-txt .s { font-size: 13.5px; color: var(--ol); line-height: 1.4; }
+.evfact-txt .t { font-size: 15px; font-weight: 700; line-height: 1.3; }
+.evfact-txt .s { font-size: 13px; color: var(--ol); line-height: 1.4; }
 .evbook { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
 .evbtn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .evbtn-ico { position: relative; top: 1px; }
@@ -1632,7 +1633,7 @@ button.ps-card { cursor: pointer; }
 .evcal { position: relative; flex: 1 1 auto; min-width: 0; }
 .evactions .btn.evactbtn {
   width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 12px 14px; font-size: 14.5px; white-space: nowrap;
+  padding: 12px 14px; font-size: 14px; white-space: nowrap;
   background: var(--cl); color: var(--ink); border: none; border-radius: 999px;
 }
 /* Share hugs its label; Add to calendar takes the rest. Same specificity as
@@ -1719,7 +1720,7 @@ button.ps-card { cursor: pointer; }
 .folback { margin-bottom: 14px; }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; }
-.adminsub { font-size: 12.5px; color: var(--ol); margin-top: 2px; word-break: break-all; }
+.adminsub { font-size: 12px; color: var(--ol); margin-top: 2px; word-break: break-all; }
 .adminback {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; text-decoration: none;
   background: var(--card); border: 1px solid var(--line); border-radius: 999px;
@@ -1731,7 +1732,7 @@ button.ps-card { cursor: pointer; }
   padding: 12px 10px; text-align: center;
 }
 .adminstat-n { display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
-.adminstat-l { display: block; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin-top: 2px; }
+.adminstat-l { display: block; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--ol); margin-top: 2px; }
 .adminseg { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 14px; }
 .adminseg button { flex: 1; padding: 10px 0; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ol); }
 .adminseg button.on { background: var(--ink); color: #fff; }
@@ -1742,7 +1743,7 @@ button.ps-card { cursor: pointer; }
 .admincard-h-link { text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .admincard-h-link:active { opacity: .6; }
 .admincard-nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admincard-tag { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 12.5px; color: var(--si); text-decoration: none; }
+.admincard-tag { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 12px; color: var(--si); text-decoration: none; }
 .admincard-tag.muted { color: var(--ol); }
 .admincard-sub { font-size: 13px; color: var(--ol); margin-top: 2px; word-break: break-word; }
 .adminmeta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ol); }
@@ -1770,7 +1771,7 @@ button.ps-card { cursor: pointer; }
 .fixlist { display: flex; flex-direction: column; gap: 2px; }
 .fixrow {
   display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
-  padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13.5px;
+  padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px;
 }
 .fixrow:last-child { border-bottom: none; }
 .fixrow-was { color: var(--ol); text-decoration: line-through; }
@@ -1778,7 +1779,7 @@ button.ps-card { cursor: pointer; }
 .fixrow-now { font-weight: 700; }
 /* Left alone rather than rewritten, so no strike-through. */
 .fixrow-kept { color: var(--ink); }
-.fixrow-who { color: var(--ol); font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.fixrow-who { color: var(--ol); font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .fixnote { font-size: 13px; line-height: 1.45; color: var(--ol); margin: 12px 0 8px; }
 
 /* Who's bringing people in. Tapping a row searches the invites below for that
@@ -1795,10 +1796,10 @@ button.ps-card { cursor: pointer; }
 .refrow:active { background: var(--cl); }
 .refrow-nm {
   display: flex; align-items: center; gap: 7px; min-width: 0;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.refrow-n { flex-shrink: 0; font-size: 12.5px; color: var(--ol); }
+.refrow-n { flex-shrink: 0; font-size: 12px; color: var(--ol); }
 .refrow-n b { color: var(--ink); font-size: 14px; }
 .refrow-n .sep { margin: 0 5px; opacity: .5; }
 
@@ -1874,7 +1875,7 @@ button.ps-card { cursor: pointer; }
 .notifrow-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .notifrow-top .nm { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; }
 .notifrow-top .tm { flex-shrink: 0; font-size: 12px; color: var(--ol); }
-.notifrow-body { font-size: 13.5px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notifrow-body { font-size: 13px; color: var(--ol); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notifrow.unread .notifrow-body { color: var(--ink); }
 .notifrow-dot { flex-shrink: 0; width: 9px; height: 9px; border-radius: 999px; background: var(--si); }
 
@@ -2054,7 +2055,7 @@ button.ps-card { cursor: pointer; }
 .storycustom .editinput { font-weight: 700; }
 .storyphoto {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 4px 4px 0; font-weight: 700; font-size: 13.5px; color: var(--ink);
+  padding: 4px 4px 0; font-weight: 700; font-size: 13px; color: var(--ink);
 }
 
 /* Style picker: a dropdown whose rows carry colour swatches */
@@ -2073,7 +2074,7 @@ button.ps-card { cursor: pointer; }
 }
 .stylepick-row {
   width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; text-align: left;
-  font-weight: 600; font-size: 14.5px; color: var(--ink); border-bottom: 1px solid var(--line);
+  font-weight: 600; font-size: 14px; color: var(--ink); border-bottom: 1px solid var(--line);
 }
 .stylepick-row:last-child { border-bottom: none; }
 .stylepick-row.sel { font-weight: 700; }
@@ -2096,7 +2097,7 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: var(--ol);
 }
 .linksfield-add {
-  margin-top: 8px; font-weight: 700; font-size: 13.5px; color: var(--si); padding: 4px 2px;
+  margin-top: 8px; font-weight: 700; font-size: 13px; color: var(--si); padding: 4px 2px;
   text-align: left;
 }
 .linksfield-add[disabled] { opacity: .45; }
@@ -2152,7 +2153,7 @@ button.ps-card { cursor: pointer; }
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
 }
 .feedav-nm {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
   max-width: 84px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* the "filtered to one coach" bar above the agenda */
@@ -2163,13 +2164,13 @@ button.ps-card { cursor: pointer; }
 .feedfilter-txt { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px; }
 .feedfilter-link {
   display: flex; align-items: center; gap: 1px; flex-shrink: 0; text-decoration: none;
-  font-weight: 600; font-size: 13.5px; color: var(--si);
+  font-weight: 600; font-size: 13px; color: var(--si);
 }
 /* Merged-agenda row: coach above the class name, studio below it. */
 .feedagenda { margin-top: 2px; }
 .ps-agenda .ps-ecoach {
   display: flex; align-items: center; gap: 6px; min-width: 0;
-  font-size: 13.5px; font-weight: 600; color: var(--ol);
+  font-size: 13px; font-weight: 600; color: var(--ol);
 }
 .ps-ecoachav {
   flex-shrink: 0; width: 22px; height: 22px; border-radius: 999px; object-fit: cover;
@@ -2187,7 +2188,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; padding: 2px 7px; border-radius: 999px;
   background: var(--cl-d); color: var(--ol);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
 }
 .ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 /* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
@@ -2357,7 +2358,7 @@ button.ps-card { cursor: pointer; }
 .ps-goingtag {
   align-self: flex-end; margin-bottom: 3px; padding: 2px 8px; border-radius: 999px;
   background: var(--go); color: #fff; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+  font-weight: 700; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -2384,7 +2385,7 @@ button.ps-card { cursor: pointer; }
   letter-spacing: -.02em; color: var(--ink);
 }
 .memberid-txt .s {
-  font-size: 13.5px; color: var(--ol);
+  font-size: 13px; color: var(--ol);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -2412,7 +2413,7 @@ button.ps-card { cursor: pointer; }
 .discity {
   flex-shrink: 0; padding: 8px 15px; border-radius: 999px; border: 1.5px solid var(--line);
   background: var(--card); color: var(--ink); cursor: pointer;
-  font-family: inherit; font-weight: 600; font-size: 13.5px; white-space: nowrap;
+  font-family: inherit; font-weight: 600; font-size: 13px; white-space: nowrap;
 }
 .discity.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .dislist {
@@ -2443,14 +2444,14 @@ button.ps-card { cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .disrow-txt .sub {
-  font-size: 12.5px; color: var(--ol);
+  font-size: 12px; color: var(--ol);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .disrow-txt .wk { font-size: 12px; font-weight: 600; color: var(--si); }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
   background: var(--ink); color: var(--paper);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13.5px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
 }
 .disfollow.on { background: var(--cl); color: var(--ink); }
 .disfollow[disabled] { opacity: .55; }
@@ -2482,13 +2483,13 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px;
   letter-spacing: -.02em; margin-top: 14px; overflow-wrap: anywhere;
 }
-.mempro-title { font-size: 14.5px; color: var(--ol); margin-top: 3px; }
+.mempro-title { font-size: 14px; color: var(--ol); margin-top: 3px; }
 .mempro-loc {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 13px; color: var(--ol); margin-top: 6px;
 }
 .mempro-about {
-  font-size: 14.5px; line-height: 1.55; color: var(--ink); margin-top: 18px; text-align: center;
+  font-size: 14px; line-height: 1.55; color: var(--ink); margin-top: 18px; text-align: center;
 }
 
 /* the photo picker inside the member profile sheet */

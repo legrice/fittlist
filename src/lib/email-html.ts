@@ -44,8 +44,8 @@ export function emailHtml({
     ? `<p style="margin:24px 0 10px">
          <a href="${esc(cta.url)}" style="display:inline-block;background:${INK};color:${CREAM};text-decoration:none;font-weight:700;font-size:15px;padding:13px 26px;border-radius:999px">${esc(cta.label)}</a>
        </p>
-       <p style="margin:0 0 4px;font-size:12.5px;color:${MUTED}">Or paste this into your browser:</p>
-       <p style="margin:0 0 8px;font-size:12.5px;line-height:1.5;word-break:break-all"><a href="${esc(cta.url)}" style="color:${MUTED}">${esc(cta.url)}</a></p>`
+       <p style="margin:0 0 4px;font-size:12px;color:${MUTED}">Or paste this into your browser:</p>
+       <p style="margin:0 0 8px;font-size:12px;line-height:1.5;word-break:break-all"><a href="${esc(cta.url)}" style="color:${MUTED}">${esc(cta.url)}</a></p>`
     : "";
 
   return `<!doctype html>
