@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
+import { addPersonalClass, removePersonalClass } from "@/app/actions/personal";
+import { InviteSheet } from "@/components/InviteFriends";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
 import { NavBar } from "@/components/NavBar";
@@ -38,15 +40,28 @@ export function WeekScreen({
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [share, setShare] = useState(false);
   // Removing is one tap next to a list of things you meant to do, so it asks.
-  const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string } | null>(null);
+  const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string; personalId?: string } | null>(null);
+  // Your own standing class: the one your coach isn't on fittlist for yet.
+  const [addOpen, setAddOpen] = useState(false);
+  const [pName, setPName] = useState("");
+  const [pDay, setPDay] = useState(0);
+  const [pTime, setPTime] = useState("18:00");
+  const [pDur, setPDur] = useState("60");
+  const [pWhere, setPWhere] = useState("");
+  const [pWith, setPWith] = useState("");
+  const [pBusy, setPBusy] = useState(false);
+  // "Is Jenny on fittlist?" — the invite sheet, opened from a personal row.
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const remove = (classId: string, iso: string, key: string) => {
+  const remove = (classId: string, iso: string, key: string, personalId?: string) => {
     setConfirm(null);
     setGone((g) => ({ ...g, [key]: true }));
     start(async () => {
-      const res = await setGoing(classId, iso, false);
+      const res = personalId
+        ? await removePersonalClass(personalId)
+        : await setGoing(classId, iso, false);
       if (!res.ok) {
         setGone((g) => ({ ...g, [key]: false }));
         toast(res.error ?? "Couldn't remove that");
@@ -58,8 +73,38 @@ export function WeekScreen({
   };
 
   const shown = days
-    .map((d) => ({ ...d, items: d.items.filter((i) => !gone[`${i.classId}|${i.iso}`]) }))
+    .map((d) => ({ ...d, items: d.items.filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`]) }))
     .filter((d) => d.items.length > 0);
+  // The first named person on a personal entry, for the invite line.
+  const namedCoach = days
+    .flatMap((d) => d.items)
+    .find((i) => i.personal && i.coachName.trim())?.coachName.trim();
+
+  const saveOwn = () => {
+    if (pBusy || !pName.trim()) return;
+    setPBusy(true);
+    start(async () => {
+      const res = await addPersonalClass({
+        name: pName,
+        dayOfWeek: pDay,
+        startTime: pTime,
+        durationMin: Number(pDur) || 60,
+        location: pWhere,
+        withWho: pWith,
+      });
+      setPBusy(false);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't add that");
+        return;
+      }
+      setAddOpen(false);
+      setPName("");
+      setPWhere("");
+      setPWith("");
+      toast("Added to your week");
+      router.refresh();
+    });
+  };
   const left = shown.reduce((n, d) => n + d.items.length, 0);
 
   return (
@@ -87,6 +132,11 @@ export function WeekScreen({
             <Link className="btn si" href="/feed">
               Find something to add
             </Link>
+            {/* The other way in: the class you already go to, whose coach
+                isn't here yet. Yours alone; nothing public. */}
+            <button className="btn ghost" onClick={() => setAddOpen(true)}>
+              Add your own class
+            </button>
           </div>
         ) : (
           <>
@@ -95,7 +145,18 @@ export function WeekScreen({
                 <div key={d.iso} className="weekday">
                   <div className="ps-daycol">{d.label}</div>
                   {d.items.map((i) => {
-                    const key = `${i.classId}|${i.iso}`;
+                    const key = `${i.personal ? i.id : i.classId}|${i.iso}`;
+                    const body = (
+                      <>
+                        <span className="weekrow-nm">{i.name}</span>
+                        <span className="weekrow-sub">
+                          {i.hm}
+                          <span className="ps-ap">{i.ap}</span> · {i.durationMin} min
+                          {i.where ? ` · ${i.where}` : ""}
+                        </span>
+                        {i.coachName.trim() && <span className="weekrow-who">with {i.coachName}</span>}
+                      </>
+                    );
                     return (
                       <div key={key} className="weekrow">
                         <span
@@ -103,15 +164,14 @@ export function WeekScreen({
                           style={{ background: i.coachColor }}
                           aria-hidden="true"
                         />
-                        <Link className="weekrow-main" href={`/${i.handle}/${i.classId}?d=${i.iso}&from=week`}>
-                          <span className="weekrow-nm">{i.name}</span>
-                          <span className="weekrow-sub">
-                            {i.hm}
-                            <span className="ps-ap">{i.ap}</span> · {i.durationMin} min
-                            {i.where ? ` · ${i.where}` : ""}
-                          </span>
-                          <span className="weekrow-who">with {i.coachName}</span>
-                        </Link>
+                        {i.personal ? (
+                          /* Yours alone: no class page behind it, so no link. */
+                          <span className="weekrow-main">{body}</span>
+                        ) : (
+                          <Link className="weekrow-main" href={`/${i.handle}/${i.classId}?d=${i.iso}&from=week`}>
+                            {body}
+                          </Link>
+                        )}
                         {/* Every row can leave. A calendar's entries don't; a
                             list's do, and that difference is most of what keeps
                             this from reading as one. */}
@@ -119,7 +179,13 @@ export function WeekScreen({
                           className="weekrow-x"
                           aria-label={`Remove ${i.name}`}
                           onClick={() =>
-                            setConfirm({ classId: i.classId, iso: i.iso, key, name: i.name })
+                            setConfirm({
+                              classId: i.classId,
+                              iso: i.iso,
+                              key,
+                              name: i.name,
+                              personalId: i.personal ? i.id : undefined,
+                            })
                           }
                         >
                           <Icon name="close" size={16} />
@@ -130,6 +196,16 @@ export function WeekScreen({
                 </div>
               ))}
             </div>
+            {/* In-flow rather than pinned: the strip stays one row, and this
+                belongs with the list it adds to. */}
+            <button className="weekinvite weekaddown" onClick={() => setAddOpen(true)}>
+              <Icon name="add" size={15} /> Add your own class
+            </button>
+            {namedCoach && (
+              <button className="weekinvite" onClick={() => setInviteOpen(true)}>
+                Is {namedCoach.split(/\s+/)[0]} on fittlist? Send them your invite link
+              </button>
+            )}
           </>
         )}
       </div>
@@ -149,6 +225,99 @@ export function WeekScreen({
           </button>
         </div>
       )}
+      {addOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !pBusy) setAddOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your own class</h2>
+            <p className="lead">
+              For the classes you already go to, whose coaches aren&rsquo;t on fittlist yet. Only
+              you see it, and it repeats weekly until you take it out.
+            </p>
+            <label className="flabel" htmlFor="ownName">Class</label>
+            <input
+              id="ownName"
+              type="text"
+              className="editinput"
+              maxLength={80}
+              placeholder="e.g. Spin"
+              value={pName}
+              onChange={(e) => setPName(e.target.value)}
+            />
+            <label className="flabel">Day</label>
+            <div className="seg ownday">
+              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d, idx) => (
+                <button key={d} className={pDay === idx ? "sel" : ""} onClick={() => setPDay(idx)}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="ownrow">
+              <div>
+                <label className="flabel" htmlFor="ownTime">Starts</label>
+                <input
+                  id="ownTime"
+                  type="time"
+                  className="editinput"
+                  value={pTime}
+                  onChange={(e) => setPTime(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="flabel" htmlFor="ownDur">Minutes</label>
+                <input
+                  id="ownDur"
+                  type="number"
+                  className="editinput"
+                  min={5}
+                  max={600}
+                  step={5}
+                  value={pDur}
+                  onChange={(e) => setPDur(e.target.value)}
+                />
+              </div>
+            </div>
+            <label className="flabel" htmlFor="ownWhere">Where <span>· optional</span></label>
+            <input
+              id="ownWhere"
+              type="text"
+              className="editinput"
+              maxLength={120}
+              placeholder="e.g. CorePower, Grove St"
+              value={pWhere}
+              onChange={(e) => setPWhere(e.target.value)}
+            />
+            <label className="flabel" htmlFor="ownWith">Coach <span>· optional</span></label>
+            <input
+              id="ownWith"
+              type="text"
+              className="editinput"
+              maxLength={80}
+              placeholder="e.g. Jenny"
+              value={pWith}
+              onChange={(e) => setPWith(e.target.value)}
+            />
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pBusy || !pName.trim()} onClick={saveOwn}>
+                {pBusy ? "Adding…" : "Add to your week"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {inviteOpen && (
+        <InviteSheet
+          onClose={() => setInviteOpen(false)}
+          onCopied={() => toast("Link copied, ready to paste")}
+        />
+      )}
       {confirm && (
         <div
           className="sheet-scrim"
@@ -165,7 +334,7 @@ export function WeekScreen({
             <div className="publishwrap nostick">
               <button
                 className="btn si"
-                onClick={() => remove(confirm.classId, confirm.iso, confirm.key)}
+                onClick={() => remove(confirm.classId, confirm.iso, confirm.key, confirm.personalId)}
               >
                 Remove it
               </button>

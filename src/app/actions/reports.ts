@@ -127,3 +127,63 @@ export async function dismissReports(seriesId: string): Promise<{ ok: boolean; e
   revalidatePath("/admin");
   return { ok: true };
 }
+
+export type DuplicateSlot = {
+  studioName: string;
+  day: number;
+  startTime: string;
+  entries: { className: string; coachName: string; href: string | null }[];
+};
+
+// ADMIN — the same studio, day and start time under two different accounts is
+// how a member-recreated class looks from above. Not proof, but exactly where
+// to start looking; the beta data predates the coach-only gate.
+export async function listDuplicateSlots(): Promise<DuplicateSlot[]> {
+  const admin = await currentAdmin();
+  if (!admin) return [];
+  const db = await getDb();
+  const rows = (await db.select().from(schema.classes)).filter((c) => c.isPublic && c.studioId);
+  const byKey = new Map<string, typeof rows>();
+  for (const c of rows) {
+    const k = `${c.studioId}|${c.dayOfWeek}|${c.startTime}`;
+    const list = byKey.get(k) ?? [];
+    list.push(c);
+    byKey.set(k, list);
+  }
+  const clashes = [...byKey.values()].filter(
+    (list) => new Set(list.map((c) => c.userId)).size > 1,
+  );
+  if (!clashes.length) return [];
+
+  const userIds = [...new Set(clashes.flat().map((c) => c.userId))];
+  const studioIds = [...new Set(clashes.flat().map((c) => c.studioId!))];
+  const [users, studios] = await Promise.all([
+    db
+      .select({ id: schema.users.id, name: schema.users.name, handle: schema.users.handle })
+      .from(schema.users)
+      .where(inArray(schema.users.id, userIds)),
+    db
+      .select({ id: schema.studios.id, name: schema.studios.name })
+      .from(schema.studios)
+      .where(inArray(schema.studios.id, studioIds)),
+  ]);
+  const userById = new Map(users.map((u) => [u.id, u]));
+  const studioById = new Map(studios.map((s) => [s.id, s]));
+
+  return clashes.map((list) => {
+    const first = list[0];
+    return {
+      studioName: studioById.get(first.studioId!)?.name ?? "a studio",
+      day: first.dayOfWeek,
+      startTime: first.startTime,
+      entries: list.map((c) => {
+        const u = userById.get(c.userId);
+        return {
+          className: c.name,
+          coachName: u?.name ?? "?",
+          href: u?.handle ? `/${u.handle}/${c.id}` : null,
+        };
+      }),
+    };
+  });
+}

@@ -12,7 +12,7 @@ import {
   adminInvite,
   adminSendMagicLink,
 } from "@/app/actions/admin";
-import { dismissReports, type ReportedClass } from "@/app/actions/reports";
+import { dismissReports, type DuplicateSlot, type ReportedClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -73,6 +73,7 @@ type Stats = {
 export function AdminPanel({
   adminEmail,
   reports,
+  duplicates,
   people,
   studios,
   invites,
@@ -83,6 +84,7 @@ export function AdminPanel({
 }: {
   adminEmail: string;
   reports: ReportedClass[];
+  duplicates: DuplicateSlot[];
   people: Person[];
   studios: Studio[];
   invites: Invite[];
@@ -325,6 +327,35 @@ export function AdminPanel({
                   </div>
                 </div>
               ))
+            )}
+            {duplicates.length > 0 && (
+              <>
+                <h2 className="brandh" style={{ marginTop: 10 }}>Possible duplicates</h2>
+                <p className="adminsub">
+                  The same studio, day and time under two accounts. That&rsquo;s what a
+                  member-recreated class looks like from here.
+                </p>
+                {duplicates.map((d, i) => (
+                  <div key={i} className="admincard">
+                    <div className="admincard-h">
+                      <span className="admincard-nm">
+                        {d.studioName} · {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d.day]} {d.startTime}
+                      </span>
+                    </div>
+                    {d.entries.map((e, j) => (
+                      <p key={j} className="adminsub">
+                        {e.className} · {e.coachName}
+                        {e.href && (
+                          <>
+                            {" "}
+                            <a href={e.href} target="_blank" rel="noopener">open</a>
+                          </>
+                        )}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </>
             )}
           </div>
         )}

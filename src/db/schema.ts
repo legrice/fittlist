@@ -298,6 +298,24 @@ export const classes = pgTable(
 // the blocked person, because a notice is an invitation to make a new account
 // and a fight. From their side the coach's page simply stops existing, which is
 // what a deleted account looks like too, so it isn't a signal.
+// A member's own standing class: the Tuesday spin they actually go to, at a
+// gym whose coach isn't on fittlist yet. Private by construction, and there is
+// no column that could make one public: it lives in that person's week and
+// nowhere else, so it can never pollute Discover or a feed. `withWho` is free
+// text, not a users reference; naming your coach is not the same as putting
+// them on the platform, and every name in here is an invite lead.
+export const personalClasses = pgTable("personal_classes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0 = Monday, same as classes
+  startTime: text("start_time").notNull(), // "HH:MM", floating, same as classes
+  durationMin: integer("duration_min").notNull().default(60),
+  location: text("location").notNull().default(""),
+  withWho: text("with_who").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // "This class isn't right": not a real class, wrong time, wrong place. Keyed
 // on the seriesId rather than a class row, because an edit deletes and
 // reinserts the rows and a delete removes them; the report is about the class

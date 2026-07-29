@@ -2,7 +2,7 @@ import { desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
-import { listReports } from "@/app/actions/reports";
+import { listDuplicateSlots, listReports } from "@/app/actions/reports";
 import { AdminPanel } from "@/components/AdminPanel";
 
 export const dynamic = "force-dynamic";
@@ -173,12 +173,13 @@ export default async function AdminPage() {
     requests: requests.length,
   };
 
-  const reports = await listReports();
+  const [reports, duplicates] = await Promise.all([listReports(), listDuplicateSlots()]);
 
   return (
     <AdminPanel
       adminEmail={admin.email}
       reports={reports}
+      duplicates={duplicates}
       people={people}
       studios={studioRows}
       invites={invites}

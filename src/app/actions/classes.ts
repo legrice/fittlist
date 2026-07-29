@@ -109,6 +109,24 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
 
   const db = await getDb();
   const isPublic = input.isPublic !== false; // default public
+  // Public inventory is coach-only. There was no gate here, and beta members
+  // used the gap the only way they could: recreating their gyms' real classes
+  // to get their own week into the app. They get personal entries for that
+  // (personal_classes); the directory stays classes taught by whoever posted
+  // them. Start coaching is still one tap for anyone who actually coaches.
+  if (isPublic) {
+    const [me] = await db
+      .select({ kind: schema.users.kind })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    if (me?.kind === "fan") {
+      return {
+        ok: false,
+        error:
+          "Publishing classes is for coaches. Add classes you attend to Your week, or switch to coaching in settings.",
+      };
+    }
+  }
   let studio: typeof schema.studios.$inferSelect | undefined;
   if (input.studioId) {
     [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId));

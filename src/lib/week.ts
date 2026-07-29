@@ -1,7 +1,7 @@
 import { and, asc, eq, gte, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { clockParts, fmtDayHeader } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded } from "@/lib/format";
 
 // The classes someone has added, from today forward.
 //
@@ -24,6 +24,9 @@ export type WeekItem = {
   coachName: string;
   coachPhoto: string | null;
   coachColor: string;
+  /** A personal entry: theirs alone, with no class page behind it. The id is
+   *  the personal_classes row, and removing it is removePersonalClass. */
+  personal?: boolean;
 };
 
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
@@ -31,19 +34,35 @@ export type WeekDay = { iso: string; label: string; items: WeekItem[] };
 /** Today, as the server sees it. Everything here is date-only. */
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
-/** How many added classes are still ahead of them. */
+/** The next date on or after today falling on this weekday (0 = Monday). */
+function nextOccurrence(dayOfWeek: number): string {
+  const d = new Date(`${todayIso()}T00:00:00Z`);
+  const today = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() + ((dayOfWeek - today + 7) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+/** How many added classes are still ahead of them, personal entries included. */
 export async function weekCount(userId: string): Promise<number> {
   const db = await getDb();
-  const rows = await db
-    .select({ id: schema.attendances.id })
-    .from(schema.attendances)
-    .where(
-      and(
-        eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, todayIso()),
+  const [rows, own] = await Promise.all([
+    db
+      .select({ id: schema.attendances.id })
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, todayIso()),
+        ),
       ),
-    );
-  return rows.length;
+    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+  ]);
+  // A personal entry recurs weekly; it counts once, for this week's occurrence,
+  // and drops out of the number once that has run, same as everything else.
+  const ownAhead = own.filter(
+    (p) => !occurrenceEnded(nextOccurrence(p.dayOfWeek), p.startTime, p.durationMin),
+  ).length;
+  return rows.length + ownAhead;
 }
 
 /** The shortlist itself, grouped by day. */
@@ -59,7 +78,11 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ),
     )
     .orderBy(asc(schema.attendances.occurrenceDate));
-  if (marks.length === 0) return [];
+  const own = await db
+    .select()
+    .from(schema.personalClasses)
+    .where(eq(schema.personalClasses.userId, userId));
+  if (marks.length === 0 && own.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = await db
@@ -106,6 +129,36 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       coachColor: avatarColor(coach),
     });
     byDay.set(m.occurrenceDate, list);
+  }
+
+  // Personal entries land on their next occurrence that hasn't already run,
+  // so a weekly one reappears each week and the list still empties itself.
+  for (const p of own) {
+    let iso = nextOccurrence(p.dayOfWeek);
+    if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
+      const d = new Date(`${iso}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + 7);
+      iso = d.toISOString().slice(0, 10);
+    }
+    const t = clockParts(p.startTime);
+    const list = byDay.get(iso) ?? [];
+    list.push({
+      id: p.id,
+      classId: "",
+      iso,
+      dayLabel: fmtDayHeader(iso),
+      name: p.name,
+      hm: t.hm,
+      ap: t.ap,
+      durationMin: p.durationMin,
+      where: p.location || null,
+      handle: "",
+      coachName: p.withWho,
+      coachPhoto: null,
+      coachColor: "#d6d1b3",
+      personal: true,
+    });
+    byDay.set(iso, list);
   }
 
   return [...byDay.entries()]

@@ -235,6 +235,18 @@ lookup table (`ICON[n.type]` in `UpdatesScreen`) hide from any audit that only
 greps literal `<Icon name="...">`, which is how every notification row rendered
 a blank circle for months.
 
+**Public classes are coach-only, and a member's own classes are private by
+construction.** Beta members recreated their gyms' real classes because it was
+the only way to get their week into the app, so `publishClasses` now refuses a
+public class from a `kind === "fan"` account, and members get
+`personal_classes` instead: name, weekday, time, place and a free-text coach
+name, living only in their own week. There is deliberately no column that
+could make one public, so the wall can't be left open. The named coach is an
+invite lead ("Is Jenny on fittlist?"), not a users reference: naming your
+coach is not putting them on the platform. The admin Reports tab lists
+same-studio-same-time classes under two accounts, which is what the old leak
+looks like from above.
+
 **A class report points at the `seriesId`, not a class row.** `class_reports`
 is how someone flags a class that isn't right, and a report keyed on a class
 row would hit the same wall as a Going mark: edits delete and reinsert rows.
