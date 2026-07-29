@@ -40,10 +40,9 @@ export default async function FeedbackPage() {
         </Link>
         <div className="chattop-txt">
           <span className="chattop-nm">Send feedback</span>
-          <span className="chattop-sub">Goes to {thread?.hostName ?? "us"}, who reads all of it</span>
         </div>
       </div>
-      <FeedbackThread hostName={thread?.hostName ?? "us"} messages={thread?.messages ?? []} />
+      <FeedbackThread messages={thread?.messages ?? []} />
     </section>
   );
 }

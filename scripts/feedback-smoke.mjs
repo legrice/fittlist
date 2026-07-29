@@ -75,7 +75,7 @@ const row = p.getByText("Send feedback").first();
 await row.waitFor();
 await row.click();
 await p.waitForURL(/\/feedback/);
-await p.getByText(/goes straight to them/i).waitFor();
+await p.getByText(/Every suggestion gets read/i).waitFor();
 await p.screenshot({ path: OUT + "/fb-1-empty.png" });
 await p.locator(".chatreply textarea").fill(
   "Edited a class description and my whole schedule disappeared.",

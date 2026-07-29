@@ -12,13 +12,7 @@ type Msg = { id: string; fromCoach: boolean; body: string; createdAt: Date | str
 // Empty the first time, and the empty state has to do the asking. "Send
 // feedback" on its own gets you "love it, thanks"; naming what's useful gets
 // you the class that vanished when someone edited its description.
-export function FeedbackThread({
-  hostName,
-  messages,
-}: {
-  hostName: string;
-  messages: Msg[];
-}) {
+export function FeedbackThread({ messages }: { messages: Msg[] }) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
@@ -49,12 +43,11 @@ export function FeedbackThread({
       ) : (
         <div className="fbintro">
           <p>
-            Anything you tell {hostName} here goes straight to them, and they answer in this
-            thread. It stays open, so you can keep adding to it.
+            Help us make Fittlist the best app for coaches and members. Every suggestion gets
+            read, and many of the best ideas come straight from the people using it.
           </p>
           <p className="fbintro-s">
-            What helps most: something that broke, something that took longer than it should
-            have, or something you wanted and could not find.
+            Whether something broke, felt confusing, or you have an idea, send it our way.
           </p>
         </div>
       )}
