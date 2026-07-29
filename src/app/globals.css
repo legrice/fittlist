@@ -771,10 +771,19 @@ button.bl-band { cursor: pointer; }
 /* Dashboard strip under the header: quick links to the most-reached-for
    actions. (The stats glance lives on the account page for now.) */
 .dashstrip { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 22px; }
-.dashlinks { display: flex; gap: 10px; }
+/* The tools scroll rather than sharing the width. Every pill added used to make
+   all of them narrower, until the labels started clipping; a rail keeps each
+   one its own size and lets the row run off the edge, which is also the hint
+   that there's more of it. Full bleed so a pill can sit half off the screen. */
+.dashlinks {
+  display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;
+  margin-left: -18px; margin-right: -18px; padding: 0 18px;
+  -webkit-overflow-scrolling: touch;
+}
+.dashlinks::-webkit-scrollbar { display: none; }
 .dashlink {
-  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 12px 6px; background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 12px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 999px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 12.5px;
   color: var(--ink); white-space: nowrap;
 }
@@ -865,25 +874,30 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-daycards { display: block; gap: 0; }
 .ps-agenda .ps-event {
   grid-template-columns: 3px 1fr auto; gap: 0 13px; align-items: center;
-  background: transparent; border-radius: 0; box-shadow: none; padding: 14px 2px;
+  background: transparent; border-radius: 0; box-shadow: none; padding: 18px 2px;
   border-bottom: 1px solid var(--line);
 }
 .ps-agenda .ps-event:hover { box-shadow: none; }
 .ps-agenda .ps-event:active { background: #f3ecdf; }
 .ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
-.ps-agenda .ps-ebody { gap: 3px; }
-.ps-agenda .ps-enm { display: flex; align-items: center; gap: 8px; font-size: 18.5px; line-height: 1.2; }
+.ps-agenda .ps-ebody { gap: 5px; }
+/* 500 and a touch of positive tracking: at this size the name reads better
+   open and light than tight and heavy, and it stops competing with the time. */
+.ps-agenda .ps-enm {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 500; font-size: 20.5px; line-height: 1.2; letter-spacing: .004em;
+}
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
-  font-size: 13.5px; font-weight: 500; color: var(--ol); min-width: 0;
+  font-size: 15.5px; font-weight: 500; color: var(--ol); min-width: 0;
 }
 .ps-agenda .ps-estudio-ic { color: var(--ol); flex-shrink: 0; }
 /* Time and length sit on the bottom of the row, so the duration lines up with
    the last line of the class rather than floating beside the middle of it. */
 .ps-agenda .ps-etimecol { flex-direction: column; align-items: flex-end; gap: 1px; align-self: end; }
-.ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
-.ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
-.ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
+.ps-agenda .ps-etime { font-weight: 700; font-size: 17px; color: var(--ink); }
+.ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 15px; color: var(--ol); white-space: nowrap; }
+.ps-agenda .ps-ap { font-size: 13px; margin-left: 2px; letter-spacing: .01em; }
 /* Private sessions: no card fill, just a muted accent bar + the Private badge. */
 .ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
 .ps-agenda .ps-event-private:active { background: #f3ecdf; }
@@ -2153,14 +2167,14 @@ button.ps-card { cursor: pointer; }
 .feedagenda { margin-top: 2px; }
 .ps-agenda .ps-ecoach {
   display: flex; align-items: center; gap: 6px; min-width: 0;
-  font-size: 13.5px; font-weight: 600; color: var(--ol);
+  font-size: 15.5px; font-weight: 600; color: var(--ol);
 }
 .ps-ecoachav {
-  flex-shrink: 0; width: 20px; height: 20px; border-radius: 999px; object-fit: cover;
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 999px; object-fit: cover;
   background: #eae3d2; display: block;
 }
 .ps-ecoachav-empty {
-  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   color: #fff; background: var(--si);
 }
