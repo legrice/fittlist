@@ -131,6 +131,12 @@ Anything asking "is this a coach?" must test `kind`, not `handle`: that
 substitution was true for months, and `/admin` was still counting handles as
 coaches long after it stopped being true.
 
+**A follow is private.** Nothing public says who a member follows: their
+profile is who they are and stops there. They see their own on Following, a
+coach sees their own followers, and `/admin` counts both. That's the whole
+audience. A list of "trains with 6" next to a "trains with 0" is a scoreboard,
+and a profile that can be lost at is worse than no profile.
+
 **"Member" is the word for someone who isn't a coach.** The column is
 `users.kind` and its value is still `"fan"`, which is the odd one out and a
 migration nobody needs yet; everything a person reads says member. Not

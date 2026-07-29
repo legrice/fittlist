@@ -112,7 +112,7 @@ console.log("member tabs ok (Following and Discover, everywhere, no Schedule)");
 }
 console.log("chrome survives the loading boundary ok");
 
-// follow the coach so the profile has a "trains with"
+// follow a coach, so there is something a profile could leak
 await p.goto(BASE + "/carinacoach");
 // The pill is a client component on a server-rendered page; clicking it before
 // hydration lands on nothing at all.
@@ -126,11 +126,16 @@ await p.goto(BASE + "/member");
 await p.getByRole("heading", { name: "Mem Ber" }).waitFor();
 if (!(await p.getByText("Lifts heavy, runs slow").count())) fail("tagline missing");
 if (!(await p.getByText("Six mornings a week").count())) fail("bio missing");
-if (!(await p.locator(".disrow", { hasText: "Carina" }).count()))
-  fail("the coaches they follow should be on their profile");
+// Who they follow is nobody else's business. Two profiles side by side, one
+// with six coaches and one with none, is a scoreboard nobody asked for.
+if (await p.locator(".disrow", { hasText: "Carina" }).count())
+  fail("a member's profile is listing the coaches they follow");
+if (await p.getByText(/Trains with/i).count())
+  fail("a member's profile still has the trains-with section");
 if (await p.locator(".pubtab").count()) fail("a member has no schedule tabs");
 await p.screenshot({ path: OUT + "/shot-member-profile.png", fullPage: true });
-console.log("member profile ok (name, tagline, bio, who they train with)");
+console.log("member profile ok (name, tagline, bio, and nothing about who they follow)");
+
 
 // and it's editable from the account
 await p.goto(BASE + "/you");

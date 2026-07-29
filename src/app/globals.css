@@ -2375,13 +2375,6 @@ button.ps-card { cursor: pointer; }
 .mempro-about {
   font-size: 14.5px; line-height: 1.55; color: var(--ink); margin-top: 18px; text-align: center;
 }
-.mempro-sec { margin-top: 30px; }
-.mempro-sec .prof-sec-h { display: flex; align-items: center; gap: 8px; }
-.mempro-n {
-  font-size: 12px; font-weight: 700; color: var(--ol);
-  background: var(--cl); border-radius: 999px; padding: 2px 9px;
-}
-.mempro-none { font-size: 13.5px; color: var(--ol); line-height: 1.5; }
 
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
