@@ -788,18 +788,6 @@ button.bl-band { cursor: pointer; }
   color: var(--ink); white-space: nowrap;
 }
 .dashlink:active { background: var(--cl); }
-/* The count riding on a pill: the requests one only appears when there are
-   requests, so the number is the point of it rather than a decoration. */
-.dashlink-n {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
-  background: var(--si-soft); color: var(--si); font-size: 11px; font-weight: 700;
-}
-/* Unread: the whole pill takes the accent, so it reads at a glance from the
-   top of a week rather than asking to be counted. */
-.dashlink.hot { background: var(--si); border-color: var(--si); color: #fff; }
-.dashlink.hot:active { background: #c25a2a; }
-.dashlink.hot .dashlink-n { background: rgba(255, 255, 255, .22); color: #fff; }
 .usericon {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; border-radius: 999px; overflow: hidden;

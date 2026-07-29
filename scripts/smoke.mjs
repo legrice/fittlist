@@ -1584,29 +1584,17 @@ await page.waitForFunction(() => !document.querySelector(".sheet"));
 }
 console.log("private session request sent ok");
 
-// It shows up as a pill at the top of the coach's week, lit while unread, and
-// the pill is only there because a request is.
-await page.goto(BASE + "/app");
+// The coach can find it and open it. Requests share the message tables for now,
+// so this is the whole of where one lands; a room of their own is still to come.
+await page.goto(BASE + "/updates?tab=messages");
 {
-  const pill = page.locator(".dashlink", { hasText: "Requests" });
-  await pill.waitFor();
-  if (!(await pill.getAttribute("class")).includes("hot"))
-    fail("an unread request should light the Requests pill");
-  const n = (await pill.locator(".dashlink-n").innerText()).trim();
-  if (n !== "1") fail("the Requests pill should count 1, got " + n);
-  const first = (await page.locator(".dashlink").first().innerText()).trim();
-  if (!first.startsWith("Requests")) fail("Requests should lead the rail, got " + first);
-  await pill.click();
-  await page.waitForURL(/tab=messages/);
-  await page.locator(".inboxrow").first().click();
+  const row = page.locator(".inboxrow", { hasText: "Priya" });
+  await row.waitFor();
+  await row.click();
   await page.waitForURL(/\/inbox\/.+/);
-  await page.goto(BASE + "/app");
-  const read = page.locator(".dashlink", { hasText: "Requests" });
-  await read.waitFor();
-  if ((await read.getAttribute("class")).includes("hot"))
-    fail("a request that's been read should not still be lit");
+  await page.getByText("Saturday mornings").waitFor();
 }
-console.log("requests pill ok (appears with the request, lit until read)");
+console.log("the request reaches the coach ok");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss

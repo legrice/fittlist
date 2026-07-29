@@ -293,19 +293,9 @@ export function ScheduleScreen({
             instead. */}
         <div className="dashstrip">
           <div className="dashlinks">
-            {/* Someone waiting on an answer goes first, and only when there is
-                one: a pill that's always there is a label, but one that appears
-                the day a request lands is the app telling you something. */}
-            {requestCount > 0 && (
-              <button
-                className={`dashlink${inboxUnread > 0 ? " hot" : ""}`}
-                onClick={() => router.push("/updates?tab=messages")}
-              >
-                <Icon name="mail" size={19} />
-                <span>Requests</span>
-                <span className="dashlink-n">{inboxUnread > 0 ? inboxUnread : requestCount}</span>
-              </button>
-            )}
+            {/* No Requests pill here. A pill that says "Requests" and opens a
+                message thread promises a queue and delivers a chat; the room it
+                should open doesn't exist yet. */}
             <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
               <Icon name="account_circle" size={19} />
               <span>Your profile</span>
