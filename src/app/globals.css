@@ -1616,22 +1616,33 @@ button.ps-card { cursor: pointer; }
 }
 .acctclose:active { background: #efe8d8; }
 .acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
-/* One column since the stats moved out: photo, name, title, then Edit. */
-.accttile {
-  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
-  margin-top: 18px; padding: 22px 18px;
-  background: #fff; border-radius: 16px; box-shadow: var(--soft-shadow);
+/* Who this is, at the top of settings: face left, name and title beside it,
+   Edit on the end. A row on the paper, not a card: it's the label on the
+   drawer, and boxing it made it read as the first row of a list. */
+.acctwho { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding: 2px 2px 0; }
+.acctwho-id {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px;
+  text-align: left; background: none; border: 0; padding: 0; cursor: pointer;
+  font-family: inherit;
 }
-.acctid {
-  min-width: 0; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; text-align: center; gap: 4px;
+.acctwho-av {
+  width: 56px; height: 56px; border-radius: 999px; object-fit: cover;
+  background: #eae3d2; flex-shrink: 0;
 }
-.acctavatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; background: #eae3d2; }
 /* Filled with the coach's own palette colour, same as the header avatar and
    every other photo-less face in the app. */
-.acctavatar-empty {
+.acctwho-av-empty {
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 38px; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 24px; color: #fff;
+}
+.acctwho-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.acctwho-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 20px;
+  letter-spacing: -.01em; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere;
+}
+.acctwho-sub {
+  font-size: 13px; font-weight: 500; color: var(--ol);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Tertiary: a plain typographic action, no fill and no border — quieter than
    the ghost button, for a control that sits inside another surface. */
@@ -1646,11 +1657,6 @@ button.ps-card { cursor: pointer; }
 .endson-add { display: block; margin: 6px 0 2px; padding-left: 0; }
 .endson-row { display: flex; align-items: center; gap: 10px; }
 .endson-row .timeinput { flex: 1; min-width: 0; }
-.acctname {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.01em; line-height: 1.1;
-  color: #191502; margin-top: 8px; overflow-wrap: anywhere;
-}
-.accttitle-sub { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 1px; }
 /* the 3 stats split the tile height evenly so both columns balance */
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
@@ -1824,22 +1830,16 @@ button.ps-card { cursor: pointer; }
 }
 .typeselect:focus { outline: none; border-color: var(--si); }
 
-/* ---- owner bar atop the public profile (back + edit) ---- */
-.ownerbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: calc(10px + env(safe-area-inset-top)) 18px 4px;
-  max-width: 520px; margin: 0 auto; width: 100%;
+/* The owner's three-dot button, beside their name. Everything they do with
+   their page (add class, edit profile, share, QR, copy week, requests) lives
+   in the sheet behind it. */
+.ownermore {
+  width: 38px; height: 38px; border-radius: 999px; background: var(--card);
+  border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
-.ownerback {
-  width: 40px; height: 40px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  color: #191502; display: flex; align-items: center; justify-content: center;
-}
-.ownerback:active { background: #efe8d8; }
-.owneredit {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502;
-  background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 22px;
-}
-.owneredit:active { background: #efe8d8; }
+.ownermore:active { background: #efe8d8; }
+.ownermenu { margin-top: 14px; }
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
 .studiotypes { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }
@@ -2299,7 +2299,6 @@ button.ps-card { cursor: pointer; }
   color: var(--ink);
 }
 /* pre-token surfaces baked with #fff / #191502 — repaint for dark */
-[data-mode="dark"] .accttile,
 [data-mode="dark"] .acctstats-grid .acctstat,
 [data-mode="dark"] .acctcard,
 [data-mode="dark"] .secblock,
@@ -2313,7 +2312,7 @@ button.ps-card { cursor: pointer; }
   background: var(--card);
   color: var(--ink);
 }
-[data-mode="dark"] .acctname,
+[data-mode="dark"] .acctwho-nm,
 [data-mode="dark"] .acctstat .n,
 [data-mode="dark"] .acctcard-ic,
 [data-mode="dark"] .acctcard-t,
@@ -2390,14 +2389,12 @@ button.ps-card { cursor: pointer; }
 /* ---- the coach's public page + event pages in dark ---- */
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio,
-[data-mode="dark"] .ownerback,
-[data-mode="dark"] .owneredit {
+[data-mode="dark"] .ownermore {
   background: var(--card); color: var(--ink); border-color: var(--line);
 }
 [data-mode="dark"] .proflink:active,
 [data-mode="dark"] .profstudio:active,
-[data-mode="dark"] .ownerback:active,
-[data-mode="dark"] .owneredit:active { background: #2c2718; }
+[data-mode="dark"] .ownermore:active { background: #2c2718; }
 /* The coach's studio rows carry no fill, so only the text and the rule between
    them need saying. */
 [data-mode="dark"] .coachstudio-txt .nm { color: var(--ink); }

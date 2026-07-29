@@ -40,6 +40,7 @@ import {
   Users,
   UserRoundPlus,
   X,
+  Ellipsis,
   Palette,
   Settings,
 } from "lucide-react";
@@ -53,6 +54,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   add: Plus,
   admin_panel_settings: ShieldUser,
   palette: Palette,
+  more_horiz: Ellipsis,
   settings: Settings,
   alternate_email: AtSign,
   arrow_back: ArrowLeft,

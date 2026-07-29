@@ -310,33 +310,38 @@ export function ProfileSheet({
         aria-label="Your account"
       >
         <div className="accttop">
-          <h1 className="acct-h">Profile</h1>
+          <h1 className="acct-h">Settings</h1>
           <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
         </div>
 
-        <div className="accttile">
-          <button className="acctid" onClick={goProfile} aria-label="Open your profile">
+        {/* Who this is, on the paper rather than in a card. It isn't a setting,
+            it's the label on the drawer, so boxing it made it read as the first
+            row of a list it doesn't belong to. */}
+        <div className="acctwho">
+          <button className="acctwho-id" onClick={goProfile} aria-label="Open your profile">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="acctavatar" src={photo} alt="" />
+              <img className="acctwho-av" src={photo} alt="" />
             ) : (
               <span
-                className="acctavatar acctavatar-empty"
+                className="acctwho-av acctwho-av-empty"
                 style={{ background: avatarColor }}
                 aria-hidden="true"
               >
                 {initial}
               </span>
             )}
-            <span className="acctname">{firstName}</span>
-            {title ? <span className="accttitle-sub">{title}</span> : null}
+            <span className="acctwho-txt">
+              <span className="acctwho-nm">{firstName}</span>
+              {title ? <span className="acctwho-sub">{title}</span> : null}
+            </span>
           </button>
           {/* Editing shouldn't need a detour through the preview: this opens
               the public page with the editor already up. */}
           <button className="tertiary acctedit" onClick={() => router.push(`/${handle}?edit=1`)}>
-            Edit profile
+            Edit
           </button>
         </div>
 

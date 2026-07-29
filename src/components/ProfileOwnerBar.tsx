@@ -3,16 +3,23 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
-import { useSlideBack } from "@/components/BackLink";
+import { myWeekText } from "@/app/actions/weektext";
 import { ChipsField } from "@/components/ChipsField";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { LocationInput } from "@/components/LocationInput";
+import { QrSheet } from "@/components/QrSheet";
+import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-// Shown at the top of the public profile page when the owner is viewing it:
-// a back arrow (to the account page) and an Edit button that opens the editor.
+// Everything a coach does with their own page, behind one button.
+//
+// It used to be a strip of pills above the schedule (Your profile, Share week,
+// QR code, Copy week) plus an Edit button in a bar of its own. That was two
+// rows of chrome on the screen people spend the most time on, for things you
+// reach for once a week. They live in a sheet under a three-dot button beside
+// the name now, which is where the rest of the internet keeps them.
 export function ProfileOwnerBar({
   name,
   title,
@@ -29,6 +36,7 @@ export function ProfileOwnerBar({
   photo,
   avatarColor: avatarColorProp,
   userId,
+  handle,
 }: {
   name: string;
   title: string;
@@ -45,9 +53,9 @@ export function ProfileOwnerBar({
   photo: string | null;
   avatarColor?: string | null;
   userId: string;
+  handle: string;
 }) {
   const router = useRouter();
-  const slideBack = useSlideBack();
   const [toastMsg, toastOn, toast] = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [pName, setPName] = useState(name);
@@ -65,6 +73,9 @@ export function ProfileOwnerBar({
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
   const [colorOpen, setColorOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const shownColor = avatarColor({ id: userId, avatarColor: pColor });
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -150,16 +161,113 @@ export function ProfileOwnerBar({
       router.refresh();
     });
 
+  const copyWeek = async () => {
+    setMenuOpen(false);
+    const res = await myWeekText();
+    if (!res.ok || !res.text) {
+      toast(res.error ?? "Couldn't copy that");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(res.text);
+      toast("Week copied, ready to paste");
+    } catch {
+      toast("Couldn't copy that");
+    }
+  };
+
+  const go = (href: string) => {
+    setMenuOpen(false);
+    router.push(href);
+  };
+
   return (
     <>
-      <div className="ownerbar">
-        <button className="ownerback" aria-label="Back to your account" onClick={() => slideBack("/app?acct=1")}>
-          <Icon name="arrow_back" size={20} />
-        </button>
-        <button className="owneredit" onClick={openEdit}>
-          Edit
-        </button>
-      </div>
+      <button
+        className="ownermore"
+        aria-label="More"
+        aria-haspopup="dialog"
+        onClick={() => setMenuOpen(true)}
+      >
+        <Icon name="more_horiz" size={20} />
+      </button>
+
+      {menuOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMenuOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMenuOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your page</h2>
+            <div className="settingslist ownermenu">
+              {/* The thing you came here to do most often goes first. */}
+              <button className="setrow" onClick={() => go("/app?add=1")}>
+                <span className="setrow-ic"><Icon name="add" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Add a class</span>
+                  <span className="s">Put another one on your week</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button className="setrow" onClick={() => { setMenuOpen(false); openEdit(); }}>
+                <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Edit profile</span>
+                  <span className="s">Your photo, bio and contact details</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button className="setrow" onClick={() => { setMenuOpen(false); setShareOpen(true); }}>
+                <span className="setrow-ic"><Icon name="share" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share your week</span>
+                  <span className="s">A story image with your link</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button className="setrow" onClick={() => { setMenuOpen(false); setQrOpen(true); }}>
+                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Your QR code</span>
+                  <span className="s">A scannable code that opens your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              {/* The story image is for a story. This is for the group chat,
+                  where an image is no use and a coach ends up typing it out. */}
+              <button className="setrow" onClick={copyWeek}>
+                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy your week</span>
+                  <span className="s">As text, ready to paste</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button className="setrow" onClick={() => go("/requests")}>
+                <span className="setrow-ic"><Icon name="mail" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Requests</span>
+                  <span className="s">People asking about private sessions</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ShareWeekSheet
+        handle={handle}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onToast={toast}
+      />
+      <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
 
       {editOpen && (
         <div

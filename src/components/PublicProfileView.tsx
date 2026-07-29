@@ -307,25 +307,6 @@ export async function PublicProfileView({
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
-      {isOwner && (
-        <ProfileOwnerBar
-          name={user.name}
-          title={user.title ?? ""}
-          about={user.about ?? ""}
-          location={user.location ?? ""}
-          certifications={user.certifications}
-          highlights={user.highlights}
-          instagram={user.instagram ?? ""}
-          website={user.website ?? ""}
-          contactEmail={user.contactEmail ?? ""}
-          phone={user.phone ?? ""}
-          whatsapp={user.whatsapp ?? ""}
-          profileLinks={user.profileLinks}
-          photo={user.photo}
-          avatarColor={user.avatarColor}
-          userId={user.id}
-        />
-      )}
       <div className="profwrap">
         {/* Signed in, this is still the app, so it keeps the app's header: the
             way home, the bell, your week. A stranger gets the wordmark and one
@@ -360,6 +341,30 @@ export async function PublicProfileView({
           // Beside the name rather than under the title: it's a badge on the
           // person, the same shape as a verification mark, and it answers the
           // question a visitor is already asking.
+          // Everything a coach does with their own page, behind one button
+          // beside their name. Nobody else sees it.
+          menu={
+            isOwner ? (
+              <ProfileOwnerBar
+                name={user.name}
+                title={user.title ?? ""}
+                about={user.about ?? ""}
+                location={user.location ?? ""}
+                certifications={user.certifications}
+                highlights={user.highlights}
+                instagram={user.instagram ?? ""}
+                website={user.website ?? ""}
+                contactEmail={user.contactEmail ?? ""}
+                phone={user.phone ?? ""}
+                whatsapp={user.whatsapp ?? ""}
+                profileLinks={user.profileLinks}
+                photo={user.photo}
+                avatarColor={user.avatarColor}
+                userId={user.id}
+                handle={handle}
+              />
+            ) : null
+          }
           avail={
             user.availability ? (
               <span className={`availbadge availbadge-${user.availability}`}>

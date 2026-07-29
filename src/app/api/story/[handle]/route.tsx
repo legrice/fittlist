@@ -210,9 +210,13 @@ export async function GET(
                     >
                       {fmtTime(c.startTime)}
                     </span>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <span style={{ fontSize: 48, fontWeight: 700 }}>{c.name}</span>
-                      <span style={{ fontSize: 41, color: t.faint }}>
+                    {/* Bounded, so a long class name wraps rather than running
+                        off the edge. See the note in /api/story/me. */}
+                    <div style={{ display: "flex", flexDirection: "column", width: 702 }}>
+                      <span style={{ fontSize: 48, fontWeight: 700, lineHeight: 1.15 }}>
+                        {c.name}
+                      </span>
+                      <span style={{ fontSize: 41, color: t.faint, lineHeight: 1.2 }}>
                         {(c.studioId && studioName.get(c.studioId)) || c.location || ""}
                       </span>
                     </div>

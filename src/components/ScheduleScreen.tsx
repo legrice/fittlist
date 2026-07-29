@@ -281,39 +281,10 @@ export function ScheduleScreen({
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The things a coach reaches for from their week — the title said
-            nothing the tab bar doesn't already say, so the tools get the space
-            instead. */}
-        <div className="dashstrip">
-          <div className="dashlinks">
-            <button className="dashlink" onClick={() => router.push(`/${handle}`)}>
-              <Icon name="account_circle" size={19} />
-              <span>Your profile</span>
-            </button>
-            {/* "Share cal" read like the calendar feed. It opens the story
-                image, which is what the sheet behind it is called. */}
-            <button className="dashlink" onClick={() => setShareOpen(true)}>
-              <Icon name="calendar_today" size={19} />
-              <span>Share week</span>
-            </button>
-            <button className="dashlink" onClick={() => setQrOpen(true)}>
-              <Icon name="qr_code_2" size={19} />
-              <span>QR code</span>
-            </button>
-            {/* The share image is for a story. This is for the group chat,
-                where an image is no use and a coach ends up typing it out. */}
-            <button className="dashlink" onClick={copyWeek}>
-              <Icon name="content_copy" size={19} />
-              <span>Copy week</span>
-            </button>
-            {/* Requests goes here, at the end, when it has a room of its own.
-                A pill that says "Requests" and opens a message thread promises a
-                queue and delivers a chat. These five are all things you do with
-                your week; a request is someone else's move, so it sits after
-                them rather than leading. */}
-          </div>
-        </div>
-
+        {/* The action pills that used to sit here moved onto the profile,
+            behind the three-dot button beside the name. They were two rows of
+            chrome on the screen a coach spends the most time on, for things
+            they reach for about once a week. */}
         {!hasAnyClass ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>

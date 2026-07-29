@@ -232,7 +232,7 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
   const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
-  await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+  await page.locator(".fab").waitFor();
   if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
@@ -253,7 +253,7 @@ for (let attempt = 0; ; attempt++) {
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
   if (!done) {
     await page.reload();
-    await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+    await page.locator(".fab").waitFor();
     done = (await scheduleClasses(page)) === 2;
   }
   if (done) break;
@@ -366,8 +366,8 @@ await expect(
 );
 await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
-await expect(page.getByRole("heading", { name: "Profile" }).isVisible(), "account page opens");
-await expect(page.locator(".accttile .acctname", { hasText: "Matt" }).isVisible(), "account tile shows name");
+await expect(page.getByRole("heading", { name: "Settings" }).isVisible(), "settings opens");
+await expect(page.locator(".acctwho .acctwho-nm", { hasText: "Matt" }).isVisible(), "the who row shows their name");
 if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three analytics stats");
 if (await page.getByText("Schedule opens").count()) fail("Schedule opens should be gone");
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
@@ -377,10 +377,11 @@ await expect(page.locator(".acctcard", { hasText: "Share your week" }).isVisible
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
 // ---- tap the avatar -> public profile page with owner back + edit
-await page.locator(".acctid").click();
+await page.locator(".acctwho-id").click();
 await page.waitForURL("**/matt");
-await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
-await page.locator(".ownerbar .owneredit").click();
+await expect(page.locator(".ownermore").isVisible(), "owner three-dot button on profile");
+await page.locator(".ownermore").click();
+await page.locator(".ownermenu .setrow", { hasText: "Edit profile" }).click();
 await page.getByRole("heading", { name: "Edit profile" }).waitFor();
 await page.locator("#pTitle").fill("Strength coach");
 await page.locator(".abouttext").fill("Strength coach across Jersey City.");
@@ -408,22 +409,18 @@ if (shownAvatar !== pickedColor)
 console.log("avatar colour pick ok (persists to the public page)");
 await page.waitForFunction(() => !document.querySelector(".sheet"));
 await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png", fullPage: true });
-// the back arrow returns to the account page (not the schedule)
-await page.locator(".ownerback").click();
+// no back control on the profile any more; settings is a route away
+await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 console.log("account + profile edit ok (back -> account)");
 
-// ---- the top of the schedule is three tools, no title: the tab bar already
-// says which space you're in.
+// ---- the schedule has no pill strip: the owner's tools live behind the
+// three-dot button beside their name on the profile.
 await page.goto(BASE + "/app");
-{
-  const pills = (await page.locator(".dashlinks .dashlink").allInnerTexts()).map((t) => t.trim());
-  const want = ["Your profile", "Share week", "QR code", "Copy week"];
-  if (pills.join("|") !== want.join("|"))
-    fail("schedule tools should be " + want.join(", ") + ", got " + pills.join(", "));
-}
+await page.locator(".fab").waitFor();
+if (await page.locator(".dashlinks").count()) fail("the pill strip should be gone from the schedule");
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
 // Your own week keeps the pin. Only the merged one drops it, where the coach's
@@ -434,17 +431,30 @@ if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   if (!(await where.locator(".icon svg").count()))
     fail("your own schedule should still mark the studio with a pin");
 }
-// each pill goes where it says
-await page.locator(".dashlink", { hasText: "QR code" }).click();
+// the three-dot menu holds every tool, and each row goes where it says
+await page.goto(BASE + "/matt");
+await page.locator(".ownermore").click();
+{
+  const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
+  const want = ["Add a class", "Edit profile", "Share your week", "Your QR code", "Copy your week", "Requests"];
+  if (rows.join("|") !== want.join("|"))
+    fail("the owner menu should be " + want.join(", ") + ", got " + rows.join(", "));
+}
+await page.locator(".ownermenu .setrow", { hasText: "Your QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".dashlink", { hasText: "Share week" }).click();
+await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
+await page.locator(".ownermore").click();
+await page.locator(".ownermenu .setrow", { hasText: "Share your week" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".dashlink", { hasText: "Your profile" }).click();
-await page.waitForURL("**/matt");
+await page.waitForFunction(() => !document.querySelector(".sheet .storyimg"));
+// Add a class lands on the schedule with the adder open
+await page.locator(".ownermore").click();
+await page.locator(".ownermenu .setrow", { hasText: "Add a class" }).click();
+await page.waitForURL("**/app**");
+await page.getByRole("heading", { name: /New class|Add a class/ }).waitFor();
+await page.locator(".sheet .sheetclose, .adderclose").first().click().catch(() => {});
 await page.goto(BASE + "/app");
 // and the QR is still reachable from the account view
 await openProfile(page);
@@ -529,7 +539,7 @@ await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "Abo
   if (order[0].trim() !== "Schedule") fail("Schedule should lead the tabs, got " + order.join(", "));
 }
 
-await expect(page.locator(".ownerbar .owneredit").isVisible(), "owner edit button on profile");
+await expect(page.locator(".ownermore").isVisible(), "owner three-dot button on profile");
 if (await page.getByText("Made with").count())
   fail("the made-with footer should be hidden from anyone signed in");
 // a logged-out visitor is who it's for, so it still shows for them
@@ -547,7 +557,7 @@ if (await page.getByText("Made with").count())
 }
 // the account tile offers a direct way into the editor
 await openProfile(page);
-await page.locator(".accttile .tertiary", { hasText: "Edit profile" }).click();
+await page.locator(".acctwho + .acctedit, .acctedit").first().click();
 await page.locator(".editsheet, .sheet").first().waitFor();
 await page.getByRole("heading", { name: "Edit profile" }).waitFor();
 await page.locator(".sheet .sheetclose, .sheet .adderclose").first().click();
@@ -676,7 +686,7 @@ console.log("stats ok");
 // ---- that follow dropped a notification; the single Updates bell carries the
 // combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
@@ -701,7 +711,7 @@ await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 if (await page.locator('a[href="/updates"] .inboxdot').count())
   fail("updates badge should clear after opening the feed");
 console.log("updates (notifications + messages) ok");
@@ -1046,7 +1056,7 @@ const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
 if (![301, 302, 303, 307, 308].includes(magicRes.status()))
   fail("magic link should redirect after setting the session, got " + magicRes.status());
 await page.goto(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
@@ -1059,7 +1069,7 @@ await page.getByRole("button", { name: "Already have an account? Log in" }).clic
 await page.getByRole("heading", { name: "Log in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
 await page.waitForURL(BASE + "/app");
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1449,7 +1459,7 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
 await page.locator(".navtab", { hasText: "Following" }).click();
@@ -1616,7 +1626,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 // three tabs only, and the account opens from the header avatar — back in the
 // app, since a profile carries neither
 await page.goto(BASE + "/app");
-await page.locator(".dashlinks").waitFor();
+await page.locator(".fab").waitFor();
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
 await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
@@ -1740,15 +1750,15 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".dashlink", { hasText: "Share week" }).waitFor();
+await page.locator(".fab").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting
 // the letter on a grey disc
 await openProfile(page);
 {
-  const av = await page.locator(".acctavatar-empty, .acctavatar").first().evaluate((el) => ({
-    empty: el.classList.contains("acctavatar-empty"),
+  const av = await page.locator(".acctwho-av-empty, .acctwho-av").first().evaluate((el) => ({
+    empty: el.classList.contains("acctwho-av-empty"),
     bg: getComputedStyle(el).backgroundColor,
   }));
   if (av.empty && (av.bg === "rgb(234, 227, 210)" || av.bg === "rgba(0, 0, 0, 0)"))

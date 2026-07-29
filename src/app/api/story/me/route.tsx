@@ -222,9 +222,16 @@ export async function GET(req: Request) {
                       >
                         {fmtTime(c.startTime)}
                       </span>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontSize: 48, fontWeight: 700 }}>{c.name}</span>
-                        <span style={{ fontSize: 41, color: t.faint }}>
+                      {/* Bounded, so a long class name wraps instead of running
+                          off the right edge of the image. 1080 canvas less
+                          2x86 padding, less the 172 time column and the 34
+                          gap. Satori won't wrap a flex child that has no
+                          width to wrap inside. */}
+                      <div style={{ display: "flex", flexDirection: "column", width: 702 }}>
+                        <span style={{ fontSize: 48, fontWeight: 700, lineHeight: 1.15 }}>
+                          {c.name}
+                        </span>
+                        <span style={{ fontSize: 41, color: t.faint, lineHeight: 1.2 }}>
                           {[coach, where].filter(Boolean).join(" · ")}
                         </span>
                       </div>

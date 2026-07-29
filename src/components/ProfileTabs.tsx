@@ -23,6 +23,7 @@ export function ProfileTabs({
   avatar,
   actions,
   avail,
+  menu,
   children,
 }: {
   handle: string;
@@ -38,6 +39,9 @@ export function ProfileTabs({
   /** The row of pills under the name: Message, Follow. */
   actions: ReactNode;
   avail: ReactNode | null;
+  /** The owner's three-dot button. Beside the name, because everything behind
+   *  it is about this person's page rather than about the section below. */
+  menu?: ReactNode;
   children: ReactNode;
 }) {
   const tracked = useRef(false);
@@ -80,6 +84,7 @@ export function ProfileTabs({
         <div className="profname-row">
           <h1 className="profname">{name}</h1>
           {avail}
+          {menu}
         </div>
         {/* Location and title on their own lines. Joined into "Strength coach in
             Jersey City, NJ" they made one long line that wrapped to two anyway,
