@@ -22,7 +22,7 @@ import { sendMessage } from "@/lib/mailer";
 import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
 import { pubKeyFromStore, pubKeyToStore, rpInfo, setChallenge, takeChallenge } from "@/lib/webauthn";
-import { acceptInvite, emailInvited, INVITE_MSG } from "@/lib/invites";
+import { acceptInvite, INVITE_MSG, signupAllowed } from "@/lib/invites";
 import { emailHtml } from "@/lib/email-html";
 import { fansEnabled } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
@@ -67,7 +67,7 @@ export async function passwordAuth(
     // members as much as coaches. Everything is in beta until it isn't, and a
     // member who joins now is exactly the feedback the beta is for.
     const fan = asFan && fansEnabled();
-    if (!(await emailInvited(email))) return { ok: false, needsInvite: true, error: INVITE_MSG };
+    if (!(await signupAllowed(email))) return { ok: false, needsInvite: true, error: INVITE_MSG };
     const problem = passwordProblem(password);
     if (problem) return { ok: false, error: problem };
     const passwordHash = await hashPassword(password);
@@ -174,7 +174,7 @@ export async function requestMagicLink(
     .select({ id: schema.users.id })
     .from(schema.users)
     .where(eq(schema.users.email, email));
-  if (!existing && !(await emailInvited(email))) return { ok: false, error: INVITE_MSG };
+  if (!existing && !(await signupAllowed(email))) return { ok: false, error: INVITE_MSG };
 
   const since = new Date(Date.now() - MAGIC_TTL_MS);
   const ip = await clientIp();
@@ -257,7 +257,7 @@ export async function consumeMagicToken(
   if (!user) {
     // Defense in depth: requestMagicLink already gates, but never create an
     // account here for an email that isn't invited.
-    if (!(await emailInvited(row.email))) return null;
+    if (!(await signupAllowed(row.email))) return null;
     [user] = await db
       .insert(schema.users)
       .values({ email: row.email, avatarColor: await nextAvatarColor() })

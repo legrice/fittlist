@@ -5,7 +5,7 @@ import { nextAvatarColor } from "@/lib/avatar-server";
 import { encryptSecret } from "@/lib/crypto";
 import { exchangeCode, emailFromIdToken, syncUserToGoogle, googleConfigured } from "@/lib/gcal";
 import { createSession } from "@/lib/session";
-import { acceptInvite, emailInvited } from "@/lib/invites";
+import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { siteOrigin } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     const db = await getDb();
     let [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
     if (!user) {
-      if (!(await emailInvited(email))) return toLogin("invite=1");
+      if (!(await signupAllowed(email))) return toLogin("invite=1");
       [user] = await db.insert(schema.users)
       .values({ email, avatarColor: await nextAvatarColor() })
       .returning();

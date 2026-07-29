@@ -89,6 +89,11 @@ export const users = pgTable("users", {
   // in localStorage so dismissing it on a phone also dismisses it on a laptop:
   // a banner you have to swat once per device is a banner nobody thanks you for.
   invitesBannerAt: timestamp("invites_banner_at", { withTimezone: true }),
+  // Their share link: fittlist.co/j/{code}. Opening it is what lets whoever
+  // followed it past the beta gate, and it's how we know who brought them.
+  // Minted the first time they ask for it, then permanent, so a link that's
+  // out in the world never stops working.
+  inviteCode: text("invite_code").unique(),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

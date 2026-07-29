@@ -43,6 +43,7 @@ export function AuthFlow({
   providers = { google: false, apple: false },
   inviteOnly = false,
   invited = false,
+  inviter = null,
   claimAs = "coach",
   fans = false,
 }: {
@@ -53,6 +54,10 @@ export function AuthFlow({
   /** They got here from a beta invite email, so they're already through the
    *  gate — say so, and don't ask them to queue for what they already have. */
   invited?: boolean;
+  /** They arrived on somebody's share link. Same thing as an invite as far as
+   *  the gate is concerned, and worth naming: a link from a person you know is
+   *  a better reason to sign up than a product page. */
+  inviter?: { name: string; photo: string | null; color: string } | null;
   /** Which side an already-signed-in visitor is claiming for. The server knows
    *  it from users.kind; the client can't, on a fresh load. */
   claimAs?: "coach" | "fan";
@@ -280,8 +285,31 @@ export function AuthFlow({
               </>
             )}
 
+            {/* Who sent them. It sits under the pitch rather than over it: the
+                product still has to say what it is, and then this says why
+                they can trust it. */}
+            {inviter && !invited && (
+              <div className="invby">
+                {inviter.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="invby-av" src={inviter.photo} alt="" />
+                ) : (
+                  <span
+                    className="invby-av invby-av-empty"
+                    style={{ background: inviter.color }}
+                    aria-hidden="true"
+                  >
+                    {(inviter.name.trim().charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <span className="invby-txt">
+                  <b>{inviter.name}</b> invited you to the beta
+                </span>
+              </div>
+            )}
+
             <button className="btn" onClick={() => { setError(""); setSheet("signup"); }}>
-              {invited ? "Claim your invite" : "Sign up with email"}
+              {invited || inviter ? "Claim your invite" : "Sign up with email"}
             </button>
             {/* Signing up and logging in are the two things most people are
                 here to do, so they sit together. Everything else is a fallback
@@ -292,9 +320,9 @@ export function AuthFlow({
             {/* Asking for an invite is a real action with a form behind it, so
                 it gets a button rather than a second line of link text.
                 Someone holding an invite has nothing to queue for. */}
-            {(providers.google || providers.apple || (inviteOnly && !invited)) && (
+            {(providers.google || providers.apple || (inviteOnly && !invited && !inviter)) && (
               <div className="obalts" style={{ marginTop: 16 }}>
-                {inviteOnly && !invited && (
+                {inviteOnly && !invited && !inviter && (
                   <button className="obalt obrequest" onClick={openRequest}>
                     <Icon name="mail" size={18} /> Request an invite
                   </button>
@@ -428,7 +456,7 @@ export function AuthFlow({
             </button>
             <h2>
               {sheet === "signup"
-                ? invited
+                ? invited || inviter
                   ? "Claim your invite"
                   : "Sign up with email"
                 : "Log in"}
@@ -460,7 +488,7 @@ export function AuthFlow({
                           ? "Follow your coaches and see their whole week in one place."
                           : "Your classes across every studio, behind one link."
                         : null,
-                      inviteOnly
+                      inviteOnly && !inviter
                         ? "Invite-only beta: use your invited email."
                         : "Pick any password and you're in.",
                     ]
@@ -507,7 +535,7 @@ export function AuthFlow({
               )}
             </div>
             {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
-            {inviteOnly && !invited && sheet === "signup" && (
+            {inviteOnly && !invited && !inviter && sheet === "signup" && (
               <button className="authmagic" onClick={openRequest}>
                 Not invited yet? Request an invite
               </button>

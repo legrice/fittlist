@@ -2052,6 +2052,44 @@ button.ps-card { cursor: pointer; }
 .refrow-n .sep { margin: 0 5px; opacity: .5; }
 
 /* invite sheet: what you've already sent, so nobody double-invites a friend */
+/* The share link itself, shown as the thing it is rather than in an input.
+   It's long, it wraps, and nobody edits it: the buttons underneath do the
+   work. `break-all` because a URL has no spaces to break at. */
+.joinlink {
+  margin-top: 14px; padding: 13px 14px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line); min-height: 46px;
+  display: flex; align-items: center;
+}
+.joinlink-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; line-height: 1.45; color: var(--ink);
+  word-break: break-all;
+}
+/* Who invited you, on the front door. */
+.invby {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 16px;
+  padding: 10px 12px; border-radius: 999px; background: var(--card);
+  border: 1px solid var(--line); align-self: center;
+}
+.invby-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.invby-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 600;
+}
+.invby-txt { font-size: 14px; color: var(--ol); }
+.invby-txt b { color: var(--ink); font-weight: 600; }
+/* Someone who came in through your link. */
+.invjoined { display: flex; align-items: center; gap: 9px; padding: 5px 0; min-width: 0; }
+.invjoined-av { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.invjoined-av-empty {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 600;
+}
+.invjoined-nm {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.invjoined-h { font-size: 13px; color: var(--ol); flex-shrink: 0; }
 .invsent { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
 .invsent-h { font-size: 12px; font-weight: 700; color: var(--ol); margin-bottom: 7px; }
 .invsent-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; }

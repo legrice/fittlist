@@ -250,34 +250,86 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     if (!/Bring people in/.test(txt)) fail(`the banner doesn't offer to invite: ${txt}`);
     // One tap to the sheet, not a trip through settings.
     await pg.locator(".invbanner-main").click();
-    await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
+    await pg.getByRole("heading", { name: "Your invite link" }).waitFor();
     await pg.locator(".sheetclose").click();
     await pg.waitForTimeout(400);
     await pg.screenshot({ path: OUT + "/shot-invite-banner.png" });
     console.log("invites banner ok (offers the door, one tap to the sheet)");
   }
 
+  // The invite is a link now, not an address we have to be told in advance.
   await pg.locator(".usericon").click();
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
-  const row = pg.locator(".setrow", { hasText: "Invite someone to the beta" });
+  const row = pg.locator(".setrow", { hasText: "Invite people to the beta" });
   // centre it rather than letting scrollIntoViewIfNeeded park it under the tabs
   await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await row.locator(".s", { hasText: "Send someone a beta invite" }).waitFor();
   await row.click();
-  await pg.getByRole("heading", { name: "Invite someone to the beta" }).waitFor();
-  // an email that's already here doesn't burn an invite
-  await pg.locator("#ivEmail").fill("mattlegrice@gmail.com");
-  await pg.getByRole("button", { name: "Send the invite" }).click();
-  await pg.locator(".sheet .errorcopy", { hasText: /already have a fittlist account/ }).waitFor();
-  await pg.locator("#ivEmail").fill("friendofriley@example.com");
-  await pg.locator("#ivNote").fill("Coaches at Ironbound");
-  await pg.getByRole("button", { name: "Send the invite" }).click();
-  await pg.getByText("Invite sent to friendofriley@example.com").waitFor();
-  // the count comes down
-  await row.locator(".s").waitFor();
+  await pg.getByRole("heading", { name: "Your invite link" }).waitFor();
+  const joinUrl = (await pg.locator(".joinlink-url").innerText()).trim();
+  if (!/\/j\/[a-z0-9]{8}$/.test(joinUrl)) fail(`that doesn't look like a share link: ${joinUrl}`);
   await pg.screenshot({ path: OUT + "/shot-invite-friend.png", fullPage: true });
-  console.log("beta user invited a friend ok");
+  console.log(`beta user has a share link ok (${joinUrl})`);
+
+  // The whole point: someone nobody has ever heard of opens that link and gets
+  // an account. The gate still holds for anyone who doesn't have one.
+  {
+    const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const st = await strangerCtx.newPage();
+    st.setDefaultTimeout(15000);
+    await st.goto(joinUrl.replace("http://localhost:3000", BASE));
+    await st.waitForURL(BASE + "/");
+    // It says who sent them, by name.
+    await st.locator(".invby", { hasText: "Riley Requestor" }).waitFor();
+    // And it stops asking them to queue for what they're holding.
+    if (await st.locator(".obrequest").count())
+      fail("someone on a share link is still being offered the invite queue");
+    await st.getByRole("button", { name: "Claim your invite" }).click();
+    await st.getByPlaceholder("you@example.com").fill("linkjoiner@example.com");
+    await st.getByPlaceholder("Password").fill("stranger-pass-123");
+    await st.getByRole("button", { name: "Create account" }).click();
+    await st.getByRole("button", { name: "Not now" }).click().catch(() => {});
+    await st.getByText("Pick your link.").waitFor();
+    await st.getByPlaceholder("Your name").fill("Sam Stranger");
+    await st.getByRole("button", { name: "Claim it" }).click();
+    await skipSetup(st);
+    console.log("a stranger signed up from a share link ok");
+
+    // And Riley can see it happened.
+    await pg.reload();
+    await pg.locator(".usericon").click();
+    await pg.locator(".acctwrap").waitFor();
+    await pg.waitForTimeout(450);
+    const row2 = pg.locator(".setrow", { hasText: "Invite people to the beta" });
+    await row2.evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await row2.locator(".s", { hasText: "1 person joined from your link" }).waitFor();
+    await row2.click();
+    await pg.locator(".invjoined", { hasText: "Sam Stranger" }).waitFor();
+    await pg.locator(".sheetclose").click();
+    console.log("the inviter sees who joined from their link ok");
+
+    // No link, no account: the gate is still a gate.
+    const coldCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const cold = await coldCtx.newPage();
+    cold.setDefaultTimeout(15000);
+    await cold.goto(BASE + "/");
+    await cold.getByRole("button", { name: "Sign up with email" }).click();
+    await cold.getByPlaceholder("you@example.com").fill("nobody@example.com");
+    await cold.getByPlaceholder("Password").fill("nobody-pass-123");
+    await cold.getByRole("button", { name: "Create account" }).click();
+    await cold.locator(".sheet .errorcopy", { hasText: /invite-only/i }).waitFor();
+    console.log("without a link the gate still holds ok");
+
+    // A link that means nothing is not an error page, it's just the front door
+    // with no invite on it.
+    const junkCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const junk = await junkCtx.newPage();
+    junk.setDefaultTimeout(15000);
+    await junk.goto(BASE + "/j/notarealcode");
+    await junk.waitForURL(BASE + "/");
+    if (await junk.locator(".invby").count()) fail("a junk code named an inviter");
+    console.log("a junk share link lands on the front door ok");
+  }
 
   // Closing it is permanent, and permanent means the account rather than this
   // browser: a banner you swat once per device is a banner nobody thanks you for.
@@ -306,20 +358,6 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   }
   await ctx.close();
 
-  // that invite works, and lands the same way ours does
-  const fctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
-  const fp = await fctx.newPage();
-  fp.setDefaultTimeout(15000);
-  await fp.goto(BASE + "/");
-  await fp.getByRole("button", { name: "Sign up with email" }).click();
-  await fp.getByPlaceholder("you@example.com").fill("friendofriley@example.com");
-  await fp.getByPlaceholder("Password").fill("friend-pass-123");
-  await fp.getByRole("button", { name: "Create account" }).click();
-  await fp.getByRole("button", { name: "Not now" }).click().catch(() => {});
-  await fp.getByText("Pick your link.").waitFor();
-  console.log("a beta user's invite gets someone in ok");
-  await fctx.close();
-
   // and the admin sees where they came from
   const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const ad = await actx.newPage();
@@ -336,7 +374,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await refRow.waitFor();
   await ad.screenshot({ path: OUT + "/shot-admin-referrers.png", fullPage: true });
   // the card carries the attribution too
-  const card = ad.locator(".admincard", { hasText: "friendofriley@example.com" });
+  const card = ad.locator(".admincard", { hasText: "linkjoiner@example.com" });
   await card.getByText("by Riley Requestor").waitFor();
   // tapping a referrer narrows the list below to just their people
   await refRow.click();
@@ -347,7 +385,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   );
   {
     const emails = await ad.locator(".admincard-nm").allInnerTexts();
-    if (!emails.some((e) => e.includes("friendofriley@example.com")))
+    if (!emails.some((e) => e.includes("linkjoiner@example.com")))
       fail("tapping a referrer should show the people they brought in");
     if (emails.some((e) => e.includes("coach2@example.com")))
       fail("tapping a referrer should exclude invites they had nothing to do with");

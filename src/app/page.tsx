@@ -6,6 +6,8 @@ import { googleConfigured } from "@/lib/gcal";
 import { appleConfigured } from "@/lib/apple";
 import { inviteOnly } from "@/lib/invites";
 import { fansEnabled } from "@/lib/flags";
+import { avatarColor } from "@/lib/avatar";
+import { pendingInviter } from "@/lib/joinlink";
 import { AuthFlow } from "@/components/AuthFlow";
 
 export default async function Home({
@@ -18,6 +20,12 @@ export default async function Home({
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
   const providers = { google: googleConfigured(), apple: appleConfigured() };
+  // Or on somebody's share link, which /j/{code} left in a cookie on the way
+  // through. Same gate, and this is who opened it for them.
+  const via_ = await pendingInviter();
+  const inviter = via_
+    ? { name: via_.name.trim() || "Someone", photo: via_.photo, color: avatarColor(via_) }
+    : null;
   const userId = await getSessionUserId();
   if (userId) {
     const db = await getDb();
@@ -38,6 +46,7 @@ export default async function Home({
           providers={providers}
           inviteOnly={inviteOnly()}
           invited={wasInvited}
+          inviter={inviter}
           fans={fansEnabled()}
         />
       );
@@ -49,6 +58,7 @@ export default async function Home({
       providers={providers}
       inviteOnly={inviteOnly()}
       invited={wasInvited}
+      inviter={inviter}
       fans={fansEnabled()}
     />
   );

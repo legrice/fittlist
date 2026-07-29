@@ -14,7 +14,7 @@ import { Toast, useToast } from "@/components/Toast";
 //
 // Once. Closing it is permanent and recorded on the account, so it doesn't
 // come back on the laptop; the settings row stays as the door.
-export function InvitesBanner({ left }: { left: number }) {
+export function InvitesBanner() {
   const [gone, setGone] = useState(false);
   const [open, setOpen] = useState(false);
   const [, start] = useTransition();
@@ -37,10 +37,8 @@ export function InvitesBanner({ left }: { left: number }) {
             <Icon name="groups" size={18} />
           </span>
           <span className="invbanner-txt">
-            <b>
-              {left < 0 ? "Bring people in" : `You have ${left} beta invite${left === 1 ? "" : "s"}`}
-            </b>
-            <span>Know a coach who should be in here?</span>
+            <b>Bring people in</b>
+            <span>Know a coach who should be in here? Send them your link.</span>
           </span>
         </button>
         <button className="invbanner-x" aria-label="Dismiss" onClick={close}>
@@ -50,7 +48,7 @@ export function InvitesBanner({ left }: { left: number }) {
       {open && (
         <InviteSheet
           onClose={() => setOpen(false)}
-          onSent={(to) => toast(`Invite sent to ${to}`)}
+          onCopied={() => toast("Link copied, ready to paste")}
         />
       )}
       <Toast msg={toastMsg} on={toastOn} />
