@@ -140,9 +140,18 @@ export function ScheduleScreen({
       settingsWasDoor.current = true;
       setAcctAnim("none");
       setProfileOpen(true);
-      window.history.replaceState(null, "", "/app");
     }
   }, []);
+
+  // The URL says settings is open the whole time it is. It used to be
+  // rewritten to /app on arrival, which meant a refresh mid-settings reloaded
+  // the bare schedule underneath: a page you never asked for, appearing at
+  // what read as random.
+  const openSettings = () => {
+    window.history.replaceState(null, "", "/app?acct=1");
+    setAcctAnim("up");
+    setProfileOpen(true);
+  };
 
   const closeSettings = () => {
     // A cold landing (an emailed link, the Google redirect) has nothing to go
@@ -152,6 +161,7 @@ export function ScheduleScreen({
       router.back();
       return;
     }
+    window.history.replaceState(null, "", "/app");
     setProfileOpen(false);
   };
 
@@ -293,18 +303,21 @@ export function ScheduleScreen({
           // The face is the You tab now, so the corner holds settings. Two
           // taps on the same picture, one of which quietly meant "account",
           // was the confusing part.
-          onSettings={() => {
-            setAcctAnim("up");
-            setProfileOpen(true);
-          }}
+          onSettings={openSettings}
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
         {/* The action pills that used to sit here moved onto the profile,
-            behind the three-dot button beside the name. They were two rows of
-            chrome on the screen a coach spends the most time on, for things
-            they reach for about once a week. */}
+            behind the three-dot button beside the name. Losing them also lost
+            the page's identity: this became a bare list that read as showing
+            up at random, so it says what it is like every other screen does. */}
+        <div className="admintop pagetop">
+          <div>
+            <h1>Your schedule</h1>
+            <p className="adminsub">The classes you teach. Tap one to edit it</p>
+          </div>
+        </div>
         {!hasAnyClass ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>

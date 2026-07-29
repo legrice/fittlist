@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { fansVisible } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
 import { weekCount } from "@/lib/week";
 import { AppHeader } from "@/components/AppHeader";
@@ -55,7 +56,11 @@ export async function AppChrome({
     <AppHeader
       unread={unread}
       weekCount={week}
-      home={isCoach ? "/app" : "/feed"}
+      // The logo goes to Following for everyone with the member side. It used
+      // to send a coach to /app, which since the one-shell change is the bare
+      // editable schedule: a page with no identity that read as showing up at
+      // random.
+      home={(await fansVisible()) ? "/feed" : "/app"}
       // The same corner for everyone: your week, the bell, settings. The face
       // left it when it became the You tab.
       settingsHref={isCoach ? "/app?acct=1" : "/you"}
