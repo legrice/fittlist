@@ -10,6 +10,7 @@ import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
+import { pageBeneath } from "@/components/NavTrack";
 import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { ProfileSheet } from "@/components/ProfileSheet";
@@ -124,16 +125,35 @@ export function ScheduleScreen({
 
   // Coming back from the profile preview reopens the account page. Clear any
   // leftover slide-direction flag now that we're back on the schedule.
+  //
+  // ?acct=1 only ever arrives from another screen's settings gear (the gear on
+  // this screen opens the overlay locally, with no navigation). So it doubles
+  // as the signal for what closing should do: whoever came here for settings
+  // goes back where they were, rather than being left on the schedule they
+  // never asked for.
+  const settingsWasDoor = useRef(false);
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
     if (new URLSearchParams(window.location.search).get("acct")) {
       // Returning from the public preview: the public page already slid out to
       // the right, so the account view should just be here, not animate in.
+      settingsWasDoor.current = true;
       setAcctAnim("none");
       setProfileOpen(true);
       window.history.replaceState(null, "", "/app");
     }
   }, []);
+
+  const closeSettings = () => {
+    // A cold landing (an emailed link, the Google redirect) has nothing to go
+    // back to, so it falls through to the schedule.
+    const beneath = pageBeneath();
+    if (settingsWasDoor.current && beneath && beneath !== "/app") {
+      router.back();
+      return;
+    }
+    setProfileOpen(false);
+  };
 
   // Returning from the Google OAuth flow -> confirm and open the profile.
   useEffect(() => {
@@ -400,7 +420,7 @@ export function ScheduleScreen({
           discoverable={discoverable}
           messagesOpen={messagesOpen}
           look={look}
-          onClose={() => setProfileOpen(false)}
+          onClose={closeSettings}
         />
       )}
 
