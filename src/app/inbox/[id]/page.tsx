@@ -11,8 +11,15 @@ export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function InboxThreadPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function InboxThreadPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { id } = await params;
+  const { from } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   if (!UUID_RE.test(id)) notFound();
@@ -42,12 +49,26 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
   return (
     <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
       <div className="chattop">
-        <Link className="iconbtn chatback" aria-label="Back to messages" href="/updates?tab=messages">
+        {/* Back where you came from. Opened from Requests, the messages tab is
+            not the page underneath, and sending someone there is the shuffle
+            that made a request feel like a chat in the first place. */}
+        <Link
+          className="iconbtn chatback"
+          aria-label={from === "requests" ? "Back to requests" : "Back to messages"}
+          href={from === "requests" ? "/requests" : "/updates?tab=messages"}
+        >
           <Icon name="arrow_back" size={18} />
         </Link>
         <div className="chattop-txt">
           <span className="chattop-nm">{thread.requesterName || thread.requesterEmail}</span>
-          <a className="chattop-sub" href={`mailto:${thread.requesterEmail}`}>{thread.requesterEmail}</a>
+          <span className="chattop-ways">
+            <a href={`mailto:${thread.requesterEmail}`}>{thread.requesterEmail}</a>
+            {thread.requesterPhone && (
+              <a href={`tel:${thread.requesterPhone.replace(/[^\d+]/g, "")}`}>
+                {thread.requesterPhone}
+              </a>
+            )}
+          </span>
         </div>
       </div>
       <div className="chatbody">

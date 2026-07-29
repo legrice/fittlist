@@ -1582,24 +1582,69 @@ await page.waitForFunction(() => !document.querySelector(".sheet"));
   await vp.getByRole("button", { name: "Request private session" }).click();
   await vp.locator("#rqName").fill("Priya Visitor");
   await vp.locator("#rqEmail").fill("priya@example.com");
+  // The phone is optional and stays optional: a second visitor sends without
+  // one below, and the send has to go through either way.
+  await vp.locator("#rqPhone").fill("555 867 5309");
   await vp.locator("#rqMsg").fill("Any Saturday mornings free for 1:1?");
+  await vp.getByRole("button", { name: "Send message" }).click();
+  await vp.getByRole("heading", { name: "Message sent" }).waitFor();
+
+  await vp.goto(BASE + "/matt");
+  await vp.getByRole("button", { name: "Request private session" }).click();
+  await vp.locator("#rqName").fill("Theo Nophone");
+  await vp.locator("#rqEmail").fill("theo@example.com");
+  await vp.locator("#rqMsg").fill("Do you take beginners?");
   await vp.getByRole("button", { name: "Send message" }).click();
   await vp.getByRole("heading", { name: "Message sent" }).waitFor();
   await visitor.close();
 }
-console.log("private session request sent ok");
+console.log("private session requests sent ok (with a phone and without)");
 
-// The coach can find it and open it. Requests share the message tables for now,
-// so this is the whole of where one lands; a room of their own is still to come.
-await page.goto(BASE + "/updates?tab=messages");
+// ---- Requests is its own room: a list of people, what they asked, and how to
+// reach them. It used to be reachable only through the messages tab, which made
+// a request read as a chat.
+await page.goto(BASE + "/requests");
 {
-  const row = page.locator(".inboxrow", { hasText: "Priya" });
-  await row.waitFor();
-  await row.click();
-  await page.waitForURL(/\/inbox\/.+/);
+  const cards = page.locator(".reqcard");
+  await cards.first().waitFor();
+  if ((await cards.count()) !== 2) fail("expected 2 requests, got " + (await cards.count()));
+  const priya = page.locator(".reqcard", { hasText: "Priya" });
+  const text = await priya.innerText();
+  if (!text.includes("priya@example.com")) fail("a request should carry the email");
+  if (!text.includes("555 867 5309")) fail("a request should carry the phone they left");
+  if (!text.includes("Saturday mornings")) fail("a request should show what they asked");
+  // The preview is what THEY wrote. A coach's own reply tells them nothing.
+  const theo = page.locator(".reqcard", { hasText: "Theo" });
+  if (!(await theo.innerText()).includes("beginners")) fail("Theo's message is missing");
+  if ((await theo.locator('a[href^="tel:"]').count()) !== 0)
+    fail("no phone was given, so there should be no number to call");
+  if ((await priya.locator('a[href^="tel:"]').count()) !== 1) fail("Priya's number should be callable");
+  // Unread until opened, and the card says so.
+  if ((await page.locator(".reqcard.unread").count()) !== 2) fail("new requests should read as unread");
+  await priya.getByRole("link", { name: /reply|thread/i }).click();
+  await page.waitForURL(/\/inbox\/.+from=requests/);
   await page.getByText("Saturday mornings").waitFor();
+  // The number rides along to the thread, and back goes where you came from.
+  if (!(await page.locator(".chattop-ways").innerText()).includes("555 867 5309"))
+    fail("the thread header should carry the phone");
+  await page.locator(".chatback").click();
+  await page.waitForURL(/\/requests/);
+  if ((await page.locator(".reqcard.unread").count()) !== 1)
+    fail("the one that was read should no longer be unread");
 }
-console.log("the request reaches the coach ok");
+console.log("requests room ok (contact details, their message, unread, back)");
+
+// The door is in settings, where a coach goes looking for it, and the stat
+// beside Followers opens the same list rather than being a dead number.
+await openProfile(page);
+{
+  const row = page.locator(".setrow", { hasText: "Requests" });
+  await row.waitFor();
+  if (!(await row.innerText()).includes("2 people")) fail("the settings row should count them");
+  await page.locator(".acctstat", { hasText: "Requests" }).click();
+  await page.waitForURL(/\/requests/);
+}
+console.log("requests door ok (settings row + the stat opens the list)");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss

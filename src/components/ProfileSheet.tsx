@@ -303,10 +303,12 @@ export function ProfileSheet({
             <span className="n">{subsCount}</span>
             <span className="l">Followers</span>
           </button>
-          <div className="acctstat">
+          {/* Same as Followers: a number of people is a list, so it opens one.
+              It was a dead number sitting next to a live one. */}
+          <button className="acctstat" onClick={() => router.push("/requests")}>
             <span className="n">{requestCount}</span>
             <span className="l">Requests</span>
-          </div>
+          </button>
         </div>
 
         <div className="acctcards">
@@ -330,6 +332,20 @@ export function ProfileSheet({
         </div>
 
         <div className="settingslist">
+          {/* The door people will look for. A request is inbound work, so it
+              sits at the top of the list rather than under the account plumbing. */}
+          <a className="setrow" href="/requests">
+            <span className="setrow-ic"><Icon name="send" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Requests</span>
+              <span className="s">
+                {requestCount === 0
+                  ? "Nobody has asked about private sessions yet"
+                  : `${requestCount} ${requestCount === 1 ? "person" : "people"}, with how to reach them`}
+              </span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </a>
           <button className="setrow" onClick={() => openView("security")}>
             <span className="setrow-ic"><Icon name="lock" size={22} /></span>
             <span className="setrow-txt">

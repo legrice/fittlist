@@ -79,11 +79,14 @@ export default async function SchedulePage({
     .orderBy(schema.customClassTypes.name);
   const customTypes = customTypeRows.map((r) => r.name);
   const inboxRows = await db
-    .select({ n: schema.inquiryThreads.coachUnread })
+    .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
     .from(schema.inquiryThreads)
     .where(eq(schema.inquiryThreads.coachUserId, userId));
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
-  const requestCount = inboxRows.length;
+  // Requests are inquiries only. The admin is a coach too, so their feedback
+  // threads live on this table and were being counted as people who had asked
+  // them about private sessions.
+  const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
   const analytics = await coachAnalytics(userId);
   const notifUnread = await unreadNotifications(userId);
 

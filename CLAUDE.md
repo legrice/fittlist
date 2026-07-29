@@ -251,7 +251,9 @@ the kind their feedback and their real private-session requests would collapse
 into one thread. Every upsert has to name all three columns: `sendInquiry` was
 left naming two, which matches no index, and each request 500'd on "no unique or
 exclusion constraint matching the ON CONFLICT specification" until the smoke
-suite started sending one. `feedbackHost()` picks the first `ADMIN_EMAILS` address with an
+suite started sending one. Anything counting or listing "requests" has to filter
+on `kind` too: `/requests` and the account's Requests stat both would otherwise
+show the admin their own feedback as people asking about private sessions. `feedbackHost()` picks the first `ADMIN_EMAILS` address with an
 account; no account means no door, and the settings row hides.
 
 **A `"use server"` file can only export async functions.** A constant in one

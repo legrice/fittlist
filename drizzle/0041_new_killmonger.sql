@@ -1,0 +1,1 @@
+ALTER TABLE "inquiry_threads" ADD COLUMN "requester_phone" text;

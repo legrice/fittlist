@@ -288,6 +288,13 @@
       "when": 1785293686396,
       "tag": "0040_clever_logan",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1785323699271,
+      "tag": "0041_new_killmonger",
+      "breakpoints": true
     }
   ]
 }

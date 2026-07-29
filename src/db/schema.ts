@@ -131,6 +131,10 @@ export const inquiryThreads = pgTable(
     kind: text("kind").notNull().default("inquiry"),
     requesterName: text("requester_name").notNull().default(""),
     requesterEmail: text("requester_email").notNull(), // normalized lowercase
+    // Optional, and it stays optional: a phone field that blocks the send turns
+    // an inquiry into a form. Kept on the thread so the coach can call back
+    // without digging through the messages for a number.
+    requesterPhone: text("requester_phone"),
     coachUnread: integer("coach_unread").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),

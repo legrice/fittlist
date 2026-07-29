@@ -23,10 +23,12 @@ export async function sendInquiry(
   nameRaw: string,
   emailRaw: string,
   messageRaw: string,
+  phoneRaw = "",
 ): Promise<Result> {
   const email = emailRaw.trim().toLowerCase();
   const name = nameRaw.trim().slice(0, 80);
   const message = messageRaw.trim().slice(0, 2000);
+  const phone = phoneRaw.trim().slice(0, 40);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email." };
   if (message.length < 2) return { ok: false, error: "Write a short message." };
 
@@ -45,6 +47,7 @@ export async function sendInquiry(
       kind: "inquiry",
       requesterName: name,
       requesterEmail: email,
+      requesterPhone: phone || null,
       coachUnread: 1,
     })
     .onConflictDoUpdate({
@@ -55,6 +58,9 @@ export async function sendInquiry(
       ],
       set: {
         requesterName: name || sql`${schema.inquiryThreads.requesterName}`,
+        // A second message with the number filled in adds it; a second one
+        // without doesn't wipe what they gave the first time.
+        requesterPhone: phone || sql`${schema.inquiryThreads.requesterPhone}`,
         coachUnread: sql`${schema.inquiryThreads.coachUnread} + 1`,
         lastMessageAt: new Date(),
       },

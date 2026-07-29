@@ -11,6 +11,7 @@ export function RequestSessionButton({ handle, coachName }: { handle: string; co
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -19,7 +20,7 @@ export function RequestSessionButton({ handle, coachName }: { handle: string; co
   const submit = () => {
     setError("");
     start(async () => {
-      const res = await sendInquiry(handle, name, email, message);
+      const res = await sendInquiry(handle, name, email, message, phone);
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
@@ -59,6 +60,10 @@ export function RequestSessionButton({ handle, coachName }: { handle: string; co
                 <input id="rqName" className="editinput" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
                 <label className="flabel" htmlFor="rqEmail">Your email</label>
                 <input id="rqEmail" className="editinput" type="email" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <label className="flabel" htmlFor="rqPhone">
+                  Phone <span>&middot; optional, if you&rsquo;d rather be called</span>
+                </label>
+                <input id="rqPhone" className="editinput" type="tel" autoComplete="tel" placeholder="555 555 5555" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 <label className="flabel" htmlFor="rqMsg">Message</label>
                 <textarea
                   id="rqMsg"
