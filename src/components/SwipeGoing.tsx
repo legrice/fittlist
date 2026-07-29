@@ -11,6 +11,10 @@ const MAX = 120; // past here the row stops following your finger
 // never a guess: green and a check when it will add, muted and an x when it
 // will remove.
 //
+// One word each. The panel is only as wide as the row has been dragged, so
+// "Add to your week" got clipped to "d to your week" at the point someone is
+// actually reading it.
+//
 // Pointer events rather than touch: one code path for finger, pen and mouse.
 // The first 10px of movement decide who owns the gesture — more horizontal
 // than vertical and we take it, otherwise we let go and the page scrolls. The
@@ -92,7 +96,7 @@ export function SwipeGoing({
         aria-hidden="true"
       >
         <Icon name={going ? "close" : "check"} size={19} />
-        <span>{going ? "Remove" : "Add to your week"}</span>
+        <span>{going ? "Remove" : "Add"}</span>
       </div>
       <div
         className="swipefront"

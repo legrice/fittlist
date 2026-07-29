@@ -2401,7 +2401,10 @@ button.ps-card { cursor: pointer; }
 .swipeact {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end;
   gap: 8px; padding: 0 18px; background: var(--go); color: #fff;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
+  /* The label sits at the right edge and the panel grows leftwards from it, so
+     nothing wraps or clips as the row is dragged. */
+  white-space: nowrap;
   transition: opacity .12s ease;
 }
 /* Already going: the swipe takes it back, so it shouldn't look like a yes. */
