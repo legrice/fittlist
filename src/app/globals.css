@@ -1207,6 +1207,71 @@ button.ps-card { cursor: pointer; }
 .classsheet-gone {
   text-align: center; font-size: 13px; font-weight: 600; color: var(--ol); padding: 4px 0 10px;
 }
+/* The brand guide. Every swatch paints itself from the token it names, so the
+   page can't drift from the product the way a PDF does. */
+.brandsec { margin-top: 34px; }
+.brandh { font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 6px; }
+.brandh3 { font-size: 15px; font-weight: 600; color: var(--ol); margin: 22px 0 8px; }
+.brandp { font-size: 14px; line-height: 1.55; color: var(--ol); margin: 0 0 14px; }
+.brandp-tight { margin: 12px 0 0; }
+.brandmarks { display: flex; gap: 10px; }
+.brandmark {
+  flex: 1; aspect-ratio: 1; border-radius: 16px; display: flex;
+  align-items: center; justify-content: center;
+}
+.brandmark svg { width: 46%; height: auto; display: block; }
+.brandmark.on-si { background: var(--si); }
+.brandmark.on-paper { background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+.brandmark.on-ink { background: var(--ink); }
+.brandsws {
+  display: flex; flex-direction: column; background: var(--card);
+  border-radius: 16px; box-shadow: var(--soft-shadow); overflow: hidden;
+}
+.brandsw {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 12px 14px; background: var(--card); border: 0; cursor: pointer;
+  border-top: 1px solid var(--line); font-family: inherit; color: inherit;
+}
+.brandsw:first-child { border-top: 0; }
+.brandsw:active { background: #f3ecdf; }
+.brandsw-chip {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(25, 21, 2, .12);
+}
+.brandsw-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.brandsw-nm { font-size: 14px; font-weight: 600; }
+.brandsw-note { font-size: 12px; color: var(--ol); }
+.brandsw-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; color: var(--ol); flex-shrink: 0;
+}
+.brandtype {
+  background: var(--card); border-radius: 16px; box-shadow: var(--soft-shadow);
+  padding: 4px 16px 16px;
+}
+.brandtyperow { padding-top: 16px; }
+.brandtype-meta {
+  display: block; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ol); margin-bottom: 5px;
+}
+.brandtype-sample { display: block; line-height: 1.15; overflow-wrap: anywhere; }
+.brandsays { display: flex; flex-direction: column; gap: 8px; }
+.brandsay {
+  display: flex; align-items: baseline; gap: 10px; font-size: 14px; line-height: 1.45;
+}
+.brandsay-tag {
+  flex-shrink: 0; width: 40px; font-size: 11px; font-weight: 600;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.brandsay-tag.good { color: var(--go); }
+.brandsay-tag.bad { color: var(--si); }
+.brandshapes { display: flex; gap: 10px; }
+.brandshape { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.brandshape-box {
+  width: 100%; aspect-ratio: 1.4; background: var(--card);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.brandshape-lbl { font-size: 12px; color: var(--ol); text-align: center; }
 .evgone { text-align: left; margin: 18px 0 0; padding: 0; }
 /* A long class description, capped. The fade tells you there's more without a
    hard edge mid-word, and Read more sits over the bottom of it so the control
