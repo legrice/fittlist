@@ -93,6 +93,7 @@ export default async function DiscoverPage() {
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
+      availability: r.kind === "fan" ? null : r.availability,
       color: avatarColor(r),
     }))
     .sort(

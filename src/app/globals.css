@@ -1449,12 +1449,15 @@ button.ps-card { cursor: pointer; }
    The words wait in the overlay a tap away. The paper ring keeps it legible
    over any photo. */
 .avphotodot {
-  position: absolute; bottom: 2%; right: 2%;
+  position: absolute; top: 2%; right: 2%;
   width: 15px; height: 15px; border-radius: 50%;
   border: 2.5px solid var(--paper); box-sizing: content-box;
 }
 .avphotodot-accepting { background: #3f9d5a; }
 .avphotodot-waitlist { background: #d98a2b; }
+/* The same dot on a 48px Discover avatar, scaled to match. */
+.disrow-avwrap { position: relative; flex-shrink: 0; display: flex; }
+.disrow-avwrap .avphotodot { top: 0; right: 0; width: 10px; height: 10px; border-width: 2px; }
 /* The trigger picks up the avatar's bottom margin so the layout doesn't move;
    the img inside must not double it. */
 .avzoom-trigger .profav { margin-bottom: 0; }

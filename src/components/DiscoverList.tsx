@@ -18,6 +18,8 @@ export type DiscoverCoach = {
   /** Display only: the green check that says "you already follow them".
    *  The follow itself lives on the profile. */
   following: boolean;
+  /** Worn as a dot on the avatar, same as the profile photo. Coaches only. */
+  availability: string | null;
   color: string;
 };
 
@@ -146,18 +148,23 @@ export function DiscoverList({
           {shown.map((c) => (
             <div key={c.id} className="disrow">
               <Link className="disrow-main" href={`/${c.handle}?from=discover`}>
-                {c.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="disrow-av" src={c.photo} alt="" />
-                ) : (
-                  <span
-                    className="disrow-av disrow-av-empty"
-                    style={{ background: c.color }}
-                    aria-hidden="true"
-                  >
-                    {(c.name.trim().charAt(0) || "?").toUpperCase()}
-                  </span>
-                )}
+                <span className="disrow-avwrap">
+                  {c.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="disrow-av" src={c.photo} alt="" />
+                  ) : (
+                    <span
+                      className="disrow-av disrow-av-empty"
+                      style={{ background: c.color }}
+                      aria-hidden="true"
+                    >
+                      {(c.name.trim().charAt(0) || "?").toUpperCase()}
+                    </span>
+                  )}
+                  {c.availability && (
+                    <span className={`avphotodot avphotodot-${c.availability}`} aria-hidden="true" />
+                  )}
+                </span>
                 <span className="disrow-txt">
                   {/* The tag rides right beside the name; the following check
                       is the row's corner mark, pinned top-right. */}
