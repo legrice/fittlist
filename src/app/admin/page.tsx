@@ -102,6 +102,7 @@ export default async function AdminPage() {
     hasPassword: !!u.passwordHash,
     hasPasskey: passkeyUsers.has(u.id),
     hasGoogle: googleUsers.has(u.id),
+    source: u.signupSource ?? "direct",
   }));
 
   const studioRows = studios.map((s) => ({

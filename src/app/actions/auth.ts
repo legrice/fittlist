@@ -26,6 +26,7 @@ import { acceptInvite, INVITE_MSG, signupAllowed } from "@/lib/invites";
 import { emailHtml } from "@/lib/email-html";
 import { fansEnabled } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
+import { signupSource } from "@/lib/attribution";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
 const MAX_LINKS_PER_EMAIL = 3; // per TTL window
@@ -73,7 +74,7 @@ export async function passwordAuth(
     const passwordHash = await hashPassword(password);
     const [created] = await db
       .insert(schema.users)
-      .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor() })
+      .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
     await acceptInvite(email, created.id);
     await createSession(created.id);
@@ -260,7 +261,7 @@ export async function consumeMagicToken(
     if (!(await signupAllowed(row.email))) return null;
     [user] = await db
       .insert(schema.users)
-      .values({ email: row.email, avatarColor: await nextAvatarColor() })
+      .values({ email: row.email, avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
     await acceptInvite(row.email, user.id);
   }

@@ -44,8 +44,11 @@ export const users = pgTable("users", {
   contactEmail: text("contact_email"),
   phone: text("phone"),
   whatsapp: text("whatsapp"),
-  // e.g. "footer:matt" - set at claim time when signup came through the
-  // public-page footer. One of the three §8 success metrics.
+  // Where this account came from. Stamped at creation off the first-touch
+  // fl_src cookie (referrer host, utm tag, via handle; see src/middleware.ts),
+  // and overwritten at claim time with "footer:{handle}" when the signup came
+  // through a coach's public-page footer, which is the more specific fact.
+  // First-party and admin-only; null reads as "direct".
   signupSource: text("signup_source"),
   // Visual style for this trainer's app + public page: "classic" | "blocks" | "poster".
   theme: text("theme").notNull().default("poster"),

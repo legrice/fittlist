@@ -73,6 +73,17 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
   const line = (label: string, total: number, added?: number) =>
     `${label}: ${total}${added ? ` (+${added} today)` : ""}`;
 
+  // Where today's signups came from: the first-touch source on each new
+  // account, so an Instagram push shows up as instagram.com the same day.
+  const newBySource = new Map<string, number>();
+  for (const u of users.filter((u) => u.createdAt >= since)) {
+    const src = u.signupSource ?? "direct";
+    newBySource.set(src, (newBySource.get(src) ?? 0) + 1);
+  }
+  const sourceLines = [...newBySource.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([src, n]) => `  ${src}: ${n}`);
+
   const text = [
     "The numbers, once a day.",
     "",
@@ -82,6 +93,7 @@ export async function sendDailyAdminStats(): Promise<{ sent: number }> {
     line("  Signed up but not set up", users.length - onboarded),
     line("  Coach requests waiting", asks.length),
     line("  Invites pending", invites.length),
+    ...(sourceLines.length ? ["", "Today's signups came from", ...sourceLines] : []),
     "",
     "Classes",
     line("  Classes", totalClasses, newClasses),

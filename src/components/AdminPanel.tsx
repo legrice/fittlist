@@ -45,6 +45,8 @@ type Person = {
   hasPassword: boolean;
   hasPasskey: boolean;
   hasGoogle: boolean;
+  /** Where their first visit came from; "direct" when nothing said. */
+  source: string;
 };
 type Studio = {
   id: string;
@@ -797,6 +799,7 @@ function PersonCard({
       <div className="admincard-sub">{c.email}</div>
       <div className="adminmeta">
         {c.joined && <span>joined {c.joined}</span>}
+        <span>via {c.source}</span>
         <span>last seen {c.lastSeen ?? "never"}</span>
         {c.kind === "coach" && (
           <span>{c.classCount} {c.classCount === 1 ? "class" : "classes"}</span>

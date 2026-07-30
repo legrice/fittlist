@@ -8,6 +8,7 @@ import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { siteOrigin } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
+import { signupSource } from "@/lib/attribution";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
   if (!user) {
     if (!(await signupAllowed(email))) return toLogin("invite=1");
     [user] = await db.insert(schema.users)
-      .values({ email, avatarColor: await nextAvatarColor() })
+      .values({ email, avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
     await acceptInvite(email, user.id);
   }
