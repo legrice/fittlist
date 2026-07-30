@@ -51,6 +51,7 @@ export default async function YouPage({
           goingCount={going.length}
           openEditor={edit === "1"}
           canSendFeedback={!!host && host.email.toLowerCase() !== me.email.toLowerCase()}
+          discoverable={me.discoverable}
         />
     </>
   );

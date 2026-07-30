@@ -9,6 +9,8 @@ export type DiscoverCoach = {
   id: string;
   handle: string;
   name: string;
+  /** Members list here too now; the badge is what tells them apart. */
+  kind: "coach" | "member";
   photo: string | null;
   title: string;
   location: string;
@@ -109,13 +111,13 @@ export function DiscoverList({
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>{city && !q ? `Nobody in ${city} yet` : "No coaches yet"}</h2>
+          <h2>{city && !q ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
           <p>
             {q
               ? "Nothing matches that. Try another name or city."
               : city
-                ? "Nobody has published a schedule there. Switch to All cities to see everyone."
-                : "The directory fills up as coaches publish their schedules."}
+                ? "Nobody is listed there. Switch to All cities to see everyone."
+                : "The list fills up as people join and coaches publish their schedules."}
           </p>
           {city && !q && (
             <button className="btn ghost" onClick={() => setCity(null)}>
@@ -141,21 +143,25 @@ export function DiscoverList({
                   </span>
                 )}
                 <span className="disrow-txt">
-                  <span className="nm">{c.name}</span>
+                  {/* The tag and the check ride the name line, small, so a row
+                      is two lines for a member and three for a coach. */}
+                  <span className="disrow-nmline">
+                    <span className="nm">{c.name}</span>
+                    {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
+                    {c.following && (
+                      <span className="disrow-fol" aria-label="Following" title="Following">
+                        <Icon name="check" size={11} />
+                      </span>
+                    )}
+                  </span>
                   <span className="sub">
                     {[c.title, c.location].filter(Boolean).join(" · ") || `fittlist.co/${c.handle}`}
                   </span>
-                  <span className="wk">
-                    {c.classesThisWeek
-                      ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`
-                      : "No classes posted yet"}
-                  </span>
-                </span>
-                <span className="disrow-right">
-                  <span className="kindtag">Coach</span>
-                  {c.following && (
-                    <span className="disrow-fol" aria-label="Following" title="Following">
-                      <Icon name="check" size={13} />
+                  {c.kind === "coach" && (
+                    <span className="wk">
+                      {c.classesThisWeek
+                        ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`
+                        : "No classes posted yet"}
                     </span>
                   )}
                 </span>

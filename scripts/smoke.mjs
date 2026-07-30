@@ -1128,7 +1128,7 @@ if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
 // search narrows, and a miss says so
 await fan.locator(".dissearch-in").fill("zzzz");
-await fan.getByText("No coaches yet").waitFor();
+await fan.getByText("Nobody here yet").waitFor();
 await fan.locator(".dissearch-in").fill("Matt");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fan.locator(".dissearch-x").click();
@@ -1422,7 +1422,7 @@ console.log("digest opt-out ok (email stops, follows survive)");
 // the directory opt-out: off means gone from Find coaches, page still public.
 // Checked from the fan's browser — a coach never sees themselves listed.
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Listed in Find coaches" }).click();
+await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
 await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
@@ -1431,8 +1431,8 @@ if (await fan.locator(".disrow", { hasText: "Matt" }).count())
 const pub = await fan.request.get(`${BASE}/matt`);
 if (!pub.ok()) fail("opting out of the directory broke the public page");
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Listed in Find coaches" }).click();
-await page.locator(".setrow", { hasText: "Members can find you" }).waitFor();
+await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
+await page.locator(".setrow", { hasText: "People can find you" }).waitFor();
 await fan.goto(BASE + "/discover");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();

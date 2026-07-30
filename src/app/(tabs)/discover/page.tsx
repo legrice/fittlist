@@ -32,13 +32,7 @@ export default async function DiscoverPage() {
     db
       .select()
       .from(schema.users)
-      .where(
-        and(
-          isNotNull(schema.users.handle),
-          eq(schema.users.kind, "coach"),
-          eq(schema.users.discoverable, true),
-        ),
-      ),
+      .where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true))),
     hiddenFrom(userId),
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
@@ -80,14 +74,20 @@ export default async function DiscoverPage() {
   const following = new Set(followRows.map((r) => r.trainerUserId));
 
   const coaches: DiscoverCoach[] = rows
-    // A page nobody can act on isn't worth listing: needs a name, and either a
-    // schedule or enough profile to be worth opening.
-    .filter((r) => r.name.trim() && (weekCount.get(r.id) || r.title?.trim() || r.about?.trim()))
+    // A coach's page has to be worth opening: a schedule, or enough profile.
+    // A member only needs a name; their profile is who they are, and the whole
+    // point of listing them is being findable by the people they train with.
+    .filter((r) =>
+      r.kind === "fan"
+        ? !!r.name.trim()
+        : r.name.trim() && (weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
+    )
     .filter((r) => r.id !== userId)
     .map((r) => ({
       id: r.id,
       handle: r.handle!,
       name: r.name,
+      kind: (r.kind === "fan" ? "member" : "coach") as "coach" | "member",
       photo: r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
@@ -97,6 +97,7 @@ export default async function DiscoverPage() {
     }))
     .sort(
       (a, b) =>
+        (a.kind === "coach" ? 0 : 1) - (b.kind === "coach" ? 0 : 1) ||
         b.classesThisWeek - a.classesThisWeek ||
         (soonest.get(a.id) ?? 1e9) - (soonest.get(b.id) ?? 1e9) ||
         a.name.localeCompare(b.name),

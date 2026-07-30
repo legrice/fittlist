@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -27,6 +28,7 @@ export function MemberAccount({
   goingCount,
   openEditor = false,
   canSendFeedback = false,
+  discoverable = true,
 }: {
   name: string;
   email: string;
@@ -42,6 +44,7 @@ export function MemberAccount({
   /** False when nobody's behind the door: no admin account to write to, or
    *  you are the admin. */
   canSendFeedback?: boolean;
+  discoverable?: boolean;
 }) {
   const [share, setShare] = useState(false);
   // Members sign up with an email and nothing else — there's no name step for
@@ -95,6 +98,7 @@ export function MemberAccount({
           </a>
         )}
         <ChangeHandle />
+        <DiscoverableToggle initialOn={discoverable} />
       </div>
 
       <div className="settingslist">

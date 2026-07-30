@@ -13,7 +13,8 @@ export type OutboundKind =
   | "weekly_schedule"
   | "inquiry"
   | "feedback"
-  | "cancelled";
+  | "cancelled"
+  | "adminstats";
 
 export interface SendArgs {
   to: string;
