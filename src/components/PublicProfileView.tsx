@@ -22,7 +22,9 @@ import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
 
-const WINDOW_DAYS = 31; // a continuous forward window — about a month
+// A continuous forward window, long enough that even a one-class-a-week
+// schedule can fill seven populated days before View more runs dry.
+const WINDOW_DAYS = 63;
 
 // The visitor's sheet-opener, or nothing: the owner's rows link straight to
 // the editor, and wrapping them would intercept the tap into the wrong thing.
@@ -132,9 +134,10 @@ export async function PublicProfileView({
   // Studios/spaces this coach is associated with, derived from where they coach.
   const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Continuous forward calendar: each date from today with classes. Each day
-  // remembers which 7-day window it falls in, so the page can show one week
-  // and offer the rest behind View more.
+  // Continuous forward calendar: each date from today with classes. Days
+  // group into chunks of seven POPULATED days, not seven calendar days, so a
+  // Mon/Wed/Fri coach still shows a full week's worth of schedule before the
+  // View more button, and each tap reveals seven more real days.
   const start = new Date(`${todayIso()}T00:00:00Z`);
   const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
@@ -145,7 +148,8 @@ export async function PublicProfileView({
     const items = classRows
       .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-    if (items.length) days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(i / 7), items });
+    if (items.length)
+      days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(days.length / 7), items });
   }
 
   // The face moved up into the header, above the name, so About starts with

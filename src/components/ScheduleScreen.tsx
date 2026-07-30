@@ -242,13 +242,15 @@ export function ScheduleScreen({
     });
   };
 
-  // The infinite calendar: every date from today forward that has classes -
-  // weekly classes recur on their weekday, one-offs land on their date. The
-  // window grows as the trainer scrolls (see the loader below).
+  // The calendar: every date from today forward that has classes - weekly
+  // classes recur on their weekday, one-offs land on their date. "A week" is
+  // seven POPULATED days, not seven calendar days, so a Mon/Wed/Fri schedule
+  // still fills the screen before View more; the calendar horizon caps the
+  // walk so an empty schedule doesn't scan a year.
   const days = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00Z`);
     const out: { iso: string; label: string; items: ClassDto[] }[] = [];
-    for (let i = 0; i < weeks * 7; i++) {
+    for (let i = 0; i < MAX_WEEKS * 7 && out.length < weeks * 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
       const iso = d.toISOString().slice(0, 10);
@@ -381,8 +383,10 @@ export function ScheduleScreen({
             </div>
             {/* A week at a time, on request. The old behavior loaded four and
                 kept loading on scroll, which made the schedule feel endless;
-                asking is one tap and the list stays the size you asked for. */}
-            {weeks < MAX_WEEKS && (
+                asking is one tap and the list stays the size you asked for.
+                Gone once the horizon runs dry: a short last page means there
+                is nothing further to show. */}
+            {weeks < MAX_WEEKS && days.length === weeks * 7 && (
               <button className="viewmore" onClick={() => setWeeks((w) => Math.min(w + 1, MAX_WEEKS))}>
                 View more
               </button>
