@@ -228,6 +228,19 @@ export const studios = pgTable("studios", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// The directory runs on trust: any coach can correct any studio. This is the
+// receipt. One row per save that actually changed something, with the editor
+// and a plain-words line per field, surfaced on the admin Studios tab.
+// De-attributed (not deleted) in adminDeleteUser: the edit stays a fact about
+// the studio after its author leaves.
+export const studioEdits = pgTable("studio_edits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  studioId: uuid("studio_id").notNull().references(() => studios.id),
+  editorUserId: uuid("editor_user_id").references(() => users.id),
+  changes: jsonb("changes").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const classTemplates = pgTable(
   "class_templates",
   {

@@ -372,6 +372,13 @@
       "when": 1785425360272,
       "tag": "0052_previous_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1785445631914,
+      "tag": "0053_slim_smiling_tiger",
+      "breakpoints": true
     }
   ]
 }

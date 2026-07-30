@@ -2078,6 +2078,24 @@ await page.getByText("sam@example.com").waitFor();
   console.log(`admin tells the two sides apart ok (${coaches} coaches, ${members} members)`);
 }
 
+// The studio directory is open to every coach, so the Studios tab keeps the
+// receipt: who changed what, when. This run edited Ironbound twice (details,
+// then a rename there and back), so the log has rows and the newest names the
+// editor.
+{
+  await page.locator('.adminseg button[aria-label="Studios"]').click();
+  await page.getByRole("heading", { name: "Recent edits" }).waitFor();
+  const cards = page.locator(".admincard", { hasText: "By Matt" });
+  if (!(await cards.count())) fail("the edit log should name Matt as the editor");
+  const log = await page.locator(".admincards").last().innerText();
+  if (!log.includes("Ironbound")) fail("the edit log should name the studio");
+  if (!/name: .*Ironbound Strength & Conditioning/.test(log))
+    fail("the rename should be in the log, field and both values");
+  if (!log.includes("about added")) fail("the about addition should be in the log");
+  await page.locator('.adminseg button[aria-label="People"]').click();
+}
+console.log("studio edit log ok (who, what, when on the Studios tab)");
+
 const samCard = page.locator(".admincard").filter({ hasText: "sam@example.com" });
 await samCard.getByRole("button", { name: "Delete user" }).click();
 await samCard.getByRole("button", { name: "Yes, delete" }).click();

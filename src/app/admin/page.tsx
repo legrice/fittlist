@@ -165,6 +165,25 @@ export default async function AdminPage() {
     .filter((r) => !r.handledAt)
     .map((r) => ({ id: r.id, name: r.name, email: r.email, requested: fmt(r.createdAt) }));
 
+  // Who changed what in the shared studio directory, newest first. The
+  // directory is open to every coach on purpose; this is the receipt that
+  // makes that openness safe to keep.
+  const studioById = new Map(studios.map((s) => [s.id, s]));
+  const editRows = await db
+    .select()
+    .from(schema.studioEdits)
+    .orderBy(desc(schema.studioEdits.createdAt))
+    .limit(80);
+  const studioEdits = editRows.map((e) => ({
+    id: e.id,
+    studioName: studioById.get(e.studioId)?.name ?? "A deleted studio",
+    studioSlug: studioById.get(e.studioId)?.slug ?? null,
+    editor: nameOf(e.editorUserId) || "A deleted account",
+    editorHandle: e.editorUserId ? (userById.get(e.editorUserId)?.handle ?? "") : "",
+    when: fmt(e.createdAt),
+    changes: e.changes,
+  }));
+
   const stats = {
     // A coach is kind, not handle. Counting handles quietly added every member
     // to the coach total from the day members started claiming links.
@@ -216,6 +235,7 @@ export default async function AdminPage() {
       duplicates={duplicates}
       people={people}
       studios={studioRows}
+      studioEdits={studioEdits}
       invites={invites}
       referrers={referrers}
       requests={requests}

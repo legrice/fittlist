@@ -116,6 +116,39 @@ export async function updateStudio(
   };
   if (input.photo !== undefined) set.photo = input.photo || null;
 
+  // The receipt. Anyone with the button can edit, so every save that changed
+  // something writes who did what, in plain words the admin can read straight
+  // off the card. Long values get clipped; the photo is named, never inlined.
+  const clip = (v: string) => (v.length > 60 ? v.slice(0, 60) + "…" : v);
+  const line = (label: string, from: string | null, to: string | null): string | null => {
+    const a = (from ?? "").trim();
+    const b = (to ?? "").trim();
+    if (a === b) return null;
+    if (!a) return `${label} added: "${clip(b)}"`;
+    if (!b) return `${label} removed (was "${clip(a)}")`;
+    return `${label}: "${clip(a)}" to "${clip(b)}"`;
+  };
+  const changes = [
+    line("name", existing.name, name),
+    line("address", existing.address, address),
+    line("types", existing.types.join(", "), types.join(", ")),
+    line("about", existing.about, set.about ?? null),
+    line("email", existing.contactEmail, set.contactEmail ?? null),
+    line("phone", existing.phone, set.phone ?? null),
+    line("website", existing.website, set.website ?? null),
+    line("instagram", existing.instagram, set.instagram ?? null),
+    input.photo === undefined || (existing.photo ?? "") === (set.photo ?? "")
+      ? null
+      : !existing.photo
+        ? "photo added"
+        : !set.photo
+          ? "photo removed"
+          : "photo replaced",
+  ].filter((c): c is string => !!c);
+  if (changes.length) {
+    await db.insert(schema.studioEdits).values({ studioId: id, editorUserId: userId, changes });
+  }
+
   await db.update(schema.studios).set(set).where(eq(schema.studios.id, id));
   revalidatePath(`/s/${slug}`);
   if (existing.slug && existing.slug !== slug) revalidatePath(`/s/${existing.slug}`);

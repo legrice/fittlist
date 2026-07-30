@@ -70,6 +70,15 @@ type Invite = {
   invitedBy: string;
   invitedByAdmin: boolean;
 };
+type StudioEdit = {
+  id: string;
+  studioName: string;
+  studioSlug: string | null;
+  editor: string;
+  editorHandle: string;
+  when: string | null;
+  changes: string[];
+};
 type Referrer = { id: string; name: string; admin: boolean; sent: number; joined: number };
 type Request = { id: string; name: string; email: string; requested: string | null };
 type Stats = {
@@ -92,6 +101,7 @@ export function AdminPanel({
   duplicates,
   people,
   studios,
+  studioEdits = [],
   invites,
   referrers,
   requests,
@@ -106,6 +116,7 @@ export function AdminPanel({
   duplicates: DuplicateSlot[];
   people: Person[];
   studios: Studio[];
+  studioEdits?: StudioEdit[];
   invites: Invite[];
   referrers: Referrer[];
   requests: Request[];
@@ -629,6 +640,47 @@ export function AdminPanel({
               ))}
               {!shownStudios.length && <p className="adminempty">No studios match.</p>}
             </div>
+            {/* The receipt for the open directory: who changed what, newest
+                first. Every coach can edit any studio; this is what keeps
+                that on the record. */}
+            {studioEdits.length > 0 && (
+              <>
+                <h2 className="brandh" style={{ marginTop: 26 }}>Recent edits</h2>
+                <div className="admincards">
+                  {studioEdits.map((e) => (
+                    <div key={e.id} className="admincard">
+                      <div className="admincard-h">
+                        <span className="admincard-nm">
+                          {e.studioSlug ? (
+                            <a href={`/s/${e.studioSlug}`} target="_blank" rel="noopener">
+                              {e.studioName}
+                            </a>
+                          ) : (
+                            e.studioName
+                          )}
+                        </span>
+                        {e.when && <span className="adminsub">{e.when}</span>}
+                      </div>
+                      <p className="adminsub">
+                        By{" "}
+                        {e.editorHandle ? (
+                          <a href={`/${e.editorHandle}`} target="_blank" rel="noopener">
+                            {e.editor}
+                          </a>
+                        ) : (
+                          e.editor
+                        )}
+                      </p>
+                      {e.changes.map((c, i) => (
+                        <p key={i} className="adminsub">
+                          {c}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
