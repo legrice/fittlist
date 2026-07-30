@@ -1826,9 +1826,11 @@ button.ps-card { cursor: pointer; }
    scroll with three stops. */
 .pubtabs {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  /* The rule sits under the tabs, and the tabs sit right on it: the
-     selected underline overlaps the same line. */
-  border-bottom: 1px solid var(--line);
+  /* The rule sits under the tabs as an inset shadow rather than a border:
+     children paint above an inset shadow, so the selected tab's underline
+     sits in front of the line instead of being clipped behind it by the
+     row's own horizontal scroll. */
+  box-shadow: inset 0 -1px 0 var(--line);
   /* Full bleed: stretch to the window edges and pad the content back to the
      column, so a pill can sit half off the screen rather than stopping short. */
   margin: 22px calc(50% - 50vw) 0;
@@ -1845,7 +1847,7 @@ button.ps-card { cursor: pointer; }
    one family. */
 /* Selected reads as an underline, not a pill: ink text, a black rule
    beneath, nothing filled. */
-.pubtab { border-radius: 0; padding-left: 6px; padding-right: 6px; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.pubtab { border-radius: 0; padding-left: 6px; padding-right: 6px; border-bottom: 3px solid transparent; }
 .pubtab.sel { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
