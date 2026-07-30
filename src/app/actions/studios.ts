@@ -81,11 +81,13 @@ export async function updateStudio(
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
   const db = await getDb();
+  // A coach is kind, never handle: members claim handles too, and the
+  // handle test quietly held this door open to everyone.
   const [me] = await db
-    .select({ handle: schema.users.handle })
+    .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  if (!me?.handle) return { ok: false, error: "Only coaches can edit a studio." };
+  if (!me || me.kind === "fan") return { ok: false, error: "Only coaches can edit a studio." };
 
   const name = input.name.trim();
   const address = input.address.trim();

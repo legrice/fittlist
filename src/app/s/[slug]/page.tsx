@@ -78,12 +78,14 @@ export default async function StudioPage({ params, searchParams }: Props) {
     const viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
-        .select({ handle: schema.users.handle })
+        .select({ kind: schema.users.kind })
         .from(schema.users)
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
         signedIn = true;
-        canEdit = !!viewer.handle;
+        // A coach is kind, never handle: members claim handles too, and the
+        // handle test put the edit button on every member's screen.
+        canEdit = viewer.kind !== "fan";
       }
     }
   }

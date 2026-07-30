@@ -1172,6 +1172,15 @@ await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasTex
     .waitFor();
 }
 console.log("discover ok (corner pill follows and unfollows on the row)");
+
+// The studio directory is coach-editable, and a coach is kind, not handle:
+// members hold handles too, and testing the handle put the edit button on
+// every member's screen and left the action open behind it.
+await fan.goto(BASE + "/s/ironbound-strength");
+await fan.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
+if (await fan.getByRole("button", { name: "Edit studio" }).count())
+  fail("a member should not see the studio edit button");
+console.log("studio edits are coach-only ok (no door for a member)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
