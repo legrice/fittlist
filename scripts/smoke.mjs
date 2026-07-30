@@ -1132,12 +1132,18 @@ await fan.getByText("No coaches yet").waitFor();
 await fan.locator(".dissearch-in").fill("Matt");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fan.locator(".dissearch-x").click();
-// follow inline, then confirm it stuck on the coach's own page
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow").click();
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfollow.on").waitFor();
-await fan.goto(BASE + "/matt");
+// no Follow on the rows any more: the Coach badge sits across from the name,
+// and following happens on the profile the row opens.
+if (await fan.locator(".disrow .disfollow").count())
+  fail("Discover rows should not carry a Follow button");
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".kindtag", { hasText: "Coach" }).waitFor();
+await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
+await fan.waitForURL("**/matt**");
+await fan.locator(".followpill").waitFor();
+await fan.waitForTimeout(400);
+await fan.locator(".followpill").click();
 await fan.locator(".followpill", { hasText: "Following" }).waitFor();
-console.log("discover ok (search + inline follow)");
+console.log("discover ok (badge on the row, follow on the profile)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();

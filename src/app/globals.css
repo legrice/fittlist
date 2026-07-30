@@ -3046,6 +3046,10 @@ button.ps-card { cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .disrow-txt .wk { font-size: 12px; font-weight: 600; color: var(--si); }
+/* The Coach badge across from the name; following moved onto the profile.
+   .disfollow stays for the followers and blocked lists, which still act
+   inline (Follow back, Undo). */
+.disrow-kind { margin-left: auto; }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
   background: var(--ink); color: var(--paper);
@@ -3053,8 +3057,8 @@ button.ps-card { cursor: pointer; }
 }
 .disfollow.on { background: var(--cl); color: var(--ink); }
 .disfollow[disabled] { opacity: .55; }
-[data-mode="dark"] .discity.on { background: var(--ink); border-color: var(--ink); color: #191502; }
 [data-mode="dark"] .disfollow.on { color: var(--ink); }
+[data-mode="dark"] .discity.on { background: var(--ink); border-color: var(--ink); color: #191502; }
 
 /* ===========================================================
    A member's public profile. Same link shape as a coach's, far less behind

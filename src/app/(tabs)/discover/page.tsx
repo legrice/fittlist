@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
@@ -28,7 +28,7 @@ export default async function DiscoverPage() {
   // profile is, and it drops the ones you removed too so you aren't handed
   // them back as a suggestion. The three loads only need the viewer, so they
   // run together.
-  const [allRows, hidden, followRows] = await Promise.all([
+  const [allRows, hidden] = await Promise.all([
     db
       .select()
       .from(schema.users)
@@ -40,10 +40,6 @@ export default async function DiscoverPage() {
         ),
       ),
     hiddenFrom(userId),
-    db
-      .select({ trainerUserId: schema.subscribers.trainerUserId })
-      .from(schema.subscribers)
-      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
   ]);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
@@ -77,8 +73,6 @@ export default async function DiscoverPage() {
     if (cur === undefined || t < cur) soonest.set(c.userId, t);
   }
 
-  const following = new Set(followRows.map((r) => r.trainerUserId));
-
   const coaches: DiscoverCoach[] = rows
     // A page nobody can act on isn't worth listing: needs a name, and either a
     // schedule or enough profile to be worth opening.
@@ -92,7 +86,6 @@ export default async function DiscoverPage() {
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
-      following: following.has(r.id),
       color: avatarColor(r),
     }))
     .sort(

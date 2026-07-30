@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
-import { useToast, Toast } from "@/components/Toast";
 
 export type DiscoverCoach = {
   id: string;
@@ -15,13 +13,13 @@ export type DiscoverCoach = {
   title: string;
   location: string;
   classesThisWeek: number;
-  following: boolean;
   color: string;
 };
 
-// Search + city filter over the directory, with Follow inline on every row —
-// finding someone and following them shouldn't take a round trip through their
-// page.
+// Search + city filter over the directory. Following happens on the profile,
+// not here: the row's one job is to get you to a person, and the Coach badge
+// across from the name is what tells you who you're looking at, which is the
+// distinction that matters once members can appear in a list.
 export function DiscoverList({
   coaches,
   cities,
@@ -41,12 +39,6 @@ export function DiscoverList({
   // Discover is asking "who's around here", not "who is on fittlist".
   const nearCity = myCity && cities.includes(myCity) ? myCity : null;
   const [city, setCity] = useState<string | null>(nearCity);
-  const [follows, setFollows] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(coaches.map((c) => [c.id, c.following])),
-  );
-  const [busy, setBusy] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-  const [toastMsg, toastOn, toast] = useToast();
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -61,22 +53,6 @@ export function DiscoverList({
     });
   }, [coaches, q, city]);
 
-  const toggle = (c: DiscoverCoach) => {
-    const next = !follows[c.id];
-    setFollows((f) => ({ ...f, [c.id]: next })); // optimistic: the tap must feel instant
-    setBusy(c.id);
-    startTransition(async () => {
-      const res = next ? await followTrainer(c.handle) : await unfollowTrainer(c.handle);
-      setBusy(null);
-      if (!res.ok) {
-        setFollows((f) => ({ ...f, [c.id]: !next }));
-        toast(res.error ?? "Something went wrong.");
-        return;
-      }
-      toast(next ? `Following ${c.name.trim().split(/\s+/)[0]}` : "Unfollowed");
-    });
-  };
-
   return (
     <>
       <div className="dissearch">
@@ -85,8 +61,8 @@ export function DiscoverList({
           className="dissearch-in"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search coaches"
-          aria-label="Search coaches"
+          placeholder="Search"
+          aria-label="Search"
         />
         {q && (
           <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
@@ -172,16 +148,9 @@ export function DiscoverList({
                       : "No classes posted yet"}
                   </span>
                 </span>
+                <span className="kindtag disrow-kind">Coach</span>
                 <LinkPending />
               </Link>
-              <button
-                type="button"
-                className={`disfollow${follows[c.id] ? " on" : ""}`}
-                disabled={busy === c.id}
-                onClick={() => toggle(c)}
-              >
-                {follows[c.id] ? "Following" : "Follow"}
-              </button>
             </div>
           ))}
         </div>
@@ -193,7 +162,6 @@ export function DiscoverList({
           Back to your week
         </Link>
       )}
-      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }
