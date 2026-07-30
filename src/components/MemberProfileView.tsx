@@ -7,6 +7,7 @@ import { getDb } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { mutualFollow, sharedWeek } from "@/lib/week";
 import { AppChrome } from "@/components/AppChrome";
+import { AvatarZoom } from "@/components/AvatarZoom";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
@@ -83,7 +84,17 @@ export async function MemberProfileView({
         </div>
 
         <div className="mempro-id">
-          {user.photo ? (
+          {user.handle ? (
+            <AvatarZoom
+              className="mempro-av"
+              handle={user.handle}
+              name={name}
+              photo={user.photo}
+              color={avatarColor(user)}
+              follow={follow}
+              isOwner={isOwner}
+            />
+          ) : user.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img className="mempro-av" src={user.photo} alt="" />
           ) : (

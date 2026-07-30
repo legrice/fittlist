@@ -11,11 +11,15 @@ export function QrSheet({
   open,
   onClose,
   onToast,
+  ownerName,
 }: {
   handle: string;
   open: boolean;
   onClose: () => void;
   onToast: (m: string) => void;
+  /** Set when the sheet shows somebody else's code: their first name puts
+   *  "Sara's QR code" on it instead of claiming it's yours. */
+  ownerName?: string;
 }) {
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -76,17 +80,19 @@ export function QrSheet({
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="sheet sheet-full">
         <div className="adderhead">
-          <h2>Your QR code</h2>
+          <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Your QR code"}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={16} />
           </button>
         </div>
         <p className="lead">
-          Anyone can scan this code to view your profile, schedule, and contact info.
+          {ownerName
+            ? "Anyone can scan this code to open their profile."
+            : "Anyone can scan this code to view your profile, schedule, and contact info."}
         </p>
         <div className="qrframe">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="qrimg" src={qrImgUrl} alt="QR code that opens your fittlist page" />
+          <img className="qrimg" src={qrImgUrl} alt="QR code that opens this fittlist page" />
         </div>
         <div className="qrurl">{pageUrl}</div>
         <div className="publishwrap">

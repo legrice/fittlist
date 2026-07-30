@@ -6,6 +6,7 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
+import { AvatarZoom } from "@/components/AvatarZoom";
 import { studioPath } from "@/lib/studio";
 
 import { Icon } from "@/components/Icon";
@@ -128,14 +129,18 @@ export async function PublicProfileView({
   }
 
   // The face moved up into the header, above the name, so About starts with
-  // what they actually wrote.
-  const avatar = user.photo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className="profav" src={user.photo} alt={user.name} />
-  ) : (
-    <div className="profav profav-empty" style={{ background: avatarColor(user) }} aria-hidden="true">
-      {user.name.trim().charAt(0).toUpperCase() || "?"}
-    </div>
+  // what they actually wrote. Tapping it blows it up with the person's
+  // follow/share/link/QR actions under it.
+  const avatar = (
+    <AvatarZoom
+      className="profav"
+      handle={handle}
+      name={user.name}
+      photo={user.photo}
+      color={avatarColor(user)}
+      follow={!isOwner && account ? account : null}
+      isOwner={isOwner}
+    />
   );
 
   const about = (
