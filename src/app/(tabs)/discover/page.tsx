@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { runsOn, todayIso } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
@@ -63,15 +63,8 @@ export default async function DiscoverPage() {
       }
     }
   }
-  // Next class time, used to break ties between equally busy coaches.
-  const soonest = new Map<string, number>();
-  for (const c of classRows) {
-    const t = timeToMinutes(c.startTime);
-    const cur = soonest.get(c.userId);
-    if (cur === undefined || t < cur) soonest.set(c.userId, t);
-  }
-
   const following = new Set(followRows.map((r) => r.trainerUserId));
+  const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
   const coaches: DiscoverCoach[] = rows
     // A coach's page has to be worth opening: a schedule, or enough profile.
@@ -96,13 +89,10 @@ export default async function DiscoverPage() {
       availability: r.kind === "fan" ? null : r.availability,
       color: avatarColor(r),
     }))
-    .sort(
-      (a, b) =>
-        (a.kind === "coach" ? 0 : 1) - (b.kind === "coach" ? 0 : 1) ||
-        b.classesThisWeek - a.classesThisWeek ||
-        (soonest.get(a.id) ?? 1e9) - (soonest.get(b.id) ?? 1e9) ||
-        a.name.localeCompare(b.name),
-    );
+    // Newest people first, coaches and members interleaved: the list doubles
+    // as "who just joined", and the fresh face at the top is the reason to
+    // keep opening it. The coaches-only switch is the coach view now.
+    .sort((a, b) => (joinedAt.get(b.id) ?? 0) - (joinedAt.get(a.id) ?? 0));
 
   const cities = [...new Set(coaches.map((c) => c.location).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
