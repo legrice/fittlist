@@ -3218,17 +3218,37 @@ button.ps-card { cursor: pointer; }
    coach) keeps the outline and just says so. */
 .disrow { position: relative; }
 .disfol {
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0;
   position: absolute; top: 13px; right: 14px;
-  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  /* A fixed height, not vertical padding: the check is taller than the text,
+     and letting it pad the box made Following a fatter pill than Follow. */
+  height: 29px; padding: 0 12px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px; font-weight: 600;
   background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
   -webkit-tap-highlight-color: transparent;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
 }
 .disfol:active { transform: scale(.96); }
 .disfol[disabled] { opacity: .6; }
 .disfol.on { background: var(--go); border-color: var(--go); color: #fff; }
+/* The yes gets a little spring, but only on the tap that made it: .pop is
+   set by the click handler, so a page of already-green pills loads still. */
+.disfol.pop { animation: folpop .4s cubic-bezier(.34, 1.56, .64, 1); }
+.disfol.pop .icon { animation: folcheck .32s cubic-bezier(.34, 1.56, .64, 1) both .06s; }
+@keyframes folpop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.14); }
+  70% { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+@keyframes folcheck {
+  from { transform: scale(0) rotate(-90deg); }
+  to { transform: scale(1) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .disfol.pop, .disfol.pop .icon { animation: none; }
+}
 /* The Discover title line carries the coaches-only switch, right-aligned. */
 .distitle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .disonly {

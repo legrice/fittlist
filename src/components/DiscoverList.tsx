@@ -40,20 +40,29 @@ function FollowMini({
   const [state, setState] = useState<"off" | "asked" | "on">(
     following ? "on" : requested ? "asked" : "off",
   );
+  // True only for a yes born of a tap, so the spring plays once at the moment
+  // it means something and a page of already-green pills loads still.
+  const [pop, setPop] = useState(false);
   const [pending, start] = useTransition();
   const tap = () =>
     start(async () => {
       if (state === "off") {
         const res = await followTrainer(handle);
-        if (res.ok) setState(res.requested ? "asked" : "on");
+        if (res.ok) {
+          setState(res.requested ? "asked" : "on");
+          setPop(!res.requested);
+        }
       } else {
         const res = await unfollowTrainer(handle);
-        if (res.ok) setState("off");
+        if (res.ok) {
+          setState("off");
+          setPop(false);
+        }
       }
     });
   return (
     <button
-      className={`disfol${state === "on" ? " on" : ""}`}
+      className={`disfol${state === "on" ? " on" : ""}${pop ? " pop" : ""}`}
       disabled={pending}
       aria-pressed={state === "on"}
       onClick={tap}
