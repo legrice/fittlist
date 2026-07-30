@@ -1825,7 +1825,7 @@ button.ps-card { cursor: pointer; }
    to its own URL, so they don't pin: the page under them is one section, not a
    scroll with three stops. */
 .pubtabs {
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
   /* The rule sits under the tabs as an inset shadow rather than a border:
      children paint above an inset shadow, so the selected tab's underline
      sits in front of the line instead of being clipped behind it by the
@@ -1840,7 +1840,7 @@ button.ps-card { cursor: pointer; }
 .pubtab {
   flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 17px; color: var(--ol); background: transparent; white-space: nowrap;
+  font-size: 20px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
