@@ -90,6 +90,17 @@ export function InviteSheet({
               Send it to as many people as you like.
             </p>
 
+            {/* The link as a QR code: at the gym, scanning beats typing. */}
+            {url && (
+              <div className="qrframe joinqr">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="qrimg"
+                  src={`/api/qr/join/${url.split("/").pop()}`}
+                  alt="QR code that opens your invite link"
+                />
+              </div>
+            )}
             <div className="joinlink">
               <span className="joinlink-url">{url || " "}</span>
             </div>
@@ -107,6 +118,16 @@ export function InviteSheet({
                 >
                   Copy the link
                 </button>
+              )}
+              {url && (
+                <a
+                  className="btn ghost"
+                  style={{ marginTop: 8 }}
+                  href={`/api/qr/join/${url.split("/").pop()}`}
+                  download="fittlist-invite-qr.png"
+                >
+                  Save the QR code
+                </a>
               )}
             </div>
 

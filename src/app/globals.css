@@ -1386,6 +1386,8 @@ button.ps-card { cursor: pointer; }
 .memweek-chev { color: var(--ol); flex-shrink: 0; }
 
 .admintop-links { display: flex; gap: 8px; flex-shrink: 0; }
+/* The invite QR sits above the link, a step smaller than the profile one. */
+.joinqr { max-width: 240px; margin: 0 auto 14px; }
 
 /* The ethos page: a numbered list of laws and a stack of lines, quiet. */
 .ethos-lead { font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 560px; margin-top: 10px; }
