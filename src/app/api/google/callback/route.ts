@@ -8,11 +8,12 @@ import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { siteOrigin } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
+import { sessionSecret } from "@/lib/secret";
 
 export const dynamic = "force-dynamic";
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 const back = (q: string) => Response.redirect(`${siteOrigin()}/app?gcal=${q}`, 302);

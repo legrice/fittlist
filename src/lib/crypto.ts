@@ -1,11 +1,12 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
+import { sessionSecretRaw } from "@/lib/secret";
 
 // AES-256-GCM at rest for secrets like Google refresh tokens. The key is
 // derived from SESSION_SECRET so no new secret is needed. Format:
 // base64(iv[12] || authTag[16] || ciphertext).
 
 function key(): Buffer {
-  const secret = process.env.SESSION_SECRET || "dev-secret-change-me";
+  const secret = sessionSecretRaw();
   return createHash("sha256").update(secret).digest();
 }
 

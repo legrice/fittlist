@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
+import { sessionSecret } from "@/lib/secret";
 
 // A member's own calendar feed lives behind a signed token rather than a
 // handle. The coach feed is public because their page is; a member's merged
@@ -7,7 +8,7 @@ import { SignJWT, jwtVerify } from "jose";
 // subscription that stops working in a month is worse than not offering one.
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 export async function calendarToken(userId: string): Promise<string> {

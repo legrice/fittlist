@@ -1,11 +1,12 @@
 import { SignJWT } from "jose";
 import { appleAuthUrl, appleConfigured } from "@/lib/apple";
 import { siteOrigin } from "@/lib/format";
+import { sessionSecret } from "@/lib/secret";
 
 export const dynamic = "force-dynamic";
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 // "Continue with Apple" from the login screen. The signed state doubles as CSRF

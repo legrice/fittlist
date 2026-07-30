@@ -4,12 +4,13 @@ import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
 import { fmtTime, runsOn, siteOrigin, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
+import { sessionSecret } from "@/lib/secret";
 
 // All list email goes through here - the piece most likely to move to SMS
 // later, so callers only describe the change and never touch the channel.
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 const origin = siteOrigin;

@@ -443,7 +443,13 @@ export const subscribers = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
   },
-  (t) => [uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email)],
+  (t) => [
+    uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email),
+    // "Who do I follow" is asked by email on every feed, week, and profile
+    // load; the unique index above leads with the trainer, so it can't serve
+    // that lookup.
+    index("subscribers_email").on(t.email),
+  ],
 );
 
 // "I'm going" — a member marking a class they intend to attend. Deliberately

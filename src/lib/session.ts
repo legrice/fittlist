@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { sessionSecret } from "@/lib/secret";
 
 const COOKIE = "fl_session";
 const MAX_AGE = 60 * 60 * 24 * 90; // 90 days
@@ -21,7 +22,7 @@ async function stampLogin(userId: string) {
 }
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 export async function createSession(userId: string) {

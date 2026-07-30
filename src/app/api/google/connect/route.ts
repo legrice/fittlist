@@ -2,11 +2,12 @@ import { SignJWT } from "jose";
 import { getSessionUserId } from "@/lib/session";
 import { authUrl, googleConfigured } from "@/lib/gcal";
 import { siteOrigin } from "@/lib/format";
+import { sessionSecret } from "@/lib/secret";
 
 export const dynamic = "force-dynamic";
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 export async function GET() {

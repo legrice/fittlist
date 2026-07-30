@@ -1,13 +1,14 @@
 import { SignJWT, jwtVerify } from "jose";
 import { sendMessage } from "@/lib/mailer";
 import { siteOrigin } from "@/lib/format";
+import { sessionSecret } from "@/lib/secret";
 
 // A private-training inquiry links a visitor (no account) to a coach. The
 // visitor keeps access to the thread through a signed, non-expiring token in
 // their reply link — same idea as the unsubscribe token.
 
 function secret() {
-  return new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret-change-me");
+  return sessionSecret();
 }
 
 export async function inquiryToken(threadId: string): Promise<string> {
