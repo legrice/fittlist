@@ -142,7 +142,7 @@ export function DiscoverList({
           )}
         </div>
       ) : (
-        <div className="dislist">
+        <div className="dislist dislist-bare">
           {shown.map((c) => (
             <div key={c.id} className="disrow">
               <Link className="disrow-main" href={`/${c.handle}?from=discover`}>
@@ -159,16 +159,11 @@ export function DiscoverList({
                   </span>
                 )}
                 <span className="disrow-txt">
-                  {/* The tag and the check ride the name line, small, so a row
-                      is two lines for a member and three for a coach. */}
+                  {/* The tag rides right beside the name; the following check
+                      is the row's corner mark, pinned top-right. */}
                   <span className="disrow-nmline">
                     <span className="nm">{c.name}</span>
                     {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
-                    {c.following && (
-                      <span className="disrow-fol" aria-label="Following" title="Following">
-                        <Icon name="check" size={11} />
-                      </span>
-                    )}
                   </span>
                   <span className="sub">
                     {[c.title, c.location].filter(Boolean).join(" · ") || `fittlist.co/${c.handle}`}
@@ -183,6 +178,11 @@ export function DiscoverList({
                 </span>
                 <LinkPending />
               </Link>
+              {c.following && (
+                <span className="disrow-fol" aria-label="Following" title="Following">
+                  <Icon name="check" size={11} />
+                </span>
+              )}
             </div>
           ))}
         </div>

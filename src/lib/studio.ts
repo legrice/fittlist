@@ -1,22 +1,51 @@
 // What kind of gym a studio is. A studio is usually more than one of these —
 // a strength gym that also runs HYROX classes — so the editor picks a set.
 export const STUDIO_TYPES = [
+  // lifting and conditioning
   "Strength",
   "Functional",
   "CrossFit",
   "HYROX",
   "Bootcamp",
+  "HIIT",
+  "Powerlifting",
+  "Olympic weightlifting",
+  "Kettlebell",
+  "Calisthenics",
+  "Gymnastics",
+  "Sports performance",
+  "Personal training",
+  // mind-body
   "Yoga",
+  "Hot yoga",
   "Pilates",
+  "Reformer Pilates",
   "Barre",
+  "Meditation",
+  // combat
   "Boxing",
+  "Kickboxing",
   "Martial arts",
+  // endurance
   "Cycling",
   "Run club",
-  "Climbing",
+  "Rowing",
   "Swimming",
+  "Triathlon",
+  // sport and movement
+  "Climbing",
   "Dance",
+  "Aerial",
+  "Tennis",
+  "Pickleball",
+  "Golf",
+  "Basketball",
+  // care and recovery
+  "Mobility",
+  "Stretch",
   "Recovery",
+  "Sauna & cold plunge",
+  "Physical therapy",
 ] as const;
 
 // A studio's page lives at /s/{slug}. Rows created before slugs existed fall

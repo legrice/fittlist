@@ -1841,6 +1841,10 @@ button.ps-card { cursor: pointer; }
 .abouttext {
   width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;
+  /* A real box, always. Inside a sheet-full flex column a textarea's
+     min-content height is one line, so it was silently squashed flat and
+     read as a short-answer field. */
+  min-height: 128px; flex-shrink: 0;
 }
 
 /* ---- account page (full-screen, reached from the header avatar) ---- */
@@ -3095,15 +3099,23 @@ button.ps-card { cursor: pointer; }
 /* The Coach badge across from the name; following moved onto the profile.
    .disfollow stays for the followers and blocked lists, which still act
    inline (Follow back, Undo). */
-/* The name line carries the tag and the follow check, small, pushed to the
-   far edge so they sit directly across from the name. */
-.disrow-nmline { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.disrow-nmline .nm { min-width: 0; flex: 1; }
-/* Already following: a small white check in a green circle, right of the tag. */
+/* The tag sits right beside the name, small. The name can still truncate. */
+.disrow-nmline { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.disrow-nmline .nm { min-width: 0; }
+/* Already following: a small white check in a green circle, pinned to the
+   row's top-right corner rather than riding the name line. */
+.disrow { position: relative; }
 .disrow-fol {
   width: 17px; height: 17px; border-radius: 50%; background: var(--go); color: #fff;
   display: grid; place-items: center; flex-shrink: 0;
+  position: absolute; top: 14px; right: 14px;
 }
+/* Discover sits its rows straight on the page, no white container. */
+.dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
+.dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
+.dislist-bare .disrow-fol { right: 2px; }
+/* Keep the name clear of the corner check. */
+.dislist-bare .disrow-nmline { padding-right: 24px; }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
   background: var(--ink); color: var(--paper);

@@ -73,14 +73,16 @@ await fillLocation(m);
 await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 for (const n of names) {
+  // Following moved off the list and onto the profile: the row gets you to a
+  // person, and the pill by their name is where the follow happens.
   await m.goto(`${BASE}/discover`);
   const row = m.locator(".disrow", { hasText: n }).first();
   await row.waitFor();
-  // The button is a client component on a server-rendered list: clicking it
-  // before hydration does nothing, and a half-followed rail wouldn't overflow.
+  await row.locator(".disrow-main").click();
+  await m.waitForSelector(".followpill");
   await m.waitForTimeout(400);
-  await row.getByRole("button", { name: /Follow/ }).first().click();
-  await row.getByRole("button", { name: "Following" }).waitFor();
+  await m.locator(".followpill").click();
+  await m.locator(".followpill", { hasText: "Following" }).waitFor();
 }
 console.log("followed all eight ok");
 
