@@ -252,7 +252,10 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
         ...followMeRows.map((r) => r.userId).filter((id): id is string => !!id),
         ...emailAccounts.map((u) => u.id),
       ]);
-      const mutuals = [...iFollow].filter((id) => followMe.has(id));
+      // Never yourself: one self-subscribe row (email-subscribing to your own
+      // page) satisfies both directions at once, and then your own week said
+      // you were going to your own classes, too.
+      const mutuals = [...iFollow].filter((id) => id !== userId && followMe.has(id));
       if (mutuals.length) {
         const theirMarks = await db
           .select()
