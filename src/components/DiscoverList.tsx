@@ -127,7 +127,7 @@ export function DiscoverList({
             aria-checked={coachesOnly}
             onClick={() => setCoachesOnly((v) => !v)}
           >
-            Search coaches only
+            View coaches only
             <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
               <span className="switch-knob" />
             </span>
