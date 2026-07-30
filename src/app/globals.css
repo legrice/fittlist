@@ -132,6 +132,12 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .obhero .obmark { position: relative; display: block; height: 61px; }
 .obhero .obmark svg { height: 100%; width: auto; display: block; }
+/* The hero is a photo of the product now. The dark ground and the ripples are
+   baked into the image, so the tile only supplies the shape; the background
+   stays close to the image's own black so loading doesn't flash. */
+.obhero-app { height: auto; aspect-ratio: 1; background: #1c1a17; }
+.obhero-app::before { content: none; }
+.obhero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* "You're in" — the difference between arriving with an invite and finding the
    site. Sits above the headline, in the CTA orange so it reads as good news. */
 .invitetag {

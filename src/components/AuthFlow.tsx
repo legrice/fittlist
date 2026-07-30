@@ -15,7 +15,6 @@ import {
 } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
 import { slug } from "@/lib/format";
-import { brandIcon } from "@/lib/brand";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -245,8 +244,13 @@ export function AuthFlow({
 
         {stage === "landing" && (
           <>
-            <div className="obhero">
-              <span className="obmark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("#dd6a35") }} />
+            <div className="obhero obhero-app">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="obhero-img"
+                src="/landing-hero.webp"
+                alt="The fittlist app: the week from every coach you follow, in one list"
+              />
             </div>
             {invited ? (
               <>
