@@ -50,6 +50,7 @@ const ICON: Record<string, string> = {
   feedback_reply: "mail",
   studio_suggest: "place",
   follow_request: "person_add",
+  class_overlap: "flag",
 };
 
 function fmt(d: Date | string) {

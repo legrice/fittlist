@@ -330,6 +330,77 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
     }
   }
 
+  // Two coaches listing the same slot at the same studio is usually one class
+  // twice: a sub, a handoff, a re-listing. Tell both, quietly, and point each
+  // at the other so they can sort it out between themselves. The admin
+  // Reports tab keeps the bird's-eye view; this is the ground-level nudge.
+  if (isPublic && studio) {
+    try {
+      const clashes = (
+        await db
+          .select()
+          .from(schema.classes)
+          .where(
+            and(
+              eq(schema.classes.studioId, studio.id),
+              eq(schema.classes.startTime, input.startTime),
+              inArray(schema.classes.dayOfWeek, days),
+            ),
+          )
+      ).filter((c) => c.userId !== userId && c.isPublic);
+      if (clashes.length) {
+        const { addNotification } = await import("@/lib/notify");
+        const { DAYS, fmtTime } = await import("@/lib/format");
+        const [me] = await db
+          .select({ name: schema.users.name, handle: schema.users.handle })
+          .from(schema.users)
+          .where(eq(schema.users.id, userId));
+        const otherIds = [...new Set(clashes.map((c) => c.userId))];
+        const people = await db
+          .select({ id: schema.users.id, name: schema.users.name, handle: schema.users.handle })
+          .from(schema.users)
+          .where(inArray(schema.users.id, otherIds));
+        for (const p of people) {
+          const clash = clashes.find((c) => c.userId === p.id)!;
+          const slot = `${DAYS[clash.dayOfWeek]} ${fmtTime(input.startTime)} at ${studio.name}`;
+          const myName = me?.name?.trim() || "Another coach";
+          const theirName = p.name.trim() || "another coach";
+          const bodyTheirs = `Their ${name} and your ${clash.name} share ${slot}. If it's one class, message each other and keep one listing.`;
+          const bodyMine = `Your ${name} and their ${clash.name} share ${slot}. If it's one class, message each other and keep one listing.`;
+          // Once per pair and slot: the body is the dedupe key, so re-saving
+          // a class that keeps its time doesn't nag anyone again.
+          const [already] = await db
+            .select({ id: schema.notifications.id })
+            .from(schema.notifications)
+            .where(
+              and(
+                eq(schema.notifications.userId, p.id),
+                eq(schema.notifications.type, "class_overlap"),
+                eq(schema.notifications.body, bodyTheirs),
+              ),
+            );
+          if (already) continue;
+          await addNotification(p.id, {
+            type: "class_overlap",
+            title: `You and ${myName} both list ${slot}`,
+            body: bodyTheirs,
+            href: me?.handle ? `/${me.handle}` : null,
+            actorUserId: userId,
+          });
+          await addNotification(userId, {
+            type: "class_overlap",
+            title: `You and ${theirName} both list ${slot}`,
+            body: bodyMine,
+            href: p.handle ? `/${p.handle}` : null,
+            actorUserId: p.id,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("overlap notice failed", err);
+    }
+  }
+
   // Subscribers get the schedule as one weekly digest (see sendWeeklyDigests),
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);

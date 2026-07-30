@@ -46,13 +46,15 @@ export async function subscribe(
     // An email subscriber may still have an account under that address, and if
     // they do the coach should see their face rather than their email.
     const [account] = await db
-      .select({ id: schema.users.id, name: schema.users.name })
+      .select({ id: schema.users.id, name: schema.users.name, handle: schema.users.handle })
       .from(schema.users)
       .where(eq(schema.users.email, email));
     await addNotification(trainer.id, {
       type: "follow",
       title: "New follower",
       body: `${account?.name?.trim() || email} followed your schedule`,
+      // Tapping the notice opens who they are, so following back is one more tap.
+      href: account?.handle ? `/${account.handle}` : null,
       actorUserId: account?.id ?? null,
     });
   } catch (err) {
@@ -165,6 +167,8 @@ export async function followTrainer(
         title: "New follower",
         // A member has no schedule to follow; the sentence has to fit both.
         body: `${me.name.trim() || me.email} followed ${trainer.kind === "fan" ? "you" : "your schedule"}`,
+        // Tapping the notice opens who they are, so following back is one more tap.
+        href: me.handle ? `/${me.handle}` : null,
         actorUserId: me.id,
       });
     } catch (err) {
@@ -275,7 +279,7 @@ export async function answerFollowRequest(
       set: { optedOutAt: null, userId: requester.id },
     });
   const [me] = await db
-    .select({ name: schema.users.name, email: schema.users.email })
+    .select({ name: schema.users.name, email: schema.users.email, handle: schema.users.handle })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   try {
@@ -283,6 +287,7 @@ export async function answerFollowRequest(
       type: "follow",
       title: `${me?.name?.trim() || me?.email || "They"} approved your follow`,
       body: "You follow each other's worlds now.",
+      href: me?.handle ? `/${me.handle}` : null,
       actorUserId: userId,
     });
   } catch (err) {

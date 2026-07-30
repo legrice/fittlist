@@ -130,13 +130,16 @@ export default async function FeedPage({
   const withClasses = new Set(days.flatMap((d) => d.items.map((i) => i.coachId)));
 
   // The rail orders itself so the face you need is in the first few bubbles:
-  // whoever teaches soonest first, then whoever you most recently marked
-  // Going with, then the alphabet. Nobody curates anything, and no bubble
-  // carries a "new" ring; the order can be smart, the faces stay quiet.
-  const firstDay = new Map<string, number>();
+  // whoever teaches soonest first, by the clock and not just the day (a 5pm
+  // today beats a 6pm today), then whoever you most recently marked Going
+  // with, then the alphabet. Nobody curates anything, and no bubble carries a
+  // "new" ring; the order can be smart, the faces stay quiet.
+  // Each day's items are already sorted by start time, so day index plus
+  // position within the day is exactly "who teaches soonest".
+  const firstMinute = new Map<string, number>();
   days.forEach((d, idx) =>
-    d.items.forEach((i) => {
-      if (!firstDay.has(i.coachId)) firstDay.set(i.coachId, idx);
+    d.items.forEach((i, pos) => {
+      if (!firstMinute.has(i.coachId)) firstMinute.set(i.coachId, idx * 10000 + pos);
     }),
   );
   const classCoach = new Map(allClassRows.map((c) => [c.id, c.userId]));
@@ -151,7 +154,7 @@ export default async function FeedPage({
     .filter((c) => withClasses.has(c.id))
     .sort(
       (a, b) =>
-        (firstDay.get(a.id) ?? 99) - (firstDay.get(b.id) ?? 99) ||
+        (firstMinute.get(a.id) ?? 1e9) - (firstMinute.get(b.id) ?? 1e9) ||
         (lastGoing.get(b.id) ?? "").localeCompare(lastGoing.get(a.id) ?? "") ||
         a.name.localeCompare(b.name),
     );
