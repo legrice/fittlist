@@ -1829,6 +1829,25 @@ button.ps-card { cursor: pointer; }
 /* About / Contact / Schedule, as a scrolling rail of pills. Each one is a link
    to its own URL, so they don't pin: the page under them is one section, not a
    scroll with three stops. */
+/* The sticky shell around the tabs. It pins under the app header (the top
+   offset is measured in ProfileTabs, because the header only exists for a
+   signed-in viewer) and, once the big header has scrolled away, shows a small
+   copy of the name so the schedule keeps its owner. Full bleed lives here so
+   the paper covers whatever scrolls beneath, edge to edge. */
+.pubstick {
+  position: sticky; top: 0; z-index: 7;
+  background: var(--paper);
+  margin: 22px calc(50% - 50vw) 0;
+  padding: 0 calc(50vw - 50%);
+}
+.pubstick-name {
+  display: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 16px; letter-spacing: -.01em; color: var(--ink);
+  padding-top: 12px; margin-bottom: -10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pubstick.stuck .pubstick-name { display: block; }
 .pubtabs {
   display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
   /* The rule sits under the tabs as an inset shadow rather than a border:
@@ -1836,9 +1855,9 @@ button.ps-card { cursor: pointer; }
      sits in front of the line instead of being clipped behind it by the
      row's own horizontal scroll. */
   box-shadow: inset 0 -1px 0 var(--line);
-  /* Full bleed: stretch to the window edges and pad the content back to the
-     column, so a pill can sit half off the screen rather than stopping short. */
-  margin: 22px calc(50% - 50vw) 0;
+  /* Full bleed again inside the sticky shell, so a tab can still slide half
+     off the screen rather than stopping at the column edge. */
+  margin: 0 calc(50% - 50vw);
   padding: 18px calc(50vw - 50%) 0;
 }
 .pubtabs::-webkit-scrollbar { display: none; }

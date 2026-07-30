@@ -47,6 +47,28 @@ export function ProfileTabs({
   children: ReactNode;
 }) {
   const tracked = useRef(false);
+  const stickRef = useRef<HTMLDivElement>(null);
+  const sentRef = useRef<HTMLDivElement>(null);
+
+  // The tab row pins to the top as the page scrolls, and once the big header
+  // is gone it grows a small copy of the name, so a long schedule never loses
+  // whose it is. The offset is the app header's height when there is one (a
+  // signed-in viewer keeps the app chrome, which is sticky itself); a
+  // stranger's bar owns the top of the screen.
+  useEffect(() => {
+    const stick = stickRef.current;
+    const sent = sentRef.current;
+    if (!stick || !sent) return;
+    const bar = document.querySelector(".brandbar");
+    const off = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+    if (off) stick.style.top = off + "px";
+    const ob = new IntersectionObserver(
+      ([e]) => stick.classList.toggle("stuck", !e.isIntersecting),
+      { rootMargin: `-${off + 1}px 0px 0px 0px` },
+    );
+    ob.observe(sent);
+    return () => ob.disconnect();
+  }, []);
 
   // Count one "schedule open" per visit. It used to fire when the scroll-spy
   // reached the schedule section; landing on the URL is the event now.
@@ -95,10 +117,19 @@ export function ProfileTabs({
         {title.trim() && <p className="proftitle">{title.trim()}</p>}
         {actions}
       </div>
-      <div className="pubtabs" aria-label="Profile sections">
-        {tabLink("schedule", "Schedule")}
-        {tabLink("about", "About")}
-        {hasContact && tabLink("contact", "Contact")}
+      {/* Zero-height marker: when it slides under the header, the bar below
+          is stuck and the small name switches on. */}
+      <div ref={sentRef} aria-hidden="true" />
+      <div ref={stickRef} className="pubstick">
+        {/* A duplicate for the eyes only; the real name is the h1 above. */}
+        <div className="pubstick-name" aria-hidden="true">
+          {name}
+        </div>
+        <div className="pubtabs" aria-label="Profile sections">
+          {tabLink("schedule", "Schedule")}
+          {tabLink("about", "About")}
+          {hasContact && tabLink("contact", "Contact")}
+        </div>
       </div>
       <div className="pubpanel">{children}</div>
     </>
