@@ -19,7 +19,6 @@ import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
-import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
@@ -447,7 +446,10 @@ export function ProfileSheet({
           <NotificationPrefs />
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
-          <InstallApp />
+          {/* Add to Home Screen left the list: the installed shell lags the
+              site while features ship this fast, and a row that hands people
+              a staler fittlist is a row doing harm. It can come back when
+              releases slow down. */}
           {canSendFeedback && (
             <a className="setrow setrow-hi" href="/feedback">
               <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>

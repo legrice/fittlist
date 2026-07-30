@@ -90,7 +90,10 @@ const leaky = cached.filter((u) => !/^\/(fonts\/|icon-|apple-touch-icon)/.test(u
 if (leaky.length) fail(`the worker cached things it must not: ${JSON.stringify(leaky)}`);
 console.log("the worker caches static assets only ok");
 
-// ---- the install row: an account, then the row it should and should not show
+// ---- the install row is deliberately GONE from settings: the installed
+// shell lags the site while features ship this fast, so the row was pulled
+// (see ProfileSheet). The worker and manifest stay, so a browser can still
+// offer an install on its own; settings just doesn't push it.
 await p.goto(BASE + "/");
 await p.getByRole("button", { name: "Sign up with email" }).click();
 await p.getByPlaceholder("you@example.com").fill("coach@example.com");
@@ -102,28 +105,20 @@ await p.getByPlaceholder("Your name").fill("Sarah");
 await p.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p);
 await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
-
-// Desktop Chrome with no install prompt and no iOS: the row stays away rather
-// than pointing at a button that isn't there.
 await p.locator(".settingsbtn").click();
 await p.waitForTimeout(700);
 if (await p.getByText("Add to home screen").isVisible().catch(() => false))
-  fail("the install row showed on a browser with nothing to install with");
-console.log("no install row where there's nothing to install ok");
+  fail("the install row is supposed to be gone from settings");
 
-// An iPhone gets instructions, because iOS has no prompt to fire.
 const ios = await b.newContext({ ...devices["iPhone 13"], storageState: await c.storageState() });
 const q = await ios.newPage();
 q.setDefaultTimeout(15000);
 await q.goto(BASE + "/app");
 await q.locator(".settingsbtn").click();
 await q.waitForTimeout(700);
-const row = q.getByText("Add to home screen");
-if (!(await row.isVisible())) fail("an iPhone should be told how to install");
-await row.click();
-await q.getByText(/Add to Home Screen/).waitFor();
-console.log("iOS gets the Share sheet instructions ok");
-await q.screenshot({ path: OUT + "/shot-install.png" });
+if (await q.getByText("Add to home screen").isVisible().catch(() => false))
+  fail("the install row is supposed to be gone from settings, on iOS too");
+console.log("install row stays out of settings ok");
 
 // ---- installed only: the tab bar as a floating glass pill.
 //

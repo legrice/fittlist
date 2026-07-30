@@ -1726,11 +1726,13 @@ button.ps-card { cursor: pointer; }
    scroll with three stops. */
 .pubtabs {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  border-bottom: 1px solid var(--line);
+  /* The rule sits above the tabs, between the action pills and the row, so
+     the tabs read as the section's own controls rather than a header's tail. */
+  border-top: 1px solid var(--line);
   /* Full bleed: stretch to the window edges and pad the content back to the
      column, so a pill can sit half off the screen rather than stopping short. */
   margin: 22px calc(50% - 50vw) 0;
-  padding: 10px calc(50vw - 50%);
+  padding: 14px calc(50vw - 50%) 4px;
 }
 .pubtabs::-webkit-scrollbar { display: none; }
 .pubtab {

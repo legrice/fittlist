@@ -5,7 +5,6 @@ import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
-import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
@@ -117,7 +116,6 @@ export function MemberAccount({
         <StartCoaching handle={handle} />
         <NotificationPrefs />
         <InviteFriends />
-        <InstallApp />
         {canSendFeedback && (
           <a className="setrow setrow-hi" href="/feedback">
             <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
