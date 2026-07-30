@@ -2779,12 +2779,27 @@ button.ps-card { cursor: pointer; }
    — the heading clears that with padding-right, but this can't. */
 .roleseg { flex: none; margin: 24px 0 14px; background: var(--cl); }
 .feedbar { position: static; margin: -14px -18px 0; }
+/* The rail's name, and the Discover door across from it. */
+.feedrail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 18px 2px 0;
+}
+.feedrail-t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ol);
+}
+.feedrail-more {
+  display: inline-flex; align-items: center; gap: 2px; text-decoration: none;
+  font-size: 13px; font-weight: 600; color: var(--ol);
+}
+.feedrail-more:active { color: var(--ink); }
 /* avatar strip: every followed coach, tap to filter the agenda to one */
 .feedstrip {
   display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
   /* 24px of air above and below: the margins carry 6px of top padding for the
-     selection ring and 14px below for the name labels. */
-  margin: 18px -18px 8px; padding: 6px 18px 14px; scrollbar-width: none;
+     selection ring and 14px below for the name labels. The head row above owns
+     the top margin now. */
+  margin: 6px -18px 8px; padding: 6px 18px 14px; scrollbar-width: none;
 }
 .feedstrip::-webkit-scrollbar { display: none; }
 /* The rail bleeds to the screen edge, so the arrows that page it have to

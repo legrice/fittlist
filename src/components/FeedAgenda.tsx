@@ -101,6 +101,15 @@ export function FeedAgenda({
     <>
       {/* No coach has anything coming up, so there is nothing to filter. */}
       {coaches.length > 0 && (
+      <>
+      {/* The rail's name, and the door to growing it. A short rail with a
+          Discover link is exactly the person who should be nudged there. */}
+      <div className="feedrail-head">
+        <span className="feedrail-t">Your coaches</span>
+        <Link className="feedrail-more" href="/discover">
+          Discover more <Icon name="chevron_right" size={15} />
+        </Link>
+      </div>
       <div className="feedrail">
       <div className={`feedstrip${sel ? " hassel" : ""}`} ref={railRef}>
         {/* "All" clears the filter — the way back to the merged week without
@@ -131,6 +140,7 @@ export function FeedAgenda({
       </div>
       <RailArrows railRef={railRef} />
       </div>
+      </>
       )}
 
       {selCoach && (

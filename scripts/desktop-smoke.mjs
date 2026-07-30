@@ -76,7 +76,11 @@ for (const n of names) {
   // Following moved off the list and onto the profile: the row gets you to a
   // person, and the pill by their name is where the follow happens.
   await m.goto(`${BASE}/discover`);
-  const row = m.locator(".disrow", { hasText: n }).first();
+  // Exact name: the list orders newest-first now, so a substring match on
+  // "Matt" lands on MattsWife, who joined after him and sits above him.
+  const row = m.locator(".disrow", {
+    has: m.locator(".nm", { hasText: new RegExp(`^${n}$`) }),
+  });
   await row.waitFor();
   await row.locator(".disrow-main").click();
   await m.waitForSelector(".followpill");

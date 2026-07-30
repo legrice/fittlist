@@ -128,7 +128,33 @@ export default async function FeedPage({
   // The rail filters the week, so a coach with nothing in it is a chip that
   // can only ever empty the screen. They stay followed — just not on the rail.
   const withClasses = new Set(days.flatMap((d) => d.items.map((i) => i.coachId)));
-  const railCoaches = coaches.filter((c) => withClasses.has(c.id));
+
+  // The rail orders itself so the face you need is in the first few bubbles:
+  // whoever teaches soonest first, then whoever you most recently marked
+  // Going with, then the alphabet. Nobody curates anything, and no bubble
+  // carries a "new" ring; the order can be smart, the faces stay quiet.
+  const firstDay = new Map<string, number>();
+  days.forEach((d, idx) =>
+    d.items.forEach((i) => {
+      if (!firstDay.has(i.coachId)) firstDay.set(i.coachId, idx);
+    }),
+  );
+  const classCoach = new Map(allClassRows.map((c) => [c.id, c.userId]));
+  const lastGoing = new Map<string, string>();
+  for (const g of goingRows) {
+    const coachId = classCoach.get(g.classId);
+    if (!coachId) continue;
+    const cur = lastGoing.get(coachId);
+    if (!cur || g.occurrenceDate > cur) lastGoing.set(coachId, g.occurrenceDate);
+  }
+  const railCoaches = coaches
+    .filter((c) => withClasses.has(c.id))
+    .sort(
+      (a, b) =>
+        (firstDay.get(a.id) ?? 99) - (firstDay.get(b.id) ?? 99) ||
+        (lastGoing.get(b.id) ?? "").localeCompare(lastGoing.get(a.id) ?? "") ||
+        a.name.localeCompare(b.name),
+    );
 
   return (
     <>
