@@ -563,6 +563,9 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
   box-shadow: 0 2px 6px rgba(25, 21, 2, .10), 0 10px 28px rgba(25, 21, 2, .18);
   transition: transform .08s;
+  /* It's a Link on the You tab and a button on /app; the link one was
+     shipping with a default underline. */
+  text-decoration: none; border: none; cursor: pointer;
 }
 .fab:active { transform: scale(.97); }
 /* In dark the card is near-black, which would vanish into the page — flip it
