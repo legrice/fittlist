@@ -403,6 +403,9 @@ export async function PublicProfileView({
           ownerTop={
             isOwner ? (
               <>
+              <Link className="addclass-pill" href="/app?add=1">
+                <Icon name="add" size={17} /> Add class
+              </Link>
               <ProfileOwnerBar
                 name={user.name}
                 title={user.title ?? ""}
@@ -421,9 +424,6 @@ export async function PublicProfileView({
                 userId={user.id}
                 handle={handle}
               />
-              <Link className="addclass-pill" href="/app?add=1">
-                <Icon name="add" size={17} /> Add class
-              </Link>
               </>
             ) : null
           }
