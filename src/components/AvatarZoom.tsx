@@ -133,6 +133,15 @@ export function AvatarZoom({
               if (e.target === e.currentTarget) setOpen(false);
             }}
           >
+            {/* Tapping the backdrop closes too, but nothing says so; the X
+                is the door people can see. */}
+            <button
+              className="iconbtn avoverlay-close"
+              aria-label="Close"
+              onClick={() => setOpen(false)}
+            >
+              <Icon name="close" size={18} />
+            </button>
             <div className="avoverlay-top">
               {photo ? (
                 // eslint-disable-next-line @next/next/no-img-element

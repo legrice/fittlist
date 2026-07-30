@@ -1477,6 +1477,14 @@ button.ps-card { cursor: pointer; }
   display: grid; place-items: center; color: #fff; font-weight: 700;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 96px;
 }
+/* The visible way out, up in the corner where every sheet puts it. */
+.avoverlay-close {
+  position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px;
+  width: 40px; height: 40px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--soft-shadow);
+}
 /* Photo + its status read as one thing; the actions are another. The big gap
    stays between the two groups. */
 .avoverlay-top { display: flex; flex-direction: column; align-items: center; gap: 18px; }
