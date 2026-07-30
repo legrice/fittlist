@@ -373,6 +373,9 @@ export function ProfileSheet({
           </button>
         </div>
 
+        {/* Grouped by what a coach reaches for, most-wanted first: the inbound
+            work, then the page they run, then who can reach it, then account
+            plumbing, then the beta, and admin at the bottom. */}
         <div className="settingslist">
           {/* The door people will look for. A request is inbound work, so it
               sits at the top of the list rather than under the account plumbing. */}
@@ -388,11 +391,17 @@ export function ProfileSheet({
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </a>
-          <button className="setrow" onClick={() => openView("security")}>
-            <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+        </div>
+
+        <h3 className="setgroup-h">Your page</h3>
+        <div className="settingslist">
+          {/* Availability leads: the state of your books changes far more often
+              than your bio, and the row says where it stands without opening. */}
+          <button className="setrow" onClick={() => openView("availability")}>
+            <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Login &amp; security</span>
-              <span className="s">Email, password, and passkeys</span>
+              <span className="t">Availability</span>
+              <span className="s">{availLabel}</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
@@ -404,27 +413,7 @@ export function ProfileSheet({
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
-          {/* Out of Edit profile and up here: the state of your books changes
-              far more often than your bio, and it decides whether anyone can
-              ask you at all. The row says where it stands without opening. */}
           <ChangeHandle />
-          {/* Quiet, and quietly reachable: the only place a block is visible. */}
-          <a className="setrow" href="/blocked">
-            <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
-            <span className="setrow-txt">
-              <span className="t">Removed people</span>
-              <span className="s">Who can&rsquo;t see your page</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </a>
-          <button className="setrow" onClick={() => openView("availability")}>
-            <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
-            <span className="setrow-txt">
-              <span className="t">Availability</span>
-              <span className="s">{availLabel}</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </button>
           {googleConfigured && (
             <button className="setrow" onClick={() => openView("gcal")}>
               <span className="setrow-ic"><Icon name="event" size={22} /></span>
@@ -435,21 +424,50 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </button>
           )}
-          {/* "Your week" and "Share classes you're attending" used to live here.
-              The Following tab already is your week, so the row was a second
-              door to the same room, and sharing what you're going to is a
-              member's move — a coach's share is their own schedule. */}
-          {/* A coach follows people too: their own week plus everyone else's. */}
-          {/* MyCalendar (the followed-classes feed) is hidden for now: the
-              subscribe flow isn't good enough yet. The /api/cal/me endpoint
-              stays live so anyone already subscribed keeps updating. */}
+        </div>
+
+        {/* Reach: the switches and the block list belong together, because
+            they're all one question — who gets to you, and how. */}
+        <h3 className="setgroup-h">Who can reach you</h3>
+        <div className="settingslist">
+          <MessagesToggle initialOn={messagesOpen} />
+          {showFanView && <DiscoverableToggle initialOn={discoverable} />}
+          {/* Quiet, and quietly reachable: the only place a block is visible. */}
+          <a className="setrow" href="/blocked">
+            <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Removed people</span>
+              <span className="s">Who can&rsquo;t see your page</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </a>
+        </div>
+
+        <h3 className="setgroup-h">Account &amp; app</h3>
+        <div className="settingslist">
+          <button className="setrow" onClick={() => openView("security")}>
+            <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+            <span className="setrow-txt">
+              <span className="t">Login &amp; security</span>
+              <span className="s">Email, password, and passkeys</span>
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </button>
           <NotificationPrefs />
+          <DarkModeToggle initialOn={look === "dark"} />
+        </div>
+
+        {/* "Your week" and "Share classes you're attending" used to live here.
+            The Following tab already is your week, so the row was a second
+            door to the same room. MyCalendar (the followed-classes feed) is
+            hidden for now: the subscribe flow isn't good enough yet; the
+            /api/cal/me endpoint stays live for anyone already subscribed.
+            Add to Home Screen left too: the installed shell lags the site
+            while features ship this fast. */}
+        <h3 className="setgroup-h">The beta</h3>
+        <div className="settingslist">
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
-          {/* Add to Home Screen left the list: the installed shell lags the
-              site while features ship this fast, and a row that hands people
-              a staler fittlist is a row doing harm. It can come back when
-              releases slow down. */}
           {canSendFeedback && (
             <a className="setrow setrow-hi" href="/feedback">
               <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
@@ -460,34 +478,31 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </a>
           )}
-          {isAdmin && (
-            <a className="setrow" href="/admin">
-              <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Admin</span>
-                <span className="s">Coaches, studios, sign-in links</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-            </a>
-          )}
-          {isAdmin && (
-            <a className="setrow" href="/brand">
-              <span className="setrow-ic"><Icon name="palette" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Brand</span>
-                <span className="s">The mark, colour, type and voice</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-            </a>
-          )}
         </div>
 
-        {/* Page look: themes the app and the coach's public page. */}
-        <div className="settingslist">
-          <MessagesToggle initialOn={messagesOpen} />
-          {showFanView && <DiscoverableToggle initialOn={discoverable} />}
-          <DarkModeToggle initialOn={look === "dark"} />
-        </div>
+        {isAdmin && (
+          <>
+            <h3 className="setgroup-h">Admin</h3>
+            <div className="settingslist">
+              <a className="setrow" href="/admin">
+                <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Admin</span>
+                  <span className="s">Coaches, studios, sign-in links</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
+              <a className="setrow" href="/brand">
+                <span className="setrow-ic"><Icon name="palette" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Brand</span>
+                  <span className="s">The mark, colour, type and voice</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
+            </div>
+          </>
+        )}
 
         <button className="calcopy" onClick={copyCal}>
           Apple or Outlook? Copy your calendar feed link

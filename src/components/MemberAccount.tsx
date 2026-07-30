@@ -70,8 +70,10 @@ export function MemberAccount({
         </span>
       </div>
 
+      {/* Grouped like the coach side: your profile first, then the things you
+          do, then account plumbing, then the beta. */}
+      <h3 className="setgroup-h">Profile</h3>
       <div className="settingslist">
-          <ChangeHandle />
         <MemberProfileEditor
           name={name}
           handle={handle}
@@ -92,6 +94,7 @@ export function MemberAccount({
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </a>
         )}
+        <ChangeHandle />
       </div>
 
       <div className="settingslist">
@@ -114,7 +117,16 @@ export function MemberAccount({
       {/* The member side is the front door; coaching is a door off it. */}
       <div className="settingslist">
         <StartCoaching handle={handle} />
+      </div>
+
+      <h3 className="setgroup-h">Account &amp; app</h3>
+      <div className="settingslist">
         <NotificationPrefs />
+        <DarkModeToggle initialOn={look === "dark"} />
+      </div>
+
+      <h3 className="setgroup-h">The beta</h3>
+      <div className="settingslist">
         <InviteFriends />
         {canSendFeedback && (
           <a className="setrow setrow-hi" href="/feedback">
@@ -126,10 +138,6 @@ export function MemberAccount({
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </a>
         )}
-      </div>
-
-      <div className="settingslist">
-        <DarkModeToggle initialOn={look === "dark"} />
       </div>
 
       <form action={logout}>

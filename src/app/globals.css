@@ -1383,6 +1383,14 @@ button.ps-card { cursor: pointer; }
 .memweek-txt .sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 .memweek-chev { color: var(--ol); flex-shrink: 0; }
 
+/* Small group labels between settings cards. */
+.setgroup-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ol);
+  margin: 22px 4px 8px;
+}
+.setgroup-h + .settingslist { margin-top: 0; }
+
 /* Where I coach, inside the profile editor: picked rows reuse the links-field
    look; a search match is the same row shape, tappable, with a plus. */
 .mystudios { margin-top: 2px; }

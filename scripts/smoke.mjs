@@ -1778,14 +1778,19 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // render a Toast beside the row, and the old `.setrow + .setrow` rule needed
 // them to be adjacent, so those three lost their line without a word.
 {
-  const lines = await page.locator(".settingslist").first().evaluate((list) =>
-    [...list.querySelectorAll(":scope > .setrow")].map((r, i) => ({
-      row: r.querySelector(".t")?.textContent ?? "?",
-      top: getComputedStyle(r).borderTopWidth,
-      first: i === 0,
-    })),
+  // Settings is several grouped cards now; check the divider rule inside
+  // every one of them, and that at least one card has enough rows to prove it.
+  const lines = await page.locator(".acctwrap").evaluate((wrap) =>
+    [...wrap.querySelectorAll(".settingslist")].flatMap((list) =>
+      [...list.querySelectorAll(":scope > .setrow")].map((r, i) => ({
+        row: r.querySelector(".t")?.textContent ?? "?",
+        top: getComputedStyle(r).borderTopWidth,
+        first: i === 0,
+      })),
+    ),
   );
-  if (lines.length < 4) fail("expected a settings list with several rows");
+  if (lines.filter((l) => !l.first).length < 3)
+    fail("expected settings groups with several rows");
   for (const l of lines) {
     if (l.first && l.top !== "0px") fail(`the first row shouldn't have a divider: ${l.row}`);
     if (!l.first && l.top === "0px") fail(`${l.row} is missing its divider`);
