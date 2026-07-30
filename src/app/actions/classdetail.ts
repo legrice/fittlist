@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
@@ -39,6 +39,9 @@ export type ClassDetail = {
   added: boolean;
   /** It's been and gone: say so rather than showing a button that fails. */
   past: boolean;
+  /** Who marked Going on this occurrence. Owner only: they marked it at this
+   *  coach, so the coach can see them; nobody else gets the list. */
+  roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -113,6 +116,32 @@ export async function classDetail(
     added = !!row;
   }
 
+  // The coach's roster for this occurrence. These people marked Going at this
+  // coach, so showing the coach is what the mark meant; it stops there. A
+  // member looking at the same sheet sees the count of nobody: the field is
+  // null for everyone but the owner.
+  let roster: ClassDetail["roster"] = null;
+  if (isOwner) {
+    const marks = await db
+      .select({ userId: schema.attendances.userId })
+      .from(schema.attendances)
+      .where(
+        and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
+      );
+    const ids = [...new Set(marks.map((m) => m.userId))];
+    const people = ids.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+      : [];
+    roster = people
+      .map((p) => ({
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return {
     id: c.id,
     handle,
@@ -137,5 +166,6 @@ export async function classDetail(
     canAdd,
     added,
     past,
+    roster,
   };
 }

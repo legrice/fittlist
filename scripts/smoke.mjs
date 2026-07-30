@@ -574,17 +574,18 @@ await page.waitForURL((u) => u.pathname === "/matt");
 await expect(page.getByText("Barbell Strength").first().isVisible(), "schedule shows class");
 await page.screenshot({ path: SCRATCH + "/shot-poster-public.png", fullPage: true });
 
-// ---- the owner's tap is an edit: your own class, from your own page, opens
-// the editor rather than the visitor sheet. (The visitor sheet is asserted
-// from the anonymous context below.)
+// ---- the owner's tap opens the sheet, like everyone's, and the owner's copy
+// carries the roster (who marked Going) and an Edit button into the editor.
 await page.locator(".ps-event").first().click();
+await page.locator(".classsheet-roster").waitFor();
+await page.getByRole("link", { name: "Edit this class" }).click();
 await page.waitForURL(/\/app/);
 await page.getByRole("heading", { name: /Edit class/ }).waitFor();
 await page.getByRole("button", { name: "Close", exact: true }).click().catch(() => {});
 await page.locator(".adder .sheetclose, .sheetclose").first().click().catch(() => {});
 await page.goto(BASE + "/matt");
 await page.waitForFunction(() => document.querySelector('.pub[data-theme="poster"] .ps-event'));
-console.log("owner tap opens the editor ok");
+console.log("owner tap opens the sheet, Edit goes to the editor ok");
 
 // ---- for a visitor, a tap opens the class from the bottom, list still behind
 {

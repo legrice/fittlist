@@ -65,6 +65,121 @@ export async function weekCount(userId: string): Promise<number> {
   return rows.length + ownAhead;
 }
 
+/** Do these two people follow each other? Both directions, neither opted out.
+ *  Account follows always carry the follower's email, so the pair of email
+ *  matches is the whole check. */
+export async function mutualFollow(aId: string, bId: string): Promise<boolean> {
+  if (aId === bId) return false;
+  const db = await getDb();
+  const people = await db
+    .select({ id: schema.users.id, email: schema.users.email })
+    .from(schema.users)
+    .where(inArray(schema.users.id, [aId, bId]));
+  const a = people.find((p) => p.id === aId);
+  const b = people.find((p) => p.id === bId);
+  if (!a || !b) return false;
+  const [aFollowsB, bFollowsA] = await Promise.all([
+    db
+      .select({ id: schema.subscribers.id })
+      .from(schema.subscribers)
+      .where(
+        and(
+          eq(schema.subscribers.trainerUserId, bId),
+          eq(schema.subscribers.email, a.email),
+          isNull(schema.subscribers.optedOutAt),
+        ),
+      ),
+    db
+      .select({ id: schema.subscribers.id })
+      .from(schema.subscribers)
+      .where(
+        and(
+          eq(schema.subscribers.trainerUserId, aId),
+          eq(schema.subscribers.email, b.email),
+          isNull(schema.subscribers.optedOutAt),
+        ),
+      ),
+  ]);
+  return aFollowsB.length > 0 && bFollowsA.length > 0;
+}
+
+export type SharedWeekItem = {
+  classId: string;
+  iso: string;
+  name: string;
+  hm: string;
+  ap: string;
+  durationMin: number;
+  where: string | null;
+  handle: string;
+  coachName: string;
+};
+
+/** The week someone shows the people they follow back: only real, public
+ *  classes they added, from today forward. Personal entries never appear
+ *  here; there is deliberately no way to share those. */
+export async function sharedWeek(
+  userId: string,
+): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
+  const db = await getDb();
+  const marks = await db
+    .select()
+    .from(schema.attendances)
+    .where(
+      and(
+        eq(schema.attendances.userId, userId),
+        gte(schema.attendances.occurrenceDate, todayIso()),
+      ),
+    )
+    .orderBy(asc(schema.attendances.occurrenceDate));
+  if (marks.length === 0) return [];
+
+  const classIds = [...new Set(marks.map((m) => m.classId))];
+  const classRows = (
+    await db.select().from(schema.classes).where(inArray(schema.classes.id, classIds))
+  ).filter((c) => c.isPublic);
+  const classById = new Map(classRows.map((c) => [c.id, c]));
+  const coachIds = [...new Set(classRows.map((c) => c.userId))];
+  const coaches = coachIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
+    : [];
+  const coachById = new Map(coaches.map((u) => [u.id, u]));
+  const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
+  const studios = studioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
+    : [];
+  const studioById = new Map(studios.map((s) => [s.id, s]));
+
+  const byDay = new Map<string, SharedWeekItem[]>();
+  for (const m of marks) {
+    const c = classById.get(m.classId);
+    if (!c) continue;
+    const coach = coachById.get(c.userId);
+    if (!coach?.handle) continue;
+    const t = clockParts(c.startTime);
+    const list = byDay.get(m.occurrenceDate) ?? [];
+    list.push({
+      classId: c.id,
+      iso: m.occurrenceDate,
+      name: c.name,
+      hm: t.hm,
+      ap: t.ap,
+      durationMin: c.durationMin,
+      where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
+      handle: coach.handle,
+      coachName: coach.name,
+    });
+    byDay.set(m.occurrenceDate, list);
+  }
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([iso, items]) => ({
+      iso,
+      label: fmtDayHeader(iso),
+      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
+    }));
+}
+
 /** The shortlist itself, grouped by day. */
 export async function myWeek(userId: string): Promise<WeekDay[]> {
   const db = await getDb();

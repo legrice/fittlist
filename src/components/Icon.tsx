@@ -44,6 +44,7 @@ import {
   Megaphone,
   Flag,
   Palette,
+  Pencil,
   Settings,
 } from "lucide-react";
 
@@ -55,6 +56,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   account_circle: CircleUserRound,
   add: Plus,
   admin_panel_settings: ShieldUser,
+  edit: Pencil,
   palette: Palette,
   flag: Flag,
   campaign: Megaphone,

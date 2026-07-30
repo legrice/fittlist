@@ -1362,6 +1362,52 @@ button.ps-card { cursor: pointer; }
   color: #fff; font-size: 9px; font-weight: 700;
 }
 .weekrow-alsotxt { font-size: 12px; font-weight: 600; color: var(--go); }
+
+/* A member's week on their profile: mutuals only, plus the owner. Rows echo
+   the coach-list shape on the studio page, quieter than Your week's cards. */
+.memweek { margin-top: 26px; }
+.memweek-note { font-size: 12.5px; color: var(--ol); margin: -4px 0 14px; }
+.memweek-day { margin-bottom: 14px; }
+.memweek-dayh {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 13px; color: var(--ol); margin-bottom: 6px;
+}
+.memweek-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+  box-shadow: var(--soft-shadow); text-decoration: none; color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.memweek-row:active { opacity: .7; }
+.memweek-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.memweek-txt .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+}
+.memweek-txt .sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
+.memweek-chev { color: var(--ol); flex-shrink: 0; }
+
+/* Who's going, for the coach who owns the class. */
+.roster { display: flex; flex-direction: column; gap: 4px; }
+.rosterrow {
+  display: flex; align-items: center; gap: 10px; padding: 7px 0;
+  text-decoration: none; color: var(--ink); -webkit-tap-highlight-color: transparent;
+}
+.rosterrow:active { opacity: .7; }
+.rosterrow-av {
+  width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+}
+.rosterrow-av-empty {
+  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.rosterrow-nm { flex: 1; min-width: 0; font-weight: 600; font-size: 14.5px; }
+.rosterrow-chev { color: var(--ol); }
+.rosternone { font-size: 13.5px; color: var(--ol); }
+.classsheet-roster { margin-top: 18px; }
+.classsheet-roster-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 14px; margin-bottom: 6px;
+}
 /* A long class description, capped. The fade tells you there's more without a
    hard edge mid-word, and Read more sits over the bottom of it so the control
    is where the text stops rather than below a gap. */
@@ -1422,6 +1468,9 @@ button.ps-card { cursor: pointer; }
 .classsheet-add:active { transform: scale(.97); }
 .classsheet-add.on { background: var(--go); color: #fff; border-color: var(--go); }
 .classsheet-add[disabled] { opacity: .6; }
+/* The owner's Edit, dressed as the sheet's one action; it's a link, so the
+   underline has to be told no. */
+.classsheet-edit { text-decoration: none; }
 .classsheet-share {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   width: 100%; margin-top: 10px; padding: 6px;

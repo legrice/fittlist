@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { fansVisible } from "@/lib/flags";
+import { mutualFollow, sharedWeek } from "@/lib/week";
 import { AppChrome } from "@/components/AppChrome";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
@@ -61,6 +63,16 @@ export async function MemberProfileView({
     }
   }
 
+  // Their week, for the people they follow back. This is the calendar members
+  // keep asking to share, gated on the one consent the app trusts: you both
+  // tapped Follow on each other. One-way followers and strangers see nothing;
+  // the owner sees it too, with a line saying exactly who else can. Real,
+  // public classes only; personal entries have no way to appear here.
+  const mutual =
+    !!viewerId && !isOwner && (await fansVisible()) && (await mutualFollow(viewerId, user.id));
+  const week = mutual || (isOwner && (await fansVisible())) ? await sharedWeek(user.id) : [];
+  const firstName = name.split(/\s+/)[0];
+
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
@@ -102,6 +114,41 @@ export async function MemberProfileView({
         </div>
 
         {user.about?.trim() && <p className="mempro-about">{user.about}</p>}
+
+        {(mutual || isOwner) && week.length > 0 && (
+          <div className="memweek">
+            <h2 className="prof-sec-h">{isOwner ? "Your week" : `${firstName}'s week`}</h2>
+            <p className="memweek-note">
+              {isOwner
+                ? "People you follow back see this. Nobody else does."
+                : "You can see this because you follow each other."}
+            </p>
+            {week.map((day) => (
+              <div key={day.iso} className="memweek-day">
+                <div className="memweek-dayh">{day.label}</div>
+                {day.items.map((i) => (
+                  <Link
+                    key={`${i.classId}-${i.iso}`}
+                    className="memweek-row"
+                    href={`/${i.handle}/${i.classId}?d=${i.iso}`}
+                  >
+                    <span className="memweek-txt">
+                      <span className="nm">{i.name}</span>
+                      <span className="sub">
+                        {i.hm}
+                        {i.ap} · {i.coachName}
+                        {i.where ? ` · ${i.where}` : ""}
+                      </span>
+                    </span>
+                    <span className="memweek-chev">
+                      <Icon name="chevron_right" size={18} />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

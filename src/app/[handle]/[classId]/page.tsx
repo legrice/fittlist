@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
@@ -14,6 +14,7 @@ import { BackLink } from "@/components/BackLink";
 import { CoachLink } from "@/components/CoachLink";
 import { EventActions } from "@/components/EventActions";
 import { GoingButton } from "@/components/GoingButton";
+import { Roster } from "@/components/Roster";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -127,6 +128,30 @@ export default async function EventPage({ params, searchParams }: Props) {
     going = !!row;
   }
 
+  // The coach's roster for this occurrence: who marked Going, owner only.
+  // They marked it at this coach; showing the coach is what the mark meant.
+  let roster: { name: string; photo: string | null; color: string; handle: string | null }[] = [];
+  if (isOwner) {
+    const marks = await db
+      .select({ userId: schema.attendances.userId })
+      .from(schema.attendances)
+      .where(
+        and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
+      );
+    const ids = [...new Set(marks.map((m) => m.userId))];
+    const people = ids.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+      : [];
+    roster = people
+      .map((p) => ({
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   // Back goes where you actually came from — off the Following tab it returns
   // there, not into a coach's calendar you never opened. (`from=home` is the
   // link's own token; the tab it names is Following.)
@@ -233,6 +258,15 @@ export default async function EventPage({ params, searchParams }: Props) {
           <section className="evsec">
             <h2 className="evsec-h">Details</h2>
             <p className="evdesc">{c.description}</p>
+          </section>
+        )}
+
+        {isOwner && (
+          <section className="evsec">
+            <h2 className="evsec-h">
+              Going{roster.length > 0 ? ` · ${roster.length}` : ""}
+            </h2>
+            <Roster people={roster} />
           </section>
         )}
 

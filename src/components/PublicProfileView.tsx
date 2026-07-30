@@ -32,7 +32,12 @@ function MaybeOpener({
   handle: string;
   children: React.ReactNode;
 }) {
-  return isOwner ? <>{children}</> : <ClassOpener handle={handle}>{children}</ClassOpener>;
+  // Owners used to skip the sheet and jump straight into the editor. Now the
+  // sheet is how a class opens from a list for everyone; the owner's copy of
+  // it carries the roster and an Edit button, so nothing was lost but the
+  // detour. `isOwner` stays in the signature for the call sites.
+  void isOwner;
+  return <ClassOpener handle={handle}>{children}</ClassOpener>;
 }
 
 type UserRow = typeof schema.users.$inferSelect;
@@ -290,7 +295,7 @@ export async function PublicProfileView({
                     className="ps-event"
                     data-cid={c.id}
                     data-d={d.iso}
-                    href={isOwner ? `/app?edit=${c.id}&d=${d.iso}` : `/${handle}/${c.id}?d=${d.iso}`}
+                    href={`/${handle}/${c.id}?d=${d.iso}`}
                   >
                     <span
                       className="ps-accent"

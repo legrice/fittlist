@@ -6,6 +6,7 @@ import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
+import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
 
 // A class, from the bottom up.
@@ -193,6 +194,16 @@ export function ClassSheet({
               </div>
             )}
 
+            {/* Owner only: who marked Going on this occurrence. */}
+            {c.roster && (
+              <div className="classsheet-roster">
+                <h3 className="classsheet-roster-h">
+                  Going{c.roster.length > 0 ? ` · ${c.roster.length}` : ""}
+                </h3>
+                <Roster people={c.roster} />
+              </div>
+            )}
+
             {c.links.length > 0 && (
               <div className="evbook classsheet-book">
                 {c.links.map((l, i) => (
@@ -216,6 +227,13 @@ export function ClassSheet({
             <div className="publishwrap classsheet-do">
               {c.past && !added && (
                 <p className="classsheet-gone">This one has already run.</p>
+              )}
+              {/* The owner's one action. The roster being non-null is the
+                  server saying this viewer owns the class. */}
+              {c.roster && (
+                <Link className="classsheet-add classsheet-edit" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
+                  <Icon name="edit" size={18} /> Edit this class
+                </Link>
               )}
               {c.canAdd && (
                 <button
