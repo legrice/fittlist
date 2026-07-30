@@ -2016,17 +2016,20 @@ await page.goto(BASE + "/requests");
 }
 console.log("requests room ok (contact details, their message, unread, back)");
 
-// The door is in settings, where a coach goes looking for it, and the stat
-// beside Followers opens the same list rather than being a dead number.
+// The stat tile is the door now (a number of people is a list); the old
+// standalone row gave its spot to the beta-link tile.
 await openProfile(page);
 {
-  const row = page.locator(".setrow", { hasText: "Requests" });
-  await row.waitFor();
-  if (!(await row.innerText()).includes("2 people")) fail("the settings row should count them");
-  await page.locator(".acctstat", { hasText: "Requests" }).click();
+  const stat = page.locator(".acctstat", { hasText: "Requests" });
+  await stat.waitFor();
+  if (!(await stat.innerText()).includes("2")) fail("the stat should count them");
+  if (await page.locator(".setrow", { hasText: "Nobody has asked about private sessions" }).count())
+    fail("the standalone Requests row should be gone");
+  await page.locator(".acctcard", { hasText: "Share your beta link" }).waitFor();
+  await stat.click();
   await page.waitForURL(/\/requests/);
 }
-console.log("requests door ok (settings row + the stat opens the list)");
+console.log("requests door ok (the stat opens the list, beta-link tile in the old spot)");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss

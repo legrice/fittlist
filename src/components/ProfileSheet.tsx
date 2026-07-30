@@ -20,7 +20,7 @@ import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
-import { InviteFriends } from "@/components/InviteFriends";
+import { InviteFriends, InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -102,6 +102,7 @@ export function ProfileSheet({
 
   const [shareOpen, setShareOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
   const [disconnecting, startDisconnect] = useTransition();
@@ -374,26 +375,16 @@ export function ProfileSheet({
               <span className="acctcard-s">A scannable code that opens your page</span>
             </span>
           </button>
-        </div>
-
-        {/* Grouped by what a coach reaches for, most-wanted first: the inbound
-            work, then the page they run, then who can reach it, then account
-            plumbing, then the beta, and admin at the bottom. */}
-        <div className="settingslist">
-          {/* The door people will look for. A request is inbound work, so it
-              sits at the top of the list rather than under the account plumbing. */}
-          <a className="setrow" href="/requests">
-            <span className="setrow-ic"><Icon name="send" size={22} /></span>
-            <span className="setrow-txt">
-              <span className="t">Requests</span>
-              <span className="s">
-                {requestCount === 0
-                  ? "Nobody has asked about private sessions yet"
-                  : `${requestCount} ${requestCount === 1 ? "person" : "people"}, with how to reach them`}
-              </span>
+          {/* The Requests row that lived below moved into the stat tile above
+              (a number of people is a list, and the tile opens it); the spot
+              goes to growth. Same tile grid, so every gap up here matches. */}
+          <button className="acctcard acctcard-wide" onClick={() => setInviteOpen(true)}>
+            <span className="acctcard-ic"><Icon name="groups" size={26} /></span>
+            <span className="acctcard-txt">
+              <span className="acctcard-t">Share your beta link</span>
+              <span className="acctcard-s">Anyone who opens it can join fittlist</span>
             </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </a>
+          </button>
         </div>
 
         <h3 className="setgroup-h">Your page</h3>
@@ -728,7 +719,12 @@ export function ProfileSheet({
       />
 
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
-
+      {inviteOpen && (
+        <InviteSheet
+          onClose={() => setInviteOpen(false)}
+          onCopied={() => toast("Link copied, ready to paste")}
+        />
+      )}
 
       <Toast msg={toastMsg} on={toastOn} />
     </>
