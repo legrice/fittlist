@@ -570,14 +570,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   text-decoration: none; border: none; cursor: pointer;
 }
 .fab:active { transform: scale(.97); }
-/* The share fab wears the wash rather than the solid: sharing is the invite,
-   adding is the action. */
-.fab.fab-tint { background: var(--si-tint); color: var(--si-ink); }
-/* The Coach tag beside the name joins the brand family on profiles. The small
-   gray tag on Discover rows stays gray on purpose: there it's a label in a
-   list, here it's part of the page's identity. */
-.profname-row .kindtag { background: var(--si-tint); color: var(--si-ink); }
-[data-mode="dark"] .profname-row .kindtag { background: var(--si-tint); color: var(--si-ink); border: none; }
+
 /* In dark the card is near-black, which would vanish into the page — flip it
    the way the light version reads: the pill is the bright thing. */
 [data-mode="dark"] .fab {
@@ -1777,22 +1770,23 @@ button.ps-card { cursor: pointer; }
   position: absolute; top: 32px; right: 0;
   display: flex; align-items: center; gap: 10px;
 }
-.addclass-pill {
+.sharepill {
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
-  padding: 0 16px; border-radius: 999px; text-decoration: none;
-  background: var(--si); color: #fff;
+  padding: 0 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--si-tint); color: var(--si-ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
 }
-.addclass-pill:active { transform: scale(.97); }
+.sharepill:active { transform: scale(.97); }
 /* The next week of a schedule, on request. */
 .viewmore {
   display: block; margin: 18px auto 6px; padding: 12px 26px; border-radius: 999px;
-  border: none; background: var(--si-tint); color: var(--si-ink);
+  border: none; background: #e9e7e1; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
   cursor: pointer;
 }
 .viewmore:active { transform: scale(.97); }
-[data-mode="dark"] .addclass-pill:active { background: #2c2718; }
+[data-mode="dark"] .viewmore { background: var(--card); border: 1px solid var(--line); }
+
 .pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
 .profav {
   width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block;
@@ -1849,7 +1843,10 @@ button.ps-card { cursor: pointer; }
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
    one family. */
-.pubtab.sel { color: var(--si-ink); background: var(--si-tint); }
+/* Selected reads as an underline, not a pill: ink text, a black rule
+   beneath, nothing filled. */
+.pubtab { border-radius: 0; padding-left: 6px; padding-right: 6px; border-bottom: 2.5px solid transparent; }
+.pubtab.sel { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -3271,7 +3268,7 @@ button.ps-card { cursor: pointer; }
 .disrow:active { transition: background 0s; }
 .feedav:active, .brandbar-home:active, .mempro-edit:active { background: transparent; opacity: .6; }
 /* The ones that were still silent under a finger. */
-.pubtab:active { background: var(--cl-d); }
+.pubtab:active { opacity: .7; }
 .weekrow-main:active { opacity: .6; }
 .feedfilter-link:active, .authforgot:active, .authmagic:active, .calcopy:active,
 .linktoggle:active, .descmore:active, .obloginlink:active { opacity: .55; }

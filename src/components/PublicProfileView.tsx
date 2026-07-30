@@ -12,7 +12,7 @@ import { studioPath } from "@/lib/studio";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
-import { ShareWeekFab } from "@/components/ShareWeekFab";
+import { ShareWeekPill } from "@/components/ShareWeekFab";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
@@ -427,9 +427,7 @@ export async function PublicProfileView({
           ownerTop={
             isOwner ? (
               <>
-              <Link className="addclass-pill" href="/app?add=1">
-                <Icon name="add" size={17} /> Add class
-              </Link>
+              {days.length > 0 && <ShareWeekPill handle={handle} />}
               <ProfileOwnerBar
                 name={user.name}
                 title={user.title ?? ""}
@@ -467,11 +465,15 @@ export async function PublicProfileView({
               there. */}
           {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
         </ProfileTabs>
-        {/* The floating spot goes to sharing: adding classes is occasional
-            maintenance and lives up top now, sharing the week is the weekly
-            habit. On every section, because sharing isn't tied to one, and
-            only when the week has something worth showing. */}
-        {isOwner && days.length > 0 && <ShareWeekFab handle={handle} />}
+        {/* The primary action holds the thumb spot in solid brand orange;
+            sharing sits up top as the tinted pill. Schedule section only:
+            About and Contact aren't places you add a class from. */}
+        {isOwner && tab === "schedule" && (
+          <Link className="fab" href="/app?add=1">
+            <Icon name="add" size={20} />
+            Add class
+          </Link>
+        )}
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (

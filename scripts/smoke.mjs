@@ -1624,16 +1624,17 @@ await expect(
 // The way off a profile is the tab bar, which is there however you arrived.
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.waitForURL("**/discover");
-// the selected tab is a filled pill, not an underline
+// the selected tab is an ink underline, not a filled pill (the pill came and
+// went; the underline is the design)
 await page.goto(BASE + "/matt");
 await page.locator(".pubtab.sel").waitFor();
 {
   const t = await page.locator(".pubtab.sel").evaluate((e) => {
     const cs = getComputedStyle(e);
-    return { bg: cs.backgroundColor, radius: parseFloat(cs.borderTopLeftRadius) };
+    return { bg: cs.backgroundColor, line: cs.borderBottomColor, w: parseFloat(cs.borderBottomWidth) };
   });
-  if (t.radius < 20) fail("the selected tab should be a pill, radius " + t.radius);
-  if (t.bg === "rgba(0, 0, 0, 0)") fail("the selected tab should be filled");
+  if (t.bg !== "rgba(0, 0, 0, 0)") fail("the selected tab should not be filled, got " + t.bg);
+  if (!(t.w >= 2)) fail("the selected tab needs its underline, width " + t.w);
 }
 // ---- each tab is a link with its own URL, so a coach can send someone to one
 {
