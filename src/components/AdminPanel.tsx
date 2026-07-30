@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import {
   adminActOnRequest,
   adminAddStudio,
@@ -647,6 +648,9 @@ function PersonCard({
   const [pending, start] = useTransition();
   const [link, setLink] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
+  // Flipping someone's side is a big enough lever to ask twice about: it
+  // changes what their page is, and member-ward it unpublishes their classes.
+  const [confirmKind, setConfirmKind] = useState(false);
   // Which side the card says they're on; flips in place when the admin flips it.
   const [kindShown, setKindShown] = useState(c.kind === "coach" ? "coach" : "member");
   const isSelf = c.email.toLowerCase() === adminEmail.toLowerCase();
@@ -737,25 +741,70 @@ function PersonCard({
         <button
           className="btn ghost adminaction"
           disabled={pending}
-          onClick={() =>
-            start(async () => {
-              const to = kindShown === "coach" ? "fan" : "coach";
-              const res = await adminSetKind(c.id, to);
-              if (!res.ok) {
-                toast(res.error ?? "Couldn't change that");
-                return;
-              }
-              setKindShown(to === "fan" ? "member" : "coach");
-              toast(
-                to === "fan"
-                  ? `${c.name} is a member now; their public classes are unpublished`
-                  : `${c.name} is a coach now`,
-              );
-            })
-          }
+          onClick={() => setConfirmKind(true)}
         >
           {kindShown === "coach" ? "Make them a member" : "Make them a coach"}
         </button>
+      )}
+      {/* Portalled to the body, same reason as InviteFriends: rendered in
+          place it inherits the card's stacking and the page paints over it. */}
+      {confirmKind && createPortal(
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmKind(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>
+              Make {c.name.trim().split(/\s+/)[0] || "them"} a{" "}
+              {kindShown === "coach" ? "member" : "coach"}?
+            </h2>
+            <p className="lead">
+              {kindShown === "coach"
+                ? "Their public classes come down and their page becomes a member profile. Anyone who was going to those classes loses them."
+                : "They can publish public classes, and their page becomes a coach page with a schedule."}
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={pending}
+                onClick={() =>
+                  start(async () => {
+                    const to = kindShown === "coach" ? "fan" : "coach";
+                    const res = await adminSetKind(c.id, to);
+                    setConfirmKind(false);
+                    if (!res.ok) {
+                      toast(res.error ?? "Couldn't change that");
+                      return;
+                    }
+                    setKindShown(to === "fan" ? "member" : "coach");
+                    toast(
+                      to === "fan"
+                        ? `${c.name} is a member now; their public classes are unpublished`
+                        : `${c.name} is a coach now`,
+                    );
+                  })
+                }
+              >
+                {pending
+                  ? "One moment…"
+                  : kindShown === "coach"
+                    ? "Yes, make them a member"
+                    : "Yes, make them a coach"}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={pending}
+                onClick={() => setConfirmKind(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
       {!isSelf &&
         (confirmDel ? (
