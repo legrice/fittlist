@@ -293,7 +293,7 @@ export function WeekScreen({
           <button className="setrow" onClick={() => setShare(true)}>
             <span className="setrow-ic"><Icon name="share" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Share my week</span>
+              <span className="t">Share your week</span>
               <span className="s">A story image of what you&rsquo;re training this week</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>

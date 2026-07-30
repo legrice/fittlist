@@ -1327,7 +1327,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekcal .setrow", { hasText: "Share my week" }).waitFor();
+  await fan.locator(".weekcal .setrow", { hasText: "Share your week" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
@@ -1415,7 +1415,7 @@ await fan.locator(".navtab", { hasText: "You" }).click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
-await fan.getByRole("heading", { name: "Share my week" }).waitFor();
+await fan.getByRole("heading", { name: "Share your week" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
 // the wordmark is the way back to the week from anywhere
