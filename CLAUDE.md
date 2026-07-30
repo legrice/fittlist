@@ -132,6 +132,17 @@ rewrite it: change a description, lose a class. A new weekly class joins an
 existing series when name, time, place and visibility all match, which keeps
 "also on Friday" as one class; anything that differs starts its own.
 
+**The app's day is US Eastern, not the server's.** Vercel's clock is UTC, so
+from 8pm Eastern `new Date().toISOString().slice(0, 10)` is tomorrow, and for
+months every screen showed Thursday as today on Wednesday night. `todayIso()`,
+`occurrenceEnded()` and `mondayOfCurrentWeek()` in `src/lib/format.ts` are the
+app's clock (`NEXT_PUBLIC_APP_TZ`, defaulting to America/New_York); anything
+that needs "today" goes through them and never through `toISOString`. The
+suites have to keep the same clock: a "yesterday" computed in UTC is the app's
+today during that window, which is a legal end date, not a passed one. A
+timezone per coach or per viewer is the real fix someday, and it lands in
+those three functions.
+
 **Feature flags** (`src/lib/flags.ts`) compare exact strings. `FANS_ENABLED`
 must be literally `"true"` or `"coaches"`; `"1"` and `"yes"` are off.
 

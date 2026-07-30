@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { studioPath } from "@/lib/studio";
 
@@ -109,7 +109,7 @@ export async function PublicProfileView({
   const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
 
   // Continuous forward calendar: each date from today with classes.
-  const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${todayIso()}T00:00:00Z`);
   const days: { iso: string; label: string; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);

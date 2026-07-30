@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
-import { DAYS, fmtTime, storyTheme, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 
 // The member's share image: the classes they marked "going" this week, across
@@ -73,7 +73,7 @@ export async function GET(req: Request) {
   // Group by the days they actually marked — the image is their commitments,
   // not every occurrence of a class they sometimes attend.
   const classById = new Map(classRows.map((c) => [c.id, c]));
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayIsoNow();
   const endIso = new Date(Date.parse(`${todayIso}T00:00:00Z`) + 7 * 864e5)
     .toISOString()
     .slice(0, 10);

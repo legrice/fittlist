@@ -292,11 +292,14 @@ console.log("delete-all ok (whole repeating set goes)");
 // ---- a weekly class can stop on a date, and stops everywhere at once
 {
   const before = await scheduleClasses(page);
-  // an end date two weeks out, on a Tuesday class
-  const end = new Date();
+  // an end date two weeks out, on a Tuesday class. Days are the app's days
+  // (US Eastern), not UTC's: late in the evening UTC is already tomorrow, and
+  // a "yesterday" computed there is the app's today, which is a legal end.
+  const appToday = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const end = new Date(`${appToday}T00:00:00Z`);
   end.setUTCDate(end.getUTCDate() + 14);
   const endIso = end.toISOString().slice(0, 10);
-  const past = new Date();
+  const past = new Date(`${appToday}T00:00:00Z`);
   past.setUTCDate(past.getUTCDate() - 1);
 
   await page.getByRole("button", { name: "Add class" }).click();

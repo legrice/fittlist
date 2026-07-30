@@ -16,6 +16,7 @@ import {
   fmtDays,
   minutesToTime,
   timeToMinutes,
+  todayIso,
 } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
@@ -515,7 +516,7 @@ export function Adder({
                         id="fEndsOn"
                         type="date"
                         className="timeinput"
-                        min={new Date().toISOString().slice(0, 10)}
+                        min={todayIso()}
                         value={endsOn}
                         onChange={(e) => setEndsOn(e.target.value)}
                         aria-label="Last day this class runs"

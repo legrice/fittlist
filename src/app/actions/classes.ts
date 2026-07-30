@@ -7,7 +7,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
-import { detectProvider, dowOfDate } from "@/lib/format";
+import { detectProvider, dowOfDate, todayIso } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
 import { humanTime, notifyCancelled } from "@/lib/cancel";
 
@@ -97,7 +97,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const endsOn = oneOff ? null : input.endsOn?.trim() || null;
   if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn))
     return { ok: false, error: "Invalid end date." };
-  if (endsOn && endsOn < new Date().toISOString().slice(0, 10))
+  if (endsOn && endsOn < todayIso())
     return { ok: false, error: "That end date has already passed." };
   const days = oneOff
     ? [dowOfDate(oneOff)]
@@ -386,7 +386,7 @@ export async function deleteClass(
     time: humanTime(row.startTime),
     where,
   };
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   // Everyone who said they were coming to these classes, and their email.
   // They have to go regardless: a Going mark points at the class row, so the

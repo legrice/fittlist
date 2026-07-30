@@ -1,7 +1,7 @@
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { clockParts, fmtDayHeader, occurrenceEnded } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
 
 // The classes someone has added, from today forward.
 //
@@ -33,9 +33,6 @@ export type WeekItem = {
 };
 
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
-
-/** Today, as the server sees it. Everything here is date-only. */
-const todayIso = () => new Date().toISOString().slice(0, 10);
 
 /** The next date on or after today falling on this weekday (0 = Monday). */
 function nextOccurrence(dayOfWeek: number): string {

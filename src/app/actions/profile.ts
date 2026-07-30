@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { AVATAR_COLORS } from "@/lib/avatar";
-import { fmtDateLong, RESERVED_HANDLES, slug } from "@/lib/format";
+import { fmtDateLong, RESERVED_HANDLES, slug, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { normalizeLocation } from "@/lib/location";
 import { knownLocations } from "@/app/actions/locations";
@@ -294,7 +294,7 @@ export async function handleStatus(): Promise<{
     : null;
   return {
     handle: me.handle,
-    lockedUntil: until && until.getTime() > Date.now() ? until.toISOString().slice(0, 10) : null,
+    lockedUntil: until && until.getTime() > Date.now() ? todayIso(until) : null,
   };
 }
 
@@ -321,7 +321,7 @@ export async function changeHandle(
       return {
         ok: false,
         error: `You changed your link recently. You can change it again on ${fmtDateLong(
-          until.toISOString().slice(0, 10),
+          todayIso(until),
         )}.`,
       };
     }

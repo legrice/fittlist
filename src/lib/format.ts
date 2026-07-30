@@ -192,32 +192,54 @@ export function fmtDays(days: number[]): string {
   return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
 }
 
-/** ISO date (YYYY-MM-DD) of today, UTC. Where "from now on" starts. */
+// The app's clock. Classes store floating local times ("06:00", no zone), and
+// every screen agrees on what "today" means by asking here. It used to be the
+// server's day, which on Vercel is UTC: from 8pm Eastern the whole app lived a
+// day ahead, showing Thursday as today on Wednesday night. Everyone in the
+// beta trains in US Eastern, so that's the clock, overridable per deployment.
+// A timezone per coach (or per viewer) is the real fix, and it would land in
+// these three functions.
+const APP_TZ = process.env.NEXT_PUBLIC_APP_TZ || "America/New_York";
+
+/** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
+ *  now on" starts. Pass a Date to ask what day some other instant falls on. */
 export function todayIso(now = new Date()): string {
-  return now.toISOString().slice(0, 10);
+  // en-CA is the locale whose short date is already YYYY-MM-DD.
+  return now.toLocaleDateString("en-CA", { timeZone: APP_TZ });
+}
+
+/** Minutes past midnight of this instant, in the app's timezone. */
+function minutesNow(now = new Date()): number {
+  const [h, m] = now
+    .toLocaleTimeString("en-GB", { timeZone: APP_TZ, hour12: false, hour: "2-digit", minute: "2-digit" })
+    .split(":")
+    .map(Number);
+  // en-GB says "24:00" for midnight in some ICU versions; fold it back.
+  return ((h % 24) * 60 + m);
 }
 
 /**
  * Has this occurrence been and gone?
  *
- * Times are floating: a class stores "06:00" and no timezone, and the app
- * already treats the server's day as the day (the feed starts at today by the
- * same clock). So this is measured the same way, and a class only counts as
- * gone once its end time has passed, not at midnight. Storing a timezone per
- * coach is the real fix, and it would land here.
+ * Times are floating, so both sides land on the same floating scale: the
+ * occurrence's end as its date plus minutes, the present as today's date plus
+ * minutes, both in the app's timezone. A class only counts as gone once its
+ * end time has passed, not at midnight.
  */
 export function occurrenceEnded(iso: string, startTime: string, durationMin: number): boolean {
   const [h, m] = startTime.split(":").map(Number);
   const end = new Date(`${iso}T00:00:00Z`);
   end.setUTCMinutes(end.getUTCMinutes() + h * 60 + m + durationMin);
-  return end.getTime() < Date.now();
+  const now = new Date();
+  const ref = new Date(`${todayIso(now)}T00:00:00Z`);
+  ref.setUTCMinutes(ref.getUTCMinutes() + minutesNow(now));
+  return end.getTime() < ref.getTime();
 }
 
-/** ISO date (YYYY-MM-DD) of the current week's Monday, UTC. */
+/** ISO date (YYYY-MM-DD) of the current week's Monday, in the app's timezone. */
 export function mondayOfCurrentWeek(now = new Date()): string {
-  const day = (now.getUTCDay() + 6) % 7; // 0 = Monday
-  const m = new Date(now);
-  m.setUTCDate(now.getUTCDate() - day);
+  const m = new Date(`${todayIso(now)}T00:00:00Z`);
+  m.setUTCDate(m.getUTCDate() - ((m.getUTCDay() + 6) % 7));
   return m.toISOString().slice(0, 10);
 }
 

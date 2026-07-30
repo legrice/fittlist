@@ -5,7 +5,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
@@ -82,7 +82,7 @@ export default async function FeedPage({
   // Classes this member marked "I'm going" to — a personal note, not a booking.
   const going = new Set(goingRows.map((g) => `${g.classId}|${g.occurrenceDate}`));
 
-  const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${todayIso()}T00:00:00Z`);
   const days: FeedDay[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);

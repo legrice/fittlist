@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
-import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes } from "@/lib/format";
+import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 
 // v1.5 share image: 1080x1920 story PNG - Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -55,7 +55,7 @@ export async function GET(
     await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
   ).filter((c) => c.isPublic); // shareable image: public classes only
   // The week image starts on *today* and runs the next 7 days (1 for "day").
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayIsoNow();
   const start = new Date(`${todayIso}T00:00:00Z`);
   const spanDays = span === "day" ? 1 : 7;
   const byDay: { day: string; items: typeof classRows }[] = [];

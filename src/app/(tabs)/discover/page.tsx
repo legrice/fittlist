@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { runsOn, timeToMinutes } from "@/lib/format";
+import { runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
@@ -56,7 +56,7 @@ export default async function DiscoverPage() {
 
   // "Classes this week" — the signal that a page is actually live, and the
   // thing a fan is deciding on.
-  const start = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+  const start = new Date(`${todayIso()}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);

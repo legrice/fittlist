@@ -1,6 +1,7 @@
 import { desc, eq, inArray, isNull, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
 import { invitesBannerCount } from "@/app/actions/invites";
@@ -130,7 +131,7 @@ export default async function SchedulePage({
     isPublic: c.isPublic,
     links: c.links,
   }));
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const hasAnyClass = classRows.length > 0;
   const studios: StudioDto[] = studioRows.map((s) => ({
     id: s.id,
@@ -167,7 +168,7 @@ export default async function SchedulePage({
     <ScheduleScreen
       classes={classes}
       hasAnyClass={hasAnyClass}
-      todayIso={todayIso}
+      todayIso={today}
       studios={studios}
       templates={templates}
       customTypes={customTypes}

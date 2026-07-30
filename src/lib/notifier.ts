@@ -2,7 +2,7 @@ import { eq, inArray, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
 import { sendMessage } from "@/lib/mailer";
-import { fmtTime, runsOn, siteOrigin, timeToMinutes } from "@/lib/format";
+import { fmtTime, runsOn, siteOrigin, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
 
 // All list email goes through here - the piece most likely to move to SMS
@@ -72,7 +72,7 @@ function weekDigestText(
   classRows: (typeof schema.classes.$inferSelect)[],
   studioById: Map<string, typeof schema.studios.$inferSelect>,
 ): string {
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayIsoNow();
   const start = new Date(`${todayIso}T00:00:00Z`);
   const out: string[] = [];
   for (let i = 0; i < 7; i++) {
@@ -227,7 +227,7 @@ function mergedWeekText(
   studioById: Map<string, typeof schema.studios.$inferSelect>,
   trainerById: Map<string, typeof schema.users.$inferSelect>,
 ): string {
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayIsoNow();
   const start = new Date(`${todayIso}T00:00:00Z`);
   const out: string[] = [];
   for (let i = 0; i < 7; i++) {
