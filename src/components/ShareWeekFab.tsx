@@ -15,7 +15,9 @@ export function ShareWeekFab({ handle }: { handle: string }) {
   return (
     <>
       <button className="fab" onClick={() => setOpen(true)}>
-        <Icon name="auto_awesome" size={20} />
+        {/* A megaphone, not sparkles: sparkles have come to mean "AI made
+            this", and this button shares a real person's real week. */}
+        <Icon name="campaign" size={20} />
         Share my week
       </button>
       <ShareWeekSheet handle={handle} open={open} onClose={() => setOpen(false)} onToast={toast} />
