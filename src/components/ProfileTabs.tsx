@@ -23,7 +23,7 @@ export function ProfileTabs({
   avatar,
   actions,
   avail,
-  menu,
+  ownerTop,
   children,
 }: {
   handle: string;
@@ -39,9 +39,11 @@ export function ProfileTabs({
   /** The row of pills under the name: Message, Follow. */
   actions: ReactNode;
   avail: ReactNode | null;
-  /** The owner's three-dot button. Beside the name, because everything behind
-   *  it is about this person's page rather than about the section below. */
-  menu?: ReactNode;
+  /** The owner's controls, top right of the header: the three-dot in the
+   *  corner, and the labeled Add class pill across from the photo. Frequency
+   *  decides placement: adding is occasional maintenance and lives up top;
+   *  sharing is the weekly habit and owns the floating button below. */
+  ownerTop?: ReactNode;
   children: ReactNode;
 }) {
   const tracked = useRef(false);
@@ -78,13 +80,13 @@ export function ProfileTabs({
       {/* Who this is, top to bottom: face, name, where, what. Then the things
           you can do about it, then the section you asked for. */}
       <div className="pubhead">
+        {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {avatar}
         {/* The badge rides with the name and wraps under it when the name is
             long, rather than being pushed down the page by the lines between. */}
         <div className="profname-row">
           <h1 className="profname">{name}</h1>
           {avail}
-          {menu}
         </div>
         {/* Location and title on their own lines. Joined into "Strength coach in
             Jersey City, NJ" they made one long line that wrapped to two anyway,

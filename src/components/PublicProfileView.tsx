@@ -12,6 +12,7 @@ import { studioPath } from "@/lib/studio";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
+import { ShareWeekFab } from "@/components/ShareWeekFab";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { AppChrome } from "@/components/AppChrome";
@@ -396,13 +397,12 @@ export async function PublicProfileView({
               </div>
             ) : null
           }
-          // Beside the name rather than under the title: it's a badge on the
-          // person, the same shape as a verification mark, and it answers the
-          // question a visitor is already asking.
-          // Everything a coach does with their own page, behind one button
-          // beside their name. Nobody else sees it.
-          menu={
+          // The owner's controls, top right: the three-dot in the corner,
+          // the labeled Add class pill across from the photo. Nobody else
+          // sees either.
+          ownerTop={
             isOwner ? (
+              <>
               <ProfileOwnerBar
                 name={user.name}
                 title={user.title ?? ""}
@@ -421,6 +421,10 @@ export async function PublicProfileView({
                 userId={user.id}
                 handle={handle}
               />
+              <Link className="addclass-pill" href="/app?add=1">
+                <Icon name="add" size={17} /> Add class
+              </Link>
+              </>
             ) : null
           }
           avail={
@@ -439,15 +443,11 @@ export async function PublicProfileView({
               there. */}
           {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
         </ProfileTabs>
-        {/* The one thing a coach does most from their own week, back under the
-            thumb. Only on the schedule section: About and Contact aren't
-            places you add a class from. */}
-        {isOwner && tab === "schedule" && (
-          <Link className="fab" href="/app?add=1">
-            <Icon name="add" size={20} />
-            Add class
-          </Link>
-        )}
+        {/* The floating spot goes to sharing: adding classes is occasional
+            maintenance and lives up top now, sharing the week is the weekly
+            habit. On every section, because sharing isn't tied to one, and
+            only when the week has something worth showing. */}
+        {isOwner && days.length > 0 && <ShareWeekFab handle={handle} />}
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (
