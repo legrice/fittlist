@@ -72,18 +72,6 @@ export async function GET(
           fontFamily: "Delight",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 1200,
-            height: 18,
-            background: t.accent,
-            display: "flex",
-          }}
-        />
-
         <div style={{ display: "flex", alignItems: "center", gap: 48 }}>
           {user.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -95,9 +83,7 @@ export async function GET(
               style={{
                 borderRadius: 999,
                 objectFit: "cover",
-                borderWidth: 8,
-                borderStyle: "solid",
-                borderColor: t.accent,
+                boxShadow: "0 18px 60px rgba(23, 26, 31, .28)",
                 flexShrink: 0,
               }}
             />
@@ -116,6 +102,7 @@ export async function GET(
                 justifyContent: "center",
                 fontSize: 124,
                 fontWeight: 800,
+                boxShadow: "0 18px 60px rgba(23, 26, 31, .28)",
                 flexShrink: 0,
               }}
             >
