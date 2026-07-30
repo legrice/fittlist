@@ -13,6 +13,7 @@ import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ShareWeekFab } from "@/components/ShareWeekFab";
+import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { AppChrome } from "@/components/AppChrome";
@@ -131,9 +132,11 @@ export async function PublicProfileView({
   // Studios/spaces this coach is associated with, derived from where they coach.
   const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Continuous forward calendar: each date from today with classes.
+  // Continuous forward calendar: each date from today with classes. Each day
+  // remembers which 7-day window it falls in, so the page can show one week
+  // and offer the rest behind View more.
   const start = new Date(`${todayIso()}T00:00:00Z`);
-  const days: { iso: string; label: string; items: typeof classRows }[] = [];
+  const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);
     d.setUTCDate(start.getUTCDate() + i);
@@ -142,7 +145,7 @@ export async function PublicProfileView({
     const items = classRows
       .filter((c) => runsOn(c, iso, dow))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-    if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
+    if (items.length) days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(i / 7), items });
   }
 
   // The face moved up into the header, above the name, so About starts with
@@ -305,49 +308,70 @@ export async function PublicProfileView({
         // one thing you'd do with it from here is change it.
         <MaybeOpener isOwner={isOwner} handle={handle}>
         <div className="ps-week ps-agenda">
-          {days.map((d) => (
-          <div key={d.iso} className="ps-daygroup">
-            <div className="ps-daycol">{d.label}</div>
-            <div className="ps-daycards">
-              {d.items.map((c) => {
-                const s = c.studioId ? studioById.get(c.studioId) : undefined;
-                const where = s ? s.name : c.location;
-                const start = clockParts(c.startTime);
-                return (
-                  <Link
-                    key={`${d.iso}-${c.id}`}
-                    className="ps-event"
-                    data-cid={c.id}
-                    data-d={d.iso}
-                    href={`/${handle}/${c.id}?d=${d.iso}`}
-                  >
-                    <span
-                      className="ps-accent"
-                      style={{ background: avatarColor(user) }}
-                      aria-hidden="true"
-                    />
-                    <span className="ps-ebody">
-                      <span className="ps-enm">{c.name}</span>
-                      {where && (
-                        <span className="ps-estudio">
-                          <Icon name="place" size={13} className="ps-estudio-ic" />
-                          {where}
+          {(() => {
+            const renderDay = (d: (typeof days)[number]) => (
+              <div key={d.iso} className="ps-daygroup">
+                <div className="ps-daycol">{d.label}</div>
+                <div className="ps-daycards">
+                  {d.items.map((c) => {
+                    const s = c.studioId ? studioById.get(c.studioId) : undefined;
+                    const where = s ? s.name : c.location;
+                    const start = clockParts(c.startTime);
+                    return (
+                      <Link
+                        key={`${d.iso}-${c.id}`}
+                        className="ps-event"
+                        data-cid={c.id}
+                        data-d={d.iso}
+                        href={`/${handle}/${c.id}?d=${d.iso}`}
+                      >
+                        <span
+                          className="ps-accent"
+                          style={{ background: avatarColor(user) }}
+                          aria-hidden="true"
+                        />
+                        <span className="ps-ebody">
+                          <span className="ps-enm">{c.name}</span>
+                          {where && (
+                            <span className="ps-estudio">
+                              <Icon name="place" size={13} className="ps-estudio-ic" />
+                              {where}
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                    <span className="ps-etimecol">
-                      <span className="ps-etime">
-                        {start.hm}
-                        <span className="ps-ap">{start.ap}</span>
-                      </span>
-                      <span className="ps-edur">{c.durationMin} min</span>
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-          ))}
+                        <span className="ps-etimecol">
+                          <span className="ps-etime">
+                            {start.hm}
+                            <span className="ps-ap">{start.ap}</span>
+                          </span>
+                          <span className="ps-edur">{c.durationMin} min</span>
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+            // One week at a time: the first non-empty week renders now, and
+            // the rest wait behind View more, revealed a week per tap. Empty
+            // weeks never make a chunk, so the button always shows something.
+            const weekIdxs = [...new Set(days.map((d) => d.week))].sort((a, b) => a - b);
+            const [firstWeek, ...laterWeeks] = weekIdxs;
+            return (
+              <>
+                {days.filter((d) => d.week === firstWeek).map(renderDay)}
+                {laterWeeks.length > 0 && (
+                  <ScheduleMore
+                    chunks={laterWeeks.map((w) => (
+                      <div key={w} style={{ display: "contents" }}>
+                        {days.filter((d) => d.week === w).map(renderDay)}
+                      </div>
+                    ))}
+                  />
+                )}
+              </>
+            );
+          })()}
         </div>
         </MaybeOpener>
       )}

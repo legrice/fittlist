@@ -1775,6 +1775,15 @@ button.ps-card { cursor: pointer; }
 }
 .addclass-pill:active { transform: scale(.97); }
 [data-mode="dark"] .addclass-pill { background: var(--card); }
+/* The next week of a schedule, on request. */
+.viewmore {
+  display: block; margin: 18px auto 6px; padding: 12px 26px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  cursor: pointer;
+}
+.viewmore:active { transform: scale(.97); }
+[data-mode="dark"] .viewmore { background: var(--card); }
 [data-mode="dark"] .addclass-pill:active { background: #2c2718; }
 .pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
 .profav {

@@ -18,7 +18,8 @@ import { QrSheet } from "@/components/QrSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-const INITIAL_WEEKS = 4;
+// One week at a time: the button at the bottom asks for the next one.
+const INITIAL_WEEKS = 1;
 const MAX_WEEKS = 52;
 
 export function ScheduleScreen({
@@ -288,25 +289,6 @@ export function ScheduleScreen({
     }
   };
 
-  // Load more weeks when the trainer nears the bottom (one load per render).
-  const loadingRef = useRef(false);
-  useEffect(() => {
-    loadingRef.current = false;
-  }, [weeks]);
-  useEffect(() => {
-    const stage = document.querySelector(".stage");
-    if (!stage) return;
-    const onScroll = () => {
-      if (loadingRef.current) return;
-      if (stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 800) {
-        loadingRef.current = true;
-        setWeeks((w) => Math.min(w + INITIAL_WEEKS, MAX_WEEKS));
-      }
-    };
-    stage.addEventListener("scroll", onScroll, { passive: true });
-    return () => stage.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
@@ -397,6 +379,14 @@ export function ScheduleScreen({
                 </div>
               ))}
             </div>
+            {/* A week at a time, on request. The old behavior loaded four and
+                kept loading on scroll, which made the schedule feel endless;
+                asking is one tap and the list stays the size you asked for. */}
+            {weeks < MAX_WEEKS && (
+              <button className="viewmore" onClick={() => setWeeks((w) => Math.min(w + 1, MAX_WEEKS))}>
+                View more
+              </button>
+            )}
           </>
         )}
       </div>
