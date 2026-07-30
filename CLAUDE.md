@@ -106,6 +106,17 @@ so a second script on a used database trips over the first one's account.
 emailed link: without it the redirect points at fittlist.co and leaves the
 sandbox.
 
+## The ethos is a gate, not a poster
+
+`ETHOS.md` is the product's constitution: four ordered laws, then the lines
+fittlist doesn't cross (never addicting, nobody is the product, private by
+default, no enshittification, charge in the open, few features done well).
+`/ethos` renders it in-app. Hold every feature request against it, including
+the founder's own: when an idea serves no law or breaks a line, say so before
+building, plainly and with the specific tenet named. That pushback is the
+file's whole job. It changes slowly and reluctantly, and only when Matt says
+so in as many words.
+
 ## Things worth knowing before changing them
 
 **`runsOn()` in `src/lib/format.ts`** is the single predicate every surface uses

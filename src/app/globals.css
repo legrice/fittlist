@@ -1385,6 +1385,18 @@ button.ps-card { cursor: pointer; }
 .memweek-txt .sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 .memweek-chev { color: var(--ol); flex-shrink: 0; }
 
+/* The ethos page: a numbered list of laws and a stack of lines, quiet. */
+.ethos-lead { font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 560px; margin-top: 10px; }
+.ethos-laws { margin: 10px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
+.ethos-laws li::marker { font-weight: 700; color: var(--si); }
+.ethos-law-t {
+  display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 16px;
+}
+.ethos-law-s { display: block; font-size: 13.5px; color: var(--ol); line-height: 1.5; margin-top: 2px; }
+.ethos-lines { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+.ethos-line { background: var(--card); border-radius: 14px; padding: 13px 15px; box-shadow: var(--soft-shadow); }
+
 /* Small group labels between settings cards. */
 .setgroup-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;

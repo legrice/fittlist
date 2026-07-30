@@ -500,6 +500,14 @@ export function ProfileSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </a>
+              <a className="setrow" href="/ethos">
+                <span className="setrow-ic"><Icon name="favorite" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Ethos</span>
+                  <span className="s">The laws, and the lines we don&rsquo;t cross</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
             </div>
           </>
         )}
