@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { eq, or } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { fansVisible } from "@/lib/flags";
+import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
@@ -99,6 +100,35 @@ export default async function StudioPage({ params, searchParams }: Props) {
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
 
+  // Who teaches here: everyone who picked this studio in setup or has a class
+  // at it. The same union the coach profile uses for "Where I coach", from the
+  // other end.
+  const [picked, classRows] = await Promise.all([
+    db
+      .select({ userId: schema.coachStudios.userId })
+      .from(schema.coachStudios)
+      .where(eq(schema.coachStudios.studioId, s.id)),
+    db
+      .select({ userId: schema.classes.userId })
+      .from(schema.classes)
+      .where(eq(schema.classes.studioId, s.id)),
+  ]);
+  const coachIds = [...new Set([...picked.map((p) => p.userId), ...classRows.map((c) => c.userId)])];
+  const coachRows = coachIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
+    : [];
+  const coaches = coachRows
+    .filter((u) => u.kind !== "fan" && !!u.handle)
+    .map((u) => ({
+      id: u.id,
+      handle: u.handle!,
+      name: u.name,
+      title: u.title ?? "",
+      photo: u.photo,
+      color: avatarColor(u),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <div className="pub profile" data-mode={await viewerLook()}>
       <div className="profwrap">
@@ -165,6 +195,35 @@ export default async function StudioPage({ params, searchParams }: Props) {
             </span>
           </a>
         </div>
+
+        {coaches.length > 0 && (
+          <div className="profstudios">
+            <h2 className="prof-sec-h">Coaches here</h2>
+            {coaches.map((c) => (
+              <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
+                {c.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="coachstudio-av" src={c.photo} alt="" />
+                ) : (
+                  <span
+                    className="coachstudio-av coachstudio-av-empty"
+                    style={{ background: c.color }}
+                    aria-hidden="true"
+                  >
+                    {(c.name.trim().charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <span className="coachstudio-txt">
+                  <span className="nm">{c.name}</span>
+                  {c.title && <span className="ad">{c.title}</span>}
+                </span>
+                <span className="coachstudio-chev">
+                  <Icon name="chevron_right" size={18} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {hasContact && (
           <>

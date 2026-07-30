@@ -57,7 +57,13 @@ export function joinUrl(code: string): string {
   return `${siteOrigin()}/j/${code}`;
 }
 
-export type Inviter = { id: string; name: string; handle: string | null; photo: string | null };
+export type Inviter = {
+  id: string;
+  name: string;
+  handle: string | null;
+  photo: string | null;
+  email: string;
+};
 
 /** Whose link is this? Null for a code that was never minted. */
 export async function inviterByCode(codeRaw: string): Promise<Inviter | null> {
@@ -70,6 +76,7 @@ export async function inviterByCode(codeRaw: string): Promise<Inviter | null> {
       name: schema.users.name,
       handle: schema.users.handle,
       photo: schema.users.photo,
+      email: schema.users.email,
     })
     .from(schema.users)
     .where(eq(schema.users.inviteCode, code));

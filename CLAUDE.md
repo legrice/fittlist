@@ -148,7 +148,11 @@ coaches long after it stopped being true.
 profile is who they are and stops there. They see their own on Following, a
 coach sees their own followers, and `/admin` counts both. That's the whole
 audience. A list of "trains with 6" next to a "trains with 0" is a scoreboard,
-and a profile that can be lost at is worse than no profile.
+and a profile that can be lost at is worse than no profile. The one place a
+follow shows through is mutual and narrow: two members who follow *each other*
+and added the *same occurrence* see each other on that row in Your week
+(`alsoGoing` in `myWeek`). One-way follows surface nothing, which is what
+makes tapping Follow on a person safe; agreeing to each other is the consent.
 
 **"Member" is the word for someone who isn't a coach.** The column is
 `users.kind` and its value is still `"fan"`, which is the odd one out and a

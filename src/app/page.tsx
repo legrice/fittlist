@@ -7,6 +7,7 @@ import { appleConfigured } from "@/lib/apple";
 import { inviteOnly } from "@/lib/invites";
 import { fansEnabled } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
+import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
 import { AuthFlow } from "@/components/AuthFlow";
 
@@ -21,11 +22,16 @@ export default async function Home({
   const wasInvited = invited === "1";
   const providers = { google: googleConfigured(), apple: appleConfigured() };
   // Or on somebody's share link, which /j/{code} left in a cookie on the way
-  // through. Same gate, and this is who opened it for them.
+  // through. Same gate, and this is who opened it for them. A link from the
+  // admin lands as a plain "you're invited" with no name on it: a coach
+  // vouching for a friend is social proof, the person running the site
+  // appearing on the front door is just their name where it needn't be.
   const via_ = await pendingInviter();
-  const inviter = via_
-    ? { name: via_.name.trim() || "Someone", photo: via_.photo, color: avatarColor(via_) }
-    : null;
+  const viaAdmin = !!via_ && adminEmails().includes(via_.email.toLowerCase());
+  const inviter =
+    via_ && !viaAdmin
+      ? { name: via_.name.trim() || "Someone", photo: via_.photo, color: avatarColor(via_) }
+      : null;
   const userId = await getSessionUserId();
   if (userId) {
     const db = await getDb();
@@ -49,7 +55,8 @@ export default async function Home({
           via={viaHandle}
           providers={providers}
           inviteOnly={inviteOnly()}
-          invited={wasInvited}
+          invited={wasInvited || viaAdmin}
+          invitedByLink={viaAdmin && !wasInvited}
           inviter={inviter}
           fans={fansEnabled()}
         />
@@ -61,7 +68,8 @@ export default async function Home({
       via={viaHandle}
       providers={providers}
       inviteOnly={inviteOnly()}
-      invited={wasInvited}
+      invited={wasInvited || viaAdmin}
+      invitedByLink={viaAdmin && !wasInvited}
       inviter={inviter}
       fans={fansEnabled()}
     />

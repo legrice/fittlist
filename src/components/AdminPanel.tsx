@@ -41,6 +41,7 @@ type Person = {
 };
 type Studio = {
   id: string;
+  slug: string | null;
   name: string;
   address: string;
   added: string | null;
@@ -979,9 +980,14 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
 
   return (
     <div className="admincard">
-      <div className="admincard-h">
+      {/* Tapping through lands on the studio's own page, where the full
+          editor (photo, about, types, contact) already lives. */}
+      <Link className="admincard-h admincard-h-link" href={`/s/${s.slug ?? s.id}`} target="_blank">
         <span className="admincard-nm">{s.name}</span>
-      </div>
+        <span className="admincard-tag">
+          open <Icon name="open_in_new" size={13} />
+        </span>
+      </Link>
       <div className="admincard-sub">{s.address}</div>
       <div className="adminmeta">
         <span>{s.coachCount} {s.coachCount === 1 ? "coach" : "coaches"}</span>

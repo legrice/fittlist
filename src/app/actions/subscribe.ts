@@ -125,7 +125,8 @@ export async function followTrainer(handle: string): Promise<{ ok: boolean; erro
       await addNotification(trainer.id, {
         type: "follow",
         title: "New follower",
-        body: `${me.name.trim() || me.email} followed your schedule`,
+        // A member has no schedule to follow; the sentence has to fit both.
+        body: `${me.name.trim() || me.email} followed ${trainer.kind === "fan" ? "you" : "your schedule"}`,
         actorUserId: me.id,
       });
     } catch (err) {

@@ -202,6 +202,34 @@ export function WeekScreen({
                           {i.where ? ` · ${i.where}` : ""}
                         </span>
                         {i.coachName.trim() && <span className="weekrow-who">with {i.coachName}</span>}
+                        {/* People you both follow, going to the same one. The
+                            whole payoff of following a member. */}
+                        {i.alsoGoing && i.alsoGoing.length > 0 && (
+                          <span className="weekrow-also">
+                            {i.alsoGoing.slice(0, 3).map((p, idx) => (
+                              p.photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img key={idx} className="weekrow-alsoav" src={p.photo} alt="" />
+                              ) : (
+                                <span
+                                  key={idx}
+                                  className="weekrow-alsoav weekrow-alsoav-empty"
+                                  style={{ background: p.color }}
+                                  aria-hidden="true"
+                                >
+                                  {(p.name.charAt(0) || "?").toUpperCase()}
+                                </span>
+                              )
+                            ))}
+                            <span className="weekrow-alsotxt">
+                              {i.alsoGoing.length === 1
+                                ? `${i.alsoGoing[0].name.split(/\s+/)[0]} is going too`
+                                : `${i.alsoGoing[0].name.split(/\s+/)[0]} and ${
+                                    i.alsoGoing.length - 1
+                                  } more are going too`}
+                            </span>
+                          </span>
+                        )}
                       </>
                     );
                     return (

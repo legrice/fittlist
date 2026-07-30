@@ -43,6 +43,7 @@ export function AuthFlow({
   providers = { google: false, apple: false },
   inviteOnly = false,
   invited = false,
+  invitedByLink = false,
   inviter = null,
   claimAs = "coach",
   fans = false,
@@ -54,6 +55,9 @@ export function AuthFlow({
   /** They got here from a beta invite email, so they're already through the
    *  gate — say so, and don't ask them to queue for what they already have. */
   invited?: boolean;
+  /** Through the gate on a share link rather than an emailed invite, so any
+   *  email address works and the copy must not tell them otherwise. */
+  invitedByLink?: boolean;
   /** They arrived on somebody's share link. Same thing as an invite as far as
    *  the gate is concerned, and worth naming: a link from a person you know is
    *  a better reason to sign up than a product page. */
@@ -253,7 +257,9 @@ export function AuthFlow({
                   fittlist beta.
                 </h1>
                 <p>
-                  Your invite is live. Sign up with the email address it was sent to
+                  {invitedByLink
+                    ? "Your invite is live. Sign up and you're in"
+                    : "Your invite is live. Sign up with the email address it was sent to"}
                   {fans ? ", whether you coach or you're here to train" : " and your page is yours"}.
                   It&rsquo;s early days, things will move around, and what you tell us changes what
                   gets built. That&rsquo;s the whole point of being here now.
@@ -481,7 +487,9 @@ export function AuthFlow({
                   ? // Two sentences already, and the landing they came from
                     // said which side they're on. Adding the role line here
                     // would push it to three.
-                    "Use the email your invite was sent to. Pick a password you'll remember."
+                    invitedByLink
+                    ? "Any email works. Pick a password you'll remember."
+                    : "Use the email your invite was sent to. Pick a password you'll remember."
                   : [
                       fans
                         ? role === "fan"

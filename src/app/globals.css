@@ -1344,6 +1344,18 @@ button.ps-card { cursor: pointer; }
 }
 .weekinvite:active { background: var(--cl-d); }
 .weekaddown { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; }
+/* Someone you know is going: mutual follows on the same occurrence. */
+.weekrow-also { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
+.weekrow-alsoav {
+  width: 18px; height: 18px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px var(--paper);
+}
+.weekrow-also .weekrow-alsoav + .weekrow-alsoav { margin-left: -9px; }
+.weekrow-alsoav-empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 9px; font-weight: 700;
+}
+.weekrow-alsotxt { font-size: 12px; font-weight: 600; color: var(--go); }
 /* A long class description, capped. The fade tells you there's more without a
    hard edge mid-word, and Read more sits over the bottom of it so the control
    is where the text stops rather than below a gap. */

@@ -1,7 +1,11 @@
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
+import { and, eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { fansVisible } from "@/lib/flags";
 import { AppChrome } from "@/components/AppChrome";
+import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -32,6 +36,31 @@ export async function MemberProfileView({
   const name = user.name.trim() || user.email.split("@")[0];
   const initial = (name.charAt(0) || "?").toUpperCase();
 
+  // Members can follow members. Same table as following a coach, and it buys
+  // less on purpose: nothing lands in your week, nothing public changes. Its
+  // one payoff is mutual: you both follow each other and both add a class,
+  // and Your week says they're going too.
+  let follow: { following: boolean } | null = null;
+  if (viewerId && !isOwner && user.handle && (await fansVisible())) {
+    const db = await getDb();
+    const [viewer] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, viewerId));
+    if (viewer) {
+      const [row] = await db
+        .select({ optedOutAt: schema.subscribers.optedOutAt })
+        .from(schema.subscribers)
+        .where(
+          and(
+            eq(schema.subscribers.trainerUserId, user.id),
+            eq(schema.subscribers.email, viewer.email),
+          ),
+        );
+      follow = { following: !!row && !row.optedOutAt };
+    }
+  }
+
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
@@ -60,6 +89,15 @@ export async function MemberProfileView({
             <p className="mempro-loc">
               <Icon name="place" size={14} /> {user.location}
             </p>
+          )}
+          {follow && (
+            <div className="profacts">
+              <FollowMemberButton
+                handle={user.handle!}
+                name={name}
+                initialFollowing={follow.following}
+              />
+            </div>
           )}
         </div>
 

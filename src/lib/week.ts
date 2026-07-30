@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { clockParts, fmtDayHeader, occurrenceEnded } from "@/lib/format";
@@ -27,6 +27,9 @@ export type WeekItem = {
   /** A personal entry: theirs alone, with no class page behind it. The id is
    *  the personal_classes row, and removing it is removePersonalClass. */
   personal?: boolean;
+  /** Mutual follows who added this same occurrence. Empty for everyone else:
+   *  one-way follows see nothing, which is what makes following safe. */
+  alsoGoing?: { name: string; photo: string | null; color: string; handle: string | null }[];
 };
 
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
@@ -103,6 +106,80 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
 
+  // Who you know that's going: mutuals only. A follows B and B follows A, and
+  // both added the same occurrence. One-way follows surface nothing, so
+  // following someone never shows them your week; agreeing to each other does.
+  const alsoByKey = new Map<string, { name: string; photo: string | null; color: string; handle: string | null }[]>();
+  if (marks.length) {
+    const [me] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    if (me) {
+      const [iFollowRows, followMeRows] = await Promise.all([
+        db
+          .select({ trainerUserId: schema.subscribers.trainerUserId })
+          .from(schema.subscribers)
+          .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+        db
+          .select({ userId: schema.subscribers.userId, email: schema.subscribers.email })
+          .from(schema.subscribers)
+          .where(and(eq(schema.subscribers.trainerUserId, userId), isNull(schema.subscribers.optedOutAt))),
+      ]);
+      const iFollow = new Set(iFollowRows.map((r) => r.trainerUserId));
+      // A follower row keyed only on email (they followed before signing in)
+      // still counts once the address has an account.
+      const followerEmails = followMeRows.filter((r) => !r.userId).map((r) => r.email);
+      const emailAccounts = followerEmails.length
+        ? await db
+            .select({ id: schema.users.id, email: schema.users.email })
+            .from(schema.users)
+            .where(inArray(schema.users.email, followerEmails))
+        : [];
+      const followMe = new Set([
+        ...followMeRows.map((r) => r.userId).filter((id): id is string => !!id),
+        ...emailAccounts.map((u) => u.id),
+      ]);
+      const mutuals = [...iFollow].filter((id) => followMe.has(id));
+      if (mutuals.length) {
+        const theirMarks = await db
+          .select()
+          .from(schema.attendances)
+          .where(
+            and(
+              inArray(schema.attendances.userId, mutuals),
+              gte(schema.attendances.occurrenceDate, todayIso()),
+            ),
+          );
+        const myKeys = new Set(marks.map((m) => `${m.classId}|${m.occurrenceDate}`));
+        const overlapping = theirMarks.filter((t) =>
+          myKeys.has(`${t.classId}|${t.occurrenceDate}`),
+        );
+        if (overlapping.length) {
+          const peopleIds = [...new Set(overlapping.map((t) => t.userId))];
+          const people = await db
+            .select()
+            .from(schema.users)
+            .where(inArray(schema.users.id, peopleIds));
+          const personById = new Map(people.map((p) => [p.id, p]));
+          for (const t of overlapping) {
+            const p = personById.get(t.userId);
+            if (!p) continue;
+            const key = `${t.classId}|${t.occurrenceDate}`;
+            const list = alsoByKey.get(key) ?? [];
+            list.push({
+              name: p.name.trim() || p.email.split("@")[0],
+              photo: p.photo,
+              color: avatarColor(p),
+              handle: p.handle,
+            });
+            alsoByKey.set(key, list);
+          }
+        }
+      }
+    }
+  }
+
   const byDay = new Map<string, WeekItem[]>();
   for (const m of marks) {
     const c = classById.get(m.classId);
@@ -127,6 +204,7 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       coachName: coach.name,
       coachPhoto: coach.photo,
       coachColor: avatarColor(coach),
+      alsoGoing: alsoByKey.get(`${m.classId}|${m.occurrenceDate}`),
     });
     byDay.set(m.occurrenceDate, list);
   }

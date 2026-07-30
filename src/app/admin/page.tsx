@@ -105,6 +105,7 @@ export default async function AdminPage() {
 
   const studioRows = studios.map((s) => ({
     id: s.id,
+    slug: s.slug,
     name: s.name,
     address: s.address,
     added: fmt(s.createdAt),
