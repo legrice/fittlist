@@ -24,6 +24,22 @@ export type DiscoverCoach = {
   color: string;
 };
 
+/** A one-off dated public class, dressed as an event: the Events view is a
+ *  lens over ordinary class rows, so the row links to the class page and
+ *  everything there (Going, share, .ics) already works. */
+export type DiscoverEvent = {
+  id: string;
+  href: string;
+  name: string;
+  wd: string;
+  mon: string;
+  day: number;
+  time: string;
+  place: string;
+  coachName: string;
+  city: string;
+};
+
 // The row's corner control: a small Follow that flips green when it's a yes,
 // so following someone doesn't require the round trip through their page.
 // Same tri-state as the profile pill (a gated coach's tap reads Requested,
@@ -79,12 +95,14 @@ function FollowMini({
 // which is the distinction that matters once members can appear in a list.
 export function DiscoverList({
   coaches,
+  events = [],
   cities,
   myCity = null,
   backHref,
   hideBack = false,
 }: {
   coaches: DiscoverCoach[];
+  events?: DiscoverEvent[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
@@ -92,6 +110,7 @@ export function DiscoverList({
   hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
+  const [view, setView] = useState<"people" | "events">("people");
   const [coachesOnly, setCoachesOnly] = useState(false);
   // Near you is the default view when it would show anything: someone opening
   // Discover is asking "who's around here", not "who is on fittlist".
@@ -112,6 +131,19 @@ export function DiscoverList({
     });
   }, [coaches, q, city, coachesOnly]);
 
+  const shownEvents = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return events.filter((e) => {
+      if (city && e.city !== city) return false;
+      if (!needle) return true;
+      return (
+        e.name.toLowerCase().includes(needle) ||
+        e.coachName.toLowerCase().includes(needle) ||
+        e.place.toLowerCase().includes(needle)
+      );
+    });
+  }, [events, q, city]);
+
   return (
     <>
       {/* The page title, with the coaches-only switch directly across from
@@ -119,7 +151,7 @@ export function DiscoverList({
           nothing to do. */}
       <div className="calbar-title distitle">
         Discover
-        {coaches.some((c) => c.kind !== "coach") && (
+        {view === "people" && coaches.some((c) => c.kind !== "coach") && (
           <button
             type="button"
             className="disonly"
@@ -133,6 +165,17 @@ export function DiscoverList({
             </span>
           </button>
         )}
+      </div>
+      {/* Two lenses on the same directory: who's here, and what's coming up.
+          Events are the one-off dated classes coaches post, so the switch only
+          changes what you're looking at, never what exists. */}
+      <div className="seg disseg">
+        <button className={view === "people" ? "sel" : ""} onClick={() => setView("people")}>
+          People
+        </button>
+        <button className={view === "events" ? "sel" : ""} onClick={() => setView("events")}>
+          Events
+        </button>
       </div>
       <div className="dissearch">
         <Icon name="search" size={19} className="dissearch-ic" />
@@ -184,7 +227,45 @@ export function DiscoverList({
       )}
 
 
-      {shown.length === 0 ? (
+      {view === "events" ? (
+        shownEvents.length === 0 ? (
+          <div className="empty-block">
+            <h2>{city && !q ? `Nothing coming up in ${city}` : "Nothing coming up"}</h2>
+            <p>
+              {q
+                ? "Nothing matches that. Try another name, coach, or place."
+                : "One-time classes and events land here as coaches post them."}
+            </p>
+            {city && !q && (
+              <button className="btn ghost" onClick={() => setCity(null)}>
+                Show all cities
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="dislist dislist-bare">
+            {shownEvents.map((e) => (
+              <Link key={e.id} className="disev" href={e.href}>
+                <span className="disev-date" aria-hidden="true">
+                  <span className="mo">{e.mon}</span>
+                  <span className="dy">{e.day}</span>
+                </span>
+                <span className="disev-txt">
+                  <span className="nm">{e.name}</span>
+                  <span className="sub">
+                    {e.wd} · {e.time}
+                    {e.place ? ` · ${e.place}` : ""}
+                  </span>
+                  <span className="wk">with {e.coachName}</span>
+                </span>
+                <span className="disev-chev">
+                  <Icon name="chevron_right" size={18} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : shown.length === 0 ? (
         <div className="empty-block">
           <h2>{city && !q ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
           <p>

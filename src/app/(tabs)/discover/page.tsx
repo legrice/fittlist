@@ -4,8 +4,8 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
+import { fmtTime, runsOn, todayIso } from "@/lib/format";
+import { DiscoverList, type DiscoverCoach, type DiscoverEvent } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -106,12 +106,56 @@ export default async function DiscoverPage() {
     a.localeCompare(b),
   );
 
+  // Events: the one-off dated classes coaches have posted, over the next four
+  // weeks. Not a new object, a new lens: these are ordinary public class rows
+  // with a specificDate, so Going marks, the class page and the .ics already
+  // work on them. The window keeps the list honest; a "calendar" stretching
+  // into an empty future is how this feature would read as dead.
+  const today = todayIso();
+  const horizon = new Date(`${today}T00:00:00Z`);
+  horizon.setUTCDate(horizon.getUTCDate() + 28);
+  const horizonIso = horizon.toISOString().slice(0, 10);
+  const userRowById = new Map(rows.map((r) => [r.id, r]));
+  const eventRows = classRows
+    .filter((c) => c.specificDate && c.specificDate >= today && c.specificDate <= horizonIso)
+    .sort(
+      (a, b) =>
+        a.specificDate!.localeCompare(b.specificDate!) || a.startTime.localeCompare(b.startTime),
+    );
+  const eventStudioIds = [...new Set(eventRows.map((c) => c.studioId).filter((x): x is string => !!x))];
+  const eventStudios = eventStudioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, eventStudioIds))
+    : [];
+  const studioNameById = new Map(eventStudios.map((s) => [s.id, s.name]));
+  const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const events: DiscoverEvent[] = eventRows.flatMap((c) => {
+    const coach = userRowById.get(c.userId);
+    if (!coach?.handle) return [];
+    const d = new Date(`${c.specificDate}T00:00:00Z`);
+    return [
+      {
+        id: c.id,
+        href: `/${coach.handle}/${c.id}?d=${c.specificDate}&from=discover`,
+        name: c.name,
+        wd: WD[(d.getUTCDay() + 6) % 7],
+        mon: MO[d.getUTCMonth()],
+        day: d.getUTCDate(),
+        time: fmtTime(c.startTime),
+        place: (c.studioId && studioNameById.get(c.studioId)) || c.location || "",
+        coachName: coach.name,
+        city: coach.location?.trim() ?? "",
+      },
+    ];
+  });
+
   return (
     <>
       {/* The title lives inside the list now, so the coaches-only switch can
           sit directly across from it. */}
       <DiscoverList
         coaches={coaches}
+        events={events}
         cities={cities}
         myCity={me.location?.trim() || null}
         backHref="/feed"

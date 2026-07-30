@@ -3256,6 +3256,41 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; padding: 4px 0; cursor: pointer;
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ol);
 }
+/* The People/Events switch, between the title and the search. */
+.disseg { margin-bottom: 14px; flex: none; }
+/* An event row: a small date tile carries the when, the text the what. The
+   row is one link to the class page, where Going and share already live. */
+.disev {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 2px; text-decoration: none; color: inherit;
+  border-bottom: 1px solid var(--line);
+}
+.disev:last-child { border-bottom: none; }
+.disev-date {
+  flex-shrink: 0; width: 48px; height: 52px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.disev-date .mo {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--si);
+}
+.disev-date .dy {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 700; line-height: 1; color: var(--ink);
+}
+.disev-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.disev-txt .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.disev-txt .sub {
+  font-size: 12px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.disev-txt .wk { font-size: 12px; font-weight: 600; color: var(--ol); }
+.disev-chev { flex-shrink: 0; color: var(--ol); display: flex; }
+
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }

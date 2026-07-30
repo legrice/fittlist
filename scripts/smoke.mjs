@@ -1173,6 +1173,19 @@ await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasTex
 }
 console.log("discover ok (corner pill follows and unfollows on the row)");
 
+// The Events lens: the one-off dated classes Matt posted earlier list as
+// event rows, soonest first, and a row opens the class page itself.
+{
+  await fan.locator(".disseg button", { hasText: "Events" }).click();
+  const evRows = fan.locator(".disev", { hasText: "with Matt" });
+  await evRows.first().waitFor();
+  if ((await evRows.count()) < 2) fail("both one-offs should list under Events");
+  await evRows.first().click();
+  await fan.waitForURL(/\/matt\/[0-9a-f-]+\?d=/);
+  await fan.goto(BASE + "/discover");
+}
+console.log("events lens ok (one-offs listed, a row opens the class)");
+
 // The studio directory is coach-editable, and a coach is kind, not handle:
 // members hold handles too, and testing the handle put the edit button on
 // every member's screen and left the action open behind it.
