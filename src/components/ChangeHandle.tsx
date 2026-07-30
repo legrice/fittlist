@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { changeHandle, handleStatus } from "@/app/actions/profile";
 import { slug } from "@/lib/format";
@@ -22,6 +23,8 @@ export function ChangeHandle() {
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Re-checked every time the sheet opens, not once on mount: the lock starts
   // the moment a change lands, and the row lives on a screen that stays up.
@@ -72,7 +75,10 @@ export function ChangeHandle() {
           <Icon name="chevron_right" size={20} />
         </span>
       </button>
-      {open && (
+      {/* Portalled to the body, same reason as InviteFriends: this row lives
+          inside the z-40 account layer, and a sheet rendered in place sits
+          UNDER the z-45 tab bar, with its bottom button trapped behind it. */}
+      {open && mounted && createPortal(
         <div
           className="sheet-scrim"
           onClick={(e) => {
@@ -134,7 +140,8 @@ export function ChangeHandle() {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
