@@ -220,9 +220,10 @@ export function DiscoverList({
                     <span className="nm">{c.name}</span>
                     {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
                   </span>
-                  <span className="sub">
-                    {[c.title, c.location].filter(Boolean).join(" · ") || `fittlist.co/${c.handle}`}
-                  </span>
+                  {/* The tagline only. The city came off the line: the filter
+                      above already speaks location, and the repeated city name
+                      crowded out the taglines it sat beside. */}
+                  <span className="sub">{c.title || `fittlist.co/${c.handle}`}</span>
                   {c.kind === "coach" && (
                     <span className="wk">
                       {c.classesThisWeek

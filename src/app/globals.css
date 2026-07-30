@@ -3203,6 +3203,8 @@ button.ps-card { cursor: pointer; }
 .disrow-txt .sub {
   font-size: 12px; color: var(--ol);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  /* A long tagline truncates before it runs under the corner pill. */
+  padding-right: 96px;
 }
 .disrow-txt .wk { font-size: 12px; font-weight: 600; color: var(--si); }
 /* The Coach badge across from the name; following moved onto the profile.
