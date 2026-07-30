@@ -1143,10 +1143,12 @@ await fan.getByText("Nobody here yet").waitFor();
 await fan.locator(".dissearch-in").fill("Matt");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fan.locator(".dissearch-x").click();
-// no Follow on the rows any more: the Coach badge sits across from the name,
-// and following happens on the profile the row opens.
-if (await fan.locator(".disrow .disfollow").count())
-  fail("Discover rows should not carry a Follow button");
+// every row carries the small corner pill: outline Follow before, green
+// Following after, so following doesn't require the trip through the page.
+await fan
+  .locator(".disrow", { hasText: "Matt" })
+  .locator(".disfol", { hasText: /^Follow$/ })
+  .waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".kindtag", { hasText: "Coach" }).waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
@@ -1154,10 +1156,22 @@ await fan.locator(".profacts .followpill").waitFor();
 await fan.waitForTimeout(400);
 await fan.locator(".profacts .followpill").click();
 await fan.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
-// and back on Discover, the row now carries the green check
+// and back on Discover, the pill on the row went green
 await fan.goto(BASE + "/discover");
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-fol").waitFor();
-console.log("discover ok (badge on the row, follow on the profile, check after)");
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasText: "Following" }).waitFor();
+// the pill follows on its own too: tap Sam's, it goes green, tap again and
+// it lets go, leaving the later coach-follows-coach checks their clean slate
+{
+  const samPill = fan.locator(".disrow", { hasText: "Sam" }).locator(".disfol");
+  await samPill.click();
+  await fan.locator(".disrow", { hasText: "Sam" }).locator(".disfol.on").waitFor();
+  await samPill.click();
+  await fan
+    .locator(".disrow", { hasText: "Sam" })
+    .locator(".disfol", { hasText: /^Follow$/ })
+    .waitFor();
+}
+console.log("discover ok (corner pill follows and unfollows on the row)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();

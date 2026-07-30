@@ -3211,15 +3211,22 @@ button.ps-card { cursor: pointer; }
 /* The tag sits right beside the name, small. The name can still truncate. */
 .disrow-nmline { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .disrow-nmline .nm { min-width: 0; }
-/* Already following: a quiet check + the word, pinned to the row's top-right
-   corner. Words, not a green medallion: the circle read as a verified mark. */
+/* The row's corner control: a small Follow pill, white with an outline, that
+   fills the Going green with a check once it's a yes. Requested (a gated
+   coach) keeps the outline and just says so. */
 .disrow { position: relative; }
-.disrow-fol {
-  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
-  position: absolute; top: 15px; right: 14px;
-  font-size: 12px; font-weight: 600; color: var(--ol);
+.disfol {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  position: absolute; top: 13px; right: 14px;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px; font-weight: 600;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
 }
-.disrow-fol .icon { color: var(--go); }
+.disfol:active { transform: scale(.96); }
+.disfol[disabled] { opacity: .6; }
+.disfol.on { background: var(--go); border-color: var(--go); color: #fff; }
 /* The Discover title line carries the coaches-only switch, right-aligned. */
 .distitle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .disonly {
@@ -3230,9 +3237,9 @@ button.ps-card { cursor: pointer; }
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
-.dislist-bare .disrow-fol { right: 2px; }
-/* Keep the name clear of the corner mark, only on rows that carry one. */
-.disrow:has(.disrow-fol) .disrow-nmline { padding-right: 88px; }
+.dislist-bare .disfol { right: 2px; }
+/* Every row carries the corner pill now, so the name always stays clear. */
+.disrow .disrow-nmline { padding-right: 96px; }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
   background: var(--ink); color: var(--paper);

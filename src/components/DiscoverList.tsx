@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 
@@ -15,18 +16,58 @@ export type DiscoverCoach = {
   title: string;
   location: string;
   classesThisWeek: number;
-  /** Display only: the green check that says "you already follow them".
-   *  The follow itself lives on the profile. */
   following: boolean;
+  /** A pending ask at a coach who approves their followers. */
+  requested: boolean;
   /** Worn as a dot on the avatar, same as the profile photo. Coaches only. */
   availability: string | null;
   color: string;
 };
 
-// Search + city filter over the directory. Following happens on the profile,
-// not here: the row's one job is to get you to a person, and the Coach badge
-// across from the name is what tells you who you're looking at, which is the
-// distinction that matters once members can appear in a list.
+// The row's corner control: a small Follow that flips green when it's a yes,
+// so following someone doesn't require the round trip through their page.
+// Same tri-state as the profile pill (a gated coach's tap reads Requested,
+// tapping again withdraws it), scoped to its own row.
+function FollowMini({
+  handle,
+  following,
+  requested,
+}: {
+  handle: string;
+  following: boolean;
+  requested: boolean;
+}) {
+  const [state, setState] = useState<"off" | "asked" | "on">(
+    following ? "on" : requested ? "asked" : "off",
+  );
+  const [pending, start] = useTransition();
+  const tap = () =>
+    start(async () => {
+      if (state === "off") {
+        const res = await followTrainer(handle);
+        if (res.ok) setState(res.requested ? "asked" : "on");
+      } else {
+        const res = await unfollowTrainer(handle);
+        if (res.ok) setState("off");
+      }
+    });
+  return (
+    <button
+      className={`disfol${state === "on" ? " on" : ""}`}
+      disabled={pending}
+      aria-pressed={state === "on"}
+      onClick={tap}
+    >
+      {state === "on" && <Icon name="check" size={13} />}
+      {state === "on" ? "Following" : state === "asked" ? "Requested" : "Follow"}
+    </button>
+  );
+}
+
+// Search + city filter over the directory. The corner control follows from
+// the row now; the row's main job is still to get you to a person, and the
+// Coach badge across from the name is what tells you who you're looking at,
+// which is the distinction that matters once members can appear in a list.
 export function DiscoverList({
   coaches,
   cities,
@@ -173,8 +214,8 @@ export function DiscoverList({
                   )}
                 </span>
                 <span className="disrow-txt">
-                  {/* The tag rides right beside the name; the following check
-                      is the row's corner mark, pinned top-right. */}
+                  {/* The tag rides right beside the name; the Follow pill
+                      is the row's corner control, pinned top-right. */}
                   <span className="disrow-nmline">
                     <span className="nm">{c.name}</span>
                     {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
@@ -192,11 +233,7 @@ export function DiscoverList({
                 </span>
                 <LinkPending />
               </Link>
-              {c.following && (
-                <span className="disrow-fol">
-                  <Icon name="check" size={12} /> Following
-                </span>
-              )}
+              <FollowMini handle={c.handle} following={c.following} requested={c.requested} />
             </div>
           ))}
         </div>

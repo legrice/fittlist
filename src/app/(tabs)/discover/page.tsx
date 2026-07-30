@@ -28,7 +28,7 @@ export default async function DiscoverPage() {
   // profile is, and it drops the ones you removed too so you aren't handed
   // them back as a suggestion. The three loads only need the viewer, so they
   // run together.
-  const [allRows, hidden, followRows] = await Promise.all([
+  const [allRows, hidden, followRows, askRows] = await Promise.all([
     db
       .select()
       .from(schema.users)
@@ -38,6 +38,12 @@ export default async function DiscoverPage() {
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+    // Pending asks at gated coaches, so their rows can say Requested rather
+    // than offering a Follow that would double-file the ask.
+    db
+      .select({ trainerUserId: schema.followRequests.trainerUserId })
+      .from(schema.followRequests)
+      .where(eq(schema.followRequests.requesterUserId, userId)),
   ]);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
@@ -64,6 +70,7 @@ export default async function DiscoverPage() {
     }
   }
   const following = new Set(followRows.map((r) => r.trainerUserId));
+  const requested = new Set(askRows.map((r) => r.trainerUserId));
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
   const coaches: DiscoverCoach[] = rows
@@ -86,6 +93,7 @@ export default async function DiscoverPage() {
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
+      requested: requested.has(r.id),
       availability: r.kind === "fan" ? null : r.availability,
       color: avatarColor(r),
     }))
