@@ -110,7 +110,8 @@ export default async function DiscoverPage() {
 
   return (
     <>
-      <div className="calbar-title">Discover</div>
+      {/* The title lives inside the list now, so the coaches-only switch can
+          sit directly across from it. */}
       <DiscoverList
         coaches={coaches}
         cities={cities}

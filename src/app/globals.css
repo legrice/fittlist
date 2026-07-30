@@ -3157,6 +3157,13 @@ button.ps-card { cursor: pointer; }
   font-size: 12px; font-weight: 600; color: var(--ol);
 }
 .disrow-fol .icon { color: var(--go); }
+/* The Discover title line carries the coaches-only switch, right-aligned. */
+.distitle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.disonly {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: none; background: none; padding: 4px 0; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ol);
+}
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
