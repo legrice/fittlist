@@ -1805,6 +1805,23 @@ button.ps-card { cursor: pointer; }
   position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
   font-size: 16px; color: var(--ol); pointer-events: none;
 }
+/* A prefix as long as "fittlist.co/" can't be absolutely positioned over the
+   input: whatever fixed padding we picked, some font metric collapsed the two
+   onto each other. This variant is a real row: the prefix takes its own width
+   and the input starts after it. */
+.editprefix-url {
+  display: flex; align-items: center;
+  border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
+  padding-left: 13px;
+}
+.editprefix-url .editprefix-at { position: static; transform: none; flex-shrink: 0; }
+.editprefix-url .editinput {
+  border: none; border-radius: 0 16px 16px 0; padding-left: 2px; flex: 1; min-width: 0;
+  background: transparent;
+}
+.editprefix-url .editinput:focus { border: none; }
+.editprefix-url:focus-within { border-color: var(--pg-day); }
+[data-mode="dark"] .editprefix-url { background: var(--card); }
 .abouttext {
   width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;

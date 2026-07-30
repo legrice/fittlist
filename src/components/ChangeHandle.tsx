@@ -103,7 +103,7 @@ export function ChangeHandle() {
                 <label className="flabel" htmlFor="chHandle">
                   New link
                 </label>
-                <div className="editprefix">
+                <div className="editprefix editprefix-url">
                   <span className="editprefix-at">fittlist.co/</span>
                   <input
                     id="chHandle"
