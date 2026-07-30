@@ -334,13 +334,16 @@ export function WeekScreen({
                 </button>
               ))}
             </div>
-            <div className="ownrow">
+            {/* Same two-column time row as the coach's class editor: native
+                time inputs have a wide intrinsic minimum, and .editinput let
+                Ends run off the sheet on a phone. */}
+            <div className="timegrid two">
               <div>
                 <label className="flabel" htmlFor="ownTime">Starts</label>
                 <input
                   id="ownTime"
                   type="time"
-                  className="editinput"
+                  className="timeinput"
                   value={pTime}
                   onChange={(e) => setPTime(e.target.value)}
                 />
@@ -350,7 +353,7 @@ export function WeekScreen({
                 <input
                   id="ownEnd"
                   type="time"
-                  className="editinput"
+                  className="timeinput"
                   value={pEnd}
                   onChange={(e) => setPEnd(e.target.value)}
                 />

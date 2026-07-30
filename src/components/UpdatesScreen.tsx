@@ -48,6 +48,7 @@ const ICON: Record<string, string> = {
   coach_approved: "check",
   message: "mail",
   feedback_reply: "mail",
+  studio_suggest: "place",
 };
 
 function fmt(d: Date | string) {

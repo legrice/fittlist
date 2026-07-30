@@ -17,6 +17,12 @@ import {
   adminSetKind,
 } from "@/app/actions/admin";
 import { dismissReports, type DuplicateSlot, type ReportedClass } from "@/app/actions/reports";
+import {
+  dismissStudioReports,
+  dismissStudioSuggestion,
+  type ReportedStudio,
+  type StudioSuggestion,
+} from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -78,6 +84,8 @@ type Stats = {
 export function AdminPanel({
   adminEmail,
   reports,
+  studioReports = [],
+  studioSuggestions = [],
   coachAsks,
   duplicates,
   people,
@@ -90,6 +98,8 @@ export function AdminPanel({
 }: {
   adminEmail: string;
   reports: ReportedClass[];
+  studioReports?: ReportedStudio[];
+  studioSuggestions?: StudioSuggestion[];
   coachAsks: { id: string; note: string; asked: string | null; name: string; email: string; handle: string }[];
   duplicates: DuplicateSlot[];
   people: Person[];
@@ -217,8 +227,12 @@ export function AdminPanel({
               }}
             >
               <Icon name={t.icon} size={20} />
-              {t.id === "reports" && reports.length > 0 && (
-                <span className="inboxdot">{reports.length > 9 ? "9+" : reports.length}</span>
+              {t.id === "reports" && reports.length + studioReports.length + studioSuggestions.length > 0 && (
+                <span className="inboxdot">
+                  {reports.length + studioReports.length + studioSuggestions.length > 9
+                    ? "9+"
+                    : reports.length + studioReports.length + studioSuggestions.length}
+                </span>
               )}
             </button>
           ))}
@@ -364,6 +378,77 @@ export function AdminPanel({
                   </div>
                 </div>
               ))
+            )}
+            {studioReports.filter((r) => !handled[r.studioId]).length > 0 && (
+              <>
+                <h2 className="brandh" style={{ marginTop: 10 }}>Reported studios</h2>
+                {studioReports.filter((r) => !handled[r.studioId]).map((r) => (
+                  <div key={r.studioId} className="admincard">
+                    <div className="admincard-h">
+                      <span className="admincard-nm">{r.studioName}</span>
+                      <span className={`reportcount${r.count > 1 ? " hot" : ""}`}>
+                        {r.count} {r.count === 1 ? "report" : "reports"}
+                      </span>
+                    </div>
+                    <p className="adminsub">{r.reasons.join(" · ")}</p>
+                    {r.notes.length > 0 && <p className="adminsub">&ldquo;{r.notes[0]}&rdquo;</p>}
+                    <p className="adminsub">By {r.reporters.join(", ")}</p>
+                    <div className="admincard-actions">
+                      {r.studioHref && (
+                        <a className="btn ghost" href={r.studioHref} target="_blank" rel="noopener">
+                          Open the studio
+                        </a>
+                      )}
+                      <button
+                        className="btn ghost"
+                        onClick={() => {
+                          setHandled((h) => ({ ...h, [r.studioId]: true }));
+                          dismissStudioReports(r.studioId);
+                        }}
+                      >
+                        Handled
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {studioSuggestions.filter((sg) => !handled[sg.id]).length > 0 && (
+              <>
+                <h2 className="brandh" style={{ marginTop: 10 }}>Suggested studio edits</h2>
+                <p className="adminsub">
+                  Corrections from the door, and sometimes an owner raising a hand. The relation
+                  line is the one to watch.
+                </p>
+                {studioSuggestions.filter((sg) => !handled[sg.id]).map((sg) => (
+                  <div key={sg.id} className="admincard">
+                    <div className="admincard-h">
+                      <span className="admincard-nm">{sg.studioName}</span>
+                      {sg.relation && <span className="reportcount hot">{sg.relation}</span>}
+                    </div>
+                    <p className="adminsub">
+                      {sg.name || "No name"} · <a href={`mailto:${sg.email}`}>{sg.email}</a>
+                    </p>
+                    <p className="adminsub">&ldquo;{sg.message}&rdquo;</p>
+                    <div className="admincard-actions">
+                      {sg.studioHref && (
+                        <a className="btn ghost" href={sg.studioHref} target="_blank" rel="noopener">
+                          Open the studio
+                        </a>
+                      )}
+                      <button
+                        className="btn ghost"
+                        onClick={() => {
+                          setHandled((h) => ({ ...h, [sg.id]: true }));
+                          dismissStudioSuggestion(sg.id);
+                        }}
+                      >
+                        Handled
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
             {duplicates.length > 0 && (
               <>

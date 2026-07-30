@@ -1334,12 +1334,6 @@ button.ps-card { cursor: pointer; }
 /* Your own class: the add sheet's day row and time/length pair. */
 .ownday { margin-top: 4px; }
 .ownday button { flex: 1; padding: 10px 0; }
-.ownrow { display: flex; gap: 10px; }
-.ownrow > div { flex: 1; min-width: 0; }
-/* iOS gives a time input an intrinsic width and centres its text, which let
-   the Starts box run underneath the field beside it. Pin both to their half. */
-.ownrow input { width: 100%; min-width: 0; text-align: left; }
-.ownrow input::-webkit-date-and-time-value { text-align: left; }
 /* The invite lead under the list: quiet, but a whole sentence, because the
    ask is a favor and a favor needs a reason. */
 .weekinvite {
@@ -1385,6 +1379,28 @@ button.ps-card { cursor: pointer; }
 }
 .memweek-txt .sub { font-size: 12.5px; color: var(--ol); margin-top: 1px; }
 .memweek-chev { color: var(--ol); flex-shrink: 0; }
+
+/* Where I coach, inside the profile editor: picked rows reuse the links-field
+   look; a search match is the same row shape, tappable, with a plus. */
+.mystudios { margin-top: 2px; }
+.mystudios .editinput { margin-top: 6px; }
+.mystudios-match {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 10px 14px; margin-top: 8px; cursor: pointer; color: var(--ink);
+}
+.mystudios-match:active { background: var(--cl); }
+.mystudios-match .icon { color: var(--si); flex-shrink: 0; }
+
+/* The studio page's quiet doors, and the relation chips in Suggest an edit. */
+.studiofeedback { margin-top: 26px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.relpick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; margin-bottom: 4px; }
+.relchip {
+  padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--card); color: var(--ink); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
+}
+.relchip.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 /* Tap a face, see the face: the avatar blown up over the blurred page, with
    that person's follow/share/link/QR actions under it. */

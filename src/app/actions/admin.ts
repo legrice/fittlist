@@ -237,6 +237,7 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // Class reports in both directions too: ones they filed, ones about their classes.
   await db.delete(schema.classReports).where(eq(schema.classReports.reporterUserId, id));
   await db.delete(schema.classReports).where(eq(schema.classReports.coachUserId, id));
+  await db.delete(schema.studioReports).where(eq(schema.studioReports.reporterUserId, id));
   // Their own private week entries, and any ask to coach.
   await db.delete(schema.personalClasses).where(eq(schema.personalClasses.userId, id));
   await db.delete(schema.coachRequests).where(eq(schema.coachRequests.userId, id));

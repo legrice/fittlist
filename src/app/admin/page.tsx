@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { listDuplicateSlots, listReports } from "@/app/actions/reports";
+import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios";
 import { AdminPanel } from "@/components/AdminPanel";
 
 export const dynamic = "force-dynamic";
@@ -176,7 +177,12 @@ export default async function AdminPage() {
     requests: requests.length,
   };
 
-  const [reports, duplicates] = await Promise.all([listReports(), listDuplicateSlots()]);
+  const [reports, duplicates, studioReports, studioSuggestions] = await Promise.all([
+    listReports(),
+    listDuplicateSlots(),
+    listStudioReports(),
+    listStudioSuggestions(),
+  ]);
   const coachAskRows = await db
     .select({
       id: schema.coachRequests.id,
@@ -203,6 +209,8 @@ export default async function AdminPage() {
     <AdminPanel
       adminEmail={admin.email}
       reports={reports}
+      studioReports={studioReports}
+      studioSuggestions={studioSuggestions}
       coachAsks={coachAsks}
       duplicates={duplicates}
       people={people}

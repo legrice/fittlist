@@ -6,6 +6,7 @@ import { updateProfile } from "@/app/actions/profile";
 import { myWeekText } from "@/app/actions/weektext";
 import { ChipsField } from "@/components/ChipsField";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
+import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { LocationInput } from "@/components/LocationInput";
@@ -70,6 +71,8 @@ export function ProfileOwnerBar({
   const [pPhone, setPPhone] = useState(phone);
   const [pWhatsapp, setPWhatsapp] = useState(whatsapp);
   const [pLinks, setPLinks] = useState<ProfileLink[]>(profileLinks);
+  // A link typed but not yet "+ Add"ed when Save is tapped. See LinksField.
+  const pendingLink = useRef<ProfileLink | null>(null);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
   const [colorOpen, setColorOpen] = useState(false);
@@ -136,6 +139,7 @@ export function ProfileOwnerBar({
 
   const saveProfile = () =>
     startSaving(async () => {
+      const links = pendingLink.current ? [...pLinks, pendingLink.current] : pLinks;
       const res = await updateProfile({
         name: pName,
         title: pTitle,
@@ -148,7 +152,7 @@ export function ProfileOwnerBar({
         contactEmail: pEmail,
         phone: pPhone,
         whatsapp: pWhatsapp,
-        profileLinks: pLinks,
+        profileLinks: links,
         photo: pPhoto,
         avatarColor: pColor,
       });
@@ -156,6 +160,7 @@ export function ProfileOwnerBar({
         toast(res.error ?? "Couldn't save");
         return;
       }
+      pendingLink.current = null;
       setEditOpen(false);
       toast("Profile saved");
       router.refresh();
@@ -426,7 +431,11 @@ export function ProfileOwnerBar({
             <label className="flabel">
               More links <span>· booking, programs, anything (up to 6)</span>
             </label>
-            <LinksField value={pLinks} onChange={setPLinks} />
+            <LinksField value={pLinks} onChange={setPLinks} onPending={(l) => (pendingLink.current = l)} />
+            <label className="flabel">
+              Where I coach <span>· the studios on your page</span>
+            </label>
+            <MyStudios />
             <label className="flabel" htmlFor="pEmail">
               Contact email <span>· optional, shown as an email button</span>
             </label>

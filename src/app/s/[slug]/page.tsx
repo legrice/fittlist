@@ -12,6 +12,7 @@ import { mapsUrlFor } from "@/lib/studio";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
+import { StudioFeedback } from "@/components/StudioFeedback";
 import { StudioOwnerBar } from "@/components/StudioOwnerBar";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -257,6 +258,10 @@ export default async function StudioPage({ params, searchParams }: Props) {
             </div>
           </>
         )}
+
+        {/* The correction doors. Suggest an edit is for anyone, because the
+            owner probably has no account; Report needs one, like classes. */}
+        <StudioFeedback studioId={s.id} signedIn={signedIn} />
 
         {!signedIn && (
           <div className="madewith">

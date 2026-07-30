@@ -365,6 +365,40 @@ export const classReports = pgTable(
   (t) => [uniqueIndex("class_reports_once").on(t.seriesId, t.reporterUserId)],
 );
 
+// Somebody flags a studio that isn't right: closed, wrong address, not a real
+// place. A studio has a stable id, so unlike a class this can point straight
+// at the row. reporter is a users FK: adminDeleteUser must clear it.
+export const studioReports = pgTable(
+  "studio_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id")
+      .notNull()
+      .references(() => studios.id),
+    reporterUserId: uuid("reporter_user_id").notNull().references(() => users.id),
+    reason: text("reason").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("studio_reports_once").on(t.studioId, t.reporterUserId)],
+);
+
+// "Suggest an edit" on a studio page. Deliberately identity-light: name and
+// email are free text, because the person most worth hearing from (the owner)
+// probably has no account yet. Relation is what makes it a lead, not a
+// correction: an owner writing in is the seed of studio claiming.
+export const studioSuggestions = pgTable("studio_suggestions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  studioId: uuid("studio_id")
+    .notNull()
+    .references(() => studios.id),
+  name: text("name").notNull().default(""),
+  email: text("email").notNull(),
+  relation: text("relation").notNull().default(""),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const blocks = pgTable(
   "blocks",
   {
