@@ -89,7 +89,7 @@ export async function GET() {
           src={phoneUri}
           alt=""
           width={440}
-          height={918}
+          height={820}
           style={{ position: "absolute", top: 76, right: 72 }}
         />
       </div>
