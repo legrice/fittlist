@@ -4,6 +4,7 @@ import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -29,6 +30,7 @@ export function MemberAccount({
   openEditor = false,
   canSendFeedback = false,
   discoverable = true,
+  approveFollowers = false,
 }: {
   name: string;
   email: string;
@@ -45,6 +47,7 @@ export function MemberAccount({
    *  you are the admin. */
   canSendFeedback?: boolean;
   discoverable?: boolean;
+  approveFollowers?: boolean;
 }) {
   const [share, setShare] = useState(false);
   // Members sign up with an email and nothing else — there's no name step for
@@ -99,6 +102,7 @@ export function MemberAccount({
         )}
         <ChangeHandle />
         <DiscoverableToggle initialOn={discoverable} />
+        <ApproveFollowersToggle initialOn={approveFollowers} />
       </div>
 
       <div className="settingslist">

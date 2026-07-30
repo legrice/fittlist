@@ -61,6 +61,10 @@ export const users = pgTable("users", {
   // only door they have.
   emailMessages: boolean("email_messages").notNull().default(true),
   emailCancellations: boolean("email_cancellations").notNull().default(true),
+  // The private-account gate: on means a follow starts as a request they
+  // approve. Off (the default) keeps follows one-tap. Pairs with
+  // discoverable: listed and gated is a fine combination.
+  approveFollowers: boolean("approve_followers").notNull().default(false),
   // Listed in the Find coaches directory. Their page stays public either way —
   // this is only about being browsable by people who weren't sent the link.
   discoverable: boolean("discoverable").notNull().default(true),
@@ -398,6 +402,21 @@ export const studioSuggestions = pgTable("studio_suggestions", {
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// A follow waiting on a yes. Deliberately its own table rather than a state
+// on subscribers, so a subscribers row keeps meaning exactly one thing: an
+// active follow. Both columns are users FKs: adminDeleteUser clears both
+// directions.
+export const followRequests = pgTable(
+  "follow_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trainerUserId: uuid("trainer_user_id").notNull().references(() => users.id),
+    requesterUserId: uuid("requester_user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("follow_requests_once").on(t.trainerUserId, t.requesterUserId)],
+);
 
 export const blocks = pgTable(
   "blocks",

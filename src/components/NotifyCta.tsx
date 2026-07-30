@@ -19,7 +19,8 @@ export function NotifyCta({
   trainerName: string;
   handle: string;
   // Signed-in viewer (fan side): one-tap follow instead of the email sheet.
-  account?: { following: boolean } | null;
+  // `requested` means a follow request is waiting on the coach's answer.
+  account?: { following: boolean; requested?: boolean } | null;
   // Member signups are open, so a fresh subscriber can be offered an account.
   canSignUp?: boolean;
 }) {
@@ -34,6 +35,7 @@ export function NotifyCta({
   const [password, setPassword] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [following, setFollowing] = useState(account?.following ?? false);
+  const [requested, setRequested] = useState(account?.requested ?? false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -43,23 +45,32 @@ export function NotifyCta({
   const label = account
     ? following
       ? "Following"
-      : "Follow"
+      : requested
+        ? "Requested"
+        : "Follow"
     : subscribed
       ? "On the list"
       : "Subscribe";
   const toggleFollow = () => {
     startTransition(async () => {
-      if (following) {
+      if (following || requested) {
         const res = await unfollowTrainer(handle);
         if (res.ok) {
+          const wasRequest = requested && !following;
           setFollowing(false);
-          toast(`Unfollowed ${firstName}`);
+          setRequested(false);
+          toast(wasRequest ? "Request withdrawn" : `Unfollowed ${firstName}`);
         } else toast(res.error ?? "Something went wrong");
       } else {
         const res = await followTrainer(handle);
         if (res.ok) {
-          setFollowing(true);
-          toast(`You're following ${firstName}`);
+          if (res.requested) {
+            setRequested(true);
+            toast(`Asked to follow ${firstName}`);
+          } else {
+            setFollowing(true);
+            toast(`You're following ${firstName}`);
+          }
         } else toast(res.error ?? "Something went wrong");
       }
     });

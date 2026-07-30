@@ -68,7 +68,7 @@ export async function PublicProfileView({
 
   // Fan side (flag-gated): a signed-in viewer gets a one-tap Follow button on
   // the subscribe bar instead of the email sheet.
-  let account: { following: boolean } | null = null;
+  let account: { following: boolean; requested: boolean } | null = null;
   let signedIn = false;
   // Who's looking, for the app header. The owner gets it too: previewing your
   // own page shouldn't drop you out of the app.
@@ -90,7 +90,23 @@ export async function PublicProfileView({
               eq(schema.subscribers.email, viewer.email),
             ),
           );
-        account = { following: !!row && !row.optedOutAt };
+        const following = !!row && !row.optedOutAt;
+        // Coaches can gate their followers too: a pending ask reads as
+        // "Requested", and tapping it again withdraws the ask.
+        let requested = false;
+        if (!following) {
+          const [req] = await db
+            .select({ id: schema.followRequests.id })
+            .from(schema.followRequests)
+            .where(
+              and(
+                eq(schema.followRequests.trainerUserId, user.id),
+                eq(schema.followRequests.requesterUserId, viewerId),
+              ),
+            );
+          requested = !!req;
+        }
+        account = { following, requested };
       }
     }
   }

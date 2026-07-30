@@ -58,6 +58,7 @@ export function ScheduleScreen({
   invitesLeft,
   showFanView,
   discoverable,
+  approveFollowers,
   messagesOpen,
   userId,
   myColor,
@@ -99,6 +100,7 @@ export function ScheduleScreen({
   invitesLeft: number;
   showFanView: boolean;
   discoverable: boolean;
+  approveFollowers: boolean;
   messagesOpen: boolean;
   userId: string;
   myColor: string | null;
@@ -446,6 +448,7 @@ export function ScheduleScreen({
           avatarColor={myAccent}
           showFanView={showFanView}
           discoverable={discoverable}
+          approveFollowers={approveFollowers}
           messagesOpen={messagesOpen}
           look={look}
           onClose={closeSettings}

@@ -29,7 +29,7 @@ export function AvatarZoom({
   /** The avatar's existing class on this page, so the trigger looks identical
    *  to the plain avatar it replaces. */
   className: string;
-  follow?: { following: boolean } | null;
+  follow?: { following: boolean; requested?: boolean } | null;
   /** The person looking is the person shown; the QR sheet says "Your". */
   isOwner?: boolean;
 }) {
@@ -37,6 +37,7 @@ export function AvatarZoom({
   const [open, setOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [following, setFollowing] = useState(follow?.following ?? false);
+  const [requested, setRequested] = useState(follow?.requested ?? false);
   const [pending, start] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
@@ -47,14 +48,23 @@ export function AvatarZoom({
 
   const toggleFollow = () => {
     if (pending) return;
-    const next = !following;
-    setFollowing(next);
     start(async () => {
-      const res = next ? await followTrainer(handle) : await unfollowTrainer(handle);
-      if (!res.ok) {
-        setFollowing(!next);
-        toast(res.error ?? "Something went wrong.");
-        return;
+      if (following || requested) {
+        const res = await unfollowTrainer(handle);
+        if (!res.ok) {
+          toast(res.error ?? "Something went wrong.");
+          return;
+        }
+        setFollowing(false);
+        setRequested(false);
+      } else {
+        const res = await followTrainer(handle);
+        if (!res.ok) {
+          toast(res.error ?? "Something went wrong.");
+          return;
+        }
+        if (res.requested) setRequested(true);
+        else setFollowing(true);
       }
       router.refresh();
     });
@@ -118,9 +128,9 @@ export function AvatarZoom({
               {follow && (
                 <button className="avact" disabled={pending} onClick={toggleFollow}>
                   <span className={`avact-ic${following ? " on" : ""}`}>
-                    <Icon name={following ? "check" : "person_add"} size={22} />
+                    <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={22} />
                   </span>
-                  {following ? "Following" : "Follow"}
+                  {following ? "Following" : requested ? "Requested" : "Follow"}
                 </button>
               )}
               <button className="avact" onClick={share}>

@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { avatarColor } from "@/lib/avatar";
 import { BackLink } from "@/components/BackLink";
+import { listFollowRequests } from "@/app/actions/subscribe";
 import { FollowersList, type FollowerRow } from "@/components/FollowersList";
 import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
@@ -78,6 +79,10 @@ export default async function FollowersPage() {
 
   const n = followers.length;
 
+  // The asks, when this account approves its followers. Answered here, so the
+  // notification's "Approve or decline in Followers" lands somewhere true.
+  const pending = await listFollowRequests();
+
   return (
     <section className="screen admin hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
       <div className="pad">
@@ -97,7 +102,7 @@ export default async function FollowersPage() {
             </p>
           </div>
         </div>
-        <FollowersList followers={followers} />
+        <FollowersList followers={followers} pending={pending} />
       </div>
     </section>
   );

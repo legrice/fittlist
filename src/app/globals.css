@@ -2263,6 +2263,9 @@ button.ps-card { cursor: pointer; }
 }
 /* Followers: the back arrow sits above the title, same as a class page. */
 .folback { margin-bottom: 14px; }
+/* The asks, above the list proper, when the account approves its followers. */
+.folasks { margin-bottom: 22px; }
+.folasks .prof-sec-h { margin-bottom: 4px; }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 /* A page title that follows the app header rather than starting the page. */
 .pagetop { margin-top: 20px; }
@@ -3092,9 +3095,10 @@ button.ps-card { cursor: pointer; }
 /* The Coach badge across from the name; following moved onto the profile.
    .disfollow stays for the followers and blocked lists, which still act
    inline (Follow back, Undo). */
-/* The name line carries the tag and the follow check, small. */
+/* The name line carries the tag and the follow check, small, pushed to the
+   far edge so they sit directly across from the name. */
 .disrow-nmline { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.disrow-nmline .nm { min-width: 0; }
+.disrow-nmline .nm { min-width: 0; flex: 1; }
 /* Already following: a small white check in a green circle, right of the tag. */
 .disrow-fol {
   width: 17px; height: 17px; border-radius: 50%; background: var(--go); color: #fff;

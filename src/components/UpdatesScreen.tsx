@@ -49,6 +49,7 @@ const ICON: Record<string, string> = {
   message: "mail",
   feedback_reply: "mail",
   studio_suggest: "place",
+  follow_request: "person_add",
 };
 
 function fmt(d: Date | string) {

@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { blockPerson } from "@/app/actions/blocks";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import {
+  answerFollowRequest,
+  followTrainer,
+  unfollowTrainer,
+  type PendingFollower,
+} from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { Toast, useToast } from "@/components/Toast";
@@ -30,7 +35,14 @@ export type FollowerRow = {
 // subscribers alike, since both get the digest. Anyone with a profile links to
 // it; only a coach gets a Follow back button, because following a member would
 // promise a week that isn't there yet.
-export function FollowersList({ followers }: { followers: FollowerRow[] }) {
+export function FollowersList({
+  followers,
+  pending = [],
+}: {
+  followers: FollowerRow[];
+  /** Asks waiting on an answer, when this account approves its followers. */
+  pending?: PendingFollower[];
+}) {
   const router = useRouter();
   const [follows, setFollows] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(followers.map((f) => [f.id, f.following])),
@@ -76,22 +88,100 @@ export function FollowersList({ followers }: { followers: FollowerRow[] }) {
     });
   };
 
+  // Answered requests leave the list right away; the page refresh moves an
+  // approval into the followers below it.
+  const [answered, setAnswered] = useState<Record<string, boolean>>({});
+  const answer = (p: PendingFollower, approve: boolean) => {
+    setAnswered((m) => ({ ...m, [p.id]: true }));
+    startTransition(async () => {
+      const res = await answerFollowRequest(p.id, approve);
+      if (!res.ok) {
+        setAnswered((m) => ({ ...m, [p.id]: false }));
+        toast(res.error ?? "Something went wrong.");
+        return;
+      }
+      toast(approve ? `${p.name.trim().split(/\s+/)[0]} follows you now` : "Declined");
+      router.refresh();
+    });
+  };
+  const asks = pending.filter((p) => !answered[p.id]);
+
   const shown = followers.filter((f) => !gone[f.id]);
+
+  const requests =
+    asks.length > 0 ? (
+      <div className="folasks">
+        <h2 className="prof-sec-h">Waiting on you</h2>
+        <div className="dislist">
+          {asks.map((p) => {
+            const initial = (p.name.trim().charAt(0) || "?").toUpperCase();
+            const inner = (
+              <>
+                {p.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="disrow-av" src={p.photo} alt="" />
+                ) : (
+                  <span
+                    className="disrow-av disrow-av-empty"
+                    style={{ background: p.color }}
+                    aria-hidden="true"
+                  >
+                    {initial}
+                  </span>
+                )}
+                <span className="disrow-txt">
+                  <span className="nm">{p.name}</span>
+                  <span className="sub">Asked to follow you</span>
+                </span>
+              </>
+            );
+            return (
+              <div key={p.id} className="disrow">
+                {p.handle ? (
+                  <Link className="disrow-main" href={`/${p.handle}?from=followers`}>
+                    {inner}
+                    <LinkPending />
+                  </Link>
+                ) : (
+                  <div className="disrow-main">{inner}</div>
+                )}
+                <button type="button" className="disfollow" onClick={() => answer(p, true)}>
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  className="disblock"
+                  aria-label={`Decline ${p.name}`}
+                  onClick={() => answer(p, false)}
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
 
   if (followers.length === 0) {
     return (
-      <div className="empty-block">
-        <h2>No followers yet</h2>
-        <p>
-          Share your link and your QR code. Anyone who follows you, in the app or by email, shows
-          up here.
-        </p>
-      </div>
+      <>
+        {requests}
+        <div className="empty-block">
+          <h2>No followers yet</h2>
+          <p>
+            Share your link and your QR code. Anyone who follows you, in the app or by email, shows
+            up here.
+          </p>
+        </div>
+        <Toast msg={toastMsg} on={toastOn} />
+      </>
     );
   }
 
   return (
     <>
+      {requests}
       <div className="dislist">
         {shown.map((f) => {
           const initial = (f.name.trim().charAt(0) || "?").toUpperCase();

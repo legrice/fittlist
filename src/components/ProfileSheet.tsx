@@ -17,6 +17,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -56,6 +57,7 @@ export function ProfileSheet({
   avatarColor,
   showFanView = false,
   discoverable = true,
+  approveFollowers = false,
   messagesOpen = true,
   look,
   onClose,
@@ -89,6 +91,7 @@ export function ProfileSheet({
   avatarColor: string;
   showFanView?: boolean;
   discoverable?: boolean;
+  approveFollowers?: boolean;
   messagesOpen?: boolean;
   look: string | null;
   onClose: () => void;
@@ -432,6 +435,7 @@ export function ProfileSheet({
         <div className="settingslist">
           <MessagesToggle initialOn={messagesOpen} />
           {showFanView && <DiscoverableToggle initialOn={discoverable} />}
+          <ApproveFollowersToggle initialOn={approveFollowers} />
           {/* Quiet, and quietly reachable: the only place a block is visible. */}
           <a className="setrow" href="/blocked">
             <span className="setrow-ic"><Icon name="public_off" size={22} /></span>

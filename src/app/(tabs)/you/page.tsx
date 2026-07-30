@@ -52,6 +52,7 @@ export default async function YouPage({
           openEditor={edit === "1"}
           canSendFeedback={!!host && host.email.toLowerCase() !== me.email.toLowerCase()}
           discoverable={me.discoverable}
+          approveFollowers={me.approveFollowers}
         />
     </>
   );

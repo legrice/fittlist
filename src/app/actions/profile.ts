@@ -190,6 +190,17 @@ export async function updateProfile(input: {
 // every visitor. "dark" today; more looks later.
 // Opt in or out of the Find coaches directory. Their page stays public and
 // shareable either way — this only controls being browsable by strangers.
+// The private-account gate. Its own action, same shape as the switches
+// around it in settings.
+export async function setApproveFollowers(on: boolean): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const db = await getDb();
+  await db.update(schema.users).set({ approveFollowers: on }).where(eq(schema.users.id, userId));
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };

@@ -43,7 +43,7 @@ export async function MemberProfileView({
   // less on purpose: nothing lands in your week, nothing public changes. Its
   // one payoff is mutual: you both follow each other and both add a class,
   // and Your week says they're going too.
-  let follow: { following: boolean } | null = null;
+  let follow: { following: boolean; requested: boolean } | null = null;
   if (viewerId && !isOwner && user.handle && (await fansVisible())) {
     const db = await getDb();
     const [viewer] = await db
@@ -60,7 +60,22 @@ export async function MemberProfileView({
             eq(schema.subscribers.email, viewer.email),
           ),
         );
-      follow = { following: !!row && !row.optedOutAt };
+      const following = !!row && !row.optedOutAt;
+      // A pending ask renders as "Requested", so a tap can withdraw it.
+      let requested = false;
+      if (!following) {
+        const [req] = await db
+          .select({ id: schema.followRequests.id })
+          .from(schema.followRequests)
+          .where(
+            and(
+              eq(schema.followRequests.trainerUserId, user.id),
+              eq(schema.followRequests.requesterUserId, viewerId),
+            ),
+          );
+        requested = !!req;
+      }
+      follow = { following, requested };
     }
   }
 
@@ -119,6 +134,7 @@ export async function MemberProfileView({
                 handle={user.handle!}
                 name={name}
                 initialFollowing={follow.following}
+                initialRequested={follow.requested}
               />
             </div>
           )}

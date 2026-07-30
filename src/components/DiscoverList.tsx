@@ -40,6 +40,7 @@ export function DiscoverList({
   hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
+  const [coachesOnly, setCoachesOnly] = useState(false);
   // Near you is the default view when it would show anything: someone opening
   // Discover is asking "who's around here", not "who is on fittlist".
   const nearCity = myCity && cities.includes(myCity) ? myCity : null;
@@ -48,6 +49,7 @@ export function DiscoverList({
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return coaches.filter((c) => {
+      if (coachesOnly && c.kind !== "coach") return false;
       if (city && c.location !== city) return false;
       if (!needle) return true;
       return (
@@ -56,7 +58,7 @@ export function DiscoverList({
         c.location.toLowerCase().includes(needle)
       );
     });
-  }, [coaches, q, city]);
+  }, [coaches, q, city, coachesOnly]);
 
   return (
     <>
@@ -78,9 +80,21 @@ export function DiscoverList({
 
       {/* Near you, then everywhere else. A row of city chips was fine at six
           cities and unreadable at sixty, so the long list moved into a picker
-          and the one city that matters most got its own button. */}
-      {cities.length > 1 && (
+          and the one city that matters most got its own button. The Coaches
+          chip rides along whenever the list mixes kinds, city picker or not:
+          it filters people, not places. */}
+      {(cities.length > 1 || coaches.some((c) => c.kind !== "coach")) && (
         <div className="disfilter">
+          {coaches.some((c) => c.kind !== "coach") && (
+            <button
+              type="button"
+              className={`disnear${coachesOnly ? " on" : ""}`}
+              aria-pressed={coachesOnly}
+              onClick={() => setCoachesOnly((v) => !v)}
+            >
+              Coaches
+            </button>
+          )}
           {nearCity && (
             <button
               type="button"
@@ -90,22 +104,24 @@ export function DiscoverList({
               <Icon name="place" size={17} /> Near you
             </button>
           )}
-          <div className="discitysel">
-            <Icon name="expand_more" size={18} className="discitysel-ic" />
-            <select
-              className="discitysel-in"
-              aria-label="Filter by city"
-              value={city ?? ""}
-              onChange={(e) => setCity(e.target.value || null)}
-            >
-              <option value="">All cities</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          {cities.length > 1 && (
+            <div className="discitysel">
+              <Icon name="expand_more" size={18} className="discitysel-ic" />
+              <select
+                className="discitysel-in"
+                aria-label="Filter by city"
+                value={city ?? ""}
+                onChange={(e) => setCity(e.target.value || null)}
+              >
+                <option value="">All cities</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       )}
 

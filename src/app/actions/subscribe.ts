@@ -83,7 +83,9 @@ export async function unsubscribeEmail(
 // ---- account-based follows (the fan side). Same subscribers table, same
 // digest pipeline — the row just carries the follower's userId.
 
-export async function followTrainer(handle: string): Promise<{ ok: boolean; error?: string }> {
+export async function followTrainer(
+  handle: string,
+): Promise<{ ok: boolean; error?: string; requested?: boolean }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Log in first." };
@@ -98,6 +100,42 @@ export async function followTrainer(handle: string): Promise<{ ok: boolean; erro
   // isn't there.
   const { isBlocked } = await import("@/lib/blocks");
   if (await isBlocked(trainer.id, userId)) return { ok: false, error: "Page not found." };
+
+  // The private-account gate: a follow starts as a request they approve.
+  // Only when there's no active follow already; re-following after an
+  // unfollow goes through the gate like anyone else.
+  if (trainer.approveFollowers) {
+    const [active] = await db
+      .select({ optedOutAt: schema.subscribers.optedOutAt })
+      .from(schema.subscribers)
+      .where(
+        and(
+          eq(schema.subscribers.trainerUserId, trainer.id),
+          eq(schema.subscribers.email, me.email),
+        ),
+      );
+    if (!active || active.optedOutAt) {
+      const inserted = await db
+        .insert(schema.followRequests)
+        .values({ trainerUserId: trainer.id, requesterUserId: userId })
+        .onConflictDoNothing()
+        .returning({ id: schema.followRequests.id });
+      if (inserted.length) {
+        try {
+          await addNotification(trainer.id, {
+            type: "follow_request",
+            title: `${me.name.trim() || me.email} asked to follow you`,
+            body: "Approve or decline in Followers.",
+            href: "/followers",
+            actorUserId: userId,
+          });
+        } catch (err) {
+          console.error("follow request notification failed", err);
+        }
+      }
+      return { ok: true, requested: true };
+    }
+  }
 
   const [existing] = await db
     .select()
@@ -150,5 +188,105 @@ export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; er
     .where(
       and(eq(schema.subscribers.trainerUserId, trainer.id), eq(schema.subscribers.email, me.email)),
     );
+  // Tapping again on "Requested" is a cancel: the ask is withdrawn quietly.
+  await db
+    .delete(schema.followRequests)
+    .where(
+      and(
+        eq(schema.followRequests.trainerUserId, trainer.id),
+        eq(schema.followRequests.requesterUserId, userId),
+      ),
+    );
+  return { ok: true };
+}
+
+// ---- the approval side. Owner-only: the request has to be addressed to you.
+
+export type PendingFollower = {
+  id: string;
+  name: string;
+  photo: string | null;
+  color: string;
+  handle: string | null;
+};
+
+export async function listFollowRequests(): Promise<PendingFollower[]> {
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  const rows = await db
+    .select()
+    .from(schema.followRequests)
+    .where(eq(schema.followRequests.trainerUserId, userId));
+  if (!rows.length) return [];
+  const { inArray } = await import("drizzle-orm");
+  const people = await db
+    .select()
+    .from(schema.users)
+    .where(inArray(schema.users.id, rows.map((r) => r.requesterUserId)));
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const { avatarColor } = await import("@/lib/avatar");
+  return rows
+    .map((r) => {
+      const p = byId.get(r.requesterUserId);
+      if (!p) return null;
+      return {
+        id: r.id,
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+      };
+    })
+    .filter((x): x is PendingFollower => !!x);
+}
+
+export async function answerFollowRequest(
+  requestId: string,
+  approve: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const db = await getDb();
+  const [req] = await db
+    .select()
+    .from(schema.followRequests)
+    .where(
+      and(eq(schema.followRequests.id, requestId), eq(schema.followRequests.trainerUserId, userId)),
+    );
+  if (!req) return { ok: false, error: "That request is gone." };
+  await db.delete(schema.followRequests).where(eq(schema.followRequests.id, requestId));
+  // Declined: nothing else happens, and nothing says so. They can ask again;
+  // a "declined" notice is an invitation to take it personally.
+  if (!approve) return { ok: true };
+
+  const [requester] = await db
+    .select()
+    .from(schema.users)
+    .where(eq(schema.users.id, req.requesterUserId));
+  if (!requester) return { ok: true };
+  await db
+    .insert(schema.subscribers)
+    .values({ trainerUserId: userId, email: requester.email, userId: requester.id })
+    .onConflictDoUpdate({
+      target: [schema.subscribers.trainerUserId, schema.subscribers.email],
+      set: { optedOutAt: null, userId: requester.id },
+    });
+  const [me] = await db
+    .select({ name: schema.users.name, email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  try {
+    await addNotification(requester.id, {
+      type: "follow",
+      title: `${me?.name?.trim() || me?.email || "They"} approved your follow`,
+      body: "You follow each other's worlds now.",
+      actorUserId: userId,
+    });
+  } catch (err) {
+    console.error("approval notification failed", err);
+  }
   return { ok: true };
 }

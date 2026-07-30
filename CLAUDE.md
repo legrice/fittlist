@@ -180,6 +180,16 @@ coach separately sees who marked Going on *their own* classes (`roster` in
 `classDetail`, owner-only): the mark was made at that coach, so the coach
 seeing it is what the mark meant, and it never shows where else anyone trains.
 
+**A follow can be gated.** `users.approveFollowers` turns Follow into an ask:
+the tap writes a `follow_requests` row (unique per trainer+requester, its own
+table so a `subscribers` row keeps meaning exactly one active follow), the pill
+reads Requested, and the answer lives on `/followers`. Approving inserts the
+subscriber and tells the requester; declining deletes the row and tells nobody,
+on purpose, because a "declined" notice is an invitation to take it personally.
+Unfollow also withdraws a pending ask, so tapping Requested is the cancel.
+Being listed in Discover and gating your followers are separate switches that
+sit together in settings. Both directions clear in `adminDeleteUser`.
+
 **"Member" is the word for someone who isn't a coach.** The column is
 `users.kind` and its value is still `"fan"`, which is the odd one out and a
 migration nobody needs yet; everything a person reads says member. Not
