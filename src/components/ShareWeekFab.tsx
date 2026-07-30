@@ -15,9 +15,7 @@ export function ShareWeekFab({ handle }: { handle: string }) {
   return (
     <>
       <button className="fab" onClick={() => setOpen(true)}>
-        {/* A camera, not the generic share arrow: the button makes a story
-            image, and the icon gets to say so. */}
-        <Icon name="photo_camera" size={20} />
+        <Icon name="auto_awesome" size={20} />
         Share my week
       </button>
       <ShareWeekSheet handle={handle} open={open} onClose={() => setOpen(false)} onToast={toast} />
