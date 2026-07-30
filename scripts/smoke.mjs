@@ -1143,7 +1143,10 @@ await fan.locator(".followpill").waitFor();
 await fan.waitForTimeout(400);
 await fan.locator(".followpill").click();
 await fan.locator(".followpill", { hasText: "Following" }).waitFor();
-console.log("discover ok (badge on the row, follow on the profile)");
+// and back on Discover, the row now carries the green check
+await fan.goto(BASE + "/discover");
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-fol").waitFor();
+console.log("discover ok (badge on the row, follow on the profile, check after)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();

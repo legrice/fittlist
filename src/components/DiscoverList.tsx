@@ -13,6 +13,9 @@ export type DiscoverCoach = {
   title: string;
   location: string;
   classesThisWeek: number;
+  /** Display only: the green check that says "you already follow them".
+   *  The follow itself lives on the profile. */
+  following: boolean;
   color: string;
 };
 
@@ -148,7 +151,14 @@ export function DiscoverList({
                       : "No classes posted yet"}
                   </span>
                 </span>
-                <span className="kindtag disrow-kind">Coach</span>
+                <span className="disrow-right">
+                  <span className="kindtag">Coach</span>
+                  {c.following && (
+                    <span className="disrow-fol" aria-label="Following" title="Following">
+                      <Icon name="check" size={13} />
+                    </span>
+                  )}
+                </span>
                 <LinkPending />
               </Link>
             </div>
