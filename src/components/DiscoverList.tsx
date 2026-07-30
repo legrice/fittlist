@@ -3,8 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { EventComposer } from "@/components/EventComposer";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
+import { Toast, useToast } from "@/components/Toast";
 
 export type DiscoverCoach = {
   id: string;
@@ -24,9 +26,11 @@ export type DiscoverCoach = {
   color: string;
 };
 
-/** A one-off dated public class, dressed as an event: the Events view is a
- *  lens over ordinary class rows, so the row links to the class page and
- *  everything there (Going, share, .ics) already works. */
+/** One entry in the Events view. Two things wear this shape: a coach's
+ *  one-off dated class (a lens over the class row, linking to the class page
+ *  where Going and share already work) and a posted community event (an expo,
+ *  a competition, a meetup), which links to its own page and may carry a
+ *  flyer. The photo is what decides row versus card. */
 export type DiscoverEvent = {
   id: string;
   href: string;
@@ -34,10 +38,13 @@ export type DiscoverEvent = {
   wd: string;
   mon: string;
   day: number;
-  time: string;
-  place: string;
-  coachName: string;
+  /** The when-and-where line, built server-side: "Sat · 6:00a · Ironbound". */
+  sub: string;
+  /** "with Matt" for a class, "Hosted by Hudson Fit Expo" for an event. */
+  by: string;
   city: string;
+  photo: string | null;
+  sort: string;
 };
 
 // The row's corner control: a small Follow that flips green when it's a yes,
@@ -98,6 +105,7 @@ export function DiscoverList({
   events = [],
   cities,
   myCity = null,
+  canPost = false,
   backHref,
   hideBack = false,
 }: {
@@ -106,12 +114,16 @@ export function DiscoverList({
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
+  /** Coaches can post a community event; members read the board. */
+  canPost?: boolean;
   backHref: string;
   hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [view, setView] = useState<"people" | "events">("people");
   const [coachesOnly, setCoachesOnly] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
+  const [toastMsg, toastOn, toast] = useToast();
   // Near you is the default view when it would show anything: someone opening
   // Discover is asking "who's around here", not "who is on fittlist".
   const nearCity = myCity && cities.includes(myCity) ? myCity : null;
@@ -138,37 +150,18 @@ export function DiscoverList({
       if (!needle) return true;
       return (
         e.name.toLowerCase().includes(needle) ||
-        e.coachName.toLowerCase().includes(needle) ||
-        e.place.toLowerCase().includes(needle)
+        e.sub.toLowerCase().includes(needle) ||
+        e.by.toLowerCase().includes(needle)
       );
     });
   }, [events, q, city]);
 
   return (
     <>
-      {/* The page title, with the coaches-only switch directly across from
-          it. Only when the list mixes kinds; all coaches leaves the switch
-          nothing to do. */}
-      <div className="calbar-title distitle">
-        Discover
-        {view === "people" && coaches.some((c) => c.kind !== "coach") && (
-          <button
-            type="button"
-            className="disonly"
-            role="switch"
-            aria-checked={coachesOnly}
-            onClick={() => setCoachesOnly((v) => !v)}
-          >
-            View coaches only
-            <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
-              <span className="switch-knob" />
-            </span>
-          </button>
-        )}
-      </div>
-      {/* Two lenses on the same directory: who's here, and what's coming up.
-          Events are the one-off dated classes coaches post, so the switch only
-          changes what you're looking at, never what exists. */}
+      {/* No page title: the People/Events switch says where you are, and the
+          word Discover was spending a headline on something the tab bar
+          already said. Two lenses on the same directory: who's here, and
+          what's coming up. */}
       <div className="seg disseg">
         <button className={view === "people" ? "sel" : ""} onClick={() => setView("people")}>
           People
@@ -195,10 +188,12 @@ export function DiscoverList({
 
       {/* Near you, then everywhere else. A row of city chips was fine at six
           cities and unreadable at sixty, so the long list moved into a picker
-          and the one city that matters most got its own button. */}
-      {cities.length > 1 && (
+          and the one city that matters most got its own button. Coaches only
+          lives here too now, as a chip: the title that used to hold it is
+          gone, and a filter belongs with the filters. */}
+      {(cities.length > 1 || (view === "people" && coaches.some((c) => c.kind !== "coach"))) && (
         <div className="disfilter">
-          {nearCity && (
+          {cities.length > 1 && nearCity && (
             <button
               type="button"
               className={`disnear${city === nearCity ? " on" : ""}`}
@@ -207,25 +202,46 @@ export function DiscoverList({
               <Icon name="place" size={17} /> Near you
             </button>
           )}
-          <div className="discitysel">
-            <Icon name="expand_more" size={18} className="discitysel-ic" />
-            <select
-              className="discitysel-in"
-              aria-label="Filter by city"
-              value={city ?? ""}
-              onChange={(e) => setCity(e.target.value || null)}
+          {cities.length > 1 && (
+            <div className="discitysel">
+              <Icon name="expand_more" size={18} className="discitysel-ic" />
+              <select
+                className="discitysel-in"
+                aria-label="Filter by city"
+                value={city ?? ""}
+                onChange={(e) => setCity(e.target.value || null)}
+              >
+                <option value="">All cities</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {view === "people" && coaches.some((c) => c.kind !== "coach") && (
+            <button
+              type="button"
+              className={`dischip${coachesOnly ? " on" : ""}`}
+              role="switch"
+              aria-checked={coachesOnly}
+              onClick={() => setCoachesOnly((v) => !v)}
             >
-              <option value="">All cities</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+              Coaches only
+            </button>
+          )}
         </div>
       )}
 
+
+      {/* Coaches seed the board; it shows above the empty state on purpose,
+          because the empty board is exactly when posting matters most. */}
+      {view === "events" && canPost && (
+        <button className="evpost" onClick={() => setPostOpen(true)}>
+          <Icon name="add" size={18} /> Post an event
+        </button>
+      )}
 
       {view === "events" ? (
         shownEvents.length === 0 ? (
@@ -244,25 +260,42 @@ export function DiscoverList({
           </div>
         ) : (
           <div className="dislist dislist-bare">
-            {shownEvents.map((e) => (
-              <Link key={e.id} className="disev" href={e.href}>
-                <span className="disev-date" aria-hidden="true">
-                  <span className="mo">{e.mon}</span>
-                  <span className="dy">{e.day}</span>
-                </span>
-                <span className="disev-txt">
-                  <span className="nm">{e.name}</span>
-                  <span className="sub">
-                    {e.wd} · {e.time}
-                    {e.place ? ` · ${e.place}` : ""}
+            {shownEvents.map((e) =>
+              e.photo ? (
+                // A flyer makes it a card: the image the host already made
+                // for Instagram carries the row, date tile riding its corner.
+                <Link key={e.id} className="discard" href={e.href}>
+                  <span className="discard-imgwrap">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="discard-img" src={e.photo} alt="" />
+                    <span className="disev-date discard-date" aria-hidden="true">
+                      <span className="mo">{e.mon}</span>
+                      <span className="dy">{e.day}</span>
+                    </span>
                   </span>
-                  <span className="wk">with {e.coachName}</span>
-                </span>
-                <span className="disev-chev">
-                  <Icon name="chevron_right" size={18} />
-                </span>
-              </Link>
-            ))}
+                  <span className="discard-body">
+                    <span className="nm">{e.name}</span>
+                    <span className="sub">{e.sub}</span>
+                    {e.by && <span className="wk">{e.by}</span>}
+                  </span>
+                </Link>
+              ) : (
+                <Link key={e.id} className="disev" href={e.href}>
+                  <span className="disev-date" aria-hidden="true">
+                    <span className="mo">{e.mon}</span>
+                    <span className="dy">{e.day}</span>
+                  </span>
+                  <span className="disev-txt">
+                    <span className="nm">{e.name}</span>
+                    <span className="sub">{e.sub}</span>
+                    {e.by && <span className="wk">{e.by}</span>}
+                  </span>
+                  <span className="disev-chev">
+                    <Icon name="chevron_right" size={18} />
+                  </span>
+                </Link>
+              ),
+            )}
           </div>
         )
       ) : shown.length === 0 ? (
@@ -336,6 +369,9 @@ export function DiscoverList({
           Back to your week
         </Link>
       )}
+
+      <EventComposer open={postOpen} myCity={myCity} onClose={() => setPostOpen(false)} onDone={toast} />
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }

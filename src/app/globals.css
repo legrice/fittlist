@@ -3256,8 +3256,8 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; padding: 4px 0; cursor: pointer;
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ol);
 }
-/* The People/Events switch, between the title and the search. */
-.disseg { margin-bottom: 14px; flex: none; }
+/* The People/Events switch leads the page; the title it sat under is gone. */
+.disseg { margin: 4px 0 14px; flex: none; }
 /* An event row: a small date tile carries the when, the text the what. The
    row is one link to the class page, where Going and share already live. */
 .disev {
@@ -3290,6 +3290,66 @@ button.ps-card { cursor: pointer; }
 }
 .disev-txt .wk { font-size: 12px; font-weight: 600; color: var(--ol); }
 .disev-chev { flex-shrink: 0; color: var(--ol); display: flex; }
+
+/* Coaches only, as a chip among the filters: it toggles like Near you. */
+.dischip {
+  flex-shrink: 0; padding: 9px 14px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.dischip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* The coach's door onto the events board. */
+.evpost {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+}
+.evpost .icon { color: var(--si); }
+/* A posted event with a flyer: the image carries the card, the date tile
+   rides its corner. Flyers are portrait or square as often as wide, so the
+   image keeps its own shape under a cap instead of being forced to a crop. */
+.discard {
+  display: block; text-decoration: none; color: inherit;
+  padding: 14px 2px; border-bottom: 1px solid var(--line);
+}
+.discard:last-child { border-bottom: none; }
+.discard-imgwrap { position: relative; display: block; }
+.discard-img {
+  display: block; width: 100%; max-height: 300px; object-fit: cover;
+  border-radius: 16px; border: 1px solid var(--line);
+}
+.discard-date { position: absolute; top: 10px; left: 10px; }
+.discard-body { display: flex; flex-direction: column; gap: 1px; padding: 10px 2px 0; }
+.discard-body .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px;
+}
+.discard-body .sub { font-size: 12.5px; color: var(--ol); }
+.discard-body .wk { font-size: 12px; font-weight: 600; color: var(--ol); }
+
+/* The event's own page: flyer, facts, one link out. */
+.evhero {
+  display: block; width: 100%; max-height: 420px; object-fit: cover;
+  border-radius: 18px; border: 1px solid var(--line); margin-bottom: 18px;
+}
+.evtitle { margin-bottom: 12px; }
+.evfacts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.evfact { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.evfact .icon { color: var(--ol); flex-shrink: 0; }
+.evlink { display: flex; margin-top: 20px; }
+.evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
+.evposter a { color: inherit; font-weight: 600; }
+
+/* The composer's two dates side by side, and the flyer preview. */
+.evdates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.evabout { resize: vertical; min-height: 70px; }
+.evflyer img {
+  display: block; width: 100%; max-height: 220px; object-fit: cover;
+  border-radius: 12px; border: 1px solid var(--line);
+}
+.evflyer .tertiary { display: block; margin: 8px auto 0; }
+.evpick { display: flex; }
 
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }

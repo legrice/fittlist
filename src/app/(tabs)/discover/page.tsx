@@ -129,25 +129,57 @@ export default async function DiscoverPage() {
   const studioNameById = new Map(eventStudios.map((s) => [s.id, s.name]));
   const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const events: DiscoverEvent[] = eventRows.flatMap((c) => {
+  const dateBits = (isoDay: string) => {
+    const d = new Date(`${isoDay}T00:00:00Z`);
+    return { wd: WD[(d.getUTCDay() + 6) % 7], mon: MO[d.getUTCMonth()], day: d.getUTCDate() };
+  };
+  const classEvents: DiscoverEvent[] = eventRows.flatMap((c) => {
     const coach = userRowById.get(c.userId);
     if (!coach?.handle) return [];
-    const d = new Date(`${c.specificDate}T00:00:00Z`);
+    const b = dateBits(c.specificDate!);
+    const place = (c.studioId && studioNameById.get(c.studioId)) || c.location || "";
     return [
       {
         id: c.id,
         href: `/${coach.handle}/${c.id}?d=${c.specificDate}&from=discover`,
         name: c.name,
-        wd: WD[(d.getUTCDay() + 6) % 7],
-        mon: MO[d.getUTCMonth()],
-        day: d.getUTCDate(),
-        time: fmtTime(c.startTime),
-        place: (c.studioId && studioNameById.get(c.studioId)) || c.location || "",
-        coachName: coach.name,
+        ...b,
+        sub: [`${b.wd} · ${fmtTime(c.startTime)}`, place].filter(Boolean).join(" · "),
+        by: `with ${coach.name}`,
         city: coach.location?.trim() ?? "",
+        photo: null,
+        sort: `${c.specificDate}T${c.startTime}`,
       },
     ];
   });
+
+  // Posted events: the expos, competitions and meetups that aren't anyone's
+  // class. A multi-day one keeps listing while it's still running.
+  const postedRows2 = await db.select().from(schema.events);
+  const posted: DiscoverEvent[] = postedRows2
+    .filter((e) => e.endDate >= today && e.startDate <= horizonIso)
+    .map((e) => {
+      const b = dateBits(e.startDate);
+      const multi = e.endDate !== e.startDate;
+      const end = dateBits(e.endDate);
+      const whenBits = multi
+        ? [`${b.wd}, ${b.mon} ${b.day} to ${end.wd}, ${end.mon} ${end.day}`]
+        : [b.wd, e.startTime ? fmtTime(e.startTime) : null];
+      const poster = e.createdByUserId ? userRowById.get(e.createdByUserId) : undefined;
+      const host = e.hostName?.trim() || poster?.name || "";
+      return {
+        id: e.id,
+        href: `/e/${e.id}`,
+        name: e.name,
+        ...b,
+        sub: [...whenBits, e.place].filter(Boolean).join(" · "),
+        by: host ? `Hosted by ${host}` : "",
+        city: e.city?.trim() ?? "",
+        photo: e.photo,
+        sort: `${e.startDate}T${e.startTime ?? "00:00"}`,
+      };
+    });
+  const events = [...classEvents, ...posted].sort((a, b) => a.sort.localeCompare(b.sort));
 
   return (
     <>
@@ -158,6 +190,7 @@ export default async function DiscoverPage() {
         events={events}
         cities={cities}
         myCity={me.location?.trim() || null}
+        canPost={isCoach}
         backHref="/feed"
         hideBack
       />

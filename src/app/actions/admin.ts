@@ -285,6 +285,8 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // Their studio edits stay: the edit is a fact about the studio, it just
   // loses its author.
   await db.update(schema.studioEdits).set({ editorUserId: null }).where(eq(schema.studioEdits.editorUserId, id));
+  // Events they posted stay too: the expo is still happening.
+  await db.update(schema.events).set({ createdByUserId: null }).where(eq(schema.events.createdByUserId, id));
   await db.update(schema.studioClasses).set({ createdByUserId: null }).where(eq(schema.studioClasses.createdByUserId, id));
   await db.update(schema.customClassTypes).set({ createdByUserId: null }).where(eq(schema.customClassTypes.createdByUserId, id));
   await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));

@@ -241,6 +241,31 @@ export const studioEdits = pgTable("studio_edits", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A community happening that isn't anyone's class: an expo, a competition, a
+// meetup in a park. Its own object, because faking one as a class would put
+// it on somebody's schedule. Coaches post them (kind-gated in the action) and
+// every event carries its poster; there is deliberately no ticketing and no
+// RSVP here, the link points out to wherever that lives. De-attributed, not
+// deleted, in adminDeleteUser: the expo is still happening after its poster
+// leaves.
+export const events = pgTable("events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  startDate: date("start_date").notNull(),
+  // Multi-day happenings (an expo weekend). Same as start_date for one-dayers.
+  endDate: date("end_date").notNull(),
+  startTime: text("start_time"), // "HH:MM" 24h, null = all-day
+  place: text("place").notNull(),
+  city: text("city"),
+  photo: text("photo"),
+  description: text("description"),
+  link: text("link"),
+  // Who's putting it on, free text: the poster often isn't the host.
+  hostName: text("host_name"),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const classTemplates = pgTable(
   "class_templates",
   {

@@ -1017,6 +1017,31 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 2);
 console.log("one-off future ok");
 
+// ---- the Events board: a coach posts a community happening (an expo, a
+// competition, a meetup) that isn't anyone's class. Multi-day, hosted by
+// someone who isn't the poster, one link out. No flyer here, so it lists as
+// a row; the card treatment is the flyer's job.
+{
+  await page.goto(BASE + "/discover");
+  await page.locator(".disseg button", { hasText: "Events" }).click();
+  await page.locator(".evpost").click();
+  await page.getByRole("heading", { name: "Post an event" }).waitFor();
+  await page.locator("#evName").fill("Hudson Fit Expo");
+  await page.locator("#evStart").fill(iso(nextWeekD));
+  const expoEnd = new Date(nextWeekD);
+  expoEnd.setUTCDate(nextWeekD.getUTCDate() + 1);
+  await page.locator("#evEnd").fill(iso(expoEnd));
+  await page.locator("#evPlace").fill("Harborside, Jersey City");
+  await page.locator("#evHost").fill("Hudson Fit Expo");
+  await page.locator("#evLink").fill("https://example.com/expo");
+  await page.getByRole("button", { name: "Post event" }).click();
+  await page.getByText("Event posted").waitFor();
+  await page.locator(".disev", { hasText: "Hudson Fit Expo" }).waitFor();
+  const sub = await page.locator(".disev", { hasText: "Hudson Fit Expo" }).locator(".sub").innerText();
+  if (!sub.includes(" to ")) fail("a multi-day event should say its range: " + sub);
+}
+console.log("event posted ok (multi-day, listed on the board)");
+
 // the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
 // The URL is the section: landing here renders the week, no scrolling involved.
@@ -1133,7 +1158,7 @@ await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await fan.locator(".disseg").waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
@@ -1185,6 +1210,22 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.goto(BASE + "/discover");
 }
 console.log("events lens ok (one-offs listed, a row opens the class)");
+
+// The posted event sits on the same board. A member reads it but can't post
+// to it, and only the poster (or the admin) sees Remove on its page.
+{
+  await fan.locator(".disseg button", { hasText: "Events" }).click();
+  if (await fan.locator(".evpost").count()) fail("a member should not see Post an event");
+  await fan.locator(".disev", { hasText: "Hudson Fit Expo" }).click();
+  await fan.waitForURL(/\/e\//);
+  await fan.getByRole("heading", { name: "Hudson Fit Expo" }).waitFor();
+  await fan.getByText("Hosted by Hudson Fit Expo").waitFor();
+  await fan.locator('a[href="https://example.com/expo"]').waitFor();
+  if (await fan.getByRole("button", { name: "Remove event" }).count())
+    fail("only the poster sees Remove on an event");
+  await fan.goto(BASE + "/discover");
+}
+console.log("event page ok (facts, link out, member can't post or remove)");
 
 // The studio directory is coach-editable, and a coach is kind, not handle:
 // members hold handles too, and testing the handle put the edit button on
@@ -1472,7 +1513,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await fan.locator(".disseg").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -1537,7 +1578,7 @@ await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
