@@ -1864,7 +1864,7 @@ button.ps-card { cursor: pointer; }
 .pubtab {
   flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 18px; color: var(--ol); background: transparent; white-space: nowrap;
+  font-size: 19px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
