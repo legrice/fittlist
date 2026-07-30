@@ -22,6 +22,8 @@
   --line: #e6dfcd;         /* warm cream dividers / input borders */
   --rule: #191502;         /* charcoal hairline rules */
   --si: #dd6a35;           /* pleasant warm-orange accent + CTA */
+  --si-tint: #fbe4d2;      /* pale brand wash: tinted CTAs, selected tabs */
+  --si-ink: #b9531f;       /* brand text/icons sitting on the wash */
   --go: #3d8b53;           /* "on" green for switches */
   --si-soft: #f7e6d6;
   --sa: #d6d1b3;
@@ -559,7 +561,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   bottom: calc(22px + env(safe-area-inset-bottom));
   display: inline-flex; align-items: center; gap: 8px;
   padding: 15px 22px 15px 18px; border-radius: 999px;
-  background: var(--card); color: var(--ink);
+  background: var(--si); color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
   box-shadow: 0 2px 6px rgba(25, 21, 2, .10), 0 10px 28px rgba(25, 21, 2, .18);
   transition: transform .08s;
@@ -568,10 +570,18 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   text-decoration: none; border: none; cursor: pointer;
 }
 .fab:active { transform: scale(.97); }
+/* The share fab wears the wash rather than the solid: sharing is the invite,
+   adding is the action. */
+.fab.fab-tint { background: var(--si-tint); color: var(--si-ink); }
+/* The Coach tag beside the name joins the brand family on profiles. The small
+   gray tag on Discover rows stays gray on purpose: there it's a label in a
+   list, here it's part of the page's identity. */
+.profname-row .kindtag { background: var(--si-tint); color: var(--si-ink); }
+[data-mode="dark"] .profname-row .kindtag { background: var(--si-tint); color: var(--si-ink); border: none; }
 /* In dark the card is near-black, which would vanish into the page — flip it
    the way the light version reads: the pill is the bright thing. */
 [data-mode="dark"] .fab {
-  background: var(--ink); color: var(--paper);
+  background: var(--si); color: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, .5), 0 10px 28px rgba(0, 0, 0, .55);
 }
 .toast {
@@ -1770,20 +1780,18 @@ button.ps-card { cursor: pointer; }
 .addclass-pill {
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
   padding: 0 16px; border-radius: 999px; text-decoration: none;
-  background: var(--cl-d); color: var(--ink);
+  background: var(--si); color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
 }
 .addclass-pill:active { transform: scale(.97); }
-[data-mode="dark"] .addclass-pill { background: var(--card); }
 /* The next week of a schedule, on request. */
 .viewmore {
   display: block; margin: 18px auto 6px; padding: 12px 26px; border-radius: 999px;
-  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  border: none; background: var(--si-tint); color: var(--si-ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
   cursor: pointer;
 }
 .viewmore:active { transform: scale(.97); }
-[data-mode="dark"] .viewmore { background: var(--card); }
 [data-mode="dark"] .addclass-pill:active { background: #2c2718; }
 .pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
 .profav {
@@ -1841,7 +1849,7 @@ button.ps-card { cursor: pointer; }
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
    one family. */
-.pubtab.sel { color: var(--ink); background: var(--cl-d); }
+.pubtab.sel { color: var(--si-ink); background: var(--si-tint); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -2135,10 +2143,9 @@ button.ps-card { cursor: pointer; }
    their page (add class, edit profile, share, QR, copy week, requests) lives
    in the sheet behind it. */
 .ownermore {
-  /* One step darker than the tab pills, so it reads as a button beside the
-     name rather than another highlight. */
-  width: 38px; height: 38px; border-radius: 999px; background: var(--cl-d);
-  border: 0; color: var(--ink);
+  /* The brand wash, same family as the Add class pill beside it. */
+  width: 38px; height: 38px; border-radius: 999px; background: var(--si-tint);
+  border: 0; color: var(--si-ink);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
 .ownermore:active { background: var(--sa); }
@@ -2598,6 +2605,8 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
+  --si-tint: #3f2413;
+  --si-ink: #f0a071;
   --card: #211c13;
   --ink: #f3efe3;
   --ol: #a89f8a;
@@ -2703,7 +2712,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .proflink,
 [data-mode="dark"] .profstudio,
 [data-mode="dark"] .ownermore {
-  background: var(--card); color: var(--ink); border-color: var(--line);
+  background: var(--si-tint); color: var(--si-ink); border-color: transparent;
 }
 [data-mode="dark"] .proflink:active,
 [data-mode="dark"] .profstudio:active,

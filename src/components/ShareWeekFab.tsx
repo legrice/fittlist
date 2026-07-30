@@ -14,7 +14,7 @@ export function ShareWeekFab({ handle }: { handle: string }) {
   const [toastMsg, toastOn, toast] = useToast();
   return (
     <>
-      <button className="fab" onClick={() => setOpen(true)}>
+      <button className="fab fab-tint" onClick={() => setOpen(true)}>
         {/* A megaphone, not sparkles: sparkles have come to mean "AI made
             this", and this button shares a real person's real week. */}
         <Icon name="campaign" size={20} />
