@@ -1484,6 +1484,11 @@ button.ps-card { cursor: pointer; }
 .avoverlay-acts { display: flex; gap: 26px; justify-content: center; }
 /* Message, stretched across the whole action row: the pill style, made a bar. */
 .actpill-wide { width: 100%; }
+/* The square profile-card preview in its share sheet. */
+.cardimg {
+  width: 100%; aspect-ratio: 1; border-radius: 14px; margin-top: 16px;
+  box-shadow: var(--soft-shadow); background: var(--card); display: block;
+}
 .avact {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   border: none; background: none; padding: 0; cursor: pointer;
@@ -3062,7 +3067,9 @@ button.ps-card { cursor: pointer; }
 .dissearch-ic { color: var(--ol); flex-shrink: 0; }
 .dissearch-in {
   flex: 1; min-width: 0; border: none; background: none; outline: none; padding: 12px 0;
-  font-family: inherit; font-size: 15px; color: var(--ink);
+  /* 16px exactly: iOS zooms into any focused input below it, and the zoom
+     left the whole app scrolled sideways. */
+  font-family: inherit; font-size: 16px; color: var(--ink);
 }
 .dissearch-in::placeholder { color: var(--ol); }
 .dissearch-x {
@@ -3130,20 +3137,21 @@ button.ps-card { cursor: pointer; }
 /* The tag sits right beside the name, small. The name can still truncate. */
 .disrow-nmline { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .disrow-nmline .nm { min-width: 0; }
-/* Already following: a small white check in a green circle, pinned to the
-   row's top-right corner rather than riding the name line. */
+/* Already following: a quiet check + the word, pinned to the row's top-right
+   corner. Words, not a green medallion: the circle read as a verified mark. */
 .disrow { position: relative; }
 .disrow-fol {
-  width: 17px; height: 17px; border-radius: 50%; background: var(--go); color: #fff;
-  display: grid; place-items: center; flex-shrink: 0;
-  position: absolute; top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  position: absolute; top: 15px; right: 14px;
+  font-size: 12px; font-weight: 600; color: var(--ol);
 }
+.disrow-fol .icon { color: var(--go); }
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
 .dislist-bare .disrow-fol { right: 2px; }
-/* Keep the name clear of the corner check. */
-.dislist-bare .disrow-nmline { padding-right: 24px; }
+/* Keep the name clear of the corner mark, only on rows that carry one. */
+.disrow:has(.disrow-fol) .disrow-nmline { padding-right: 88px; }
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
   background: var(--ink); color: var(--paper);

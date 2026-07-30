@@ -179,8 +179,8 @@ export function DiscoverList({
                 <LinkPending />
               </Link>
               {c.following && (
-                <span className="disrow-fol" aria-label="Following" title="Following">
-                  <Icon name="check" size={11} />
+                <span className="disrow-fol">
+                  <Icon name="check" size={12} /> Following
                 </span>
               )}
             </div>

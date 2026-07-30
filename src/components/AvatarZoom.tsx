@@ -7,6 +7,7 @@ import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { QrSheet } from "@/components/QrSheet";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // Tap a face, see the face. The avatar blows up over a blurred page with the
@@ -44,6 +45,7 @@ export function AvatarZoom({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [following, setFollowing] = useState(follow?.following ?? false);
   const [requested, setRequested] = useState(follow?.requested ?? false);
   const [pending, start] = useTransition();
@@ -176,6 +178,17 @@ export function AvatarZoom({
                 </span>
                 QR code
               </button>
+              {/* Your own photo grows a fifth action: the square card image,
+                  made for a post. Only yours; a card is a thing you hand out,
+                  not something made of someone else. */}
+              {isOwner && (
+                <button className="avact" onClick={() => setCardOpen(true)}>
+                  <span className="avact-ic">
+                    <Icon name="auto_awesome" size={22} />
+                  </span>
+                  Card
+                </button>
+              )}
             </div>
             {/* The Message door, spanning the action row. Only when they've
                 said messages are open, and never on your own photo. */}
@@ -190,6 +203,9 @@ export function AvatarZoom({
               onToast={toast}
               ownerName={isOwner ? undefined : name}
             />
+            {cardOpen && (
+              <ShareCardSheet handle={handle} onClose={() => setCardOpen(false)} onToast={toast} />
+            )}
           </div>,
           document.body,
         )}
