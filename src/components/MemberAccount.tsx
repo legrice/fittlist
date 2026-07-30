@@ -7,6 +7,7 @@ import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
+import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
@@ -114,6 +115,7 @@ export function MemberAccount({
       {/* The member side is the front door; coaching is a door off it. */}
       <div className="settingslist">
         <StartCoaching handle={handle} />
+        <NotificationPrefs />
         <InviteFriends />
         <InstallApp />
         {canSendFeedback && (

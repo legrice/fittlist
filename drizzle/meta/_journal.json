@@ -344,6 +344,13 @@
       "when": 1785368665210,
       "tag": "0048_famous_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1785374288295,
+      "tag": "0049_rapid_jetstream",
+      "breakpoints": true
     }
   ]
 }

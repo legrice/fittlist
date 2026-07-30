@@ -46,6 +46,8 @@ const ICON: Record<string, string> = {
   class_cancelled: "event",
   coach_request: "person_add",
   coach_approved: "check",
+  message: "mail",
+  feedback_reply: "mail",
 };
 
 function fmt(d: Date | string) {

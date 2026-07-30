@@ -17,6 +17,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
 import { InstallApp } from "@/components/InstallApp";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -453,6 +454,7 @@ export function ProfileSheet({
           {/* MyCalendar (the followed-classes feed) is hidden for now: the
               subscribe flow isn't good enough yet. The /api/cal/me endpoint
               stays live so anyone already subscribed keeps updating. */}
+          <NotificationPrefs />
           {/* Beta users bring the next beta users in. */}
           <InviteFriends />
           <InstallApp />

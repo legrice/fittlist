@@ -1385,7 +1385,11 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; gap: 8px; margin-top: 12px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px; font-weight: 600; color: var(--ol);
+  /* It's a link to the coach now; keep it dressed as a label. */
+  text-decoration: none; width: fit-content; -webkit-tap-highlight-color: transparent;
 }
+.classsheet-who:active { opacity: .6; }
+.classsheet-who .icon { color: var(--ol); opacity: .7; }
 .classsheet-av {
   width: 26px; height: 26px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
   background: #eae3d2; display: block;

@@ -75,11 +75,27 @@ export async function sendInquiry(
 
   await db.insert(schema.inquiryMessages).values({ threadId: thread.id, fromCoach: false, body: message });
 
-  after(() =>
-    emailCoachInquiry({ to: coach.email, requesterName: name, body: message }).catch((err) =>
-      console.error("inquiry coach email failed", err),
-    ),
-  );
+  // The bell has to know: the Messages tab lives behind it, and a badge that
+  // only counts per-thread unreads never lit it. Best effort, like follows.
+  const senderId = await getSessionUserId();
+  try {
+    await addNotification(coach.id, {
+      type: "message",
+      title: `${name || email} sent you a message`,
+      body: message,
+      href: `/inbox/${thread.id}`,
+      actorUserId: senderId,
+    });
+  } catch (err) {
+    console.error("inquiry notification failed", err);
+  }
+  if (coach.emailMessages) {
+    after(() =>
+      emailCoachInquiry({ to: coach.email, requesterName: name, body: message }).catch((err) =>
+        console.error("inquiry coach email failed", err),
+      ),
+    );
+  }
   return { ok: true };
 }
 
@@ -107,6 +123,31 @@ export async function markThreadRead(threadId: string): Promise<void> {
   if (cleared.length) revalidatePath("/", "layout");
 }
 
+// The same signal from the other chair: the person who wrote in, reading the
+// coach's reply inside the app.
+export async function markThreadReadAsRequester(threadId: string): Promise<void> {
+  const userId = await getSessionUserId();
+  if (!userId) return;
+  const db = await getDb();
+  const [me] = await db
+    .select({ email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return;
+  const cleared = await db
+    .update(schema.inquiryThreads)
+    .set({ requesterUnread: 0 })
+    .where(
+      and(
+        eq(schema.inquiryThreads.id, threadId),
+        eq(schema.inquiryThreads.requesterEmail, me.email),
+        sql`${schema.inquiryThreads.requesterUnread} > 0`,
+      ),
+    )
+    .returning({ id: schema.inquiryThreads.id });
+  if (cleared.length) revalidatePath("/", "layout");
+}
+
 export async function replyToInquiry(threadId: string, bodyRaw: string): Promise<Result> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
@@ -130,15 +171,17 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
     .select({ name: schema.users.name })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
+  // Whoever wrote in might have an account under that address; if they do,
+  // the reply belongs in their app too: a bell, a badge, a thread they can
+  // answer without leaving. The email still goes out (unless they turned
+  // message emails off in settings); for a visitor with no account it's the
+  // only door there is.
+  const [them] = await db
+    .select({ id: schema.users.id, emailMessages: schema.users.emailMessages })
+    .from(schema.users)
+    .where(eq(schema.users.email, thread.requesterEmail));
 
-  // Feedback comes from someone with an account, so the reply belongs in the
-  // app: a bell and a thread they already know how to find. A private-session
-  // request comes from a visitor who has neither, and only has the token link.
   if (thread.kind === "feedback") {
-    const [them] = await db
-      .select({ id: schema.users.id })
-      .from(schema.users)
-      .where(eq(schema.users.email, thread.requesterEmail));
     const from = coach?.name?.trim() || "fittlist";
     if (them) {
       await addNotification(them.id, {
@@ -148,26 +191,105 @@ export async function replyToInquiry(threadId: string, bodyRaw: string): Promise
         href: "/feedback",
       });
     }
-    after(() =>
-      emailFeedbackReply({ to: thread.requesterEmail, from, body }).catch((err) =>
-        console.error("feedback reply email failed", err),
-      ),
-    );
+    if (!them || them.emailMessages) {
+      after(() =>
+        emailFeedbackReply({ to: thread.requesterEmail, from, body }).catch((err) =>
+          console.error("feedback reply email failed", err),
+        ),
+      );
+    }
     revalidatePath(`/inbox/${threadId}`);
     revalidatePath("/feedback");
     revalidatePath("/updates");
     return { ok: true };
   }
 
-  const token = await inquiryToken(threadId);
-  after(() =>
-    emailRequesterReply({ to: thread.requesterEmail, coachName: coach?.name ?? "Your coach", body, token }).catch(
-      (err) => console.error("inquiry reply email failed", err),
-    ),
-  );
+  if (them) {
+    await db
+      .update(schema.inquiryThreads)
+      .set({ requesterUnread: sql`${schema.inquiryThreads.requesterUnread} + 1` })
+      .where(eq(schema.inquiryThreads.id, threadId));
+    try {
+      await addNotification(them.id, {
+        type: "message",
+        title: `${coach?.name?.trim() || "Your coach"} sent you a message`,
+        body,
+        href: `/inbox/${threadId}`,
+        actorUserId: userId,
+      });
+    } catch (err) {
+      console.error("reply notification failed", err);
+    }
+  }
+  if (!them || them.emailMessages) {
+    const token = await inquiryToken(threadId);
+    after(() =>
+      emailRequesterReply({ to: thread.requesterEmail, coachName: coach?.name ?? "Your coach", body, token }).catch(
+        (err) => console.error("inquiry reply email failed", err),
+      ),
+    );
+  }
 
   revalidatePath(`/inbox/${threadId}`);
   revalidatePath("/inbox");
+  revalidatePath("/updates");
+  return { ok: true };
+}
+
+// REQUESTER — reply from inside the app, no token involved. The session's
+// email has to be the one the thread belongs to; that's the same proof the
+// token link carries, held differently.
+export async function replyAsRequester(threadId: string, bodyRaw: string): Promise<Result> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const body = bodyRaw.trim().slice(0, 2000);
+  if (body.length < 1) return { ok: false, error: "Write a message." };
+
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Session expired." };
+  const [thread] = await db
+    .select()
+    .from(schema.inquiryThreads)
+    .where(
+      and(eq(schema.inquiryThreads.id, threadId), eq(schema.inquiryThreads.requesterEmail, me.email)),
+    );
+  if (!thread) return { ok: false, error: "Conversation not found." };
+
+  await db.insert(schema.inquiryMessages).values({ threadId, fromCoach: false, body });
+  await db
+    .update(schema.inquiryThreads)
+    .set({
+      lastMessageAt: new Date(),
+      coachUnread: sql`${schema.inquiryThreads.coachUnread} + 1`,
+      requesterUnread: 0,
+    })
+    .where(eq(schema.inquiryThreads.id, threadId));
+
+  const [coach] = await db
+    .select({ email: schema.users.email, emailMessages: schema.users.emailMessages })
+    .from(schema.users)
+    .where(eq(schema.users.id, thread.coachUserId));
+  try {
+    await addNotification(thread.coachUserId, {
+      type: "message",
+      title: `${me.name.trim() || me.email} sent you a message`,
+      body,
+      href: `/inbox/${threadId}`,
+      actorUserId: userId,
+    });
+  } catch (err) {
+    console.error("inquiry notification failed", err);
+  }
+  if (coach && coach.emailMessages) {
+    after(() =>
+      emailCoachInquiry({ to: coach.email, requesterName: thread.requesterName, body }).catch((err) =>
+        console.error("inquiry coach email failed", err),
+      ),
+    );
+  }
+  revalidatePath(`/inbox/${threadId}`);
+  revalidatePath("/updates");
   return { ok: true };
 }
 
@@ -192,10 +314,25 @@ export async function replyByToken(token: string, bodyRaw: string): Promise<Resu
     .where(eq(schema.inquiryThreads.id, threadId));
 
   const [coach] = await db
-    .select({ email: schema.users.email })
+    .select({ email: schema.users.email, emailMessages: schema.users.emailMessages })
     .from(schema.users)
     .where(eq(schema.users.id, thread.coachUserId));
-  if (coach) {
+  try {
+    const [account] = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, thread.requesterEmail));
+    await addNotification(thread.coachUserId, {
+      type: "message",
+      title: `${thread.requesterName || thread.requesterEmail} sent you a message`,
+      body,
+      href: `/inbox/${threadId}`,
+      actorUserId: account?.id ?? null,
+    });
+  } catch (err) {
+    console.error("inquiry notification failed", err);
+  }
+  if (coach && coach.emailMessages) {
     after(() =>
       emailCoachInquiry({ to: coach.email, requesterName: thread.requesterName, body }).catch((err) =>
         console.error("inquiry coach email failed", err),

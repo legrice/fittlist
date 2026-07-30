@@ -1,3 +1,5 @@
+import { inArray } from "drizzle-orm";
+import { getDb, schema } from "@/db";
 import { fmtDayHeader, siteOrigin } from "@/lib/format";
 import { sendMessage } from "@/lib/mailer";
 import { addNotification } from "@/lib/notify";
@@ -36,6 +38,17 @@ export async function notifyCancelled(
   people: CancelledFor[],
 ): Promise<void> {
   const coach = cls.coachName.trim() || "Your coach";
+  // Who turned cancellation emails off. The in-app note goes to everyone; a
+  // pref should quiet an inbox, not hide a cancelled class.
+  const db = await getDb();
+  const ids = [...new Set(people.map((p) => p.userId))];
+  const prefRows = ids.length
+    ? await db
+        .select({ id: schema.users.id, emailCancellations: schema.users.emailCancellations })
+        .from(schema.users)
+        .where(inArray(schema.users.id, ids))
+    : [];
+  const emailOff = new Set(prefRows.filter((r) => !r.emailCancellations).map((r) => r.id));
   for (const p of people) {
     // check-copy-ignore: fmtDayHeader is the date label, dash and all.
     const day = fmtDayHeader(p.date);
@@ -46,6 +59,7 @@ export async function notifyCancelled(
       body: `${day}, ${cls.time}. It was in your week.`,
       href: "/feed",
     }).catch(() => {});
+    if (emailOff.has(p.userId)) continue;
     await sendMessage({
       to: p.email,
       kind: "cancelled",

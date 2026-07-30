@@ -55,6 +55,12 @@ export const users = pgTable("users", {
   // Set when this account unsubscribes from the merged weekly digest. Separate
   // from unfollowing on purpose: "stop emailing me" must not empty their feed.
   digestOptOutAt: timestamp("digest_opt_out_at", { withTimezone: true }),
+  // Email preferences, settable in Settings > Notifications. These gate the
+  // email copy only: the in-app notification always lands, and someone with
+  // no account (a visitor who wrote in) is always emailed, because it's the
+  // only door they have.
+  emailMessages: boolean("email_messages").notNull().default(true),
+  emailCancellations: boolean("email_cancellations").notNull().default(true),
   // Listed in the Find coaches directory. Their page stays public either way —
   // this is only about being browsable by people who weren't sent the link.
   discoverable: boolean("discoverable").notNull().default(true),
@@ -163,6 +169,9 @@ export const inquiryThreads = pgTable(
     // without digging through the messages for a number.
     requesterPhone: text("requester_phone"),
     coachUnread: integer("coach_unread").notNull().default(0),
+    // Unread count on the other side of the table. Only means anything when
+    // the requester email belongs to an account; a visitor reads over email.
+    requesterUnread: integer("requester_unread").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -1,9 +1,9 @@
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { markThreadRead } from "@/app/actions/inquiries";
+import { markThreadRead, markThreadReadAsRequester } from "@/app/actions/inquiries";
 import { ChatMessages } from "@/components/ChatMessages";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Icon } from "@/components/Icon";
@@ -27,15 +27,26 @@ export default async function InboxThreadPage({
   if (!UUID_RE.test(id)) notFound();
 
   const db = await getDb();
+  // Either chair opens the same room: the coach it was sent to, or the person
+  // who wrote in, matched by the email on the thread. Everyone else, 404.
   const [thread] = await db
     .select()
     .from(schema.inquiryThreads)
-    .where(and(eq(schema.inquiryThreads.id, id), eq(schema.inquiryThreads.coachUserId, userId)));
+    .where(eq(schema.inquiryThreads.id, id));
   if (!thread) notFound();
   const [me] = await db
-    .select({ look: schema.users.look })
+    .select({ look: schema.users.look, email: schema.users.email })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
+  const isCoach = thread.coachUserId === userId;
+  const isRequester = !isCoach && !!me && me.email === thread.requesterEmail;
+  if (!isCoach && !isRequester) notFound();
+  const [coach] = isRequester
+    ? await db
+        .select({ name: schema.users.name, handle: schema.users.handle })
+        .from(schema.users)
+        .where(eq(schema.users.id, thread.coachUserId))
+    : [undefined];
 
   // Opening the thread clears the coach's unread count, from the client once
   // the page is up (see MarkSeen for why not during this render).
@@ -48,7 +59,10 @@ export default async function InboxThreadPage({
 
   return (
     <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
-      {thread.coachUnread > 0 && <MarkSeen action={markThreadRead.bind(null, id)} />}
+      {isCoach && thread.coachUnread > 0 && <MarkSeen action={markThreadRead.bind(null, id)} />}
+      {isRequester && thread.requesterUnread > 0 && (
+        <MarkSeen action={markThreadReadAsRequester.bind(null, id)} />
+      )}
       <div className="chattop">
         {/* Back where you came from. Opened from Requests, the messages tab is
             not the page underneath, and sending someone there is the shuffle
@@ -60,22 +74,33 @@ export default async function InboxThreadPage({
         >
           <Icon name="arrow_back" size={18} />
         </Link>
-        <div className="chattop-txt">
-          <span className="chattop-nm">{thread.requesterName || thread.requesterEmail}</span>
-          <span className="chattop-ways">
-            <a href={`mailto:${thread.requesterEmail}`}>{thread.requesterEmail}</a>
-            {thread.requesterPhone && (
-              <a href={`tel:${thread.requesterPhone.replace(/[^\d+]/g, "")}`}>
-                {thread.requesterPhone}
-              </a>
+        {isCoach ? (
+          <div className="chattop-txt">
+            <span className="chattop-nm">{thread.requesterName || thread.requesterEmail}</span>
+            <span className="chattop-ways">
+              <a href={`mailto:${thread.requesterEmail}`}>{thread.requesterEmail}</a>
+              {thread.requesterPhone && (
+                <a href={`tel:${thread.requesterPhone.replace(/[^\d+]/g, "")}`}>
+                  {thread.requesterPhone}
+                </a>
+              )}
+            </span>
+          </div>
+        ) : (
+          <div className="chattop-txt">
+            <span className="chattop-nm">{coach?.name || "Coach"}</span>
+            {coach?.handle && (
+              <span className="chattop-ways">
+                <Link href={`/${coach.handle}`}>See their page</Link>
+              </span>
             )}
-          </span>
-        </div>
+          </div>
+        )}
       </div>
       <div className="chatbody">
-        <ChatMessages messages={messages} mineIsCoach />
+        <ChatMessages messages={messages} mineIsCoach={isCoach} />
       </div>
-      <InquiryReply threadId={id} />
+      <InquiryReply threadId={id} requester={isRequester} />
     </section>
   );
 }

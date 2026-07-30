@@ -130,10 +130,10 @@ export function ClassSheet({
           <>
             {c.classType && <span className="evtype">{c.classType}</span>}
             <h2 className="classsheet-nm">{c.name}</h2>
-            {/* Whose class it is, as a face and a name. Not a link: you got
-                here from their schedule, and a sheet that can navigate away is
-                a sheet you have to find your way back into. */}
-            <div className="classsheet-who">
+            {/* Whose class it is, as a face and a name, and a way to them:
+                from the feed or your week this sheet is often the first time
+                you meet a coach, and their name is the natural next tap. */}
+            <Link className="classsheet-who" href={`/${c.handle}`}>
               {c.coachPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className="classsheet-av" src={c.coachPhoto} alt="" />
@@ -147,7 +147,8 @@ export function ClassSheet({
                 </span>
               )}
               {c.coachName}
-            </div>
+              <Icon name="chevron_right" size={16} />
+            </Link>
 
             <div className="evfacts classsheet-facts">
               <div className="evfact">
