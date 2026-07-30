@@ -1872,16 +1872,8 @@ button.ps-card { cursor: pointer; }
 .setrow-hi .setrow-txt .t { color: var(--si); }
 
 /* settings sub-view slides in over the account page, back slides it out right */
-/* Above the tab bar (z-45), not below it. A sub-view is a whole screen with its
-   own back arrow, and its save bar is fixed to the bottom of the window: at
-   z-41 the tab bar sat on top of that bar and swallowed the taps, so a coach
-   with the member side on could open Contact info and never save it. */
-.settingspane { z-index: 46; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-.settingspane.from-right { animation: slideInRight .28s cubic-bezier(.22, .8, .28, 1); }
-.settingspane.exit-right { animation: slideOutRight .24s cubic-bezier(.4, 0, .7, 1) forwards; }
-.settingstop { justify-content: flex-start; gap: 10px; }
-.settings-h { font-size: 24px; }
-.settings-lead { font-size: 14px; color: var(--ol); line-height: 1.5; margin: 6px 2px 16px; }
+/* The settings sub-views are bottom sheets now, same as every other section;
+   the slide-in pane and its fixed save bar went with the third pattern. */
 /* Availability: three states, each with what it does to the public page. Rows
    rather than a segmented control, because "Hidden" needs a sentence and a
    three-up seg has room for a word. Saves on the tap; there's nothing to
@@ -1900,15 +1892,6 @@ button.ps-card { cursor: pointer; }
 }
 .availopt-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .availopt.sel .t, .availopt.sel .icon { color: var(--si); }
-/* Save bar: full-bleed light strip pinned to the bottom of the window. */
-.settingspane .publishwrap {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
-  max-width: none; width: auto; margin: 0;
-  background: var(--paper); border-top: 1px solid var(--line); border-radius: 0;
-  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
-}
-.settingspane .publishwrap .btn { max-width: 660px; margin: 0 auto; }
-
 /* adder: class Type dropdown */
 .typeselect {
   width: 100%; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 16px;
@@ -2110,7 +2093,6 @@ button.ps-card { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .acctwrap, .acctwrap.acct-from-left,
-  .settingspane.from-right, .settingspane.exit-right,
   .page-slide, .page-slide.from-left, .page-slide.exit-right, .tab-fade { animation: none; }
 }
 

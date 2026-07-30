@@ -97,7 +97,6 @@ export function ProfileSheet({
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
   const [view, setView] = useState<View>("home");
-  const [leaving, setLeaving] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -139,17 +138,8 @@ export function ProfileSheet({
     setWebcalUrl(`webcal://${window.location.host}/api/cal/${handle}`);
   }, [handle]);
 
-  const openView = (v: View) => {
-    setLeaving(false);
-    setView(v);
-  };
-  const goBack = () => {
-    setLeaving(true);
-    setTimeout(() => {
-      setView("home");
-      setLeaving(false);
-    }, 230);
-  };
+  const openView = (v: View) => setView(v);
+  const goBack = () => setView("home");
 
   const goProfile = () => router.push(`/${handle}`);
 
@@ -507,18 +497,21 @@ export function ProfileSheet({
         </form>
       </div>
 
+      {/* Every settings section opens the same way: a bottom sheet over the
+          list. These four used to slide in a whole pane from the right, which
+          was a third behavior next to the sheets and the page links. */}
       {view !== "home" && (
         <div
-          className={`acctwrap settingspane${leaving ? " exit-right" : " from-right"}`}
-          role="dialog"
-          aria-label={viewTitle}
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) goBack();
+          }}
         >
-          <div className="accttop settingstop">
-            <button className="iconbtn acctclose" aria-label="Back" onClick={goBack}>
-              <Icon name="arrow_back" size={18} />
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={goBack}>
+              <Icon name="close" size={16} />
             </button>
-            <h1 className="acct-h settings-h">{viewTitle}</h1>
-          </div>
+            <h2>{viewTitle}</h2>
 
           {view === "security" && (
             <div className="secblock">
@@ -567,7 +560,7 @@ export function ProfileSheet({
 
           {view === "contact" && (
             <>
-              <p className="settings-lead">
+              <p className="lead">
                 These show as buttons on your public profile. All optional.
               </p>
               <label className="flabel" htmlFor="cEmail">Contact email</label>
@@ -590,7 +583,7 @@ export function ProfileSheet({
 
           {view === "availability" && (
             <>
-              <p className="settings-lead">
+              <p className="lead">
                 Whether you are taking private clients, shown as a line on your page. Hidden
                 says nothing either way. Whether people can write to you is the Messages switch,
                 further down.
@@ -624,7 +617,7 @@ export function ProfileSheet({
 
           {view === "gcal" && (
             <>
-              <p className="settings-lead">
+              <p className="lead">
                 Mirror your classes into Google Calendar. We only add the classes you post and never
                 touch your personal events.
               </p>
@@ -652,6 +645,7 @@ export function ProfileSheet({
               </button>
             </>
           )}
+          </div>
         </div>
       )}
 

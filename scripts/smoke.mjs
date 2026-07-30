@@ -1051,8 +1051,8 @@ await page.getByRole("button", { name: "Save password" }).click();
 await page.getByText("Password saved").waitFor();
 console.log("password change ok");
 
-// back out of the settings sub-view, then log out from the account home
-await page.locator(".settingspane .acctclose").click();
+// back out of the settings sheet, then log out from the account home
+await page.locator(".sheet .sheetclose").click();
 await page.getByRole("button", { name: "Log out" }).click();
 await page.waitForURL(BASE + "/");
 if ((await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
@@ -1824,7 +1824,7 @@ await page.waitForTimeout(450); // the account slides up
   await page.locator(".availpick").waitFor();
   await page.locator(".availopt", { hasText: "Accepting" }).click();
   await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
-  await page.locator(".settingstop .acctclose").click();
+  await page.locator(".sheet .sheetclose").click();
 }
 // And it shows on the page as a badge beside the name, not a pill two lines
 // down: it answers the question a visitor is already asking.
