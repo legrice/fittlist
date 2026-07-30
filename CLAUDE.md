@@ -106,6 +106,30 @@ so a second script on a used database trips over the first one's account.
 emailed link: without it the redirect points at fittlist.co and leaves the
 sandbox.
 
+## How code gets written here
+
+Four rules, distilled from Karpathy's guidelines and this codebase's own
+habits. They're the difference between a repo one founder can steer and one
+that quietly rots.
+
+1. **Think before coding.** Say what you're assuming; when a request is
+   ambiguous, name the reading you chose. Push back before building (the
+   ethos section below is the strongest form of this).
+2. **Simplicity first.** No speculative features, no abstraction until the
+   third caller needs it. A new table, flag, or dependency must earn itself.
+3. **Surgical changes.** Touch what the task needs and match the style
+   around it. Don't refactor in passing; a cleanup is its own commit.
+4. **Verify against the goal.** Every change ends with the build, a fresh-DB
+   check of the actual behavior, and the affected suites. "It compiles" is
+   not done; the suites in this file are the definition of done.
+
+And the security floor: every server action starts with a session lookup and
+scopes its writes by that user id (owner) or `currentAdmin()` (admin); all
+signing goes through `src/lib/secret.ts`, never a local fallback; nothing
+secret is ever passed as a prop to a `"use client"` component, because props
+serialize into the page. `scripts/load-smoke.mjs` is the ceiling check when a
+hot path changes shape.
+
 ## The ethos is a gate, not a poster
 
 `ETHOS.md` is the product's constitution: four ordered laws, then the lines
