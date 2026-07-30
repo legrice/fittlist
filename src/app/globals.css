@@ -2782,7 +2782,7 @@ button.ps-card { cursor: pointer; }
 /* The rail's name, and the Discover door across from it. */
 .feedrail-head {
   display: flex; align-items: center; justify-content: space-between;
-  margin: 18px 2px 0;
+  margin: 18px 2px 8px;
 }
 .feedrail-t {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
