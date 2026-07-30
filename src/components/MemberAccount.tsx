@@ -10,6 +10,7 @@ import { Icon } from "@/components/Icon";
 import { InviteFriends } from "@/components/InviteFriends";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
+import { MessagesToggle } from "@/components/MessagesToggle";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
 
@@ -31,6 +32,7 @@ export function MemberAccount({
   canSendFeedback = false,
   discoverable = true,
   approveFollowers = false,
+  messagesOpen = true,
 }: {
   name: string;
   email: string;
@@ -48,6 +50,7 @@ export function MemberAccount({
   canSendFeedback?: boolean;
   discoverable?: boolean;
   approveFollowers?: boolean;
+  messagesOpen?: boolean;
 }) {
   const [share, setShare] = useState(false);
   // Members sign up with an email and nothing else — there's no name step for
@@ -103,6 +106,7 @@ export function MemberAccount({
         <ChangeHandle />
         <DiscoverableToggle initialOn={discoverable} />
         <ApproveFollowersToggle initialOn={approveFollowers} />
+        <MessagesToggle initialOn={messagesOpen} />
       </div>
 
       <div className="settingslist">

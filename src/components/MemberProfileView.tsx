@@ -108,6 +108,7 @@ export async function MemberProfileView({
               color={avatarColor(user)}
               follow={follow}
               isOwner={isOwner}
+              canMessage={!isOwner && user.messagesOpen}
             />
           ) : user.photo ? (
             // eslint-disable-next-line @next/next/no-img-element

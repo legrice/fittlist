@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { QrSheet } from "@/components/QrSheet";
+import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { Toast, useToast } from "@/components/Toast";
 
 // Tap a face, see the face. The avatar blows up over a blurred page with the
@@ -21,6 +22,8 @@ export function AvatarZoom({
   /** null hides the Follow action: the owner, or nobody signed in. */
   follow = null,
   isOwner = false,
+  availability = null,
+  canMessage = false,
 }: {
   handle: string;
   name: string;
@@ -32,6 +35,11 @@ export function AvatarZoom({
   follow?: { following: boolean; requested?: boolean } | null;
   /** The person looking is the person shown; the QR sheet says "Your". */
   isOwner?: boolean;
+  /** Worn as a dot on the photo itself: green accepting, yellow waitlist.
+   *  The words live in the overlay, under the photo. */
+  availability?: string | null;
+  /** They said messages are open, so the overlay carries the Message door. */
+  canMessage?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -105,6 +113,13 @@ export function AvatarZoom({
         onClick={() => setOpen(true)}
       >
         {face}
+        {availability && (
+          <span
+            className={`avphotodot avphotodot-${availability}`}
+            aria-label={availability === "accepting" ? "Open for clients" : "Waitlist"}
+            title={availability === "accepting" ? "Open for clients" : "Waitlist"}
+          />
+        )}
       </button>
       {open && mounted &&
         createPortal(
@@ -116,14 +131,24 @@ export function AvatarZoom({
               if (e.target === e.currentTarget) setOpen(false);
             }}
           >
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="avoverlay-photo" src={photo} alt={name} />
-            ) : (
-              <span className="avoverlay-photo avoverlay-photo-empty" style={{ background: color }}>
-                {initial}
-              </span>
-            )}
+            <div className="avoverlay-top">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="avoverlay-photo" src={photo} alt={name} />
+              ) : (
+                <span className="avoverlay-photo avoverlay-photo-empty" style={{ background: color }}>
+                  {initial}
+                </span>
+              )}
+              {/* The dot's words. The photo wears the colour; this says it. */}
+              {availability && (
+                <span className={`availbadge availbadge-${availability}`}>
+                  <span className="availdot" aria-hidden="true" />
+                  {availability === "accepting" ? "Open for clients" : "Waitlist"}
+                </span>
+              )}
+            </div>
+            <div className="avoverlay-bottom">
             <div className="avoverlay-acts">
               {follow && (
                 <button className="avact" disabled={pending} onClick={toggleFollow}>
@@ -151,6 +176,12 @@ export function AvatarZoom({
                 </span>
                 QR code
               </button>
+            </div>
+            {/* The Message door, spanning the action row. Only when they've
+                said messages are open, and never on your own photo. */}
+            {canMessage && !isOwner && (
+              <RequestSessionButton handle={handle} coachName={name} variant="wide" />
+            )}
             </div>
             <QrSheet
               handle={handle}

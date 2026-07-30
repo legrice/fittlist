@@ -53,6 +53,7 @@ export default async function YouPage({
           canSendFeedback={!!host && host.email.toLowerCase() !== me.email.toLowerCase()}
           discoverable={me.discoverable}
           approveFollowers={me.approveFollowers}
+          messagesOpen={me.messagesOpen}
         />
     </>
   );

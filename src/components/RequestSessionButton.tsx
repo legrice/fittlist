@@ -7,10 +7,11 @@ import { Icon } from "@/components/Icon";
 // The public "write to this coach" composer. Sends them an email and starts a
 // thread in their Requests list; the visitor replies later via a link.
 //
-// One composer, two doors. `variant: "pill"` is the Message button in the
+// One composer, three doors. `variant: "pill"` is the Message button in the
 // profile header, which is the main one; "cta" is the full-width Request
 // private session button under Contact, kept for the person who scrolled all
-// the way down there looking for exactly that.
+// the way down there looking for exactly that; "wide" is the Message bar in
+// the photo overlay, the pill style stretched across the action row.
 export function RequestSessionButton({
   handle,
   coachName,
@@ -18,7 +19,7 @@ export function RequestSessionButton({
 }: {
   handle: string;
   coachName: string;
-  variant?: "cta" | "pill";
+  variant?: "cta" | "pill" | "wide";
 }) {
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
@@ -45,16 +46,22 @@ export function RequestSessionButton({
   return (
     <>
       <button
-        className={variant === "pill" ? "actpill actpill-primary" : "btn si reqbtn"}
+        className={
+          variant === "pill"
+            ? "actpill actpill-primary"
+            : variant === "wide"
+              ? "actpill actpill-primary actpill-wide"
+              : "btn si reqbtn"
+        }
         onClick={() => { setSent(false); setError(""); setOpen(true); }}
       >
-        {variant === "pill" ? (
+        {variant === "cta" ? (
           <>
-            <Icon name="chat_bubble" size={17} /> Message
+            <Icon name="send" size={18} /> Request private session
           </>
         ) : (
           <>
-            <Icon name="send" size={18} /> Request private session
+            <Icon name="chat_bubble" size={17} /> Message
           </>
         )}
       </button>
@@ -78,7 +85,7 @@ export function RequestSessionButton({
               </>
             ) : (
               <>
-                <h2 style={{ marginTop: 10 }}>{variant === "pill" ? `Message ${first}` : "Request a private session"}</h2>
+                <h2 style={{ marginTop: 10 }}>{variant === "cta" ? "Request a private session" : `Message ${first}`}</h2>
                 <p className="lead">Tell {first} what you&rsquo;re after. They&rsquo;ll reply by email.</p>
                 <label className="flabel" htmlFor="rqName">Your name</label>
                 <input id="rqName" className="editinput" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />

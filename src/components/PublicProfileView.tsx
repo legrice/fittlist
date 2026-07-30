@@ -156,6 +156,8 @@ export async function PublicProfileView({
       color={avatarColor(user)}
       follow={!isOwner && account ? account : null}
       isOwner={isOwner}
+      availability={user.availability}
+      canMessage={!isOwner && user.messagesOpen}
     />
   );
 
@@ -425,14 +427,9 @@ export async function PublicProfileView({
             <>
               {/* Says which side of the app this person is on. Members have
                   the same shape of page now, so the page itself no longer
-                  answers it. */}
+                  answers it. Availability left this row for the photo: the
+                  dot wears the colour, and the overlay says the words. */}
               <span className="kindtag">Coach</span>
-              {user.availability ? (
-                <span className={`availbadge availbadge-${user.availability}`}>
-                  <span className="availdot" aria-hidden="true" />
-                  {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
-                </span>
-              ) : null}
             </>
           }
         >

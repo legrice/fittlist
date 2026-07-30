@@ -1841,14 +1841,20 @@ await page.waitForTimeout(450); // the account slides up
   await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
   await page.locator(".sheet .sheetclose").click();
 }
-// And it shows on the page as a badge beside the name, not a pill two lines
-// down: it answers the question a visitor is already asking.
+// And it shows on the page as a dot on the profile photo; the words live in
+// the photo overlay, under the picture.
 {
   await page.goto(BASE + "/matt");
-  const badge = page.locator(".profname-row .availbadge");
+  await page.locator(".avzoom-trigger .avphotodot-accepting").waitFor();
+  if (await page.locator(".profname-row .availbadge").count())
+    fail("the old status badge should have left the name row");
+  await page.locator(".avzoom-trigger").click();
+  const badge = page.locator(".avoverlay .availbadge");
   await badge.waitFor();
   if (!(await badge.innerText()).includes("Open for clients"))
-    fail("the status badge should say the status, got " + (await badge.innerText()));
+    fail("the overlay should say the status, got " + (await badge.innerText()));
+  await page.locator(".avoverlay").click({ position: { x: 10, y: 10 } });
+  await page.waitForFunction(() => !document.querySelector(".avoverlay"));
 }
 // Back on the account, the row reports it without being opened.
 await page.goto(BASE + "/app");

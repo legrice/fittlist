@@ -1029,8 +1029,14 @@ button.ps-card { cursor: pointer; }
   flex: 1; width: 100%; max-width: 660px; margin: 0 auto;
   padding: calc(18px + env(safe-area-inset-top)) 18px 120px;
 }
-/* Signed in, a profile carries the tab bar, so the last row has to clear it. */
-.pub.hasnav .profwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+/* Signed in, a profile carries the tab bar, so the last row has to clear it.
+   The top matches the tabs shell exactly (14px wrapper, safe area on the
+   brandbar): the same header renders in both, and a profile opening from a
+   tab used to nudge it down a few pixels. */
+.pub.hasnav .profwrap { padding-top: 14px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+.pub.hasnav .brandbar, .memberpub.hasnav .brandbar {
+  padding-top: calc(16px + env(safe-area-inset-top));
+}
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
@@ -1436,8 +1442,24 @@ button.ps-card { cursor: pointer; }
 .avzoom-trigger {
   display: block; padding: 0; border: none; background: none; cursor: pointer;
   border-radius: 999px; -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 .avzoom-trigger:active { opacity: .8; }
+/* Availability, worn on the photo itself: green accepting, yellow waitlist.
+   The words wait in the overlay a tap away. The paper ring keeps it legible
+   over any photo. */
+.avphotodot {
+  position: absolute; bottom: 2%; right: 2%;
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2.5px solid var(--paper); box-sizing: content-box;
+}
+.avphotodot-accepting { background: #3f9d5a; }
+.avphotodot-waitlist { background: #d98a2b; }
+/* The trigger picks up the avatar's bottom margin so the layout doesn't move;
+   the img inside must not double it. */
+.avzoom-trigger .profav { margin-bottom: 0; }
+.avzoom-trigger { margin-bottom: 18px; }
+.mempro-id .avzoom-trigger { margin-bottom: 0; }
 .avoverlay {
   position: fixed; inset: 0; z-index: 46;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1455,7 +1477,13 @@ button.ps-card { cursor: pointer; }
   display: grid; place-items: center; color: #fff; font-weight: 700;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 96px;
 }
-.avoverlay-acts { display: flex; gap: 26px; }
+/* Photo + its status read as one thing; the actions are another. The big gap
+   stays between the two groups. */
+.avoverlay-top { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.avoverlay-bottom { display: flex; flex-direction: column; align-items: stretch; gap: 20px; }
+.avoverlay-acts { display: flex; gap: 26px; justify-content: center; }
+/* Message, stretched across the whole action row: the pill style, made a bar. */
+.actpill-wide { width: 100%; }
 .avact {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   border: none; background: none; padding: 0; cursor: pointer;
@@ -3135,8 +3163,9 @@ button.ps-card { cursor: pointer; }
   max-width: 660px; margin: 0 auto;
   padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
 }
-/* Signed in it carries the tab bar, so the bottom has to clear it. */
-.memberpub.hasnav .profwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+/* Signed in it carries the tab bar, so the bottom has to clear it; the top
+   matches the tabs shell so the header holds still. */
+.memberpub.hasnav .profwrap { padding-top: 14px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 .mempro-top { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
 .mempro-edit { text-decoration: none; }
 .mempro-id { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 18px; }
