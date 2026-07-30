@@ -512,10 +512,15 @@ await expect(page.locator(".proftitle", { hasText: "Strength coach" }).isVisible
 // title as "Strength coach in Jersey City, NJ".
 await expect(page.locator(".profwhere", { hasText: "Jersey City" }).isVisible(), "profile shows where");
 await expect(page.getByText("Strength coach across Jersey City.").isVisible(), "profile shows about");
+// Studios moved off About onto their own tab.
+if (await page.locator(".coachstudio").count())
+  fail("studios should have left the About tab");
+await page.goto(BASE + "/matt/studios");
 await expect(
   page.locator(".coachstudio", { hasText: "Ironbound Strength" }).isVisible(),
-  "profile shows 'Where I coach' studio",
+  "Studios tab lists the studio",
 );
+await page.goto(BASE + "/matt/about");
 // The ways to reach them live on their own URL now, not under the bio.
 if (await page.locator(".proflink").count())
   fail("contact links belong on /matt/contact, not on About");
@@ -1537,7 +1542,7 @@ await setDark(page, false);
 console.log("viewer look wins on another coach's page ok");
 
 // ---- studios have their own page, and any coach can correct one
-await page.goto(BASE + "/matt/about");
+await page.goto(BASE + "/matt/studios");
 await page.locator(".coachstudio", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 await page.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
@@ -1641,7 +1646,7 @@ await page.locator(".pubtab.sel").waitFor();
   const hrefs = await page
     .locator(".pubtabs a")
     .evaluateAll((els) => els.map((e) => new URL(e.href).pathname));
-  const want = ["/matt", "/matt/about", "/matt/contact"];
+  const want = ["/matt", "/matt/about", "/matt/studios", "/matt/contact"];
   if (hrefs.join("|") !== want.join("|"))
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
   // Landing on a section URL renders that section and only that section.

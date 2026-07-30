@@ -1058,7 +1058,7 @@ button.ps-card { cursor: pointer; }
 .proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
 .profloc { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ol); margin: 5px 0 0; }
 .profloc-ic { color: var(--si); position: relative; top: -.5px; }
-.profabout { font-size: 15px; line-height: 1.55; color: #6b6555; margin-top: 18px; white-space: pre-wrap; }
+.profabout { font-size: 15px; line-height: 1.55; color: var(--ink); margin-top: 18px; white-space: pre-wrap; }
 /* one horizontal, left/right-scrollable rail; bleeds to the content edges */
 .proflinks {
   display: flex; flex-wrap: nowrap; gap: 10px;
@@ -1078,8 +1078,9 @@ button.ps-card { cursor: pointer; }
 .reqbtn + .contactlist { margin-top: 16px; }
 .contactlist .proflink { width: 100%; padding: 14px 16px; border-radius: 16px; }
 
-/* "Where I coach": the studios/spaces a coach is associated with */
-.profstudios { margin-top: 26px; }
+/* Studios: the places a coach is associated with, as its own tab. First
+   thing on the page, so the sibling gap moves inside, between rows. */
+.profstudios { margin-top: 8px; }
 .profsec { margin-top: 26px; }
 /* First on the tab, so it doesn't need the gap that separates siblings, and
    its label owns the spacing the bare paragraph used to carry. */
@@ -1794,7 +1795,7 @@ button.ps-card { cursor: pointer; }
 
 .pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
 .profav {
-  width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block;
+  width: 100px; height: 100px; border-radius: 999px; object-fit: cover; display: block;
   margin-bottom: 18px; background: #eae3d2;
 }
 .profav-empty {
@@ -2750,7 +2751,6 @@ button.ps-card { cursor: pointer; }
    them need saying. */
 [data-mode="dark"] .coachstudio-txt .nm { color: var(--ink); }
 [data-mode="dark"] .coachstudio-chev { color: rgba(243, 239, 227, .32); }
-[data-mode="dark"] .profabout,
 [data-mode="dark"] .madewith { color: var(--ol); }
 [data-mode="dark"] .profphoto-empty { background: var(--cl); color: #6f6852; }
 /* Segmented switchers (admin tabs, availability picker): the selected pill's

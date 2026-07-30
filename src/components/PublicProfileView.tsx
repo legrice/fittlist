@@ -201,35 +201,39 @@ export async function PublicProfileView({
           </ul>
         </div>
       )}
-      {coachStudios.length > 0 && (
-        <div className="profstudios">
-          <h2 className="prof-sec-h">Where I coach</h2>
-          {coachStudios.map((s) => (
-            // A place is somewhere with a face, same as a person. The card
-            // around each one made a list of two look like a form; the photo
-            // carries the row instead, and an initial stands in without one.
-            <Link key={s.id} className="coachstudio" href={studioPath(s)}>
-              {s.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="coachstudio-av" src={s.photo} alt="" />
-              ) : (
-                <span className="coachstudio-av coachstudio-av-empty" aria-hidden="true">
-                  {(s.name.trim().charAt(0) || "?").toUpperCase()}
-                </span>
-              )}
-              <span className="coachstudio-txt">
-                <span className="nm">{s.name}</span>
-                <span className="ad">{s.address}</span>
-              </span>
-              <span className="coachstudio-chev">
-                <Icon name="chevron_right" size={18} />
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
     </>
   );
+
+  // Studios got their own tab: "where do they teach" is a question people
+  // come with, and it was buried at the bottom of About. The heading stays
+  // off, because the tab that got you here already says it.
+  const studios =
+    coachStudios.length > 0 ? (
+      <div className="profstudios">
+        {coachStudios.map((s) => (
+          // A place is somewhere with a face, same as a person. The card
+          // around each one made a list of two look like a form; the photo
+          // carries the row instead, and an initial stands in without one.
+          <Link key={s.id} className="coachstudio" href={studioPath(s)}>
+            {s.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="coachstudio-av" src={s.photo} alt="" />
+            ) : (
+              <span className="coachstudio-av coachstudio-av-empty" aria-hidden="true">
+                {(s.name.trim().charAt(0) || "?").toUpperCase()}
+              </span>
+            )}
+            <span className="coachstudio-txt">
+              <span className="nm">{s.name}</span>
+              <span className="ad">{s.address}</span>
+            </span>
+            <span className="coachstudio-chev">
+              <Icon name="chevron_right" size={18} />
+            </span>
+          </Link>
+        ))}
+      </div>
+    ) : null;
 
   // Contact is its own page: the private-session request plus the ways to
   // reach the coach, stacked as full-width rows. No "Contact" heading on it,
@@ -417,6 +421,7 @@ export async function PublicProfileView({
           title={user.title ?? ""}
           location={user.location ?? ""}
           hasContact={hasContact}
+          hasStudios={!!studios}
           trackSchedule={!isOwner}
           avatar={avatar}
           actions={
@@ -487,11 +492,17 @@ export async function PublicProfileView({
             ) : null
           }
         >
-          {/* One section, the one they asked for. Contact can vanish (no
-              details and no open door), so it falls back to the schedule
-              rather than rendering an empty page under a tab that isn't
-              there. */}
-          {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
+          {/* One section, the one they asked for. Contact and Studios can
+              vanish (nothing to show means no tab), so each falls back to the
+              schedule rather than rendering an empty page under a tab that
+              isn't there. */}
+          {tab === "about"
+            ? about
+            : tab === "studios" && studios
+              ? studios
+              : tab === "contact" && contact
+                ? contact
+                : schedule}
         </ProfileTabs>
         </FollowSync>
         {/* The primary action holds the thumb spot in solid brand orange;

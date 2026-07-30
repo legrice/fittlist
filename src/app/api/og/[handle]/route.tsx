@@ -66,7 +66,7 @@ export async function GET(
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: t.bg,
+          background: "#faf8f2",
           color: t.fg,
           padding: "76px 84px",
           fontFamily: "Delight",

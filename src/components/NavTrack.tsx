@@ -39,14 +39,14 @@ export function pageBeneath(): string | null {
  * One screen, whatever it's calling itself.
  *
  * A coach's page answers to "/sarah" (the schedule), "/sarah/about",
- * "/sarah/contact" and the legacy "/sarah/schedule".
+ * "/sarah/studios", "/sarah/contact" and the legacy "/sarah/schedule".
  * They're separate routes now, but they're still one screen wearing three
  * URLs: the header is identical and only the section below it differs. A back
  * control pointing at "/sarah" should pop off any of them rather than pushing
  * a fourth entry onto the pile.
  */
 export function samePage(a: string, b: string): boolean {
-  const bare = (u: string) => u.replace(/\/(schedule|about|contact)$/, "") || "/";
+  const bare = (u: string) => u.replace(/\/(schedule|about|studios|contact)$/, "") || "/";
   return a === b || bare(a) === bare(b);
 }
 

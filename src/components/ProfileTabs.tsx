@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode } from "react";
 
-export type ProfileTab = "about" | "contact" | "schedule";
+export type ProfileTab = "about" | "studios" | "contact" | "schedule";
 
 // The public profile header and one section under it.
 //
@@ -19,6 +19,7 @@ export function ProfileTabs({
   title,
   location,
   hasContact,
+  hasStudios,
   trackSchedule,
   avatar,
   actions,
@@ -34,6 +35,8 @@ export function ProfileTabs({
   location: string;
   /** No contact details and no way to write to them means no Contact tab. */
   hasContact: boolean;
+  /** Nowhere they coach on record means no Studios tab. */
+  hasStudios: boolean;
   trackSchedule: boolean;
   /** The face: photo or coloured initial, above the name. */
   avatar: ReactNode;
@@ -135,6 +138,7 @@ export function ProfileTabs({
         <div className="pubtabs" aria-label="Profile sections">
           {tabLink("schedule", "Schedule")}
           {tabLink("about", "About")}
+          {hasStudios && tabLink("studios", "Studios")}
           {hasContact && tabLink("contact", "Contact")}
         </div>
       </div>

@@ -30,7 +30,7 @@ export async function GET() {
           width: "100%",
           height: "100%",
           display: "flex",
-          background: t.bg,
+          background: "#faf8f2",
           color: t.fg,
           fontFamily: "Delight",
         }}
