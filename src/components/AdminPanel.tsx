@@ -190,9 +190,16 @@ export function AdminPanel({
             <h1>Admin</h1>
             <p className="adminsub">Signed in as {adminEmail}</p>
           </div>
-          <Link className="adminback" href="/feed">
-            <Icon name="arrow_back" size={18} /> App
-          </Link>
+          <div className="admintop-links">
+            {/* The mission, one tap from the numbers, so the numbers never
+                get to argue with it unsupervised. */}
+            <Link className="adminback" href="/ethos">
+              <Icon name="favorite" size={18} /> Ethos
+            </Link>
+            <Link className="adminback" href="/feed">
+              <Icon name="arrow_back" size={18} /> App
+            </Link>
+          </div>
         </div>
 
         <div className="adminstats">
