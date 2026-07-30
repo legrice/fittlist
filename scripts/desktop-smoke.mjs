@@ -83,10 +83,10 @@ for (const n of names) {
   });
   await row.waitFor();
   await row.locator(".disrow-main").click();
-  await m.waitForSelector(".followpill");
+  await m.waitForSelector(".profacts .followpill");
   await m.waitForTimeout(400);
-  await m.locator(".followpill").click();
-  await m.locator(".followpill", { hasText: "Following" }).waitFor();
+  await m.locator(".profacts .followpill").click();
+  await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 }
 console.log("followed all eight ok");
 

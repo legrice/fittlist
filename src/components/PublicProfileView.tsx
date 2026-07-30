@@ -10,6 +10,7 @@ import { AvatarZoom } from "@/components/AvatarZoom";
 import { studioPath } from "@/lib/studio";
 
 import { Icon } from "@/components/Icon";
+import { FollowSync } from "@/components/FollowSync";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ShareWeekPill } from "@/components/ShareWeekFab";
@@ -399,6 +400,16 @@ export async function PublicProfileView({
         ) : (
           <PublicTopBar handle={handle} />
         )}
+        {/* The Follow control renders twice below (the header pill and the
+            sticky bar's compact copy); this provider is the one place the
+            answer lives, so tapping either updates both. */}
+        <FollowSync
+          initial={{
+            following: account?.following ?? false,
+            requested: account?.requested ?? false,
+            subscribed: false,
+          }}
+        >
         <ProfileTabs
           handle={handle}
           tab={tab}
@@ -462,6 +473,19 @@ export async function PublicProfileView({
               <span className="kindtag">Coach</span>
             </>
           }
+          // The sticky bar's Follow: the same control, smaller, so someone
+          // three weeks deep in a schedule can say yes without climbing back.
+          stickAction={
+            !isOwner ? (
+              <NotifyCta
+                trainerName={user.name}
+                handle={handle}
+                account={account}
+                canSignUp={fansEnabled()}
+                compact
+              />
+            ) : null
+          }
         >
           {/* One section, the one they asked for. Contact can vanish (no
               details and no open door), so it falls back to the schedule
@@ -469,6 +493,7 @@ export async function PublicProfileView({
               there. */}
           {tab === "about" ? about : tab === "contact" && contact ? contact : schedule}
         </ProfileTabs>
+        </FollowSync>
         {/* The primary action holds the thumb spot in solid brand orange;
             sharing sits up top as the tinted pill. Schedule section only:
             About and Contact aren't places you add a class from. */}

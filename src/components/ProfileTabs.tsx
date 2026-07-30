@@ -24,6 +24,7 @@ export function ProfileTabs({
   actions,
   avail,
   ownerTop,
+  stickAction,
   children,
 }: {
   handle: string;
@@ -44,6 +45,9 @@ export function ProfileTabs({
    *  decides placement: adding is occasional maintenance and lives up top;
    *  sharing is the weekly habit and owns the floating button below. */
   ownerTop?: ReactNode;
+  /** A compact copy of the Follow control, across from the small name in the
+   *  stuck bar, so scrolling never carries someone away from the yes. */
+  stickAction?: ReactNode;
   children: ReactNode;
 }) {
   const tracked = useRef(false);
@@ -121,9 +125,12 @@ export function ProfileTabs({
           is stuck and the small name switches on. */}
       <div ref={sentRef} aria-hidden="true" />
       <div ref={stickRef} className="pubstick">
-        {/* A duplicate for the eyes only; the real name is the h1 above. */}
-        <div className="pubstick-name" aria-hidden="true">
-          {name}
+        <div className="pubstick-row">
+          {/* A duplicate for the eyes only; the real name is the h1 above. */}
+          <div className="pubstick-name" aria-hidden="true">
+            {name}
+          </div>
+          {stickAction}
         </div>
         <div className="pubtabs" aria-label="Profile sections">
           {tabLink("schedule", "Schedule")}

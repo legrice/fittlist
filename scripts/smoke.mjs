@@ -657,9 +657,9 @@ console.log("class sheet ok (opens over the list, the page is still shareable)")
   );
   await subPage.getByRole("button", { name: "Maybe later, just email me" }).click();
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
-  await expect(subPage.locator(".followpill").textContent().then((t) => t.trim() === "On the list"), "cta flips to subscribed");
+  await expect(subPage.locator(".profacts .followpill").textContent().then((t) => t.trim() === "On the list"), "cta flips to subscribed");
 
-  await subPage.locator(".followpill").click();
+  await subPage.locator(".profacts .followpill").click();
   await subPage.getByRole("button", { name: "Unsubscribe" }).waitFor();
   await subPage.locator(".sheet .sheetclose").click();
   await subPage.waitForFunction(() => !document.querySelector(".sheet"));
@@ -679,13 +679,13 @@ console.log("class sheet ok (opens over the list, the page is still shareable)")
   await up.locator("#ntPw").fill("upgrade-pass-123");
   await up.getByRole("button", { name: "Create my account" }).click();
   // signed in, and the subscribe they just made already reads as a follow
-  await up.locator(".followpill", { hasText: "Following" }).waitFor({ timeout: 20000 });
+  await up.locator(".profacts .followpill", { hasText: "Following" }).waitFor({ timeout: 20000 });
   await up.goto(BASE + "/feed");
   await up.locator(".feedagenda .ps-event").first().waitFor();
   // leave the fixture as we found it — later assertions count Matt's followers
   await up.goto(BASE + "/matt");
-  await up.locator(".followpill", { hasText: "Following" }).click();
-  await up.locator(".followpill", { hasText: /^Follow$/ }).waitFor();
+  await up.locator(".profacts .followpill", { hasText: "Following" }).click();
+  await up.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
   await upCtx.close();
 }
 console.log("subscribe ok (offer an account after, not before)");
@@ -1145,10 +1145,10 @@ if (await fan.locator(".disrow .disfollow").count())
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".kindtag", { hasText: "Coach" }).waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
-await fan.locator(".followpill").waitFor();
+await fan.locator(".profacts .followpill").waitFor();
 await fan.waitForTimeout(400);
-await fan.locator(".followpill").click();
-await fan.locator(".followpill", { hasText: "Following" }).waitFor();
+await fan.locator(".profacts .followpill").click();
+await fan.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 // and back on Discover, the row now carries the green check
 await fan.goto(BASE + "/discover");
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-fol").waitFor();
@@ -1447,8 +1447,8 @@ console.log("directory opt-out ok (delisted, page still public)");
 // a coach following another coach: two separate spaces. Their own schedule
 // stays what they teach; following lives on /feed and never leaks publicly.
 await page.goto(BASE + "/sam");
-await page.locator(".followpill", { hasText: "Follow" }).click();
-await page.locator(".followpill", { hasText: "Following" }).waitFor();
+await page.locator(".profacts .followpill", { hasText: "Follow" }).click();
+await page.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 await page.goto(BASE + "/feed");
 // their own classes belong on their Home too, beside the ones they follow
 if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" }).count()))
@@ -1666,13 +1666,13 @@ console.log("profile tabs are links ok (three URLs, one section each)");
 // follows Sam by this point, so settle the state first rather than assuming.
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
-await page.locator(".followpill").waitFor();
-if ((await page.locator(".followpill").innerText()).trim() !== "Following") {
-  await page.locator(".followpill").click();
-  await page.locator(".followpill", { hasText: /^Following$/ }).waitFor();
+await page.locator(".profacts .followpill").waitFor();
+if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Following") {
+  await page.locator(".profacts .followpill").click();
+  await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 {
-  const bg = await page.locator(".followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
+  const bg = await page.locator(".profacts .followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
   if (bg !== "rgb(61, 139, 83)") fail("Following should be green, got " + bg);
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
@@ -1700,17 +1700,17 @@ console.log("coach following ok (separate from their schedule, never public)");
   const mailPg = await mailCtx.newPage();
   mailPg.setDefaultTimeout(10000);
   await mailPg.goto(BASE + "/matt");
-  await mailPg.locator(".followpill").click();
+  await mailPg.locator(".profacts .followpill").click();
   await mailPg.locator("#ntEmail").fill("mailonly@example.com");
   await mailPg.getByRole("button", { name: "Add me to the list" }).click();
   await mailPg.locator(".sheet h2", { hasText: "on Matt" }).waitFor();
   await mailCtx.close();
 }
 await anonPage.goto(BASE + "/matt");
-await anonPage.locator(".followpill").waitFor();
-if ((await anonPage.locator(".followpill").innerText()).trim() !== "Following") {
-  await anonPage.locator(".followpill").click();
-  await anonPage.locator(".followpill", { hasText: /^Following$/ }).waitFor();
+await anonPage.locator(".profacts .followpill").waitFor();
+if ((await anonPage.locator(".profacts .followpill").innerText()).trim() !== "Following") {
+  await anonPage.locator(".profacts .followpill").click();
+  await anonPage.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 await page.goto(BASE + "/app");
 await page.locator(".settingsbtn").click();

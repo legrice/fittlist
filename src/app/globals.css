@@ -1840,14 +1840,20 @@ button.ps-card { cursor: pointer; }
   margin: 22px calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
 }
-.pubstick-name {
+.pubstick-row {
   display: none;
+  align-items: center; justify-content: space-between; gap: 12px;
+  padding-top: 10px; margin-bottom: -6px;
+}
+.pubstick.stuck .pubstick-row { display: flex; }
+.pubstick-name {
+  min-width: 0;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 16px; letter-spacing: -.01em; color: var(--ink);
-  padding-top: 12px; margin-bottom: -10px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.pubstick.stuck .pubstick-name { display: block; }
+/* The sticky bar's Follow, sized to ride beside the small name. */
+.followpill.mini { padding: 8px 16px; font-size: 14px; gap: 6px; }
 .pubtabs {
   display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
   /* The rule sits under the tabs as an inset shadow rather than a border:

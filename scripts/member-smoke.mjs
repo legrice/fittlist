@@ -117,10 +117,10 @@ console.log("chrome survives the loading boundary ok");
 await p.goto(BASE + "/carinacoach");
 // The pill is a client component on a server-rendered page; clicking it before
 // hydration lands on nothing at all.
-await p.locator(".followpill").waitFor();
+await p.locator(".profacts .followpill").waitFor();
 await p.waitForTimeout(400);
-await p.locator(".followpill").click();
-await p.locator(".followpill", { hasText: "Following" }).waitFor();
+await p.locator(".profacts .followpill").click();
+await p.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 
 // the public profile
 await p.goto(BASE + "/member");

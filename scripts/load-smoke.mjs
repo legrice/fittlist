@@ -72,10 +72,10 @@ const memberCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
   await p.getByRole("button", { name: "Finish setup" }).click();
   await p.waitForURL("**/feed");
   await p.goto(BASE + "/loadcoach");
-  await p.locator(".followpill").waitFor();
+  await p.locator(".profacts .followpill").waitFor();
   await p.waitForTimeout(300);
-  await p.locator(".followpill").click();
-  await p.locator(".followpill", { hasText: "Following" }).waitFor();
+  await p.locator(".profacts .followpill").click();
+  await p.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 }
 const cookies = await memberCtx.cookies(BASE);
 const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { passwordAuth } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
 import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
+import { useFollowSync } from "@/components/FollowSync";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -15,6 +16,7 @@ export function NotifyCta({
   handle,
   account = null,
   canSignUp = false,
+  compact = false,
 }: {
   trainerName: string;
   handle: string;
@@ -23,6 +25,8 @@ export function NotifyCta({
   account?: { following: boolean; requested?: boolean } | null;
   // Member signups are open, so a fresh subscriber can be offered an account.
   canSignUp?: boolean;
+  // The sticky bar's copy: a smaller pill, same behaviour.
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // Shown right after a successful subscribe: they've already given the email
@@ -33,9 +37,19 @@ export function NotifyCta({
   // so this is a waitlist, not a wall — file the request and say so.
   const [waitlisted, setWaitlisted] = useState(false);
   const [password, setPassword] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [following, setFollowing] = useState(account?.following ?? false);
-  const [requested, setRequested] = useState(account?.requested ?? false);
+  // The follow/subscribe answer lives in FollowSync when the page provides
+  // one, so the header pill and the sticky bar's copy agree; the local state
+  // is the fallback for a lone instance.
+  const sync = useFollowSync();
+  const [localSub, setLocalSub] = useState(false);
+  const [localFollowing, setLocalFollowing] = useState(account?.following ?? false);
+  const [localRequested, setLocalRequested] = useState(account?.requested ?? false);
+  const subscribed = sync ? sync[0].subscribed : localSub;
+  const following = sync ? sync[0].following : localFollowing;
+  const requested = sync ? sync[0].requested : localRequested;
+  const setSubscribed = (v: boolean) => (sync ? sync[1]({ subscribed: v }) : setLocalSub(v));
+  const setFollowing = (v: boolean) => (sync ? sync[1]({ following: v }) : setLocalFollowing(v));
+  const setRequested = (v: boolean) => (sync ? sync[1]({ requested: v }) : setLocalRequested(v));
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -142,13 +156,13 @@ export function NotifyCta({
   return (
     <>
       <button
-        className={`followpill${following || subscribed ? " on" : ""}`}
+        className={`followpill${compact ? " mini" : ""}${following || subscribed ? " on" : ""}`}
         disabled={pending}
         aria-pressed={account ? following : subscribed}
         onClick={onCta}
       >
         {/* A tick on the yes state, so the pill reports rather than offers. */}
-        {(following || subscribed) && <Icon name="check" size={17} />}
+        {(following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
         {label}
       </button>
 

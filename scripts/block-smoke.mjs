@@ -67,10 +67,10 @@ await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 await m.goto(BASE + "/carina");
-await m.locator(".followpill").waitFor();
+await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);
-await m.locator(".followpill").click();
-await m.locator(".followpill", { hasText: "Following" }).waitFor();
+await m.locator(".profacts .followpill").click();
+await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 console.log("member follows the coach ok");
 
 // --- the member adds a class, so the block has something to clean up
@@ -159,8 +159,8 @@ await co.waitForTimeout(1200);
 }
 // Undoing a block doesn't refollow: that was their choice to make.
 await m.goto(BASE + "/carina");
-await m.locator(".followpill").waitFor();
-const pill = (await m.locator(".followpill").innerText()).trim();
+await m.locator(".profacts .followpill").waitFor();
+const pill = (await m.locator(".profacts .followpill").innerText()).trim();
 if (/Following/.test(pill)) fail(`allowing someone back refollowed them for them (${pill})`);
 console.log("allowing them back doesn't refollow ok");
 

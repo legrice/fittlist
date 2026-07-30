@@ -62,10 +62,10 @@ await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 await m.goto(BASE + "/carina");
-await m.locator(".followpill").waitFor();
+await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);
-await m.locator(".followpill").click();
-await m.locator(".followpill", { hasText: "Following" }).waitFor();
+await m.locator(".profacts .followpill").click();
+await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 await m.goto(BASE + "/feed");
 await m.locator(".feeditem, .ps-event").first().waitFor();
 {
