@@ -53,6 +53,10 @@ const LINES = [
     t: "Few features, done well",
     s: "Build what helps someone find their fit. Skip the rest, even when it's easy.",
   },
+  {
+    t: "Human, not artificial",
+    s: "Fittlist is people teaching people, in rooms. AI helps build the product; it never performs in it. No sparkle glyphs, no generated coaches, no machine pretending to be a person. What you see on fittlist was done by someone.",
+  },
 ];
 
 export default async function EthosPage() {

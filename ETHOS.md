@@ -34,6 +34,10 @@ Things fittlist does not do, at any size, for any reason.
   never for the growth chart.
 - **Few features, done well.** Build what helps someone find their fit. Skip
   the rest, even when it's easy.
+- **Human, not artificial.** Fittlist is people teaching people, in rooms. AI
+  helps build the product; it never performs in it. No sparkle glyphs, no
+  generated coaches, no machine pretending to be a person. What you see on
+  fittlist was done by someone.
 
 ## How to use this
 

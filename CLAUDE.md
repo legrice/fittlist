@@ -134,7 +134,8 @@ hot path changes shape.
 
 `ETHOS.md` is the product's constitution: four ordered laws, then the lines
 fittlist doesn't cross (never addicting, nobody is the product, private by
-default, no enshittification, charge in the open, few features done well).
+default, no enshittification, charge in the open, few features done well,
+human not artificial: AI helps build the product but never performs in it).
 `/ethos` renders it in-app. Hold every feature request against it, including
 the founder's own: when an idea serves no law or breaks a line, say so before
 building, plainly and with the specific tenet named. That pushback is the
