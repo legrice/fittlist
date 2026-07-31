@@ -139,8 +139,8 @@ await r.locator(".profacts .followpill").click();
 await r.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 await r.goto(BASE + "/feed");
 await r.locator(".feedagenda .ps-event").first().click();
-await r.locator(".classsheet-add").waitFor();
-await r.locator(".classsheet-add").click();
+await r.locator(".ovcta-save").waitFor();
+await r.locator(".ovcta-save").click();
 // The second screen opens on a fresh yes: "You're in", with the picker.
 // Ruth's mutual Sarah lists as a row; picking her and sending drops an
 // in-app ask in her Updates.
@@ -150,16 +150,16 @@ await r.locator(".tellbtn", { hasText: "Ask 1 person to come" }).click();
 await r.locator(".tellbtn", { hasText: "Asked" }).waitFor();
 await r.locator(".tellbtn.tellbtn-text", { hasText: "aren't on fittlist" }).waitFor();
 await r.locator(".tellsheet-done").click();
-await r.locator(".classsheet-add.on").waitFor();
-// the share leans forward the moment you commit: it now carries the invite
-await r.locator(".classsheet-share.invite", { hasText: "Tell someone" }).waitFor();
-// reopening the sheet brings the room with it
-await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await r.locator(".ovcta-save.on").waitFor();
+// the word leaves with the tap: just the filled heart now
+if ((await r.locator(".ovcta-save").innerText()).trim()) fail("the saved heart should drop the word");
+// reopening the overlay brings the room with it
+await r.locator(".ovcircle-back").click();
 await r.waitForTimeout(400);
 await r.locator(".feedagenda .ps-event").first().click();
-await r.getByText(/Also going · 1/).waitFor();
+await r.getByText(/Also saved · 1/).waitFor();
 await r.locator(".classsheet-roster", { hasText: "Sarah" }).waitFor();
-await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await r.locator(".ovcircle-back").click();
 console.log("fellow goer sees the room ok (Sarah on Ruth's sheet)");
 
 // Ruth brings two friends who aren't on the app. Names, not accounts, and
@@ -170,11 +170,11 @@ await r.locator(".withbtn", { hasText: "Bringing anyone" }).click();
 await r.locator("#withNames").fill("Joanne, Dave");
 await r.locator(".withsave").click();
 await r.locator(".withbtn", { hasText: "With Joanne and Dave" }).waitFor();
-await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await r.locator(".ovcircle-back").click();
 await m.goto(BASE + "/feed");
 await m.locator(".feedagenda .ps-event").first().click();
 await m.locator(".rosterrow", { hasText: "Ruth" }).getByText("with Joanne and Dave").waitFor();
-await m.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await m.locator(".ovcircle-back").click();
 await co.goto(BASE + "/app");
 await co.locator(".ps-event[data-cid]").first().click();
 await co.getByRole("heading", { name: /Edit class/ }).waitFor();
@@ -212,10 +212,10 @@ await n.locator(".profacts .followpill").click();
 await n.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 await n.goto(BASE + "/feed");
 await n.locator(".feedagenda .ps-event").first().click();
-await n.locator(".classsheet-add").waitFor();
-if (await n.getByText(/Also going/).count())
+await n.locator(".ovcta-save").waitFor();
+if (await n.getByText(/Also saved/).count())
   fail("someone who hasn't committed should see no roster");
-await n.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await n.locator(".ovcircle-back").click();
 console.log("no lurking ok (the price of the list is being on it)");
 
 // --- Going on an event: the poster sees the room, a fellow goer sees the
@@ -236,16 +236,16 @@ await co.waitForURL(/\/e\//);
 const evUrl = co.url();
 // Sarah goes; her mutual Ruth hears even though Ruth isn't going yet
 await m.goto(evUrl);
-await m.locator(".evgoing").click();
-await m.locator(".evgoing.on").waitFor();
+await m.getByRole("button", { name: "I'm going" }).click();
+await m.locator(".evacts .avact-ic.on").waitFor();
 await r.goto(BASE + "/updates");
 await r.getByText("Sarah is going to Harbor Throwdown").waitFor();
 console.log("event going-notification ok (mutual told, without being marked)");
 // Ruth goes too and sees Sarah; the poster sees the pair
 await r.goto(evUrl);
-await r.locator(".evgoing").click();
-await r.locator(".evgoing.on").waitFor();
-await r.locator(".invitebtn", { hasText: "Tell someone" }).waitFor();
+await r.getByRole("button", { name: "I'm going" }).click();
+await r.locator(".evacts .avact-ic.on").waitFor();
+await r.locator(".evacts .avact", { hasText: "Share" }).waitFor();
 await r.getByText(/Also going · 1/).waitFor();
 await r.locator(".evwho", { hasText: "Sarah" }).waitFor();
 await co.goto(evUrl);

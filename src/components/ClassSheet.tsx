@@ -11,15 +11,15 @@ import { Roster } from "@/components/Roster";
 import { TellSheet } from "@/components/TellSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-// A class, from the bottom up.
-//
-// It used to be a full page, which meant tapping a row in a list threw the list
-// away and the one thing you were there to do (add it) arrived after a
-// navigation. A sheet keeps the list behind it, so adding reads as picking
-// something up rather than going somewhere.
+// A class, worn as a full-screen overlay. The page you were on stays visible
+// through a light blur, so opening a class reads as leaning in for a closer
+// look rather than going somewhere. Floating circles top left and right (back,
+// share), the class itself in open space, and the two things to do with it on
+// a dark pill at the bottom: Book, and the heart. Saving is the heart filling
+// in; the word leaves with the tap.
 //
 // The page at /{handle}/{classId} stays: a link somebody was sent has to open
-// something real, and the share button here points at exactly that.
+// something real, and the share here points at exactly that.
 export function ClassSheet({
   handle,
   classId,
@@ -32,7 +32,7 @@ export function ClassSheet({
   /** The occurrence that was tapped, so a weekly class opens on the right day. */
   iso?: string;
   onClose: () => void;
-  /** Fired after an add or a remove, so the list behind can catch up. */
+  /** Fired after a save or a remove, so the list behind can catch up. */
   onChanged?: (added: boolean) => void;
 }) {
   const [c, setC] = useState<ClassDetail | null>(null);
@@ -41,7 +41,7 @@ export function ClassSheet({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reported, setReported] = useState(false);
   const [tellOpen, setTellOpen] = useState(false);
@@ -99,7 +99,7 @@ export function ClassSheet({
   const share = async () => {
     if (!c) return;
     // The moment you commit is the moment you'd text a friend, so once
-    // you're going the share carries the sentence, not just the link. The
+    // you're saved the share carries the sentence, not just the link. The
     // group chat stays where it belongs; we just hand it something to say.
     const invite = added ? `I'm going to ${c.name} on ${c.dateLong}. Come with me:` : null;
     const url = added && c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl;
@@ -118,220 +118,234 @@ export function ClassSheet({
   };
 
   const where = c?.studioName ?? c?.location ?? null;
+  const showBook = !!c && c.links.length > 0 && !c.past;
+  const isOwner = !!c?.roster;
 
   return (
-    <div
-      className="sheet-scrim"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="sheet classsheet">
-        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
+    <div className="classoverlay">
+      <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
+        <Icon name="arrow_back" size={19} />
+      </button>
+      {c && (
+        <button className="ovcircle ovcircle-share" aria-label="Share this class" onClick={share}>
+          <Icon name="ios_share" size={18} />
         </button>
+      )}
 
-        {missing ? (
-          <p className="lead" style={{ marginTop: 10 }}>
+      {missing ? (
+        <div className="classoverlay-body">
+          <p className="lead" style={{ textAlign: "center", marginTop: "30vh" }}>
             That class isn&rsquo;t there any more.
           </p>
-        ) : !c ? (
-          // A blank beat rather than a spinner: the sheet is already open and
-          // the data lands in a moment.
-          <div className="classsheet-wait" aria-hidden="true" />
-        ) : (
-          <>
-            {c.classType && <span className="evtype">{c.classType}</span>}
-            <h2 className="classsheet-nm">{c.name}</h2>
-            {/* Whose class it is, as a face and a name, and a way to them:
-                from the feed or your week this sheet is often the first time
-                you meet a coach, and their name is the natural next tap. */}
-            <Link className="classsheet-who" href={`/${c.handle}`}>
-              {c.coachPhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="classsheet-av" src={c.coachPhoto} alt="" />
-              ) : (
-                <span
-                  className="classsheet-av classsheet-av-empty"
-                  style={{ background: c.coachColor }}
-                  aria-hidden="true"
-                >
-                  {(c.coachName.trim().charAt(0) || "?").toUpperCase()}
-                </span>
-              )}
-              {c.coachName}
-              <Icon name="chevron_right" size={16} />
-            </Link>
+        </div>
+      ) : !c ? (
+        // A blank beat rather than a spinner: the overlay is already open and
+        // the data lands in a moment.
+        <div className="classoverlay-body" aria-hidden="true" />
+      ) : (
+        <div className="classoverlay-body">
+          {c.classType && <span className="evtype classoverlay-type">{c.classType}</span>}
+          <h2 className="classoverlay-nm">{c.name}</h2>
+          {/* Whose class it is, as a face and a name, and a way to them: from
+              the feed or your saves this is often the first time you meet a
+              coach, and their name is the natural next tap. */}
+          <Link className="classoverlay-coach" href={`/${c.handle}`}>
+            {c.coachPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="classsheet-av" src={c.coachPhoto} alt="" />
+            ) : (
+              <span
+                className="classsheet-av classsheet-av-empty"
+                style={{ background: c.coachColor }}
+                aria-hidden="true"
+              >
+                {(c.coachName.trim().charAt(0) || "?").toUpperCase()}
+              </span>
+            )}
+            <span className="classoverlay-coach-txt">
+              <span className="k">Coached by</span> {c.coachName}
+            </span>
+            <Icon name="chevron_right" size={16} />
+          </Link>
 
-            <div className="evfacts classsheet-facts">
-              <div className="evfact">
-                <Icon name="event" size={20} />
-                <span className="evfact-txt">
-                  <span className="t">{c.dateLong}</span>
-                  <span className="s">
-                    {c.time} · {c.durationMin} min
-                  </span>
+          <div className="evfacts classoverlay-facts">
+            <div className="evfact">
+              <Icon name="event" size={20} />
+              <span className="evfact-txt">
+                <span className="t">{c.dateLong}</span>
+                <span className="s">
+                  {c.time} · {c.durationMin} min
                 </span>
-              </div>
-              {where &&
-                (c.studioHref ? (
-                  <Link className="evfact" href={c.studioHref}>
-                    <Icon name="place" size={20} />
-                    <span className="evfact-txt">
-                      <span className="t">{c.studioName}</span>
-                      {c.studioAddress && <span className="s">{c.studioAddress}</span>}
-                    </span>
-                  </Link>
-                ) : (
-                  <div className="evfact">
-                    <Icon name="place" size={20} />
-                    <span className="evfact-txt">
-                      <span className="t">{where}</span>
-                    </span>
-                  </div>
-                ))}
+              </span>
             </div>
+            {where &&
+              (c.studioHref ? (
+                <Link className="evfact" href={c.studioHref}>
+                  <Icon name="place" size={20} />
+                  <span className="evfact-txt">
+                    <span className="t">{c.studioName}</span>
+                    {c.studioAddress && <span className="s">{c.studioAddress}</span>}
+                  </span>
+                </Link>
+              ) : (
+                <div className="evfact">
+                  <Icon name="place" size={20} />
+                  <span className="evfact-txt">
+                    <span className="t">{where}</span>
+                  </span>
+                </div>
+              ))}
+          </div>
 
-            {c.description?.trim() && (
-              // Four lines, then Read more. A coach who writes a paragraph about
-              // their class pushed the add button off the bottom of the sheet,
-              // which is the one thing the sheet is for.
-              <div className={`classsheet-descwrap${moreOpen ? " open" : ""}`}>
-                <p className="evdesc classsheet-desc">{c.description}</p>
-                {!moreOpen && (
-                  <button className="descmore" onClick={() => setMoreOpen(true)}>
-                    Read more
+          {/* Full screen means the description gets to just be there; the old
+              sheet clamped it to keep the add button on screen, and the pill
+              floats now. */}
+          {c.description?.trim() && <p className="evdesc classoverlay-desc">{c.description}</p>}
+
+          {/* Owner only: who saved this occurrence. */}
+          {c.roster && (
+            <div className="classsheet-roster">
+              <h3 className="classsheet-roster-h">
+                Going{c.roster.length > 0 ? ` · ${c.roster.length}` : ""}
+              </h3>
+              <Roster people={c.roster} />
+            </div>
+          )}
+
+          {/* The room introducing itself early: the other people who saved
+              it, shown only because this viewer saved it too. Non-null and
+              non-empty is the server saying both of those things. */}
+          {c.alsoGoing && c.alsoGoing.length > 0 && (
+            <div className="classsheet-roster">
+              <h3 className="classsheet-roster-h">Also saved · {c.alsoGoing.length}</h3>
+              <Roster people={c.alsoGoing} />
+            </div>
+          )}
+
+          {/* Names, not accounts: Joanne doesn't need the app to count. */}
+          {added && (
+            <CompanionsEditor
+              value={c.myCompanions}
+              onSave={async (names) => {
+                const res = await setGoingCompanions(c.id, c.whenIso, names);
+                if (!res.ok) {
+                  toast(res.error ?? "Something went wrong");
+                  return null;
+                }
+                return res.companions ?? [];
+              }}
+            />
+          )}
+
+          {c.past && !added && <p className="classsheet-gone">This one has already run.</p>}
+
+          {/* Quiet on purpose: a moderation control shouldn't compete with
+              the pill, but it has to exist, because a class that isn't real
+              is somebody else's wasted trip. */}
+          {c.canAdd && !reported && (
+            <button className="classsheet-report" onClick={() => setReportOpen(true)}>
+              Report this class
+            </button>
+          )}
+          {reported && <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>}
+        </div>
+      )}
+
+      {/* The floating pill: Book on the left, the heart on the right. The
+          owner's pill is their one action instead. */}
+      {c && (isOwner || showBook || c.canAdd) && (
+        <>
+          {bookOpen && c.links.length > 1 && (
+            <div className="ovbook-menu" role="menu">
+              {c.links.map((l, i) => (
+                <a
+                  key={i}
+                  className="ovbook-item"
+                  role="menuitem"
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener nofollow"
+                  onClick={() => setBookOpen(false)}
+                >
+                  Book via {l.label}
+                </a>
+              ))}
+            </div>
+          )}
+          <div className="classoverlay-cta">
+            {isOwner ? (
+              <Link className="ovcta-btn" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
+                <Icon name="edit" size={17} /> Edit this class
+              </Link>
+            ) : (
+              <>
+                {showBook &&
+                  (c.links.length === 1 ? (
+                    <a
+                      className="ovcta-btn"
+                      href={c.links[0].url}
+                      target="_blank"
+                      rel="noopener nofollow"
+                    >
+                      Book
+                    </a>
+                  ) : (
+                    <button
+                      className="ovcta-btn"
+                      aria-expanded={bookOpen}
+                      onClick={() => setBookOpen((o) => !o)}
+                    >
+                      Book
+                    </button>
+                  ))}
+                {showBook && c.canAdd && <span className="ovcta-div" aria-hidden="true" />}
+                {c.canAdd && (
+                  <button
+                    className={`ovcta-btn ovcta-save${added ? " on" : ""}`}
+                    disabled={pending}
+                    aria-pressed={added}
+                    aria-label={added ? "Saved" : "Save"}
+                    onClick={toggle}
+                  >
+                    <Icon name="favorite" size={19} />
+                    {!added && "Save"}
                   </button>
                 )}
-              </div>
+              </>
             )}
+          </div>
+        </>
+      )}
 
-            {/* Owner only: who marked Going on this occurrence. */}
-            {c.roster && (
-              <div className="classsheet-roster">
-                <h3 className="classsheet-roster-h">
-                  Going{c.roster.length > 0 ? ` · ${c.roster.length}` : ""}
-                </h3>
-                <Roster people={c.roster} />
-              </div>
-            )}
-
-            {/* The room introducing itself early: the other people coming,
-                shown only because this viewer is coming too. Non-null and
-                non-empty is the server saying both of those things. */}
-            {c.alsoGoing && c.alsoGoing.length > 0 && (
-              <div className="classsheet-roster">
-                <h3 className="classsheet-roster-h">Also going · {c.alsoGoing.length}</h3>
-                <Roster people={c.alsoGoing} />
-              </div>
-            )}
-
-            {c.links.length > 0 && (
-              <div className="evbook classsheet-book">
-                {c.links.map((l, i) => (
-                  <a
-                    key={i}
-                    className="btn ghost evbtn"
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener nofollow"
+      {reportOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setReportOpen(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>What&rsquo;s wrong with it?</h2>
+            <p className="lead">
+              This goes to fittlist, not to the coach. If it checks out, nothing changes.
+            </p>
+            <div className="reportreasons">
+              {["Not a real class", "Wrong time or place", "Not at this gym", "Something else"].map(
+                (r) => (
+                  <button
+                    key={r}
+                    className="btn ghost reportreason"
+                    disabled={pending}
+                    onClick={() => sendReport(r)}
                   >
-                    Book via {l.label}
-                    <Icon name="north_east" size={18} className="evbtn-ico" />
-                  </a>
-                ))}
-              </div>
-            )}
-
-            {/* The add is the point of the sheet, so it gets the footer. Share
-                sits beside it: passing a class to someone is the other thing
-                you'd want to do from here, and it links at the real page. */}
-            <div className="publishwrap classsheet-do">
-              {c.past && !added && (
-                <p className="classsheet-gone">This one has already run.</p>
+                    {r}
+                  </button>
+                ),
               )}
-              {/* The owner's one action. The roster being non-null is the
-                  server saying this viewer owns the class. */}
-              {c.roster && (
-                <Link className="classsheet-add classsheet-edit" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
-                  <Icon name="edit" size={18} /> Edit this class
-                </Link>
-              )}
-              {c.canAdd && (
-                <button
-                  className={`classsheet-add${added ? " on" : ""}`}
-                  disabled={pending}
-                  onClick={toggle}
-                >
-                  {added ? (
-                    <>
-                      <Icon name="check" size={18} /> Added to your week
-                    </>
-                  ) : (
-                    "Add to your week"
-                  )}
-                </button>
-              )}
-              <button className={`classsheet-share${added ? " invite" : ""}`} onClick={share}>
-                <Icon name={added ? "campaign" : "ios_share"} size={18} />
-                {added ? "Tell someone you're going" : "Share this class"}
-              </button>
-              {/* Names, not accounts: Joanne doesn't need the app to count. */}
-              {added && (
-                <CompanionsEditor
-                  value={c.myCompanions}
-                  onSave={async (names) => {
-                    const res = await setGoingCompanions(c.id, c.whenIso, names);
-                    if (!res.ok) {
-                      toast(res.error ?? "Something went wrong");
-                      return null;
-                    }
-                    return res.companions ?? [];
-                  }}
-                />
-              )}
-              {/* Quiet on purpose: a moderation control shouldn't compete with
-                  the add button, but it has to exist, because a class that
-                  isn't real is somebody else's wasted trip. */}
-              {c.canAdd && !reported && (
-                <button className="classsheet-report" onClick={() => setReportOpen(true)}>
-                  Report this class
-                </button>
-              )}
-              {reported && <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>}
             </div>
-            {reportOpen && (
-              <div
-                className="sheet-scrim"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) setReportOpen(false);
-                }}
-              >
-                <div className="sheet confirmsheet">
-                  <h2>What&rsquo;s wrong with it?</h2>
-                  <p className="lead">
-                    This goes to fittlist, not to the coach. If it checks out, nothing changes.
-                  </p>
-                  <div className="reportreasons">
-                    {["Not a real class", "Wrong time or place", "Not at this gym", "Something else"].map(
-                      (r) => (
-                        <button
-                          key={r}
-                          className="btn ghost reportreason"
-                          disabled={pending}
-                          onClick={() => sendReport(r)}
-                        >
-                          {r}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
       {c && (
         <TellSheet
           open={tellOpen}

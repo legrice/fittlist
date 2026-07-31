@@ -3571,3 +3571,83 @@ button.ps-card { cursor: pointer; }
 /* The gap under the header while a tab loads. Holds the scroll position so
    the page doesn't jump when the content lands. */
 .tabloading { min-height: 60vh; }
+
+/* The class overlay: full screen over a light blur of the page you were on,
+   floating back and share circles, the class in open space, and a dark pill
+   at the bottom holding the two things to do with it. */
+.classoverlay {
+  position: fixed; inset: 0; z-index: 46; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(247, 244, 236, .8);
+  backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  animation: fadeIn .16s ease;
+}
+[data-mode="dark"] .classoverlay { background: rgba(20, 19, 16, .8); }
+.ovcircle {
+  position: fixed; top: calc(14px + env(safe-area-inset-top)); z-index: 2;
+  width: 40px; height: 40px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--soft-shadow); cursor: pointer;
+}
+.ovcircle:active { transform: scale(.93); }
+.ovcircle-back { left: 16px; }
+.ovcircle-share { right: 16px; }
+.classoverlay-body {
+  max-width: 560px; margin: 0 auto;
+  padding: calc(74px + env(safe-area-inset-top)) 24px calc(130px + env(safe-area-inset-bottom));
+}
+.classoverlay-type { text-align: center; }
+.classoverlay-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 800;
+  font-size: 33px; line-height: 1.1; letter-spacing: -.01em;
+  text-align: center; margin: 0 0 14px;
+}
+.classoverlay-coach {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin: 0 0 24px; text-decoration: none; color: var(--ink);
+  font-weight: 700; font-size: 14.5px;
+}
+.classoverlay-coach:active { opacity: .6; }
+.classoverlay-coach .icon { color: var(--ol); opacity: .7; }
+.classoverlay-coach-txt .k { font-weight: 600; color: var(--ol); }
+.classoverlay-facts { margin: 0 auto; max-width: 400px; }
+.classoverlay-desc { margin-top: 20px; color: var(--ink); }
+.classoverlay .classsheet-report { align-self: auto; display: block; margin: 18px auto 0; }
+/* The pill. Ink on paper flips with the theme, same as the tell buttons. */
+.classoverlay-cta {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  display: flex; align-items: center;
+  background: var(--ink); color: var(--paper);
+  border-radius: 999px; padding: 7px 8px;
+  box-shadow: 0 12px 34px rgba(23, 26, 31, .3);
+  white-space: nowrap;
+}
+.ovcta-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 24px; border: none; background: none; cursor: pointer;
+  color: inherit; text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 15.5px; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.ovcta-btn:active { opacity: .7; }
+.ovcta-btn[disabled] { opacity: .7; }
+/* currentColor so the hairline follows the pill through both themes. */
+.ovcta-div { width: 1px; align-self: stretch; margin: 6px 0; background: currentColor; opacity: .3; }
+/* The heart fills in and the word leaves with the tap. */
+.ovcta-save.on .icon svg { fill: var(--si); stroke: var(--si); }
+.ovbook-menu {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden; min-width: 230px;
+  animation: fadeIn .12s ease;
+}
+.ovbook-item {
+  display: block; padding: 13px 20px; text-align: center; text-decoration: none;
+  font-weight: 600; font-size: 14px; color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.ovbook-item:last-child { border-bottom: none; }

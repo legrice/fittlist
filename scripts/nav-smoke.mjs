@@ -58,9 +58,9 @@ const depth0 = await q.evaluate(() => history.length);
 // should leave history exactly where it started.
 for (let i = 0; i < 3; i++) {
   await q.locator(".ps-event").first().click();
-  await q.locator(".classsheet-nm").waitFor();
-  await q.locator(".classsheet .sheetclose").click();
-  await q.waitForFunction(() => !document.querySelector(".classsheet"));
+  await q.locator(".classoverlay-nm").waitFor();
+  await q.locator(".ovcircle-back").click();
+  await q.waitForFunction(() => !document.querySelector(".classoverlay"));
   await q.waitForTimeout(200);
 }
 const depth1 = await q.evaluate(() => history.length);

@@ -171,7 +171,7 @@ console.log("allowing them back doesn't refollow ok");
 // date it really ran on, and it's exactly the case an old shared link lands in.
 await c2.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
 await m.locator(".ps-event").first().click();
-await m.locator(".classsheet-nm").waitFor();
+await m.locator(".classoverlay-nm").waitFor();
 await m.getByRole("button", { name: "Share this class" }).click();
 const shareUrl = await m.evaluate(() => navigator.clipboard.readText());
 const classId = shareUrl.match(
