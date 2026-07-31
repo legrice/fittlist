@@ -3633,8 +3633,10 @@ button.ps-card { cursor: pointer; }
 .ovcta-btn[disabled] { opacity: .7; }
 /* currentColor so the hairline follows the pill through both themes. */
 .ovcta-div { width: 1px; align-self: stretch; margin: 6px 0; background: currentColor; opacity: .3; }
-/* The heart fills in and the word leaves with the tap. */
-.ovcta-save.on .icon svg { fill: var(--si); stroke: var(--si); }
+/* The heart fills in and the word leaves with the tap. White on the dark
+   pill (currentColor, so the dark theme's inverted pill stays right too):
+   an orange fill fought the black background. */
+.ovcta-save.on .icon svg { fill: currentColor; }
 .ovbook-menu {
   position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
   bottom: calc(86px + env(safe-area-inset-bottom));
@@ -3683,7 +3685,7 @@ button.ps-card { cursor: pointer; }
   pointer-events: none; transition: opacity .18s ease, transform .18s ease;
 }
 .favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
-.favtoast-heart svg { fill: var(--si); stroke: var(--si); }
+.favtoast-heart svg { fill: currentColor; }
 .favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 
 /* The empty room: an invitation, not a verdict. The one place share lives. */
@@ -3722,3 +3724,65 @@ button.ps-card { cursor: pointer; }
 }
 /* The event page carries the same floating pill, so its tail needs room. */
 .profwrap:has(.classoverlay-cta) { padding-bottom: 110px; }
+
+/* Your plans: the top of Home. Everything hearted that's still ahead, in one
+   sideways row, each chip opening the same overlay as everywhere else. */
+.plans { margin: 2px 0 18px; }
+.plans-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 15px; margin-bottom: 9px;
+}
+.plans-row {
+  display: flex; gap: 10px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.plans-row::-webkit-scrollbar { display: none; }
+.planchip {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-width: 150px; max-width: 220px; padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--card); cursor: pointer; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.planchip:active { transform: scale(.98); }
+.planchip-when {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--si);
+}
+.planchip-nm {
+  font-weight: 700; font-size: 14.5px; color: var(--ink);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.planchip-sub {
+  font-size: 12px; color: var(--ol);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Coaches near you: a quiet door to Discover at the bottom of Home. */
+.nearby { margin-top: 28px; }
+.nearby-h { display: flex; align-items: baseline; justify-content: space-between; }
+.nearby-all { font-size: 12.5px; font-weight: 600; color: var(--ol); text-decoration: none; }
+.nearby-row {
+  display: flex; gap: 14px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.nearby-row::-webkit-scrollbar { display: none; }
+.nearbyc {
+  flex: 0 0 auto; width: 76px; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; text-decoration: none; color: var(--ink);
+  font-weight: 600; font-size: 12.5px; text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.nearbyc:active { opacity: .7; }
+.nearbyc-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.nearbyc-av-empty {
+  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.nearbyc-nm { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* An event row on the week screen wears the brand accent; classes wear their
+   coach's colour. */
+.weekrow-ev { background: var(--si); }

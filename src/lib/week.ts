@@ -1,7 +1,7 @@
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
+import { clockParts, fmtDayHeader, fmtTime, occurrenceEnded, todayIso } from "@/lib/format";
 
 // The classes someone has added, from today forward.
 //
@@ -32,7 +32,42 @@ export type WeekItem = {
   alsoGoing?: { name: string; photo: string | null; color: string; handle: string | null }[];
 };
 
-export type WeekDay = { iso: string; label: string; items: WeekItem[] };
+/** An event you marked Going, riding the same list as the classes: the
+ *  heart means one thing everywhere it appears. */
+export type WeekEventItem = {
+  attId: string;
+  eventId: string;
+  iso: string;
+  name: string;
+  place: string;
+  timeLabel: string | null;
+};
+
+export type WeekDay = { iso: string; label: string; items: WeekItem[]; events?: WeekEventItem[] };
+
+/** The events someone marked Going that haven't finished, on the day they
+ *  start (or today, once a multi-day one is under way). */
+export async function myEventMarks(userId: string): Promise<WeekEventItem[]> {
+  const db = await getDb();
+  const today = todayIso();
+  const rows = await db
+    .select({ attId: schema.eventAttendances.id, ev: schema.events })
+    .from(schema.eventAttendances)
+    .innerJoin(schema.events, eq(schema.events.id, schema.eventAttendances.eventId))
+    .where(
+      and(eq(schema.eventAttendances.userId, userId), gte(schema.events.endDate, today)),
+    );
+  return rows
+    .map(({ attId, ev }) => ({
+      attId,
+      eventId: ev.id,
+      iso: ev.startDate >= today ? ev.startDate : today,
+      name: ev.name,
+      place: ev.place,
+      timeLabel: ev.startTime ? fmtTime(ev.startTime) : null,
+    }))
+    .sort((a, b) => a.iso.localeCompare(b.iso) || a.name.localeCompare(b.name));
+}
 
 /** The next date on or after today falling on this weekday (0 = Monday). */
 function nextOccurrence(dayOfWeek: number): string {
@@ -42,10 +77,11 @@ function nextOccurrence(dayOfWeek: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** How many added classes are still ahead of them, personal entries included. */
+/** How many saved things are still ahead of them: classes, personal entries,
+ *  and the events they marked. */
 export async function weekCount(userId: string): Promise<number> {
   const db = await getDb();
-  const [rows, own] = await Promise.all([
+  const [rows, own, evs] = await Promise.all([
     db
       .select({ id: schema.attendances.id })
       .from(schema.attendances)
@@ -56,13 +92,14 @@ export async function weekCount(userId: string): Promise<number> {
         ),
       ),
     db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+    myEventMarks(userId),
   ]);
   // A personal entry recurs weekly; it counts once, for this week's occurrence,
   // and drops out of the number once that has run, same as everything else.
   const ownAhead = own.filter(
     (p) => !occurrenceEnded(nextOccurrence(p.dayOfWeek), p.startTime, p.durationMin),
   ).length;
-  return rows.length + ownAhead;
+  return rows.length + ownAhead + evs.length;
 }
 
 /** Do these two people follow each other? Both directions, neither opted out.
@@ -197,7 +234,8 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     .select()
     .from(schema.personalClasses)
     .where(eq(schema.personalClasses.userId, userId));
-  if (marks.length === 0 && own.length === 0) return [];
+  const evMarks = await myEventMarks(userId);
+  if (marks.length === 0 && own.length === 0 && evMarks.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = await db
@@ -354,11 +392,19 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     byDay.set(iso, list);
   }
 
-  return [...byDay.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([iso, items]) => ({
-      iso,
-      label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
-    }));
+  // Events land on their day too; a day can exist for an event alone.
+  const evByDay = new Map<string, WeekEventItem[]>();
+  for (const e of evMarks) {
+    const list = evByDay.get(e.iso) ?? [];
+    list.push(e);
+    evByDay.set(e.iso, list);
+  }
+
+  const allIsos = [...new Set([...byDay.keys(), ...evByDay.keys()])];
+  return allIsos.sort().map((iso) => ({
+    iso,
+    label: fmtDayHeader(iso),
+    items: (byDay.get(iso) ?? []).sort((a, b) => a.hm.localeCompare(b.hm)),
+    events: evByDay.get(iso),
+  }));
 }

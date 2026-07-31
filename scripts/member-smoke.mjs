@@ -70,8 +70,8 @@ console.log("member setup ok (two steps, no studios, lands on their week)");
 {
   const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
   if (onFeed.length !== 3) fail(`a member should get three tabs, got ${onFeed.join(",")}`);
-  if (!onFeed[0].includes("Following") || !onFeed[1].includes("Discover") || !onFeed[2].includes("You"))
-    fail(`a member's tabs should be Following, Discover, You, got ${onFeed.join(",")}`);
+  if (!onFeed[0].includes("Home") || !onFeed[1].includes("Discover") || !onFeed[2].includes("You"))
+    fail(`a member's tabs should be Home, Discover, You, got ${onFeed.join(",")}`);
   await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL("**/discover");
   if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
@@ -80,7 +80,7 @@ console.log("member setup ok (two steps, no studios, lands on their week)");
   if ((await p.locator(".navtab").count()) !== 3) fail("and to their own page");
   if ((await p.locator(".navtab.on").innerText()).includes("You") === false)
     fail("their own page should light the You tab");
-  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.locator(".navtab", { hasText: "Home" }).click();
   await p.waitForURL("**/feed");
 }
 console.log("member tabs ok (Following, Discover, You, everywhere)");
@@ -108,7 +108,7 @@ console.log("member tabs ok (Following, Discover, You, everywhere)");
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL("**/discover");
-  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.locator(".navtab", { hasText: "Home" }).click();
   await p.waitForURL("**/feed");
 }
 console.log("chrome survives the loading boundary ok");

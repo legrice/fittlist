@@ -1420,7 +1420,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     fail("the saved heart should drop the word");
   {
     const fill = await fan.locator(".ovcta-save.on .icon svg").evaluate((e) => getComputedStyle(e).fill);
-    if (fill !== "rgb(221, 106, 53)") fail("the saved heart should fill orange, got " + fill);
+    if (fill !== "rgb(250, 248, 242)") fail("the saved heart should fill paper-white on the dark pill, got " + fill);
   }
   // Whose class it is, as a face and a name.
   await fan.locator(".classoverlay-coach .classsheet-av").waitFor();
@@ -1587,20 +1587,20 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Home" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Home" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
 await page.locator(".navtab.on", { hasText: "You" }).waitFor();
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Home" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Home" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
 await page.locator(".classoverlay-nm").waitFor();
 await page.locator(".ovcircle-back").click();
@@ -1901,7 +1901,7 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Home" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".profname").waitFor();

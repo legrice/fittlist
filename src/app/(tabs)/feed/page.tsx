@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -7,7 +7,8 @@ import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
-import { weekCount } from "@/lib/week";
+import { PlansShelf, type PlanChip } from "@/components/PlansShelf";
+import { myWeek, weekCount } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
@@ -162,8 +163,59 @@ export default async function FeedPage({
 
   const myCount = await weekCount(userId);
 
+  // Your plans: everything hearted that's still ahead, classes and events in
+  // one row. Personal entries stay on the week screen; they have no overlay.
+  const WD_C = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const MO_C = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const chipWhen = (iso: string) => {
+    const d = new Date(`${iso}T00:00:00Z`);
+    return `${WD_C[(d.getUTCDay() + 6) % 7]} · ${MO_C[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  };
+  const week = await myWeek(userId);
+  const plans: PlanChip[] = week
+    .flatMap((d) => [
+      ...d.items
+        .filter((i) => !i.personal)
+        .map((i) => ({
+          key: `c|${i.classId}|${i.iso}`,
+          kind: "class" as const,
+          when: chipWhen(i.iso),
+          name: i.name,
+          sub: `${i.hm}${i.ap}${i.coachName.trim() ? ` · ${i.coachName}` : ""}`,
+          iso: i.iso,
+          handle: i.handle,
+          classId: i.classId,
+        })),
+      ...(d.events ?? []).map((e) => ({
+        key: `e|${e.eventId}`,
+        kind: "event" as const,
+        when: chipWhen(d.iso),
+        name: e.name,
+        sub: e.timeLabel ? `${e.timeLabel} · ${e.place}` : e.place,
+        iso: d.iso,
+        eventId: e.eventId,
+      })),
+    ])
+    .slice(0, 10);
+
+  // Coaches near you: same city, not you, not already followed. A quiet door
+  // to Discover for the person who just got here, and for everyone else the
+  // occasional "oh, she's on here too".
+  const followedSet = new Set(followed);
+  const nearby = me.location
+    ? (
+        await db
+          .select()
+          .from(schema.users)
+          .where(and(eq(schema.users.location, me.location), ne(schema.users.kind, "fan")))
+      )
+        .filter((u) => u.id !== userId && !!u.handle && !followedSet.has(u.id) && !hidden.has(u.id))
+        .slice(0, 6)
+    : [];
+
   return (
     <>
+        {plans.length > 0 && <PlansShelf items={plans} />}
         {/* "Nobody yet" is for an empty tab, not an empty week: someone who
             follows coaches with nothing on gets the agenda's own message. */}
         {railCoaches.length === 0 && followed.length === 0 ? (
@@ -196,6 +248,35 @@ export default async function FeedPage({
             meId={userId}
           />
           </>
+        )}
+        {nearby.length > 0 && (
+          <div className="nearby">
+            <h2 className="plans-h nearby-h">
+              Coaches near you
+              <Link className="nearby-all" href="/discover">
+                See all
+              </Link>
+            </h2>
+            <div className="nearby-row">
+              {nearby.map((u) => (
+                <Link key={u.id} className="nearbyc" href={`/${u.handle}?from=home`}>
+                  {u.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="nearbyc-av" src={u.photo} alt="" />
+                  ) : (
+                    <span
+                      className="nearbyc-av nearbyc-av-empty"
+                      style={{ background: avatarColor(u) }}
+                      aria-hidden="true"
+                    >
+                      {(u.name.trim().charAt(0) || "?").toUpperCase()}
+                    </span>
+                  )}
+                  <span className="nearbyc-nm">{u.name.trim() || u.email.split("@")[0]}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </>
