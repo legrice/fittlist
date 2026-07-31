@@ -13,8 +13,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
-import { StudioFeedback } from "@/components/StudioFeedback";
-import { StudioOwnerBar } from "@/components/StudioOwnerBar";
+import { StudioMenu } from "@/components/StudioMenu";
 import { Wordmark } from "@/components/Wordmark";
 
 export const dynamic = "force-dynamic";
@@ -148,20 +147,25 @@ export default async function StudioPage({ params, searchParams }: Props) {
           )}
           <div className="pubhead-row">
           <h1 className="profname">{s.name}</h1>
-          {canEdit && (
-            <StudioOwnerBar
-              id={s.id}
-              name={s.name}
-              address={s.address}
-              types={s.types}
-              about={s.about ?? ""}
-              photo={s.photo}
-              contactEmail={s.contactEmail ?? ""}
-              phone={s.phone ?? ""}
-              website={s.website ?? ""}
-              instagram={s.instagram ?? ""}
-            />
-          )}
+          {/* Everything you can do with a studio, behind one set of dots:
+              share, suggest, report, and for coaches the edit. */}
+          <StudioMenu
+            slug={s.slug ?? ""}
+            canEdit={canEdit}
+            signedIn={signedIn}
+            studio={{
+              id: s.id,
+              name: s.name,
+              address: s.address,
+              types: s.types,
+              about: s.about ?? "",
+              photo: s.photo,
+              contactEmail: s.contactEmail ?? "",
+              phone: s.phone ?? "",
+              website: s.website ?? "",
+              instagram: s.instagram ?? "",
+            }}
+          />
           </div>
         </div>
         {s.types.length > 0 && (
@@ -183,9 +187,14 @@ export default async function StudioPage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {s.about?.trim() && <p className="profabout">{s.about}</p>}
+        {s.about?.trim() && (
+          <div className="studsec studsec-first">
+            <h2 className="prof-sec-h">About</h2>
+            <p className="profabout">{s.about}</p>
+          </div>
+        )}
 
-        <div className="profstudios">
+        <div className="profstudios studsec">
           <h2 className="prof-sec-h">Where it is</h2>
           <a
             className="profstudio"
@@ -204,7 +213,7 @@ export default async function StudioPage({ params, searchParams }: Props) {
         </div>
 
         {coaches.length > 0 && (
-          <div className="profstudios">
+          <div className="profstudios studsec">
             <h2 className="prof-sec-h">Coaches here</h2>
             {coaches.map((c) => (
               <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
@@ -233,8 +242,8 @@ export default async function StudioPage({ params, searchParams }: Props) {
         )}
 
         {hasContact && (
-          <>
-            <h2 className="prof-sec-h sched-h">Contact</h2>
+          <div className="studsec">
+            <h2 className="prof-sec-h">Contact</h2>
             <div className="contactlist">
               {s.contactEmail && (
                 <a className="proflink" href={`mailto:${s.contactEmail}`}>
@@ -262,12 +271,8 @@ export default async function StudioPage({ params, searchParams }: Props) {
                 </a>
               )}
             </div>
-          </>
+          </div>
         )}
-
-        {/* The correction doors. Suggest an edit is for anyone, because the
-            owner probably has no account; Report needs one, like classes. */}
-        <StudioFeedback studioId={s.id} signedIn={signedIn} />
 
         {!signedIn && (
           <div className="madewith">

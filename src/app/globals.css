@@ -3835,3 +3835,9 @@ button.ps-card { cursor: pointer; }
 .classoverlay-desc { margin-top: 0; }
 /* The booking hand-off: fittlist points the way, the studio takes the money. */
 .bookout-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+/* Studio page sections: a hairline seam between each, and room to breathe.
+   The first (About) opens the page, so it carries no rule. */
+.studsec { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.studsec-first { margin-top: 22px; padding-top: 0; border-top: none; }
+.studsec .prof-sec-h { margin-bottom: 10px; }

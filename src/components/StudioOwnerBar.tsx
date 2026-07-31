@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateStudio } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { STUDIO_TYPES } from "@/lib/studio";
 import { Toast, useToast } from "@/components/Toast";
 
-type Props = {
+export type StudioEditProps = {
   id: string;
   name: string;
   address: string;
@@ -20,12 +20,15 @@ type Props = {
   instagram: string;
 };
 
-// Any coach can correct a studio in the shared directory, so the button shows
-// for all of them rather than a single owner. It sits in the page's top row,
-// across from the back arrow; the sheet is the coach profile editor's shape.
-export function StudioOwnerBar(props: Props) {
+// Any coach can correct a studio in the shared directory. The sheet is the
+// coach profile editor's shape; the trigger lives in the studio menu now,
+// behind the word about care, so this only renders the editor itself.
+export function StudioOwnerBar({
+  open,
+  onClose,
+  ...props
+}: StudioEditProps & { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,7 +69,10 @@ export function StudioOwnerBar(props: Props) {
     reader.readAsDataURL(file);
   };
 
-  const openEdit = () => {
+  // Fresh fields every time the sheet opens: the page may have changed
+  // under us since the last look.
+  useEffect(() => {
+    if (!open) return;
     setPName(props.name);
     setPAddress(props.address);
     setPTypes(props.types);
@@ -76,8 +82,8 @@ export function StudioOwnerBar(props: Props) {
     setPPhone(props.phone);
     setPWebsite(props.website);
     setPInstagram(props.instagram);
-    setOpen(true);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const toggleType = (t: string) =>
     setPTypes((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
@@ -99,7 +105,7 @@ export function StudioOwnerBar(props: Props) {
         toast(res.error ?? "Couldn't save");
         return;
       }
-      setOpen(false);
+      onClose();
       // The slug moves with the name, so land on wherever it lives now.
       if (res.slug) router.replace(`/s/${res.slug}`);
       router.refresh();
@@ -108,15 +114,11 @@ export function StudioOwnerBar(props: Props) {
 
   return (
     <>
-      <button className="owneredit" onClick={openEdit}>
-        Edit studio
-      </button>
-
       {open && (
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
+            if (e.target === e.currentTarget) onClose();
           }}
         >
           <div className="sheet sheet-full">
@@ -125,7 +127,7 @@ export function StudioOwnerBar(props: Props) {
               <button
                 className="iconbtn sheetclose adderclose"
                 aria-label="Close"
-                onClick={() => setOpen(false)}
+                onClick={onClose}
               >
                 <Icon name="close" size={16} />
               </button>
