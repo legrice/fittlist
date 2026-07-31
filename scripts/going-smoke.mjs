@@ -142,6 +142,8 @@ await r.locator(".feedagenda .ps-event").first().click();
 await r.locator(".classsheet-add").waitFor();
 await r.locator(".classsheet-add").click();
 await r.locator(".classsheet-add.on").waitFor();
+// the share leans forward the moment you commit: it now carries the invite
+await r.locator(".classsheet-share.invite", { hasText: "Tell someone" }).waitFor();
 // reopening the sheet brings the room with it
 await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
 await r.waitForTimeout(400);
@@ -213,6 +215,7 @@ console.log("event going-notification ok (mutual told, without being marked)");
 await r.goto(evUrl);
 await r.locator(".evgoing").click();
 await r.locator(".evgoing.on").waitFor();
+await r.locator(".invitebtn", { hasText: "Tell someone" }).waitFor();
 await r.getByText(/Also going · 1/).waitFor();
 await r.locator(".evwho", { hasText: "Sarah" }).waitFor();
 await co.goto(evUrl);

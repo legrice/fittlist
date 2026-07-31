@@ -3354,6 +3354,19 @@ button.ps-card { cursor: pointer; }
 .evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
 .evposter a { color: inherit; font-weight: 600; }
 
+/* "Tell someone you're going": the share leaning forward at the moment of
+   commitment. Tinted, not solid: it's an offer, not the next required step. */
+.invitebtn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 10px; padding: 12px 16px; border-radius: 999px;
+  border: none; cursor: pointer;
+  background: var(--si-tint); color: var(--si-ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+}
+.invitebtn:active { transform: scale(.98); }
+/* The sheet's share button wearing the invitation. */
+.classsheet-share.invite { background: var(--si-tint); color: var(--si-ink); border-radius: 999px; }
+
 /* Going, on the event page: the class page's pill, plus the room. */
 .evgoing { margin-top: 20px; }
 .evwho { margin-top: 22px; }

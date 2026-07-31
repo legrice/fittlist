@@ -93,13 +93,19 @@ export function ClassSheet({
 
   const share = async () => {
     if (!c) return;
+    // The moment you commit is the moment you'd text a friend, so once
+    // you're going the share carries the sentence, not just the link. The
+    // group chat stays where it belongs; we just hand it something to say.
+    const invite = added ? `I'm going to ${c.name} on ${c.dateLong}. Come with me:` : null;
     try {
       if (canShareFiles) {
-        await navigator.share({ title: c.name, url: c.shareUrl });
+        await navigator.share(
+          invite ? { title: c.name, text: invite, url: c.shareUrl } : { title: c.name, url: c.shareUrl },
+        );
         return;
       }
-      await navigator.clipboard.writeText(c.shareUrl);
-      toast("Link copied, ready to paste");
+      await navigator.clipboard.writeText(invite ? `${invite} ${c.shareUrl}` : c.shareUrl);
+      toast(invite ? "Invite copied, ready to paste" : "Link copied, ready to paste");
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast(c.shareUrl);
     }
@@ -260,8 +266,9 @@ export function ClassSheet({
                   )}
                 </button>
               )}
-              <button className="classsheet-share" onClick={share}>
-                <Icon name="ios_share" size={18} /> Share this class
+              <button className={`classsheet-share${added ? " invite" : ""}`} onClick={share}>
+                <Icon name={added ? "campaign" : "ios_share"} size={18} />
+                {added ? "Tell someone you're going" : "Share this class"}
               </button>
               {/* Quiet on purpose: a moderation control shouldn't compete with
                   the add button, but it has to exist, because a class that

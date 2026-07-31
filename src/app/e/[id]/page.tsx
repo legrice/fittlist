@@ -130,7 +130,15 @@ export default async function EventPage({ params }: Props) {
           )}
         </div>
         {ev.description && <p className="profabout">{ev.description}</p>}
-        {viewerId && !isPoster && <EventGoingButton id={ev.id} initialGoing={going} />}
+        {viewerId && !isPoster && (
+          <EventGoingButton
+            id={ev.id}
+            initialGoing={going}
+            eventName={ev.name}
+            whenLabel={dayLabel(ev.startDate)}
+            shareUrl={`${siteOrigin()}/e/${ev.id}`}
+          />
+        )}
         {viewerId && (going || isPoster) && faces.length > 0 && (
           <div className="evwho">
             <h2 className="evwho-h">{isPoster ? "Going" : "Also going"} · {faces.length}</h2>

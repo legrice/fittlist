@@ -303,6 +303,9 @@ export default async function EventPage({ params, searchParams }: Props) {
           iso={whenIso}
           initialGoing={going}
           hasBooking={c.links.length > 0}
+          className={c.name}
+          dateLong={fmtDateLong(whenIso)}
+          shareUrl={`${classUrl}?d=${whenIso}`}
         />
       )}
     </div>

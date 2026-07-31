@@ -12,15 +12,37 @@ export function GoingButton({
   iso,
   initialGoing,
   hasBooking,
+  className,
+  dateLong,
+  shareUrl,
 }: {
   classId: string;
   iso: string;
   initialGoing: boolean;
   hasBooking: boolean;
+  /** For the invitation the share carries once you're going. */
+  className: string;
+  dateLong: string;
+  shareUrl: string;
 }) {
   const [on, setOn] = useState(initialGoing);
   const [err, setErr] = useState("");
   const [pending, startTransition] = useTransition();
+
+  // The moment you commit is the moment you'd text a friend.
+  const invite = async () => {
+    const text = `I'm going to ${className} on ${dateLong}. Come with me:`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: className, text, url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(`${text} ${shareUrl}`);
+      setErr("");
+    } catch {
+      // a dismissed share sheet is not an error
+    }
+  };
 
   const toggle = () => {
     const next = !on;
@@ -52,6 +74,11 @@ export function GoingButton({
           <Icon name={on ? "check" : "add"} size={18} />
           {on ? "Added to your week" : "Add to your week"}
         </button>
+        {on && (
+          <button className="invitebtn" onClick={invite}>
+            <Icon name="campaign" size={17} /> Tell someone you&rsquo;re going
+          </button>
+        )}
         {err && <p className="err">{err}</p>}
       </div>
     </div>
