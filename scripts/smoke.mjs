@@ -1625,7 +1625,9 @@ await page.goto(BASE + "/sam/schedule");
   const href = await page.locator(".ps-event").first().getAttribute("href");
   await page.goto(BASE + href);
 }
-await page.locator(".evname").waitFor();
+// The page wears the same overlay the lists open: same name block, same back
+// circle, named for where it returns to.
+await page.locator(".classoverlay-nm").waitFor();
 if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
   fail("a class page opened cold should back into the coach's page");
 // a class with no booking link says nothing rather than a line of filler
