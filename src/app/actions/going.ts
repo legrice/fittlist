@@ -121,3 +121,47 @@ export async function setGoing(
   revalidatePath("/app");
   return { ok: true };
 }
+
+// Clean a companions list: names people typed, not data. Trimmed, deduped,
+// capped so nobody can paste a novel into the coach's roster.
+function cleanCompanions(raw: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of raw) {
+    const name = r.trim().slice(0, 40);
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
+    if (out.length >= 10) break;
+  }
+  return out;
+}
+
+// "With Joanne and Dave" on your own mark. Yours to write and yours only:
+// the update is scoped to your attendance row, and there has to be one.
+export async function setGoingCompanions(
+  classId: string,
+  occurrenceDate: string,
+  namesRaw: string[],
+): Promise<{ ok: boolean; error?: string; companions?: string[] }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  const companions = cleanCompanions(Array.isArray(namesRaw) ? namesRaw : []);
+  const db = await getDb();
+  const updated = await db
+    .update(schema.attendances)
+    .set({ companions })
+    .where(
+      and(
+        eq(schema.attendances.userId, userId),
+        eq(schema.attendances.classId, classId),
+        eq(schema.attendances.occurrenceDate, occurrenceDate),
+      ),
+    )
+    .returning({ id: schema.attendances.id });
+  if (!updated.length) return { ok: false, error: "Mark yourself going first." };
+  revalidatePath("/feed");
+  revalidatePath("/app");
+  return { ok: true, companions };
+}

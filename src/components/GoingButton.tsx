@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingCompanions } from "@/app/actions/going";
+import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 
 // "I'm going" on the class itself, pinned to the bottom of the screen — the
@@ -15,6 +16,7 @@ export function GoingButton({
   className,
   dateLong,
   shareUrl,
+  initialCompanions = [],
 }: {
   classId: string;
   iso: string;
@@ -24,6 +26,7 @@ export function GoingButton({
   className: string;
   dateLong: string;
   shareUrl: string;
+  initialCompanions?: string[];
 }) {
   const [on, setOn] = useState(initialGoing);
   const [err, setErr] = useState("");
@@ -78,6 +81,15 @@ export function GoingButton({
           <button className="invitebtn" onClick={invite}>
             <Icon name="campaign" size={17} /> Tell someone you&rsquo;re going
           </button>
+        )}
+        {on && (
+          <CompanionsEditor
+            value={initialCompanions}
+            onSave={async (names) => {
+              const res = await setGoingCompanions(classId, iso, names);
+              return res.ok ? (res.companions ?? []) : null;
+            }}
+          />
         )}
         {err && <p className="err">{err}</p>}
       </div>

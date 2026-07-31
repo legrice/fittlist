@@ -114,9 +114,10 @@ export default async function EventPage({ params, searchParams }: Props) {
   const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
   const canGo = !isOwner && !!viewerId && c.isPublic && !past && (await fansVisible());
   let going = false;
+  let myCompanions: string[] = [];
   if (canGo) {
     const [row] = await db
-      .select({ id: schema.attendances.id })
+      .select({ id: schema.attendances.id, companions: schema.attendances.companions })
       .from(schema.attendances)
       .where(
         and(
@@ -126,6 +127,7 @@ export default async function EventPage({ params, searchParams }: Props) {
         ),
       );
     going = !!row;
+    myCompanions = row?.companions ?? [];
   }
 
   // The coach's roster for this occurrence: who marked Going, owner only.
@@ -306,6 +308,7 @@ export default async function EventPage({ params, searchParams }: Props) {
           className={c.name}
           dateLong={fmtDateLong(whenIso)}
           shareUrl={`${classUrl}?d=${whenIso}`}
+          initialCompanions={myCompanions}
         />
       )}
     </div>

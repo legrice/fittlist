@@ -58,12 +58,22 @@ export default async function EventPage({ params }: Props) {
   // event it is. Everyone else sees no list at all: the price of seeing the
   // room is being in it.
   const markRows = await db
-    .select({ userId: schema.eventAttendances.userId })
+    .select({
+      userId: schema.eventAttendances.userId,
+      companions: schema.eventAttendances.companions,
+    })
     .from(schema.eventAttendances)
     .where(eq(schema.eventAttendances.eventId, ev.id));
+  const companionsByUser = new Map(markRows.map((m) => [m.userId, m.companions]));
   const going = !!viewerId && markRows.some((m) => m.userId === viewerId);
   const isPoster = !!viewerId && viewerId === ev.createdByUserId;
-  let faces: { name: string; photo: string | null; color: string; handle: string | null }[] = [];
+  let faces: {
+    name: string;
+    photo: string | null;
+    color: string;
+    handle: string | null;
+    companions: string[];
+  }[] = [];
   if (viewerId && (going || isPoster)) {
     let ids = [...new Set(markRows.map((m) => m.userId))];
     if (!isPoster) {
@@ -79,6 +89,7 @@ export default async function EventPage({ params }: Props) {
         photo: p.photo,
         color: avatarColor(p),
         handle: p.handle,
+        companions: companionsByUser.get(p.id) ?? [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -137,6 +148,7 @@ export default async function EventPage({ params }: Props) {
             eventName={ev.name}
             whenLabel={dayLabel(ev.startDate)}
             shareUrl={`${siteOrigin()}/e/${ev.id}`}
+            initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
           />
         )}
         {viewerId && (going || isPoster) && faces.length > 0 && (

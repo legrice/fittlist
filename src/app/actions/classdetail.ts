@@ -41,11 +41,22 @@ export type ClassDetail = {
   past: boolean;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
-  roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
+  roster: RosterFace[] | null;
   /** The room introducing itself early: the other people going to this same
    *  occurrence, shown only to a viewer who is going too. The price of seeing
    *  the list is being on it, so nobody can lurk on a roster. */
-  alsoGoing: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
+  alsoGoing: RosterFace[] | null;
+  /** Who this viewer said they're bringing, for the editor on the sheet. */
+  myCompanions: string[];
+};
+
+export type RosterFace = {
+  name: string;
+  photo: string | null;
+  color: string;
+  handle: string | null;
+  /** Names they're bringing: people in the room, not accounts. */
+  companions: string[];
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -126,13 +137,16 @@ export async function classDetail(
   // null for everyone but the owner.
   let roster: ClassDetail["roster"] = null;
   let alsoGoing: ClassDetail["alsoGoing"] = null;
+  let myCompanions: string[] = [];
   if (isOwner || added) {
     const marks = await db
-      .select({ userId: schema.attendances.userId })
+      .select({ userId: schema.attendances.userId, companions: schema.attendances.companions })
       .from(schema.attendances)
       .where(
         and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
       );
+    const companionsByUser = new Map(marks.map((m) => [m.userId, m.companions]));
+    myCompanions = (viewerId && companionsByUser.get(viewerId)) || [];
     let ids = [...new Set(marks.map((m) => m.userId))];
     if (!isOwner) {
       // The fellow-goer's view: everyone but themselves, minus anyone either
@@ -150,6 +164,7 @@ export async function classDetail(
         photo: p.photo,
         color: avatarColor(p),
         handle: p.handle,
+        companions: companionsByUser.get(p.id) ?? [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
     if (isOwner) roster = faces;
@@ -182,5 +197,6 @@ export async function classDetail(
     past,
     roster,
     alsoGoing,
+    myCompanions,
   };
 }

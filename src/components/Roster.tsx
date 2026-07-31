@@ -9,7 +9,16 @@ export type RosterPerson = {
   photo: string | null;
   color: string;
   handle: string | null;
+  /** Names they're bringing: people in the room, not accounts. */
+  companions?: string[];
 };
+
+/** ["Joanne"] -> "Joanne"; ["Joanne","Dave"] -> "Joanne and Dave";
+ *  three or more -> "Joanne, Dave and Mia". */
+export function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 function Face({ p }: { p: RosterPerson }) {
   return p.photo ? (
@@ -32,7 +41,12 @@ export function Roster({ people }: { people: RosterPerson[] }) {
         p.handle ? (
           <Link key={i} className="rosterrow" href={`/${p.handle}`}>
             <Face p={p} />
-            <span className="rosterrow-nm">{p.name}</span>
+            <span className="rosterrow-txt">
+              <span className="rosterrow-nm">{p.name}</span>
+              {(p.companions?.length ?? 0) > 0 && (
+                <span className="rosterrow-with">with {joinNames(p.companions!)}</span>
+              )}
+            </span>
             <span className="rosterrow-chev">
               <Icon name="chevron_right" size={16} />
             </span>
@@ -40,7 +54,12 @@ export function Roster({ people }: { people: RosterPerson[] }) {
         ) : (
           <div key={i} className="rosterrow">
             <Face p={p} />
-            <span className="rosterrow-nm">{p.name}</span>
+            <span className="rosterrow-txt">
+              <span className="rosterrow-nm">{p.name}</span>
+              {(p.companions?.length ?? 0) > 0 && (
+                <span className="rosterrow-with">with {joinNames(p.companions!)}</span>
+              )}
+            </span>
           </div>
         ),
       )}

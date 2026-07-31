@@ -400,6 +400,13 @@
       "when": 1785467816454,
       "tag": "0056_early_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1785469569833,
+      "tag": "0057_tired_titanium_man",
+      "breakpoints": true
     }
   ]
 }

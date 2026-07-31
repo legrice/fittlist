@@ -152,6 +152,25 @@ await r.getByText(/Also going · 1/).waitFor();
 await r.locator(".classsheet-roster", { hasText: "Sarah" }).waitFor();
 await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
 console.log("fellow goer sees the room ok (Sarah on Ruth's sheet)");
+
+// Ruth brings two friends who aren't on the app. Names, not accounts, and
+// they show exactly where the roster shows: Sarah's sheet and the coach's
+// roster, nowhere public.
+await r.locator(".feedagenda .ps-event").first().click();
+await r.locator(".withbtn", { hasText: "Bringing anyone" }).click();
+await r.locator("#withNames").fill("Joanne, Dave");
+await r.locator(".withsave").click();
+await r.locator(".withbtn", { hasText: "With Joanne and Dave" }).waitFor();
+await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await m.goto(BASE + "/feed");
+await m.locator(".feedagenda .ps-event").first().click();
+await m.locator(".rosterrow", { hasText: "Ruth" }).getByText("with Joanne and Dave").waitFor();
+await m.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await co.goto(BASE + "/app");
+await co.locator(".ps-event[data-cid]").first().click();
+await co.getByRole("heading", { name: /Edit class/ }).waitFor();
+await co.locator(".sheetclose").click().catch(() => {});
+console.log("companions ok (named friends ride the roster, no accounts needed)");
 // Sarah hears about it, because they're mutuals and she's marked too
 await m.goto(BASE + "/updates");
 await m.getByText("Ruth is going too").waitFor();

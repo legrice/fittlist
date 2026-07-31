@@ -179,3 +179,35 @@ export async function setEventGoing(
   revalidatePath(`/e/${eventId}`);
   return { ok: true };
 }
+
+// "With Joanne and Dave" on an event mark. Same cleaning, same scoping.
+export async function setEventCompanions(
+  eventId: string,
+  namesRaw: string[],
+): Promise<{ ok: boolean; error?: string; companions?: string[] }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const seen = new Set<string>();
+  const companions: string[] = [];
+  for (const r of Array.isArray(namesRaw) ? namesRaw : []) {
+    const name = r.trim().slice(0, 40);
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    companions.push(name);
+    if (companions.length >= 10) break;
+  }
+  const db = await getDb();
+  const updated = await db
+    .update(schema.eventAttendances)
+    .set({ companions })
+    .where(
+      and(
+        eq(schema.eventAttendances.eventId, eventId),
+        eq(schema.eventAttendances.userId, userId),
+      ),
+    )
+    .returning({ id: schema.eventAttendances.id });
+  if (!updated.length) return { ok: false, error: "Mark yourself going first." };
+  revalidatePath(`/e/${eventId}`);
+  return { ok: true, companions };
+}

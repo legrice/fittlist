@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingCompanions } from "@/app/actions/going";
 import { reportClass } from "@/app/actions/reports";
+import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
@@ -270,6 +271,20 @@ export function ClassSheet({
                 <Icon name={added ? "campaign" : "ios_share"} size={18} />
                 {added ? "Tell someone you're going" : "Share this class"}
               </button>
+              {/* Names, not accounts: Joanne doesn't need the app to count. */}
+              {added && (
+                <CompanionsEditor
+                  value={c.myCompanions}
+                  onSave={async (names) => {
+                    const res = await setGoingCompanions(c.id, c.whenIso, names);
+                    if (!res.ok) {
+                      toast(res.error ?? "Something went wrong");
+                      return null;
+                    }
+                    return res.companions ?? [];
+                  }}
+                />
+              )}
               {/* Quiet on purpose: a moderation control shouldn't compete with
                   the add button, but it has to exist, because a class that
                   isn't real is somebody else's wasted trip. */}

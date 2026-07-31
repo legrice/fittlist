@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setEventGoing } from "@/app/actions/events";
+import { setEventCompanions, setEventGoing } from "@/app/actions/events";
+import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 
 // "I'm going", for an event. Same meaning as the class mark: a personal note
@@ -15,6 +16,7 @@ export function EventGoingButton({
   eventName,
   whenLabel,
   shareUrl,
+  initialCompanions = [],
 }: {
   id: string;
   initialGoing: boolean;
@@ -22,6 +24,7 @@ export function EventGoingButton({
   eventName: string;
   whenLabel: string;
   shareUrl: string;
+  initialCompanions?: string[];
 }) {
   const router = useRouter();
   const [going, setGoing] = useState(initialGoing);
@@ -62,6 +65,16 @@ export function EventGoingButton({
         <button className="invitebtn" onClick={invite}>
           <Icon name="campaign" size={17} /> Tell someone you&rsquo;re going
         </button>
+      )}
+      {going && (
+        <CompanionsEditor
+          value={initialCompanions}
+          onSave={async (names) => {
+            const res = await setEventCompanions(id, names);
+            if (res.ok) router.refresh();
+            return res.ok ? (res.companions ?? []) : null;
+          }}
+        />
       )}
     </>
   );

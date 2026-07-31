@@ -275,6 +275,8 @@ export const eventAttendances = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     eventId: uuid("event_id").notNull().references(() => events.id),
     userId: uuid("user_id").notNull().references(() => users.id),
+    // Same as a class mark's companions: names in the room, not accounts.
+    companions: jsonb("companions").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("event_attendances_event_user").on(t.eventId, t.userId)],
@@ -532,6 +534,11 @@ export const attendances = pgTable(
     // The specific day they're going. Classes are recurring templates, so
     // without a date "going" would mean every future Tuesday forever.
     occurrenceDate: date("occurrence_date").notNull(),
+    // "With Joanne and Dave": names, not accounts. Naming who you're bringing
+    // is telling the front desk, so these show exactly where the roster shows
+    // (the coach and fellow goers) and nowhere public. Not users references,
+    // on purpose: the friend without the app is still a person in the room.
+    companions: jsonb("companions").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],
