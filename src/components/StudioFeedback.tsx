@@ -5,11 +5,11 @@ import { reportStudio, suggestStudioEdit } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The two quiet doors at the bottom of a studio page. Suggest an edit is for
-// anyone, signed in or not: the person most worth hearing from is the owner,
-// who probably has no account, and the relation field is what turns a
-// correction into a lead. Report is the moderation door, signed-in only, same
-// shape as reporting a class.
+// The correction sheets, opened from the studio menu. Suggest an edit is
+// for anyone, signed in or not: the person most worth hearing from is the
+// owner, who probably has no account, and the relation field is what turns
+// a correction into a lead. Report is the moderation door, same shape as
+// reporting a class.
 
 const REASONS = [
   "It closed",
@@ -21,16 +21,23 @@ const REASONS = [
 
 const RELATIONS = ["I own it", "I manage it", "I coach here", "I train here", "Other"];
 
-export function StudioFeedback({ studioId, signedIn }: { studioId: string; signedIn: boolean }) {
-  const [mode, setMode] = useState<null | "report" | "suggest">(null);
+export function StudioFeedback({
+  studioId,
+  mode,
+  onClose,
+  onDone,
+}: {
+  studioId: string;
+  mode: null | "report" | "suggest";
+  onClose: () => void;
+  onDone: (msg: string) => void;
+}) {
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
   const [sgName, setSgName] = useState("");
   const [sgEmail, setSgEmail] = useState("");
   const [sgRelation, setSgRelation] = useState("");
   const [sgMessage, setSgMessage] = useState("");
-  const [reportDone, setReportDone] = useState(false);
-  const [suggestDone, setSuggestDone] = useState(false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -41,8 +48,8 @@ export function StudioFeedback({ studioId, signedIn }: { studioId: string; signe
         toast(res.error ?? "Couldn't send that.");
         return;
       }
-      setMode(null);
-      setReportDone(true);
+      onClose();
+      onDone("Thanks. We'll take a look.");
     });
 
   const sendSuggestion = () =>
@@ -52,39 +59,21 @@ export function StudioFeedback({ studioId, signedIn }: { studioId: string; signe
         toast(res.error ?? "Couldn't send that.");
         return;
       }
-      setMode(null);
-      setSuggestDone(true);
+      onClose();
+      onDone("Thanks. We'll take a look.");
     });
 
   return (
     <>
-      <div className="studiofeedback">
-        {suggestDone ? (
-          <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>
-        ) : (
-          <button className="classsheet-report" onClick={() => setMode("suggest")}>
-            Suggest an edit
-          </button>
-        )}
-        {signedIn &&
-          (reportDone ? (
-            <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>
-          ) : (
-            <button className="classsheet-report" onClick={() => setMode("report")}>
-              Report this studio
-            </button>
-          ))}
-      </div>
-
       {mode === "report" && (
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setMode(null);
+            if (e.target === e.currentTarget) onClose();
           }}
         >
           <div className="sheet confirmsheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMode(null)}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
               <Icon name="close" size={16} />
             </button>
             <h2>Report this studio</h2>
@@ -127,11 +116,11 @@ export function StudioFeedback({ studioId, signedIn }: { studioId: string; signe
         <div
           className="sheet-scrim"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setMode(null);
+            if (e.target === e.currentTarget) onClose();
           }}
         >
           <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMode(null)}>
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
               <Icon name="close" size={16} />
             </button>
             <h2>Suggest an edit</h2>

@@ -3551,3 +3551,9 @@ button.ps-card { cursor: pointer; }
 .ps-agenda .ps-event.goingon {
   box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
 }
+
+/* Studio page sections: a hairline seam between each, and room to breathe.
+   The first (About) opens the page, so it carries no rule. */
+.studsec { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.studsec-first { margin-top: 22px; padding-top: 0; border-top: none; }
+.studsec .prof-sec-h { margin-bottom: 10px; }

@@ -1183,9 +1183,16 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // every member's screen and left the action open behind it.
 await fan.goto(BASE + "/s/ironbound-strength");
 await fan.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
-if (await fan.getByRole("button", { name: "Edit studio" }).count())
-  fail("a member should not see the studio edit button");
-console.log("studio edits are coach-only ok (no door for a member)");
+// The three dots hold everything you can do with a studio; the edit row is
+// the one thing a member's menu must not carry.
+await fan.locator(".ownermore").click();
+await fan.locator(".ownermenu").waitFor();
+if (await fan.locator(".ownermenu .setrow", { hasText: "Edit studio" }).count())
+  fail("a member should not see the studio edit row");
+await fan.locator(".ownermenu .setrow", { hasText: "Report this studio" }).waitFor();
+await fan.locator(".sheetclose").click();
+await fan.locator(".ownermenu").waitFor({ state: "detached" });
+console.log("studio edits are coach-only ok (no edit row in a member's menu)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
@@ -1573,12 +1580,20 @@ await setDark(page, false);
 console.log("viewer look wins on another coach's page ok");
 
 // ---- studios have their own page, and any coach can correct one
+// The editor sits behind the three dots and a word about care: menu, then
+// "Before you edit", then the form.
+const openStudioEditor = async (p) => {
+  await p.locator(".ownermore").click();
+  await p.locator(".ownermenu .setrow", { hasText: "Edit studio" }).click();
+  await p.getByRole("heading", { name: "Before you edit" }).waitFor();
+  await p.getByRole("button", { name: "Continue to edit" }).click();
+  await p.getByRole("heading", { name: "Edit studio" }).waitFor();
+};
 await page.goto(BASE + "/matt/studios");
 await page.locator(".coachstudio", { hasText: "Ironbound Strength" }).click();
 await page.waitForURL("**/s/ironbound-strength");
 await page.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
-await page.getByRole("button", { name: "Edit studio" }).click();
-await page.getByRole("heading", { name: "Edit studio" }).waitFor();
+await openStudioEditor(page);
 await page.locator(".typepick .chip", { hasText: "Strength" }).first().click();
 await page.locator(".typepick .chip", { hasText: "HYROX" }).click();
 await page.locator("#stAbout").fill("Platforms, a turf strip and a sled track.");
@@ -1601,12 +1616,12 @@ await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio ema
 // renaming moves the slug, and the old address still resolves by id
 {
   const before = page.url();
-  await page.getByRole("button", { name: "Edit studio" }).click();
+  await openStudioEditor(page);
   await page.locator("#stName").fill("Ironbound Strength & Conditioning");
   await page.getByRole("button", { name: "Save studio" }).click();
   await page.waitForURL("**/s/ironbound-strength-conditioning");
   if (page.url() === before) fail("renaming a studio should move its slug");
-  await page.getByRole("button", { name: "Edit studio" }).click();
+  await openStudioEditor(page);
   await page.locator("#stName").fill("Ironbound Strength");
   await page.getByRole("button", { name: "Save studio" }).click();
   await page.waitForURL("**/s/ironbound-strength");
