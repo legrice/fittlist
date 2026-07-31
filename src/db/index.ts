@@ -1,4 +1,5 @@
 import * as schema from "./schema";
+import journal from "../../drizzle/meta/_journal.json";
 
 // One DB module for both environments:
 //  - DATABASE_URL set  -> node-postgres pool (production)
@@ -26,27 +27,36 @@ async function init(): Promise<Db> {
       connectionTimeoutMillis: 10_000,
     });
     const db = drizzle(pool, { schema });
-    // Serverless runs this on every cold start, and two instances racing the
-    // migrator is how the whole site once went down: the loser threw "already
-    // exists" and served that error for the rest of its life. The advisory
-    // lock makes the migration single-file across instances; it has to live
-    // on one dedicated connection, because the lock is session-scoped.
-    const lock = await pool.connect();
+    // The migrator stays off the hot path. Almost every cold start finds the
+    // database already at the newest migration, and for those one cheap
+    // SELECT is the whole ceremony: no advisory lock to contend on, nothing
+    // that can wedge the site. Only a database that is actually behind takes
+    // the lock, and even then every wait is bounded, because a frozen
+    // serverless instance holding an unbounded lock took the site down once.
+    const latest = journal.entries[journal.entries.length - 1].when;
+    let behind = true;
     try {
-      // Bounded wait: if another instance holds the lock (or froze holding
-      // it, which serverless can do), give up rather than hang the site.
-      // The rejection clears the memo and the next request retries against
-      // a database that is, by then, migrated.
-      await lock.query("set lock_timeout = '15s'");
-      await lock.query("select pg_advisory_lock(872619)");
-      await migrate(db, { migrationsFolder: "./drizzle" });
-    } finally {
+      const r = await pool.query(
+        'select created_at from "drizzle"."__drizzle_migrations" order by created_at desc limit 1',
+      );
+      behind = r.rows.length === 0 || Number(r.rows[0].created_at) < latest;
+    } catch {
+      // No migrations table yet: a fresh database, which is as behind as it gets.
+    }
+    if (behind) {
+      const lock = await pool.connect();
       try {
-        await lock.query("select pg_advisory_unlock(872619)");
-      } catch {
-        // The session dying releases the lock anyway.
+        await lock.query("set lock_timeout = '15s'");
+        await lock.query("select pg_advisory_lock(872619)");
+        await migrate(db, { migrationsFolder: "./drizzle" });
       } finally {
-        lock.release();
+        try {
+          await lock.query("select pg_advisory_unlock(872619)");
+        } catch {
+          // The session dying releases the lock anyway.
+        } finally {
+          lock.release();
+        }
       }
     }
     return db as unknown as Db;
