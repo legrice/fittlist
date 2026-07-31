@@ -1528,20 +1528,20 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Classes" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Classes" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
 await page.locator(".navtab.on", { hasText: "You" }).waitFor();
-await page.locator(".navtab", { hasText: "Classes" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Classes" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
 await page.locator(".classoverlay-nm").waitFor();
 await page.locator(".ovcircle-back").click();
@@ -1842,7 +1842,7 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-await page.locator(".navtab", { hasText: "Classes" }).click();
+await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".profname").waitFor();
