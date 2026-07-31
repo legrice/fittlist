@@ -2854,8 +2854,15 @@ button.ps-card { cursor: pointer; }
 }
 .feedstrip::-webkit-scrollbar { display: none; }
 /* The rail bleeds to the screen edge, so the arrows that page it have to
-   anchor to a box that doesn't scroll with it. */
-.feedrail { position: relative; }
+   anchor to a box that doesn't scroll with it. The hairline underneath is
+   the seam between who you follow and what they're teaching. It bleeds
+   edge to edge with the rail rather than stopping at the gutter. */
+.feedrail {
+  position: relative;
+  margin: 0 -18px 12px; padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.feedrail .feedstrip { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
 .railarrow {
   position: absolute; top: 42px; transform: translateY(-50%);
   display: none; align-items: center; justify-content: center;
