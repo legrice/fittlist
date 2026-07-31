@@ -3,7 +3,16 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
-import { DAYS, fmtDateLong, fmtDayHeader, fmtTime, mondayOfCurrentWeek, runsOn, timeToMinutes } from "@/lib/format";
+import {
+  DAYS,
+  fmtDateLong,
+  fmtDayHeader,
+  fmtTime,
+  mondayOfCurrentWeek,
+  runsOn,
+  timeToMinutes,
+  todayIso,
+} from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
@@ -239,6 +248,57 @@ export async function addGymClass(
   return { ok: true };
 }
 
+/**
+ * Freeze what was true before the standing rota changed.
+ *
+ * `classes.coachUserId` says who teaches a slot now. Read on its own it also
+ * claims to say who taught it every week since it existed, which is a lie the
+ * moment the assignment changes, and a wrong paycheck if anyone counts from
+ * it. So when the standing coach moves, every date that has already run gets
+ * an explicit cover recording who was actually on it. Dates with a cover
+ * already are left alone: they were exceptions and they still are.
+ *
+ * The old coach may be null, and that is worth writing too: without it,
+ * putting somebody on a slot today would credit them with every week the slot
+ * ran open.
+ */
+async function freezePast(
+  db: Awaited<ReturnType<typeof getDb>>,
+  cls: typeof schema.classes.$inferSelect,
+  wasCoachUserId: string | null,
+  byUserId: string,
+) {
+  const today = todayIso();
+  // Since the class existed, and no further back than a year: nobody
+  // recalculates payroll from before that, and it keeps one dropdown change
+  // from writing hundreds of rows.
+  const yearAgo = new Date(`${today}T00:00:00Z`);
+  yearAgo.setUTCDate(yearAgo.getUTCDate() - 366);
+  const createdIso = cls.createdAt
+    ? new Date(cls.createdAt).toISOString().slice(0, 10)
+    : today;
+  let cursor = createdIso > yearAgo.toISOString().slice(0, 10)
+    ? createdIso
+    : yearAgo.toISOString().slice(0, 10);
+
+  const had = await db
+    .select({ occurrenceDate: schema.shiftCovers.occurrenceDate })
+    .from(schema.shiftCovers)
+    .where(eq(schema.shiftCovers.classId, cls.id));
+  const already = new Set(had.map((h) => h.occurrenceDate));
+
+  const rows: { classId: string; occurrenceDate: string; coachUserId: string | null; createdByUserId: string }[] = [];
+  const d = new Date(`${cursor}T00:00:00Z`);
+  while (cursor < today) {
+    const dow = (d.getUTCDay() + 6) % 7;
+    if (runsOn(cls, cursor, dow) && !already.has(cursor))
+      rows.push({ classId: cls.id, occurrenceDate: cursor, coachUserId: wasCoachUserId, createdByUserId: byUserId });
+    d.setUTCDate(d.getUTCDate() + 1);
+    cursor = d.toISOString().slice(0, 10);
+  }
+  if (rows.length) await db.insert(schema.shiftCovers).values(rows).onConflictDoNothing();
+}
+
 export async function updateGymClass(
   studioId: string,
   classId: string,
@@ -259,6 +319,10 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
+  // Before the standing rota moves, write down what it used to be, so the
+  // weeks that have already happened keep saying who taught them.
+  if (existing.coachUserId !== coachUserId)
+    await freezePast(db, existing, existing.coachUserId, ctx.userId);
   // Updated in place, never deleted and reinserted, so any Going mark on this
   // class survives the manager moving it half an hour.
   await db
@@ -394,4 +458,131 @@ export async function setShiftCover(
     });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
+}
+
+export type GymCountRow = {
+  coachUserId: string;
+  name: string;
+  first: number;
+  second: number;
+  total: number;
+};
+export type GymCounts = {
+  /** The month being counted, as "2026-08", and how it reads. */
+  month: string;
+  label: string;
+  /** The two halves, so it lines up with a semi-monthly pay run. */
+  firstLabel: string;
+  secondLabel: string;
+  rows: GymCountRow[];
+  /** Dates in the month with a class nobody was on. Not somebody's pay, but
+   *  the manager's problem, and counting is when it surfaces. */
+  openSlots: number;
+};
+
+/**
+ * How many classes each coach was on, in a month, split into halves.
+ *
+ * Counted from the schedule rather than tallied by hand: every date the class
+ * runs (runsOn, the same predicate every other surface uses) with any cover
+ * for that date laid over the top. A number derived from the rota can't drift
+ * from it the way a COUNTIF over a grid does.
+ *
+ * This is a count and an export, not payroll. It models no rates, no periods
+ * and no overtime, and produces nothing that is itself a pay record: the
+ * number goes to whoever actually pays people. Every coach can see their own,
+ * which is what makes fifteen people the check on it.
+ */
+export async function gymCounts(studioId: string, monthIso?: string): Promise<GymCounts | null> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return null;
+  const { db, gymId } = ctx;
+
+  const month = /^\d{4}-\d{2}$/.test(monthIso ?? "") ? monthIso! : todayIso().slice(0, 7);
+  const [y, mo] = month.split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const iso = (d: number) => `${month}-${String(d).padStart(2, "0")}`;
+
+  const rows = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
+  const covers = rows.length
+    ? await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, rows.map((r) => r.id)))
+    : [];
+  const coverBy = new Map(covers.map((c) => [`${c.classId}|${c.occurrenceDate}`, c]));
+
+  // runsOn describes a standing weekly slot, which has no notion of when the
+  // gym started running it: left alone it happily reports that a class added
+  // today also ran every Thursday last year. A slot only counts from the day
+  // it existed.
+  const startedOn = new Map(
+    rows.map((r) => [
+      r.id,
+      r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : "0000-00-00",
+    ]),
+  );
+
+  const tally = new Map<string, { first: number; second: number }>();
+  let openSlots = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = iso(d);
+    const dow = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+    for (const r of rows) {
+      if (date < (startedOn.get(r.id) ?? "")) continue;
+      if (!runsOn(r, date, dow)) continue;
+      const cover = coverBy.get(`${r.id}|${date}`);
+      const who = cover ? cover.coachUserId : r.coachUserId;
+      if (!who) {
+        openSlots++;
+        continue;
+      }
+      const cur = tally.get(who) ?? { first: 0, second: 0 };
+      if (d <= 15) cur.first++;
+      else cur.second++;
+      tally.set(who, cur);
+    }
+  }
+
+  const ids = [...tally.keys()];
+  const people = ids.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+    : [];
+  const nameOf = new Map(
+    people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const),
+  );
+  // 31st, not 31th.
+  const ordinal = (n: number) => {
+    const rem100 = n % 100;
+    if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+    return `${n}${["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
+  };
+  const monthName = new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+  return {
+    month,
+    label: monthName,
+    firstLabel: "1st to 15th",
+    secondLabel: `16th to ${ordinal(daysInMonth)}`,
+    openSlots,
+    rows: ids
+      .map((id) => {
+        const t = tally.get(id)!;
+        return {
+          coachUserId: id,
+          name: nameOf.get(id) ?? "",
+          first: t.first,
+          second: t.second,
+          total: t.first + t.second,
+        };
+      })
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)),
+  };
 }

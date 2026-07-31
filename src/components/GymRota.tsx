@@ -183,6 +183,12 @@ export function GymRota({
         </BackLink>
       </div>
 
+      {/* Counted from this schedule rather than tallied by hand, which is the
+          whole reason the rota is worth keeping here. */}
+      <Link className="btn ghost rotacounts" href={`${manageBase}/counts`}>
+        <Icon name="calendar_month" size={17} /> Shifts worked
+      </Link>
+
       {/* A real week, dates and all, because that's what the spreadsheet is
           and what a swap is about. */}
       <div className="rotaweek">
@@ -301,7 +307,9 @@ export function GymRota({
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             />
 
-            <label className="flabel">Day</label>
+            <label className="flabel">
+              Day <span>· it runs this day every week</span>
+            </label>
             <div className="daypick">
               {SHORT.map((s, i) => (
                 <button
@@ -376,6 +384,11 @@ export function GymRota({
               <button className="tertiary tellsheet-done" disabled={pending} onClick={remove}>
                 Take it off the week
               </button>
+            )}
+            {!draft.id && (
+              <p className="rotahint" style={{ textAlign: "center" }}>
+                It repeats weekly from now on. Swap or open a single date from the week itself.
+              </p>
             )}
           </div>
         </div>
