@@ -894,9 +894,10 @@ button.bl-band { cursor: pointer; }
    public page keeps its cards. */
 .ps-agenda.ps-week { gap: 30px; }
 .ps-agenda .ps-daygroup { gap: 0; }
+/* No divider under the day: the cards carry their own edges now, and a rule
+   above a shadowed card read as clutter. The weight steps up instead. */
 .ps-agenda .ps-daycol {
-  font-weight: 400; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
-  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  font-weight: 500; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
 }
 .ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
 /* The event listing's poster manners, carried to classes: a white card per
