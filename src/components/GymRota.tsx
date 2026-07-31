@@ -2,19 +2,30 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   addGymClass,
   deleteGymClass,
+  setShiftCover,
   updateGymClass,
   type GymClassDto,
   type GymCoachDto,
+  type GymWeekDto,
 } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** "Thu, Aug 6" — the date a swap is about, said the way a person would. */
+const fmtDay = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
 const fmtTime = (v: string) => {
   const [h, m] = v.split(":").map(Number);
@@ -28,16 +39,24 @@ type Draft = {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
+  /** Who normally teaches it. */
   coachUserId: string;
+  /** The date being looked at, and who is on it that day. */
+  iso: string;
+  onUserId: string;
+  covered: boolean;
 };
 
-const blank = (dayOfWeek: number): Draft => ({
+const blank = (dayOfWeek: number, iso: string): Draft => ({
   id: null,
   name: "",
   dayOfWeek,
   startTime: "06:00",
   durationMin: 60,
   coachUserId: "",
+  iso,
+  onUserId: "",
+  covered: false,
 });
 
 // The rota: the thing the spreadsheet was for. A week of slots, each one a
@@ -51,15 +70,18 @@ export function GymRota({
   studioId,
   studioName,
   backHref,
+  manageBase,
   hasAccount,
-  classes,
+  week,
   coaches,
 }: {
   studioId: string;
   studioName: string;
   backHref: string;
+  /** /s/{slug}/manage, for the week links. */
+  manageBase: string;
   hasAccount: boolean;
-  classes: GymClassDto[];
+  week: GymWeekDto | null;
   coaches: GymCoachDto[];
 }) {
   const router = useRouter();
@@ -67,9 +89,9 @@ export function GymRota({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const byDay = DAYS.map((_, d) => classes.filter((c) => c.dayOfWeek === d));
-  const assigned = classes.filter((c) => c.coachUserId).length;
-  const open = classes.length - assigned;
+  const days = week?.days ?? [];
+  const all = days.flatMap((d) => d.items);
+  const open = all.filter((c) => !c.onUserId).length;
 
   const save = () => {
     if (!draft || pending) return;
@@ -90,6 +112,22 @@ export function GymRota({
       }
       setDraft(null);
       toast(draft.id ? "Saved" : "Added to the week");
+      router.refresh();
+    });
+  };
+
+  // Who's on this one date. A swap is about a date, so it never touches the
+  // standing rota; setting it back to the regular coach clears the exception.
+  const cover = (who: string) => {
+    if (!draft?.id || pending) return;
+    start(async () => {
+      const res = await setShiftCover(studioId, draft.id!, draft.iso, who || null);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't change that");
+        return;
+      }
+      setDraft({ ...draft, onUserId: who, covered: who !== draft.coachUserId });
+      toast(who ? "Swapped" : "Opened up");
       router.refresh();
     });
   };
@@ -134,9 +172,9 @@ export function GymRota({
         <div>
           <h1>{studioName}</h1>
           <p className="adminsub">
-            {classes.length === 0
+            {all.length === 0
               ? "The week is empty"
-              : `${classes.length} ${classes.length === 1 ? "class" : "classes"} a week` +
+              : `${all.length} ${all.length === 1 ? "class" : "classes"}` +
                 (open ? ` · ${open} with nobody on` : "")}
           </p>
         </div>
@@ -145,22 +183,38 @@ export function GymRota({
         </BackLink>
       </div>
 
+      {/* A real week, dates and all, because that's what the spreadsheet is
+          and what a swap is about. */}
+      <div className="rotaweek">
+        <Link
+          className={`rotanav${week && week.offset > 0 ? "" : " off"}`}
+          href={`${manageBase}?w=${Math.max(0, (week?.offset ?? 0) - 1)}`}
+          aria-disabled={!week || week.offset === 0}
+        >
+          <Icon name="chevron_left" size={18} />
+        </Link>
+        <span className="rotaweek-lbl">{week?.label ?? ""}</span>
+        <Link className="rotanav" href={`${manageBase}?w=${(week?.offset ?? 0) + 1}`}>
+          <Icon name="chevron_right" size={18} />
+        </Link>
+      </div>
+
       <div className="rota">
-        {DAYS.map((day, d) => (
-          <div key={day} className="rotaday">
+        {days.map((day, d) => (
+          <div key={day.iso} className="rotaday">
             <div className="rotaday-h">
-              <span>{day}</span>
-              <button className="rotaadd" onClick={() => setDraft(blank(d))}>
+              <span>{day.label}</span>
+              <button className="rotaadd" onClick={() => setDraft(blank(d, day.iso))}>
                 <Icon name="add" size={16} /> Add
               </button>
             </div>
-            {byDay[d].length === 0 ? (
+            {day.items.length === 0 ? (
               <p className="rotaempty">Nothing on</p>
             ) : (
-              byDay[d].map((c) => (
+              day.items.map((c) => (
                 <button
                   key={c.id}
-                  className={`rotarow${c.coachUserId ? "" : " rotaopen"}`}
+                  className={`rotarow${c.onUserId ? "" : " rotaopen"}`}
                   onClick={() =>
                     setDraft({
                       id: c.id,
@@ -169,6 +223,9 @@ export function GymRota({
                       startTime: c.startTime,
                       durationMin: c.durationMin,
                       coachUserId: c.coachUserId ?? "",
+                      iso: day.iso,
+                      onUserId: c.onUserId ?? "",
+                      covered: c.covered,
                     })
                   }
                 >
@@ -176,7 +233,8 @@ export function GymRota({
                   <span className="rotarow-main">
                     <span className="rotarow-nm">{c.name}</span>
                     <span className="rotarow-who">
-                      {c.coachName || "Nobody on it yet"}
+                      {c.onName || "Nobody on it yet"}
+                      {c.covered && <span className="rotaswap">covering</span>}
                     </span>
                   </span>
                   <span className="rotarow-dur">{c.durationMin} min</span>
@@ -198,20 +256,52 @@ export function GymRota({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setDraft(null)}>
               <Icon name="close" size={16} />
             </button>
-            <h2 style={{ marginTop: 10 }}>{draft.id ? "This class" : "Add a class"}</h2>
+            <h2 style={{ marginTop: 10 }}>{draft.id ? draft.name : "Add a class"}</h2>
 
-            <label className="fieldlabel" htmlFor="rotaName">
+            {/* This one date first: it is what a manager opens the rota to
+                change. The standing class is underneath, because changing it
+                changes every week. */}
+            {draft.id && (
+              <>
+                <label className="flabel" htmlFor="rotaOn">
+                  Who&rsquo;s on {fmtDay(draft.iso)}
+                </label>
+                <select
+                  id="rotaOn"
+                  className="editinput"
+                  value={draft.onUserId}
+                  disabled={pending}
+                  onChange={(e) => cover(e.target.value)}
+                >
+                  <option value="">Nobody yet</option>
+                  {coaches.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {c.id === draft.coachUserId ? " (usually)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="rotahint">
+                  {draft.covered
+                    ? "Just this one. The standing rota is unchanged, and both of them have been told."
+                    : "Changing this only changes this date. Whoever it moves to and from hears about it."}
+                </p>
+                <h3 className="rotasec-h">Every week</h3>
+              </>
+            )}
+
+            <label className="flabel" htmlFor="rotaName">
               What is it
             </label>
             <input
               id="rotaName"
-              className="input"
+              className="editinput"
               placeholder="e.g. Guns, Buns, and Lungs"
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             />
 
-            <label className="fieldlabel">Day</label>
+            <label className="flabel">Day</label>
             <div className="daypick">
               {SHORT.map((s, i) => (
                 <button
@@ -226,24 +316,24 @@ export function GymRota({
 
             <div className="rotatimes">
               <div>
-                <label className="fieldlabel" htmlFor="rotaTime">
+                <label className="flabel" htmlFor="rotaTime">
                   Starts
                 </label>
                 <input
                   id="rotaTime"
-                  className="input"
+                  className="editinput"
                   type="time"
                   value={draft.startTime}
                   onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
                 />
               </div>
               <div>
-                <label className="fieldlabel" htmlFor="rotaDur">
+                <label className="flabel" htmlFor="rotaDur">
                   Minutes
                 </label>
                 <input
                   id="rotaDur"
-                  className="input"
+                  className="editinput"
                   type="number"
                   min={5}
                   max={600}
@@ -256,12 +346,12 @@ export function GymRota({
               </div>
             </div>
 
-            <label className="fieldlabel" htmlFor="rotaCoach">
-              Who&rsquo;s coaching
+            <label className="flabel" htmlFor="rotaCoach">
+              {draft.id ? "Who normally coaches it" : "Who\u2019s coaching"}
             </label>
             <select
               id="rotaCoach"
-              className="input"
+              className="editinput"
               value={draft.coachUserId}
               onChange={(e) => setDraft({ ...draft, coachUserId: e.target.value })}
             >
@@ -272,7 +362,7 @@ export function GymRota({
                 </option>
               ))}
             </select>
-            <p className="fieldhint">
+            <p className="rotahint">
               They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out under
               the gym&rsquo;s name, so this stays between you and them.
             </p>

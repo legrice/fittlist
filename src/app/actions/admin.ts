@@ -427,6 +427,14 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     .update(schema.classes)
     .set({ coachUserId: null })
     .where(eq(schema.classes.coachUserId, id));
+  await db
+    .update(schema.shiftCovers)
+    .set({ coachUserId: null })
+    .where(eq(schema.shiftCovers.coachUserId, id));
+  await db
+    .update(schema.shiftCovers)
+    .set({ createdByUserId: null })
+    .where(eq(schema.shiftCovers.createdByUserId, id));
   // Their keys go with them; a page they ran alone returns to the commons
   // rather than being left locked with nobody holding it.
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));

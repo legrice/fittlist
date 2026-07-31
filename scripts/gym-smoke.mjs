@@ -100,7 +100,7 @@ console.log("open slot ok (added, nobody on it)");
 
 // now put Tom on it
 await openRow.click();
-await matt.getByRole("heading", { name: "This class" }).waitFor();
+await matt.locator("#rotaCoach").waitFor();
 await matt.locator("#rotaCoach").selectOption({ label: "Tom" });
 await matt.getByRole("button", { name: "Save" }).click();
 await matt.getByText("Saved").waitFor();
@@ -119,6 +119,88 @@ if (!/THU|Thu/i.test(body) || !body.includes("7:00a")) fail("the notice should s
 if (!(await tom.locator(".notifrow .icon svg").first().count()))
   fail("the shift notice rendered a blank circle");
 console.log("the coach is told ok");
+
+// ---- a swap: one date changes hands, the standing rota doesn't
+//
+// This is the thing the spreadsheet does with a dropdown, and the thing that
+// has to reach two calendars or somebody doesn't turn up.
+{
+  await matt.goto(BASE + studioHref + "/manage");
+  const row = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  await row.waitFor();
+  await row.click();
+  await matt.locator("#rotaOn").waitFor();
+  // Tom is on it normally; Julia takes this one date.
+  const label = await matt.locator("#rotaOn option:checked").innerText();
+  if (!/Tom/.test(label)) fail("this date should start on the regular coach, got " + label);
+  await matt.locator("#rotaOn").selectOption({ label: "Julia" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(700);
+  await matt.locator(".sheetclose").click();
+  const swapped = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const txt = await swapped.innerText();
+  if (!txt.includes("Julia")) fail("the row should show who's actually on: " + txt);
+  if (!/covering/i.test(txt)) fail("a swapped date should be marked as an exception");
+  console.log("swap ok (Julia has this one, Tom keeps the rest)");
+
+  // Next week is untouched: a swap is one date, not a change to the class.
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  const next = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  await next.waitFor();
+  const nextTxt = await next.innerText();
+  if (!nextTxt.includes("Tom")) fail("next week should still be the regular coach: " + nextTxt);
+  if (/covering/i.test(nextTxt)) fail("next week should carry no exception");
+  console.log("the standing rota is untouched ok");
+}
+
+// Both calendars move: the date leaves Tom's and lands in Julia's. Getting
+// this wrong is two people turning up, or nobody.
+{
+  const feedFor = async (page) => {
+    await page.goto(BASE + "/app?acct=1");
+    const r = page.locator(".setrow", { hasText: "Your week in your calendar" });
+    await r.waitFor();
+    await r.click();
+    const href = await page.locator('.installhow a[href^="webcal:"]').getAttribute("href");
+    const res = await page.request.get(href.replace(/^webcal:/, "http:"));
+    if (!res.ok()) fail("calendar feed is " + res.status());
+    return res.text();
+  };
+  const tomIcs = await feedFor(tom);
+  if (!tomIcs.includes("HYROX")) fail("Tom should still have his standing HYROX");
+  if (!/EXDATE:/.test(tomIcs)) fail("the covered date should drop out of Tom's recurrence");
+  const juliaIcs = await feedFor(julia);
+  if (!juliaIcs.includes("HYROX")) fail("Julia's cover never reached her calendar");
+  if (!/covering this one/i.test(juliaIcs)) fail("the cover entry should say what it is");
+  console.log("the date moves between both calendars ok");
+}
+
+// Opening a slot up: nobody on it, said out loud rather than left blank.
+{
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator("#rotaOn").waitFor();
+  await matt.locator("#rotaOn").selectOption("");
+  await matt.getByText("Opened up").waitFor();
+  await matt.waitForTimeout(700);
+  await matt.locator(".sheetclose").click();
+  const opened = matt.locator(".rotarow.rotaopen", { hasText: "HYROX" }).first();
+  await opened.waitFor();
+  if (!(await opened.innerText()).includes("Nobody on it yet"))
+    fail("an opened date should say nobody is on it");
+  console.log("opening a date up ok");
+
+  // And back to the regular coach clears the exception entirely.
+  await opened.click();
+  await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(700);
+  await matt.locator(".sheetclose").click();
+  const back = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  if (/covering/i.test(await back.innerText()))
+    fail("putting the regular coach back should clear the exception, not store one");
+  console.log("back to normal clears the exception ok");
+}
 
 // A shift is work, not a listing. It belongs in the private feed (a signed
 // token) and must never reach the coach's public calendar or their page,

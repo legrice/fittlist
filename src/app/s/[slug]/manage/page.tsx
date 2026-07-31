@@ -15,10 +15,13 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // is the same nothing an admin-only route gives anyone else.
 export default async function ManageStudioPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ w?: string }>;
 }) {
   const { slug } = await params;
+  const { w } = await searchParams;
   const db = await getDb();
   const [studio] = await db
     .select()
@@ -40,8 +43,8 @@ export default async function ManageStudioPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [classes, coaches] = await Promise.all([
-    gymSchedule(studio.id),
+  const [week, coaches] = await Promise.all([
+    gymSchedule(studio.id, Number(w) || 0),
     gymCoaches(studio.id),
   ]);
 
@@ -50,8 +53,9 @@ export default async function ManageStudioPage({
       studioId={studio.id}
       studioName={studio.name}
       backHref={`/s/${studio.slug ?? studio.id}`}
+      manageBase={`/s/${studio.slug ?? studio.id}/manage`}
       hasAccount={!!studio.accountUserId}
-      classes={classes}
+      week={week}
       coaches={coaches}
     />
   );
