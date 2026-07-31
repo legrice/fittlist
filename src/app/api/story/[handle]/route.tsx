@@ -5,6 +5,7 @@ import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
 import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
+import { listBudget, planStory } from "@/lib/storyplan";
 
 // v1.5 share image: 1080x1920 story PNG - Exhaust background, class list in
 // Space Mono, fittlist.co/{handle} + cloud lockup as watermark. Layout scales
@@ -94,6 +95,26 @@ export async function GET(
   const hSize = maxLine <= 9 ? 104 : maxLine <= 13 ? 86 : 70;
   const showPhoto = prefs.showPhoto !== false && !!user.photo;
 
+  // How much detail the week can carry: everything if it fits, the same rows
+  // tighter if it doesn't, and a line a day when even that is too much.
+  const plan = planStory(
+    byDay.map(({ day, items }) => ({
+      day,
+      items: items.map((c) => ({
+        time: fmtTime(c.startTime),
+        name: c.name,
+        where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
+      })),
+    })),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78),
+  );
+  // Tier 1 is the poster as it has always looked; tier 2 is the same shape
+  // with the air taken out of it.
+  const m =
+    plan.tier === 1
+      ? { dayFs: 34, dayMt: 34, dayMb: 17, timeFs: 43, timeW: 172, gap: 34, nameFs: 48, subFs: 41, rowMb: 22, colW: 702 }
+      : { dayFs: 30, dayMt: 26, dayMb: 13, timeFs: 38, timeW: 150, gap: 30, nameFs: 42, subFs: 36, rowMb: 18, colW: 728 };
+
   return new ImageResponse(
     (
       <div
@@ -170,55 +191,124 @@ export async function GET(
           {line2 && <span style={{ color: t.accent }}>{line2}</span>}
         </div>
 
+        {/* What every class has in common, said once instead of on every row. */}
+        {plan.lifted && (
+          <div style={{ display: "flex", fontSize: 36, color: t.faint, marginBottom: 30 }}>
+            {plan.lifted}
+          </div>
+        )}
+
         {byDay.length === 0 ? (
           <div style={{ display: "flex", color: t.faint, fontSize: 44 }}>
             Nothing on the calendar yet.
           </div>
+        ) : plan.tier === 3 ? (
+          // A line a day: the same class twice becomes one name with both its
+          // times, so a week reads as a shape rather than a wall.
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {plan.summary.map(({ day, entries }) => (
+              <div key={day} style={{ display: "flex", marginBottom: 26 }}>
+                {span === "week" && (
+                  <span
+                    style={{
+                      display: "flex",
+                      width: 118,
+                      flexShrink: 0,
+                      // Sits on the first line's baseline, whatever size the
+                      // week ended up being said in.
+                      paddingTop: Math.max(2, Math.round((plan.summaryFs * 1.3 - 36) / 2)),
+                      fontWeight: 600,
+                      fontSize: 30,
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                      color: t.faint,
+                    }}
+                  >
+                    {day}
+                  </span>
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: span === "week" ? 764 : 908,
+                    fontSize: plan.summaryFs,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {/* The name carries the weight and its times sit back from
+                      it, so the line reads as what, then when. */}
+                  {entries.map((e) => (
+                    <div key={e.name} style={{ display: "flex" }}>
+                      <span style={{ fontWeight: 700 }}>{e.name}</span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: t.muted,
+                          marginLeft: Math.round(plan.summaryFs * 0.32),
+                        }}
+                      >
+                        {e.times}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {plan.moreDays > 0 && (
+              <div style={{ display: "flex", fontSize: 34, color: t.faint, marginTop: 12 }}>
+                + {plan.moreDays} more {plan.moreDays === 1 ? "day" : "days"} at fittlist.co/
+                {handle}
+              </div>
+            )}
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {byDay.map(({ day, items }) => (
+            {plan.days.map(({ day, rows }) => (
               <div key={day} style={{ display: "flex", flexDirection: "column" }}>
                 {span === "week" && (
                   <div
                     style={{
                       display: "flex",
                       fontWeight: 600,
-                      fontSize: 34,
+                      fontSize: m.dayFs,
                       letterSpacing: 4,
                       textTransform: "uppercase",
                       color: t.faint,
-                      margin: "34px 0 17px",
+                      margin: `${m.dayMt}px 0 ${m.dayMb}px`,
                     }}
                   >
                     {day}
                   </div>
                 )}
-                {items.map((c) => (
+                {rows.map((r, i) => (
                   <div
-                    key={c.id}
-                    style={{ display: "flex", gap: 34, marginBottom: 22 }}
+                    key={`${day}-${i}`}
+                    style={{ display: "flex", gap: m.gap, marginBottom: m.rowMb }}
                   >
                     <span
                       style={{
                         fontWeight: 700,
-                        fontSize: 43,
+                        fontSize: m.timeFs,
                         color: t.time,
-                        width: 172,
+                        width: m.timeW,
                         flexShrink: 0,
                         display: "flex",
                       }}
                     >
-                      {fmtTime(c.startTime)}
+                      {r.time}
                     </span>
                     {/* Bounded, so a long class name wraps rather than running
                         off the edge. See the note in /api/story/me. */}
-                    <div style={{ display: "flex", flexDirection: "column", width: 702 }}>
-                      <span style={{ fontSize: 48, fontWeight: 700, lineHeight: 1.15 }}>
-                        {c.name}
+                    <div style={{ display: "flex", flexDirection: "column", width: m.colW }}>
+                      <span style={{ fontSize: m.nameFs, fontWeight: 700, lineHeight: 1.15 }}>
+                        {r.name}
                       </span>
-                      <span style={{ fontSize: 41, color: t.faint, lineHeight: 1.2 }}>
-                        {(c.studioId && studioName.get(c.studioId)) || c.location || ""}
-                      </span>
+                      {r.sub && (
+                        <span style={{ fontSize: m.subFs, color: t.faint, lineHeight: 1.2 }}>
+                          {r.sub}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
