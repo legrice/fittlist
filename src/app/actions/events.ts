@@ -1,10 +1,14 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
 import { knownLocations } from "@/app/actions/locations";
+import { avatarColor } from "@/lib/avatar";
+import { hiddenFrom } from "@/lib/blocks";
+import { fmtTime, siteOrigin } from "@/lib/format";
+import { floatingEnd, floatingStart } from "@/lib/ics";
 import { normalizeLocation } from "@/lib/location";
 import { mutualIds } from "@/lib/mutuals";
 import { addNotification } from "@/lib/notify";
@@ -24,6 +28,156 @@ export type EventInput = {
 };
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+const WD_S = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MO_S = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dayLabel = (isoDay: string) => {
+  const d = new Date(`${isoDay}T00:00:00Z`);
+  return `${WD_S[(d.getUTCDay() + 6) % 7]}, ${MO_S[d.getUTCMonth()]} ${d.getUTCDate()}`;
+};
+
+export type EventDetail = {
+  id: string;
+  name: string;
+  photo: string | null;
+  /** The full when: one day with its time, or the range. */
+  whenLabel: string;
+  /** Just the start day, for the invite sentence. */
+  startLabel: string;
+  place: string;
+  city: string | null;
+  host: string;
+  posterName: string | null;
+  posterHandle: string | null;
+  description: string | null;
+  link: string | null;
+  shareUrl: string;
+  googleUrl: string;
+  canGo: boolean;
+  going: boolean;
+  isPoster: boolean;
+  canRemove: boolean;
+  myCompanions: string[];
+  myHandle: string | null;
+  /** The room: the poster's list, or a goer's list minus themselves. Null
+   *  means this viewer doesn't get to look. */
+  faces:
+    | { name: string; photo: string | null; color: string; handle: string | null; companions: string[] }[]
+    | null;
+};
+
+// What the event overlay needs, in one round trip. The same data the page at
+// /e/{id} renders, without the chrome, so tapping a poster on the board keeps
+// you on the board.
+export async function eventDetail(id: string): Promise<EventDetail | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const db = await getDb();
+  const [ev] = await db.select().from(schema.events).where(eq(schema.events.id, id));
+  if (!ev) return null;
+
+  const viewerId = await getSessionUserId();
+  const admin = viewerId ? await currentAdmin() : null;
+  const isPoster = !!viewerId && viewerId === ev.createdByUserId;
+
+  const markRows = await db
+    .select({
+      userId: schema.eventAttendances.userId,
+      companions: schema.eventAttendances.companions,
+    })
+    .from(schema.eventAttendances)
+    .where(eq(schema.eventAttendances.eventId, ev.id));
+  const companionsByUser = new Map(markRows.map((m) => [m.userId, m.companions]));
+  const going = !!viewerId && markRows.some((m) => m.userId === viewerId);
+
+  let myHandle: string | null = null;
+  if (viewerId) {
+    const [v] = await db
+      .select({ handle: schema.users.handle })
+      .from(schema.users)
+      .where(eq(schema.users.id, viewerId));
+    myHandle = v?.handle ?? null;
+  }
+
+  // The room, priced the same as everywhere: the poster sees their list, a
+  // goer sees the others, and nobody else sees anything at all.
+  let faces: EventDetail["faces"] = null;
+  if (viewerId && (going || isPoster)) {
+    let ids = [...new Set(markRows.map((m) => m.userId))];
+    if (!isPoster) {
+      const hidden = await hiddenFrom(viewerId);
+      ids = ids.filter((x) => x !== viewerId && !hidden.has(x));
+    }
+    const people = ids.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+      : [];
+    faces = people
+      .map((p) => ({
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+        companions: companionsByUser.get(p.id) ?? [],
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const poster = ev.createdByUserId
+    ? (
+        await db
+          .select({ name: schema.users.name, handle: schema.users.handle })
+          .from(schema.users)
+          .where(eq(schema.users.id, ev.createdByUserId))
+      )[0]
+    : undefined;
+
+  const multi = ev.endDate !== ev.startDate;
+  const whenLabel = multi
+    ? `${dayLabel(ev.startDate)} to ${dayLabel(ev.endDate)}`
+    : `${dayLabel(ev.startDate)}${ev.startTime ? ` · ${fmtTime(ev.startTime)}` : ""}`;
+
+  // Google gets a template link: an hour for a timed event, all-day (end
+  // exclusive) otherwise. No .ics endpoint for events yet, so one door.
+  const pageUrl = `${siteOrigin()}/e/${ev.id}`;
+  const ymd = (iso: string) => iso.replaceAll("-", "");
+  const dayAfter = (iso: string) => {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  };
+  const gcalParams = new URLSearchParams({
+    action: "TEMPLATE",
+    text: ev.name,
+    dates: ev.startTime
+      ? `${floatingStart(ev.startDate, ev.startTime)}/${floatingEnd(ev.startDate, ev.startTime, 60)}`
+      : `${ymd(ev.startDate)}/${ymd(dayAfter(ev.endDate))}`,
+    details: ev.link ? `${ev.link}\n\n${pageUrl}` : pageUrl,
+    location: ev.place,
+  });
+
+  return {
+    id: ev.id,
+    name: ev.name,
+    photo: ev.photo,
+    whenLabel,
+    startLabel: dayLabel(ev.startDate),
+    place: ev.place,
+    city: ev.city,
+    host: ev.hostName?.trim() || poster?.name || "",
+    posterName: poster?.name ?? null,
+    posterHandle: poster?.handle ?? null,
+    description: ev.description,
+    link: ev.link,
+    shareUrl: pageUrl,
+    googleUrl: `https://calendar.google.com/calendar/render?${gcalParams.toString()}`,
+    canGo: !!viewerId && !isPoster,
+    going,
+    isPoster,
+    canRemove: isPoster || !!admin,
+    myCompanions: (viewerId && companionsByUser.get(viewerId)) || [],
+    myHandle,
+    faces,
+  };
+}
 
 // Post a community event. Coaches only, by kind: members' things stay private
 // by construction everywhere else, and an open events board is the same wall.

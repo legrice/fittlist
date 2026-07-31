@@ -3350,7 +3350,6 @@ button.ps-card { cursor: pointer; }
 .evfacts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .evfact { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .evfact .icon { color: var(--ol); flex-shrink: 0; }
-.evlink { display: flex; width: 100%; margin-top: 24px; }
 .evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
 .evposter a { color: inherit; font-weight: 600; }
 
@@ -3447,9 +3446,6 @@ button.ps-card { cursor: pointer; }
 .actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .actrow-txt .s { font-size: 12px; color: var(--ol); }
 
-/* The event page's actions: the photo overlay's circle pair, given air, with
-   the tickets pill beneath them and the room below that. */
-.evacts { display: flex; gap: 34px; justify-content: center; margin-top: 30px; }
 .evwho { margin-top: 26px; }
 .evwho-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
@@ -3718,3 +3714,11 @@ button.ps-card { cursor: pointer; }
 }
 .disposter-sub { margin-top: 6px; font-size: 13px; font-weight: 600; opacity: .72; }
 .disposter-by { margin-top: 2px; font-size: 12px; font-weight: 600; opacity: .55; }
+
+/* The flyer inside the event overlay, under the floating circles. */
+.evsheet-hero {
+  display: block; width: 100%; max-height: 300px; object-fit: cover;
+  border-radius: 18px; margin-bottom: 18px;
+}
+/* The event page carries the same floating pill, so its tail needs room. */
+.profwrap:has(.classoverlay-cta) { padding-bottom: 110px; }

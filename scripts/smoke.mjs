@@ -1205,8 +1205,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   const evRows = fan.locator(".disposter", { hasText: "with Matt" });
   await evRows.first().waitFor();
   if ((await evRows.count()) < 2) fail("both one-offs should list under Events");
+  // A tap opens the overlay; the href still points at the real class page.
   await evRows.first().click();
-  await fan.waitForURL(/\/matt\/[0-9a-f-]+\?d=/);
+  await fan.locator(".classoverlay-nm").waitFor();
+  await fan.locator(".ovcircle-back").click();
+  const oneOffHref = await evRows.first().getAttribute("href");
+  if (!/^\/matt\/[0-9a-f-]+\?d=/.test(oneOffHref ?? ""))
+    fail("a one-off should link at its class page: " + oneOffHref);
   await fan.goto(BASE + "/discover");
 }
 console.log("events lens ok (one-offs listed, a row opens the class)");
@@ -1216,7 +1221,12 @@ console.log("events lens ok (one-offs listed, a row opens the class)");
 {
   await fan.locator(".disseg button", { hasText: "Events" }).click();
   if (await fan.locator(".evpost").count()) fail("a member should not see Post an event");
+  // The overlay first, then the page a sent link would open.
   await fan.locator(".disposter", { hasText: "Hudson Fit Expo" }).click();
+  await fan.locator(".classoverlay-nm", { hasText: "Hudson Fit Expo" }).waitFor();
+  await fan.locator(".ovcircle-back").click();
+  const expoHref = await fan.locator(".disposter", { hasText: "Hudson Fit Expo" }).getAttribute("href");
+  await fan.goto(BASE + expoHref);
   await fan.waitForURL(/\/e\//);
   await fan.getByRole("heading", { name: "Hudson Fit Expo" }).waitFor();
   await fan.getByText("Hosted by Hudson Fit Expo").waitFor();

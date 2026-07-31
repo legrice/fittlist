@@ -3,7 +3,9 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { ClassSheet } from "@/components/ClassSheet";
 import { EventComposer } from "@/components/EventComposer";
+import { EventSheet } from "@/components/EventSheet";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { Toast, useToast } from "@/components/Toast";
@@ -134,6 +136,27 @@ export function DiscoverList({
   const [coachesOnly, setCoachesOnly] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
+  // A tap on the board opens the thing as an overlay, so the board stays
+  // behind it; the hrefs stay real for a new-tab click and for anyone the
+  // link gets sent to. The href itself says which kind of thing it is.
+  const [openEv, setOpenEv] = useState<string | null>(null);
+  const [openCls, setOpenCls] = useState<{ handle: string; classId: string; iso?: string } | null>(
+    null,
+  );
+  const openFromHref = (e: React.MouseEvent, href: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const asEvent = href.match(/^\/e\/([0-9a-f-]{36})$/i);
+    if (asEvent) {
+      e.preventDefault();
+      setOpenEv(asEvent[1]);
+      return;
+    }
+    const asClass = href.match(/^\/([a-z0-9-]+)\/([0-9a-f-]{36})(?:\?d=(\d{4}-\d{2}-\d{2}))?/i);
+    if (asClass) {
+      e.preventDefault();
+      setOpenCls({ handle: asClass[1], classId: asClass[2], iso: asClass[3] });
+    }
+  };
   // Near you is the default view when it would show anything: someone opening
   // Discover is asking "who's around here", not "who is on fittlist".
   const nearCity = myCity && cities.includes(myCity) ? myCity : null;
@@ -274,7 +297,12 @@ export function DiscoverList({
               e.photo ? (
                 // A flyer makes it a card: the image the host already made
                 // for Instagram carries the row, date tile riding its corner.
-                <Link key={e.id} className="discard" href={e.href}>
+                <Link
+                  key={e.id}
+                  className="discard"
+                  href={e.href}
+                  onClick={(ev) => openFromHref(ev, e.href)}
+                >
                   <span className="discard-imgwrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img className="discard-img" src={e.photo} alt="" />
@@ -299,6 +327,7 @@ export function DiscoverList({
                   className="disposter"
                   href={e.href}
                   style={{ background: posterTint(e.id) }}
+                  onClick={(ev) => openFromHref(ev, e.href)}
                 >
                   <span className="disev-date disposter-date" aria-hidden="true">
                     <span className="mo">{e.mon}</span>
@@ -385,6 +414,15 @@ export function DiscoverList({
       )}
 
       <EventComposer open={postOpen} myCity={myCity} onClose={() => setPostOpen(false)} onDone={toast} />
+      {openEv && <EventSheet id={openEv} onClose={() => setOpenEv(null)} />}
+      {openCls && (
+        <ClassSheet
+          handle={openCls.handle}
+          classId={openCls.classId}
+          iso={openCls.iso}
+          onClose={() => setOpenCls(null)}
+        />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

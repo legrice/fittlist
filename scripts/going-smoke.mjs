@@ -224,21 +224,24 @@ await co.locator("#evStart").fill(evDate.toISOString().slice(0, 10));
 await co.locator("#evPlace").fill("Harborside, Jersey City");
 await co.getByRole("button", { name: "Post event" }).click();
 await co.getByText("Event posted").waitFor();
-await co.locator(".disposter", { hasText: "Harbor Throwdown" }).click();
-await co.waitForURL(/\/e\//);
-const evUrl = co.url();
+// Tapping the poster opens the overlay now; the href stays real for the
+// page a link opens, which is what the rest of this block drives.
+const evPath = await co.locator(".disposter", { hasText: "Harbor Throwdown" }).getAttribute("href");
+if (!/^\/e\//.test(evPath ?? "")) fail("an event poster should link at its page: " + evPath);
+const evUrl = BASE + evPath;
 // Sarah goes; her mutual Ruth hears even though Ruth isn't going yet
 await m.goto(evUrl);
 await m.getByRole("button", { name: "I'm going" }).click();
-await m.locator(".evacts .avact-ic.on").waitFor();
+await m.locator(".ovcta-save.on").waitFor();
+// first one in: the empty room offers the share
+await m.locator(".emptyroom-btn", { hasText: "Share with friends" }).waitFor();
 await r.goto(BASE + "/updates");
 await r.getByText("Sarah is going to Harbor Throwdown").waitFor();
 console.log("event going-notification ok (mutual told, without being marked)");
 // Ruth goes too and sees Sarah; the poster sees the pair
 await r.goto(evUrl);
 await r.getByRole("button", { name: "I'm going" }).click();
-await r.locator(".evacts .avact-ic.on").waitFor();
-await r.locator(".evacts .avact", { hasText: "Share" }).waitFor();
+await r.locator(".ovcta-save.on").waitFor();
 await r.getByText(/Also going · 1/).waitFor();
 await r.locator(".evwho", { hasText: "Sarah" }).waitFor();
 await co.goto(evUrl);

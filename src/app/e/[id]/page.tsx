@@ -161,9 +161,8 @@ export default async function EventPage({ params }: Props) {
           )}
         </div>
         {ev.description && <p className="profabout">{ev.description}</p>}
-        {/* Two circles and one door, the way the profile photo overlay does
-            it: Going and Share above, the event's own tickets link as the
-            wide pill beneath, where the Message bar sits on a profile. */}
+        {/* The same pill the overlay wears: Book and the heart, floating at
+            the bottom. The share lives in the empty room it renders. */}
         <EventPageActions
           id={ev.id}
           canGo={!!viewerId && !isPoster}
@@ -171,15 +170,11 @@ export default async function EventPage({ params }: Props) {
           eventName={ev.name}
           whenLabel={dayLabel(ev.startDate)}
           shareUrl={`${siteOrigin()}/e/${ev.id}`}
+          link={ev.link}
           initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
           myHandle={viewerHandle}
           othersCount={viewerId && going ? faces.length : null}
         />
-        {ev.link && (
-          <a className="btn si evlink" href={ev.link} target="_blank" rel="noopener">
-            Tickets and details
-          </a>
-        )}
         {viewerId && (going || isPoster) && faces.length > 0 && (
           <div className="evwho">
             <h2 className="evwho-h">{isPoster ? "Going" : "Also going"} · {faces.length}</h2>

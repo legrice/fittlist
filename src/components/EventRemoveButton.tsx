@@ -6,14 +6,22 @@ import { deleteEvent } from "@/app/actions/events";
 
 // Take the event down, behind one confirmation. There's no edit sheet yet
 // (delete and repost covers a beta), so this is the poster's whole toolbox.
-export function EventRemoveButton({ id }: { id: string }) {
+export function EventRemoveButton({ id, onDone }: { id: string; onDone?: () => void }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [pending, start] = useTransition();
   const remove = () =>
     start(async () => {
       const res = await deleteEvent(id);
-      if (res.ok) router.push("/discover");
+      if (!res.ok) return;
+      // From the overlay the board is already behind us; from the page it
+      // isn't, so the default walks there.
+      if (onDone) {
+        onDone();
+        router.refresh();
+      } else {
+        router.push("/discover");
+      }
     });
   return (
     <div className="dangerzone">

@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setEventCompanions, setEventGoing } from "@/app/actions/events";
 import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The event page's two actions, worn the way the profile photo overlay wears
-// its own: a pair of circles with room around them and words underneath.
-// Going is a personal note and a wave to your mutuals, never a reservation;
-// Share hands the event on, and once you're going it carries the invitation
-// and the poster with your name on it. Anything louder belongs to the tickets
-// pill below, which is the event's own door.
+// The event page's actions, identical to the overlay's: Book and the heart
+// on a dark pill at the bottom. Going is a personal note and a wave to your
+// mutuals, never a reservation; the share lives in the empty room, at the
+// moment it would actually help.
 export function EventPageActions({
   id,
   canGo,
@@ -20,6 +18,7 @@ export function EventPageActions({
   eventName,
   whenLabel,
   shareUrl,
+  link = null,
   initialCompanions = [],
   myHandle = null,
   othersCount = null,
@@ -31,6 +30,8 @@ export function EventPageActions({
   eventName: string;
   whenLabel: string;
   shareUrl: string;
+  /** Tickets or details: the event's own door, the pill's Book side. */
+  link?: string | null;
   initialCompanions?: string[];
   myHandle?: string | null;
   /** How many other people this going viewer may see. null = not going. */
@@ -40,14 +41,23 @@ export function EventPageActions({
   const [going, setGoing] = useState(initialGoing);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+  const [favOn, setFavOn] = useState(false);
+  const favTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggle = () =>
     start(async () => {
       const res = await setEventGoing(id, !going);
-      if (res.ok) {
-        setGoing(!going);
-        router.refresh();
+      if (!res.ok) return;
+      const next = !going;
+      setGoing(next);
+      if (next) {
+        setFavOn(true);
+        if (favTimer.current) clearTimeout(favTimer.current);
+        favTimer.current = setTimeout(() => setFavOn(false), 4200);
+      } else {
+        setFavOn(false);
       }
+      router.refresh();
     });
 
   // The moment you commit is the moment you'd text a friend, so once you're
@@ -69,24 +79,7 @@ export function EventPageActions({
 
   return (
     <>
-      <div className="evacts">
-        {canGo && (
-          <button className="avact" disabled={pending} aria-pressed={going} onClick={toggle}>
-            <span className={`avact-ic${going ? " on" : ""}`}>
-              <Icon name={going ? "check" : "add"} size={22} />
-            </span>
-            {going ? "Going" : "I'm going"}
-          </button>
-        )}
-        <button className="avact" onClick={share}>
-          <span className="avact-ic">
-            <Icon name="ios_share" size={22} />
-          </span>
-          Share
-        </button>
-      </div>
-      {/* Names, not accounts: Joanne doesn't need the app to count. Quiet on
-          purpose, and only once there's a mark for the names to ride on. */}
+      {/* Names, not accounts: Joanne doesn't need the app to count. */}
       {going && (
         <CompanionsEditor
           value={initialCompanions}
@@ -110,6 +103,33 @@ export function EventPageActions({
           </button>
         </div>
       )}
+      {(link || canGo) && (
+        <div className="classoverlay-cta">
+          {link && (
+            <a className="ovcta-btn" href={link} target="_blank" rel="noopener nofollow">
+              Book
+            </a>
+          )}
+          {link && canGo && <span className="ovcta-div" aria-hidden="true" />}
+          {canGo && (
+            <button
+              className={`ovcta-btn ovcta-save${going ? " on" : ""}`}
+              disabled={pending}
+              aria-pressed={going}
+              aria-label={going ? "Going" : "I'm going"}
+              onClick={toggle}
+            >
+              <Icon name="favorite" size={19} />
+              {!going && "I'm going"}
+            </button>
+          )}
+        </div>
+      )}
+      {/* The note that answers the heart: an event mark means you're going. */}
+      <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
+        <Icon name="favorite" size={16} className="favtoast-heart" />
+        You&rsquo;re going
+      </div>
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
