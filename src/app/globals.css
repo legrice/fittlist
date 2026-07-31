@@ -3611,3 +3611,27 @@ button.ps-card { cursor: pointer; }
 
 /* A studio's tabs sit where a person's do, and read the same. */
 .studiotabs { margin-top: 18px; }
+
+/* The rota's week stepper, and the mark on a swapped date. */
+.rotaweek {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 16px;
+}
+.rotaweek-lbl { font-weight: 700; font-size: 15px; }
+.rotanav {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
+  background: var(--card); color: var(--ink); border: 1px solid var(--line);
+}
+.rotanav.off { opacity: .35; pointer-events: none; }
+.rotaswap {
+  margin-left: 7px; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--si);
+}
+.rotasec-h {
+  margin: 22px 0 0; font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ol);
+}
+
+/* The line under a rota field that says what a change will do. */
+.rotahint { margin: 7px 0 0; font-size: 12px; color: var(--ol); line-height: 1.4; }

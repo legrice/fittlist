@@ -3,7 +3,7 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
-import { DAYS, fmtTime } from "@/lib/format";
+import { DAYS, fmtDateLong, fmtDayHeader, fmtTime, mondayOfCurrentWeek, runsOn, timeToMinutes } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
@@ -29,8 +29,23 @@ export type GymClassDto = {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
+  /** Who normally teaches it, week in week out. */
   coachUserId: string | null;
   coachName: string;
+  /** Who is actually on it this date, once covers are applied. */
+  onUserId: string | null;
+  onName: string;
+  /** This date is an exception to the standing rota. */
+  covered: boolean;
+};
+
+export type GymDayDto = { iso: string; label: string; items: GymClassDto[] };
+export type GymWeekDto = {
+  /** Monday of the week being shown, and how far it is from this one. */
+  monday: string;
+  offset: number;
+  label: string;
+  days: GymDayDto[];
 };
 
 export type GymCoachDto = { id: string; name: string; email: string };
@@ -82,32 +97,82 @@ export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function gymSchedule(studioId: string): Promise<GymClassDto[]> {
+/**
+ * A real week of the rota, dates and all, because a swap is about a date. The
+ * standing slots are expanded with runsOn (the same predicate every surface
+ * uses) and then any cover for that date is laid over the top.
+ */
+export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeekDto | null> {
   const ctx = await actingFor(studioId);
-  if ("error" in ctx) return [];
+  if ("error" in ctx) return null;
   const { db, gymId } = ctx;
+
+  const week = Math.max(0, Math.min(8, Math.trunc(offset) || 0));
+  const start = new Date(`${mondayOfCurrentWeek()}T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() + week * 7);
+  const monday = start.toISOString().slice(0, 10);
+  const isoOf = (i: number) => {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  };
+
   const rows = await db
     .select()
     .from(schema.classes)
-    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)))
-    .orderBy(asc(schema.classes.dayOfWeek), asc(schema.classes.startTime));
-  const coachIds = [...new Set(rows.map((r) => r.coachUserId).filter((x): x is string => !!x))];
-  const people = coachIds.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
+    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.studioId, studioId)));
+
+  const covers = rows.length
+    ? await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, rows.map((r) => r.id)))
+    : [];
+  const coverBy = new Map(covers.map((c) => [`${c.classId}|${c.occurrenceDate}`, c]));
+
+  const ids = new Set<string>();
+  for (const r of rows) if (r.coachUserId) ids.add(r.coachUserId);
+  for (const c of covers) if (c.coachUserId) ids.add(c.coachUserId);
+  const people = ids.size
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, [...ids]))
     : [];
   const nameOf = new Map(
     people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const),
   );
-  return rows.map((r) => ({
-    id: r.id,
-    name: r.name,
-    classType: r.classType,
-    dayOfWeek: r.dayOfWeek,
-    startTime: r.startTime,
-    durationMin: r.durationMin,
-    coachUserId: r.coachUserId,
-    coachName: (r.coachUserId && nameOf.get(r.coachUserId)) || "",
-  }));
+
+  const days: GymDayDto[] = [];
+  for (let i = 0; i < 7; i++) {
+    const iso = isoOf(i);
+    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    const items = rows
+      .filter((r) => runsOn(r, iso, dow))
+      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+      .map((r) => {
+        const cover = coverBy.get(`${r.id}|${iso}`);
+        const onUserId = cover ? cover.coachUserId : r.coachUserId;
+        return {
+          id: r.id,
+          name: r.name,
+          classType: r.classType,
+          dayOfWeek: r.dayOfWeek,
+          startTime: r.startTime,
+          durationMin: r.durationMin,
+          coachUserId: r.coachUserId,
+          coachName: (r.coachUserId && nameOf.get(r.coachUserId)) || "",
+          onUserId,
+          onName: (onUserId && nameOf.get(onUserId)) || "",
+          covered: !!cover,
+        };
+      });
+    days.push({ iso, label: fmtDayHeader(iso), items });
+  }
+
+  return {
+    monday,
+    offset: week,
+    label: week === 0 ? "This week" : week === 1 ? "Next week" : `Week of ${fmtDayHeader(monday)}`,
+    days,
+  };
 }
 
 export type GymClassInput = {
@@ -248,8 +313,85 @@ export async function deleteGymClass(
     });
   }
   await db.delete(schema.attendances).where(eq(schema.attendances.classId, classId));
+  // Its exceptions go with it, or the foreign key refuses the delete.
+  await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.classId, classId));
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
   if (existing.coachUserId) await tellCoach(existing.coachUserId, studio.name, existing, false);
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  return { ok: true };
+}
+
+/**
+ * Who is on this class on this one date. The swap, and the way a slot is
+ * opened up: pass null and nobody is on it, which is a thing a manager says
+ * out loud rather than a gap in a spreadsheet.
+ *
+ * Setting the date back to whoever normally teaches it clears the exception
+ * rather than storing a no-op, so the table only ever holds real ones.
+ */
+export async function setShiftCover(
+  studioId: string,
+  classId: string,
+  occurrenceDate: string,
+  coachUserId: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  const { db, userId, studio, gymId } = ctx;
+
+  const [cls] = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, gymId)));
+  if (!cls) return { ok: false, error: "Class not found." };
+  const dow = (new Date(`${occurrenceDate}T00:00:00Z`).getUTCDay() + 6) % 7;
+  if (!runsOn(cls, occurrenceDate, dow))
+    return { ok: false, error: "That class doesn't run that day." };
+
+  const [existing] = await db
+    .select()
+    .from(schema.shiftCovers)
+    .where(
+      and(
+        eq(schema.shiftCovers.classId, classId),
+        eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+      ),
+    );
+  const before = existing ? existing.coachUserId : cls.coachUserId;
+  if (before === coachUserId) return { ok: true };
+
+  if (coachUserId === cls.coachUserId) {
+    // Back to normal: the exception stops existing.
+    if (existing) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, existing.id));
+  } else if (existing) {
+    await db
+      .update(schema.shiftCovers)
+      .set({ coachUserId, createdByUserId: userId })
+      .where(eq(schema.shiftCovers.id, existing.id));
+  } else {
+    await db
+      .insert(schema.shiftCovers)
+      .values({ classId, occurrenceDate, coachUserId, createdByUserId: userId });
+  }
+
+  // Both sides of a swap hear about it, and only about their own half. The
+  // date is the whole point, so it leads.
+  const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  if (before)
+    await addNotification(before, {
+      type: "shift_dropped",
+      title: `You're off ${cls.name}`,
+      body: `${when} at ${studio.name}. Somebody else is on it.`,
+      href: "/week",
+    });
+  if (coachUserId)
+    await addNotification(coachUserId, {
+      type: "shift_assigned",
+      title: `You're covering ${cls.name}`,
+      body: `${when} at ${studio.name}.`,
+      href: "/week",
+    });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }

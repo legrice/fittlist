@@ -237,6 +237,31 @@ export const studios = pgTable("studios", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// One date's exception to the rota: who is actually on this class this week.
+//
+// A gym class is a standing slot, so `classes.coachUserId` says who normally
+// teaches it. Real weeks aren't like that: somebody is away, somebody swaps,
+// somebody picks up a shift nobody was on. That's one date, not a change to
+// the class, and writing it onto the class row would rewrite every week.
+//
+// A row here wins over the class for that date. coachUserId null is the open
+// state, said out loud: the slot runs and nobody is on it yet. Setting the date
+// back to the regular coach deletes the row rather than storing a no-op, so the
+// table only ever holds real exceptions.
+export const shiftCovers = pgTable(
+  "shift_covers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    classId: uuid("class_id").notNull().references(() => classes.id),
+    occurrenceDate: date("occurrence_date").notNull(),
+    /** Null means nobody is on it that day: open, and asking to be picked up. */
+    coachUserId: uuid("coach_user_id").references(() => users.id),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("shift_covers_once").on(t.classId, t.occurrenceDate)],
+);
+
 // Who runs a studio's page. A studio with no rows here is unclaimed, which is
 // the directory's normal state: anyone coaching can correct it, because an
 // entry nobody owns is better maintained by the people who teach there than

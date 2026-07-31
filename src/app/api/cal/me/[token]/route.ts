@@ -54,12 +54,48 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     .from(schema.classes)
     .where(eq(schema.classes.coachUserId, userId));
   const seen = new Set(followed.map((c) => c.id));
+  // Dates that are exceptions to the standing rota: somebody swapped, or a
+  // slot was opened up. A cover moves one date from one calendar to another,
+  // so it has to reach both of them or two people turn up, or nobody does.
+  const coverRows = await db.select().from(schema.shiftCovers);
+  const takenFromMe = new Map<string, string[]>(); // class -> dates I'm no longer on
+  const givenToMe: typeof coverRows = [];
+  const shiftIds = new Set(shifts.map((c) => c.id));
+  for (const cv of coverRows) {
+    if (cv.coachUserId === userId) givenToMe.push(cv);
+    else if (shiftIds.has(cv.classId)) {
+      const list = takenFromMe.get(cv.classId) ?? [];
+      list.push(cv.occurrenceDate);
+      takenFromMe.set(cv.classId, list);
+    }
+  }
+  // A date somebody handed me on a class I don't normally teach still needs
+  // the class itself in hand to render it.
+  const extraIds = [...new Set(givenToMe.map((c) => c.classId))].filter(
+    (id) => !seen.has(id) && !shiftIds.has(id),
+  );
+  const extras = extraIds.length
+    ? await db.select().from(schema.classes).where(inArray(schema.classes.id, extraIds))
+    : [];
   const classRows = [...followed, ...shifts.filter((c) => !seen.has(c.id))];
+  const byId = new Map([...classRows, ...extras].map((c) => [c.id, c]));
+  const coveredDatesFor = (classId: string) => takenFromMe.get(classId) ?? [];
+  // A one-off entry per date handed to me, so the cover lands on the day it
+  // was actually for rather than every week.
+  const oneOffs = givenToMe
+    .map((cv) => ({ cover: cv, cls: byId.get(cv.classId) }))
+    .filter((x) => !!x.cls && x.cls.isPublic && x.cover.occurrenceDate >= monday);
   // Public only. A coach's private client sessions are on their own schedule
   // and must not reach a follower's calendar.
   const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= monday));
 
-  const studioIds = [...new Set(rows.map((c) => c.studioId).filter((id): id is string => !!id))];
+  const studioIds = [
+    ...new Set(
+      [...rows, ...oneOffs.map((o) => o.cls!)]
+        .map((c) => c.studioId)
+        .filter((id): id is string => !!id),
+    ),
+  ];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
@@ -101,7 +137,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     lines.push(`DTSTART:${floatingStart(date, c.startTime)}`);
     lines.push(`DTEND:${floatingEnd(date, c.startTime, c.durationMin)}`);
     if (!c.specificDate) {
-      lines.push(...recurrenceLines(c.dayOfWeek, c.endsOn, c.skipDates, c.startTime));
+      lines.push(
+        ...recurrenceLines(
+          c.dayOfWeek,
+          c.endsOn,
+          // The dates somebody else took off me drop out of my recurrence.
+          [...(c.skipDates ?? []), ...coveredDatesFor(c.id)],
+          c.startTime,
+        ),
+      );
     }
     // The coach's name is in the title: a merged week is several people's
     // classes, and "Stretch+" alone doesn't say whose.
@@ -110,6 +154,25 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
     else if (c.location) lines.push(fold(`LOCATION:${esc(c.location)}`));
     lines.push(fold(`DESCRIPTION:${desc}`));
+    lines.push("END:VEVENT");
+  }
+
+  // The dates handed to me: one entry each, on the day it was actually for.
+  for (const { cover, cls } of oneOffs) {
+    const c = cls!;
+    const owner = coachById.get(c.userId);
+    const studio = c.studioId ? studioById.get(c.studioId) : undefined;
+    const iso = cover.occurrenceDate;
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${c.id}.${iso}.cover@fittlist.co`);
+    lines.push(`DTSTAMP:${stamp}`);
+    lines.push(`DTSTART:${floatingStart(iso, c.startTime)}`);
+    lines.push(`DTEND:${floatingEnd(iso, c.startTime, c.durationMin)}`);
+    const who = owner?.name?.trim();
+    lines.push(fold(`SUMMARY:${esc(who ? `${c.name} with ${who}` : c.name)}`));
+    if (studio) lines.push(fold(`LOCATION:${esc(`${studio.name}, ${studio.address}`)}`));
+    else if (c.location) lines.push(fold(`LOCATION:${esc(c.location)}`));
+    lines.push(fold("DESCRIPTION:You're covering this one. fittlist.co"));
     lines.push("END:VEVENT");
   }
 

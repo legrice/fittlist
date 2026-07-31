@@ -363,6 +363,18 @@ is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
 clears a departing coach's `coachUserId` so their slots reopen rather than
 vanishing. `scripts/gym-smoke.mjs` walks the whole path.
 
+**A swap is one date, not a change to the class.** `classes.coachUserId` is
+who normally teaches a slot; `shift_covers` is the exception for a single date,
+and it wins over the class for that date. Writing a swap onto the class row
+would rewrite every week, which is the mistake the spreadsheet makes by having
+nowhere else to put it. `coachUserId` null on a cover is the open state said out
+loud: the slot runs and nobody is on it. Putting the regular coach back deletes
+the row rather than storing a no-op, so the table only ever holds real
+exceptions. A cover has to reach **both** calendars, or two people turn up or
+nobody does: the private feed adds the covered dates to the regular coach's
+EXDATE list and emits a one-off event for whoever took it. The rota screen is a
+real dated week (`?w=` offsets from this Monday) because a swap is about a date.
+
 **A studio running a schedule wears the same tabs a person does.** `/s/{slug}`
 is the schedule, `/s/{slug}/about` and `/s/{slug}/contact` the rest, and
 `/s/{slug}/schedule` resolves too. The schedule leads for the same reason it
