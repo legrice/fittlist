@@ -9,6 +9,7 @@ import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
+import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
@@ -69,13 +70,15 @@ export default async function StudioPage({ params, searchParams }: Props) {
   if (!s) notFound();
 
   const db = await getDb();
-  // Like a class page: no app header, no bottom tabs. A signed-in viewer gets
-  // a way back; a coach also gets the edit button, because the directory is
-  // shared and anyone can correct an entry.
+  // A studio is a screen of the app like any other: signed in, the header
+  // rides above and the tab bar below, same as a coach's profile. A coach
+  // also gets the edit button, because the directory is shared and anyone
+  // can correct an entry.
+  let viewerId: string | null = null;
   let signedIn = false;
   let canEdit = false;
   if (await fansVisible()) {
-    const viewerId = await getSessionUserId();
+    viewerId = await getSessionUserId();
     if (viewerId) {
       const [viewer] = await db
         .select({ kind: schema.users.kind })
@@ -133,8 +136,9 @@ export default async function StudioPage({ params, searchParams }: Props) {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="pub profile" data-mode={await viewerLook()}>
+    <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
+        {signedIn && viewerId && <AppChrome userId={viewerId} bar />}
         {/* Back, name and the one action ride together and stay pinned. */}
         <div className="pubhead">
           {signedIn && (
