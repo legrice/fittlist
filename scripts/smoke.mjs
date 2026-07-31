@@ -1036,8 +1036,8 @@ console.log("one-off future ok");
   await page.locator("#evLink").fill("https://example.com/expo");
   await page.getByRole("button", { name: "Post event" }).click();
   await page.getByText("Event posted").waitFor();
-  await page.locator(".disev", { hasText: "Hudson Fit Expo" }).waitFor();
-  const sub = await page.locator(".disev", { hasText: "Hudson Fit Expo" }).locator(".sub").innerText();
+  await page.locator(".disposter", { hasText: "Hudson Fit Expo" }).waitFor();
+  const sub = await page.locator(".disposter", { hasText: "Hudson Fit Expo" }).locator(".disposter-sub").innerText();
   if (!sub.includes(" to ")) fail("a multi-day event should say its range: " + sub);
 }
 console.log("event posted ok (multi-day, listed on the board)");
@@ -1202,7 +1202,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // event rows, soonest first, and a row opens the class page itself.
 {
   await fan.locator(".disseg button", { hasText: "Events" }).click();
-  const evRows = fan.locator(".disev", { hasText: "with Matt" });
+  const evRows = fan.locator(".disposter", { hasText: "with Matt" });
   await evRows.first().waitFor();
   if ((await evRows.count()) < 2) fail("both one-offs should list under Events");
   await evRows.first().click();
@@ -1216,7 +1216,7 @@ console.log("events lens ok (one-offs listed, a row opens the class)");
 {
   await fan.locator(".disseg button", { hasText: "Events" }).click();
   if (await fan.locator(".evpost").count()) fail("a member should not see Post an event");
-  await fan.locator(".disev", { hasText: "Hudson Fit Expo" }).click();
+  await fan.locator(".disposter", { hasText: "Hudson Fit Expo" }).click();
   await fan.waitForURL(/\/e\//);
   await fan.getByRole("heading", { name: "Hudson Fit Expo" }).waitFor();
   await fan.getByText("Hosted by Hudson Fit Expo").waitFor();
@@ -1325,17 +1325,17 @@ await fan.locator(".classoverlay-nm").waitFor();
 if (!(await fan.locator(".feedagenda .ps-event").count()))
   fail("the week should stay behind the overlay");
 await fan.locator(".ovcta-save").click();
+// The note answers the heart, up in the top third, with the door to the list.
+await fan.getByText("Added to your favorites").waitFor();
 await fan.locator(".ovcta-save.on").waitFor();
-// The tell screen rises on a fresh yes; Done puts it away.
-await fan.locator(".tellsheet-done").click().catch(() => {});
 // Reopening it says the same thing: the save is on the server, not in the tab.
 await fan.locator(".ovcircle-back").click();
 await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
 await fan.reload();
 await fan.locator(".feedagenda .ps-event").first().click();
 await fan.locator(".ovcta-save.on").waitFor();
-// Share is here too, so a class can be passed on without leaving it.
-await fan.locator(".ovcircle-share").waitFor();
+// The room is empty, and an empty room is an invitation: share lives there.
+await fan.locator(".emptyroom-btn", { hasText: "Share with friends" }).waitFor();
 await fan.locator(".ovcircle-back").click();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
@@ -1403,10 +1403,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
   await fan.locator(".ovcta-save").click();
-  // The second screen: "You're in", with the two tell doors. Close it; the
-  // overlay behind is what this block is checking.
-  await fan.getByRole("heading", { name: /You.re in/ }).waitFor();
-  await fan.locator(".tellsheet-done").click();
+  await fan.getByText("Added to your favorites").waitFor();
   // The heart fills in and the word leaves with the tap.
   await fan.locator(".ovcta-save.on").waitFor();
   if ((await fan.locator(".ovcta-save").innerText()).trim())

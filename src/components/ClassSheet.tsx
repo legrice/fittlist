@@ -8,7 +8,6 @@ import { reportClass } from "@/app/actions/reports";
 import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 import { Roster } from "@/components/Roster";
-import { TellSheet } from "@/components/TellSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // A class, worn as a full-screen overlay. The page you were on stays visible
@@ -45,8 +44,9 @@ export function ClassSheet({
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reported, setReported] = useState(false);
-  const [tellOpen, setTellOpen] = useState(false);
+  const [favOn, setFavOn] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  const favTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The overflow menu closes on any tap outside it, like a menu should.
   useEffect(() => {
@@ -104,8 +104,19 @@ export function ClassSheet({
         return;
       }
       onChanged?.(next);
-      // The second screen: who should know? Only on a fresh yes.
-      if (next) setTellOpen(true);
+      if (next) {
+        // The moment of the heart filling: a note, not a ceremony. It says
+        // where the class went and offers the way there.
+        setFavOn(true);
+        if (favTimer.current) clearTimeout(favTimer.current);
+        favTimer.current = setTimeout(() => setFavOn(false), 4200);
+      } else {
+        setFavOn(false);
+      }
+      // Refresh the room: the server decides who this viewer may see, and a
+      // fresh save changes the answer.
+      const fresh = await classDetail(handle, classId, iso);
+      if (fresh) setC(fresh);
     });
   };
 
@@ -139,14 +150,8 @@ export function ClassSheet({
       <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
         <Icon name="arrow_back" size={19} />
       </button>
-      {c && (
-        <button className="ovcircle ovcircle-share" aria-label="Share this class" onClick={share}>
-          <Icon name="ios_share" size={18} />
-        </button>
-      )}
       {/* The overflow: everything you might do with a class that isn't the
-          class's own two buttons. Share sits here too; a menu people open
-          looking for "everything else" should have everything else. */}
+          class's own two buttons. */}
       {c && (
         <div ref={moreRef}>
           <button
@@ -159,28 +164,6 @@ export function ClassSheet({
           </button>
           {moreOpen && (
             <div className="ovmenu" role="menu">
-              <button
-                className="ovmenu-item"
-                role="menuitem"
-                onClick={() => {
-                  setMoreOpen(false);
-                  share();
-                }}
-              >
-                <Icon name="ios_share" size={17} /> Share this class
-              </button>
-              {added && (
-                <button
-                  className="ovmenu-item"
-                  role="menuitem"
-                  onClick={() => {
-                    setMoreOpen(false);
-                    setTellOpen(true);
-                  }}
-                >
-                  <Icon name="send" size={17} /> Tell someone you&rsquo;re going
-                </button>
-              )}
               <a
                 className="ovmenu-item"
                 role="menuitem"
@@ -297,12 +280,25 @@ export function ClassSheet({
           )}
 
           {/* The room introducing itself early: the other people who saved
-              it, shown only because this viewer saved it too. Non-null and
-              non-empty is the server saying both of those things. */}
+              it, shown only because this viewer saved it too. Non-null is the
+              server saying this viewer is allowed to look. */}
           {c.alsoGoing && c.alsoGoing.length > 0 && (
             <div className="classsheet-roster">
               <h3 className="classsheet-roster-h">Also saved · {c.alsoGoing.length}</h3>
               <Roster people={c.alsoGoing} />
+            </div>
+          )}
+          {/* An empty room is an invitation, not a verdict. This is where the
+              share lives now: at the moment it would actually help. */}
+          {c.alsoGoing && c.alsoGoing.length === 0 && (
+            <div className="emptyroom">
+              <h3 className="classsheet-roster-h">Also saved</h3>
+              <p className="emptyroom-p">
+                No one else yet. Fitness is better together, so bring somebody.
+              </p>
+              <button className="emptyroom-btn" onClick={share}>
+                <Icon name="campaign" size={17} /> Share with friends
+              </button>
             </div>
           )}
 
@@ -420,18 +416,15 @@ export function ClassSheet({
           </div>
         </div>
       )}
-      {c && (
-        <TellSheet
-          open={tellOpen}
-          onClose={() => setTellOpen(false)}
-          name={c.name}
-          dateLong={c.dateLong}
-          shareUrl={c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl}
-          classId={c.id}
-          whenIso={c.whenIso}
-          onToast={toast}
-        />
-      )}
+      {/* "It went somewhere": the note that answers the heart, up in the top
+          third where the eye already is, with the way to the list it joined. */}
+      <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
+        <Icon name="favorite" size={16} className="favtoast-heart" />
+        Added to your favorites
+        <Link className="favtoast-link" href="/week" onClick={() => setFavOn(false)}>
+          See them
+        </Link>
+      </div>
       <Toast msg={toastMsg} on={toastOn} />
     </div>
   );

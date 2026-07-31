@@ -8,6 +8,16 @@ import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { Toast, useToast } from "@/components/Toast";
 
+// The poster tints for events with no flyer: warm paper colours the ink
+// stays readable on, in either theme. Keyed on the id so a card doesn't
+// change clothes between visits.
+const POSTER_TINTS = ["#f2e3cf", "#dfe8d4", "#e6e0f0", "#f6ded6", "#dbe8ec", "#f0e0e8"];
+const posterTint = (id: string) => {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return POSTER_TINTS[h % POSTER_TINTS.length];
+};
+
 export type DiscoverCoach = {
   id: string;
   handle: string;
@@ -280,19 +290,23 @@ export function DiscoverList({
                   </span>
                 </Link>
               ) : (
-                <Link key={e.id} className="disev" href={e.href}>
-                  <span className="disev-date" aria-hidden="true">
+                // No flyer? Make one. A tinted card with the date riding the
+                // corner, so the board reads as a wall of posters rather than
+                // a calendar. The tint is picked by the event's id, so a card
+                // keeps its colour for life.
+                <Link
+                  key={e.id}
+                  className="disposter"
+                  href={e.href}
+                  style={{ background: posterTint(e.id) }}
+                >
+                  <span className="disev-date disposter-date" aria-hidden="true">
                     <span className="mo">{e.mon}</span>
                     <span className="dy">{e.day}</span>
                   </span>
-                  <span className="disev-txt">
-                    <span className="nm">{e.name}</span>
-                    <span className="sub">{e.sub}</span>
-                    {e.by && <span className="wk">{e.by}</span>}
-                  </span>
-                  <span className="disev-chev">
-                    <Icon name="chevron_right" size={18} />
-                  </span>
+                  <span className="disposter-nm">{e.name}</span>
+                  <span className="disposter-sub">{e.sub}</span>
+                  {e.by && <span className="disposter-by">{e.by}</span>}
                 </Link>
               ),
             )}

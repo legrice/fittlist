@@ -22,6 +22,7 @@ export function EventPageActions({
   shareUrl,
   initialCompanions = [],
   myHandle = null,
+  othersCount = null,
 }: {
   id: string;
   /** Signed in and not the poster: the only viewer with a mark to make. */
@@ -32,6 +33,8 @@ export function EventPageActions({
   shareUrl: string;
   initialCompanions?: string[];
   myHandle?: string | null;
+  /** How many other people this going viewer may see. null = not going. */
+  othersCount?: number | null;
 }) {
   const router = useRouter();
   const [going, setGoing] = useState(initialGoing);
@@ -93,6 +96,19 @@ export function EventPageActions({
             return res.ok ? (res.companions ?? []) : null;
           }}
         />
+      )}
+      {/* An empty room is an invitation, not a verdict: the share leans in
+          exactly when it would help. */}
+      {going && othersCount === 0 && (
+        <div className="emptyroom">
+          <h3 className="classsheet-roster-h">Also going</h3>
+          <p className="emptyroom-p">
+            No one else yet. Fitness is better together, so bring somebody.
+          </p>
+          <button className="emptyroom-btn" onClick={share}>
+            <Icon name="campaign" size={17} /> Share with friends
+          </button>
+        </div>
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>

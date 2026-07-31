@@ -173,6 +173,7 @@ export default async function EventPage({ params }: Props) {
           shareUrl={`${siteOrigin()}/e/${ev.id}`}
           initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
           myHandle={viewerHandle}
+          othersCount={viewerId && going ? faces.length : null}
         />
         {ev.link && (
           <a className="btn si evlink" href={ev.link} target="_blank" rel="noopener">

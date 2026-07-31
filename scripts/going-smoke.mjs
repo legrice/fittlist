@@ -141,15 +141,9 @@ await r.goto(BASE + "/feed");
 await r.locator(".feedagenda .ps-event").first().click();
 await r.locator(".ovcta-save").waitFor();
 await r.locator(".ovcta-save").click();
-// The second screen opens on a fresh yes: "You're in", with the picker.
-// Ruth's mutual Sarah lists as a row; picking her and sending drops an
-// in-app ask in her Updates.
-await r.getByRole("heading", { name: /You.re in/ }).waitFor();
-await r.locator(".tellrow", { hasText: "Sarah" }).click();
-await r.locator(".tellbtn", { hasText: "Ask 1 person to come" }).click();
-await r.locator(".tellbtn", { hasText: "Asked" }).waitFor();
-await r.locator(".tellbtn.tellbtn-text", { hasText: "aren't on fittlist" }).waitFor();
-await r.locator(".tellsheet-done").click();
+// The note answers the heart: the favorites toast, with the door to the
+// list it joined. No second screen.
+await r.getByText("Added to your favorites").waitFor();
 await r.locator(".ovcta-save.on").waitFor();
 // the word leaves with the tap: just the filled heart now
 if ((await r.locator(".ovcta-save").innerText()).trim()) fail("the saved heart should drop the word");
@@ -184,8 +178,7 @@ console.log("companions ok (named friends ride the roster, no accounts needed)")
 // the ask Ruth sent on purpose.
 await m.goto(BASE + "/updates");
 await m.getByText("Ruth is going too").waitFor();
-await m.getByText("Ruth asked you to come along").waitFor();
-console.log("going-too and the ask ok (mutuals only, same occurrence)");
+console.log("going-too ok (mutuals only, same occurrence)");
 // a stranger who hasn't committed sees no list
 const c4 = await b.newContext({ viewport: { width: 390, height: 844 } });
 const n = await c4.newPage();
@@ -231,7 +224,7 @@ await co.locator("#evStart").fill(evDate.toISOString().slice(0, 10));
 await co.locator("#evPlace").fill("Harborside, Jersey City");
 await co.getByRole("button", { name: "Post event" }).click();
 await co.getByText("Event posted").waitFor();
-await co.locator(".disev", { hasText: "Harbor Throwdown" }).click();
+await co.locator(".disposter", { hasText: "Harbor Throwdown" }).click();
 await co.waitForURL(/\/e\//);
 const evUrl = co.url();
 // Sarah goes; her mutual Ruth hears even though Ruth isn't going yet

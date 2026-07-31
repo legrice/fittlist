@@ -3672,3 +3672,49 @@ button.ps-card { cursor: pointer; }
 .ovmenu-item:active { background: var(--cl); }
 .ovmenu-item .icon { color: var(--ol); flex-shrink: 0; }
 .ovmenu-quiet { color: var(--ol); }
+
+/* "Added to your favorites": the note that answers the heart, in the top
+   third where the eye already is. Ink on paper, flipping with the theme. */
+.favtoast {
+  position: fixed; top: 30vh; left: 50%; z-index: 48;
+  display: flex; align-items: center; gap: 9px; white-space: nowrap;
+  padding: 13px 20px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+  box-shadow: 0 12px 34px rgba(23, 26, 31, .3);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px;
+  opacity: 0; transform: translateX(-50%) translateY(-8px);
+  pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+}
+.favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.favtoast-heart svg { fill: var(--si); stroke: var(--si); }
+.favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+
+/* The empty room: an invitation, not a verdict. The one place share lives. */
+.emptyroom { margin-top: 18px; }
+.emptyroom-p { font-size: 13.5px; color: var(--ol); margin: 4px 0 12px; }
+.emptyroom-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--si-tint); color: var(--si-ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+}
+.emptyroom-btn:active { transform: scale(.98); }
+
+/* An event with no flyer gets a poster made for it: tinted card, date tile
+   riding the corner, the name set big. Ink stays ink in the dark theme too,
+   because the tints are paper whatever the sky is. */
+.disposter {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 150px; border-radius: 18px; padding: 16px; margin-bottom: 14px;
+  text-decoration: none; color: #191502; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.disposter:active { transform: scale(.99); }
+.disposter-date { position: absolute; top: 12px; left: 12px; background: #fff; color: #191502; }
+.disposter-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 800;
+  font-size: 24px; line-height: 1.06; letter-spacing: -.01em;
+}
+.disposter-sub { margin-top: 6px; font-size: 13px; font-weight: 600; opacity: .72; }
+.disposter-by { margin-top: 2px; font-size: 12px; font-weight: 600; opacity: .55; }
