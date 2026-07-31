@@ -33,11 +33,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!ev) return { title: "fittlist" };
   const title = `${ev.name} · fittlist`;
   const description = `${dayLabel(ev.startDate)} at ${ev.place}`;
+  const image = `${siteOrigin()}/api/og/event/${ev.id}`;
   return {
     title,
     description,
     alternates: { canonical: `${siteOrigin()}/e/${ev.id}` },
-    openGraph: { title, description, siteName: "fittlist" },
+    openGraph: {
+      title,
+      description,
+      siteName: "fittlist",
+      images: [{ url: image, width: 1200, height: 630, alt: ev.name }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
