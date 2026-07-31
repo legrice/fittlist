@@ -20,6 +20,7 @@ import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
+import { MyCalendar } from "@/components/MyCalendar";
 import { InviteFriends, InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
@@ -54,6 +55,7 @@ export function ProfileSheet({
   passkeyCount,
   isAdmin = false,
   canSendFeedback = false,
+  hasShifts = false,
   avatarColor,
   showFanView = false,
   discoverable = true,
@@ -87,6 +89,8 @@ export function ProfileSheet({
   /** False when there's nobody behind the door: no admin account exists, or
    *  you are the one it would go to. */
   canSendFeedback?: boolean;
+  /** They're on a gym's rota, so the calendar row says so. */
+  hasShifts?: boolean;
   /** The coach's own palette colour, so a photo-less avatar reads as theirs. */
   avatarColor: string;
   showFanView?: boolean;
@@ -448,17 +452,18 @@ export function ProfileSheet({
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
+          {/* Back, because a gym's rota puts shifts in here and a coach has to
+              be able to see what they're teaching without opening the app.
+              Not knowing you were on is what cost somebody a class. */}
+          <MyCalendar hasShifts={hasShifts} />
           <NotificationPrefs />
           <DarkModeToggle initialOn={look === "dark"} />
         </div>
 
         {/* "Your week" and "Share classes you're attending" used to live here.
             The Following tab already is your week, so the row was a second
-            door to the same room. MyCalendar (the followed-classes feed) is
-            hidden for now: the subscribe flow isn't good enough yet; the
-            /api/cal/me endpoint stays live for anyone already subscribed.
-            Add to Home Screen left too: the installed shell lags the site
-            while features ship this fast. */}
+            door to the same room. Add to Home Screen left too: the installed
+            shell lags the site while features ship this fast. */}
         <h3 className="setgroup-h">The beta</h3>
         <div className="settingslist">
           {/* Beta users bring the next beta users in. */}
