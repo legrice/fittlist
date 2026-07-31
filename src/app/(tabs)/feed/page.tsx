@@ -7,7 +7,6 @@ import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
-import { FeedWeekFab } from "@/components/FeedWeekFab";
 import { weekCount } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
@@ -198,7 +197,6 @@ export default async function FeedPage({
           />
           </>
         )}
-      <FeedWeekFab count={myCount} />
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </>
   );

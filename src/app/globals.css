@@ -3397,10 +3397,8 @@ button.ps-card { cursor: pointer; }
 .tellbtn-text { background: var(--si-tint); color: var(--si-ink); }
 .tellsheet-done { display: block; margin: 16px auto 4px; }
 
-/* Following: the teach line over an empty week, and the floating share
-   sitting clear of the tab bar. */
+/* Following: the teach line over an empty week. */
 .feedhint { font-size: 13px; color: var(--ol); margin: 2px 0 14px; }
-.feedfab { bottom: calc(88px + env(safe-area-inset-bottom)); }
 /* A member's chips and their one link out. */
 .mempro-trains { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
 .mempro-insta {
