@@ -167,6 +167,14 @@ export function WeekScreen({
                 : `${left} class${left === 1 ? "" : "es"} coming up`}
             </p>
           </div>
+          {/* The other way in, across from the title: the class you already
+              go to, whose coach isn't here yet. The empty state carries its
+              own copy of this door. */}
+          {shown.length > 0 && (
+            <button className="weekinvite weekaddown weekaddtop" onClick={() => setAddOpen(true)}>
+              <Icon name="add" size={15} /> Add your own class
+            </button>
+          )}
         </div>
 
         {shown.length === 0 ? (
@@ -271,11 +279,6 @@ export function WeekScreen({
                 </div>
               ))}
             </div>
-            {/* In-flow rather than pinned: the strip stays one row, and this
-                belongs with the list it adds to. */}
-            <button className="weekinvite weekaddown" onClick={() => setAddOpen(true)}>
-              <Icon name="add" size={15} /> Add your own class
-            </button>
             {namedCoach && (
               <button className="weekinvite" onClick={() => setInviteOpen(true)}>
                 Is {namedCoach.split(/\s+/)[0]} on fittlist? Send them your invite link

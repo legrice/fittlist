@@ -1347,6 +1347,8 @@ button.ps-card { cursor: pointer; }
 }
 .weekinvite:active { background: var(--cl-d); }
 .weekaddown { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; }
+/* Across from the title, top-aligned with it rather than the subtitle. */
+.weekaddtop { align-self: flex-start; margin: 4px 0 0; flex-shrink: 0; }
 /* Someone you know is going: mutual follows on the same occurrence. */
 .weekrow-also { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
 .weekrow-alsoav {
