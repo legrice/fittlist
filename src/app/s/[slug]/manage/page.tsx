@@ -54,6 +54,7 @@ export default async function ManageStudioPage({
     <GymRota
       studioId={studio.id}
       studioName={studio.name}
+      studioAddress={studio.address}
       backHref={`/s/${studio.slug ?? studio.id}`}
       manageBase={`/s/${studio.slug ?? studio.id}/manage`}
       hasAccount={!!studio.accountUserId}
