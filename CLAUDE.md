@@ -363,6 +363,22 @@ is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
 clears a departing coach's `coachUserId` so their slots reopen rather than
 vanishing. `scripts/gym-smoke.mjs` walks the whole path.
 
+**A studio running a schedule wears the same tabs a person does.** `/s/{slug}`
+is the schedule, `/s/{slug}/about` and `/s/{slug}/contact` the rest, and
+`/s/{slug}/schedule` resolves too. The schedule leads for the same reason it
+does on a coach's page: it's what the link is for. A directory entry with no
+schedule has nothing to divide, so it keeps the single sectioned page it always
+had (`show()` in `StudioView`), which is almost every row in the table and
+should stay that way. `samePage()` already collapses the suffixes, so back
+pops. A gym's class lives at `/s/{slug}/{classId}`, because its account has no
+handle; `classDetail()` takes a handle **or** a studio slug and scopes the
+lookup either way.
+
+**A handle is not "has a page you can link to".** `week.ts` dropped any saved
+class whose owner had no handle, which silently emptied a member's plans of
+every gym class the moment gyms existed. Anything building a class URL wants
+the base (`handle`, or `s/{slug}` for a gym), not the handle.
+
 **A studio is the commons until somebody claims it.** The directory has always
 run on trust: any coach can correct any entry, because a row nobody owns is
 better kept right by the people who teach there than left wrong. One

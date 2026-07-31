@@ -3608,3 +3608,6 @@ button.ps-card { cursor: pointer; }
 .rotarow-dur { font-size: 12px; color: var(--ol); flex-shrink: 0; }
 .rotatimes { display: flex; gap: 12px; }
 .rotatimes > div { flex: 1; min-width: 0; }
+
+/* A studio's tabs sit where a person's do, and read the same. */
+.studiotabs { margin-top: 18px; }

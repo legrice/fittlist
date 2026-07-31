@@ -155,7 +155,13 @@ export async function sharedWeek(
     const c = classById.get(m.classId);
     if (!c) continue;
     const coach = coachById.get(c.userId);
-    if (!coach?.handle) continue;
+    // The base its class page lives under. A coach's is their handle; a gym's
+    // account has none by design, so its classes are addressed under the
+    // studio. Testing the handle alone dropped every gym class out of the week
+    // silently, which is the same handle-as-proxy mistake as ever.
+    const st = c.studioId ? studioById.get(c.studioId) : null;
+    const base = coach?.handle ?? (st?.slug ? `s/${st.slug}` : null);
+    if (!coach || !base) continue;
     const t = clockParts(c.startTime);
     const list = byDay.get(m.occurrenceDate) ?? [];
     list.push({
@@ -166,7 +172,7 @@ export async function sharedWeek(
       ap: t.ap,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
-      handle: coach.handle,
+      handle: base,
       coachName: coach.name,
     });
     byDay.set(m.occurrenceDate, list);
@@ -302,7 +308,13 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     // moment. Skip it rather than rendering a row with nothing in it.
     if (!c) continue;
     const coach = coachById.get(c.userId);
-    if (!coach?.handle) continue;
+    // The base its class page lives under. A coach's is their handle; a gym's
+    // account has none by design, so its classes are addressed under the
+    // studio. Testing the handle alone dropped every gym class out of the week
+    // silently, which is the same handle-as-proxy mistake as ever.
+    const st = c.studioId ? studioById.get(c.studioId) : null;
+    const base = coach?.handle ?? (st?.slug ? `s/${st.slug}` : null);
+    if (!coach || !base) continue;
     const t = clockParts(c.startTime);
     const list = byDay.get(m.occurrenceDate) ?? [];
     list.push({
@@ -315,7 +327,7 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ap: t.ap,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
-      handle: coach.handle,
+      handle: base,
       coachName: coach.name,
       coachPhoto: coach.photo,
       coachColor: avatarColor(coach),
