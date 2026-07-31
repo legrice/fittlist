@@ -5,6 +5,7 @@ import { nextAvatarColor } from "@/lib/avatar-server";
 import { appleConfigured, appleEmail, appleExchange } from "@/lib/apple";
 import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
+import { pushSignupPing } from "@/lib/push";
 import { siteOrigin } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
     [user] = await db.insert(schema.users)
       .values({ email, avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
+      pushSignupPing(email); // fire and forget
     await acceptInvite(email, user.id);
   }
   await createSession(user.id);

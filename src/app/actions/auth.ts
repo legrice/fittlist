@@ -27,6 +27,7 @@ import { emailHtml } from "@/lib/email-html";
 import { fansEnabled } from "@/lib/flags";
 import { RESERVED_HANDLES, siteOrigin, slug } from "@/lib/format";
 import { signupSource } from "@/lib/attribution";
+import { pushSignupPing } from "@/lib/push";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
 const MAX_LINKS_PER_EMAIL = 3; // per TTL window
@@ -76,6 +77,7 @@ export async function passwordAuth(
       .insert(schema.users)
       .values({ email, passwordHash, kind: fan ? "fan" : "coach", avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
+    pushSignupPing(email); // fire and forget; signup never waits on a ping
     await acceptInvite(email, created.id);
     await createSession(created.id);
     return { ok: true, needsProfile: true, hasPasskey: false, fan };
@@ -263,6 +265,7 @@ export async function consumeMagicToken(
       .insert(schema.users)
       .values({ email: row.email, avatarColor: await nextAvatarColor(), signupSource: await signupSource() })
       .returning();
+    pushSignupPing(row.email);
     await acceptInvite(row.email, user.id);
   }
   await createSession(user.id);

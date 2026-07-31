@@ -2420,6 +2420,19 @@ button.ps-card { cursor: pointer; }
 }
 .reqway:active { background: var(--cl-d); }
 .reqcard-btn { width: 100%; }
+/* The admin's signup pings: one row, one switch, per device. */
+.pushping { margin: 2px 0 16px; }
+.pushping-btn {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 12px 14px; border-radius: 14px; cursor: pointer;
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
+  text-align: left;
+}
+.pushping-btn .icon { color: var(--si); flex-shrink: 0; }
+.pushping-btn .switch { margin-left: auto; }
+.pushping-btn[disabled] { opacity: .6; }
+
 .adminstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; margin-bottom: 18px; }
 .adminstat {
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
