@@ -180,6 +180,12 @@ export default async function StudioPage({ params, searchParams }: Props) {
               <Icon name="verified" size={15} /> Kept by the studio
             </p>
           )}
+          {/* The way into the rota, for the people who run the place. */}
+          {access.isManager && s.accountUserId && (
+            <Link className="btn ghost studiomanage" href={`/s/${s.slug ?? s.id}/manage`}>
+              <Icon name="calendar_month" size={17} /> The schedule
+            </Link>
+          )}
         </div>
         {s.types.length > 0 && (
           <div className="studiotypes">

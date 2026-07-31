@@ -228,6 +228,12 @@ export const studios = pgTable("studios", {
   website: text("website"),
   instagram: text("instagram"),
   createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  // The gym's own account, once it runs its schedule here. A users row with
+  // kind "gym": no handle, no password, nobody signs into it. It exists so the
+  // gym's classes have an owner that isn't a person, which is the whole reason
+  // Tom can teach without a public profile and Josh can publish a schedule
+  // without naming anyone. Its managers act for it; see studio_managers.
+  accountUserId: uuid("account_user_id").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -394,6 +400,12 @@ export const classes = pgTable(
     // deleting: a coach teaching Stretch+ at two studios has two series and one
     // template, and grouping by the template collapsed them into one class.
     seriesId: uuid("series_id").notNull().defaultRandom(),
+    // Who is teaching it, when the owner is a gym rather than a person. The
+    // class belongs to the gym (userId); this is the rota. It drives the
+    // shift, the notification and the calendar, and whether the name is ever
+    // shown in public is a separate question with two people's say in it.
+    // Null on an ordinary coach's own class, and on a gym slot nobody covers.
+    coachUserId: uuid("coach_user_id").references(() => users.id),
     dayOfWeek: integer("day_of_week").notNull(),
     // null = standing weekly (shows every week, link never stales); set = a
     // one-off pinned to this ISO date, shown only in the week it falls in.

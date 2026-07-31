@@ -55,6 +55,8 @@ const ICON: Record<string, string> = {
   class_invite: "event",
   event_going: "event",
   studio_manager: "verified",
+  shift_assigned: "calendar_month",
+  shift_dropped: "event",
 };
 
 function fmt(d: Date | string) {

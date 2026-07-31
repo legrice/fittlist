@@ -10,6 +10,7 @@ import {
   adminAddStudio,
   adminAddStudioManager,
   adminDeleteStudio,
+  adminEnableStudioSchedule,
   adminRemoveStudioManager,
   adminBroadcast,
   adminDeleteUser,
@@ -62,6 +63,8 @@ type Studio = {
   classCount: number;
   /** Who runs the page. Any at all means the studio is claimed. */
   managers: { userId: string; name: string; email: string }[];
+  /** It has its own account, so it can run a schedule. */
+  hasAccount: boolean;
 };
 type Invite = {
   id: string;
@@ -1253,6 +1256,12 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
       toast("They run this page now");
     });
 
+  const enableSchedule = () =>
+    start(async () => {
+      const res = await adminEnableStudioSchedule(s.id);
+      toast(res.ok ? "Its schedule is on" : (res.error ?? "Couldn't turn it on"));
+    });
+
   const removeManager = (userId: string) =>
     start(async () => {
       const res = await adminRemoveStudioManager(s.id, userId);
@@ -1301,6 +1310,12 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
             </button>
           </div>
         ))}
+        {s.managers.length > 0 && !s.hasAccount && (
+          <button className="linktoggle" disabled={pending} onClick={enableSchedule}>
+            Turn on its schedule
+          </button>
+        )}
+        {s.hasAccount && <span className="adminmgr-em">runs its own schedule</span>}
         {adding ? (
           <div className="adminaddform-row" style={{ marginTop: 8 }}>
             <input
