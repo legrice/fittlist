@@ -112,6 +112,18 @@ export default async function AdminPage({
     source: u.signupSource ?? "direct",
   }));
 
+  // Who runs each page. A studio with anyone here is claimed: the directory's
+  // open-to-any-coach rule stops applying to it.
+  const managerRows = await db.select().from(schema.studioManagers);
+  const managersByStudio = new Map<string, { userId: string; name: string; email: string }[]>();
+  for (const m of managerRows) {
+    const u = users.find((x) => x.id === m.userId);
+    if (!u) continue;
+    const list = managersByStudio.get(m.studioId) ?? [];
+    list.push({ userId: u.id, name: u.name.trim() || u.email.split("@")[0], email: u.email });
+    managersByStudio.set(m.studioId, list);
+  }
+
   const studioRows = studios.map((s) => ({
     id: s.id,
     slug: s.slug,
@@ -120,6 +132,7 @@ export default async function AdminPage({
     added: fmt(s.createdAt),
     coachCount: coachesByStudio.get(s.id)?.size ?? 0,
     classCount: classCountByStudio.get(s.id) ?? 0,
+    managers: (managersByStudio.get(s.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
   }));
 
   const userById = new Map(users.map((u) => [u.id, u]));

@@ -54,6 +54,7 @@ const ICON: Record<string, string> = {
   going_together: "groups",
   class_invite: "event",
   event_going: "event",
+  studio_manager: "verified",
 };
 
 function fmt(d: Date | string) {

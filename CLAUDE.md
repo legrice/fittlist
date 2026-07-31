@@ -339,6 +339,21 @@ person means by "this class" anyway. The cost is two denormalised columns
 `adminDeleteUser`. Reports on a deleted class keep rendering in `/admin` as "A
 deleted class", which is on purpose: the report is still a fact about a coach.
 
+**A studio is the commons until somebody claims it.** The directory has always
+run on trust: any coach can correct any entry, because a row nobody owns is
+better kept right by the people who teach there than left wrong. One
+`studio_managers` row changes that. From the first manager on, the studio is
+claimed: only its managers (and `currentAdmin()`, who must be able to fix a gym
+that locks itself out) may edit, everyone else gets the Suggest an edit door
+they already had, and the page says "Kept by the studio" so the missing pencil
+has a reason. `studioAccess()` in `src/lib/studioaccess.ts` is the one answer
+both the page and `updateStudio` ask, so the button and the action can't
+disagree. It's a join table rather than a column because a gym is a place of
+work with more than one person running it: an owner and a manager both hold
+keys, and either one leaving must not lock the other out. The last key leaving
+returns the page to the commons, which is also what `adminDeleteUser` does with
+a departing manager's row.
+
 **Adding a users foreign key means editing `adminDeleteUser`.** It deletes rows
 the account owns and de-attributes shared ones, in an order the foreign keys
 allow; a new reference that isn't listed there makes deleting any user fail

@@ -7,6 +7,7 @@ import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { STUDIO_TYPES } from "@/lib/studio";
+import { studioAccess } from "@/lib/studioaccess";
 
 export type StudioDto = { id: string; seq: number; name: string; address: string };
 
@@ -88,6 +89,15 @@ export async function updateStudio(
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   if (!me || me.kind === "fan") return { ok: false, error: "Only coaches can edit a studio." };
+
+  // Claimed means the gym states its own details. The door isn't closed, it
+  // moved: Suggest an edit goes to the people who can actually answer.
+  const access = await studioAccess(id, { id: userId, kind: me.kind });
+  if (!access.canEdit)
+    return {
+      ok: false,
+      error: "This studio keeps its own page. Use Suggest an edit and they'll see it.",
+    };
 
   const name = input.name.trim();
   const address = input.address.trim();
