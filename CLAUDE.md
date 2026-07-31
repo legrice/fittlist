@@ -38,8 +38,9 @@ feel about it.
 
 ```bash
 npm run dev                      # localhost:3000, PGlite at .data/pglite
-npm run build                    # runs the copy check first
+npm run build                    # runs the copy and story-layout checks first
 npm run db:generate              # after any schema change
+npm run check:story              # the story image fits its canvas (no browser)
 ```
 
 Migrations run automatically on the first `getDb()`, so a fresh `.data/pglite`
@@ -178,6 +179,20 @@ suites have to keep the same clock: a "yesterday" computed in UTC is the app's
 today during that window, which is a legal end date, not a passed one. A
 timezone per coach or per viewer is the real fix someday, and it lands in
 those three functions.
+
+**The story image has three levels of detail, and the sums have to match the
+paint.** The canvas is a fixed 1080x1920 with no scroll, and the routes used to
+draw rows until they ran out of it: eight classes clipped a real coach's poster
+and twenty dropped twelve of them silently. `planStory()` in
+`src/lib/storyplan.ts` now picks the most detailed layout that fits: a row per
+class, then the same rows tighter with a shared studio lifted out of every one
+of them, then a line per day with each class's times collapsed onto it. Only
+past the third does a day come off, and then the poster says how many. The
+heights live beside the tiers because Satori can't measure, so the only thing
+keeping the footer off Thursday is `measurePlan()` counting what the routes
+draw; `npm run check:story` holds 6,000 synthetic weeks to that budget and the
+build runs it. Change a font size or a margin in either story route and change
+its constant in the same commit.
 
 **Feature flags** (`src/lib/flags.ts`) compare exact strings. `FANS_ENABLED`
 must be literally `"true"` or `"coaches"`; `"1"` and `"yes"` are off.

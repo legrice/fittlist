@@ -6,6 +6,7 @@ import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
 import { DAYS, fmtTime, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { listBudget, planStory } from "@/lib/storyplan";
 
 // The member's share image: the classes they marked "going" this week, across
 // every coach and studio. The mirror of the coach's "Train with me" — this one
@@ -110,6 +111,26 @@ export async function GET(req: Request) {
   const hSize = maxLine <= 9 ? 104 : maxLine <= 13 ? 86 : 70;
   const showPhoto = prefs.showPhoto !== false && !!me.photo;
 
+  // Same three levels of detail as the coach's poster, for the same reason:
+  // the canvas doesn't grow, so a full week has to summarise rather than run
+  // off the bottom of it.
+  const plan = planStory(
+    byDay.map(({ day, items }) => ({
+      day,
+      items: items.map((c) => ({
+        time: fmtTime(c.startTime),
+        name: c.name,
+        where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
+        who: coachById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "",
+      })),
+    })),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78),
+  );
+  const m =
+    plan.tier === 1
+      ? { dayFs: 34, dayMt: 34, dayMb: 17, timeFs: 43, timeW: 172, gap: 34, nameFs: 48, subFs: 41, rowMb: 22, colW: 702 }
+      : { dayFs: 30, dayMt: 26, dayMb: 13, timeFs: 38, timeW: 150, gap: 30, nameFs: 42, subFs: 36, rowMb: 18, colW: 728 };
+
   return new ImageResponse(
     (
       <div
@@ -184,60 +205,119 @@ export async function GET(req: Request) {
           {line2 && <span style={{ color: t.accent }}>{line2}</span>}
         </div>
 
+        {/* What every class has in common, said once instead of on every row. */}
+        {plan.lifted && (
+          <div style={{ display: "flex", fontSize: 36, color: t.faint, marginBottom: 30 }}>
+            {plan.lifted}
+          </div>
+        )}
+
         {byDay.length === 0 ? (
           <div style={{ display: "flex", color: t.faint, fontSize: 44 }}>
             Nothing marked yet this week.
           </div>
+        ) : plan.tier === 3 ? (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {plan.summary.map(({ day, entries }) => (
+              <div key={day} style={{ display: "flex", marginBottom: 26 }}>
+                <span
+                  style={{
+                    display: "flex",
+                    width: 118,
+                    flexShrink: 0,
+                    paddingTop: Math.max(2, Math.round((plan.summaryFs * 1.3 - 36) / 2)),
+                    fontWeight: 600,
+                    fontSize: 30,
+                    letterSpacing: 3,
+                    textTransform: "uppercase",
+                    color: t.faint,
+                  }}
+                >
+                  {day}
+                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: 764,
+                    fontSize: plan.summaryFs,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {entries.map((e) => (
+                    <div key={e.name} style={{ display: "flex" }}>
+                      <span style={{ fontWeight: 700 }}>{e.name}</span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: t.muted,
+                          marginLeft: Math.round(plan.summaryFs * 0.32),
+                        }}
+                      >
+                        {e.times}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {plan.moreDays > 0 && (
+              <div style={{ display: "flex", fontSize: 34, color: t.faint, marginTop: 12 }}>
+                + {plan.moreDays} more {plan.moreDays === 1 ? "day" : "days"} at fittlist.co
+              </div>
+            )}
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {byDay.map(({ day, items }) => (
+            {plan.days.map(({ day, rows }) => (
               <div key={day} style={{ display: "flex", flexDirection: "column" }}>
                 <div
                   style={{
                     display: "flex",
                     fontWeight: 600,
-                    fontSize: 34,
+                    fontSize: m.dayFs,
                     letterSpacing: 4,
                     textTransform: "uppercase",
                     color: t.faint,
-                    margin: "34px 0 17px",
+                    margin: `${m.dayMt}px 0 ${m.dayMb}px`,
                   }}
                 >
                   {day}
                 </div>
-                {items.map((c) => {
-                  const where = (c.studioId && studioName.get(c.studioId)) || c.location || "";
-                  const coach = coachById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "";
-                  return (
-                    <div key={c.id} style={{ display: "flex", gap: 34, marginBottom: 22 }}>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 43,
-                          color: t.time,
-                          width: 172,
-                          flexShrink: 0,
-                          display: "flex",
-                        }}
-                      >
-                        {fmtTime(c.startTime)}
+                {rows.map((r, i) => (
+                  <div
+                    key={`${day}-${i}`}
+                    style={{ display: "flex", gap: m.gap, marginBottom: m.rowMb }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        fontSize: m.timeFs,
+                        color: t.time,
+                        width: m.timeW,
+                        flexShrink: 0,
+                        display: "flex",
+                      }}
+                    >
+                      {r.time}
+                    </span>
+                    {/* Bounded, so a long class name wraps instead of running
+                        off the right edge of the image. 1080 canvas less
+                        2x86 padding, less the time column and the gap. Satori
+                        won't wrap a flex child that has no width to wrap
+                        inside. */}
+                    <div style={{ display: "flex", flexDirection: "column", width: m.colW }}>
+                      <span style={{ fontSize: m.nameFs, fontWeight: 700, lineHeight: 1.15 }}>
+                        {r.name}
                       </span>
-                      {/* Bounded, so a long class name wraps instead of running
-                          off the right edge of the image. 1080 canvas less
-                          2x86 padding, less the 172 time column and the 34
-                          gap. Satori won't wrap a flex child that has no
-                          width to wrap inside. */}
-                      <div style={{ display: "flex", flexDirection: "column", width: 702 }}>
-                        <span style={{ fontSize: 48, fontWeight: 700, lineHeight: 1.15 }}>
-                          {c.name}
+                      {r.sub && (
+                        <span style={{ fontSize: m.subFs, color: t.faint, lineHeight: 1.2 }}>
+                          {r.sub}
                         </span>
-                        <span style={{ fontSize: 41, color: t.faint, lineHeight: 1.2 }}>
-                          {[coach, where].filter(Boolean).join(" · ")}
-                        </span>
-                      </div>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
