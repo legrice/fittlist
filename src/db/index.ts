@@ -19,7 +19,22 @@ async function init(): Promise<Db> {
     const { Pool } = await import("pg");
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const db = drizzle(pool, { schema });
-    await migrate(db, { migrationsFolder: "./drizzle" });
+    // Serverless runs this on every cold start, and two instances racing the
+    // migrator is how the whole site once went down: the loser threw "already
+    // exists" and served that error for the rest of its life. The advisory
+    // lock makes the migration single-file across instances; it has to live
+    // on one dedicated connection, because the lock is session-scoped.
+    const lock = await pool.connect();
+    try {
+      await lock.query("select pg_advisory_lock(872619)");
+      await migrate(db, { migrationsFolder: "./drizzle" });
+    } finally {
+      try {
+        await lock.query("select pg_advisory_unlock(872619)");
+      } finally {
+        lock.release();
+      }
+    }
     return db as unknown as Db;
   }
   const { PGlite } = await import("@electric-sql/pglite");
@@ -34,7 +49,15 @@ async function init(): Promise<Db> {
 }
 
 export function getDb(): Promise<Db> {
-  if (!globalThis.__fittlistDb) globalThis.__fittlistDb = init();
+  if (!globalThis.__fittlistDb) {
+    // A failed init must not become the instance's last word. Clear the memo
+    // on rejection so the next request tries again, instead of every request
+    // replaying one bad cold start until the process dies.
+    globalThis.__fittlistDb = init().catch((err) => {
+      globalThis.__fittlistDb = undefined;
+      throw err;
+    });
+  }
   return globalThis.__fittlistDb;
 }
 
