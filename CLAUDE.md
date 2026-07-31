@@ -98,6 +98,11 @@ node scripts/going-smoke.mjs      # Going marks through an edit, a delete, a can
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/pwa-smoke.mjs        # manifest, icons, the worker, the install row
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
+  npm run start > server.log 2>&1 &
+node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, tell, close
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -338,6 +343,25 @@ person means by "this class" anyway. The cost is two denormalised columns
 (`coach_user_id`, `reporter_user_id`), both users FKs, both cleared in
 `adminDeleteUser`. Reports on a deleted class keep rendering in `/admin` as "A
 deleted class", which is on purpose: the report is still a fact about a coach.
+
+**A gym's class belongs to the gym, not to whoever is teaching it.** This is
+the one inversion the rota rests on. `studios.accountUserId` points at a `users`
+row with `kind = "gym"`: no handle, no password, nobody signs into it, and it
+exists so a gym's classes have an owner that isn't a person.
+`classes.coachUserId` is then the rota, driving the shift, the notice and the
+calendar. That split is what lets a gym publish a week without naming anybody
+(a schedule is not a popularity contest) and a coach take shifts without
+wanting a public profile at all. Whether a coach's name is ever shown is a
+separate question with two people's say in it, and the more private setting
+wins. A shift is work, not a listing: it stays out of the coach's public page
+and their public `.ics`, and lands in the private token feed instead.
+
+One row is one slot, mirroring the spreadsheet's one cell per class, so
+`updateGymClass` edits in place and a Going mark on it is never at risk. The
+gym account is excluded from the admin's people counts and has no handle, which
+is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
+clears a departing coach's `coachUserId` so their slots reopen rather than
+vanishing. `scripts/gym-smoke.mjs` walks the whole path.
 
 **A studio is the commons until somebody claims it.** The directory has always
 run on trust: any coach can correct any entry, because a row nobody owns is

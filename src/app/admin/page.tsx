@@ -1,4 +1,4 @@
-import { desc, eq, isNull } from "drizzle-orm";
+import { desc, eq, isNull, ne } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -29,7 +29,14 @@ export default async function AdminPage({
     await Promise.all([
     // Newest first: the person you're looking for in a beta is almost always
     // the one who just signed up.
-    db.select().from(schema.users).orderBy(desc(schema.users.createdAt)),
+    // A gym's account is a users row so its classes have an owner, but it is
+    // not a person: it never signs in, and counting it as a coach would say
+    // there is one more of us than there is.
+    db
+      .select()
+      .from(schema.users)
+      .where(ne(schema.users.kind, "gym"))
+      .orderBy(desc(schema.users.createdAt)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select({
@@ -133,6 +140,7 @@ export default async function AdminPage({
     coachCount: coachesByStudio.get(s.id)?.size ?? 0,
     classCount: classCountByStudio.get(s.id) ?? 0,
     managers: (managersByStudio.get(s.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+    hasAccount: !!s.accountUserId,
   }));
 
   const userById = new Map(users.map((u) => [u.id, u]));

@@ -421,6 +421,13 @@
       "when": 1785518895716,
       "tag": "0059_volatile_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1785524972316,
+      "tag": "0060_magenta_xavin",
+      "breakpoints": true
     }
   ]
 }

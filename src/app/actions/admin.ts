@@ -237,6 +237,52 @@ export async function adminAddStudioManager(
   return { ok: true };
 }
 
+// Give a claimed studio its own account, which is what lets it run a schedule.
+// A users row with kind "gym": no handle, no password, no way to sign in. It
+// exists to own the gym's classes so they can be public without belonging to
+// any one person, which is what lets a coach take shifts while staying off the
+// public side entirely. Its managers act for it.
+export async function adminEnableStudioSchedule(
+  studioId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
+  if (!studio) return { ok: false, error: "Studio not found." };
+  if (studio.accountUserId) return { ok: false, error: "It already has one." };
+
+  const managers = await db
+    .select({ id: schema.studioManagers.id })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  if (!managers.length)
+    return { ok: false, error: "Hand the page to somebody first: a rota needs someone to run it." };
+
+  // An address nobody can receive mail at or sign up with, so the account can
+  // never be logged into and never collides with a real person's email.
+  const [account] = await db
+    .insert(schema.users)
+    .values({
+      kind: "gym",
+      email: `studio.${studio.id}@gym.fittlist.invalid`,
+      name: studio.name,
+      // No handle: a gym lives at /s/{slug}, not at /{handle}, and the handle
+      // is also what keeps it out of Discover's people list.
+      handle: null,
+      discoverable: false,
+      onboardedAt: new Date(),
+    })
+    .returning();
+  await db
+    .update(schema.studios)
+    .set({ accountUserId: account.id })
+    .where(eq(schema.studios.id, studioId));
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 /** Take the keys back. The last one leaving returns the page to the commons. */
 export async function adminRemoveStudioManager(
   studioId: string,
@@ -279,7 +325,13 @@ export async function adminDeleteStudio(
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.studioId, id));
   await db.delete(schema.studioEdits).where(eq(schema.studioEdits.studioId, id));
   await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
+  const [gone] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
   await db.delete(schema.studios).where(eq(schema.studios.id, id));
+  // The gym's account exists only to own this studio's classes, and the check
+  // above proved there are none left, so it goes with the studio rather than
+  // sitting in the users table as a row nobody can reach.
+  if (gone?.accountUserId)
+    await db.delete(schema.users).where(eq(schema.users.id, gone.accountUserId));
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -294,12 +346,17 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   if (id === admin.id) return { ok: false, error: "You can't delete your own account." };
   const db = await getDb();
   const [u] = await db
-    .select({ email: schema.users.email })
+    .select({ email: schema.users.email, kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, id));
   if (!u) return { ok: false, error: "User not found." };
   if (adminEmails().includes(u.email.toLowerCase())) {
     return { ok: false, error: "Can't delete an admin account." };
+  }
+  // A gym's account isn't a person and this path would take its whole schedule
+  // with it. Deleting the studio is the way to do that, deliberately.
+  if (u.kind === "gym") {
+    return { ok: false, error: "That's a studio's account. Remove the studio instead." };
   }
 
   // Rows the account owns — delete outright, children before parents.
@@ -363,6 +420,13 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.
+  // Their shifts come off the rota rather than going with them: the gym owns
+  // those classes, and a coach leaving turns their slots back into open ones
+  // for somebody else to pick up.
+  await db
+    .update(schema.classes)
+    .set({ coachUserId: null })
+    .where(eq(schema.classes.coachUserId, id));
   // Their keys go with them; a page they ran alone returns to the commons
   // rather than being left locked with nobody holding it.
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));

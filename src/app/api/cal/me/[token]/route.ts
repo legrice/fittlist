@@ -34,11 +34,27 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((c) => [c.id, c]));
+  // A shift's owner is the gym, so its name is what the entry should read as:
+  // "HYROX with Ironbound Performance" is the truth of who you're teaching for.
+  const gymAccounts = await db.select().from(schema.users).where(eq(schema.users.kind, "gym"));
+  for (const g of gymAccounts) if (!coachById.has(g.id)) coachById.set(g.id, g);
 
   const monday = mondayOfCurrentWeek();
-  const classRows = coachIds.length
+  const followed = coachIds.length
     ? await db.select().from(schema.classes).where(inArray(schema.classes.userId, coachIds))
     : [];
+  // The shifts they're on. A gym's class belongs to the gym, so it never turns
+  // up in the followed set even for the person teaching it, and this feed is
+  // where it has to land: it's private (a signed token, not a handle), so a
+  // coach who wants no public presence at all still gets their week in the
+  // calendar they already live in. Not knowing you were on is what cost
+  // somebody a class.
+  const shifts = await db
+    .select()
+    .from(schema.classes)
+    .where(eq(schema.classes.coachUserId, userId));
+  const seen = new Set(followed.map((c) => c.id));
+  const classRows = [...followed, ...shifts.filter((c) => !seen.has(c.id))];
   // Public only. A coach's private client sessions are on their own schedule
   // and must not reach a follower's calendar.
   const rows = classRows.filter((c) => c.isPublic && (!c.specificDate || c.specificDate >= monday));
