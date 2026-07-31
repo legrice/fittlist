@@ -134,6 +134,27 @@ console.log("the coach is told ok");
   console.log("a shift stays off the coach's public side ok");
 }
 
+// And it's in his calendar, which is the fix for not knowing you were on.
+// A signed link, no Google account and no permission from anybody, so the
+// coach who wants nothing public still gets their week.
+{
+  await tom.goto(BASE + "/app?acct=1");
+  const row = tom.locator(".setrow", { hasText: "Your week in your calendar" });
+  await row.waitFor();
+  if (!/shifts you.re on/i.test(await row.innerText()))
+    fail("a coach on a rota should be told the feed carries their shifts");
+  await row.click();
+  const link = tom.locator('.installhow a[href^="webcal:"]');
+  await link.waitFor();
+  const webcal = await link.getAttribute("href");
+  const ics = await tom.request.get(webcal.replace(/^webcal:/, "http:"));
+  if (!ics.ok()) fail("the personal calendar feed is " + ics.status());
+  const text = await ics.text();
+  if (!text.includes("HYROX")) fail("the shift never reached the coach's calendar");
+  if (!text.includes("Ironbound")) fail("the entry should say who the shift is for");
+  console.log("the shift is in the coach's calendar ok");
+}
+
 // ---- the public side: the gym's week, under the gym's name
 {
   // Tabs, and the schedule leads because that's what the link is for.

@@ -5,12 +5,18 @@ import { myCalendarUrl } from "@/app/actions/calfeed";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// Every class from every coach you follow, in the calendar you already use.
+// Your week in the calendar you already use: the classes you saved, and the
+// shifts you're on at a gym.
 //
-// Subscribing beats exporting: the feed is live, so when a coach moves the 6am
-// to 6:15 it moves in your calendar too, and a cancelled week disappears on
+// Subscribing beats exporting: the feed is live, so when a class moves from
+// 6am to 6:15 it moves in your calendar too, and a cancelled one disappears on
 // its own. A one-time .ics download would be wrong within a fortnight.
-export function MyCalendar() {
+//
+// It needs no Google account and no permissions from anyone: the link is a
+// signed token, and every calendar app takes a webcal:// subscription. That
+// matters most for the person who wants nothing public at all and still has to
+// know they're teaching on Thursday.
+export function MyCalendar({ hasShifts = false }: { hasShifts?: boolean }) {
   const [url, setUrl] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
@@ -43,8 +49,12 @@ export function MyCalendar() {
       <button className="setrow" onClick={() => setOpen(!open)}>
         <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
         <span className="setrow-txt">
-          <span className="t">Add classes to your calendar</span>
-          <span className="s">Every coach you follow, kept up to date</span>
+          <span className="t">Your week in your calendar</span>
+          <span className="s">
+            {hasShifts
+              ? "The shifts you're on and the classes you saved"
+              : "The classes you saved, kept up to date"}
+          </span>
         </span>
         <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
       </button>
@@ -52,7 +62,8 @@ export function MyCalendar() {
         <div className="installhow">
           <p>
             It subscribes rather than copying, so a class that moves or gets cancelled updates
-            on its own.
+            on its own. Works with Google Calendar, Apple Calendar and Outlook, and the link is
+            yours alone: don&rsquo;t pass it on.
           </p>
           <div className="adminaddform-row">
             <a className="btn si" href={webcal}>Add to calendar</a>

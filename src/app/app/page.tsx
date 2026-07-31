@@ -84,6 +84,7 @@ export default async function SchedulePage({
     analytics,
     notifUnread,
     week,
+    shiftRows,
   ] = await Promise.all([
     isGoogleConnected(userId),
     feedbackHost(),
@@ -105,6 +106,13 @@ export default async function SchedulePage({
     unreadNotifications(userId),
     // A coach follows people too, so they get the same shortlist.
     weekCount(userId),
+    // On a gym's rota? Then the calendar row says shifts, because that is what
+    // they came looking for.
+    db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(eq(schema.classes.coachUserId, userId))
+      .limit(1),
   ]);
   const adminNew = user && adminEmails().includes(user.email.toLowerCase())
     ? await adminNewActivityCount(userId)
@@ -206,6 +214,7 @@ export default async function SchedulePage({
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
       canSendFeedback={!!fbHost && fbHost.email.toLowerCase() !== (user?.email ?? "").toLowerCase()}
+      hasShifts={shiftRows.length > 0}
       showFanView={await fansVisible()}
       discoverable={user?.discoverable ?? true}
       approveFollowers={user?.approveFollowers ?? false}
