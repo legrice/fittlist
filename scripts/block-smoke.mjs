@@ -182,16 +182,16 @@ if (!classId) fail(`couldn't get a class id out of the share link: ${shareUrl}`)
 const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
 await m.goto(`${BASE}/carina/${classId}?d=${weekAgo}`);
 await m.getByText("This one has already run.").waitFor();
-if (await m.locator(".evcta").count())
+if (await m.locator(".ovcta-save").count())
   fail("a class that already ran still offers a way to add it");
 console.log("a past class says so and offers no button ok");
 
 // Today's occurrence still adds, so the rule is about the time and not the class.
 await m.goto(`${BASE}/carina/${classId}`);
-await m.locator(".evname").waitFor();
+await m.locator(".classoverlay-nm").waitFor();
 if (await m.getByText("This one has already run.").count())
   fail("the next occurrence of a daily class reads as already run");
-if (!(await m.locator(".evcta").count())) fail("a class still to come has no way to add it");
+if (!(await m.locator(".ovcta-save").count())) fail("a class still to come has no way to add it");
 console.log("the next occurrence is still addable ok");
 
 await b.close();

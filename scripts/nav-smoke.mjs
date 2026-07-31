@@ -80,7 +80,7 @@ await q.locator(".ps-event").first().waitFor();
 }
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
 await q.waitForTimeout(350);
-await q.locator(".evback").click();
+await q.locator(".ovcircle-back").click();
 await q.waitForURL(/\/sarah(\/schedule)?$/);
 await q.waitForTimeout(400);
 // history.length never shrinks on a back, so the honest test is whether there
@@ -106,9 +106,9 @@ await q.goto(BASE + "/sarah/schedule");
 await q.waitForURL(/\/sarah\/[0-9a-f-]{36}/);
 const classUrl = q.url();
 await r.goto(classUrl);
-await r.locator(".evback").waitFor();
+await r.locator(".ovcircle-back").waitFor();
 await r.waitForTimeout(400);
-await r.locator(".evback").click();
+await r.locator(".ovcircle-back").click();
 await r.waitForURL(/\/sarah(\/schedule)?$/);
 await r.locator(".ps-event").first().waitFor();
 console.log("a cold class page still gets to the profile ok");

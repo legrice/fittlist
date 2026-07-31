@@ -8,6 +8,7 @@ import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
+import { Wordmark } from "@/components/Wordmark";
 
 // A class, worn as a full-screen overlay. The page you were on stays visible
 // through a light blur, so opening a class reads as leaning in for a closer
@@ -17,13 +18,18 @@ import { Toast, useToast } from "@/components/Toast";
 // in; the word leaves with the tap.
 //
 // The page at /{handle}/{classId} stays: a link somebody was sent has to open
-// something real, and the share here points at exactly that.
+// something real, and the share here points at exactly that. The page wears
+// this same component, seeded server-side via `initial`, so the two doors
+// can't drift apart.
 export function ClassSheet({
   handle,
   classId,
   iso,
   onClose,
   onChanged,
+  initial,
+  backLabel,
+  claimVia,
 }: {
   handle: string;
   classId: string;
@@ -32,10 +38,17 @@ export function ClassSheet({
   onClose: () => void;
   /** Fired after a save or a remove, so the list behind can catch up. */
   onChanged?: (added: boolean) => void;
+  /** The page hands its server-loaded detail in, skipping the client fetch. */
+  initial?: ClassDetail;
+  /** Names where back goes when the circle is a page's only way out. */
+  backLabel?: string;
+  /** Set for signed-out visitors on the page: the made-with footer, attributed
+   *  to the coach whose link brought them here. */
+  claimVia?: string | null;
 }) {
-  const [c, setC] = useState<ClassDetail | null>(null);
+  const [c, setC] = useState<ClassDetail | null>(initial ?? null);
   const [missing, setMissing] = useState(false);
-  const [added, setAdded] = useState(false);
+  const [added, setAdded] = useState(initial?.added ?? false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
@@ -72,6 +85,7 @@ export function ClassSheet({
   };
 
   useEffect(() => {
+    if (initial) return;
     let live = true;
     classDetail(handle, classId, iso).then((d) => {
       if (!live) return;
@@ -85,7 +99,7 @@ export function ClassSheet({
     return () => {
       live = false;
     };
-  }, [handle, classId, iso]);
+  }, [handle, classId, iso, initial]);
 
   useEffect(() => {
     setCanShareFiles(typeof navigator !== "undefined" && typeof navigator.share === "function");
@@ -146,7 +160,7 @@ export function ClassSheet({
 
   return (
     <div className="classoverlay">
-      <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
+      <button className="ovcircle ovcircle-back" aria-label={backLabel ?? "Back"} onClick={onClose}>
         <Icon name="arrow_back" size={19} />
       </button>
       {c && (
@@ -289,6 +303,15 @@ export function ClassSheet({
           )}
 
           {c.past && !added && <p className="classsheet-gone">This one has already run.</p>}
+
+          {/* Visitors only, on the page: the growth loop rides the artifact
+              that actually gets shared around. */}
+          {claimVia && (
+            <div className="madewith">
+              Made with <Wordmark variant="ink" className="mw-logo" />. Coach classes?{" "}
+              <Link href={`/?via=${claimVia}`}>Claim your page</Link>
+            </div>
+          )}
         </div>
       )}
 
