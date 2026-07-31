@@ -3350,7 +3350,7 @@ button.ps-card { cursor: pointer; }
 .evfacts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .evfact { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .evfact .icon { color: var(--ol); flex-shrink: 0; }
-.evlink { display: flex; margin-top: 20px; }
+.evlink { display: flex; width: 100%; margin-top: 24px; }
 .evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
 .evposter a { color: inherit; font-weight: 600; }
 
@@ -3449,9 +3449,10 @@ button.ps-card { cursor: pointer; }
 .actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .actrow-txt .s { font-size: 12px; color: var(--ol); }
 
-/* Going, on the event page: the class page's pill, plus the room. */
-.evgoing { margin-top: 20px; }
-.evwho { margin-top: 22px; }
+/* The event page's actions: the photo overlay's circle pair, given air, with
+   the tickets pill beneath them and the room below that. */
+.evacts { display: flex; gap: 34px; justify-content: center; margin-top: 30px; }
+.evwho { margin-top: 26px; }
 .evwho-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
   margin-bottom: 10px;

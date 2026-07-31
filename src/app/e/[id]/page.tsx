@@ -9,7 +9,7 @@ import { fmtTime, siteOrigin } from "@/lib/format";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
-import { EventGoingButton } from "@/components/EventGoingButton";
+import { EventPageActions } from "@/components/EventPageActions";
 import { EventRemoveButton } from "@/components/EventRemoveButton";
 import { Icon } from "@/components/Icon";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -161,27 +161,29 @@ export default async function EventPage({ params }: Props) {
           )}
         </div>
         {ev.description && <p className="profabout">{ev.description}</p>}
-        {viewerId && !isPoster && (
-          <EventGoingButton
-            id={ev.id}
-            initialGoing={going}
-            eventName={ev.name}
-            whenLabel={dayLabel(ev.startDate)}
-            shareUrl={`${siteOrigin()}/e/${ev.id}`}
-            initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
-            myHandle={viewerHandle}
-          />
+        {/* Two circles and one door, the way the profile photo overlay does
+            it: Going and Share above, the event's own tickets link as the
+            wide pill beneath, where the Message bar sits on a profile. */}
+        <EventPageActions
+          id={ev.id}
+          canGo={!!viewerId && !isPoster}
+          initialGoing={going}
+          eventName={ev.name}
+          whenLabel={dayLabel(ev.startDate)}
+          shareUrl={`${siteOrigin()}/e/${ev.id}`}
+          initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
+          myHandle={viewerHandle}
+        />
+        {ev.link && (
+          <a className="btn si evlink" href={ev.link} target="_blank" rel="noopener">
+            Tickets and details
+          </a>
         )}
         {viewerId && (going || isPoster) && faces.length > 0 && (
           <div className="evwho">
             <h2 className="evwho-h">{isPoster ? "Going" : "Also going"} · {faces.length}</h2>
             <Roster people={faces} />
           </div>
-        )}
-        {ev.link && (
-          <a className="btn si evlink" href={ev.link} target="_blank" rel="noopener">
-            Tickets and details
-          </a>
         )}
         {poster && (
           <p className="evposter">
