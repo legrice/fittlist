@@ -278,6 +278,7 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, id));
   await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));
   await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
+  await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.

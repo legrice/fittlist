@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { AdminPushToggle } from "@/components/AdminPushToggle";
 import { createPortal } from "react-dom";
 import {
   adminActOnRequest,
@@ -106,6 +107,7 @@ export function AdminPanel({
   referrers,
   requests,
   stats,
+  vapidKey = null,
   dark = false,
 }: {
   adminEmail: string;
@@ -121,6 +123,8 @@ export function AdminPanel({
   referrers: Referrer[];
   requests: Request[];
   stats: Stats;
+  /** null = VAPID keys not configured; the pings row hides itself. */
+  vapidKey?: string | null;
   dark?: boolean;
 }) {
   const [tab, setTab] = useState<"people" | "studios" | "invites" | "message" | "reports">("people");
@@ -223,6 +227,8 @@ export function AdminPanel({
           <Stat n={stats.pendingInvites} label="Invites pending" />
           <Stat n={stats.requests} label="Requests" />
         </div>
+
+        {vapidKey && <AdminPushToggle vapidKey={vapidKey} />}
 
         {/* Icons, not words: five labelled pills didn't fit a phone, and the
             admin is one person who knows what the glyphs mean. */}

@@ -266,6 +266,19 @@ export const events = pgTable("events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A device that asked to be pinged. Admin-only for now (the one use is "tell
+// me when someone joins"), but the shape is general: one row per browser
+// subscription, owned by a user, deleted with them in adminDeleteUser. The
+// endpoint is the subscription's identity; a dead one is pruned on send.
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const classTemplates = pgTable(
   "class_templates",
   {

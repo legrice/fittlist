@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { listDuplicateSlots, listReports } from "@/app/actions/reports";
 import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios";
+import { vapidPublicKey } from "@/lib/push";
 import { AdminPanel } from "@/components/AdminPanel";
 
 export const dynamic = "force-dynamic";
@@ -240,6 +241,7 @@ export default async function AdminPage() {
       referrers={referrers}
       requests={requests}
       stats={stats}
+      vapidKey={vapidPublicKey()}
       dark={admin.look === "dark"}
     />
   );
