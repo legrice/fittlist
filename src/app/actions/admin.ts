@@ -7,6 +7,20 @@ import { adminEmails, currentAdmin } from "@/lib/admin";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
 
+// Opening the Activity list is what "seen" means; the header badge counts
+// from here.
+export async function adminMarkActivitySeen(): Promise<{ ok: boolean }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false };
+  const db = await getDb();
+  await db
+    .update(schema.users)
+    .set({ adminActivityAt: new Date() })
+    .where(eq(schema.users.id, admin.id));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Rewrite every stored location into the canonical "City, ST".

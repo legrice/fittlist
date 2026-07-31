@@ -19,7 +19,6 @@ export function GoingButton({
   shareUrl,
   initialCompanions = [],
   myHandle = null,
-  canAnnounce = false,
 }: {
   classId: string;
   iso: string;
@@ -31,7 +30,6 @@ export function GoingButton({
   shareUrl: string;
   initialCompanions?: string[];
   myHandle?: string | null;
-  canAnnounce?: boolean;
 }) {
   const [on, setOn] = useState(initialGoing);
   const [err, setErr] = useState("");
@@ -110,7 +108,6 @@ export function GoingButton({
         name={className}
         dateLong={dateLong}
         shareUrl={url}
-        canAnnounce={canAnnounce || on}
         classId={classId}
         whenIso={iso}
         onToast={setToldMsg}

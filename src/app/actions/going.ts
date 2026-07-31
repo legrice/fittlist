@@ -166,14 +166,37 @@ export async function setGoingCompanions(
   return { ok: true, companions };
 }
 
-// "Let the people you follow know." Deliberate, actor-initiated, mutuals
-// only: announcing your own plan to the people who agreed to you is the
-// whole consent story. Shares the going_together dedupe, so a mutual who was
-// already told (they're marked for the same occurrence) isn't told twice.
-export async function announceGoing(
+// The faces for the invite picker: your mutuals, the only people the app
+// will ever let you poke directly. Needs the avatar bits, so it joins users.
+export async function myPeople(): Promise<
+  { id: string; name: string; photo: string | null; color: string; handle: string | null }[]
+> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const mutuals = await mutualIds(userId);
+  if (!mutuals.size) return [];
+  const db = await getDb();
+  const rows = await db.select().from(schema.users).where(inArray(schema.users.id, [...mutuals]));
+  const { avatarColor } = await import("@/lib/avatar");
+  return rows
+    .map((p) => ({
+      id: p.id,
+      name: p.name.trim() || p.email.split("@")[0],
+      photo: p.photo,
+      color: avatarColor(p),
+      handle: p.handle,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Send "come with me" to chosen mutuals, as an in-app note. Every target is
+// re-checked against the mutual set server-side, so the picker can't be
+// talked into poking a stranger. Deduped per person per occurrence.
+export async function inviteToClass(
   classId: string,
   occurrenceDate: string,
-): Promise<{ ok: boolean; error?: string; told?: number }> {
+  targetIds: string[],
+): Promise<{ ok: boolean; error?: string; sent?: number }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Log in first." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
@@ -192,7 +215,8 @@ export async function announceGoing(
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
   const mutuals = await mutualIds(userId);
-  if (!mutuals.size) return { ok: true, told: 0 };
+  const targets = [...new Set(targetIds)].filter((t) => mutuals.has(t)).slice(0, 50);
+  if (!targets.length) return { ok: true, sent: 0 };
   const [me] = await db
     .select({ name: schema.users.name, email: schema.users.email })
     .from(schema.users)
@@ -202,29 +226,30 @@ export async function announceGoing(
     .from(schema.users)
     .where(eq(schema.users.id, cls.userId));
   const myName = me?.name.trim() || me?.email.split("@")[0] || "Someone";
+  const href = coach?.handle ? `/${coach.handle}/${classId}?d=${occurrenceDate}` : null;
   const body = `${cls.name} · ${fmtDateLong(occurrenceDate)}`;
-  let told = 0;
-  for (const mid of mutuals) {
+  let sent = 0;
+  for (const t of targets) {
     const [dupe] = await db
       .select({ id: schema.notifications.id })
       .from(schema.notifications)
       .where(
         and(
-          eq(schema.notifications.userId, mid),
-          eq(schema.notifications.type, "going_together"),
+          eq(schema.notifications.userId, t),
+          eq(schema.notifications.type, "class_invite"),
           eq(schema.notifications.actorUserId, userId),
           eq(schema.notifications.body, body),
         ),
       );
     if (dupe) continue;
-    await addNotification(mid, {
-      type: "going_together",
-      title: `${myName} is going to ${cls.name}`,
+    await addNotification(t, {
+      type: "class_invite",
+      title: `${myName} asked you to come along`,
       body,
-      href: coach?.handle ? `/${coach.handle}/${classId}?d=${occurrenceDate}` : null,
+      href,
       actorUserId: userId,
     });
-    told += 1;
+    sent += 1;
   }
-  return { ok: true, told };
+  return { ok: true, sent };
 }

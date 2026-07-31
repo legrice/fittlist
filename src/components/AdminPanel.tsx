@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { AdminPushToggle } from "@/components/AdminPushToggle";
+import { adminMarkActivitySeen } from "@/app/actions/admin";
 import { createPortal } from "react-dom";
 import {
   adminActOnRequest,
@@ -108,6 +109,9 @@ export function AdminPanel({
   requests,
   stats,
   vapidKey = null,
+  activity = [],
+  activityNew = 0,
+  activityOpen = false,
   dark = false,
 }: {
   adminEmail: string;
@@ -125,9 +129,32 @@ export function AdminPanel({
   stats: Stats;
   /** null = VAPID keys not configured; the pings row hides itself. */
   vapidKey?: string | null;
+  /** The pulse: what changed across the app, newest first, nothing private. */
+  activity?: { icon: string; text: string; when: string; fresh: boolean }[];
+  activityNew?: number;
+  /** True when the header badge sent them here: the list opens itself. */
+  activityOpen?: boolean;
   dark?: boolean;
 }) {
   const [tab, setTab] = useState<"people" | "studios" | "invites" | "message" | "reports">("people");
+  const [actOpen, setActOpen] = useState(activityOpen);
+  const [actSeen, setActSeen] = useState(false);
+  // Arriving through the header badge auto-opens the list; that has to count
+  // as looking, or the badge would never clear.
+  useEffect(() => {
+    if (activityOpen) {
+      setActSeen(true);
+      adminMarkActivitySeen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const openActivity = () => {
+    setActOpen(true);
+    if (!actSeen) {
+      setActSeen(true);
+      adminMarkActivitySeen();
+    }
+  };
   // The megaphone: a note from fittlist into people's Updates feeds.
   const [audience, setAudience] = useState<"everyone" | "coaches" | "members" | "one">("everyone");
   const [msgTarget, setMsgTarget] = useState("");
@@ -208,6 +235,12 @@ export function AdminPanel({
             <p className="adminsub">Signed in as {adminEmail}</p>
           </div>
           <div className="admintop-links">
+            <button className="adminback adminact" onClick={openActivity}>
+              <Icon name="bolt" size={18} /> Activity
+              {activityNew > 0 && !actSeen && (
+                <span className="inboxdot">{activityNew > 99 ? "99+" : activityNew}</span>
+              )}
+            </button>
             {/* The mission, one tap from the numbers, so the numbers never
                 get to argue with it unsupervised. */}
             <Link className="adminback" href="/ethos">
@@ -690,6 +723,39 @@ export function AdminPanel({
           </>
         )}
       </div>
+      {actOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActOpen(false);
+          }}
+        >
+          <div className="sheet sheet-full actsheet">
+            <div className="adderhead">
+              <h2>Activity</h2>
+              <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={() => setActOpen(false)}>
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <p className="lead">
+              What&rsquo;s happened across the app, newest first. Accounts, classes, studios and
+              events only; nothing between people shows here.
+            </p>
+            <div className="actlist">
+              {activity.map((a, i) => (
+                <div key={i} className={`actrow${a.fresh && !actSeen ? " fresh" : a.fresh ? " fresh" : ""}`}>
+                  <span className="actrow-ic"><Icon name={a.icon} size={17} /></span>
+                  <span className="actrow-txt">
+                    <span className="t">{a.text}</span>
+                    <span className="s">{a.when}</span>
+                  </span>
+                </div>
+              ))}
+              {activity.length === 0 && <p className="adminempty">Nothing yet.</p>}
+            </div>
+          </div>
+        </div>
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

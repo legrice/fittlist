@@ -3410,6 +3410,45 @@ button.ps-card { cursor: pointer; }
   background: var(--card);
 }
 
+/* The invite picker: your mutuals as tappable rows, then the send. */
+.tellpick { margin-top: 16px; text-align: left; }
+.tellpick-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  margin-bottom: 8px;
+}
+.tellpick-list { max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
+.tellrow {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 10px; border-radius: 12px; border: none; background: none; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+.tellrow.on { background: var(--cl); }
+.tellrow-av {
+  width: 34px; height: 34px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
+}
+.tellrow-av-empty {
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+}
+.tellrow-nm { flex: 1; min-width: 0; font-weight: 600; font-size: 14.5px; color: var(--ink); }
+.tellrow-check { color: var(--go); opacity: 0; display: flex; }
+.tellrow.on .tellrow-check { opacity: 1; }
+
+/* The admin's Activity door and its list. */
+.adminact { position: relative; }
+.adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
+.actsheet .actlist { margin-top: 6px; }
+.actrow {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 11px 2px; border-bottom: 1px solid var(--line);
+}
+.actrow:last-child { border-bottom: none; }
+.actrow-ic { color: var(--ol); flex-shrink: 0; margin-top: 2px; display: flex; }
+.actrow.fresh .actrow-ic { color: var(--si); }
+.actrow-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.actrow-txt .s { font-size: 12px; color: var(--ol); }
+
 /* Going, on the event page: the class page's pill, plus the room. */
 .evgoing { margin-top: 20px; }
 .evwho { margin-top: 22px; }

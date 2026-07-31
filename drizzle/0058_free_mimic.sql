@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "admin_activity_at" timestamp with time zone;

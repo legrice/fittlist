@@ -6,7 +6,6 @@ import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } f
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom, isBlocked } from "@/lib/blocks";
 import { fansVisible } from "@/lib/flags";
-import { mutualIds } from "@/lib/mutuals";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
 
@@ -51,8 +50,6 @@ export type ClassDetail = {
   myCompanions: string[];
   /** The viewer's own handle, so a share can say who's going. */
   myHandle: string | null;
-  /** Whether "let your people know" has anyone to tell. */
-  canAnnounce: boolean;
 };
 
 export type RosterFace = {
@@ -144,14 +141,12 @@ export async function classDetail(
   let alsoGoing: ClassDetail["alsoGoing"] = null;
   let myCompanions: string[] = [];
   let myHandle: string | null = null;
-  let canAnnounce = false;
   if (viewerId && !isOwner) {
     const [viewer] = await db
       .select({ handle: schema.users.handle })
       .from(schema.users)
       .where(eq(schema.users.id, viewerId));
     myHandle = viewer?.handle ?? null;
-    if (added) canAnnounce = (await mutualIds(viewerId)).size > 0;
   }
   if (isOwner || added) {
     const marks = await db
@@ -214,6 +209,5 @@ export async function classDetail(
     alsoGoing,
     myCompanions,
     myHandle,
-    canAnnounce,
   };
 }

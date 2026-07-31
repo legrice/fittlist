@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { announceGoing } from "@/app/actions/going";
+import { useEffect, useState, useTransition } from "react";
+import { inviteToClass, myPeople } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 
-// The second screen after "I'm going": who should know? Two doors, both
-// yours to open. In the app, a deliberate note to your mutuals; outside it,
-// the text message that carries the poster with your name on it. Neither
-// happens on its own, and closing the sheet does nothing at all.
+// The second screen after "I'm going": who's coming with you? Your mutuals
+// list here with checkboxes, an in-app note each; everyone else is a text
+// message away, carrying the poster with your name on it. Both doors are
+// yours to open, nothing happens on its own, and closing does nothing.
+type Person = { id: string; name: string; photo: string | null; color: string; handle: string | null };
+
 export function TellSheet({
   open,
   onClose,
   name,
   dateLong,
   shareUrl,
-  canAnnounce,
   classId,
   whenIso,
   onToast,
@@ -25,22 +26,42 @@ export function TellSheet({
   dateLong: string;
   /** Carries ?g={handle} so the poster says who's going. */
   shareUrl: string;
-  canAnnounce: boolean;
   classId: string;
   whenIso: string;
   onToast: (msg: string) => void;
 }) {
-  const [announced, setAnnounced] = useState(false);
+  const [people, setPeople] = useState<Person[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [sent, setSent] = useState(false);
   const [pending, start] = useTransition();
 
-  const announce = () =>
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    myPeople().then((p) => {
+      if (live) setPeople(p);
+    });
+    return () => {
+      live = false;
+    };
+  }, [open]);
+
+  const toggle = (id: string) =>
+    setPicked((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const send = () =>
     start(async () => {
-      const res = await announceGoing(classId, whenIso);
+      const res = await inviteToClass(classId, whenIso, [...picked]);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
       }
-      setAnnounced(true);
+      setSent(true);
     });
 
   const text = async () => {
@@ -73,17 +94,59 @@ export function TellSheet({
         <p className="lead">
           {name} · {dateLong}. Classes are better with your people there.
         </p>
-        <div className="tellsheet-acts">
-          {canAnnounce && (
-            <button className="tellbtn" disabled={pending || announced} onClick={announce}>
-              <Icon name={announced ? "check" : "notifications"} size={18} />
-              {announced ? "Your people will see it in Updates" : "Let the people you follow know"}
+
+        {people && people.length > 0 && (
+          <div className="tellpick">
+            <h3 className="tellpick-h">Ask your people</h3>
+            <div className="tellpick-list">
+              {people.map((p) => (
+                <button
+                  key={p.id}
+                  className={`tellrow${picked.has(p.id) ? " on" : ""}`}
+                  disabled={sent}
+                  aria-pressed={picked.has(p.id)}
+                  onClick={() => toggle(p.id)}
+                >
+                  {p.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="tellrow-av" src={p.photo} alt="" />
+                  ) : (
+                    <span
+                      className="tellrow-av tellrow-av-empty"
+                      style={{ background: p.color }}
+                      aria-hidden="true"
+                    >
+                      {(p.name.charAt(0) || "?").toUpperCase()}
+                    </span>
+                  )}
+                  <span className="tellrow-nm">{p.name}</span>
+                  <span className="tellrow-check" aria-hidden="true">
+                    <Icon name="check" size={15} />
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button
+              className="tellbtn"
+              disabled={pending || sent || picked.size === 0}
+              onClick={send}
+            >
+              <Icon name={sent ? "check" : "notifications"} size={18} />
+              {sent
+                ? "Asked. They'll see it in Updates"
+                : picked.size > 0
+                  ? `Ask ${picked.size} ${picked.size === 1 ? "person" : "people"} to come`
+                  : "Pick who to ask"}
             </button>
-          )}
-          <button className="tellbtn tellbtn-text" onClick={text}>
-            <Icon name="campaign" size={18} /> Text someone the plan
-          </button>
-        </div>
+          </div>
+        )}
+
+        <button className="tellbtn tellbtn-text" onClick={text}>
+          <Icon name="campaign" size={18} />
+          {people && people.length > 0
+            ? "Text friends who aren't on fittlist"
+            : "Text someone the plan"}
+        </button>
         <button className="tertiary tellsheet-done" onClick={onClose}>
           Done
         </button>

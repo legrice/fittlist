@@ -8,6 +8,7 @@ import type { NavTab } from "@/lib/nav";
 // and your avatar right. The avatar takes a handler inside the app shell
 // (where the account is an overlay) and a link everywhere else.
 export function AppHeader({
+  adminNew = null,
   unread = 0,
   weekCount,
   avatar,
@@ -16,6 +17,8 @@ export function AppHeader({
   home = "/feed",
   nav,
 }: {
+  /** null = not an admin; a number shows the door, >0 lights the badge. */
+  adminNew?: number | null;
   unread?: number;
   /** Settings, for anyone whose face is already the You tab. A link where the
    *  account is its own route, a handler where it's an overlay. */
@@ -51,6 +54,12 @@ export function AppHeader({
             that only exists just after you used it can't answer "what have I
             got so far?". The count is what's still ahead, not everything you
             ever added: a number that only grows is a scoreboard. */}
+        {adminNew !== null && (
+          <Link className="iconbtn inboxbtn adminbtn" aria-label="Admin" href="/admin?activity=1">
+            <Icon name="shield" size={20} />
+            {adminNew > 0 && <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>}
+          </Link>
+        )}
         {weekCount !== undefined && (
           <Link
             className="iconbtn inboxbtn weekbtn"

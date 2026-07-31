@@ -14,6 +14,7 @@ import { weekCount } from "@/lib/week";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
+import { adminNewActivityCount } from "@/lib/adminactivity";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
@@ -105,6 +106,10 @@ export default async function SchedulePage({
     // A coach follows people too, so they get the same shortlist.
     weekCount(userId),
   ]);
+  const adminNew = user && adminEmails().includes(user.email.toLowerCase())
+    ? await adminNewActivityCount(userId)
+    : null;
+
   const customTypes = customTypeRows.map((r) => r.name);
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
   // Requests are inquiries only. The admin is a coach too, so their feedback
@@ -177,6 +182,7 @@ export default async function SchedulePage({
       subsCount={subRows.length}
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
+      adminNew={adminNew}
       weekCount={week}
       profileViews={analytics.profileViews}
       requestCount={requestCount}

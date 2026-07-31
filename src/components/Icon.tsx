@@ -46,8 +46,7 @@ import {
   Flag,
   Palette,
   Pencil,
-  Settings,
-} from "lucide-react";
+  Settings, ShieldCheck, Zap } from "lucide-react";
 
 // Lucide, drawn inline as SVG. Call sites keep the old Material names — this
 // map is the only place that knows the difference — so changing sets again is
@@ -56,6 +55,8 @@ import {
 const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   account_circle: CircleUserRound,
   add: Plus,
+  shield: ShieldCheck,
+  bolt: Zap,
   admin_panel_settings: ShieldUser,
   edit: Pencil,
   palette: Palette,

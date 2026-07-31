@@ -339,7 +339,6 @@ export function ClassSheet({
           name={c.name}
           dateLong={c.dateLong}
           shareUrl={c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl}
-          canAnnounce={c.canAnnounce || added}
           classId={c.id}
           whenIso={c.whenIso}
           onToast={toast}

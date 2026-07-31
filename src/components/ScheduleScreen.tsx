@@ -33,6 +33,7 @@ export function ScheduleScreen({
   subsCount,
   inboxUnread,
   notifUnread,
+  adminNew = null,
   weekCount,
   profileViews,
   requestCount,
@@ -75,6 +76,7 @@ export function ScheduleScreen({
   subsCount: number;
   inboxUnread: number;
   notifUnread: number;
+  adminNew?: number | null;
   weekCount: number;
   profileViews: number;
   requestCount: number;
@@ -297,6 +299,7 @@ export function ScheduleScreen({
         <AppHeader
           unread={updatesUnread}
           weekCount={weekCount}
+          adminNew={adminNew}
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.

@@ -141,12 +141,14 @@ await r.goto(BASE + "/feed");
 await r.locator(".feedagenda .ps-event").first().click();
 await r.locator(".classsheet-add").waitFor();
 await r.locator(".classsheet-add").click();
-// The second screen opens on a fresh yes: "You're in", the in-app door and
-// the text door. Ruth tells her people, which reaches Sarah once (the
-// fellow-goer notice already covered her, and the dedupe holds).
+// The second screen opens on a fresh yes: "You're in", with the picker.
+// Ruth's mutual Sarah lists as a row; picking her and sending drops an
+// in-app ask in her Updates.
 await r.getByRole("heading", { name: /You.re in/ }).waitFor();
-await r.locator(".tellbtn", { hasText: "Let the people you follow know" }).click();
-await r.locator(".tellbtn", { hasText: "Your people will see it" }).waitFor();
+await r.locator(".tellrow", { hasText: "Sarah" }).click();
+await r.locator(".tellbtn", { hasText: "Ask 1 person to come" }).click();
+await r.locator(".tellbtn", { hasText: "Asked" }).waitFor();
+await r.locator(".tellbtn.tellbtn-text", { hasText: "aren't on fittlist" }).waitFor();
 await r.locator(".tellsheet-done").click();
 await r.locator(".classsheet-add.on").waitFor();
 // the share leans forward the moment you commit: it now carries the invite
@@ -178,10 +180,12 @@ await co.locator(".ps-event[data-cid]").first().click();
 await co.getByRole("heading", { name: /Edit class/ }).waitFor();
 await co.locator(".sheetclose").click().catch(() => {});
 console.log("companions ok (named friends ride the roster, no accounts needed)");
-// Sarah hears about it, because they're mutuals and she's marked too
+// Sarah hears about it twice over: the automatic fellow-goer notice, and
+// the ask Ruth sent on purpose.
 await m.goto(BASE + "/updates");
 await m.getByText("Ruth is going too").waitFor();
-console.log("going-too notification ok (mutuals only, same occurrence)");
+await m.getByText("Ruth asked you to come along").waitFor();
+console.log("going-too and the ask ok (mutuals only, same occurrence)");
 // a stranger who hasn't committed sees no list
 const c4 = await b.newContext({ viewport: { width: 390, height: 844 } });
 const n = await c4.newPage();

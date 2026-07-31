@@ -111,6 +111,9 @@ export const users = pgTable("users", {
   // doesn't count). One change per 90 days: a handle is an address people
   // write down, and an address that keeps moving breaks every link out there.
   handleChangedAt: timestamp("handle_changed_at", { withTimezone: true }),
+  // When the admin last opened the Activity list. Only meaningful on admin
+  // accounts; everything newer than this counts toward the header badge.
+  adminActivityAt: timestamp("admin_activity_at", { withTimezone: true }),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),

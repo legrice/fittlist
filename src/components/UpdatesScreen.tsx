@@ -52,6 +52,7 @@ const ICON: Record<string, string> = {
   follow_request: "person_add",
   class_overlap: "flag",
   going_together: "groups",
+  class_invite: "event",
   event_going: "event",
 };
 

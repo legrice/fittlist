@@ -374,7 +374,6 @@ export default async function EventPage({ params, searchParams }: Props) {
           shareUrl={`${classUrl}?d=${whenIso}`}
           initialCompanions={myCompanions}
           myHandle={viewerHandle}
-          canAnnounce={going}
         />
       )}
     </div>
