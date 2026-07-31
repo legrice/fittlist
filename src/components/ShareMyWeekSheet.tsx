@@ -80,7 +80,7 @@ export function ShareMyWeekSheet({ onClose }: { onClose: () => void }) {
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="sheet sheet-full">
         <div className="adderhead">
-          <h2>Share your week</h2>
+          <h2>Share your schedule</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={16} />
           </button>

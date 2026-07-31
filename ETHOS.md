@@ -34,6 +34,9 @@ Things fittlist does not do, at any size, for any reason.
   never for the growth chart.
 - **Few features, done well.** Build what helps someone find their fit. Skip
   the rest, even when it's easy.
+- **Finish, then add.** One feature at a time, perfected, before the next
+  begins. A half-built thing stacked on another half-built thing is how good
+  products rot; new ideas wait their turn, however exciting they are.
 - **Human, not artificial.** Fittlist is people teaching people, in rooms. AI
   helps build the product; it never performs in it. No sparkle glyphs, no
   generated coaches, no machine pretending to be a person. What you see on

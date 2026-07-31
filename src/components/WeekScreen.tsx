@@ -75,7 +75,7 @@ export function WeekScreen({
         toast(res.error ?? "Couldn't remove that");
         return;
       }
-      toast("Removed from your week");
+      toast("Removed from your plans");
       router.refresh();
     });
   };
@@ -130,7 +130,7 @@ export function WeekScreen({
       setPName("");
       setPWhere("");
       setPWith("");
-      toast("Added to your week");
+      toast("Added to your plans");
       router.refresh();
     });
   };
@@ -160,7 +160,7 @@ export function WeekScreen({
         {header}
         <div className="admintop pagetop">
           <div>
-            <h1>Your week</h1>
+            <h1>Your plans</h1>
             <p className="adminsub">
               {left === 0
                 ? "Classes you add land here"
@@ -173,7 +173,7 @@ export function WeekScreen({
           <div className="empty-block">
             <h2>Nothing added yet</h2>
             <p>
-              Swipe any class on Following, or open one and tap Add to your week. What you pick
+              Heart a class and it lands here. What you pick
               lands here, and drops off once it&rsquo;s been and gone.
             </p>
             <Link className="btn si" href="/feed">
@@ -291,9 +291,9 @@ export function WeekScreen({
       {shown.length > 0 && (
         <div className="weekcal">
           <button className="setrow" onClick={() => setShare(true)}>
-            <span className="setrow-ic"><Icon name="share" size={22} /></span>
+            <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Share your week</span>
+              <span className="t">Share your schedule</span>
               <span className="s">A story image of what you&rsquo;re training this week</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
@@ -381,7 +381,7 @@ export function WeekScreen({
             />
             <div className="publishwrap nostick">
               <button className="btn si" disabled={pBusy || !pName.trim()} onClick={() => saveOwn()}>
-                {pBusy ? "Adding…" : "Add to your week"}
+                {pBusy ? "Adding…" : "Add to your plans"}
               </button>
             </div>
           </div>
@@ -433,7 +433,7 @@ export function WeekScreen({
           }}
         >
           <div className="sheet confirmsheet">
-            <h2>Take it out of your week?</h2>
+            <h2>Take it out of your plans?</h2>
             <p className="lead">
               {confirm.name} comes off your list. You can add it back from the coach&rsquo;s
               schedule any time.

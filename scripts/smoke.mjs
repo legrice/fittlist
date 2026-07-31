@@ -382,7 +382,7 @@ if (await page.getByText("Schedule opens").count()) fail("Schedule opens should 
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
 await expect(page.locator(".acctstats .acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
 await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
-await expect(page.locator(".acctcard", { hasText: "Share your week" }).isVisible(), "share your week card");
+await expect(page.locator(".acctcard", { hasText: "Share your schedule" }).isVisible(), "share your week card");
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
 // ---- tap the avatar -> public profile page with owner back + edit
@@ -445,7 +445,7 @@ await page.goto(BASE + "/matt");
 await page.locator(".ownermore").click();
 {
   const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = ["Add a class", "Edit profile", "Share your week", "Your QR code", "Copy your week", "Requests"];
+  const want = ["Add a class", "Edit profile", "Share your schedule", "Your QR code", "Copy your week", "Requests"];
   if (rows.join("|") !== want.join("|"))
     fail("the owner menu should be " + want.join(", ") + ", got " + rows.join(", "));
 }
@@ -454,7 +454,7 @@ await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
 await page.locator(".ownermore").click();
-await page.locator(".ownermenu .setrow", { hasText: "Share your week" }).click();
+await page.locator(".ownermenu .setrow", { hasText: "Share your schedule" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .storyimg"));
@@ -610,18 +610,23 @@ console.log("owner tap opens the sheet, Edit goes to the editor ok");
   sp.setDefaultTimeout(10000);
   await sp.goto(BASE + "/matt");
   await sp.locator(".ps-event").first().click();
-  await sp.locator(".classsheet").waitFor();
-  // The sheet opens first and fills a beat later, so wait for the content.
-  await sp.locator(".classsheet-nm", { hasText: "Barbell Strength" }).waitFor();
-  await expect(sp.getByText("143 Newark Ave, Jersey City").isVisible(), "sheet shows address");
-  await expect(sp.locator(".evbtn", { hasText: "Book via Website" }).first().isVisible(), "sheet shows booking link");
-  await expect(sp.locator(".evtype", { hasText: "Strength" }).isVisible(), "sheet shows class type");
-  await expect(sp.getByText("Barbell club for all levels").isVisible(), "sheet shows description");
-  // The list is still there underneath — that's the point of a sheet.
-  if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the sheet");
+  await sp.locator(".classoverlay").waitFor();
+  // The overlay opens first and fills a beat later, so wait for the content.
+  await sp.locator(".classoverlay-nm", { hasText: "Barbell Strength" }).waitFor();
+  await expect(sp.getByText("143 Newark Ave, Jersey City").isVisible(), "overlay shows address");
+  await expect(sp.locator(".ovcta-btn", { hasText: "Book" }).first().isVisible(), "overlay shows the Book pill");
+  await expect(sp.locator(".evtype", { hasText: "Strength" }).isVisible(), "overlay shows class type");
+  await expect(sp.getByText("Barbell club for all levels").isVisible(), "overlay shows description");
+  // Book opens the hand-off, not the site.
+  await sp.locator(".ovcta-btn", { hasText: "Book" }).click();
+  await sp.getByRole("heading", { name: "Book this class" }).waitFor();
+  await sp.locator(".bookout-links a", { hasText: "Book via Website" }).waitFor();
+  await sp.getByRole("button", { name: "Not now" }).click();
+  // The list is still there underneath — that's the point of an overlay.
+  if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the overlay");
   await sp.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
-  await sp.locator(".classsheet .sheetclose").click();
-  await sp.waitForFunction(() => !document.querySelector(".classsheet"));
+  await sp.locator(".ovcircle-back").click();
+  await sp.waitForFunction(() => !document.querySelector(".classoverlay"));
   // The page behind the sheet is still a real URL anyone can be sent to.
   const href = await sp.locator(".ps-event").first().getAttribute("href");
   if (!href || !/\/matt\/[0-9a-f-]{36}/.test(href))
@@ -942,8 +947,8 @@ console.log("ical feed ok (VEVENT + weekly RRULE)");
 
 // share sheet UI from the account page
 await openProfile(page);
-await page.locator(".acctcard", { hasText: "Share your week" }).click();
-await page.locator(".sheet h2", { hasText: "Share your week" }).waitFor();
+await page.locator(".acctcard", { hasText: "Share your schedule" }).click();
+await page.locator(".sheet h2", { hasText: "Share your schedule" }).waitFor();
 await page.waitForFunction(() => {
   const img = document.querySelector(".storyimg");
   return img && img.complete && img.naturalWidth > 0;
@@ -1267,20 +1272,22 @@ if (await fan.locator(".feedagenda .goingbtn").count())
 // The class opens from the bottom, so the week is still behind it and the add
 // reads as picking something up rather than going somewhere.
 await fan.locator(".feedagenda .ps-event").first().click();
-await fan.locator(".classsheet-nm").waitFor();
+await fan.locator(".classoverlay-nm").waitFor();
 if (!(await fan.locator(".feedagenda .ps-event").count()))
-  fail("the week should stay behind the sheet");
-await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
-await fan.getByRole("button", { name: "Added to your week" }).waitFor();
-// Reopening it says the same thing: the add is on the server, not in the tab.
-await fan.locator(".classsheet .sheetclose").click();
-await fan.waitForFunction(() => !document.querySelector(".classsheet"));
+  fail("the week should stay behind the overlay");
+await fan.locator(".ovcta-save").click();
+// The note answers the heart, up in the top third, with the door to the list.
+await fan.getByText("Added to your favorites").waitFor();
+await fan.locator(".ovcta-save.on").waitFor();
+// Reopening it says the same thing: the save is on the server, not in the tab.
+await fan.locator(".ovcircle-back").click();
+await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
 await fan.reload();
 await fan.locator(".feedagenda .ps-event").first().click();
-await fan.getByRole("button", { name: "Added to your week" }).waitFor();
-// Share is here too, so a class can be passed on without leaving the sheet.
-await fan.locator(".classsheet-share").waitFor();
-await fan.locator(".classsheet .sheetclose").click();
+await fan.locator(".ovcta-save.on").waitFor();
+// Share is here too, so a class can be passed on without leaving it.
+await fan.locator(".ovcircle-share").waitFor();
+await fan.locator(".ovcircle-back").click();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
@@ -1303,7 +1310,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if ((await dot.innerText()).trim() !== "1") fail("the week count should be 1, got " + (await dot.innerText()));
   await fan.locator(".weekbtn").click();
   await fan.waitForURL(/\/week/);
-  await fan.getByRole("heading", { name: "Your week" }).waitFor();
+  await fan.getByRole("heading", { name: "Your plans" }).waitFor();
   // Reached from the header, but still inside the app: the tabs come with it.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
@@ -1327,7 +1334,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekcal .setrow", { hasText: "Share your week" }).waitFor();
+  await fan.locator(".weekcal .setrow", { hasText: "Share your schedule" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
@@ -1337,7 +1344,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if ((await rows.count()) !== 1) fail("Keep it should leave the class where it was");
   await rows.first().locator(".weekrow-x").click();
   await fan.getByRole("button", { name: "Remove it" }).click();
-  await fan.getByText("Removed from your week").waitFor();
+  await fan.getByText("Removed from your plans").waitFor();
   await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
   // The badge goes with it: the count is state, not a running total.
   await fan.goto(BASE + "/feed");
@@ -1346,20 +1353,21 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     fail("an empty week should carry no count");
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
-  await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
-  await fan.getByRole("button", { name: "Added to your week" }).waitFor();
-  // The add pill goes green, the same yes Following gives.
+  await fan.locator(".ovcta-save").click();
+  await fan.getByText("Added to your favorites").waitFor();
+  // The heart fills in and the word leaves with the tap.
+  await fan.locator(".ovcta-save.on").waitFor();
+  if ((await fan.locator(".ovcta-save").innerText()).trim())
+    fail("the saved heart should drop the word");
   {
-    const bg = await fan.locator(".classsheet-add.on").evaluate((e) => getComputedStyle(e).backgroundColor);
-    if (bg !== "rgb(61, 139, 83)") fail("Added should be green, got " + bg);
+    const fill = await fan.locator(".ovcta-save.on .icon svg").evaluate((e) => getComputedStyle(e).fill);
+    if (fill !== "rgb(250, 248, 242)") fail("the saved heart should fill paper-white on the dark pill, got " + fill);
   }
-  // Whose class it is, as a face and a name, and not a link out of the sheet.
-  await fan.locator(".classsheet-who .classsheet-av").waitFor();
-  if (await fan.locator(".classsheet-who a").count())
-    fail("the coach line in the sheet shouldn't navigate away");
-  if ((await fan.locator(".classsheet-who").innerText()).toLowerCase().startsWith("with"))
-    fail("the coach line should just be the name");
-  await fan.locator(".classsheet .sheetclose").click();
+  // Whose class it is, as a face and a name.
+  await fan.locator(".classoverlay-coach .classsheet-av").waitFor();
+  if ((await fan.locator(".classoverlay-coach").innerText()).toLowerCase().startsWith("with"))
+    fail("the coach line should say coached by, then the name");
+  await fan.locator(".ovcircle-back").click();
   await fan.goto(BASE + "/feed");
 }
 console.log("your week ok (count ahead, rows leave, points at a real calendar)");
@@ -1415,7 +1423,7 @@ await fan.locator(".navtab", { hasText: "You" }).click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
-await fan.getByRole("heading", { name: "Share your week" }).waitFor();
+await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
 // the wordmark is the way back to the week from anywhere
@@ -1483,8 +1491,8 @@ if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" 
   fail("a coach's own classes should show on their Home");
 await page.locator(".feedav", { hasText: "Matt" }).waitFor();
 await page.locator(".feedagenda .ps-event", { hasText: "Conditioning" }).first().click();
-await page.getByRole("button", { name: "Add to your week", exact: true }).click();
-await page.getByRole("button", { name: "Added to your week" }).waitFor();
+await page.locator(".ovcta-save").click();
+await page.locator(".ovcta-save.on").waitFor();
 // it shows on the following page
 await page.goto(BASE + "/feed");
 await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
@@ -1520,24 +1528,24 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Classes" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
 await page.locator(".navtab.on", { hasText: "You" }).waitFor();
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
-await page.locator(".classsheet-nm").waitFor();
-await page.locator(".classsheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".classsheet"));
+await page.locator(".classoverlay-nm").waitFor();
+await page.locator(".ovcircle-back").click();
+await page.waitForFunction(() => !document.querySelector(".classoverlay"));
 await page.locator(".feedstrip").waitFor();
 if (!page.url().endsWith("/feed")) fail("opening a class shouldn't navigate: " + page.url());
 // The page behind it still exists for a link somebody was sent, and still
@@ -1615,8 +1623,8 @@ await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio ema
   st.setDefaultTimeout(10000);
   await st.goto(BASE + "/matt/schedule");
   await st.locator(".ps-event").first().click();
-  await st.locator(".classsheet-nm").waitFor();
-  await st.locator(".classsheet .evfact", { hasText: "Ironbound Strength" }).click();
+  await st.locator(".classoverlay-nm").waitFor();
+  await st.locator(".classoverlay .evfact", { hasText: "Ironbound Strength" }).click();
   await st.waitForURL("**/s/ironbound-strength");
   await stCtx.close();
 }
@@ -1834,7 +1842,7 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".profname").waitFor();

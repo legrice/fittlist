@@ -364,8 +364,8 @@ export function ProfileSheet({
             <span className="acctcard-s">See and edit your public page</span>
           </button>
           <button className="acctcard" onClick={() => setShareOpen(true)}>
-            <span className="acctcard-ic"><Icon name="share" size={26} /></span>
-            <span className="acctcard-t">Share your week</span>
+            <span className="acctcard-ic"><Icon name="campaign" size={26} /></span>
+            <span className="acctcard-t">Share your schedule</span>
             <span className="acctcard-s">A story image with your link</span>
           </button>
           <button className="acctcard acctcard-wide" onClick={() => setQrOpen(true)}>

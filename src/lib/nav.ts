@@ -24,7 +24,9 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, youHref?: string): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // Classes, not Following: the tab is named for what you get, and the
+    // coach rail inside already says who you follow.
+    { id: "following", href: "/feed", icon: "event", label: "Classes" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     // Your own page, as everyone else sees it. It carries your face rather
     // than an icon: it's the one tab that is a person rather than a place. A

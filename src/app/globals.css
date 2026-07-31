@@ -1873,7 +1873,7 @@ button.ps-card { cursor: pointer; }
 .pubtab {
   flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 19px; color: var(--ol); background: transparent; white-space: nowrap;
+  font-size: 18px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
@@ -3389,3 +3389,169 @@ button.ps-card { cursor: pointer; }
 .actrow-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .actrow-txt .s { font-size: 12px; color: var(--ol); }
+
+/* ---- The class overlay and its manners ---- */
+
+/* The class overlay: full screen over a light blur of the page you were on,
+   floating back and share circles, the class in open space, and a dark pill
+   at the bottom holding the two things to do with it. */
+.classoverlay {
+  position: fixed; inset: 0; z-index: 46; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(247, 244, 236, .8);
+  backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  animation: fadeIn .16s ease;
+}
+[data-mode="dark"] .classoverlay { background: rgba(20, 19, 16, .8); }
+.ovcircle {
+  position: fixed; top: calc(14px + env(safe-area-inset-top)); z-index: 2;
+  width: 40px; height: 40px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--soft-shadow); cursor: pointer;
+}
+.ovcircle:active { transform: scale(.93); }
+.ovcircle-back { left: 16px; }
+.ovcircle-share { right: 66px; }
+.ovcircle-more { right: 16px; }
+.classoverlay-body {
+  max-width: 560px; margin: 0 auto;
+  padding: calc(74px + env(safe-area-inset-top)) 24px calc(130px + env(safe-area-inset-bottom));
+}
+.classoverlay-type { text-align: left; }
+.classoverlay-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 800;
+  font-size: 33px; line-height: 1.1; letter-spacing: -.01em;
+  text-align: left; margin: 0 0 14px;
+}
+.classoverlay-coach {
+  display: flex; align-items: center; justify-content: flex-start; gap: 9px;
+  margin: 0 0 24px; text-decoration: none; color: var(--ink);
+  font-weight: 700; font-size: 14.5px;
+}
+.classoverlay-coach:active { opacity: .6; }
+.classoverlay-coach .icon { color: var(--ol); opacity: .7; }
+.classoverlay-coach-txt .k { font-weight: 600; color: var(--ol); }
+.classoverlay-facts { margin: 0; }
+.classoverlay-desc { margin-top: 20px; color: var(--ink); }
+.classoverlay .classsheet-report { align-self: auto; display: block; margin: 18px auto 0; }
+/* The pill. Ink on paper flips with the theme, same as the tell buttons. */
+.classoverlay-cta {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  display: flex; align-items: center;
+  background: var(--ink); color: var(--paper);
+  border-radius: 999px; padding: 7px 8px;
+  box-shadow: 0 12px 34px rgba(23, 26, 31, .3);
+  white-space: nowrap;
+}
+.ovcta-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 24px; border: none; background: none; cursor: pointer;
+  color: inherit; text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 15.5px; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.ovcta-btn:active { opacity: .7; }
+.ovcta-btn[disabled] { opacity: .7; }
+/* currentColor so the hairline follows the pill through both themes. */
+.ovcta-div { width: 1px; align-self: stretch; margin: 6px 0; background: currentColor; opacity: .3; }
+/* The heart fills in and the word leaves with the tap. White on the dark
+   pill (currentColor, so the dark theme's inverted pill stays right too):
+   an orange fill fought the black background. */
+.ovcta-save.on .icon svg { fill: currentColor; }
+.ovbook-menu {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden; min-width: 230px;
+  animation: fadeIn .12s ease;
+}
+.ovbook-item {
+  display: block; padding: 13px 20px; text-align: center; text-decoration: none;
+  font-weight: 600; font-size: 14px; color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.ovbook-item:last-child { border-bottom: none; }
+
+/* The overflow menu, under the dots: everything else you'd do with a class. */
+.ovmenu {
+  position: fixed; top: calc(62px + env(safe-area-inset-top)); right: 16px; z-index: 3;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden; min-width: 240px;
+  animation: fadeIn .12s ease;
+}
+.ovmenu-item {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 13px 18px; border: none; background: none; cursor: pointer; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 14px; color: var(--ink); text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  -webkit-tap-highlight-color: transparent;
+}
+.ovmenu-item:last-child { border-bottom: none; }
+.ovmenu-item:active { background: var(--cl); }
+.ovmenu-item .icon { color: var(--ol); flex-shrink: 0; }
+.ovmenu-quiet { color: var(--ol); }
+
+/* "Added to your favorites": the note that answers the heart, in the top
+   third where the eye already is. Ink on paper, flipping with the theme. */
+.favtoast {
+  position: fixed; top: 30vh; left: 50%; z-index: 48;
+  display: flex; align-items: center; gap: 9px; white-space: nowrap;
+  padding: 13px 20px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+  box-shadow: 0 12px 34px rgba(23, 26, 31, .3);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px;
+  opacity: 0; transform: translateX(-50%) translateY(-8px);
+  pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+}
+.favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.favtoast-heart svg { fill: currentColor; }
+.favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Section titles inside the overlay, About first among them. */
+.ovsec-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 15px; margin: 22px 0 6px;
+}
+.classoverlay-desc { margin-top: 0; }
+
+/* The booking hand-off: fittlist points the way, the studio takes the money. */
+.bookout-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+/* ---- Class rows as white cards on the profile overlay's soft shadow ---- */
+
+.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+/* The event listing's poster manners, carried to classes: a white card per
+   row lifted on the same soft shadow the profile photo overlay wears, scaled
+   to a list. The day header names the date, so the card doesn't. */
+.ps-agenda .ps-event {
+  grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
+  background: var(--card);
+  border-radius: 16px; padding: 14px 16px; border-bottom: none;
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
+}
+.ps-agenda .ps-event:hover {
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
+}
+.ps-agenda .ps-event:active { background: var(--cl); }
+.ps-agenda .ps-accent { display: none; }
+
+.ps-agenda .ps-enm {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 19px; line-height: 1.15; letter-spacing: -.005em;
+}
+
+/* Private sessions keep reading as drafts: muted fill, dashed edge. */
+.ps-agenda .ps-event-private {
+  background: var(--cl); border: 1.5px dashed #c7bf9f;
+}
+.ps-agenda .ps-event-private:active { background: var(--cl); }
+
+/* The marked card wears a quiet green ring, the same yes the tag gives. */
+.ps-agenda .ps-event.goingon {
+  box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
+}

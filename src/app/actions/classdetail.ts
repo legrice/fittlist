@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { isBlocked } from "@/lib/blocks";
+import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
@@ -34,6 +35,11 @@ export type ClassDetail = {
   location: string | null;
   links: { label: string; url: string }[];
   shareUrl: string;
+  /** Calendar doors for the overflow menu, same targets as the class page. */
+  googleUrl: string;
+  icsHref: string;
+  /** The viewer's own handle, so a share can say who's going. */
+  myHandle: string | null;
   /** Whether this viewer can add it: signed in, not theirs, and public. */
   canAdd: boolean;
   added: boolean;
@@ -142,6 +148,33 @@ export async function classDetail(
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  // The viewer's handle rides the share once they've saved, so the link
+  // preview can say who's going.
+  let myHandle: string | null = null;
+  if (viewerId && !isOwner) {
+    const [viewer] = await db
+      .select({ handle: schema.users.handle })
+      .from(schema.users)
+      .where(eq(schema.users.id, viewerId));
+    myHandle = viewer?.handle ?? null;
+  }
+
+  // "Add to calendar", same as the page: Google gets a prefilled template
+  // link, Apple and Outlook get the .ics. Weekly classes carry the rule.
+  const classUrl = `${siteOrigin()}/${handle}/${c.id}`;
+  const locationText = studio ? `${studio.name}, ${studio.address}` : c.location ?? "";
+  const gcalDetails = c.links.length
+    ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") + `\n\n${classUrl}`
+    : classUrl;
+  const gcalParams = new URLSearchParams({
+    action: "TEMPLATE",
+    text: c.name,
+    dates: `${floatingStart(whenIso, c.startTime)}/${floatingEnd(whenIso, c.startTime, c.durationMin)}`,
+    details: gcalDetails,
+  });
+  if (locationText) gcalParams.set("location", locationText);
+  if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn));
+
   return {
     id: c.id,
     handle,
@@ -163,6 +196,9 @@ export async function classDetail(
     // The date rides along, so whoever opens it lands on the occurrence you
     // were looking at rather than the next one after they tap.
     shareUrl: `${siteOrigin()}/${handle}/${c.id}?d=${whenIso}`,
+    googleUrl: `https://calendar.google.com/calendar/render?${gcalParams.toString()}`,
+    icsHref: `/api/cal/${handle}/${c.id}`,
+    myHandle,
     canAdd,
     added,
     past,
