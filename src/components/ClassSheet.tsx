@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing, setGoingCompanions } from "@/app/actions/going";
 import { reportClass } from "@/app/actions/reports";
@@ -42,9 +42,21 @@ export function ClassSheet({
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reported, setReported] = useState(false);
   const [tellOpen, setTellOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  // The overflow menu closes on any tap outside it, like a menu should.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [moreOpen]);
 
   const sendReport = (reason: string) => {
     if (!c || pending) return;
@@ -56,6 +68,7 @@ export function ClassSheet({
         return;
       }
       setReported(true);
+      toast("Thanks. We'll take a look.");
     });
   };
 
@@ -130,6 +143,77 @@ export function ClassSheet({
         <button className="ovcircle ovcircle-share" aria-label="Share this class" onClick={share}>
           <Icon name="ios_share" size={18} />
         </button>
+      )}
+      {/* The overflow: everything you might do with a class that isn't the
+          class's own two buttons. Share sits here too; a menu people open
+          looking for "everything else" should have everything else. */}
+      {c && (
+        <div ref={moreRef}>
+          <button
+            className="ovcircle ovcircle-more"
+            aria-label="More"
+            aria-expanded={moreOpen}
+            onClick={() => setMoreOpen((o) => !o)}
+          >
+            <Icon name="more_horiz" size={18} />
+          </button>
+          {moreOpen && (
+            <div className="ovmenu" role="menu">
+              <button
+                className="ovmenu-item"
+                role="menuitem"
+                onClick={() => {
+                  setMoreOpen(false);
+                  share();
+                }}
+              >
+                <Icon name="ios_share" size={17} /> Share this class
+              </button>
+              {added && (
+                <button
+                  className="ovmenu-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    setTellOpen(true);
+                  }}
+                >
+                  <Icon name="send" size={17} /> Tell someone you&rsquo;re going
+                </button>
+              )}
+              <a
+                className="ovmenu-item"
+                role="menuitem"
+                href={c.googleUrl}
+                target="_blank"
+                rel="noopener nofollow"
+                onClick={() => setMoreOpen(false)}
+              >
+                <Icon name="calendar_month" size={17} /> Add to Google Calendar
+              </a>
+              <a
+                className="ovmenu-item"
+                role="menuitem"
+                href={c.icsHref}
+                onClick={() => setMoreOpen(false)}
+              >
+                <Icon name="calendar_today" size={17} /> Add to Apple or Outlook
+              </a>
+              {c.canAdd && !reported && (
+                <button
+                  className="ovmenu-item ovmenu-quiet"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    setReportOpen(true);
+                  }}
+                >
+                  <Icon name="flag" size={17} /> Report this class
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {missing ? (
@@ -238,16 +322,6 @@ export function ClassSheet({
           )}
 
           {c.past && !added && <p className="classsheet-gone">This one has already run.</p>}
-
-          {/* Quiet on purpose: a moderation control shouldn't compete with
-              the pill, but it has to exist, because a class that isn't real
-              is somebody else's wasted trip. */}
-          {c.canAdd && !reported && (
-            <button className="classsheet-report" onClick={() => setReportOpen(true)}>
-              Report this class
-            </button>
-          )}
-          {reported && <p className="classsheet-reported">Thanks. We&rsquo;ll take a look.</p>}
         </div>
       )}
 

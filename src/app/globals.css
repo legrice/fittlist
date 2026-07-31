@@ -3592,7 +3592,8 @@ button.ps-card { cursor: pointer; }
 }
 .ovcircle:active { transform: scale(.93); }
 .ovcircle-back { left: 16px; }
-.ovcircle-share { right: 16px; }
+.ovcircle-share { right: 66px; }
+.ovcircle-more { right: 16px; }
 .classoverlay-body {
   max-width: 560px; margin: 0 auto;
   padding: calc(74px + env(safe-area-inset-top)) 24px calc(130px + env(safe-area-inset-bottom));
@@ -3651,3 +3652,23 @@ button.ps-card { cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .ovbook-item:last-child { border-bottom: none; }
+
+/* The overflow menu, under the dots: everything else you'd do with a class. */
+.ovmenu {
+  position: fixed; top: calc(62px + env(safe-area-inset-top)); right: 16px; z-index: 3;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--soft-shadow); overflow: hidden; min-width: 240px;
+  animation: fadeIn .12s ease;
+}
+.ovmenu-item {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 13px 18px; border: none; background: none; cursor: pointer; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 14px; color: var(--ink); text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  -webkit-tap-highlight-color: transparent;
+}
+.ovmenu-item:last-child { border-bottom: none; }
+.ovmenu-item:active { background: var(--cl); }
+.ovmenu-item .icon { color: var(--ol); flex-shrink: 0; }
+.ovmenu-quiet { color: var(--ol); }
