@@ -231,6 +231,29 @@ export const studios = pgTable("studios", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Who runs a studio's page. A studio with no rows here is unclaimed, which is
+// the directory's normal state: anyone coaching can correct it, because an
+// entry nobody owns is better maintained by the people who teach there than
+// left wrong. One row and the studio is claimed, and from then on only these
+// people (and the site admin) may edit it; everyone else suggests.
+//
+// A join table rather than a column on studios, because a gym is a place of
+// work with more than one person running it: an owner and a manager both need
+// the keys, and either leaving must not lock the other out.
+export const studioManagers = pgTable(
+  "studio_managers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    // Who let them in. De-attributed rather than deleted when that account
+    // goes, the same as a studio edit: it stays a fact about the studio.
+    addedByUserId: uuid("added_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("studio_managers_once").on(t.studioId, t.userId)],
+);
+
 // The directory runs on trust: any coach can correct any studio. This is the
 // receipt. One row per save that actually changed something, with the editor
 // and a plain-words line per field, surfaced on the admin Studios tab.

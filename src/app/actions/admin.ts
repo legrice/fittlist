@@ -1,9 +1,10 @@
 "use server";
 
-import { eq, inArray, isNotNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
+import { addNotification } from "@/lib/notify";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
 
@@ -191,6 +192,70 @@ export async function adminSendMagicLink(
   return { ok: true, url, emailed: true };
 }
 
+// Hand a studio's page to the people who run it. The first one claims it: from
+// then on the directory's open-to-any-coach rule stops applying and only these
+// people (and an admin) may edit. Adding a second is how an owner and a manager
+// both get the keys without either being able to lock the other out.
+export async function adminAddStudioManager(
+  studioId: string,
+  emailRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return { ok: false, error: "Enter their email." };
+  const db = await getDb();
+
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
+  if (!studio) return { ok: false, error: "Studio not found." };
+
+  const already = await db
+    .select({ id: schema.studioManagers.id })
+    .from(schema.studioManagers)
+    .where(
+      and(
+        eq(schema.studioManagers.studioId, studioId),
+        eq(schema.studioManagers.userId, user.id),
+      ),
+    );
+  if (already.length) return { ok: false, error: "They already run this page." };
+
+  await db
+    .insert(schema.studioManagers)
+    .values({ studioId, userId: user.id, addedByUserId: admin.id });
+  // Being handed the keys is not something to discover by accident.
+  await addNotification(user.id, {
+    type: "studio_manager",
+    title: `You run ${studio.name} on fittlist`,
+    body: "You can edit its page, and its details are yours to state.",
+    href: `/s/${studio.slug ?? studio.id}`,
+  });
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/** Take the keys back. The last one leaving returns the page to the commons. */
+export async function adminRemoveStudioManager(
+  studioId: string,
+  userId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const db = await getDb();
+  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
+  await db
+    .delete(schema.studioManagers)
+    .where(
+      and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, userId)),
+    );
+  if (studio) revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 // Remove a studio from the shared directory. Only allowed when nothing depends
 // on it (no classes, templates, or coach associations) so we never orphan data;
 // a studio that's in use should be edited, not deleted.
@@ -210,7 +275,8 @@ export async function adminDeleteStudio(
   }
 
   // studio_classes are just catalog groundwork — safe to clear before removing.
-  // The edit history goes with the studio it describes.
+  // The edit history and the keys go with the studio they describe.
+  await db.delete(schema.studioManagers).where(eq(schema.studioManagers.studioId, id));
   await db.delete(schema.studioEdits).where(eq(schema.studioEdits.studioId, id));
   await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
   await db.delete(schema.studios).where(eq(schema.studios.id, id));
@@ -297,6 +363,13 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.
+  // Their keys go with them; a page they ran alone returns to the commons
+  // rather than being left locked with nobody holding it.
+  await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
+  await db
+    .update(schema.studioManagers)
+    .set({ addedByUserId: null })
+    .where(eq(schema.studioManagers.addedByUserId, id));
   await db.update(schema.studios).set({ createdByUserId: null }).where(eq(schema.studios.createdByUserId, id));
   // Their studio edits stay: the edit is a fact about the studio, it just
   // loses its author.

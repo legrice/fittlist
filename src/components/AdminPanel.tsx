@@ -8,7 +8,9 @@ import { createPortal } from "react-dom";
 import {
   adminActOnRequest,
   adminAddStudio,
+  adminAddStudioManager,
   adminDeleteStudio,
+  adminRemoveStudioManager,
   adminBroadcast,
   adminDeleteUser,
   adminFixLocations,
@@ -58,6 +60,8 @@ type Studio = {
   added: string | null;
   coachCount: number;
   classCount: number;
+  /** Who runs the page. Any at all means the studio is claimed. */
+  managers: { userId: string; name: string; email: string }[];
 };
 type Invite = {
   id: string;
@@ -1233,7 +1237,27 @@ function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
 function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
   const [pending, start] = useTransition();
   const [confirming, setConfirming] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [email, setEmail] = useState("");
   const removable = s.coachCount === 0 && s.classCount === 0;
+
+  const addManager = () =>
+    start(async () => {
+      const res = await adminAddStudioManager(s.id, email);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't add them");
+        return;
+      }
+      setEmail("");
+      setAdding(false);
+      toast("They run this page now");
+    });
+
+  const removeManager = (userId: string) =>
+    start(async () => {
+      const res = await adminRemoveStudioManager(s.id, userId);
+      toast(res.ok ? "Keys taken back" : (res.error ?? "Couldn't remove"));
+    });
 
   const remove = () =>
     start(async () => {
@@ -1261,6 +1285,43 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
         <span>{s.coachCount} {s.coachCount === 1 ? "coach" : "coaches"}</span>
         <span>{s.classCount} {s.classCount === 1 ? "class" : "classes"}</span>
         {s.added && <span>added {s.added}</span>}
+        {s.managers.length > 0 && <span className="adminclaimed">claimed</span>}
+      </div>
+
+      {/* Who runs the page. The first name here closes the directory's open
+          door on this studio, so it reads as handing over keys rather than
+          ticking a box. */}
+      <div className="adminmgrs">
+        {s.managers.map((m) => (
+          <div key={m.userId} className="adminmgr">
+            <span className="adminmgr-nm">{m.name}</span>
+            <span className="adminmgr-em">{m.email}</span>
+            <button className="adminremove" disabled={pending} onClick={() => removeManager(m.userId)}>
+              Remove
+            </button>
+          </div>
+        ))}
+        {adding ? (
+          <div className="adminaddform-row" style={{ marginTop: 8 }}>
+            <input
+              className="input"
+              type="email"
+              placeholder="their@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button className="btn si" disabled={pending || !email.trim()} onClick={addManager}>
+              {pending ? "Adding…" : "Add"}
+            </button>
+            <button className="linktoggle" disabled={pending} onClick={() => setAdding(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className="linktoggle" onClick={() => setAdding(true)}>
+            {s.managers.length ? "Add another manager" : "Hand this page to the studio"}
+          </button>
+        )}
       </div>
       {removable &&
         (confirming ? (
@@ -1273,8 +1334,10 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
             </button>
           </div>
         ) : (
+          // Named, because the manager rows above it each carry a Remove of
+          // their own and they mean something much smaller.
           <button className="adminremove" onClick={() => setConfirming(true)}>
-            Remove
+            Remove studio
           </button>
         ))}
     </div>

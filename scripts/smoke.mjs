@@ -2140,9 +2140,81 @@ await page.getByText("sam@example.com").waitFor();
   if (!/name: .*Ironbound Strength & Conditioning/.test(log))
     fail("the rename should be in the log, field and both values");
   if (!log.includes("about added")) fail("the about addition should be in the log");
-  await page.locator('.adminseg button[aria-label="People"]').click();
 }
 console.log("studio edit log ok (who, what, when on the Studios tab)");
+
+// ---- claiming a studio closes the directory's open door on it
+//
+// Unclaimed, any coach may correct any entry, which is what kept the directory
+// right while nobody owned it. Hand the page to the gym and that stops: the
+// details are theirs to state, and everyone else suggests instead.
+{
+  // The studio cards come before the edit log on this tab, and only they carry
+  // the manager controls.
+  const studioCard = () =>
+    page.locator(".admincards").first().locator(".admincard")
+      .filter({ hasText: "Ironbound Strength" }).first();
+
+  const handTo = async (email) => {
+    await page.goto(BASE + "/admin");
+    await page.locator('.adminseg button[aria-label="Studios"]').click();
+    await studioCard()
+      .getByRole("button", { name: /Hand this page to the studio|Add another manager/ })
+      .click();
+    await studioCard().getByPlaceholder("their@email.com").fill(email);
+    await studioCard().getByRole("button", { name: "Add", exact: true }).click();
+    await page.getByText("They run this page now").waitFor();
+  };
+  /** Does this page's three-dot menu offer the editor? */
+  const hasEditRow = async (p) => {
+    await p.goto(BASE + "/s/ironbound-strength");
+    await p.locator(".profname", { hasText: "Ironbound Strength" }).waitFor();
+    await p.locator(".ownermore").click();
+    await p.locator(".ownermenu").waitFor();
+    const yes = await p.locator(".ownermenu .setrow", { hasText: "Edit studio" }).count();
+    // Suggest is the door that stays open to everyone, claimed or not.
+    await p.locator(".ownermenu .setrow", { hasText: "Suggest an edit" }).waitFor();
+    await p.locator(".sheetclose").click();
+    await p.locator(".ownermenu").waitFor({ state: "detached" });
+    return !!yes;
+  };
+
+  // Matt runs the gym here. Sam is a coach with no stake in it, and edited this
+  // studio's entry freely while it was unclaimed.
+  await handTo("matt@example.com");
+  await studioCard().getByText("matt@example.com").waitFor();
+  console.log("studio claimed ok");
+
+  // anonPage signed up as Sam. Claimed by somebody else, his menu loses the
+  // pencil and the page says why.
+  await anonPage.goto(BASE + "/s/ironbound-strength");
+  await anonPage.getByText("Kept by the studio").waitFor();
+  if (await hasEditRow(anonPage))
+    fail("a claimed studio should not offer the editor to a coach who doesn't run it");
+  console.log("claimed studio is closed to other coaches ok (suggest, not edit)");
+  if (!(await hasEditRow(page))) fail("the studio's own manager lost the editor");
+
+  // An owner and a manager both hold keys, and neither can shut the other out.
+  await handTo("sam@example.com");
+  if (!(await hasEditRow(anonPage))) fail("a second manager should get the editor too");
+  console.log("two managers on one page ok (owner and manager both hold keys)");
+
+  // Taking the keys back closes it again for that person.
+  await page.goto(BASE + "/admin");
+  await page.locator('.adminseg button[aria-label="Studios"]').click();
+  await studioCard()
+    .locator(".adminmgr", { hasText: "sam@example.com" })
+    .getByRole("button", { name: "Remove" })
+    .click();
+  await page.getByText("Keys taken back").waitFor();
+  if (await hasEditRow(anonPage)) fail("removing a manager should take the editor back");
+  console.log("keys come back ok");
+
+  // Leave Sam holding a key: deleting him below is then also the check that a
+  // new users foreign key was wired into adminDeleteUser.
+  await handTo("sam@example.com");
+  await page.locator('.adminseg button[aria-label="People"]').click();
+}
 
 const samCard = page.locator(".admincard").filter({ hasText: "sam@example.com" });
 await samCard.getByRole("button", { name: "Delete user" }).click();

@@ -13,11 +13,14 @@ import { Toast, useToast } from "@/components/Toast";
 export function StudioMenu({
   slug,
   canEdit,
+  claimed,
   signedIn,
   studio,
 }: {
   slug: string;
   canEdit: boolean;
+  /** The studio runs its own page, so a suggestion goes to them, not to us. */
+  claimed: boolean;
   signedIn: boolean;
   studio: StudioEditProps;
 }) {
@@ -95,7 +98,11 @@ export function StudioMenu({
                 <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
                 <span className="setrow-txt">
                   <span className="t">Suggest an edit</span>
-                  <span className="s">Tell us what&rsquo;s wrong or missing</span>
+                  <span className="s">
+                    {claimed
+                      ? "This studio keeps its own page"
+                      : "Tell us what’s wrong or missing"}
+                  </span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>

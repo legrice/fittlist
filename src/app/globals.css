@@ -3560,3 +3560,21 @@ button.ps-card { cursor: pointer; }
 .studsec { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
 .studsec-first { margin-top: 22px; padding-top: 0; border-top: none; }
 .studsec .prof-sec-h { margin-bottom: 10px; }
+
+/* A studio that runs its own page says so, once, under the name. It is why
+   the pencil is gone for everyone else, and it is what makes the details
+   worth trusting. */
+.studiorun {
+  display: flex; align-items: center; gap: 6px;
+  margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--go);
+}
+
+/* Admin: who holds the keys to a studio page. */
+.adminclaimed { color: var(--go); font-weight: 700; }
+.adminmgrs { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.adminmgr {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 13px;
+}
+.adminmgr-nm { font-weight: 700; }
+.adminmgr-em { color: var(--ol); font-size: 12px; }

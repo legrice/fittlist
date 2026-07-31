@@ -414,6 +414,13 @@
       "when": 1785472264784,
       "tag": "0058_free_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1785518895716,
+      "tag": "0059_volatile_skin",
+      "breakpoints": true
     }
   ]
 }

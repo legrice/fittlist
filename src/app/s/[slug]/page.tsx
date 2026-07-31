@@ -9,6 +9,7 @@ import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
+import { studioAccess } from "@/lib/studioaccess";
 import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -70,12 +71,10 @@ export default async function StudioPage({ params, searchParams }: Props) {
 
   const db = await getDb();
   // A studio is a screen of the app like any other: signed in, the header
-  // rides above and the tab bar below, same as a coach's profile. A coach
-  // also gets the edit button, because the directory is shared and anyone
-  // can correct an entry.
+  // rides above and the tab bar below, same as a coach's profile.
+  let viewerKind: string | null = null;
   let viewerId: string | null = null;
   let signedIn = false;
-  let canEdit = false;
   if (await fansVisible()) {
     viewerId = await getSessionUserId();
     if (viewerId) {
@@ -85,12 +84,17 @@ export default async function StudioPage({ params, searchParams }: Props) {
         .where(eq(schema.users.id, viewerId));
       if (viewer) {
         signedIn = true;
-        // A coach is kind, never handle: members claim handles too, and the
-        // handle test put the edit button on every member's screen.
-        canEdit = viewer.kind !== "fan";
+        viewerKind = viewer.kind;
       }
     }
   }
+  // Unclaimed, any coach may fix it; claimed, only the people who run it. The
+  // rule lives in studioAccess so the page and the action can't disagree.
+  const access = await studioAccess(
+    s.id,
+    viewerId && viewerKind ? { id: viewerId, kind: viewerKind } : null,
+  );
+  const canEdit = access.canEdit;
 
   // A tab we know by name gets a named destination; anything else walks back
   // through history, which is where they actually tapped from.
@@ -152,6 +156,7 @@ export default async function StudioPage({ params, searchParams }: Props) {
           <StudioMenu
             slug={s.slug ?? ""}
             canEdit={canEdit}
+            claimed={access.claimed}
             signedIn={signedIn}
             studio={{
               id: s.id,
@@ -167,6 +172,14 @@ export default async function StudioPage({ params, searchParams }: Props) {
             }}
           />
           </div>
+          {/* Said once, quietly: it explains why the pencil is gone for
+              everyone else, and it is the thing that makes the page worth
+              trusting. */}
+          {access.claimed && (
+            <p className="studiorun">
+              <Icon name="verified" size={15} /> Kept by the studio
+            </p>
+          )}
         </div>
         {s.types.length > 0 && (
           <div className="studiotypes">
