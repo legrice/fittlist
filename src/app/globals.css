@@ -2949,7 +2949,10 @@ button.ps-card { cursor: pointer; }
 /* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
    the browser; only sideways movement reaches the component. */
 .swiperow {
-  position: relative; overflow: hidden; touch-action: pan-y;
+  /* No overflow clip: it cut the card shadows at the row's edge. The page
+     clips the slide at its own boundary, and the front's paper covers the
+     action panel at rest, so nothing needed hiding here. */
+  position: relative; touch-action: pan-y;
   user-select: none; -webkit-user-select: none;
 }
 /* The row slides left, so the action is revealed against the right edge. */
@@ -2960,6 +2963,7 @@ button.ps-card { cursor: pointer; }
   /* The label sits at the right edge and the panel grows leftwards from it, so
      nothing wraps or clips as the row is dragged. */
   white-space: nowrap;
+  border-radius: 16px;
   transition: opacity .12s ease;
 }
 /* Already going: the swipe takes it back, so it shouldn't look like a yes. */
