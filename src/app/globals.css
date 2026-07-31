@@ -3385,6 +3385,18 @@ button.ps-card { cursor: pointer; }
 .rosterrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .rosterrow-with { font-size: 12px; color: var(--ol); }
 
+/* The "You're in" second screen: two doors, both the person's to open. */
+.tellsheet-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.tellbtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--ink); color: var(--paper);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px;
+}
+.tellbtn[disabled] { opacity: .75; }
+.tellbtn-text { background: var(--si-tint); color: var(--si-ink); }
+.tellsheet-done { display: block; margin: 16px auto 4px; }
+
 /* Going, on the event page: the class page's pill, plus the room. */
 .evgoing { margin-top: 20px; }
 .evwho { margin-top: 22px; }

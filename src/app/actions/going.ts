@@ -165,3 +165,66 @@ export async function setGoingCompanions(
   revalidatePath("/app");
   return { ok: true, companions };
 }
+
+// "Let the people you follow know." Deliberate, actor-initiated, mutuals
+// only: announcing your own plan to the people who agreed to you is the
+// whole consent story. Shares the going_together dedupe, so a mutual who was
+// already told (they're marked for the same occurrence) isn't told twice.
+export async function announceGoing(
+  classId: string,
+  occurrenceDate: string,
+): Promise<{ ok: boolean; error?: string; told?: number }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
+  const db = await getDb();
+  const [mine] = await db
+    .select({ id: schema.attendances.id })
+    .from(schema.attendances)
+    .where(
+      and(
+        eq(schema.attendances.userId, userId),
+        eq(schema.attendances.classId, classId),
+        eq(schema.attendances.occurrenceDate, occurrenceDate),
+      ),
+    );
+  if (!mine) return { ok: false, error: "Mark yourself going first." };
+  const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
+  const mutuals = await mutualIds(userId);
+  if (!mutuals.size) return { ok: true, told: 0 };
+  const [me] = await db
+    .select({ name: schema.users.name, email: schema.users.email })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const [coach] = await db
+    .select({ handle: schema.users.handle })
+    .from(schema.users)
+    .where(eq(schema.users.id, cls.userId));
+  const myName = me?.name.trim() || me?.email.split("@")[0] || "Someone";
+  const body = `${cls.name} · ${fmtDateLong(occurrenceDate)}`;
+  let told = 0;
+  for (const mid of mutuals) {
+    const [dupe] = await db
+      .select({ id: schema.notifications.id })
+      .from(schema.notifications)
+      .where(
+        and(
+          eq(schema.notifications.userId, mid),
+          eq(schema.notifications.type, "going_together"),
+          eq(schema.notifications.actorUserId, userId),
+          eq(schema.notifications.body, body),
+        ),
+      );
+    if (dupe) continue;
+    await addNotification(mid, {
+      type: "going_together",
+      title: `${myName} is going to ${cls.name}`,
+      body,
+      href: coach?.handle ? `/${coach.handle}/${classId}?d=${occurrenceDate}` : null,
+      actorUserId: userId,
+    });
+    told += 1;
+  }
+  return { ok: true, told };
+}

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setGoing, setGoingCompanions } from "@/app/actions/going";
 import { CompanionsEditor } from "@/components/CompanionsEditor";
+import { TellSheet } from "@/components/TellSheet";
 import { Icon } from "@/components/Icon";
 
 // "I'm going" on the class itself, pinned to the bottom of the screen — the
@@ -17,6 +18,8 @@ export function GoingButton({
   dateLong,
   shareUrl,
   initialCompanions = [],
+  myHandle = null,
+  canAnnounce = false,
 }: {
   classId: string;
   iso: string;
@@ -27,20 +30,25 @@ export function GoingButton({
   dateLong: string;
   shareUrl: string;
   initialCompanions?: string[];
+  myHandle?: string | null;
+  canAnnounce?: boolean;
 }) {
   const [on, setOn] = useState(initialGoing);
   const [err, setErr] = useState("");
+  const [tellOpen, setTellOpen] = useState(false);
+  const [toldMsg, setToldMsg] = useState("");
   const [pending, startTransition] = useTransition();
+  const url = myHandle ? `${shareUrl}&g=${myHandle}` : shareUrl;
 
   // The moment you commit is the moment you'd text a friend.
   const invite = async () => {
     const text = `I'm going to ${className} on ${dateLong}. Come with me:`;
     try {
       if (typeof navigator.share === "function") {
-        await navigator.share({ title: className, text, url: shareUrl });
+        await navigator.share({ title: className, text, url });
         return;
       }
-      await navigator.clipboard.writeText(`${text} ${shareUrl}`);
+      await navigator.clipboard.writeText(`${text} ${url}`);
       setErr("");
     } catch {
       // a dismissed share sheet is not an error
@@ -56,7 +64,9 @@ export function GoingButton({
       if (!res.ok) {
         setOn(!next);
         setErr(res.error ?? "Something went wrong.");
+        return;
       }
+      if (next) setTellOpen(true);
     });
   };
 
@@ -92,7 +102,19 @@ export function GoingButton({
           />
         )}
         {err && <p className="err">{err}</p>}
+        {toldMsg && <p className="evctanote">{toldMsg}</p>}
       </div>
+      <TellSheet
+        open={tellOpen}
+        onClose={() => setTellOpen(false)}
+        name={className}
+        dateLong={dateLong}
+        shareUrl={url}
+        canAnnounce={canAnnounce || on}
+        classId={classId}
+        whenIso={iso}
+        onToast={setToldMsg}
+      />
     </div>
   );
 }

@@ -78,6 +78,14 @@ export async function GET(
   const day = d.getUTCDate();
 
   const place = studio?.name ?? c.location ?? "";
+  // ?g={handle}: the sharer, so the poster says who's going. Resolved to a
+  // real account so a link can't be dressed up with an arbitrary name.
+  const g = url.searchParams.get("g");
+  let goer: string | null = null;
+  if (g && /^[a-z0-9-]{1,40}$/i.test(g)) {
+    const [gu] = await db.select().from(schema.users).where(eq(schema.users.handle, g));
+    if (gu?.name.trim()) goer = gu.name.trim();
+  }
   const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon(SI)).toString("base64")}`;
   const colour = avatarColor(coach);
   const initial = (coach.name.trim().charAt(0) || "?").toUpperCase();
@@ -122,6 +130,19 @@ export async function GET(
             <span style={{ fontSize: 30, fontWeight: 600, color: MUTED, marginTop: 6 }}>{wd}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", maxWidth: 830 }}>
+            {goer && (
+              <span
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  color: SI,
+                  marginBottom: 14,
+                }}
+              >
+                {goer.toUpperCase()} IS GOING
+              </span>
+            )}
             <span style={{ fontSize: nameSize, fontWeight: 800, lineHeight: 1.02, letterSpacing: -2 }}>
               {c.name}
             </span>

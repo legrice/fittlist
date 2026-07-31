@@ -141,6 +141,13 @@ await r.goto(BASE + "/feed");
 await r.locator(".feedagenda .ps-event").first().click();
 await r.locator(".classsheet-add").waitFor();
 await r.locator(".classsheet-add").click();
+// The second screen opens on a fresh yes: "You're in", the in-app door and
+// the text door. Ruth tells her people, which reaches Sarah once (the
+// fellow-goer notice already covered her, and the dedupe holds).
+await r.getByRole("heading", { name: /You.re in/ }).waitFor();
+await r.locator(".tellbtn", { hasText: "Let the people you follow know" }).click();
+await r.locator(".tellbtn", { hasText: "Your people will see it" }).waitFor();
+await r.locator(".tellsheet-done").click();
 await r.locator(".classsheet-add.on").waitFor();
 // the share leans forward the moment you commit: it now carries the invite
 await r.locator(".classsheet-share.invite", { hasText: "Tell someone" }).waitFor();

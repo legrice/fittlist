@@ -25,7 +25,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 type Props = {
   params: Promise<{ handle: string; classId: string }>;
-  searchParams: Promise<{ d?: string; from?: string }>;
+  searchParams: Promise<{ d?: string; from?: string; g?: string }>;
 };
 
 // The link preview is the mini poster: /api/og/class composes the date tile,
@@ -33,7 +33,7 @@ type Props = {
 // carry rides through so the poster names the same day the sender meant.
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { handle, classId } = await params;
-  const { d } = await searchParams;
+  const { d, g } = await searchParams;
   if (!UUID_RE.test(classId)) return { title: "fittlist" };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -52,7 +52,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     .filter(Boolean)
     .join(" · ");
   const dOk = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
-  const image = `${siteOrigin()}/api/og/class/${c.id}${dOk ? `?d=${dOk}` : ""}`;
+  const gOk = g && /^[a-z0-9-]{1,40}$/i.test(g) ? g : null;
+  const imgQs = [dOk && `d=${dOk}`, gOk && `g=${gOk}`].filter(Boolean).join("&");
+  const image = `${siteOrigin()}/api/og/class/${c.id}${imgQs ? `?${imgQs}` : ""}`;
   const url = `${siteOrigin()}/${handle}/${c.id}${dOk ? `?d=${dOk}` : ""}`;
   return {
     title,
@@ -154,8 +156,19 @@ export default async function EventPage({ params, searchParams }: Props) {
   // opens on the day it named, and that day can be behind us.
   const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
   const canGo = !isOwner && !!viewerId && c.isPublic && !past && (await fansVisible());
+  // Joanne's link, opened by someone without an account: the details are all
+  // here, and saying "I'm in" is what the door is for.
+  const askToJoin = !viewerId && c.isPublic && !past && (await fansVisible());
   let going = false;
   let myCompanions: string[] = [];
+  let viewerHandle: string | null = null;
+  if (viewerId) {
+    const [v] = await db
+      .select({ handle: schema.users.handle })
+      .from(schema.users)
+      .where(eq(schema.users.id, viewerId));
+    viewerHandle = v?.handle ?? null;
+  }
   if (canGo) {
     const [row] = await db
       .select({ id: schema.attendances.id, companions: schema.attendances.companions })
@@ -339,6 +352,16 @@ export default async function EventPage({ params, searchParams }: Props) {
           </div>
         )}
       </div>
+      {askToJoin && (
+        <div className="evcta">
+          <div className="evcta-inner">
+            <p className="evctanote">Add it to your week and see who else is going.</p>
+            <Link className="btn evctabtn" href={`/?via=${handle}`}>
+              <Icon name="add" size={18} /> Sign up to say you&rsquo;re going
+            </Link>
+          </div>
+        </div>
+      )}
       {/* The one commitment on this page sits under the thumb, pinned. */}
       {canGo && (
         <GoingButton
@@ -350,6 +373,8 @@ export default async function EventPage({ params, searchParams }: Props) {
           dateLong={fmtDateLong(whenIso)}
           shareUrl={`${classUrl}?d=${whenIso}`}
           initialCompanions={myCompanions}
+          myHandle={viewerHandle}
+          canAnnounce={going}
         />
       )}
     </div>

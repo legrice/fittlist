@@ -8,6 +8,7 @@ import { reportClass } from "@/app/actions/reports";
 import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 import { Roster } from "@/components/Roster";
+import { TellSheet } from "@/components/TellSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // A class, from the bottom up.
@@ -43,6 +44,7 @@ export function ClassSheet({
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reported, setReported] = useState(false);
+  const [tellOpen, setTellOpen] = useState(false);
 
   const sendReport = (reason: string) => {
     if (!c || pending) return;
@@ -89,6 +91,8 @@ export function ClassSheet({
         return;
       }
       onChanged?.(next);
+      // The second screen: who should know? Only on a fresh yes.
+      if (next) setTellOpen(true);
     });
   };
 
@@ -98,14 +102,15 @@ export function ClassSheet({
     // you're going the share carries the sentence, not just the link. The
     // group chat stays where it belongs; we just hand it something to say.
     const invite = added ? `I'm going to ${c.name} on ${c.dateLong}. Come with me:` : null;
+    const url = added && c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl;
     try {
       if (canShareFiles) {
         await navigator.share(
-          invite ? { title: c.name, text: invite, url: c.shareUrl } : { title: c.name, url: c.shareUrl },
+          invite ? { title: c.name, text: invite, url } : { title: c.name, url },
         );
         return;
       }
-      await navigator.clipboard.writeText(invite ? `${invite} ${c.shareUrl}` : c.shareUrl);
+      await navigator.clipboard.writeText(invite ? `${invite} ${url}` : url);
       toast(invite ? "Invite copied, ready to paste" : "Link copied, ready to paste");
     } catch (err) {
       if ((err as Error)?.name !== "AbortError") toast(c.shareUrl);
@@ -327,6 +332,19 @@ export function ClassSheet({
           </>
         )}
       </div>
+      {c && (
+        <TellSheet
+          open={tellOpen}
+          onClose={() => setTellOpen(false)}
+          name={c.name}
+          dateLong={c.dateLong}
+          shareUrl={c.myHandle ? `${c.shareUrl}&g=${c.myHandle}` : c.shareUrl}
+          canAnnounce={c.canAnnounce || added}
+          classId={c.id}
+          whenIso={c.whenIso}
+          onToast={toast}
+        />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </div>
   );

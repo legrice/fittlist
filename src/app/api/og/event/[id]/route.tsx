@@ -38,7 +38,7 @@ const dayBits = (iso: string) => {
   return { wd: WD[(d.getUTCDay() + 6) % 7], mon: MO[d.getUTCMonth()], day: d.getUTCDate() };
 };
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Not found", { status: 404 });
   const db = await getDb();
@@ -52,6 +52,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     ? `${b.wd}, ${b.mon} ${b.day} to ${end.wd}, ${end.mon} ${end.day}`
     : `${b.wd}, ${b.mon} ${b.day}${ev.startTime ? ` · ${fmtTime(ev.startTime)}` : ""}`;
   const host = ev.hostName?.trim() || "";
+  const g = new URL(req.url).searchParams.get("g");
+  let goer: string | null = null;
+  if (g && /^[a-z0-9-]{1,40}$/i.test(g)) {
+    const [gu] = await db.select().from(schema.users).where(eq(schema.users.handle, g));
+    if (gu?.name.trim()) goer = gu.name.trim();
+  }
   const markUri = `data:image/svg+xml;base64,${Buffer.from(brandIcon(SI)).toString("base64")}`;
   const nameSize = ev.name.length <= 16 ? 80 : ev.name.length <= 28 ? 62 : 48;
 
@@ -98,6 +104,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                 {b.day}
               </span>
             </div>
+            {goer && (
+              <span
+                style={{
+                  fontSize: 26,
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  color: SI,
+                  marginBottom: 12,
+                }}
+              >
+                {goer.toUpperCase()} IS GOING
+              </span>
+            )}
             <span style={{ fontSize: nameSize, fontWeight: 800, lineHeight: 1.03, letterSpacing: -2 }}>
               {ev.name}
             </span>

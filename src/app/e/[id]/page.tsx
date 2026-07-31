@@ -17,7 +17,10 @@ import { Roster } from "@/components/Roster";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ g?: string }>;
+};
 
 const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -26,14 +29,16 @@ const dayLabel = (isoDay: string) => {
   return `${WD[(d.getUTCDay() + 6) % 7]}, ${MO[d.getUTCMonth()]} ${d.getUTCDate()}`;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { id } = await params;
+  const { g } = await searchParams;
   const db = await getDb();
   const [ev] = await db.select().from(schema.events).where(eq(schema.events.id, id));
   if (!ev) return { title: "fittlist" };
   const title = `${ev.name} · fittlist`;
   const description = `${dayLabel(ev.startDate)} at ${ev.place}`;
-  const image = `${siteOrigin()}/api/og/event/${ev.id}`;
+  const gOk = g && /^[a-z0-9-]{1,40}$/i.test(g) ? g : null;
+  const image = `${siteOrigin()}/api/og/event/${ev.id}${gOk ? `?g=${gOk}` : ""}`;
   return {
     title,
     description,
@@ -73,6 +78,14 @@ export default async function EventPage({ params }: Props) {
     .where(eq(schema.eventAttendances.eventId, ev.id));
   const companionsByUser = new Map(markRows.map((m) => [m.userId, m.companions]));
   const going = !!viewerId && markRows.some((m) => m.userId === viewerId);
+  const viewerHandle = viewerId
+    ? ((
+        await db
+          .select({ handle: schema.users.handle })
+          .from(schema.users)
+          .where(eq(schema.users.id, viewerId))
+      )[0]?.handle ?? null)
+    : null;
   const isPoster = !!viewerId && viewerId === ev.createdByUserId;
   let faces: {
     name: string;
@@ -156,6 +169,7 @@ export default async function EventPage({ params }: Props) {
             whenLabel={dayLabel(ev.startDate)}
             shareUrl={`${siteOrigin()}/e/${ev.id}`}
             initialCompanions={viewerId ? (companionsByUser.get(viewerId) ?? []) : []}
+            myHandle={viewerHandle}
           />
         )}
         {viewerId && (going || isPoster) && faces.length > 0 && (

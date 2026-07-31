@@ -1401,6 +1401,10 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
   await fan.getByRole("button", { name: "Add to your week", exact: true }).click();
+  // The second screen: "You're in", with the two tell doors. Close it; the
+  // sheet behind is what this block is checking.
+  await fan.getByRole("heading", { name: /You.re in/ }).waitFor();
+  await fan.locator(".tellsheet-done").click();
   await fan.getByRole("button", { name: "Added to your week" }).waitFor();
   // The add pill goes green, the same yes Following gives.
   {

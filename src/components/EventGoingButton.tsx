@@ -17,6 +17,7 @@ export function EventGoingButton({
   whenLabel,
   shareUrl,
   initialCompanions = [],
+  myHandle = null,
 }: {
   id: string;
   initialGoing: boolean;
@@ -25,6 +26,7 @@ export function EventGoingButton({
   whenLabel: string;
   shareUrl: string;
   initialCompanions?: string[];
+  myHandle?: string | null;
 }) {
   const router = useRouter();
   const [going, setGoing] = useState(initialGoing);
@@ -40,12 +42,13 @@ export function EventGoingButton({
   // The moment you commit is the moment you'd text a friend.
   const invite = async () => {
     const text = `I'm going to ${eventName} on ${whenLabel}. Come with me:`;
+    const url = myHandle ? `${shareUrl}?g=${myHandle}` : shareUrl;
     try {
       if (typeof navigator.share === "function") {
-        await navigator.share({ title: eventName, text, url: shareUrl });
+        await navigator.share({ title: eventName, text, url });
         return;
       }
-      await navigator.clipboard.writeText(`${text} ${shareUrl}`);
+      await navigator.clipboard.writeText(`${text} ${url}`);
     } catch {
       // a dismissed share sheet is not an error
     }
