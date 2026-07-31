@@ -1485,9 +1485,9 @@ await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).cl
 await fan.getByRole("heading", { name: "Share your week" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
-// the wordmark is the way back to the week from anywhere
+// the wordmark is the way home from anywhere
 await fan.locator(".brandbar-home").click();
-await fan.waitForURL("**/feed");
+await fan.waitForURL("**/home");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -1587,20 +1587,20 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Home" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Classes" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
 await page.locator(".navtab.on", { hasText: "You" }).waitFor();
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
 await page.locator(".classoverlay-nm").waitFor();
 await page.locator(".ovcircle-back").click();
@@ -1772,11 +1772,11 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// three tabs only, and the account opens from the header avatar — back in the
+// four tabs, and the account opens from the header avatar — back in the
 // app, since a profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".fab").waitFor();
-if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
 await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();
@@ -1901,7 +1901,7 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-await page.locator(".navtab", { hasText: "Home" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".profname").waitFor();

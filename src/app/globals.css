@@ -3786,3 +3786,37 @@ button.ps-card { cursor: pointer; }
 /* An event row on the week screen wears the brand accent; classes wear their
    coach's colour. */
 .weekrow-ev { background: var(--si); }
+
+/* Home: the doors. A hint under an empty shelf, the door to the week, and
+   the events row as small posters. */
+.homehint { font-size: 13px; color: var(--ol); }
+.homedoor {
+  display: flex; align-items: center; gap: 12px;
+  padding: 15px 16px; margin: 0 0 6px; border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line);
+  text-decoration: none; color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.homedoor:active { transform: scale(.99); }
+.homedoor-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.homedoor-txt .t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px;
+}
+.homedoor-txt .s { font-size: 12.5px; color: var(--ol); }
+.homedoor .icon { color: var(--ol); flex-shrink: 0; }
+.homeevs {
+  display: flex; gap: 10px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.homeevs::-webkit-scrollbar { display: none; }
+.disposter-mini {
+  flex: 0 0 230px; min-height: 120px; margin-bottom: 0; padding: 14px;
+  background: var(--card);
+}
+.disposter-mini .disposter-nm { font-size: 19px; position: relative; }
+.disposter-mini .disposter-sub { position: relative; }
+/* A flyer behind the words, dimmed enough for ink to win. */
+.disposter-mini-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5;
+}

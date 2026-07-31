@@ -99,18 +99,18 @@ await m.waitForTimeout(500);
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
   // The same three everyone gets; only where You points differs.
-  if (labels.join("|") !== "Home|Discover|You")
-    fail(`a member's header links should be Home, Discover and You, got ${labels}`);
+  if (labels.join("|") !== "Home|Classes|Discover|You")
+    fail(`a member's header links should be Home, Classes, Discover and You, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();
-  if (on !== "Home") fail(`the lit link is "${on}", expected Home`);
+  if (on !== "Classes") fail(`the lit link is "${on}", expected Classes`);
   await m.locator(".headnav-l", { hasText: "Discover" }).click();
   await m.waitForURL(/\/discover/);
   await m.locator(".headnav-l.on", { hasText: "Discover" }).waitFor();
-  await m.locator(".headnav-l", { hasText: "Home" }).click();
+  await m.locator(".headnav-l", { hasText: "Classes" }).click();
   await m.waitForURL(/\/feed/);
-  await m.locator(".headnav-l.on", { hasText: "Home" }).waitFor();
+  await m.locator(".headnav-l.on", { hasText: "Classes" }).waitFor();
   await m.locator(".feedav").first().waitFor();
   console.log("header links navigate and light up ok");
 }
