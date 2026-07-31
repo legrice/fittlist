@@ -76,6 +76,13 @@ export const users = pgTable("users", {
   // are full" and "don't write to me" are different sentences, and a coach who
   // is full still wants to hear from the person asking about a class.
   messagesOpen: boolean("messages_open").notNull().default(true),
+  // Whether the shifts a gym has them on show on their own public page, share
+  // and calendar feed, alongside the classes they own. Off by default, because
+  // a shift is work rather than a listing and a coach may want no public trace
+  // of it at all; on, it is how somebody who teaches at four gyms has one page
+  // that answers "how do I train with you". Their answer only, and separate
+  // from whether the *gym's* schedule ever names them, which is the gym's.
+  shiftsPublic: boolean("shifts_public").notNull().default(false),
   // Their pick from AVATAR_COLORS, behind the initial when there's no photo.
   // Null means "derive one from my id" — everyone looks distinct from day one.
   avatarColor: text("avatar_color"),

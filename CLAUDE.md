@@ -353,8 +353,36 @@ calendar. That split is what lets a gym publish a week without naming anybody
 (a schedule is not a popularity contest) and a coach take shifts without
 wanting a public profile at all. Whether a coach's name is ever shown is a
 separate question with two people's say in it, and the more private setting
-wins. A shift is work, not a listing: it stays out of the coach's public page
-and their public `.ics`, and lands in the private token feed instead.
+wins. A shift is work, not a listing: by default it stays out of the coach's
+public page and their public `.ics`, and lands in the private token feed
+instead.
+
+**`users.shiftsPublic` is the coach's own answer, and `publicSchedules()` is
+the only place it's read.** Default off, so nothing changed for anybody who
+had a page before gyms existed. On, the shifts a gym has them on join their own
+classes everywhere their public week appears: the page, the public `.ics`, the
+story and card images, Share my week as text, Following, Discover's count, and
+both digests. That list is why there is one loader (`src/lib/coachweek.ts`) and
+not a query per surface: a coach whose page says Thursday and whose digest
+doesn't is worse than one that says neither. It is also a different question
+from whether the *gym's* schedule names anybody, which is the gym's call and
+stays off; this switch never touches it.
+
+Two things make the loader the whole answer rather than half of it. Covers are
+folded into the rows before they're returned, a date somebody else took
+becoming a `skipDate` and a date handed over becoming a one-off pinned to it, so
+`runsOn` stays the only predicate a caller needs and no surface has to learn
+what a swap is. And a shift is owned by the gym, so the row carries
+`ownerUserId` (whose schedule it belongs on, never `userId`) and its page lives
+under the studio: `classAddress()` returns the `base` for the href and the
+`key` `classDetail()` looks the owner up by, because conflating those two is
+how a link 404s. A row can name its own base with `data-base`, which is how
+`ClassOpener` opens a shift under the gym from a coach's page.
+
+Still out, deliberately: the coach's own `/app` schedule and the Google
+Calendar sync. Their shifts already reach them through the token feed, and a
+row in the editor that opens the adder for a class they don't own would fail on
+save.
 
 One row is one slot, mirroring the spreadsheet's one cell per class, so
 `updateGymClass` edits in place and a Going mark or a swap on it is never at

@@ -1,5 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { publicSchedule } from "@/lib/coachweek";
 import { mondayOfCurrentWeek } from "@/lib/format";
 import { floatingEnd, floatingStart, icsEsc as esc, icsFold as fold, recurrenceLines } from "@/lib/ics";
 
@@ -15,7 +16,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ handle:
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const classRows = await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id));
+  // Their own classes, and the gym shifts they've chosen to show. Same
+  // loader as the page, so the feed can't say something the page doesn't.
+  const classRows = await publicSchedule(user);
   const monday = mondayOfCurrentWeek();
   // Public classes only (this feed is reachable by handle, like the page);
   // weekly always, one-offs only if they haven't already passed. Private client
