@@ -195,9 +195,9 @@ export function FeedAgenda({
                         </span>
                         <span className="ps-etimecol">
                           {/* Level with the coach's name, above the time — the
-                              row reads who, then when, and Added sits with the
+                              row reads who, then when, and Saved sits with the
                               commitment rather than in the class title. */}
-                          {on && <span className="ps-goingtag">Added</span>}
+                          {on && <span className="ps-goingtag">Saved</span>}
                           <span className="ps-etime">
                             {i.hm}
                             <span className="ps-ap">{i.ap}</span>
