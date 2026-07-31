@@ -393,6 +393,13 @@
       "when": 1785457422143,
       "tag": "0055_fixed_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1785467816454,
+      "tag": "0056_early_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

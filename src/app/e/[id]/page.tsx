@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
+import { avatarColor } from "@/lib/avatar";
+import { hiddenFrom } from "@/lib/blocks";
 import { fmtTime, siteOrigin } from "@/lib/format";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { EventGoingButton } from "@/components/EventGoingButton";
 import { EventRemoveButton } from "@/components/EventRemoveButton";
 import { Icon } from "@/components/Icon";
 import { PublicTopBar } from "@/components/PublicTopBar";
+import { Roster } from "@/components/Roster";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +52,36 @@ export default async function EventPage({ params }: Props) {
   const viewerId = await getSessionUserId();
   const admin = viewerId ? await currentAdmin() : null;
   const canRemove = !!viewerId && (viewerId === ev.createdByUserId || !!admin);
+
+  // Going, and who else is. The faces show to a viewer who is going (minus
+  // themselves and anyone either side has blocked) and to the poster, whose
+  // event it is. Everyone else sees no list at all: the price of seeing the
+  // room is being in it.
+  const markRows = await db
+    .select({ userId: schema.eventAttendances.userId })
+    .from(schema.eventAttendances)
+    .where(eq(schema.eventAttendances.eventId, ev.id));
+  const going = !!viewerId && markRows.some((m) => m.userId === viewerId);
+  const isPoster = !!viewerId && viewerId === ev.createdByUserId;
+  let faces: { name: string; photo: string | null; color: string; handle: string | null }[] = [];
+  if (viewerId && (going || isPoster)) {
+    let ids = [...new Set(markRows.map((m) => m.userId))];
+    if (!isPoster) {
+      const hidden = await hiddenFrom(viewerId);
+      ids = ids.filter((x) => x !== viewerId && !hidden.has(x));
+    }
+    const people = ids.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+      : [];
+    faces = people
+      .map((p) => ({
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   const poster = ev.createdByUserId
     ? (
@@ -96,6 +130,13 @@ export default async function EventPage({ params }: Props) {
           )}
         </div>
         {ev.description && <p className="profabout">{ev.description}</p>}
+        {viewerId && !isPoster && <EventGoingButton id={ev.id} initialGoing={going} />}
+        {viewerId && (going || isPoster) && faces.length > 0 && (
+          <div className="evwho">
+            <h2 className="evwho-h">{isPoster ? "Going" : "Also going"} · {faces.length}</h2>
+            <Roster people={faces} />
+          </div>
+        )}
         {ev.link && (
           <a className="btn si evlink" href={ev.link} target="_blank" rel="noopener">
             Tickets and details

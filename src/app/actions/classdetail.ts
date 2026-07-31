@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom, isBlocked } from "@/lib/blocks";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
@@ -42,6 +42,10 @@ export type ClassDetail = {
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
+  /** The room introducing itself early: the other people going to this same
+   *  occurrence, shown only to a viewer who is going too. The price of seeing
+   *  the list is being on it, so nobody can lurk on a roster. */
+  alsoGoing: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -121,18 +125,26 @@ export async function classDetail(
   // member looking at the same sheet sees the count of nobody: the field is
   // null for everyone but the owner.
   let roster: ClassDetail["roster"] = null;
-  if (isOwner) {
+  let alsoGoing: ClassDetail["alsoGoing"] = null;
+  if (isOwner || added) {
     const marks = await db
       .select({ userId: schema.attendances.userId })
       .from(schema.attendances)
       .where(
         and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
       );
-    const ids = [...new Set(marks.map((m) => m.userId))];
+    let ids = [...new Set(marks.map((m) => m.userId))];
+    if (!isOwner) {
+      // The fellow-goer's view: everyone but themselves, minus anyone either
+      // side has blocked. The coach's roster stays unfiltered; the mark was
+      // made at the coach.
+      const hidden = await hiddenFrom(viewerId!);
+      ids = ids.filter((id) => id !== viewerId && !hidden.has(id));
+    }
     const people = ids.length
       ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
       : [];
-    roster = people
+    const faces = people
       .map((p) => ({
         name: p.name.trim() || p.email.split("@")[0],
         photo: p.photo,
@@ -140,6 +152,8 @@ export async function classDetail(
         handle: p.handle,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    if (isOwner) roster = faces;
+    else alsoGoing = faces;
   }
 
   return {
@@ -167,5 +181,6 @@ export async function classDetail(
     added,
     past,
     roster,
+    alsoGoing,
   };
 }

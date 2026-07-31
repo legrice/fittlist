@@ -1,11 +1,13 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { currentAdmin } from "@/lib/admin";
 import { knownLocations } from "@/app/actions/locations";
 import { normalizeLocation } from "@/lib/location";
+import { mutualIds } from "@/lib/mutuals";
+import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 
 export type EventInput = {
@@ -91,7 +93,89 @@ export async function deleteEvent(id: string): Promise<{ ok: boolean; error?: st
   const admin = await currentAdmin();
   if (ev.createdByUserId !== userId && !admin)
     return { ok: false, error: "Only the poster can remove this." };
+  await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.eventId, id));
   await db.delete(schema.events).where(eq(schema.events.id, id));
   revalidatePath("/discover");
+  return { ok: true };
+}
+
+// Going, on the events board. Any signed-in person; the marker's mutuals get
+// told, because "your friend is going" is exactly the reason people show up.
+// Mutuals only, as everywhere: a one-way follow surfaces nothing.
+export async function setEventGoing(
+  eventId: string,
+  on: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Log in first." };
+  const db = await getDb();
+  const [ev] = await db.select().from(schema.events).where(eq(schema.events.id, eventId));
+  if (!ev) return { ok: false, error: "Event not found." };
+
+  if (!on) {
+    await db
+      .delete(schema.eventAttendances)
+      .where(
+        and(
+          eq(schema.eventAttendances.eventId, eventId),
+          eq(schema.eventAttendances.userId, userId),
+        ),
+      );
+    revalidatePath(`/e/${eventId}`);
+    return { ok: true };
+  }
+
+  const inserted = await db
+    .insert(schema.eventAttendances)
+    .values({ eventId, userId })
+    .onConflictDoNothing({
+      target: [schema.eventAttendances.eventId, schema.eventAttendances.userId],
+    })
+    .returning({ id: schema.eventAttendances.id });
+  // Only a real insert rings bells, and the dedupe keeps a remove-and-re-add
+  // quiet the second time.
+  if (inserted.length) {
+    try {
+      const mutuals = await mutualIds(userId);
+      if (mutuals.size) {
+        const [me] = await db
+          .select({ name: schema.users.name, email: schema.users.email })
+          .from(schema.users)
+          .where(eq(schema.users.id, userId));
+        const myName = me?.name.trim() || me?.email.split("@")[0] || "Someone";
+        const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const d = new Date(`${ev.startDate}T00:00:00Z`);
+        const when = `${WD[(d.getUTCDay() + 6) % 7]}, ${MO[d.getUTCMonth()]} ${d.getUTCDate()}`;
+        const body = [when, ev.place].filter(Boolean).join(" · ");
+        for (const mid of mutuals) {
+          // Keyed on the href (unique per event): two events can share a
+          // date and place, but not a page.
+          const [dupe] = await db
+            .select({ id: schema.notifications.id })
+            .from(schema.notifications)
+            .where(
+              and(
+                eq(schema.notifications.userId, mid),
+                eq(schema.notifications.type, "event_going"),
+                eq(schema.notifications.actorUserId, userId),
+                eq(schema.notifications.href, `/e/${eventId}`),
+              ),
+            );
+          if (dupe) continue;
+          await addNotification(mid, {
+            type: "event_going",
+            title: `${myName} is going to ${ev.name}`,
+            body,
+            href: `/e/${eventId}`,
+            actorUserId: userId,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("event-going notification failed", err);
+    }
+  }
+  revalidatePath(`/e/${eventId}`);
   return { ok: true };
 }

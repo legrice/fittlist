@@ -51,6 +51,8 @@ const ICON: Record<string, string> = {
   studio_suggest: "place",
   follow_request: "person_add",
   class_overlap: "flag",
+  going_together: "groups",
+  event_going: "event",
 };
 
 function fmt(d: Date | string) {

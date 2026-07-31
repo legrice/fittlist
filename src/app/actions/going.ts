@@ -1,10 +1,12 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { isBlocked } from "@/lib/blocks";
-import { occurrenceEnded } from "@/lib/format";
+import { fmtDateLong, occurrenceEnded } from "@/lib/format";
+import { mutualIds } from "@/lib/mutuals";
+import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 
 // Adding a class is a personal note, not a reservation. Nothing here talks to
@@ -36,7 +38,7 @@ export async function setGoing(
   }
 
   if (on) {
-    await db
+    const inserted = await db
       .insert(schema.attendances)
       .values({ userId, classId, occurrenceDate })
       .onConflictDoNothing({
@@ -45,7 +47,65 @@ export async function setGoing(
           schema.attendances.classId,
           schema.attendances.occurrenceDate,
         ],
-      });
+      })
+      .returning({ id: schema.attendances.id });
+    // "Alex is going too": tell the mutuals already marked for this same
+    // occurrence. Mutuals only — one-way follows surface nothing — and only
+    // on a real insert, so toggling can't drum on anyone. The dedupe check
+    // keeps a remove-and-re-add from re-ringing the same bell.
+    if (inserted.length) {
+      try {
+        const mutuals = await mutualIds(userId);
+        if (mutuals.size) {
+          const fellow = await db
+            .select({ userId: schema.attendances.userId })
+            .from(schema.attendances)
+            .where(
+              and(
+                eq(schema.attendances.classId, classId),
+                eq(schema.attendances.occurrenceDate, occurrenceDate),
+                inArray(schema.attendances.userId, [...mutuals]),
+              ),
+            );
+          if (fellow.length) {
+            const [me] = await db
+              .select({ name: schema.users.name, email: schema.users.email })
+              .from(schema.users)
+              .where(eq(schema.users.id, userId));
+            const [coach] = await db
+              .select({ handle: schema.users.handle })
+              .from(schema.users)
+              .where(eq(schema.users.id, cls.userId));
+            const myName = me?.name.trim() || me?.email.split("@")[0] || "Someone";
+            const body = `${cls.name} · ${fmtDateLong(occurrenceDate)}`;
+            for (const f of fellow) {
+              const [dupe] = await db
+                .select({ id: schema.notifications.id })
+                .from(schema.notifications)
+                .where(
+                  and(
+                    eq(schema.notifications.userId, f.userId),
+                    eq(schema.notifications.type, "going_together"),
+                    eq(schema.notifications.actorUserId, userId),
+                    eq(schema.notifications.body, body),
+                  ),
+                );
+              if (dupe) continue;
+              await addNotification(f.userId, {
+                type: "going_together",
+                title: `${myName} is going too`,
+                body,
+                href: coach?.handle ? `/${coach.handle}/${classId}?d=${occurrenceDate}` : null,
+                actorUserId: userId,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        // The mark itself always lands; the hello is best-effort.
+        console.error("going-too notification failed", err);
+      }
+    }
   } else {
     await db
       .delete(schema.attendances)

@@ -266,6 +266,20 @@ export const events = pgTable("events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Going, for the events board: same meaning as a class mark, anchored to the
+// happening instead of an occurrence date. Unique per person per event;
+// deleted with the event and with the person.
+export const eventAttendances = pgTable(
+  "event_attendances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id").notNull().references(() => events.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("event_attendances_event_user").on(t.eventId, t.userId)],
+);
+
 // A device that asked to be pinged. Admin-only for now (the one use is "tell
 // me when someone joins"), but the shape is general: one row per browser
 // subscription, owned by a user, deleted with them in adminDeleteUser. The

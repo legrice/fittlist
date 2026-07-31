@@ -204,6 +204,16 @@ export function ClassSheet({
               </div>
             )}
 
+            {/* The room introducing itself early: the other people coming,
+                shown only because this viewer is coming too. Non-null and
+                non-empty is the server saying both of those things. */}
+            {c.alsoGoing && c.alsoGoing.length > 0 && (
+              <div className="classsheet-roster">
+                <h3 className="classsheet-roster-h">Also going · {c.alsoGoing.length}</h3>
+                <Roster people={c.alsoGoing} />
+              </div>
+            )}
+
             {c.links.length > 0 && (
               <div className="evbook classsheet-book">
                 {c.links.map((l, i) => (

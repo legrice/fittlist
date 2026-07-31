@@ -3354,6 +3354,14 @@ button.ps-card { cursor: pointer; }
 .evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
 .evposter a { color: inherit; font-weight: 600; }
 
+/* Going, on the event page: the class page's pill, plus the room. */
+.evgoing { margin-top: 20px; }
+.evwho { margin-top: 22px; }
+.evwho-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+  margin-bottom: 10px;
+}
+
 /* The composer's two dates side by side, and the flyer preview. */
 .evdates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .evabout { resize: vertical; min-height: 70px; }

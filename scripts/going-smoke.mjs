@@ -97,6 +97,128 @@ const stillGoing = await m.locator(".ps-event.goingon").count();
 if (stillGoing !== 1) fail(`editing the class dropped the Going mark (${stillGoing} left)`);
 console.log("an edit keeps the Going marks ok");
 
+// --- the room introduces itself early. Ruth and Sarah agree to each other
+// (mutual follows), Ruth marks the same occurrence, and three things follow:
+// Sarah is told Ruth is going too, Ruth sees Sarah on the sheet, and a
+// stranger who hasn't committed sees no list at all.
+const c3 = await b.newContext({ viewport: { width: 390, height: 844 } });
+const r = await c3.newPage();
+r.setDefaultTimeout(15000);
+await r.goto(BASE + "/");
+await r.getByRole("button", { name: "Sign up with email" }).click();
+await r.locator(".roleseg button", { hasText: "here to train" }).click();
+await r.getByPlaceholder("you@example.com").fill("ruth@example.com");
+await r.getByPlaceholder("Password").fill("member-pass-123");
+await r.getByRole("button", { name: "Create account" }).click();
+await r.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await r.getByText("Pick your link.").waitFor();
+await r.getByPlaceholder("Your name").fill("Ruth");
+await r.getByRole("button", { name: "Claim it" }).click();
+await r.getByRole("heading", { name: "Add a photo." }).waitFor();
+await r.getByRole("button", { name: "Continue" }).click();
+await r.locator("#wLocation").fill("Jersey City, NJ");
+await r.getByRole("button", { name: "Finish setup" }).click();
+await r.waitForURL("**/feed");
+// the agreement, both directions
+await r.goto(BASE + "/sarah");
+await r.locator(".profacts .followpill").waitFor();
+await r.waitForTimeout(400);
+await r.locator(".profacts .followpill").click();
+await r.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await m.goto(BASE + "/ruth");
+await m.locator(".profacts .followpill").waitFor();
+await m.waitForTimeout(400);
+await m.locator(".profacts .followpill").click();
+await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+// Ruth follows Carina too and marks the same occurrence Sarah did: the
+// feed's first row, which is the next one that hasn't run yet.
+await r.goto(BASE + "/carina");
+await r.locator(".profacts .followpill").waitFor();
+await r.waitForTimeout(400);
+await r.locator(".profacts .followpill").click();
+await r.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await r.goto(BASE + "/feed");
+await r.locator(".feedagenda .ps-event").first().click();
+await r.locator(".classsheet-add").waitFor();
+await r.locator(".classsheet-add").click();
+await r.locator(".classsheet-add.on").waitFor();
+// reopening the sheet brings the room with it
+await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+await r.waitForTimeout(400);
+await r.locator(".feedagenda .ps-event").first().click();
+await r.getByText(/Also going · 1/).waitFor();
+await r.locator(".classsheet-roster", { hasText: "Sarah" }).waitFor();
+await r.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+console.log("fellow goer sees the room ok (Sarah on Ruth's sheet)");
+// Sarah hears about it, because they're mutuals and she's marked too
+await m.goto(BASE + "/updates");
+await m.getByText("Ruth is going too").waitFor();
+console.log("going-too notification ok (mutuals only, same occurrence)");
+// a stranger who hasn't committed sees no list
+const c4 = await b.newContext({ viewport: { width: 390, height: 844 } });
+const n = await c4.newPage();
+n.setDefaultTimeout(15000);
+await n.goto(BASE + "/");
+await n.getByRole("button", { name: "Sign up with email" }).click();
+await n.locator(".roleseg button", { hasText: "here to train" }).click();
+await n.getByPlaceholder("you@example.com").fill("nora@example.com");
+await n.getByPlaceholder("Password").fill("member-pass-123");
+await n.getByRole("button", { name: "Create account" }).click();
+await n.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await n.getByText("Pick your link.").waitFor();
+await n.getByPlaceholder("Your name").fill("Nora");
+await n.getByRole("button", { name: "Claim it" }).click();
+await n.getByRole("heading", { name: "Add a photo." }).waitFor();
+await n.getByRole("button", { name: "Continue" }).click();
+await n.locator("#wLocation").fill("Jersey City, NJ");
+await n.getByRole("button", { name: "Finish setup" }).click();
+await n.waitForURL("**/feed");
+await n.goto(BASE + "/carina");
+await n.locator(".profacts .followpill").waitFor();
+await n.waitForTimeout(400);
+await n.locator(".profacts .followpill").click();
+await n.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await n.goto(BASE + "/feed");
+await n.locator(".feedagenda .ps-event").first().click();
+await n.locator(".classsheet-add").waitFor();
+if (await n.getByText(/Also going/).count())
+  fail("someone who hasn't committed should see no roster");
+await n.locator(".sheet-scrim").click({ position: { x: 10, y: 10 } });
+console.log("no lurking ok (the price of the list is being on it)");
+
+// --- Going on an event: the poster sees the room, a fellow goer sees the
+// others, and the marker's mutuals hear about it without needing to be going.
+await co.goto(BASE + "/discover");
+await co.locator(".disseg button", { hasText: "Events" }).click();
+await co.locator(".evpost").click();
+await co.getByRole("heading", { name: "Post an event" }).waitFor();
+const evDate = new Date();
+evDate.setUTCDate(evDate.getUTCDate() + 5);
+await co.locator("#evName").fill("Harbor Throwdown");
+await co.locator("#evStart").fill(evDate.toISOString().slice(0, 10));
+await co.locator("#evPlace").fill("Harborside, Jersey City");
+await co.getByRole("button", { name: "Post event" }).click();
+await co.getByText("Event posted").waitFor();
+await co.locator(".disev", { hasText: "Harbor Throwdown" }).click();
+await co.waitForURL(/\/e\//);
+const evUrl = co.url();
+// Sarah goes; her mutual Ruth hears even though Ruth isn't going yet
+await m.goto(evUrl);
+await m.locator(".evgoing").click();
+await m.locator(".evgoing.on").waitFor();
+await r.goto(BASE + "/updates");
+await r.getByText("Sarah is going to Harbor Throwdown").waitFor();
+console.log("event going-notification ok (mutual told, without being marked)");
+// Ruth goes too and sees Sarah; the poster sees the pair
+await r.goto(evUrl);
+await r.locator(".evgoing").click();
+await r.locator(".evgoing.on").waitFor();
+await r.getByText(/Also going · 1/).waitFor();
+await r.locator(".evwho", { hasText: "Sarah" }).waitFor();
+await co.goto(evUrl);
+await co.getByText(/Going · 2/).waitFor();
+console.log("event room ok (goers see each other, the poster sees the list)");
+
 // --- copy week as text, from the three-dot menu on their own page
 await co.goto(BASE + "/carina");
 await co.locator(".ownermore").waitFor();

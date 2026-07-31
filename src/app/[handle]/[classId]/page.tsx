@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
-import { isBlocked } from "@/lib/blocks";
+import { hiddenFrom, isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
@@ -130,19 +130,26 @@ export default async function EventPage({ params, searchParams }: Props) {
 
   // The coach's roster for this occurrence: who marked Going, owner only.
   // They marked it at this coach; showing the coach is what the mark meant.
+  // A fellow goer gets the same faces minus themselves: the price of seeing
+  // the room is being in it.
   let roster: { name: string; photo: string | null; color: string; handle: string | null }[] = [];
-  if (isOwner) {
+  let alsoGoing: typeof roster = [];
+  if (isOwner || going) {
     const marks = await db
       .select({ userId: schema.attendances.userId })
       .from(schema.attendances)
       .where(
         and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
       );
-    const ids = [...new Set(marks.map((m) => m.userId))];
+    let ids = [...new Set(marks.map((m) => m.userId))];
+    if (!isOwner) {
+      const hidden = await hiddenFrom(viewerId!);
+      ids = ids.filter((id) => id !== viewerId && !hidden.has(id));
+    }
     const people = ids.length
       ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
       : [];
-    roster = people
+    const faces = people
       .map((p) => ({
         name: p.name.trim() || p.email.split("@")[0],
         photo: p.photo,
@@ -150,6 +157,8 @@ export default async function EventPage({ params, searchParams }: Props) {
         handle: p.handle,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    if (isOwner) roster = faces;
+    else alsoGoing = faces;
   }
 
   // Back goes where you actually came from — off the Following tab it returns
@@ -267,6 +276,13 @@ export default async function EventPage({ params, searchParams }: Props) {
               Going{roster.length > 0 ? ` · ${roster.length}` : ""}
             </h2>
             <Roster people={roster} />
+          </section>
+        )}
+
+        {alsoGoing.length > 0 && (
+          <section className="evsec">
+            <h2 className="evsec-h">Also going · {alsoGoing.length}</h2>
+            <Roster people={alsoGoing} />
           </section>
         )}
 
