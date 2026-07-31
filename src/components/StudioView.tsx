@@ -168,18 +168,21 @@ export async function StudioView({
     <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
         {signedIn && viewerId && <AppChrome userId={viewerId} bar />}
-        {/* Back, name and the one action ride together and stay pinned. */}
         <div className="pubhead">
-          {signedIn && (
-            <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
-              <Icon name="arrow_back" size={21} />
-            </BackLink>
-          )}
-          <div className="pubhead-row">
-          <h1 className="profname">{s.name}</h1>
-          {/* Everything you can do with a studio, behind one set of dots:
-              share, suggest, report, and for coaches the edit. */}
-          <StudioMenu
+          {/* The two page controls face each other across the top, the way
+              they do on a class: out on the left, everything you can do on
+              the right. The name gets the width to itself underneath. */}
+          <div className="studiotop">
+            {signedIn ? (
+              <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
+                <Icon name="arrow_back" size={21} />
+              </BackLink>
+            ) : (
+              <span aria-hidden="true" />
+            )}
+            {/* Everything you can do with a studio, behind one set of dots:
+                share, suggest, report, and for coaches the edit. */}
+            <StudioMenu
             slug={s.slug ?? ""}
             canEdit={canEdit}
             claimed={access.claimed}
@@ -196,8 +199,9 @@ export async function StudioView({
               website: s.website ?? "",
               instagram: s.instagram ?? "",
             }}
-          />
+            />
           </div>
+          <h1 className="profname">{s.name}</h1>
           {/* Said once, quietly: it explains why the pencil is gone for
               everyone else, and it is the thing that makes the page worth
               trusting. */}

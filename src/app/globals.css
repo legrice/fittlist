@@ -3922,3 +3922,10 @@ button.ps-card { cursor: pointer; }
 
 /* The line under a rota field that says what a change will do. */
 .rotahint { margin: 7px 0 0; font-size: 12px; color: var(--ol); line-height: 1.4; }
+
+/* A studio's page controls face each other across the top: back on the left,
+   the three-dot on the right, the name with the full width underneath. */
+.studiotop {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; margin-bottom: 14px;
+}
