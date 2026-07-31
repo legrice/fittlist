@@ -3645,3 +3645,20 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between;
   width: 100%; margin-bottom: 14px;
 }
+
+/* Shifts worked: the table that replaces the spreadsheet's COUNTIFs. */
+.counttable { margin-top: 16px; }
+.countrow {
+  display: grid; grid-template-columns: 1fr 62px 62px 54px; align-items: center; gap: 6px;
+  padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.countrow span:not(.countnm) { text-align: right; font-variant-numeric: tabular-nums; }
+.counthead {
+  font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ol); padding-bottom: 8px;
+}
+.countnm { font-weight: 700; }
+.counttot { font-weight: 700; }
+
+/* The way through from the rota to what it adds up to. */
+.rotacounts { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; }

@@ -102,7 +102,7 @@ node scripts/pwa-smoke.mjs        # manifest, icons, the worker, the install row
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
   npm run start > server.log 2>&1 &
-node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, tell, close
+node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, swap, count
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -362,6 +362,18 @@ gym account is excluded from the admin's people counts and has no handle, which
 is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
 clears a departing coach's `coachUserId` so their slots reopen rather than
 vanishing. `scripts/gym-smoke.mjs` walks the whole path.
+
+**Counts are derived from the rota, and the past has to be frozen.**
+`gymCounts()` counts every date a slot runs (`runsOn`, the same predicate as
+everywhere) with covers laid over, split into month halves to match a
+semi-monthly pay run. It is a count and an export: no rates, no pay periods,
+nothing that is itself a pay record. Two things make the number honest. A
+standing slot has no start date, so counting is bounded by `classes.createdAt`
+or a class added today claims every Thursday last year. And changing the
+standing coach would silently rewrite history, so `freezePast()` writes an
+explicit cover for every date already run before the assignment moves; a null
+old coach is written too, or assigning somebody today credits them with every
+week the slot ran open.
 
 **A swap is one date, not a change to the class.** `classes.coachUserId` is
 who normally teaches a slot; `shift_covers` is the exception for a single date,

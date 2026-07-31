@@ -202,6 +202,112 @@ console.log("the coach is told ok");
   console.log("back to normal clears the exception ok");
 }
 
+// ---- what it adds up to, and the history that has to survive
+//
+// A count read off the current rota would say Tom taught every week since the
+// class existed, including the weeks Julia covered and the weeks before he was
+// on it at all. That's somebody's paycheck, so the past gets frozen.
+{
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.getByRole("link", { name: "Shifts worked" }).click();
+  await matt.waitForURL("**/counts");
+  await matt.getByRole("heading", { name: "Shifts worked" }).waitFor();
+  // A class added today may have no occurrences left in this month, so count
+  // the month where its weekly slot actually falls.
+  const nextMonth = (() => {
+    const d = new Date();
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() + 1);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  })();
+  await matt.goto(BASE + studioHref + `/manage/counts?m=${nextMonth}`);
+  await matt.locator(".counttable").waitFor();
+  const before = await matt.locator(".counttable").innerText();
+  if (!/Tom/.test(before)) fail("the regular coach should be counted: " + before);
+  if (/\d+th\b/.test(before) && /(?:21|22|23|31)th/.test(before))
+    fail("the half-month label got its ordinal wrong: " + before);
+  // The two halves and a total, the shape the spreadsheet has.
+  if (!/1st to 15th/i.test(before) || !/Total/i.test(before))
+    fail("the table should split the month in half: " + before);
+  console.log("counts ok (counted off the schedule)");
+
+  // Copy the table out: the number goes to whatever actually pays people.
+  await matt.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
+  await matt.getByRole("button", { name: "Copy the table" }).click();
+  await matt.getByText("Copied, ready to paste").waitFor();
+  const pasted = await matt.evaluate(() => navigator.clipboard.readText());
+  if (!pasted.includes("Tom") || !/Coach\t/.test(pasted))
+    fail("the copied table should be pasteable columns: " + pasted);
+  console.log("the table copies out ok");
+}
+
+// Handing the standing slot to somebody else must not rewrite what already
+// happened. The dates somebody covered stay theirs, whoever holds the slot now.
+//
+// (The other half of this, freezing plain past weeks on handover, only has a
+// window once a class is more than a day old, so a same-day run can't reach
+// it. What is reachable is that an explicit cover survives, which is the same
+// property from the side the suite can see.)
+{
+  await matt.goto(BASE + studioHref + "/manage");
+  const row = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  await row.click();
+  await matt.locator("#rotaOn").waitFor();
+  await matt.locator("#rotaOn").selectOption({ label: "Julia" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(700);
+  await matt.locator(".sheetclose").click();
+
+  // Now hand the standing slot to Matt entirely.
+  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator("#rotaCoach").waitFor();
+  await matt.locator("#rotaCoach").selectOption({ label: "Matt" });
+  await matt.getByRole("button", { name: "Save" }).click();
+  await matt.getByText("Saved").waitFor();
+  await matt.waitForTimeout(800);
+  await matt.locator(".sheetclose").click().catch(() => {});
+
+  const covered = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const txt = await covered.innerText();
+  if (!txt.includes("Julia"))
+    fail("handing the slot over took a covered date with it: " + txt);
+  console.log("a covered date survives a handover ok");
+
+  // Put it back so the rest of the run sees the rota it expects.
+  await covered.click();
+  await matt.locator("#rotaCoach").waitFor();
+  await matt.locator("#rotaCoach").selectOption({ label: "Tom" });
+  await matt.getByRole("button", { name: "Save" }).click();
+  await matt.getByText("Saved").waitFor();
+  await matt.waitForTimeout(600);
+  await matt.locator(".sheetclose").click().catch(() => {});
+  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator("#rotaOn").waitFor();
+  await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(600);
+  await matt.locator(".sheetclose").click();
+}
+
+// A class added today did not run last month, and must not be counted as if
+// it had: runsOn describes a standing slot and knows nothing about when the
+// gym started running it.
+{
+  const lastMonth = (() => {
+    const d = new Date();
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() - 1);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  })();
+  await matt.goto(BASE + studioHref + `/manage/counts?m=${lastMonth}`);
+  await matt.locator(".admintop h1").waitFor();
+  await matt.waitForTimeout(400);
+  const body = await matt.locator("body").innerText();
+  if (/\bTom\b/.test(body) && !/Nobody was on a class/.test(body))
+    fail("a class added today was counted against a month before it existed");
+  console.log("counting starts when the class did ok");
+}
+
 // A shift is work, not a listing. It belongs in the private feed (a signed
 // token) and must never reach the coach's public calendar or their page,
 // because a coach who wants no public presence still takes shifts.
