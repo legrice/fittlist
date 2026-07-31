@@ -120,6 +120,65 @@ if (!(await tom.locator(".notifrow .icon svg").first().count()))
   fail("the shift notice rendered a blank circle");
 console.log("the coach is told ok");
 
+// ---- a gym class carries what a coach's does, and can borrow it
+//
+// The coaches here already described "Warm Up" when they added it. Building
+// the rota shouldn't mean typing it out again, and the description shouldn't
+// end up different depending on who wrote it down.
+{
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.locator(".rotaday", { hasText: "Tuesday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#rotaPull").waitFor();
+  const options = await matt.locator("#rotaPull option").allInnerTexts();
+  if (!options.some((o) => /Warm Up/.test(o)))
+    fail("a class already described here should be pullable: " + options.join(","));
+  await matt.locator("#rotaPull").selectOption({ label: "Warm Up" });
+  await matt.waitForTimeout(300);
+  if ((await matt.locator("#rotaName").inputValue()) !== "Warm Up")
+    fail("pulling one in should fill the name");
+
+  // Everything a coach's class carries, on a gym's too.
+  await matt.locator("#rotaType").selectOption({ label: "Strength" });
+  await matt.locator("#rotaDesc").fill("Bring shoes you can lift in.");
+  await matt.getByRole("button", { name: "+ Add a link" }).click();
+  await matt.locator('input[aria-label="Booking link"]').fill("https://ironbound.example/book");
+  await matt.locator(".linktag").waitFor();
+  await matt.locator("#rotaTime").fill("12:00");
+  await matt.locator("#rotaCoach").selectOption({ label: "Julia" });
+  await matt.getByRole("button", { name: "Add it" }).click();
+  await matt.getByText("Added to the week").waitFor();
+  await matt.waitForTimeout(700);
+  console.log("pulled a class in and filled the rest ok");
+
+  // Reopening it shows what was saved rather than an empty form.
+  await matt.locator(".rotarow", { hasText: "Warm Up" }).first().click();
+  await matt.locator("#rotaDesc").waitFor();
+  if (!(await matt.locator("#rotaDesc").inputValue()).includes("shoes you can lift"))
+    fail("the description didn't survive a save");
+  if ((await matt.locator('input[aria-label="Booking link"]').inputValue()) !== "https://ironbound.example/book")
+    fail("the booking link didn't survive a save");
+  await matt.locator(".sheetclose").click();
+  console.log("the details come back on an edit ok");
+}
+
+// And they reach the class a member actually opens.
+{
+  const anonCtx = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (gym detail bot)",
+  });
+  const anon = await anonCtx.newPage();
+  anon.setDefaultTimeout(15000);
+  await anon.goto(BASE + studioHref);
+  await anon.locator(".ps-event", { hasText: "Warm Up" }).first().click();
+  await anon.locator(".classoverlay-nm", { hasText: "Warm Up" }).waitFor();
+  const body = await anon.locator(".classoverlay-body").innerText();
+  if (!body.includes("shoes you can lift")) fail("the description never reached the class");
+  await anon.getByRole("button", { name: "Book" }).waitFor();
+  await anonCtx.close();
+  console.log("the description and the booking door reach the class ok");
+}
+
 // ---- a swap: one date changes hands, the standing rota doesn't
 //
 // This is the thing the spreadsheet does with a dropdown, and the thing that
@@ -367,10 +426,13 @@ console.log("the coach is told ok");
 
   // The class opens as a real page from a link, the same as a coach's.
   await anon.goto(BASE + studioHref);
-  const href = await anon.locator(".ps-event").first().getAttribute("href");
+  const first = anon.locator(".ps-event").first();
+  const firstName = (await first.locator(".ps-enm").innerText()).trim();
+  const href = await first.getAttribute("href");
   if (!href?.startsWith("/s/")) fail("a gym class should live under the studio: " + href);
   await anon.goto(BASE + href);
-  await anon.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  // Whatever the first row was, the link has to open that class.
+  await anon.locator(".classoverlay-nm", { hasText: firstName }).waitFor();
   await anonCtx.close();
   console.log("a gym class opens from its own link ok");
 }
