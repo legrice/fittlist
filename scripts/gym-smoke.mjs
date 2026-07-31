@@ -12,7 +12,7 @@
 //     npm run start > server.log 2>&1 &
 //   node scripts/gym-smoke.mjs
 import { chromium } from "playwright";
-import { skipSetup } from "./lib/wizard.mjs";
+import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const fail = (m) => { throw new Error("GYM FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
@@ -132,6 +132,89 @@ console.log("the coach is told ok");
   if ((await tom.locator("body").innerText()).includes("HYROX"))
     fail("a gym shift leaked onto the coach's public page");
   console.log("a shift stays off the coach's public side ok");
+}
+
+// ---- the public side: the gym's week, under the gym's name
+{
+  // Tabs, and the schedule leads because that's what the link is for.
+  const anonCtx = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 (gym smoke bot)",
+  });
+  const anon = await anonCtx.newPage();
+  anon.setDefaultTimeout(15000);
+  await anon.goto(BASE + studioHref);
+  await anon.locator(".studiotabs .pubtab.sel", { hasText: "Schedule" }).waitFor();
+  await anon.locator(".ps-event", { hasText: "HYROX" }).waitFor();
+  // Under the gym's name and nobody else's: this is what lets Tom teach here
+  // without a public profile, and stops a schedule becoming a leaderboard.
+  if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
+    fail("the gym's public week named the coach");
+  await anon.locator(".studiotabs .pubtab", { hasText: "About" }).click();
+  await anon.waitForURL("**/about");
+  await anon.getByRole("heading", { name: "Where it is" }).waitFor();
+  if (await anon.locator(".ps-event").count()) fail("About should not carry the schedule");
+  console.log("studio tabs ok (schedule leads, one URL per section)");
+
+  // The class opens as a real page from a link, the same as a coach's.
+  await anon.goto(BASE + studioHref);
+  const href = await anon.locator(".ps-event").first().getAttribute("href");
+  if (!href?.startsWith("/s/")) fail("a gym class should live under the studio: " + href);
+  await anon.goto(BASE + href);
+  await anon.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  await anonCtx.close();
+  console.log("a gym class opens from its own link ok");
+}
+
+// A member can add every class at the gym, whether or not any coach here uses
+// the app publicly. That is the whole point of the gym owning the class.
+{
+  const memCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const mem = await memCtx.newPage();
+  mem.setDefaultTimeout(15000);
+  await mem.goto(BASE + "/");
+  await mem.getByRole("button", { name: "Sign up with email" }).click();
+  await mem.locator(".roleseg button", { hasText: "here to train" }).click();
+  await mem.getByPlaceholder("you@example.com").fill("mem@example.com");
+  await mem.getByPlaceholder("Password").fill("pass-word-123");
+  await mem.getByRole("button", { name: "Create account" }).click();
+  await mem.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await mem.getByText("Pick your link.").waitFor();
+  await mem.getByPlaceholder("Your name").fill("Mem Ber");
+  await mem.getByRole("button", { name: "Claim it" }).click();
+  await mem.getByRole("heading", { name: "Add a photo." }).waitFor();
+  await mem.getByRole("button", { name: "Continue" }).click();
+  await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
+  await fillLocation(mem);
+  await mem.getByRole("button", { name: "Finish setup" }).click();
+  await mem.waitForURL("**/feed");
+
+  await mem.goto(BASE + studioHref);
+  await mem.locator(".ps-event", { hasText: "HYROX" }).click();
+  await mem.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  await mem.locator(".ovcta-save").click();
+  await mem.locator(".favtoast.on").waitFor();
+  await mem.goto(BASE + "/week");
+  await mem.locator(".weekrow-nm", { hasText: "HYROX" }).waitFor();
+  await memCtx.close();
+  console.log("a member can add the gym's class ok (it lands in their plans)");
+}
+
+// The coach on the slot can't mark themselves down for it: teaching it isn't
+// attending it, and the class belongs to the gym so the owner test alone
+// would have let this through.
+{
+  await tom.goto(BASE + studioHref);
+  await tom.locator(".ps-event", { hasText: "HYROX" }).click();
+  await tom.locator(".classoverlay-nm").waitFor();
+  if (await tom.locator(".ovcta-save").count()) {
+    await tom.locator(".ovcta-save").click();
+    await tom.waitForTimeout(600);
+    const t = await tom.locator("body").innerText();
+    if (!/aren.t able to attend your own class/i.test(t))
+      fail("a coach was allowed to attend the shift they're teaching");
+  }
+  console.log("a coach can't attend their own shift ok");
 }
 
 // Julia, the other manager, sees the same rota

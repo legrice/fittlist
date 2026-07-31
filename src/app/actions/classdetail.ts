@@ -67,20 +67,40 @@ export type RosterFace = {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * `key` is a coach's handle, or a studio's slug when the class belongs to a
+ * gym. A gym's account has no handle by design (it is not a person and does
+ * not live at /{handle}), so its classes are addressed under the studio they
+ * run at. Either way the lookup stays scoped: the class has to belong to the
+ * thing named in the URL.
+ */
 export async function classDetail(
-  handle: string,
+  key: string,
   classId: string,
   d?: string,
 ): Promise<ClassDetail | null> {
   if (!UUID_RE.test(classId)) return null;
   const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
-  if (!user) return null;
+  let [user] = await db.select().from(schema.users).where(eq(schema.users.handle, key));
+  let studioScope: string | null = null;
+  if (!user) {
+    const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.slug, key));
+    if (!studio?.accountUserId) return null;
+    const [gym] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, studio.accountUserId));
+    if (!gym) return null;
+    user = gym;
+    studioScope = studio.id;
+  }
   const [c] = await db
     .select()
     .from(schema.classes)
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, user.id)));
   if (!c) return null;
+  // A gym's class has to be at the studio whose page it was opened from.
+  if (studioScope && c.studioId !== studioScope) return null;
 
   const viewerId = await getSessionUserId();
   const isOwner = viewerId === user.id;
@@ -187,7 +207,11 @@ export async function classDetail(
 
   // "Add to calendar", same as the page: Google gets a prefilled template
   // link, Apple and Outlook get the .ics. Weekly classes carry the rule.
-  const classUrl = `${siteOrigin()}/${handle}/${c.id}`;
+  // A gym's classes live under the studio, a coach's under their handle. The
+  // base is what the caller opened the class from, so the share points back at
+  // the same door.
+  const base = studioScope ? `s/${key}` : key;
+  const classUrl = `${siteOrigin()}/${base}/${c.id}`;
   const locationText = studio ? `${studio.name}, ${studio.address}` : c.location ?? "";
   const gcalDetails = c.links.length
     ? c.links.map((l) => `Book via ${l.label}: ${l.url}`).join("\n") + `\n\n${classUrl}`
@@ -203,7 +227,7 @@ export async function classDetail(
 
   return {
     id: c.id,
-    handle,
+    handle: base,
     coachName: user.name,
     coachPhoto: user.photo,
     coachColor: avatarColor(user),
@@ -221,9 +245,11 @@ export async function classDetail(
     links: c.links,
     // The date rides along, so whoever opens it lands on the occurrence you
     // were looking at rather than the next one after they tap.
-    shareUrl: `${siteOrigin()}/${handle}/${c.id}?d=${whenIso}`,
+    shareUrl: `${siteOrigin()}/${base}/${c.id}?d=${whenIso}`,
     googleUrl: `https://calendar.google.com/calendar/render?${gcalParams.toString()}`,
-    icsHref: `/api/cal/${handle}/${c.id}`,
+    // The per-class .ics route takes the bare key (handle or slug), not the
+    // page's /s/ prefix.
+    icsHref: `/api/cal/${key}/${c.id}`,
     canAdd,
     added,
     past,

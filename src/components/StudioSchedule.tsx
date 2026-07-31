@@ -1,0 +1,68 @@
+import Link from "next/link";
+import { clockParts } from "@/lib/format";
+import { ClassOpener } from "@/components/ClassOpener";
+
+export type StudioDay = {
+  iso: string;
+  label: string;
+  items: { id: string; name: string; startTime: string; durationMin: number }[];
+};
+
+// The gym's own week, on its own page.
+//
+// No coach names. A gym's schedule goes out under the gym's name, which is
+// what lets somebody teach here without wanting a public profile at all, and
+// what keeps a schedule from turning into a leaderboard. Showing who is on is
+// a separate switch, and the coach has a say in it.
+//
+// Rows are real links wrapped in ClassOpener, the same as a coach's schedule:
+// an ordinary tap opens the class over the list, a modified click or a crawler
+// gets the page underneath.
+export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[] }) {
+  if (days.length === 0) {
+    return (
+      <div className="empty-block">
+        <h2>Nothing on the calendar</h2>
+        <p>This studio hasn&rsquo;t posted its classes yet.</p>
+      </div>
+    );
+  }
+  return (
+    // The slug is the key classDetail resolves a gym's class by; the /s/
+    // prefix belongs to the URL, not to the lookup.
+    <ClassOpener handle={slug}>
+      <div className="ps-week ps-agenda">
+        {days.map((d) => (
+          <div key={d.iso} className="ps-daygroup">
+            <div className="ps-daycol">{d.label}</div>
+            <div className="ps-daycards">
+              {d.items.map((c) => {
+                const start = clockParts(c.startTime);
+                return (
+                  <Link
+                    key={`${d.iso}-${c.id}`}
+                    className="ps-event"
+                    data-cid={c.id}
+                    data-d={d.iso}
+                    href={`/s/${slug}/${c.id}?d=${d.iso}`}
+                  >
+                    <span className="ps-ebody">
+                      <span className="ps-enm">{c.name}</span>
+                    </span>
+                    <span className="ps-etimecol">
+                      <span className="ps-etime">
+                        {start.hm}
+                        <span className="ps-ap">{start.ap}</span>
+                      </span>
+                      <span className="ps-edur">{c.durationMin} min</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </ClassOpener>
+  );
+}

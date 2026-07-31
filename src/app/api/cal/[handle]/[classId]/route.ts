@@ -20,7 +20,19 @@ export async function GET(
   if (!UUID_RE.test(classId)) return new Response("Not found", { status: 404 });
 
   const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  // A handle, or a studio's slug when the class belongs to a gym: a gym's
+  // account has no handle, so its classes are addressed under the studio.
+  let [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!user) {
+    const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.slug, handle));
+    if (studio?.accountUserId) {
+      const [gym] = await db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, studio.accountUserId));
+      user = gym;
+    }
+  }
   if (!user) return new Response("Not found", { status: 404 });
 
   const [c] = await db

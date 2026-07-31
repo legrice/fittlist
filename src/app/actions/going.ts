@@ -25,7 +25,10 @@ export async function setGoing(
   if (!cls || !cls.isPublic) return { ok: false, error: "Class not found." };
   // Your own classes show up on your Home alongside the ones you follow, so
   // this is reachable — you teach it, you're not attending it.
-  if (cls.userId === userId)
+  // Your own classes show up alongside the ones you follow, and so do the
+  // shifts you're on at a gym: the class belongs to the gym, so the owner test
+  // alone would let a coach mark themselves down for a class they're teaching.
+  if (cls.userId === userId || cls.coachUserId === userId)
     return { ok: false, error: "You aren’t able to attend your own class." };
   // A coach who blocked you has no schedule as far as you're concerned, so
   // there's nothing here to add. Same wording as a class that isn't there.
