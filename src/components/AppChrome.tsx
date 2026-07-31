@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { adminNewActivityCount } from "@/lib/adminactivity";
+import { adminEmails } from "@/lib/admin";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
@@ -42,7 +44,12 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const [unread, week] = await Promise.all([unreadNotifications(userId), weekCount(userId)]);
+  const isAdmin = adminEmails().includes(me.email.toLowerCase());
+  const [unread, week, adminNew] = await Promise.all([
+    unreadNotifications(userId),
+    weekCount(userId),
+    isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
+  ]);
   // A coach's You is their public page, so the tab shows them what the link
   // shows everyone else.
   const youHref = isCoach ? `/${me.handle}` : "/you";
@@ -56,6 +63,7 @@ export async function AppChrome({
     <AppHeader
       unread={unread}
       weekCount={week}
+      adminNew={adminNew}
       // The logo goes to Following for everyone with the member side. It used
       // to send a coach to /app, which since the one-shell change is the bare
       // editable schedule: a page with no identity that read as showing up at

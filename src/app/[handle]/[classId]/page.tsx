@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { and, eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -24,8 +25,50 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 type Props = {
   params: Promise<{ handle: string; classId: string }>;
-  searchParams: Promise<{ d?: string; from?: string }>;
+  searchParams: Promise<{ d?: string; from?: string; g?: string }>;
 };
+
+// The link preview is the mini poster: /api/og/class composes the date tile,
+// the name, the when-and-where and the coach, and the ?d= the share links
+// carry rides through so the poster names the same day the sender meant.
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { handle, classId } = await params;
+  const { d, g } = await searchParams;
+  if (!UUID_RE.test(classId)) return { title: "fittlist" };
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
+  if (!user) return { title: "fittlist" };
+  const [c] = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, user.id)));
+  if (!c || !c.isPublic) return { title: "fittlist" };
+  const [studio] = c.studioId
+    ? await db.select().from(schema.studios).where(eq(schema.studios.id, c.studioId))
+    : [];
+  const title = `${c.name} with ${user.name} · fittlist`;
+  const place = studio?.name ?? c.location ?? "";
+  const description = [fmtTime(c.startTime), `${c.durationMin} min`, place]
+    .filter(Boolean)
+    .join(" · ");
+  const dOk = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+  const gOk = g && /^[a-z0-9-]{1,40}$/i.test(g) ? g : null;
+  const imgQs = [dOk && `d=${dOk}`, gOk && `g=${gOk}`].filter(Boolean).join("&");
+  const image = `${siteOrigin()}/api/og/class/${c.id}${imgQs ? `?${imgQs}` : ""}`;
+  const url = `${siteOrigin()}/${handle}/${c.id}${dOk ? `?d=${dOk}` : ""}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "fittlist",
+      images: [{ url: image, width: 1200, height: 630, alt: c.name }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
 
 export default async function EventPage({ params, searchParams }: Props) {
   const { handle, classId } = await params;

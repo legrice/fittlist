@@ -13,12 +13,12 @@ export function adminEmails(): string[] {
 }
 
 // The signed-in user if they're an admin, else null.
-export async function currentAdmin(): Promise<{ id: string; email: string; look: string | null } | null> {
+export async function currentAdmin(): Promise<{ id: string; email: string; look: string | null; adminActivityAt: Date | null } | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
   const db = await getDb();
   const [u] = await db
-    .select({ id: schema.users.id, email: schema.users.email, look: schema.users.look })
+    .select({ id: schema.users.id, email: schema.users.email, look: schema.users.look, adminActivityAt: schema.users.adminActivityAt })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   if (!u) return null;

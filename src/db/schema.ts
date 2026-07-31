@@ -111,6 +111,9 @@ export const users = pgTable("users", {
   // doesn't count). One change per 90 days: a handle is an address people
   // write down, and an address that keeps moving breaks every link out there.
   handleChangedAt: timestamp("handle_changed_at", { withTimezone: true }),
+  // When the admin last opened the Activity list. Only meaningful on admin
+  // accounts; everything newer than this counts toward the header badge.
+  adminActivityAt: timestamp("admin_activity_at", { withTimezone: true }),
   // Refreshed every time a session is issued (any login method). Powers the
   // admin "last seen" column.
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
@@ -240,6 +243,47 @@ export const studioEdits = pgTable("studio_edits", {
   changes: jsonb("changes").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// A community happening that isn't anyone's class: an expo, a competition, a
+// meetup in a park. Its own object, because faking one as a class would put
+// it on somebody's schedule. Coaches post them (kind-gated in the action) and
+// every event carries its poster; there is deliberately no ticketing and no
+// RSVP here, the link points out to wherever that lives. De-attributed, not
+// deleted, in adminDeleteUser: the expo is still happening after its poster
+// leaves.
+export const events = pgTable("events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  startDate: date("start_date").notNull(),
+  // Multi-day happenings (an expo weekend). Same as start_date for one-dayers.
+  endDate: date("end_date").notNull(),
+  startTime: text("start_time"), // "HH:MM" 24h, null = all-day
+  place: text("place").notNull(),
+  city: text("city"),
+  photo: text("photo"),
+  description: text("description"),
+  link: text("link"),
+  // Who's putting it on, free text: the poster often isn't the host.
+  hostName: text("host_name"),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Going, for the events board: same meaning as a class mark, anchored to the
+// happening instead of an occurrence date. Unique per person per event;
+// deleted with the event and with the person.
+export const eventAttendances = pgTable(
+  "event_attendances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id").notNull().references(() => events.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    // Same as a class mark's companions: names in the room, not accounts.
+    companions: jsonb("companions").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("event_attendances_event_user").on(t.eventId, t.userId)],
+);
 
 // A device that asked to be pinged. Admin-only for now (the one use is "tell
 // me when someone joins"), but the shape is general: one row per browser
@@ -493,6 +537,11 @@ export const attendances = pgTable(
     // The specific day they're going. Classes are recurring templates, so
     // without a date "going" would mean every future Tuesday forever.
     occurrenceDate: date("occurrence_date").notNull(),
+    // "With Joanne and Dave": names, not accounts. Naming who you're bringing
+    // is telling the front desk, so these show exactly where the roster shows
+    // (the coach and fellow goers) and nowhere public. Not users references,
+    // on purpose: the friend without the app is still a person in the room.
+    companions: jsonb("companions").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],

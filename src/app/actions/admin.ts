@@ -7,6 +7,20 @@ import { adminEmails, currentAdmin } from "@/lib/admin";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
 
+// Opening the Activity list is what "seen" means; the header badge counts
+// from here.
+export async function adminMarkActivitySeen(): Promise<{ ok: boolean }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false };
+  const db = await getDb();
+  await db
+    .update(schema.users)
+    .set({ adminActivityAt: new Date() })
+    .where(eq(schema.users.id, admin.id));
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Rewrite every stored location into the canonical "City, ST".
@@ -279,6 +293,7 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));
   await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
   await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
+  await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.userId, id));
   await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
   // Shared records they created — keep, just drop the attribution FK.
@@ -286,6 +301,8 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // Their studio edits stay: the edit is a fact about the studio, it just
   // loses its author.
   await db.update(schema.studioEdits).set({ editorUserId: null }).where(eq(schema.studioEdits.editorUserId, id));
+  // Events they posted stay too: the expo is still happening.
+  await db.update(schema.events).set({ createdByUserId: null }).where(eq(schema.events.createdByUserId, id));
   await db.update(schema.studioClasses).set({ createdByUserId: null }).where(eq(schema.studioClasses.createdByUserId, id));
   await db.update(schema.customClassTypes).set({ createdByUserId: null }).where(eq(schema.customClassTypes.createdByUserId, id));
   await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));

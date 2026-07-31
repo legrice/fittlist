@@ -3374,3 +3374,18 @@ button.ps-card { cursor: pointer; }
 /* The gap under the header while a tab loads. Holds the scroll position so
    the page doesn't jump when the content lands. */
 .tabloading { min-height: 60vh; }
+
+/* The admin's Activity door and its list. */
+.adminact { position: relative; }
+.adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
+.actsheet .actlist { margin-top: 6px; }
+.actrow {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 11px 2px; border-bottom: 1px solid var(--line);
+}
+.actrow:last-child { border-bottom: none; }
+.actrow-ic { color: var(--ol); flex-shrink: 0; margin-top: 2px; display: flex; }
+.actrow.fresh .actrow-ic { color: var(--si); }
+.actrow-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.actrow-txt .s { font-size: 12px; color: var(--ol); }

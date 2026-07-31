@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { listDuplicateSlots, listReports } from "@/app/actions/reports";
 import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios";
+import { adminActivity } from "@/lib/adminactivity";
 import { vapidPublicKey } from "@/lib/push";
 import { AdminPanel } from "@/components/AdminPanel";
 
@@ -12,10 +13,15 @@ export const dynamic = "force-dynamic";
 const fmt = (d: Date | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null;
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ activity?: string }>;
+}) {
   const admin = await currentAdmin();
   // Don't reveal the route to non-admins (signed in or not).
   if (!admin) notFound();
+  const { activity: activityParam } = await searchParams;
 
   const adminList = adminEmails();
   const db = await getDb();
@@ -226,6 +232,20 @@ export default async function AdminPage() {
     handle: r.handle ?? "",
   }));
 
+  // The pulse: everything public that changed, newest first, and how much of
+  // it is new since the admin last opened the list.
+  const activityEntries = await adminActivity(100);
+  const seenAt = admin.adminActivityAt?.getTime() ?? 0;
+  const fmtWhen = (d: Date) =>
+    d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const activity = activityEntries.map((e) => ({
+    icon: e.icon,
+    text: e.text,
+    when: fmtWhen(e.when),
+    fresh: e.when.getTime() > seenAt,
+  }));
+  const activityNew = activity.filter((a) => a.fresh).length;
+
   return (
     <AdminPanel
       adminEmail={admin.email}
@@ -242,6 +262,9 @@ export default async function AdminPage() {
       requests={requests}
       stats={stats}
       vapidKey={vapidPublicKey()}
+      activity={activity}
+      activityNew={activityNew}
+      activityOpen={activityParam === "1"}
       dark={admin.look === "dark"}
     />
   );

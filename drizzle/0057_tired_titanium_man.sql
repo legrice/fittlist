@@ -1,0 +1,2 @@
+ALTER TABLE "attendances" ADD COLUMN "companions" jsonb DEFAULT '[]'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "event_attendances" ADD COLUMN "companions" jsonb DEFAULT '[]'::jsonb NOT NULL;
