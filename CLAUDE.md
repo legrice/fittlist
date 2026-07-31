@@ -379,10 +379,36 @@ under the studio: `classAddress()` returns the `base` for the href and the
 how a link 404s. A row can name its own base with `data-base`, which is how
 `ClassOpener` opens a shift under the gym from a coach's page.
 
-Still out, deliberately: the coach's own `/app` schedule and the Google
-Calendar sync. Their shifts already reach them through the token feed, and a
-row in the editor that opens the adder for a class they don't own would fail on
-save.
+**On their own screen the switch never applies.** `/app` asks `mySchedule()`,
+which always folds shifts in: `shiftsPublic` answers "does anyone else see
+these", and a coach who is on Thursday at seven has to be able to see that they
+are on Thursday at seven. The row wears a Shift tag and opens the class rather
+than the adder, because it is the gym's to edit. Google Calendar sync is still
+out: the token feed already carries shifts, and syncing them too would double
+them for anyone using both.
+
+**A coach works their own half of the rota, and the manager only hears about
+it.** `giveUpShift` and `claimShift` in `gym.ts` are the coach-side pair, and
+unlike everything else there they run on a session rather than `actingFor()`:
+giving up needs only that you are the one on that date, taking needs only that
+you coach at that studio. Both write the same `shift_covers` row a manager's
+`setShiftCover` would, so a swap is a swap however it happened. Handing a date
+back opens the slot (`coachUserId` null) and tells the managers **and** every
+coach at the studio, because a dropped class needs a taker and that notice is
+what the lost text message was for; taking one tells the managers only, since
+everyone else was told so that one of them would do exactly this. It is a
+notice, not a request: nobody asks permission, and nobody finds out too late.
+
+Both controls live on the class itself, offered by `classDetail().shift`,
+which is null for anyone it means nothing to. A member sees no trace of the
+rota, and no name: whether a coach is listed is still the gym's switch.
+
+**A gym is a place, not a face.** `classDetail` returns `ownerIsGym`, and the
+sheet drops the "Coached by" row entirely for one: the gym has no page at
+`/{handle}` to tap through to, and nobody is coached by a company. The studio
+row underneath already says where. `canAdd` is false for the coach on the rota
+too (`c.coachUserId === viewerId`), because `setGoing` refuses it and a button
+that fails is worse than no button.
 
 One row is one slot, mirroring the spreadsheet's one cell per class, so
 `updateGymClass` edits in place and a Going mark or a swap on it is never at

@@ -483,6 +483,63 @@ console.log("the coach is told ok");
   console.log("the switch turns it back off ok");
 }
 
+// ---- the coach's own half of the rota
+//
+// Fifteen coaches, not one manager. "I can't make Thursday" is a text message
+// somebody loses today; here it opens the slot and tells the people who could
+// take it, and one of them closes it without the manager in the middle.
+{
+  const thu = weekDay(10);
+  await tom.goto(BASE + "/app");
+  const mine = tom.locator(`#day-${thu} .ps-event`, { hasText: "HYROX" });
+  await mine.waitFor();
+  // On his own screen whatever his public switch says: not knowing you were
+  // on is the thing the spreadsheet cost somebody.
+  if (!/shift/i.test(await mine.innerText()))
+    fail("a shift should say it isn't his to edit");
+  await mine.click();
+  // The class, not the adder. It belongs to the gym.
+  await tom.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  await tom.getByRole("button", { name: /can.t make this one/i }).click();
+  await tom.getByText("Handed back").waitFor();
+  await tom.waitForTimeout(900);
+  // The sheet now says what is true: nobody is on it, and he teaches here, so
+  // he could take it back.
+  await tom.getByRole("button", { name: /take it/i }).waitFor();
+  console.log("handing a date back opens the slot ok");
+
+  // Everyone who could cover it hears, not just the manager.
+  await julia.goto(BASE + "/updates");
+  const call = julia.locator(".notifrow", { hasText: "HYROX needs somebody" });
+  await call.waitFor();
+  await call.click();
+  await julia.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  await julia.getByRole("button", { name: /take it/i }).click();
+  await julia.getByText("It's yours").waitFor();
+  await julia.waitForTimeout(900);
+  console.log("a coach takes an open date ok");
+
+  // It moved, on the rota and on both their schedules.
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  const onRota = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  await onRota.waitFor();
+  const txt = await onRota.innerText();
+  if (!txt.includes("Julia") || !/covering/i.test(txt))
+    fail("the rota should show who actually took it: " + txt);
+  await tom.goto(BASE + "/app");
+  await tom.waitForTimeout(400);
+  if (await tom.locator(`#day-${thu} .ps-event`, { hasText: "HYROX" }).count())
+    fail("a date he gave up should leave his own schedule");
+  await julia.goto(BASE + "/app");
+  await julia.locator(`#day-${thu} .ps-event`, { hasText: "HYROX" }).waitFor();
+  console.log("the date moves between both their schedules ok");
+
+  // And the manager is told, because it is still their rota.
+  await matt.goto(BASE + "/updates");
+  await matt.locator(".notifrow", { hasText: "took HYROX" }).waitFor();
+  console.log("the manager is told without having to do it ok");
+}
+
 // And it's in his calendar, which is the fix for not knowing you were on.
 // A signed link, no Google account and no permission from anybody, so the
 // coach who wants nothing public still gets their week.
@@ -535,6 +592,9 @@ console.log("the coach is told ok");
   await anon.goto(BASE + href);
   // Whatever the first row was, the link has to open that class.
   await anon.locator(".classoverlay-nm", { hasText: firstName }).waitFor();
+  // The rota is for the people who work there. A visitor sees a class.
+  if (await anon.locator(".shiftbox").count())
+    fail("the rota controls reached somebody who doesn't coach here");
   await anonCtx.close();
   console.log("a gym class opens from its own link ok");
 }
@@ -580,14 +640,13 @@ console.log("the coach is told ok");
   await tom.goto(BASE + studioHref);
   await tom.locator(".ps-event", { hasText: "HYROX" }).click();
   await tom.locator(".classoverlay-nm").waitFor();
-  if (await tom.locator(".ovcta-save").count()) {
-    await tom.locator(".ovcta-save").click();
-    await tom.waitForTimeout(600);
-    const t = await tom.locator("body").innerText();
-    if (!/aren.t able to attend your own class/i.test(t))
-      fail("a coach was allowed to attend the shift they're teaching");
-  }
-  console.log("a coach can't attend their own shift ok");
+  // Not offered at all. A button setGoing would refuse is worse than no button.
+  if (await tom.locator(".ovcta-save").count())
+    fail("the coach on a shift was offered a Save that would fail");
+  // And a gym is a place, not a face: nothing here claims to be coached by it.
+  const said = await tom.locator(".classoverlay-body").innerText();
+  if (/coached by/i.test(said)) fail("a gym rendered in the coach slot: " + said);
+  console.log("a coach can't attend their own shift ok (and a gym isn't a coach)");
 }
 
 // ---- the shapes the coach's adder has always had, now on a gym

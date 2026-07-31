@@ -19,6 +19,11 @@ export type ClassDto = {
   location: string | null;
   isPublic: boolean;
   links: BookingLink[];
+  /** A gym's class this coach is on, rather than one of their own. It is the
+   *  gym's to edit, so the row opens the class rather than the adder. */
+  shift?: boolean;
+  /** The studio slug a shift's class page lives under. */
+  shiftBase?: string | null;
 };
 
 export type TemplateDto = {

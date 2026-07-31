@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing, setGoingCompanions } from "@/app/actions/going";
+import { claimShift, giveUpShift } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
@@ -157,6 +158,26 @@ export function ClassSheet({
 
   const where = c?.studioName ?? c?.location ?? null;
   const showBook = !!c && c.links.length > 0 && !c.past;
+  const [shifting, startShift] = useTransition();
+  // Giving a date up and taking one are the same shape: one call, then reload
+  // the sheet so it says what is true now rather than what was true.
+  const act = (
+    fn: (classId: string, occurrenceDate: string) => Promise<{ ok: boolean; error?: string }>,
+    done: string,
+  ) => {
+    if (!c || shifting) return;
+    startShift(async () => {
+      const res = await fn(c.id, c.whenIso);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't do that");
+        return;
+      }
+      toast(done);
+      const fresh = await classDetail(handle, classId, c.whenIso);
+      if (fresh) setC(fresh);
+      onChanged?.(added);
+    });
+  };
   const isOwner = !!c?.roster;
 
   return (
@@ -234,7 +255,14 @@ export function ClassSheet({
           <h2 className="classoverlay-nm">{c.name}</h2>
           {/* Whose class it is, as a face and a name, and a way to them: from
               the feed or your saves this is often the first time you meet a
-              coach, and their name is the natural next tap. */}
+              coach, and their name is the natural next tap.
+
+              A gym gets no such row. It is a place rather than a person, it has
+              no page at /{handle} to tap through to, and "coached by Ironbound
+              Performance Athletics" is not true of anybody. The studio row
+              below already says where, and who is teaching is the gym's own
+              switch, which is off. */}
+          {!c.ownerIsGym && (
           <Link className="classoverlay-coach" href={`/${c.handle}`}>
             {c.coachPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -253,6 +281,7 @@ export function ClassSheet({
             </span>
             <Icon name="chevron_right" size={16} />
           </Link>
+          )}
 
           <div className="evfacts classoverlay-facts">
             <div className="evfact">
@@ -339,6 +368,42 @@ export function ClassSheet({
                 return res.companions ?? [];
               }}
             />
+          )}
+
+          {/* The rota, from the coach's side. Whoever is on this date can hand
+              it back; whoever teaches here can take it when nobody is. The
+              manager never has to be in the middle of it, which is what the
+              text message they send today was for. */}
+          {c.shift && (
+            <div className="shiftbox">
+              <h3 className="ovsec-h">Your shift</h3>
+              {c.shift.canGiveUp ? (
+                <>
+                  <p className="shiftbox-s">
+                    You&rsquo;re on this one. Hand it back and the slot opens up; the gym and
+                    everyone who could cover it are told.
+                  </p>
+                  <button
+                    className="btn ghost shiftbox-btn"
+                    disabled={shifting}
+                    onClick={() => act(giveUpShift, "Handed back")}
+                  >
+                    {shifting ? "One moment…" : "I can't make this one"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="shiftbox-s">Nobody is on this one yet.</p>
+                  <button
+                    className="btn si shiftbox-btn"
+                    disabled={shifting}
+                    onClick={() => act(claimShift, "It's yours")}
+                  >
+                    {shifting ? "One moment…" : "I'll take it"}
+                  </button>
+                </>
+              )}
+            </div>
           )}
 
           {c.past && !added && <p className="classsheet-gone">This one has already run.</p>}

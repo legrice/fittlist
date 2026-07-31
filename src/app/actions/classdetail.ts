@@ -54,6 +54,20 @@ export type ClassDetail = {
   myCompanions: string[];
   /** The viewer's own handle, so a share can say who's going. */
   myHandle: string | null;
+  /** The owner is a gym, not a person. Nothing here is "coached by" anybody:
+   *  whether a coach's name is ever shown is the gym's own switch, and it is
+   *  off. The studio row below says where, which is the whole truth of it. */
+  ownerIsGym: boolean;
+  /** A gym's class, seen by somebody who could be on it. Null on a coach's own
+   *  class, and for anyone with no standing at the studio. */
+  shift: {
+    /** Who is on this date, once any cover is laid over. */
+    onName: string;
+    /** The viewer is on it and can put it back in the pool. */
+    canGiveUp: boolean;
+    /** Nobody is on it and the viewer coaches here. */
+    canClaim: boolean;
+  } | null;
 };
 
 export type RosterFace = {
@@ -141,7 +155,12 @@ export async function classDetail(
   // Already run: there's nothing to add. A shared link carries its date, so an
   // old one opens on the day it named, and that day can be behind us.
   const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
-  const canAdd = !isOwner && !!viewerId && c.isPublic && !past && (await fansVisible());
+  // Teaching it isn't attending it. The class belongs to the gym, so the owner
+  // test alone would offer the coach on the rota a button that setGoing then
+  // refuses; a button that fails is worse than no button.
+  const teaching = !!viewerId && c.coachUserId === viewerId;
+  const canAdd =
+    !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
   let added = false;
   if (canAdd) {
     const [row] = await db
@@ -164,6 +183,62 @@ export async function classDetail(
   let roster: ClassDetail["roster"] = null;
   let alsoGoing: ClassDetail["alsoGoing"] = null;
   let myCompanions: string[] = [];
+
+  // A gym's rota, from the coach's side. Whoever is on this date can hand it
+  // back, and whoever teaches here can take it when nobody is. That is the
+  // half of the rota the manager shouldn't have to be in the middle of, and
+  // it's what the text message they send today is trying to do.
+  let shift: ClassDetail["shift"] = null;
+  if (user.kind === "gym" && c.studioId && viewerId && !past) {
+    const [cover] = await db
+      .select()
+      .from(schema.shiftCovers)
+      .where(
+        and(
+          eq(schema.shiftCovers.classId, c.id),
+          eq(schema.shiftCovers.occurrenceDate, whenIso),
+        ),
+      );
+    const on = cover ? cover.coachUserId : c.coachUserId;
+    let onName = "";
+    if (on) {
+      const [p] = await db.select().from(schema.users).where(eq(schema.users.id, on));
+      onName = p ? p.name.trim() || p.email.split("@")[0] : "";
+    }
+    let teachesHere = false;
+    if (!on) {
+      const [me] = await db
+        .select({ kind: schema.users.kind })
+        .from(schema.users)
+        .where(eq(schema.users.id, viewerId));
+      if (me && me.kind !== "fan" && me.kind !== "gym") {
+        const [picked] = await db
+          .select({ userId: schema.coachStudios.userId })
+          .from(schema.coachStudios)
+          .where(
+            and(
+              eq(schema.coachStudios.studioId, c.studioId),
+              eq(schema.coachStudios.userId, viewerId),
+            ),
+          );
+        const [taught] = await db
+          .select({ id: schema.classes.id })
+          .from(schema.classes)
+          .where(
+            and(eq(schema.classes.studioId, c.studioId), eq(schema.classes.userId, viewerId)),
+          );
+        teachesHere = !!picked || !!taught;
+      }
+    }
+    // Only shown to somebody it means something to: the person on it, or a
+    // coach here looking at a slot with nobody on. A member sees none of this,
+    // and no name: whether a coach is listed is a separate switch.
+    if (on === viewerId || (!on && teachesHere))
+      shift = { onName, canGiveUp: on === viewerId, canClaim: !on && teachesHere };
+  }
+
+  // The viewer's handle rides the share once they've saved, so the link
+  // preview can say who's going.
   let myHandle: string | null = null;
   if (viewerId && !isOwner) {
     const [viewer] = await db
@@ -257,5 +332,7 @@ export async function classDetail(
     alsoGoing,
     myCompanions,
     myHandle,
+    ownerIsGym: user.kind === "gym",
+    shift,
   };
 }
