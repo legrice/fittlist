@@ -23,6 +23,7 @@ import { MessagesToggle } from "@/components/MessagesToggle";
 import { InviteFriends, InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 type View = "home" | "security" | "contact" | "gcal" | "availability";
@@ -102,6 +103,7 @@ export function ProfileSheet({
 
   const [shareOpen, setShareOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
   const [connected, setConnected] = useState(googleConnected);
@@ -371,8 +373,8 @@ export function ProfileSheet({
           <button className="acctcard acctcard-wide" onClick={() => setQrOpen(true)}>
             <span className="acctcard-ic"><Icon name="qr_code_2" size={26} /></span>
             <span className="acctcard-txt">
-              <span className="acctcard-t">Your QR code</span>
-              <span className="acctcard-s">A scannable code that opens your page</span>
+              <span className="acctcard-t">Share your page</span>
+              <span className="acctcard-s">Your link, QR code, and card, in one place</span>
             </span>
           </button>
           {/* The Requests row that lived below moved into the stat tile above
@@ -718,7 +720,19 @@ export function ProfileSheet({
         onToast={toast}
       />
 
-      <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+      <QrSheet
+        handle={handle}
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        onToast={toast}
+        onCard={() => {
+          setQrOpen(false);
+          setCardOpen(true);
+        }}
+      />
+      {cardOpen && (
+        <ShareCardSheet handle={handle} onClose={() => setCardOpen(false)} onToast={toast} />
+      )}
       {inviteOpen && (
         <InviteSheet
           onClose={() => setInviteOpen(false)}

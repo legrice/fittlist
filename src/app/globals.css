@@ -3397,6 +3397,19 @@ button.ps-card { cursor: pointer; }
 .tellbtn-text { background: var(--si-tint); color: var(--si-ink); }
 .tellsheet-done { display: block; margin: 16px auto 4px; }
 
+/* Following: the teach line over an empty week, and the floating share
+   sitting clear of the tab bar. */
+.feedhint { font-size: 13px; color: var(--ol); margin: 2px 0 14px; }
+.feedfab { bottom: calc(88px + env(safe-area-inset-bottom)); }
+/* A member's chips and their one link out. */
+.mempro-trains { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.mempro-insta {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink); text-decoration: none;
+  padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--card);
+}
+
 /* Going, on the event page: the class page's pill, plus the room. */
 .evgoing { margin-top: 20px; }
 .evwho { margin-top: 22px; }

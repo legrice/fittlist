@@ -12,6 +12,7 @@ export function QrSheet({
   onClose,
   onToast,
   ownerName,
+  onCard,
 }: {
   handle: string;
   open: boolean;
@@ -20,6 +21,9 @@ export function QrSheet({
   /** Set when the sheet shows somebody else's code: their first name puts
    *  "Sara's QR code" on it instead of claiming it's yours. */
   ownerName?: string;
+  /** Owner only: opens the profile card from here, so every way to share
+   *  the page lives behind one door. */
+  onCard?: () => void;
 }) {
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -66,6 +70,20 @@ export function QrSheet({
     }
   };
 
+  const shareLink = async () => {
+    const url = `${window.location.origin}/${handle}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: `fittlist.co/${handle}`, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      onToast("Link copied");
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") onToast(url);
+    }
+  };
+
   const copyPageLink = async () => {
     const url = `${window.location.origin}/${handle}`;
     try {
@@ -80,7 +98,7 @@ export function QrSheet({
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="sheet sheet-full">
         <div className="adderhead">
-          <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Your QR code"}</h2>
+          <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Share your page"}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={16} />
           </button>
@@ -88,7 +106,7 @@ export function QrSheet({
         <p className="lead">
           {ownerName
             ? "Anyone can scan this code to open their profile."
-            : "Anyone can scan this code to view your profile, schedule, and contact info."}
+            : "Your link, your QR code, and your card, in one place. The code opens your page from any camera."}
         </p>
         <div className="qrframe">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,16 +114,26 @@ export function QrSheet({
         </div>
         <div className="qrurl">{pageUrl}</div>
         <div className="publishwrap">
+          {!ownerName && (
+            <button className="btn si" onClick={shareLink}>
+              Share your link
+            </button>
+          )}
           {canShareFiles ? (
-            <button className="btn" disabled={sharing} onClick={shareQr}>
+            <button className="btn" style={ownerName ? undefined : { marginTop: 8 }} disabled={sharing} onClick={shareQr}>
               {sharing ? "Opening…" : "Save QR code"}
             </button>
           ) : (
-            <a className="btn" href={qrImgUrl} download={qrFileName}>Save QR code</a>
+            <a className="btn" style={ownerName ? undefined : { marginTop: 8 }} href={qrImgUrl} download={qrFileName}>Save QR code</a>
           )}
           <button className="btn ghost" style={{ marginTop: 8 }} onClick={copyPageLink}>
             Copy link
           </button>
+          {onCard && (
+            <button className="btn ghost" style={{ marginTop: 8 }} onClick={onCard}>
+              Your profile card
+            </button>
+          )}
         </div>
       </div>
     </div>
