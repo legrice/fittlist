@@ -1,6 +1,7 @@
 import { desc, eq, inArray, isNull, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { mySchedule } from "@/lib/coachweek";
 import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { adminEmails } from "@/lib/admin";
@@ -29,7 +30,10 @@ export default async function SchedulePage({
   const db = await getDb();
 
   const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([
-    db.select().from(schema.classes).where(eq(schema.classes.userId, userId)),
+    // Their own classes and the shifts they're on, covers folded in. Always
+    // both here: shiftsPublic is about who else sees them, not about whether
+    // the coach can see their own week.
+    mySchedule(userId),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select()
@@ -112,8 +116,7 @@ export default async function SchedulePage({
     db
       .select({ id: schema.classes.id })
       .from(schema.classes)
-      .where(eq(schema.classes.coachUserId, userId))
-      .limit(1),
+      .where(eq(schema.classes.coachUserId, userId)),
   ]);
   const adminNew = user && adminEmails().includes(user.email.toLowerCase())
     ? await adminNewActivityCount(userId)
@@ -126,6 +129,7 @@ export default async function SchedulePage({
   // them about private sessions.
   const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
 
+  const studioById = new Map(studioRows.map((st) => [st.id, st]));
   // The schedule is an infinite forward calendar; hand the client every class
   // (weekly + one-offs) and today's date, and it lays out the dated days.
   const classes: ClassDto[] = classRows.map((c) => ({
@@ -145,6 +149,9 @@ export default async function SchedulePage({
     location: c.location,
     isPublic: c.isPublic,
     links: c.links,
+    shift: c.shift,
+    // A shift's class page lives under the studio, because that is who owns it.
+    shiftBase: c.shift && c.studioId ? studioById.get(c.studioId)?.slug ?? null : null,
   }));
   const today = todayIso();
   const hasAnyClass = classRows.length > 0;

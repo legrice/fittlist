@@ -7,6 +7,7 @@ import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { ClassSheet } from "@/components/ClassSheet";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
@@ -254,6 +255,15 @@ export function ScheduleScreen({
   // seven POPULATED days, not seven calendar days, so a Mon/Wed/Fri schedule
   // still fills the screen before View more; the calendar horizon caps the
   // walk so an empty schedule doesn't scan a year.
+  // A shift belongs to the gym, so tapping it opens the class rather than the
+  // adder: it isn't this coach's to edit, and what they *can* do with it (give
+  // the date up, take an open one) lives on the class itself.
+  const [shiftOpen, setShiftOpen] = useState<{
+    base: string;
+    classId: string;
+    iso: string;
+  } | null>(null);
+
   const days = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00Z`);
     const out: { iso: string; label: string; items: ClassDto[] }[] = [];
@@ -324,7 +334,7 @@ export function ScheduleScreen({
         <div className="admintop pagetop">
           <div>
             <h1>Your schedule</h1>
-            <p className="adminsub">The classes you teach. Tap one to edit it</p>
+            <p className="adminsub">The classes you teach. Tap one to open it</p>
           </div>
         </div>
         {!hasAnyClass ? (
@@ -356,7 +366,12 @@ export function ScheduleScreen({
                           key={`${d.iso}-${c.id}`}
                           className={`ps-event${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
-                          onClick={() => edit(c, d.iso)}
+                          onClick={() =>
+                            c.shift
+                              ? c.shiftBase &&
+                                setShiftOpen({ base: c.shiftBase, classId: c.id, iso: d.iso })
+                              : edit(c, d.iso)
+                          }
                         >
                           <span
                             className="ps-accent"
@@ -367,6 +382,7 @@ export function ScheduleScreen({
                             <span className="ps-enm">
                               {c.name}
                               {!c.isPublic && <span className="ps-private">Private</span>}
+                              {c.shift && <span className="ps-shift">Shift</span>}
                             </span>
                             {where && (
                               <span className="ps-estudio">
@@ -402,6 +418,16 @@ export function ScheduleScreen({
           </>
         )}
       </div>
+
+      {shiftOpen && (
+        <ClassSheet
+          handle={shiftOpen.base}
+          classId={shiftOpen.classId}
+          iso={shiftOpen.iso}
+          onClose={() => setShiftOpen(null)}
+          onChanged={() => router.refresh()}
+        />
+      )}
 
       {hasAnyClass && !adder.open && (
         <button className="fab" onClick={() => setAdder({ open: true })}>

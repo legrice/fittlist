@@ -47,11 +47,28 @@ const own = (r: typeof schema.classes.$inferSelect): ScheduleRow => ({
 export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
   const ids = [...new Set(who.map((w) => w.id))];
   if (!ids.length) return [];
+  return build(
+    ids,
+    who.filter((w) => w.shiftsPublic).map((w) => w.id),
+  );
+}
+
+/**
+ * A coach's own schedule, shifts always included.
+ *
+ * `shiftsPublic` answers "does anyone else see these", which is a question
+ * about strangers. On their own screen it never applies: a coach who is on
+ * Thursday at seven has to be able to see that they are on Thursday at seven,
+ * and not knowing you were on is the thing the spreadsheet cost somebody.
+ */
+export async function mySchedule(userId: string): Promise<ScheduleRow[]> {
+  return build([userId], [userId]);
+}
+
+async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
   const db = await getDb();
   const rows = await db.select().from(schema.classes).where(inArray(schema.classes.userId, ids));
   const out = rows.map(own);
-
-  const sharing = who.filter((w) => w.shiftsPublic).map((w) => w.id);
   if (!sharing.length) return out;
 
   // Slots these coaches are on at a gym. Their own rows are already in hand,

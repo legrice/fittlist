@@ -716,6 +716,183 @@ export async function setShiftCover(
   return { ok: true };
 }
 
+/**
+ * Who can take a slot here: the coaches who teach at this studio.
+ *
+ * The same union `gymCoaches` uses, without the manager check, because this
+ * answers a question about the caller rather than listing anybody.
+ */
+async function coachesHere(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+): Promise<Set<string>> {
+  const [picked, classRows] = await Promise.all([
+    db
+      .select({ userId: schema.coachStudios.userId })
+      .from(schema.coachStudios)
+      .where(eq(schema.coachStudios.studioId, studioId)),
+    db
+      .select({ userId: schema.classes.userId })
+      .from(schema.classes)
+      .where(eq(schema.classes.studioId, studioId)),
+  ]);
+  return new Set([...picked, ...classRows].map((r) => r.userId));
+}
+
+/** Everyone who should hear that a slot changed hands without a manager doing
+ *  it: the people who run the place, and the coaches who could take it. */
+async function tellTheGym(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studio: typeof schema.studios.$inferSelect,
+  exclude: string[],
+  n: Parameters<typeof addNotification>[1],
+  toCoaches: boolean,
+) {
+  const managers = await db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studio.id));
+  const ids = new Set(managers.map((m) => m.userId));
+  if (toCoaches) for (const id of await coachesHere(db, studio.id)) ids.add(id);
+  for (const id of exclude) ids.delete(id);
+  for (const id of ids) await addNotification(id, n);
+}
+
+/**
+ * The coach's own half of the rota: give up a date, or take an open one.
+ *
+ * A manager moving somebody is `setShiftCover`. This is the coach doing it
+ * themselves, which is the thing fifteen people at a gym actually want and the
+ * reason the rota is worth more than the spreadsheet: today "I can't make
+ * Thursday" is a text message somebody loses. Giving a date up opens the slot
+ * and says so out loud, to the managers and to everyone who could cover it.
+ * It is a notice, not a request: nobody is asked for permission, and nobody
+ * finds out too late.
+ */
+async function shiftFor(classId: string, occurrenceDate: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { error: "Session expired." as const };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { error: "Bad date." as const };
+  const db = await getDb();
+  const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!cls?.studioId) return { error: "Class not found." as const };
+  const [owner] = await db.select().from(schema.users).where(eq(schema.users.id, cls.userId));
+  // Only a gym's own rota has shifts to hand around. A coach's own class is
+  // theirs to edit and has nobody else on it.
+  if (owner?.kind !== "gym") return { error: "Class not found." as const };
+  const dow = dowOfDate(occurrenceDate);
+  if (!runsOn(cls, occurrenceDate, dow))
+    return { error: "That class doesn't run that day." as const };
+  if (occurrenceDate < todayIso()) return { error: "That date has already gone." as const };
+  const [studio] = await db
+    .select()
+    .from(schema.studios)
+    .where(eq(schema.studios.id, cls.studioId));
+  if (!studio) return { error: "Class not found." as const };
+  const [cover] = await db
+    .select()
+    .from(schema.shiftCovers)
+    .where(
+      and(
+        eq(schema.shiftCovers.classId, classId),
+        eq(schema.shiftCovers.occurrenceDate, occurrenceDate),
+      ),
+    );
+  const on = cover ? cover.coachUserId : cls.coachUserId;
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  return { db, userId, me, cls, studio, cover, on };
+}
+
+/** Put a date back into the pool. The slot still runs; nobody is on it. */
+export async function giveUpShift(
+  classId: string,
+  occurrenceDate: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await shiftFor(classId, occurrenceDate);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, me, cls, studio, cover, on } = ctx;
+  if (on !== userId) return { ok: false, error: "You aren't on that one." };
+
+  if (cover) {
+    await db
+      .update(schema.shiftCovers)
+      .set({ coachUserId: null, createdByUserId: userId })
+      .where(eq(schema.shiftCovers.id, cover.id));
+  } else {
+    await db
+      .insert(schema.shiftCovers)
+      .values({ classId, occurrenceDate, coachUserId: null, createdByUserId: userId });
+  }
+
+  const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  const who = me?.name?.trim() || "A coach";
+  await tellTheGym(
+    db,
+    studio,
+    [userId],
+    {
+      type: "shift_dropped",
+      title: `${cls.name} needs somebody`,
+      body: `${who} is off ${when} at ${studio.name}. The slot is open.`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+      actorUserId: userId,
+    },
+    true,
+  );
+  revalidatePath("/app");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  return { ok: true };
+}
+
+/** Take a date nobody is on. Only coaches who teach at this studio. */
+export async function claimShift(
+  classId: string,
+  occurrenceDate: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await shiftFor(classId, occurrenceDate);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, me, cls, studio, cover, on } = ctx;
+  if (on) return { ok: false, error: "Somebody is already on that one." };
+  if (me?.kind === "fan") return { ok: false, error: "That's for coaches at this studio." };
+  if (!(await coachesHere(db, studio.id)).has(userId))
+    return { ok: false, error: "That's for coaches at this studio." };
+
+  if (userId === cls.coachUserId) {
+    // Taking back a date they'd given up: the exception stops existing.
+    if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+  } else if (cover) {
+    await db
+      .update(schema.shiftCovers)
+      .set({ coachUserId: userId, createdByUserId: userId })
+      .where(eq(schema.shiftCovers.id, cover.id));
+  } else {
+    await db
+      .insert(schema.shiftCovers)
+      .values({ classId, occurrenceDate, coachUserId: userId, createdByUserId: userId });
+  }
+
+  const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  const who = me?.name?.trim() || "A coach";
+  // Managers only. Everyone else was told it was open so that one of them
+  // would take it, and telling them all again that it's handled is noise.
+  await tellTheGym(
+    db,
+    studio,
+    [userId],
+    {
+      type: "shift_assigned",
+      title: `${who} took ${cls.name}`,
+      body: `${when} at ${studio.name}.`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+      actorUserId: userId,
+    },
+    false,
+  );
+  revalidatePath("/app");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  return { ok: true };
+}
+
 export type GymCountRow = {
   coachUserId: string;
   name: string;

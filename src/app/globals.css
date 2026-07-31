@@ -886,6 +886,23 @@ button.bl-band { cursor: pointer; }
   letter-spacing: .05em; text-transform: uppercase; color: var(--ol);
   background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
 }
+/* The coach's half of the rota, on the class itself: hand this date back, or
+   take it when nobody has it. Boxed rather than in the floating pill, because
+   the pill is what a member does with a class and this is not that. */
+.shiftbox { margin-top: 26px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--cl); }
+.shiftbox .ovsec-h { margin-top: 0; }
+.shiftbox-s { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ol); }
+.shiftbox-btn { width: 100%; }
+
+/* A shift at a gym: the same tag shape as Private, saying the opposite thing.
+   It's on your week and it isn't yours to edit, so the row has to say so
+   before you tap it expecting the adder. */
+.ps-shift {
+  display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--accent);
+  background: var(--cl); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 8px;
+}
 .ps-echev { color: rgba(17, 17, 17, .32); display: flex; align-items: center; justify-content: center; }
 
 /* Agenda list layout (coach's own schedule) - Apple/Fantastical style: hairline
