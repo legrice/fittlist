@@ -2908,6 +2908,9 @@ button.ps-card { cursor: pointer; }
 .feedfilter-link {
   display: flex; align-items: center; gap: 1px; flex-shrink: 0; text-decoration: none;
   font-weight: 600; font-size: 13px; color: var(--si);
+  /* Also worn by the Clear button when several coaches are picked. */
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: inherit;
 }
 /* Merged-agenda row: coach above the class name, studio below it. */
 .feedagenda { margin-top: 2px; }

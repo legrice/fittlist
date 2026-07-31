@@ -49,7 +49,9 @@ export function FeedAgenda({
   meId?: string;
 }) {
   const router = useRouter();
-  const [sel, setSel] = useState<string | null>(null);
+  // A set, not one id: people train with more than one coach and want to see
+  // two of them side by side without flipping back and forth. Empty is All.
+  const [sel, setSel] = useState<Set<string>>(new Set());
   const railRef = useRef<HTMLDivElement>(null);
   // What the swipes changed, laid over what the server sent. Keeping the two
   // apart means a refresh can't wipe a mark the member just made.
@@ -67,7 +69,23 @@ export function FeedAgenda({
       }),
     ),
   );
-  const selCoach = sel ? coaches.find((c) => c.id === sel) : undefined;
+  const picked = coaches.filter((c) => sel.has(c.id));
+  const toggle = (id: string) =>
+    setSel((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  // "Sam", "Sam and Mia", "Sam, Mia and Ana", then a count: a list of five
+  // names is not a label any more.
+  const names = (() => {
+    const n = picked.map((c) => c.name.trim().split(/\s+/)[0]);
+    if (n.length <= 1) return n[0] ?? "";
+    if (n.length === 2) return `${n[0]} and ${n[1]}`;
+    if (n.length === 3) return `${n[0]}, ${n[1]} and ${n[2]}`;
+    return `${n[0]}, ${n[1]} and ${n.length - 2} others`;
+  })();
 
   // Swipe commits straight away and shows the result; if the server refuses,
   // the row goes back where it was and says why.
@@ -84,7 +102,7 @@ export function FeedAgenda({
   };
 
   const shown = days
-    .map((d) => ({ ...d, items: d.items.filter((i) => !sel || i.coachId === sel) }))
+    .map((d) => ({ ...d, items: d.items.filter((i) => sel.size === 0 || sel.has(i.coachId)) }))
     .filter((d) => d.items.length > 0);
 
   const avatar = (photo: string | null, name: string, cls: string, color: string) =>
@@ -105,14 +123,14 @@ export function FeedAgenda({
           tab is one tap down. */}
       {coaches.length > 0 && (
       <div className="feedrail">
-      <div className={`feedstrip${sel ? " hassel" : ""}`} ref={railRef}>
+      <div className={`feedstrip${sel.size ? " hassel" : ""}`} ref={railRef}>
         {/* "All" clears the filter — the way back to the merged week without
             having to remember which avatar is currently selected. */}
         <button
           type="button"
-          className={`feedav${sel === null ? " on" : ""}`}
-          aria-pressed={sel === null}
-          onClick={() => setSel(null)}
+          className={`feedav${sel.size === 0 ? " on" : ""}`}
+          aria-pressed={sel.size === 0}
+          onClick={() => setSel(new Set())}
         >
           <span className="feedav-img feedav-all" aria-hidden="true">
             <Icon name="groups" size={30} />
@@ -123,9 +141,9 @@ export function FeedAgenda({
           <button
             key={c.id}
             type="button"
-            className={`feedav${sel === c.id ? " on" : ""}`}
-            aria-pressed={sel === c.id}
-            onClick={() => setSel(sel === c.id ? null : c.id)}
+            className={`feedav${sel.has(c.id) ? " on" : ""}`}
+            aria-pressed={sel.has(c.id)}
+            onClick={() => toggle(c.id)}
           >
             {avatar(c.photo, c.name, "feedav-img", c.color)}
             <span className="feedav-nm">{c.name.trim().split(/\s+/)[0]}</span>
@@ -136,12 +154,20 @@ export function FeedAgenda({
       </div>
       )}
 
-      {selCoach && (
+      {picked.length > 0 && (
         <div className="feedfilterbar">
-          <span className="feedfilter-txt">Classes with {selCoach.name}</span>
-          <Link href={`/${selCoach.handle}?from=home`} className="feedfilter-link">
-            View page <Icon name="chevron_right" size={16} />
-          </Link>
+          <span className="feedfilter-txt">Classes with {names}</span>
+          {/* One coach has a page to go to; several don't, so the link makes
+              way for the way back out. */}
+          {picked.length === 1 ? (
+            <Link href={`/${picked[0].handle}?from=home`} className="feedfilter-link">
+              View page <Icon name="chevron_right" size={16} />
+            </Link>
+          ) : (
+            <button className="feedfilter-link" onClick={() => setSel(new Set())}>
+              Clear
+            </button>
+          )}
         </div>
       )}
 
@@ -149,8 +175,8 @@ export function FeedAgenda({
         <div className="empty-block">
           <h2>Nothing coming up</h2>
           <p>
-            {selCoach
-              ? `${selCoach.name} hasn’t posted upcoming classes yet.`
+            {picked.length
+              ? `${names} ${picked.length === 1 ? "hasn’t" : "haven’t"} posted upcoming classes yet.`
               : "Your coaches haven’t posted upcoming classes yet. Check back soon."}
           </p>
         </div>
