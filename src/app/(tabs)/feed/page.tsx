@@ -181,7 +181,7 @@ export default async function FeedPage({
           <>
           {myCount === 0 && (
             <p className="feedhint">
-              Tap a class and say you&rsquo;re going. It lands in Your week, ready to share.
+              Tap a class and heart it. It lands in your plans, ready to share.
             </p>
           )}
           <FeedAgenda

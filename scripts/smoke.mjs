@@ -382,7 +382,7 @@ if (await page.getByText("Schedule opens").count()) fail("Schedule opens should 
 await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
 await expect(page.locator(".acctstats .acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
 await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
-await expect(page.locator(".acctcard", { hasText: "Share your week" }).isVisible(), "share your week card");
+await expect(page.locator(".acctcard", { hasText: "Share your schedule" }).isVisible(), "share your week card");
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
 // ---- tap the avatar -> public profile page with owner back + edit
@@ -445,7 +445,7 @@ await page.goto(BASE + "/matt");
 await page.locator(".ownermore").click();
 {
   const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = ["Add a class", "Edit profile", "Share your week", "Your QR code", "Copy your week", "Requests"];
+  const want = ["Add a class", "Edit profile", "Share your schedule", "Your QR code", "Copy your week", "Requests"];
   if (rows.join("|") !== want.join("|"))
     fail("the owner menu should be " + want.join(", ") + ", got " + rows.join(", "));
 }
@@ -454,7 +454,7 @@ await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
 await page.locator(".ownermore").click();
-await page.locator(".ownermenu .setrow", { hasText: "Share your week" }).click();
+await page.locator(".ownermenu .setrow", { hasText: "Share your schedule" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .storyimg"));
@@ -942,8 +942,8 @@ console.log("ical feed ok (VEVENT + weekly RRULE)");
 
 // share sheet UI from the account page
 await openProfile(page);
-await page.locator(".acctcard", { hasText: "Share your week" }).click();
-await page.locator(".sheet h2", { hasText: "Share your week" }).waitFor();
+await page.locator(".acctcard", { hasText: "Share your schedule" }).click();
+await page.locator(".sheet h2", { hasText: "Share your schedule" }).waitFor();
 await page.waitForFunction(() => {
   const img = document.querySelector(".storyimg");
   return img && img.complete && img.naturalWidth > 0;
@@ -1369,7 +1369,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if ((await dot.innerText()).trim() !== "1") fail("the week count should be 1, got " + (await dot.innerText()));
   await fan.locator(".weekbtn").click();
   await fan.waitForURL(/\/week/);
-  await fan.getByRole("heading", { name: "Your week" }).waitFor();
+  await fan.getByRole("heading", { name: "Your plans" }).waitFor();
   // Reached from the header, but still inside the app: the tabs come with it.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
@@ -1393,7 +1393,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekcal .setrow", { hasText: "Share your week" }).waitFor();
+  await fan.locator(".weekcal .setrow", { hasText: "Share your schedule" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
@@ -1403,7 +1403,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if ((await rows.count()) !== 1) fail("Keep it should leave the class where it was");
   await rows.first().locator(".weekrow-x").click();
   await fan.getByRole("button", { name: "Remove it" }).click();
-  await fan.getByText("Removed from your week").waitFor();
+  await fan.getByText("Removed from your plans").waitFor();
   await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
   // The badge goes with it: the count is state, not a running total.
   await fan.goto(BASE + "/feed");
@@ -1482,7 +1482,7 @@ await fan.locator(".navtab", { hasText: "You" }).click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
-await fan.getByRole("heading", { name: "Share your week" }).waitFor();
+await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
 // the wordmark is the way home from anywhere

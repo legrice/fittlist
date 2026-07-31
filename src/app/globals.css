@@ -899,19 +899,19 @@ button.bl-band { cursor: pointer; }
   padding-bottom: 10px; border-bottom: 1px solid var(--line);
 }
 .ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
-/* The event listing's poster manners, carried to classes: a tinted card per
-   row, washed with the coach's colour (the brand orange where there's no
-   coach to key on). The day header names the date, so the card doesn't. */
+/* The event listing's poster manners, carried to classes: a white card per
+   row lifted on the same soft shadow the profile photo overlay wears, scaled
+   to a list. The day header names the date, so the card doesn't. */
 .ps-agenda .ps-event {
   grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
-  background: color-mix(in srgb, var(--evtint, var(--si)) 13%, var(--card));
-  border-radius: 16px; box-shadow: none; padding: 14px 16px;
-  border-bottom: none;
+  background: var(--card);
+  border-radius: 16px; padding: 14px 16px; border-bottom: none;
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
 }
-.ps-agenda .ps-event:hover { box-shadow: none; }
-.ps-agenda .ps-event:active {
-  background: color-mix(in srgb, var(--evtint, var(--si)) 22%, var(--card));
+.ps-agenda .ps-event:hover {
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
 }
+.ps-agenda .ps-event:active { background: var(--cl); }
 .ps-agenda .ps-accent { display: none; }
 /* The name and the studio are one thing, so they sit close; the air belongs
    between rows, which is what the padding above is for. */
@@ -3127,7 +3127,9 @@ button.ps-card { cursor: pointer; }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
 /* The marked card wears a quiet green ring, the same yes the tag gives. */
-.ps-agenda .ps-event.goingon { box-shadow: inset 0 0 0 1.5px var(--go); }
+.ps-agenda .ps-event.goingon {
+  box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
+}
 /* "I'm going" lives on the class page; the week only reports it. */
 /* A member's account: who you are, then the switches. No public page, no QR,
    no stats — those are a coach's. */
@@ -3602,21 +3604,21 @@ button.ps-card { cursor: pointer; }
   max-width: 560px; margin: 0 auto;
   padding: calc(74px + env(safe-area-inset-top)) 24px calc(130px + env(safe-area-inset-bottom));
 }
-.classoverlay-type { text-align: center; }
+.classoverlay-type { text-align: left; }
 .classoverlay-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 800;
   font-size: 33px; line-height: 1.1; letter-spacing: -.01em;
-  text-align: center; margin: 0 0 14px;
+  text-align: left; margin: 0 0 14px;
 }
 .classoverlay-coach {
-  display: flex; align-items: center; justify-content: center; gap: 9px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 9px;
   margin: 0 0 24px; text-decoration: none; color: var(--ink);
   font-weight: 700; font-size: 14.5px;
 }
 .classoverlay-coach:active { opacity: .6; }
 .classoverlay-coach .icon { color: var(--ol); opacity: .7; }
 .classoverlay-coach-txt .k { font-weight: 600; color: var(--ol); }
-.classoverlay-facts { margin: 0 auto; max-width: 400px; }
+.classoverlay-facts { margin: 0; }
 .classoverlay-desc { margin-top: 20px; color: var(--ink); }
 .classoverlay .classsheet-report { align-self: auto; display: block; margin: 18px auto 0; }
 /* The pill. Ink on paper flips with the theme, same as the tell buttons. */
@@ -3828,3 +3830,12 @@ button.ps-card { cursor: pointer; }
 .disposter-mini-img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5;
 }
+
+/* Section titles inside the overlay, About first among them. */
+.ovsec-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 15px; margin: 22px 0 6px;
+}
+.classoverlay-desc { margin-top: 0; }
+/* The booking hand-off: fittlist points the way, the studio takes the money. */
+.bookout-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }

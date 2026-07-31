@@ -337,10 +337,7 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
-            <div
-              className="ps-week ps-agenda"
-              style={{ "--evtint": myAccent } as React.CSSProperties}
-            >
+            <div className="ps-week ps-agenda">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
                   <div className="ps-daycol">{d.label}</div>

@@ -150,6 +150,11 @@ export function ClassSheet({
       <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
         <Icon name="arrow_back" size={19} />
       </button>
+      {c && (
+        <button className="ovcircle ovcircle-share" aria-label="Share this class" onClick={share}>
+          <Icon name="ios_share" size={18} />
+        </button>
+      )}
       {/* The overflow: everything you might do with a class that isn't the
           class's own two buttons. */}
       {c && (
@@ -267,7 +272,12 @@ export function ClassSheet({
           {/* Full screen means the description gets to just be there; the old
               sheet clamped it to keep the add button on screen, and the pill
               floats now. */}
-          {c.description?.trim() && <p className="evdesc classoverlay-desc">{c.description}</p>}
+          {c.description?.trim() && (
+            <>
+              <h3 className="ovsec-h">About</h3>
+              <p className="evdesc classoverlay-desc">{c.description}</p>
+            </>
+          )}
 
           {/* Owner only: who saved this occurrence. */}
           {c.roster && (
@@ -325,23 +335,6 @@ export function ClassSheet({
           owner's pill is their one action instead. */}
       {c && (isOwner || showBook || c.canAdd) && (
         <>
-          {bookOpen && c.links.length > 1 && (
-            <div className="ovbook-menu" role="menu">
-              {c.links.map((l, i) => (
-                <a
-                  key={i}
-                  className="ovbook-item"
-                  role="menuitem"
-                  href={l.url}
-                  target="_blank"
-                  rel="noopener nofollow"
-                  onClick={() => setBookOpen(false)}
-                >
-                  Book via {l.label}
-                </a>
-              ))}
-            </div>
-          )}
           <div className="classoverlay-cta">
             {isOwner ? (
               <Link className="ovcta-btn" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
@@ -349,25 +342,11 @@ export function ClassSheet({
               </Link>
             ) : (
               <>
-                {showBook &&
-                  (c.links.length === 1 ? (
-                    <a
-                      className="ovcta-btn"
-                      href={c.links[0].url}
-                      target="_blank"
-                      rel="noopener nofollow"
-                    >
-                      Book
-                    </a>
-                  ) : (
-                    <button
-                      className="ovcta-btn"
-                      aria-expanded={bookOpen}
-                      onClick={() => setBookOpen((o) => !o)}
-                    >
-                      Book
-                    </button>
-                  ))}
+                {showBook && (
+                  <button className="ovcta-btn" onClick={() => setBookOpen(true)}>
+                    Book
+                  </button>
+                )}
                 {showBook && c.canAdd && <span className="ovcta-div" aria-hidden="true" />}
                 {c.canAdd && (
                   <button
@@ -387,6 +366,42 @@ export function ClassSheet({
         </>
       )}
 
+      {/* The hand-off: booking and money live on the studio's site, and
+          saying so beats a link that quietly walks you out of the app. */}
+      {bookOpen && c && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBookOpen(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Book this class</h2>
+            <p className="lead">
+              Booking and payment happen on the studio&rsquo;s site, not on fittlist.
+              We&rsquo;ll take you there.
+            </p>
+            <div className="bookout-links">
+              {c.links.map((l, i) => (
+                <a
+                  key={i}
+                  className="btn si evbtn"
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener nofollow"
+                  onClick={() => setBookOpen(false)}
+                >
+                  Book via {l.label}
+                  <Icon name="north_east" size={18} className="evbtn-ico" />
+                </a>
+              ))}
+            </div>
+            <button className="tertiary tellsheet-done" onClick={() => setBookOpen(false)}>
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
       {reportOpen && (
         <div
           className="sheet-scrim"

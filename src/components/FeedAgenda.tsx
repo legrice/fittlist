@@ -170,7 +170,6 @@ export function FeedAgenda({
                     >
                       <button
                         className={`ps-event${on ? " goingon" : ""}`}
-                        style={{ "--evtint": i.coachColor } as React.CSSProperties}
                         onClick={() => setOpen({ handle: i.handle, classId: i.classId, iso: d.iso })}
                       >
                         <span

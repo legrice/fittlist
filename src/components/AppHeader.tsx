@@ -63,7 +63,7 @@ export function AppHeader({
         {weekCount !== undefined && (
           <Link
             className="iconbtn inboxbtn weekbtn"
-            aria-label={`Your week${weekCount ? `, ${weekCount} classes` : ", empty"}`}
+            aria-label={`Your plans${weekCount ? `, ${weekCount} classes` : ", empty"}`}
             href="/week"
           >
             {/* A heart, not a calendar: the things here are saved, and the

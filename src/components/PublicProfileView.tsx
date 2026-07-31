@@ -316,11 +316,7 @@ export async function PublicProfileView({
         // owner a tap opens the editor instead: this is your class, and the
         // one thing you'd do with it from here is change it.
         <MaybeOpener isOwner={isOwner} handle={handle}>
-        {/* The cards wash with the coach's colour, same key as everywhere. */}
-        <div
-          className="ps-week ps-agenda"
-          style={{ "--evtint": avatarColor(user) } as React.CSSProperties}
-        >
+        <div className="ps-week ps-agenda">
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
               <div key={d.iso} className="ps-daygroup">
