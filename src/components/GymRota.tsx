@@ -8,10 +8,12 @@ import {
   deleteGymClass,
   setShiftCover,
   updateGymClass,
+  type GymCatalogItem,
   type GymClassDto,
   type GymCoachDto,
   type GymWeekDto,
 } from "@/app/actions/gym";
+import { CLASS_TYPES, detectProvider } from "@/lib/format";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -39,6 +41,9 @@ type Draft = {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
+  classType: string;
+  description: string;
+  links: { label: string; url: string }[];
   /** Who normally teaches it. */
   coachUserId: string;
   /** The date being looked at, and who is on it that day. */
@@ -53,6 +58,9 @@ const blank = (dayOfWeek: number, iso: string): Draft => ({
   dayOfWeek,
   startTime: "06:00",
   durationMin: 60,
+  classType: "",
+  description: "",
+  links: [],
   coachUserId: "",
   iso,
   onUserId: "",
@@ -74,6 +82,8 @@ export function GymRota({
   hasAccount,
   week,
   coaches,
+  catalog,
+  customTypes,
 }: {
   studioId: string;
   studioName: string;
@@ -83,11 +93,27 @@ export function GymRota({
   hasAccount: boolean;
   week: GymWeekDto | null;
   coaches: GymCoachDto[];
+  /** Classes already described at this studio, to pull in rather than retype. */
+  catalog: GymCatalogItem[];
+  customTypes: string[];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+
+  const typeOptions = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const t of [...CLASS_TYPES, ...customTypes, ...(draft?.classType ? [draft.classType] : [])]) {
+      const k = t.toLowerCase();
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push(t);
+      }
+    }
+    return out;
+  })();
 
   const days = week?.days ?? [];
   const all = days.flatMap((d) => d.items);
@@ -100,6 +126,9 @@ export function GymRota({
       dayOfWeek: draft.dayOfWeek,
       startTime: draft.startTime,
       durationMin: draft.durationMin,
+      classType: draft.classType || null,
+      description: draft.description,
+      links: draft.links,
       coachUserId: draft.coachUserId || null,
     };
     start(async () => {
@@ -228,6 +257,9 @@ export function GymRota({
                       dayOfWeek: c.dayOfWeek,
                       startTime: c.startTime,
                       durationMin: c.durationMin,
+                      classType: c.classType ?? "",
+                      description: c.description ?? "",
+                      links: c.links.map((l) => ({ ...l })),
                       coachUserId: c.coachUserId ?? "",
                       iso: day.iso,
                       onUserId: c.onUserId ?? "",
@@ -296,6 +328,40 @@ export function GymRota({
               </>
             )}
 
+            {/* Somebody here has already written this class down. Pull it in
+                rather than typing it again, and the descriptions stay the same
+                everywhere the class appears. */}
+            {!draft.id && catalog.length > 0 && (
+              <>
+                <label className="flabel" htmlFor="rotaPull">
+                  Pull one in <span>· classes already described here</span>
+                </label>
+                <select
+                  id="rotaPull"
+                  className="editinput"
+                  value=""
+                  onChange={(e) => {
+                    const c = catalog.find((x) => x.name === e.target.value);
+                    if (!c) return;
+                    setDraft({
+                      ...draft,
+                      name: c.name,
+                      classType: c.classType ?? "",
+                      description: c.description ?? "",
+                      links: c.links.map((l) => ({ ...l })),
+                    });
+                  }}
+                >
+                  <option value="">Start from scratch</option>
+                  {catalog.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+
             <label className="flabel" htmlFor="rotaName">
               What is it
             </label>
@@ -352,6 +418,87 @@ export function GymRota({
                   }
                 />
               </div>
+            </div>
+
+            <label className="flabel" htmlFor="rotaType">
+              Type
+            </label>
+            <select
+              id="rotaType"
+              className="editinput"
+              value={draft.classType}
+              onChange={(e) => setDraft({ ...draft, classType: e.target.value })}
+            >
+              <option value="">Not set</option>
+              {typeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+
+            <label className="flabel" htmlFor="rotaDesc">
+              Description <span>· what to expect</span>
+            </label>
+            <textarea
+              id="rotaDesc"
+              className="editinput abouttext"
+              rows={3}
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+            />
+
+            <label className="flabel">
+              Booking link <span>· paste any link, we tag it</span>
+            </label>
+            <div>
+              {draft.links.map((l, i) => (
+                <div className="linkrow" key={i}>
+                  <div className="linkfield">
+                    <input
+                      type="url"
+                      inputMode="url"
+                      placeholder="Paste a link"
+                      aria-label="Booking link"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      value={l.url}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          links: draft.links.map((x, xi) =>
+                            xi === i
+                              ? { url: e.target.value, label: detectProvider(e.target.value) }
+                              : x,
+                          ),
+                        })
+                      }
+                    />
+                    {l.url.trim() && (
+                      <span className="linktag">
+                        <Icon name="check" size={13} /> {detectProvider(l.url)}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    className="iconbtn"
+                    aria-label="Remove link"
+                    onClick={() =>
+                      setDraft({ ...draft, links: draft.links.filter((_, xi) => xi !== i) })
+                    }
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                className="linktoggle"
+                onClick={() =>
+                  setDraft({ ...draft, links: [...draft.links, { url: "", label: "Book" }] })
+                }
+              >
+                + Add a link
+              </button>
             </div>
 
             <label className="flabel" htmlFor="rotaCoach">

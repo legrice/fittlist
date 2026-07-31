@@ -39,6 +39,8 @@ export type GymClassDto = {
   startTime: string;
   durationMin: number;
   /** Who normally teaches it, week in week out. */
+  description: string | null;
+  links: { label: string; url: string }[];
   coachUserId: string | null;
   coachName: string;
   /** Who is actually on it this date, once covers are applied. */
@@ -166,6 +168,8 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
           dayOfWeek: r.dayOfWeek,
           startTime: r.startTime,
           durationMin: r.durationMin,
+          description: r.description,
+          links: r.links,
           coachUserId: r.coachUserId,
           coachName: (r.coachUserId && nameOf.get(r.coachUserId)) || "",
           onUserId,
@@ -189,9 +193,111 @@ export type GymClassInput = {
   dayOfWeek: number;
   startTime: string;
   durationMin: number;
-  classType?: string;
+  classType?: string | null;
+  description?: string;
+  /** Where a member books it. A gym usually has one, on every class. */
+  links?: { label: string; url: string }[];
   coachUserId?: string | null;
 };
+
+/** A class already described at this studio, ready to be pulled in. */
+export type GymCatalogItem = {
+  name: string;
+  classType: string | null;
+  description: string | null;
+  links: { label: string; url: string }[];
+};
+
+/**
+ * What has already been written down about the classes at this studio.
+ *
+ * The shared catalogue (`studio_classes`) carries the name, type and
+ * description that any coach here has filled in. Booking links live on the
+ * classes themselves, and unlike a coach reusing another coach's class, a gym
+ * pulling in its own studio's link is the same booking page either way, so
+ * they come along.
+ */
+export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return [];
+  const { db } = ctx;
+
+  const [cat, atStudio] = await Promise.all([
+    db
+      .select()
+      .from(schema.studioClasses)
+      .where(eq(schema.studioClasses.studioId, studioId)),
+    db.select().from(schema.classes).where(eq(schema.classes.studioId, studioId)),
+  ]);
+
+  const byKey = new Map<string, GymCatalogItem>();
+  for (const c of cat)
+    byKey.set(c.nameKey, {
+      name: c.name,
+      classType: c.classType,
+      description: c.description,
+      links: [],
+    });
+  // Real classes fill the gaps the catalogue doesn't hold, links above all.
+  for (const c of atStudio) {
+    if (!c.isPublic) continue;
+    const key = c.name.trim().toLowerCase();
+    const cur = byKey.get(key) ?? {
+      name: c.name,
+      classType: c.classType,
+      description: c.description,
+      links: [],
+    };
+    if (!cur.classType && c.classType) cur.classType = c.classType;
+    if (!cur.description && c.description) cur.description = c.description;
+    if (!cur.links.length && c.links.length) cur.links = c.links.map((l) => ({ ...l }));
+    byKey.set(key, cur);
+  }
+  return [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Keep the studio's shared description of a class up to date. */
+async function catalogue(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+  userId: string,
+  input: GymClassInput,
+) {
+  const name = input.name.trim();
+  const classType = input.classType?.trim() || null;
+  const description = input.description?.trim() || null;
+  try {
+    await db
+      .insert(schema.studioClasses)
+      .values({
+        studioId,
+        name,
+        nameKey: name.toLowerCase(),
+        classType,
+        description,
+        createdByUserId: userId,
+      })
+      .onConflictDoUpdate({
+        target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
+        set: {
+          name,
+          ...(classType ? { classType } : {}),
+          ...(description ? { description } : {}),
+          updatedAt: new Date(),
+        },
+      });
+  } catch (err) {
+    console.error("studio catalog upsert failed", err);
+  }
+}
+
+/** Links people paste: keep the real ones, drop the rest, cap the list. */
+function cleanLinks(raw: GymClassInput["links"]): { label: string; url: string }[] {
+  return (raw ?? [])
+    .map((l) => ({ label: (l.label || "Book").trim().slice(0, 30), url: l.url.trim() }))
+    .filter((l) => /^https?:\/\//i.test(l.url))
+    .slice(0, 6);
+}
 
 function validate(input: GymClassInput): string | null {
   if (!input.name.trim()) return "Give the class a name.";
@@ -241,8 +347,11 @@ export async function addGymClass(
     durationMin: input.durationMin,
     name: input.name.trim(),
     classType: input.classType?.trim() || null,
+    description: input.description?.trim() || null,
+    links: cleanLinks(input.links),
     isPublic: true,
   });
+  await catalogue(db, studioId, ctx.userId, input);
   if (coachUserId) await tellCoach(coachUserId, studio.name, { ...input, name: input.name.trim() }, true);
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
@@ -334,8 +443,11 @@ export async function updateGymClass(
       durationMin: input.durationMin,
       name: input.name.trim(),
       classType: input.classType?.trim() || null,
+      description: input.description?.trim() || null,
+      links: cleanLinks(input.links),
     })
     .where(eq(schema.classes.id, classId));
+  await catalogue(db, studioId, ctx.userId, input);
 
   // Only the people whose shift actually changed hear about it.
   if (existing.coachUserId !== coachUserId) {

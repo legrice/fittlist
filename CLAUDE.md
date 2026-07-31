@@ -363,6 +363,14 @@ is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
 clears a departing coach's `coachUserId` so their slots reopen rather than
 vanishing. `scripts/gym-smoke.mjs` walks the whole path.
 
+**A gym's class carries what a coach's does, and borrows it.** Same fields:
+type, description and booking links, not just a name and a time. `gymCatalog()`
+offers the classes already described at that studio so a manager pulls one in
+rather than retyping it, and saving writes back to `studio_classes`, so the
+description of a class stays the same wherever it appears. Links come along
+here, unlike a coach reusing another coach's class: a gym pulling in its own
+studio's booking page is the same page either way.
+
 **Counts are derived from the rota, and the past has to be frozen.**
 `gymCounts()` counts every date a slot runs (`runsOn`, the same predicate as
 everywhere) with covers laid over, split into month halves to match a
