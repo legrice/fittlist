@@ -1318,10 +1318,10 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // page also has to actually scroll: wrapped in .appshell without a .stage it
   // was clipped at the viewport and nothing moved.
   {
-    const bar = await fan.locator(".weekcal").evaluate((e) => getComputedStyle(e).position);
-    if (bar !== "fixed") fail("Share my week should be pinned, got " + bar);
+    const bar = await fan.locator(".weekshare").evaluate((e) => getComputedStyle(e).position);
+    if (bar !== "fixed") fail("Share your schedule should float, got " + bar);
     const clipped = await fan.evaluate(
-      () => getComputedStyle(document.querySelector(".weekcal").closest("div[data-mode], body"))
+      () => getComputedStyle(document.querySelector(".weekshare").closest("div[data-mode], body"))
         .overflow === "hidden",
     );
     if (clipped) fail("your week is inside a clipped shell, so it can never scroll");
@@ -1334,7 +1334,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekcal .setrow", { hasText: "Share your schedule" }).waitFor();
+  await fan.locator(".weekshare .ovcta-btn", { hasText: "Share your schedule" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();

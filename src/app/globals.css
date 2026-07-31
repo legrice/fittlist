@@ -1199,30 +1199,12 @@ button.ps-card { cursor: pointer; }
   background: var(--cl); color: var(--ol);
 }
 .weekrow-x:active { background: var(--cl-d); }
-/* Share my week is pinned, not parked at the end of the list. A week with
-   enough classes in it pushed the button off the bottom, which is exactly the
-   week you'd most want to share. It sits above the tab bar, which is fixed
-   too, so the two stack rather than overlapping. */
-.weekcal {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 44;
-  margin: 0; border-radius: 0; box-shadow: none;
-  background: var(--paper); border-top: 1px solid var(--line);
-  padding: 10px 18px calc(10px + 62px + env(safe-area-inset-bottom));
-}
-/* A pill, not a card. The strip is chrome over a scrolling list, so what sits
-   in it should read as a control: the same shape every other button in the app
-   uses. It used to borrow .settingslist, which paints itself white and comes
-   later in this file, so the strip behind it went white too and the whole
-   bottom of the screen stopped matching the page. */
-.weekcal .setrow {
-  max-width: 660px; margin: 0 auto; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--line);
-}
-.weekcal .setrow:active { background: #f3ecdf; }
-/* No tab bar (desktop, where the header carries the nav): the strip only has
-   its own padding to clear. */
+/* Share your schedule floats the way the class overlay's pill does, above
+   the tab bar so a long week can't push it off the bottom. */
+.classoverlay-cta.weekshare { bottom: calc(88px + env(safe-area-inset-bottom)); z-index: 46; }
+/* No tab bar on a desktop width (the header carries the nav). */
 @media (min-width: 940px) {
-  .weekcal { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .classoverlay-cta.weekshare { bottom: calc(24px + env(safe-area-inset-bottom)); }
 }
 
 /* A class, from the bottom up. The list stays behind it, so adding reads as
