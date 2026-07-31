@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { ClassSheet } from "@/components/ClassSheet";
 import { EventSheet } from "@/components/EventSheet";
@@ -26,7 +27,12 @@ export function PlansShelf({ items }: { items: PlanChip[] }) {
 
   return (
     <div className="plans">
-      <h2 className="plans-h">Your plans</h2>
+      <h2 className="plans-h nearby-h">
+        Your plans
+        <Link className="nearby-all" href="/week">
+          See all
+        </Link>
+      </h2>
       <div className="plans-row">
         {items.map((p) => (
           <button

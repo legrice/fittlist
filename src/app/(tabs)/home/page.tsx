@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -16,8 +16,9 @@ export const dynamic = "force-dynamic";
 
 // Home is the doors, not the room. Every section here is an entry point:
 // your plans, the week behind its own door, the coaches you already train
-// with, what's coming up on the board, and who's around you. The long lists
-// all live one tap away, where they can be long.
+// with, and what's coming up on the board. The long lists all live one tap
+// away, where they can be long. (Coaches near you lived here briefly; next
+// to Your coaches it read as the same rail twice, so Discover keeps it.)
 export default async function HomePage() {
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
@@ -36,7 +37,6 @@ export default async function HomePage() {
   const followedIds = followRows
     .map((r) => r.trainerUserId)
     .filter((id) => id !== userId && !hidden.has(id));
-  const followedSet = new Set(followedIds);
 
   // The faces you already train with. Following them doesn't hide them: home
   // is where you'd go looking for a person, and these are your people.
@@ -95,18 +95,6 @@ export default async function HomePage() {
     const day = `${WD[(d.getUTCDay() + 6) % 7]} · ${MO[d.getUTCMonth()]} ${d.getUTCDate()}`;
     return ev.startTime ? `${day} · ${fmtTime(ev.startTime)}` : day;
   };
-
-  // Coaches near you: same city, not you, not already followed.
-  const nearby = me.location
-    ? (
-        await db
-          .select()
-          .from(schema.users)
-          .where(and(eq(schema.users.location, me.location), ne(schema.users.kind, "fan")))
-      )
-        .filter((u) => u.id !== userId && !!u.handle && !followedSet.has(u.id) && !hidden.has(u.id))
-        .slice(0, 6)
-    : [];
 
   const face = (photo: string | null, name: string, color: string) =>
     photo ? (
@@ -185,24 +173,6 @@ export default async function HomePage() {
         </div>
       )}
 
-      {nearby.length > 0 && (
-        <div className="nearby">
-          <h2 className="plans-h nearby-h">
-            Coaches near you
-            <Link className="nearby-all" href="/discover">
-              See all
-            </Link>
-          </h2>
-          <div className="nearby-row">
-            {nearby.map((u) => (
-              <Link key={u.id} className="nearbyc" href={`/${u.handle}?from=home`}>
-                {face(u.photo, u.name, avatarColor(u))}
-                <span className="nearbyc-nm">{u.name.trim() || u.email.split("@")[0]}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 }

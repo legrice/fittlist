@@ -898,15 +898,21 @@ button.bl-band { cursor: pointer; }
   font-weight: 400; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
   padding-bottom: 10px; border-bottom: 1px solid var(--line);
 }
-.ps-agenda .ps-daycards { display: block; gap: 0; }
+.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+/* The event listing's poster manners, carried to classes: a tinted card per
+   row, washed with the coach's colour (the brand orange where there's no
+   coach to key on). The day header names the date, so the card doesn't. */
 .ps-agenda .ps-event {
-  grid-template-columns: 3px 1fr auto; gap: 0 13px; align-items: center;
-  background: transparent; border-radius: 0; box-shadow: none; padding: 18px 2px;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
+  background: color-mix(in srgb, var(--evtint, var(--si)) 13%, var(--card));
+  border-radius: 16px; box-shadow: none; padding: 14px 16px;
+  border-bottom: none;
 }
 .ps-agenda .ps-event:hover { box-shadow: none; }
-.ps-agenda .ps-event:active { background: #f3ecdf; }
-.ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
+.ps-agenda .ps-event:active {
+  background: color-mix(in srgb, var(--evtint, var(--si)) 22%, var(--card));
+}
+.ps-agenda .ps-accent { display: none; }
 /* The name and the studio are one thing, so they sit close; the air belongs
    between rows, which is what the padding above is for. */
 .ps-agenda .ps-ebody { gap: 3px; }
@@ -915,7 +921,7 @@ button.bl-band { cursor: pointer; }
    the size both went a step away and came back. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-size: 18px; line-height: 1.2; letter-spacing: .004em;
+  font-weight: 700; font-size: 19px; line-height: 1.15; letter-spacing: -.005em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
@@ -928,10 +934,11 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
 .ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
-/* Private sessions: no card fill, just a muted accent bar + the Private badge. */
-.ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
-.ps-agenda .ps-event-private:active { background: #f3ecdf; }
-.ps-agenda .ps-event-private .ps-accent { background: var(--sa); }
+/* Private sessions keep reading as drafts: muted fill, dashed edge. */
+.ps-agenda .ps-event-private {
+  background: var(--cl); border: 1.5px dashed #c7bf9f;
+}
+.ps-agenda .ps-event-private:active { background: var(--cl); }
 
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
@@ -1873,7 +1880,7 @@ button.ps-card { cursor: pointer; }
 .pubtab {
   flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 19px; color: var(--ol); background: transparent; white-space: nowrap;
+  font-size: 18px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 /* Same fill as the three-dot beside the name: the header's controls read as
@@ -3119,7 +3126,8 @@ button.ps-card { cursor: pointer; }
 }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
-.ps-agenda .ps-event.goingon .ps-accent { width: 5px; }
+/* The marked card wears a quiet green ring, the same yes the tag gives. */
+.ps-agenda .ps-event.goingon { box-shadow: inset 0 0 0 1.5px var(--go); }
 /* "I'm going" lives on the class page; the week only reports it. */
 /* A member's account: who you are, then the switches. No public page, no QR,
    no stats — those are a coach's. */
