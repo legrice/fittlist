@@ -95,8 +95,8 @@ export function SwipeGoing({
         style={{ opacity: dx < -4 ? 1 : 0 }}
         aria-hidden="true"
       >
-        <Icon name={going ? "close" : "check"} size={19} />
-        <span>{going ? "Remove" : "Add"}</span>
+        <Icon name={going ? "close" : "favorite"} size={19} />
+        <span>{going ? "Remove" : "Save"}</span>
       </div>
       <div
         className="swipefront"
