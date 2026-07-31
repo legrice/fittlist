@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { classAddress, publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
@@ -59,14 +60,13 @@ export default async function FeedPage({
   // together. Private sessions stay out of the classes: this is the
   // member-facing week even when you're looking at your own — the full
   // schedule, private included, lives behind the gear.
-  const [coachRows, allClassRows] = await Promise.all([
-    trainerIds.length
-      ? db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
-      : Promise.resolve([]),
-    trainerIds.length
-      ? db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerIds))
-      : Promise.resolve([]),
-  ]);
+  const coachRows = trainerIds.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
+    : [];
+  // Their own classes, plus the gym shifts each has chosen to show. Same
+  // loader the coach's own page uses, so following someone shows the week
+  // their page shows and not a shorter one.
+  const allClassRows = await publicSchedules(coachRows);
   const coaches = coachRows.filter((c) => !!c.handle);
   coaches.sort((a, b) => a.name.localeCompare(b.name));
   const coachById = new Map(coaches.map((c) => [c.id, c]));
@@ -98,15 +98,19 @@ export default async function FeedPage({
       .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
       .flatMap((c) => {
-        const coach = coachById.get(c.userId);
+        // A shift is owned by the gym and shown under the coach, so the
+        // person this row is about is `ownerUserId`, never `userId`.
+        const coach = coachById.get(c.ownerUserId);
         if (!coach?.handle) return [];
         const s = c.studioId ? studioById.get(c.studioId) : undefined;
+        const at = classAddress(c, coach.handle, s?.slug);
+        if (!at) return [];
         const t = clockParts(c.startTime);
         return [
           {
             classId: c.id,
             coachId: coach.id,
-            handle: coach.handle,
+            handle: at.key,
             coachName: coach.name,
             coachPhoto: coach.photo,
             coachColor: avatarColor(coach),

@@ -57,7 +57,8 @@ export function ScheduleScreen({
   passkeyCount,
   isAdmin,
   canSendFeedback,
-  hasShifts,
+  shiftCount,
+  shiftsPublic,
   invitesLeft,
   showFanView,
   discoverable,
@@ -102,7 +103,8 @@ export function ScheduleScreen({
   isAdmin: boolean;
   canSendFeedback: boolean;
   /** On a gym's rota, so the calendar row names shifts. */
-  hasShifts: boolean;
+  shiftCount: number;
+  shiftsPublic: boolean;
   invitesLeft: number;
   showFanView: boolean;
   discoverable: boolean;
@@ -445,7 +447,8 @@ export function ScheduleScreen({
           passkeyCount={passkeyCount}
           isAdmin={isAdmin}
           canSendFeedback={canSendFeedback}
-          hasShifts={hasShifts}
+          shiftCount={shiftCount}
+          shiftsPublic={shiftsPublic}
           avatarColor={myAccent}
           showFanView={showFanView}
           discoverable={discoverable}

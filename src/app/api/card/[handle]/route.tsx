@@ -3,6 +3,7 @@ import { join } from "path";
 import { eq } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
+import { publicSchedule } from "@/lib/coachweek";
 import { avatarColor } from "@/lib/avatar";
 import { brandIcon } from "@/lib/brand";
 import { runsOn, storyTheme, todayIso as todayIsoNow } from "@/lib/format";
@@ -54,9 +55,7 @@ export async function GET(
   // never listed; the schedule has its own image.
   let classesThisWeek = 0;
   if (isCoach) {
-    const classRows = (
-      await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
-    ).filter((c) => c.isPublic);
+    const classRows = (await publicSchedule(user)).filter((c) => c.isPublic);
     const start = new Date(`${todayIsoNow()}T00:00:00Z`);
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);

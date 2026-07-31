@@ -3,6 +3,7 @@ import { join } from "path";
 import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
+import { publicSchedule } from "@/lib/coachweek";
 import { brandIcon } from "@/lib/brand";
 import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { listBudget, planStory } from "@/lib/storyplan";
@@ -52,9 +53,7 @@ export async function GET(
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return new Response("Not found", { status: 404 });
 
-  const classRows = (
-    await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
-  ).filter((c) => c.isPublic); // shareable image: public classes only
+  const classRows = (await publicSchedule(user)).filter((c) => c.isPublic); // shareable: public only
   // The week image starts on *today* and runs the next 7 days (1 for "day").
   const todayIso = todayIsoNow();
   const start = new Date(`${todayIso}T00:00:00Z`);

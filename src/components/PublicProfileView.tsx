@@ -8,6 +8,7 @@ import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib
 import { avatarColor } from "@/lib/avatar";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { studioPath } from "@/lib/studio";
+import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { Icon } from "@/components/Icon";
 import { FollowSync } from "@/components/FollowSync";
@@ -116,9 +117,10 @@ export async function PublicProfileView({
     }
   }
 
-  const classRows = (
-    await db.select().from(schema.classes).where(eq(schema.classes.userId, user.id))
-  ).filter((c) => c.isPublic); // private client sessions never appear publicly
+  // Their own classes, plus the shifts a gym has them on when they've said
+  // those belong here. One loader, so the page, the share, the feed and the
+  // .ics can't answer this differently.
+  const classRows = (await publicSchedule(user)).filter((c) => c.isPublic);
   // "Where I coach" is the union of studios the coach picked in setup and any
   // studio they've published a class at.
   const pickedRows = await db
@@ -326,13 +328,18 @@ export async function PublicProfileView({
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;
                     const where = s ? s.name : c.location;
                     const start = clockParts(c.startTime);
+                    // A shift belongs to the gym, so its page lives under the
+                    // studio. Pointing it at this handle would 404: the class
+                    // is not this coach's to serve.
+                    const at = classAddress(c, handle, s?.slug);
                     return (
                       <Link
                         key={`${d.iso}-${c.id}`}
                         className="ps-event"
                         data-cid={c.id}
                         data-d={d.iso}
-                        href={`/${handle}/${c.id}?d=${d.iso}`}
+                        data-base={at?.key}
+                        href={`/${at?.base ?? handle}/${c.id}?d=${d.iso}`}
                       >
                         <span
                           className="ps-accent"

@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
@@ -47,12 +48,9 @@ export default async function DiscoverPage() {
   ]);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
-  const ids = rows.map((r) => r.id);
-  const classRows = ids.length
-    ? (await db.select().from(schema.classes).where(inArray(schema.classes.userId, ids))).filter(
-        (c) => c.isPublic,
-      )
-    : [];
+  // Their own classes plus the shifts each has chosen to show, so the count
+  // below matches what opening their page actually shows.
+  const classRows = (await publicSchedules(rows)).filter((c) => c.isPublic);
 
   // "Classes this week" — the signal that a page is actually live, and the
   // thing a fan is deciding on.
@@ -65,7 +63,7 @@ export default async function DiscoverPage() {
     const dow = (d.getUTCDay() + 6) % 7;
     for (const c of classRows) {
       if (runsOn(c, iso, dow)) {
-        weekCount.set(c.userId, (weekCount.get(c.userId) ?? 0) + 1);
+        weekCount.set(c.ownerUserId, (weekCount.get(c.ownerUserId) ?? 0) + 1);
       }
     }
   }

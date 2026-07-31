@@ -18,7 +18,9 @@ export function ClassOpener({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState<{ classId: string; iso?: string } | null>(null);
+  const [open, setOpen] = useState<{ classId: string; iso?: string; base?: string } | null>(
+    null,
+  );
 
   return (
     <>
@@ -32,14 +34,21 @@ export function ClassOpener({
           if (me.metaKey || me.ctrlKey || me.shiftKey || me.altKey) return;
           e.preventDefault();
           e.stopPropagation();
-          setOpen({ classId: row.dataset.cid!, iso: row.dataset.d || undefined });
+          // A row can name its own base. A gym's class is addressed under the
+          // studio, so a shift on a coach's page opens under the gym that
+          // owns it rather than under the coach, which resolves to nothing.
+          setOpen({
+            classId: row.dataset.cid!,
+            iso: row.dataset.d || undefined,
+            base: row.dataset.base || undefined,
+          });
         }}
       >
         {children}
       </div>
       {open && (
         <ClassSheet
-          handle={handle}
+          handle={open.base ?? handle}
           classId={open.classId}
           iso={open.iso}
           onClose={() => setOpen(null)}

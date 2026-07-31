@@ -47,6 +47,7 @@ export default async function SchedulePage({
         discoverable: schema.users.discoverable,
         approveFollowers: schema.users.approveFollowers,
         messagesOpen: schema.users.messagesOpen,
+        shiftsPublic: schema.users.shiftsPublic,
         avatarColor: schema.users.avatarColor,
         handle: schema.users.handle,
         name: schema.users.name,
@@ -214,7 +215,8 @@ export default async function SchedulePage({
       passkeyCount={passkeyRows.length}
       isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
       canSendFeedback={!!fbHost && fbHost.email.toLowerCase() !== (user?.email ?? "").toLowerCase()}
-      hasShifts={shiftRows.length > 0}
+      shiftCount={shiftRows.length}
+      shiftsPublic={user?.shiftsPublic ?? false}
       showFanView={await fansVisible()}
       discoverable={user?.discoverable ?? true}
       approveFollowers={user?.approveFollowers ?? false}

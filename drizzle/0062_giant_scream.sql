@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "shifts_public" boolean DEFAULT false NOT NULL;

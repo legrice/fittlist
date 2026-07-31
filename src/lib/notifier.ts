@@ -1,6 +1,7 @@
 import { eq, inArray, isNull } from "drizzle-orm";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb, schema } from "@/db";
+import { publicSchedule, publicSchedules, type ScheduleRow } from "@/lib/coachweek";
 import { sendMessage } from "@/lib/mailer";
 import { fmtTime, runsOn, siteOrigin, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { fansEnabled } from "@/lib/flags";
@@ -106,9 +107,8 @@ export async function sendWeeklyDigestForTrainer(
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.id, trainerUserId));
   if (!trainer?.handle) return 0;
 
-  const classRows = (
-    await db.select().from(schema.classes).where(eq(schema.classes.userId, trainerUserId))
-  ).filter((c) => c.isPublic); // subscribers see the public schedule only
+  // Same loader as their page: the digest and the page are the same week.
+  const classRows = (await publicSchedule(trainer)).filter((c) => c.isPublic);
 
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((x): x is string => !!x))];
   const studios = studioIds.length
@@ -179,9 +179,9 @@ export async function sendMergedDigestForFan(
     .where(inArray(schema.users.id, trainerUserIds));
   const trainerById = new Map(trainers.map((t) => [t.id, t]));
 
-  const classRows = (
-    await db.select().from(schema.classes).where(inArray(schema.classes.userId, trainerUserIds))
-  ).filter((c) => c.isPublic && trainerById.get(c.userId)?.handle);
+  const classRows = (await publicSchedules(trainers)).filter(
+    (c) => c.isPublic && trainerById.get(c.ownerUserId)?.handle,
+  );
 
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((x): x is string => !!x))];
   const studios = studioIds.length
@@ -224,7 +224,7 @@ export async function sendMergedDigestForFan(
 
 /** Like weekDigestText, but across coaches — each line carries whose class it is. */
 function mergedWeekText(
-  classRows: (typeof schema.classes.$inferSelect)[],
+  classRows: ScheduleRow[],
   studioById: Map<string, typeof schema.studios.$inferSelect>,
   trainerById: Map<string, typeof schema.users.$inferSelect>,
 ): string {
@@ -244,7 +244,9 @@ function mergedWeekText(
     out.push(head);
     for (const c of items) {
       const where = c.studioId ? studioById.get(c.studioId)?.name ?? "" : c.location ?? "";
-      const coach = trainerById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "";
+      // A shift is owned by the gym and shown under the coach, so the name
+      // on the line comes from `ownerUserId`.
+      const coach = trainerById.get(c.ownerUserId)?.name?.trim().split(/\s+/)[0] ?? "";
       out.push(
         `  ${fmtTime(c.startTime)}  ${c.name} with ${coach}${where ? ` · ${where}` : ""}`,
       );

@@ -17,6 +17,7 @@ import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
+import { ShiftsPublicToggle } from "@/components/ShiftsPublicToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
@@ -55,7 +56,8 @@ export function ProfileSheet({
   passkeyCount,
   isAdmin = false,
   canSendFeedback = false,
-  hasShifts = false,
+  shiftCount = 0,
+  shiftsPublic = false,
   avatarColor,
   showFanView = false,
   discoverable = true,
@@ -89,8 +91,11 @@ export function ProfileSheet({
   /** False when there's nobody behind the door: no admin account exists, or
    *  you are the one it would go to. */
   canSendFeedback?: boolean;
-  /** They're on a gym's rota, so the calendar row says so. */
-  hasShifts?: boolean;
+  /** How many gym slots they are on, so the calendar row and the shifts
+   *  switch can both say what they are about. */
+  shiftCount?: number;
+  /** Their answer to whether those shifts show on their public page. */
+  shiftsPublic?: boolean;
   /** The coach's own palette colour, so a photo-less avatar reads as theirs. */
   avatarColor: string;
   showFanView?: boolean;
@@ -422,6 +427,11 @@ export function ProfileSheet({
               <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
             </button>
           )}
+          {/* Only once a gym has actually put them on something. A switch for
+              a thing you don't have is a question nobody asked. */}
+          {shiftCount > 0 && (
+            <ShiftsPublicToggle initialOn={shiftsPublic} count={shiftCount} />
+          )}
         </div>
 
         {/* Reach: the switches and the block list belong together, because
@@ -455,7 +465,7 @@ export function ProfileSheet({
           {/* Back, because a gym's rota puts shifts in here and a coach has to
               be able to see what they're teaching without opening the app.
               Not knowing you were on is what cost somebody a class. */}
-          <MyCalendar hasShifts={hasShifts} />
+          <MyCalendar hasShifts={shiftCount > 0} />
           <NotificationPrefs />
           <DarkModeToggle initialOn={look === "dark"} />
         </div>

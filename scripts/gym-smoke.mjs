@@ -15,6 +15,20 @@ import { chromium } from "playwright";
 import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const fail = (m) => { throw new Error("GYM FAIL: " + m); };
+
+// The app's day is US Eastern, so a date computed off the server's UTC clock
+// can be tomorrow's. Anything asserting on a specific date has to agree.
+const weekDay = (i) => {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7) + i);
+  return d.toISOString().slice(0, 10);
+};
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
 const mkCoach = async (email, name, withClass) => {
@@ -393,6 +407,82 @@ console.log("the coach is told ok");
   console.log("a shift stays off the coach's public side ok");
 }
 
+// ---- unless the coach says otherwise
+//
+// Off, a shift is in their calendar and nowhere else. On, the classes they
+// actually teach are on the page that answers "how do I train with you",
+// which is what a coach teaching at four gyms needs. Theirs to decide, and a
+// different question from the gym naming anybody, which stays off either way.
+{
+  await tom.goto(BASE + "/app?acct=1");
+  const sw = tom.locator(".setrow", { hasText: "Gym shifts on your page" });
+  await sw.waitFor();
+  if (!/calendar only/i.test(await sw.innerText())) fail("the switch should start off");
+  await sw.click();
+  await tom.waitForTimeout(900);
+
+  await tom.goto(BASE + "/tom");
+  const shown = tom.locator(".ps-event", { hasText: "HYROX" });
+  await shown.first().waitFor();
+  // A specific date rather than a count: the page's window is seven populated
+  // days, so dropping one Thursday just pulls the next one into view.
+  const thu = weekDay(10); // Thursday of next week, always ahead of today
+  const onThu = tom.locator(`.ps-event[data-d="${thu}"]`, { hasText: "HYROX" });
+  if ((await onThu.count()) !== 1) fail("his page should carry the shift on " + thu);
+  // The class belongs to the gym, so its page lives under the studio. Pointing
+  // it at the coach's handle would 404: it isn't theirs to serve.
+  const href = await shown.first().getAttribute("href");
+  if (!href?.startsWith("/s/")) fail("a shift should open under the gym: " + href);
+  const ics = await tom.request.get(BASE + "/api/cal/tom");
+  if (!(await ics.text()).includes("HYROX"))
+    fail("the shift never reached the coach's public feed");
+  console.log("shifts on the coach's page and feed ok");
+
+  // The gym's own schedule still names nobody. Two switches, and this one was
+  // never the gym's to flip.
+  {
+    const anonCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    const anon = await anonCtx.newPage();
+    anon.setDefaultTimeout(15000);
+    await anon.goto(BASE + studioHref);
+    await anon.locator(".ps-event", { hasText: "HYROX" }).first().waitFor();
+    if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
+      fail("a coach's own switch named them on the gym's schedule");
+    await anonCtx.close();
+  }
+  console.log("the gym's schedule still names nobody ok");
+
+  // A date somebody else is covering is not a date he teaches, so it comes off
+  // his page. Getting this wrong tells people to turn up to the wrong class.
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator("#rotaOn").waitFor();
+  await matt.locator("#rotaOn").selectOption({ label: "Julia" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(800);
+  await tom.goto(BASE + "/tom");
+  await tom.waitForTimeout(400);
+  if (await tom.locator(`.ps-event[data-d="${thu}"]`, { hasText: "HYROX" }).count())
+    fail("a covered date should leave his page: " + thu);
+  console.log("a covered date comes off the coach's page ok");
+
+  // Put the rota back, then switch off: calendar only again. The sheet is
+  // still up from the swap above, so this reuses it rather than reopening.
+  await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
+  await matt.getByText("Swapped").waitFor();
+  await matt.waitForTimeout(700);
+  await matt.locator(".sheetclose").first().click();
+
+  await tom.goto(BASE + "/app?acct=1");
+  await tom.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+  await tom.waitForTimeout(900);
+  await tom.goto(BASE + "/tom");
+  await tom.waitForTimeout(400);
+  if (await tom.locator(".ps-event", { hasText: "HYROX" }).count())
+    fail("turning it off should take the shifts back off the page");
+  console.log("the switch turns it back off ok");
+}
+
 // And it's in his calendar, which is the fix for not knowing you were on.
 // A signed link, no Google account and no permission from anybody, so the
 // coach who wants nothing public still gets their week.
@@ -506,19 +596,6 @@ console.log("the coach is told ok");
 // date out of a standing slot. A gym had none of these while it had a form of
 // its own, which is the argument for it not having one.
 {
-  const easternToday = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-  const mon = new Date(`${easternToday}T00:00:00Z`);
-  mon.setUTCDate(mon.getUTCDate() - ((mon.getUTCDay() + 6) % 7));
-  const dayIso = (i) => {
-    const d = new Date(mon);
-    d.setUTCDate(mon.getUTCDate() + i);
-    return d.toISOString().slice(0, 10);
-  };
   const rowOn = (day, name) =>
     matt.locator(".rotaday", { hasText: day }).locator(".rotarow", { hasText: name });
 
@@ -543,7 +620,7 @@ console.log("the coach is told ok");
   await matt.locator("#fName").waitFor();
   await matt.locator("#fName").fill("Barbell Clinic");
   await matt.getByRole("button", { name: "One-time" }).click();
-  await matt.locator('input[aria-label="Class date"]').fill(dayIso(9));
+  await matt.locator('input[aria-label="Class date"]').fill(weekDay(9));
   await matt.locator("#fStart").fill("18:00");
   await matt.getByRole("button", { name: "Add to the schedule" }).click();
   await matt.getByText("Added to the week").waitFor();

@@ -2,6 +2,7 @@
 
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { publicSchedule } from "@/lib/coachweek";
 import { runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
 import { siteOrigin } from "@/lib/format";
@@ -20,14 +21,18 @@ export async function myWeekText(): Promise<{ ok: boolean; text?: string; error?
   if (!userId) return { ok: false, error: "Log in first." };
   const db = await getDb();
   const [me] = await db
-    .select({ name: schema.users.name, handle: schema.users.handle })
+    .select({
+      name: schema.users.name,
+      handle: schema.users.handle,
+      shiftsPublic: schema.users.shiftsPublic,
+    })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   if (!me?.handle) return { ok: false, error: "Claim your link first." };
 
-  const rows = (
-    await db.select().from(schema.classes).where(eq(schema.classes.userId, userId))
-  ).filter((c) => c.isPublic);
+  const rows = (await publicSchedule({ id: userId, shiftsPublic: me.shiftsPublic })).filter(
+    (c) => c.isPublic,
+  );
   const studioIds = [...new Set(rows.map((c) => c.studioId))].filter((id): id is string => !!id);
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))

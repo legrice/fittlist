@@ -201,6 +201,19 @@ export async function setApproveFollowers(on: boolean): Promise<{ ok: boolean }>
   return { ok: true };
 }
 
+// Whether the shifts a gym has this coach on show on their own public page.
+// Theirs alone: a shift is their work, and whether it's listed is the same
+// question as whether any of their classes are. Separate from the gym naming
+// them on its schedule, which is the gym's call and stays off.
+export async function setShiftsPublic(on: boolean): Promise<{ ok: boolean }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false };
+  const db = await getDb();
+  await db.update(schema.users).set({ shiftsPublic: on }).where(eq(schema.users.id, userId));
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function setDiscoverable(on: boolean): Promise<{ ok: boolean }> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false };
