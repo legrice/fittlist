@@ -357,19 +357,37 @@ wins. A shift is work, not a listing: it stays out of the coach's public page
 and their public `.ics`, and lands in the private token feed instead.
 
 One row is one slot, mirroring the spreadsheet's one cell per class, so
-`updateGymClass` edits in place and a Going mark on it is never at risk. The
+`updateGymClass` edits in place and a Going mark or a swap on it is never at
+risk. Nothing on the gym path deletes and reinserts a class row the way a
+coach's `save()` does, which is what keeps `shift_covers` safe. The
 gym account is excluded from the admin's people counts and has no handle, which
 is also what keeps it out of Discover; `adminDeleteUser` refuses it outright and
 clears a departing coach's `coachUserId` so their slots reopen rather than
 vanishing. `scripts/gym-smoke.mjs` walks the whole path.
 
-**A gym's class carries what a coach's does, and borrows it.** Same fields:
-type, description and booking links, not just a name and a time. `gymCatalog()`
-offers the classes already described at that studio so a manager pulls one in
-rather than retyping it, and saving writes back to `studio_classes`, so the
-description of a class stays the same wherever it appears. Links come along
-here, unlike a coach reusing another coach's class: a gym pulling in its own
-studio's booking page is the same page either way.
+**A gym's class carries what a coach's does, because it is the same form.**
+`GymRota` renders `Adder`, the coach's own adder, with a `gym` prop rather than
+a parallel sheet of its own: two forms asking for the same things is how they
+drift, and the gym's copy had already fallen a step behind (no second day, no
+end date, no one-off). What the prop changes is only what has to. The studio is
+the gym's and is never asked for, the public/private toggle is gone because a
+gym's schedule is what it publishes, and one field is added: `coachUserId`, the
+rota. `gymCatalog()` fills the name field's existing autocomplete, so a manager
+pulls in a class already described at that studio rather than retyping it, and
+saving writes back to `studio_classes` so the description stays the same
+wherever it appears. Links come along here, unlike a coach reusing another
+coach's class: a gym pulling in its own studio's booking page is the same page
+either way.
+
+The one place gym mode diverges from the form's own behaviour is the day pills
+on an edit, and it follows from one row being one slot: picking several days on
+a *new* class makes several slots (sharing a `seriesId`, each with its own
+person on it), but editing an existing one moves the slot rather than fanning it
+out, so the pills go single-select. That is also why a gym's delete offers this
+date off or the slot gone, and never "all the days it runs": a slot runs on one.
+A `shift_covers` row for a future date the class no longer runs is cleared on
+that move; past ones are left alone, because they are exactly what `freezePast`
+wrote down.
 
 **Counts are derived from the rota, and the past has to be frozen.**
 `gymCounts()` counts every date a slot runs (`runsOn`, the same predicate as

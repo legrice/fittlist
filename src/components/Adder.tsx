@@ -7,6 +7,7 @@ import {
   publishClasses,
   updateClass,
 } from "@/app/actions/classes";
+import { addGymClass, deleteGymClass, updateGymClass } from "@/app/actions/gym";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import {
@@ -41,6 +42,31 @@ export type AdderPrefill = {
 
 const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+type CatalogItem = {
+  name: string;
+  classType: string | null;
+  description: string | null;
+  links?: BookingLink[];
+};
+
+/**
+ * A gym running its own schedule fills a class in exactly the way a coach
+ * does, so it gets this form rather than one of its own. What differs is only
+ * what has to: the studio is the gym's and never asked for, a gym has no
+ * private classes, and one field is the rota.
+ */
+export type AdderGym = {
+  studioId: string;
+  coaches: { id: string; name: string }[];
+  /** Classes already described at this studio, ready to pull in. */
+  catalog: CatalogItem[];
+  /** Who normally teaches the slot being edited. */
+  coachUserId?: string | null;
+  /** Who's on the one date that was tapped. Saves as you pick, so the rota
+   *  owns it and hands it down rather than the form holding it. */
+  dateSwap?: React.ReactNode;
+};
+
 type Stage = "start" | "form" | "pick" | "new";
 
 export function Adder({
@@ -51,6 +77,7 @@ export function Adder({
   subsCount,
   prefill,
   firstPublish,
+  gym,
   onClose,
   onToast,
   onPublished,
@@ -63,20 +90,25 @@ export function Adder({
   subsCount: number;
   prefill?: AdderPrefill;
   firstPublish: boolean;
+  /** Set when a gym's manager is filling this in, not a coach. */
+  gym?: AdderGym;
   onClose: () => void;
   onToast: (msg: string) => void;
   onPublished: (msg: string) => void;
   onDeleted: (msg: string) => void;
 }) {
   const isEdit = Boolean(prefill?.classId);
+  const isGym = Boolean(gym);
   const [studios, setStudios] = useState(studiosProp);
   // Add always opens straight to the new-class form; saved classes are reused
   // via the class-name field's autocomplete rather than a separate stage.
   const [stage, setStage] = useState<Stage>("form");
+  // A prefill with no name is a starting point, not a copy: the rota opens the
+  // form on the day that was tapped, and that is still a new class.
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
     isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }
-      : prefill
+      : prefill?.name
         ? { title: "Duplicate class", lead: "Same class. Pick the new days." }
         : {
             title: "New class",
@@ -97,9 +129,13 @@ export function Adder({
   const [end, setEnd] = useState(minutesToTime(timeToMinutes(initStart) + initDur));
   // No studio prefill on a brand-new class: an already-filled gym reads as a
   // mistake. Editing/duplicating still carries the class's studio.
-  const [studioId, setStudioId] = useState<string | null>(prefill?.studioId ?? null);
+  // A gym's schedule is the gym's, at the gym: the picker never comes up.
+  const [studioId, setStudioId] = useState<string | null>(gym?.studioId ?? prefill?.studioId ?? null);
   // Public by default; private items are the coach's own work (PT clients etc.).
-  const [isPublic, setIsPublic] = useState<boolean>(prefill?.isPublic ?? true);
+  // A gym has none: its schedule is the thing it publishes.
+  const [isPublic, setIsPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  // The rota, on a gym's class. Null on a coach's own.
+  const [coachUserId, setCoachUserId] = useState(gym?.coachUserId ?? "");
   const [location, setLocation] = useState(prefill?.location ?? "");
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
@@ -108,37 +144,43 @@ export function Adder({
   const [nsAddr, setNsAddr] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
-  // Studio-first: the class list is scoped to the chosen studio's catalog.
-  const [catalog, setCatalog] = useState<
-    { name: string; classType: string | null; description: string | null }[]
-  >([]);
+  // Studio-first: the class list is scoped to the chosen studio's catalog. A
+  // gym is handed its own, links and all, because it is the studio.
+  const [fetched, setFetched] = useState<CatalogItem[]>([]);
+  const catalog = gym ? gym.catalog : fetched;
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
 
   // Load the studio's shared class catalog whenever the studio changes.
   useEffect(() => {
-    if (!studioId) {
-      setCatalog([]);
+    if (isGym || !studioId) {
+      setFetched([]);
       return;
     }
     let live = true;
     getStudioCatalog(studioId).then((rows) => {
-      if (live) setCatalog(rows);
+      if (live) setFetched(rows);
     });
     return () => {
       live = false;
     };
-  }, [studioId]);
+  }, [studioId, isGym]);
 
   // Reuse a class already logged at this studio: fills the name, type, and
   // description, leaving the coach to set their own time, days, and links.
-  const fillFromCatalog = (c: { name: string; classType: string | null; description: string | null }) => {
+  const fillFromCatalog = (c: CatalogItem) => {
     setName(c.name);
     setClassType(c.classType ?? null);
     setDescription(c.description ?? "");
     // The studio catalog is shared across coaches and deliberately carries no
-    // booking links — another coach's booking page isn't yours. But if this
-    // coach has run the class before, their own links come back with it.
+    // booking links: another coach's booking page isn't yours. But if this
+    // coach has run the class before, their own links come back with it. A gym
+    // pulling in its own studio's link is the same booking page either way, so
+    // there it comes along.
+    if (c.links?.length) {
+      setLinks(c.links.map((l) => ({ ...l })));
+      return;
+    }
     const mine = templates.find((t) => t.name.toLowerCase() === c.name.toLowerCase());
     if (mine?.links.length) setLinks(mine.links.map((l) => ({ ...l })));
   };
@@ -180,6 +222,13 @@ export function Adder({
   }, [name, catalog]);
 
   const toggleDay = (i: number) => {
+    // One row is one slot on a rota, so editing a gym's class moves the day it
+    // runs rather than fanning it across more of them. A second day is a second
+    // slot, added from the day it belongs to.
+    if (isGym && isEdit) {
+      setDays(new Set([i]));
+      return;
+    }
     setDays((prev) => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
@@ -192,21 +241,25 @@ export function Adder({
   const oneTime = mode === "date";
   const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const whenChosen = oneTime ? dateValid : n > 0;
-  // Public classes need a studio; private ones don't.
-  const needsStudio = isPublic && !selectedStudio;
+  // Public classes need a studio; private ones don't. A gym always has one.
+  const needsStudio = !gym && isPublic && !selectedStudio;
   const publishLabel = !whenChosen
     ? oneTime
       ? "Pick a date"
-      : "Pick at least one day"
+      : isGym && isEdit
+        ? "Pick a day"
+        : "Pick at least one day"
     : needsStudio
       ? "Pick a studio"
       : !durValid
         ? "End time must be after start"
         : isEdit
           ? "Save changes"
-          : isPublic
-            ? "Publish event"
-            : "Save event";
+          : gym
+            ? "Add to the schedule"
+            : isPublic
+              ? "Publish event"
+              : "Save event";
 
   const publish = () => {
     if (!whenChosen || !durValid || (isPublic && !studioId)) return;
@@ -225,9 +278,17 @@ export function Adder({
         isPublic,
         links,
       };
-      const res = isEdit
-        ? await updateClass(prefill!.classId!, input)
-        : await publishClasses(input);
+      // Same fields, same validation, one field more: who's on it.
+      const res = gym
+        ? isEdit
+          ? await updateGymClass(gym.studioId, prefill!.classId!, {
+              ...input,
+              coachUserId: coachUserId || null,
+            })
+          : await addGymClass(gym.studioId, { ...input, coachUserId: coachUserId || null })
+        : isEdit
+          ? await updateClass(prefill!.classId!, input)
+          : await publishClasses(input);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
@@ -235,9 +296,13 @@ export function Adder({
       onPublished(
         isEdit
           ? "Saved"
-          : firstPublish
-            ? "Your page is live"
-            : `Published${n > 1 ? ` ${n} classes` : ""}`,
+          : gym
+            ? n > 1
+              ? `Added ${n} classes`
+              : "Added to the week"
+            : firstPublish
+              ? "Your page is live"
+              : `Published${n > 1 ? ` ${n} classes` : ""}`,
       );
     });
   };
@@ -263,7 +328,16 @@ export function Adder({
   const doDelete = (scope: "occurrence" | "one" | "all") => {
     if (!prefill?.classId) return;
     startTransition(async () => {
-      const res = await deleteClass(prefill.classId!, scope, occurrence);
+      // A gym's slot is one row, so "every day it runs" never comes up: the
+      // choice is this date off, or the slot gone.
+      const res = gym
+        ? await deleteGymClass(
+            gym.studioId,
+            prefill.classId!,
+            scope === "occurrence" ? "occurrence" : "one",
+            occurrence,
+          )
+        : await deleteClass(prefill.classId!, scope, occurrence);
       if (!res.ok) {
         onToast(res.error ?? "Something went wrong");
         return;
@@ -271,9 +345,11 @@ export function Adder({
       onDeleted(
         scope === "occurrence"
           ? `${occurrenceLabel} cancelled`
-          : res.count && res.count > 1
-            ? `Deleted ${res.count} days`
-            : "Deleted",
+          : gym
+            ? "Taken off the week"
+            : res.count && res.count > 1
+              ? `Deleted ${res.count} days`
+              : "Deleted",
       );
     });
   };
@@ -323,7 +399,38 @@ export function Adder({
               </button>
             </div>
 
-            {/* Public (on your page) vs private (your own clients / sessions). */}
+            {/* The rota. Who's on this one date is what a manager opens the
+                week to change, so it leads; who normally has it is underneath,
+                because changing that changes every week. */}
+            {gym && (
+              <div className="adder-card">
+                {gym.dateSwap}
+                <label className="flabel" htmlFor="fCoach">
+                  {isEdit ? "Who normally coaches it" : "Who’s coaching"}
+                </label>
+                <select
+                  id="fCoach"
+                  className="typeselect"
+                  value={coachUserId}
+                  onChange={(e) => setCoachUserId(e.target.value)}
+                >
+                  <option value="">Nobody yet</option>
+                  {gym.coaches.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  They&rsquo;ll be told, and it lands in their calendar. Your schedule goes out
+                  under the gym&rsquo;s name, so this stays between you and them.
+                </p>
+              </div>
+            )}
+
+            {/* Public (on your page) vs private (your own clients / sessions).
+                A gym has no private classes: its schedule is what it publishes. */}
+            {!gym && (
             <div className="adder-card">
             <label className="flabel">Who sees this?</label>
             <div className="modetoggle">
@@ -340,8 +447,11 @@ export function Adder({
                 : "Use for private clients or classes. Visible on your schedule only, hidden from your public page."}
             </p>
             </div>
+            )}
 
-            {/* Studio — required for public, optional for private. */}
+            {/* Studio: required for public, optional for private. A gym's
+                classes are at the gym, so it is never asked. */}
+            {!gym && (
             <div className="adder-card">
             <label className="flabel">
               Studio{!isPublic && <span> · optional</span>}
@@ -373,11 +483,12 @@ export function Adder({
               </>
             )}
             </div>
+            )}
 
             <div className="adder-card">
             <label className="flabel" htmlFor="fName">
               Class name
-              {selectedStudio && catalog.length > 0 && !isEdit && (
+              {(gym || selectedStudio) && catalog.length > 0 && !isEdit && (
                 <span> · type new or pick one from this studio</span>
               )}
             </label>
@@ -414,7 +525,7 @@ export function Adder({
                 </div>
               )}
             </div>
-            {isPublic && !selectedStudio && (
+            {!gym && isPublic && !selectedStudio && (
               <p className="durnote" style={{ marginTop: 8 }}>
                 Pick a studio to see its classes.
               </p>
@@ -486,7 +597,15 @@ export function Adder({
             ) : (
               <>
                 <label className="flabel">
-                  Days <span>· tap all that apply</span>
+                  {isGym && isEdit ? (
+                    <>
+                      Day <span>· the day this slot runs</span>
+                    </>
+                  ) : (
+                    <>
+                      Days <span>· tap all that apply</span>
+                    </>
+                  )}
                 </label>
                 <div className="daypick">
                   {DAYS.map((d, i) => (
@@ -620,7 +739,7 @@ export function Adder({
             {isEdit && (
               <div className="dangerzone">
                 <button className="deletelink" onClick={() => setConfirmDelete(true)}>
-                  Delete this class
+                  {gym ? "Take it off the week" : "Delete this class"}
                 </button>
               </div>
             )}
@@ -779,7 +898,12 @@ export function Adder({
             ) : (
               <>
                 <h3>Delete this class?</h3>
-                <p>It disappears from your public page. This can&rsquo;t be undone.</p>
+                <p>
+                  {gym
+                    ? "It comes off the gym's schedule, and whoever was on it is told."
+                    : "It disappears from your public page."}{" "}
+                  This can&rsquo;t be undone.
+                </p>
                 <button className="btn si" disabled={pending} onClick={() => doDelete("one")}>
                   {pending ? "Deleting…" : "Yes, delete it"}
                 </button>

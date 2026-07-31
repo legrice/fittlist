@@ -1,12 +1,15 @@
 "use server";
 
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import {
   DAYS,
+  dowOfDate,
   fmtDateLong,
   fmtDayHeader,
+  fmtDays,
   fmtTime,
   mondayOfCurrentWeek,
   runsOn,
@@ -26,21 +29,27 @@ import { studioAccess } from "@/lib/studioaccess";
 // or not one single coach uses the app. `classes.userId` is the gym's account
 // and `classes.coachUserId` is the rota.
 //
-// One row is one slot, mirroring the spreadsheet's one cell per class. A
-// weekly class taught twice a week is two rows: nothing here needs the
-// weekday-series dance a coach's own adder does, and skipping it means an edit
-// never deletes and reinserts a row, so a Going mark on it is never at risk.
+// One row is one slot, mirroring the spreadsheet's one cell per class. Adding
+// Monday and Wednesday at once makes two rows sharing a series, and each is
+// then its own slot with its own person on it, because that is what a rota is.
+// An edit is about the slot that was opened and updates it in place: unlike a
+// coach's save, nothing here deletes and reinserts a row, so a Going mark or a
+// swap on it is never at risk.
 
 export type GymClassDto = {
   id: string;
   name: string;
   classType: string | null;
   dayOfWeek: number;
+  /** Set = a one-off pinned to this date (a workshop, a seminar). */
+  specificDate: string | null;
+  /** Last date a standing weekly slot runs. */
+  endsOn: string | null;
   startTime: string;
   durationMin: number;
-  /** Who normally teaches it, week in week out. */
   description: string | null;
   links: { label: string; url: string }[];
+  /** Who normally teaches it, week in week out. */
   coachUserId: string | null;
   coachName: string;
   /** Who is actually on it this date, once covers are applied. */
@@ -166,6 +175,8 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
           name: r.name,
           classType: r.classType,
           dayOfWeek: r.dayOfWeek,
+          specificDate: r.specificDate,
+          endsOn: r.endsOn,
           startTime: r.startTime,
           durationMin: r.durationMin,
           description: r.description,
@@ -188,13 +199,24 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
   };
 }
 
+/**
+ * The same shape the coach's adder sends, because it is the same adder. A gym
+ * fills in a class the way a coach does: name, type, description, the days it
+ * runs, when it starts and how long, where a member books it. The one field
+ * that is only a gym's is `coachUserId`, which is the rota.
+ */
 export type GymClassInput = {
   name: string;
-  dayOfWeek: number;
+  classType?: string | null;
+  description?: string | null;
+  /** 0 = Monday. Adding several makes several slots; one row is one slot. */
+  days: number[];
+  /** Set = a one-off pinned to this ISO date rather than a standing weekly. */
+  specificDate?: string | null;
+  /** Weekly only: the last date it runs. */
+  endsOn?: string | null;
   startTime: string;
   durationMin: number;
-  classType?: string | null;
-  description?: string;
   /** Where a member books it. A gym usually has one, on every class. */
   links?: { label: string; url: string }[];
   coachUserId?: string | null;
@@ -299,14 +321,35 @@ function cleanLinks(raw: GymClassInput["links"]): { label: string; url: string }
     .slice(0, 6);
 }
 
+/** A one-off is authoritative on its date; a weekly runs on the days picked. */
+function shape(input: GymClassInput) {
+  const oneOff = input.specificDate?.trim() || null;
+  const days = oneOff
+    ? [dowOfDate(oneOff)]
+    : [...new Set(input.days ?? [])].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6).sort();
+  return { oneOff, days, endsOn: oneOff ? null : input.endsOn?.trim() || null };
+}
+
 function validate(input: GymClassInput): string | null {
   if (!input.name.trim()) return "Give the class a name.";
-  if (!Number.isInteger(input.dayOfWeek) || input.dayOfWeek < 0 || input.dayOfWeek > 6)
-    return "Pick a day.";
+  const oneOff = input.specificDate?.trim() || null;
+  if (oneOff && !/^\d{4}-\d{2}-\d{2}$/.test(oneOff)) return "Pick a date.";
+  const { days, endsOn } = shape(input);
+  if (!days.length) return oneOff ? "Pick a date." : "Pick at least one day.";
   if (!/^\d{2}:\d{2}$/.test(input.startTime)) return "Pick a start time.";
   if (!Number.isInteger(input.durationMin) || input.durationMin < 5 || input.durationMin > 600)
     return "That length doesn't look right.";
+  if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return "That end date doesn't look right.";
+  if (endsOn && endsOn < todayIso()) return "That end date has already passed.";
   return null;
+}
+
+/** "Mon, Wed & Fri 6:00am", or the date itself when it only runs once. */
+function whenOf(input: GymClassInput): string {
+  const { oneOff, days } = shape(input);
+  return oneOff
+    ? `${fmtDateLong(oneOff)}, ${fmtTime(input.startTime)}`
+    : `${fmtDays(days)} ${fmtTime(input.startTime)}`;
 }
 
 /** Tell a coach they are on, or that they are off. Silence is how a shift gets
@@ -314,23 +357,28 @@ function validate(input: GymClassInput): string | null {
 async function tellCoach(
   coachUserId: string,
   studioName: string,
-  row: { name: string; dayOfWeek: number; startTime: string },
+  className: string,
+  when: string,
   on: boolean,
 ) {
   await addNotification(coachUserId, {
     type: on ? "shift_assigned" : "shift_dropped",
-    title: on
-      ? `You're coaching ${row.name}`
-      : `You're off ${row.name}`,
-    body: `${DAYS[row.dayOfWeek]} ${fmtTime(row.startTime)} at ${studioName}.`,
+    title: on ? `You're coaching ${className}` : `You're off ${className}`,
+    body: `${when} at ${studioName}.`,
     href: "/week",
   });
 }
 
+/** How an existing row reads when it's the one being taken away. */
+const whenOfRow = (r: { dayOfWeek: number; specificDate: string | null; startTime: string }) =>
+  r.specificDate
+    ? `${fmtDateLong(r.specificDate)}, ${fmtTime(r.startTime)}`
+    : `${DAYS[r.dayOfWeek]} ${fmtTime(r.startTime)}`;
+
 export async function addGymClass(
   studioId: string,
   input: GymClassInput,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; count?: number }> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const bad = validate(input);
@@ -338,23 +386,34 @@ export async function addGymClass(
   const { db, studio, gymId } = ctx;
 
   const coachUserId = input.coachUserId || null;
-  await db.insert(schema.classes).values({
-    userId: gymId,
-    coachUserId,
-    studioId,
-    dayOfWeek: input.dayOfWeek,
-    startTime: input.startTime,
-    durationMin: input.durationMin,
-    name: input.name.trim(),
-    classType: input.classType?.trim() || null,
-    description: input.description?.trim() || null,
-    links: cleanLinks(input.links),
-    isPublic: true,
-  });
+  const name = input.name.trim();
+  const { oneOff, days, endsOn } = shape(input);
+  // One row per day, sharing a series so they read as one class where that
+  // matters. Each row is still its own slot: the rota assigns Monday and
+  // Wednesday separately, which is exactly what the spreadsheet's cells did.
+  const seriesId = randomUUID();
+  await db.insert(schema.classes).values(
+    days.map((dayOfWeek) => ({
+      userId: gymId,
+      coachUserId,
+      studioId,
+      seriesId,
+      dayOfWeek,
+      specificDate: oneOff,
+      endsOn,
+      startTime: input.startTime,
+      durationMin: input.durationMin,
+      name,
+      classType: input.classType?.trim() || null,
+      description: input.description?.trim() || null,
+      links: cleanLinks(input.links),
+      isPublic: true,
+    })),
+  );
   await catalogue(db, studioId, ctx.userId, input);
-  if (coachUserId) await tellCoach(coachUserId, studio.name, { ...input, name: input.name.trim() }, true);
+  if (coachUserId) await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
-  return { ok: true };
+  return { ok: true, count: days.length };
 }
 
 /**
@@ -428,42 +487,84 @@ export async function updateGymClass(
   if (!existing) return { ok: false, error: "Class not found." };
 
   const coachUserId = input.coachUserId || null;
+  const name = input.name.trim();
+  // One row is one slot, so an edit is about the slot that was opened: the day
+  // pills move it rather than fanning it out. Adding a second day is adding a
+  // second slot, which the rota does from the day it belongs to.
+  const { oneOff, days, endsOn } = shape(input);
+  const dayOfWeek = days[0];
+
   // Before the standing rota moves, write down what it used to be, so the
   // weeks that have already happened keep saying who taught them.
   if (existing.coachUserId !== coachUserId)
     await freezePast(db, existing, existing.coachUserId, ctx.userId);
   // Updated in place, never deleted and reinserted, so any Going mark on this
   // class survives the manager moving it half an hour.
-  await db
+  const [updated] = await db
     .update(schema.classes)
     .set({
       coachUserId,
-      dayOfWeek: input.dayOfWeek,
+      dayOfWeek,
+      specificDate: oneOff,
+      endsOn,
       startTime: input.startTime,
       durationMin: input.durationMin,
-      name: input.name.trim(),
+      name,
       classType: input.classType?.trim() || null,
       description: input.description?.trim() || null,
       links: cleanLinks(input.links),
     })
-    .where(eq(schema.classes.id, classId));
+    .where(eq(schema.classes.id, classId))
+    .returning();
   await catalogue(db, studioId, ctx.userId, input);
+
+  // A cover is an exception to a date this class runs. Move the slot to another
+  // day and some of them point at dates it no longer does, where they mean
+  // nothing and would come back to life if it ever moved back. Only the ones
+  // still ahead go: the past is what freezePast just spent its time recording.
+  if (updated) {
+    const today = todayIso();
+    const covers = await db
+      .select()
+      .from(schema.shiftCovers)
+      .where(eq(schema.shiftCovers.classId, classId));
+    const stale = covers.filter(
+      (c) =>
+        c.occurrenceDate >= today &&
+        !runsOn(updated, c.occurrenceDate, dowOfDate(c.occurrenceDate)),
+    );
+    if (stale.length)
+      await db.delete(schema.shiftCovers).where(
+        inArray(
+          schema.shiftCovers.id,
+          stale.map((s) => s.id),
+        ),
+      );
+  }
 
   // Only the people whose shift actually changed hear about it.
   if (existing.coachUserId !== coachUserId) {
     if (existing.coachUserId)
-      await tellCoach(existing.coachUserId, studio.name, existing, false);
-    if (coachUserId)
-      await tellCoach(coachUserId, studio.name, { ...input, name: input.name.trim() }, true);
+      await tellCoach(existing.coachUserId, studio.name, existing.name, whenOfRow(existing), false);
+    if (coachUserId) await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
   }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
 
+/**
+ * Take a slot off the week, or take one date out of it.
+ *
+ * "occurrence" is the week off: the slot keeps running and this one date is
+ * stamped out of it, which is what a gym means by closing on a holiday. "one"
+ * is the slot itself, gone.
+ */
 export async function deleteGymClass(
   studioId: string,
   classId: string,
-): Promise<{ ok: boolean; error?: string }> {
+  scope: "occurrence" | "one" = "one",
+  occurrenceDate?: string | null,
+): Promise<{ ok: boolean; error?: string; count?: number }> {
   const ctx = await actingFor(studioId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, studio, gymId } = ctx;
@@ -472,29 +573,72 @@ export async function deleteGymClass(
     .from(schema.classes)
     .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, gymId)));
   if (!existing) return { ok: false, error: "Class not found." };
+  const today = todayIso();
 
-  // A Going mark points at this row, so it has to go first or the delete fails
-  // on the foreign key. Whoever was coming is told, the same as when a coach
-  // cancels one of their own.
-  const marks = await db
-    .select({ userId: schema.attendances.userId })
-    .from(schema.attendances)
-    .where(eq(schema.attendances.classId, classId));
-  for (const m of [...new Set(marks.map((r) => r.userId))]) {
-    await addNotification(m, {
-      type: "class_cancelled",
-      title: `${existing.name} is off`,
-      body: `${DAYS[existing.dayOfWeek]} ${fmtTime(existing.startTime)} at ${studio.name} is no longer on the schedule.`,
-      href: "/week",
-    });
+  // Whoever said they were coming has to be cleared: a Going mark points at
+  // this row, so a delete fails on the foreign key while any survive. They are
+  // told either way, the same as when a coach cancels one of their own.
+  const tellComers = async (when: string, on?: string) => {
+    const where = on
+      ? and(eq(schema.attendances.classId, classId), eq(schema.attendances.occurrenceDate, on))
+      : eq(schema.attendances.classId, classId);
+    const marks = await db
+      .select({ userId: schema.attendances.userId, date: schema.attendances.occurrenceDate })
+      .from(schema.attendances)
+      .where(where);
+    await db.delete(schema.attendances).where(where);
+    // Nobody needs telling that last Tuesday is off.
+    const ahead = [...new Set(marks.filter((m) => m.date >= today).map((m) => m.userId))];
+    for (const m of ahead) {
+      await addNotification(m, {
+        type: "class_cancelled",
+        title: `${existing.name} is off`,
+        body: `${when} at ${studio.name} is no longer on the schedule.`,
+        href: "/week",
+      });
+    }
+  };
+
+  // One date off a standing slot. A one-off has only the one occurrence, so
+  // cancelling it is just deleting it, and falls through.
+  if (scope === "occurrence" && !existing.specificDate) {
+    const iso = occurrenceDate?.trim() ?? "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return { ok: false, error: "Which date?" };
+    if (!existing.skipDates.includes(iso)) {
+      await db
+        .update(schema.classes)
+        .set({ skipDates: [...existing.skipDates, iso].sort() })
+        .where(eq(schema.classes.id, classId));
+      // Whoever was on that date is off it, and hears so. Read the cover first:
+      // a swap means the person on it isn't the standing coach.
+      const [cover] = await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(
+          and(
+            eq(schema.shiftCovers.classId, classId),
+            eq(schema.shiftCovers.occurrenceDate, iso),
+          ),
+        );
+      const wasOn = cover ? cover.coachUserId : existing.coachUserId;
+      if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+      const when = `${fmtDateLong(iso)}, ${fmtTime(existing.startTime)}`;
+      await tellComers(when, iso);
+      if (wasOn && iso >= today)
+        await tellCoach(wasOn, studio.name, existing.name, when, false);
+    }
+    revalidatePath(`/s/${studio.slug ?? studio.id}`);
+    return { ok: true, count: 1 };
   }
-  await db.delete(schema.attendances).where(eq(schema.attendances.classId, classId));
+
+  await tellComers(whenOfRow(existing));
   // Its exceptions go with it, or the foreign key refuses the delete.
   await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.classId, classId));
   await db.delete(schema.classes).where(eq(schema.classes.id, classId));
-  if (existing.coachUserId) await tellCoach(existing.coachUserId, studio.name, existing, false);
+  if (existing.coachUserId)
+    await tellCoach(existing.coachUserId, studio.name, existing.name, whenOfRow(existing), false);
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
-  return { ok: true };
+  return { ok: true, count: 1 };
 }
 
 /**

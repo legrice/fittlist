@@ -85,11 +85,16 @@ await matt.getByRole("link", { name: "The schedule" }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
 
-// add a class with nobody on it
+// add a class with nobody on it. The form is the coach's own adder, handed the
+// gym's studio and one extra field, so the ids are the adder's.
 await matt.locator(".rotaday", { hasText: "Thursday" }).getByRole("button", { name: "Add" }).click();
-await matt.getByPlaceholder("e.g. Guns, Buns, and Lungs").fill("HYROX");
-await matt.locator("#rotaTime").fill("07:00");
-await matt.getByRole("button", { name: "Add it" }).click();
+await matt.locator("#fName").waitFor();
+if (await matt.locator("#fCoach").count() === 0) fail("a gym's adder needs the rota field");
+if (await matt.locator(".studio-sel").count()) fail("a gym should never be asked for a studio");
+if (await matt.getByText("Who sees this?").count()) fail("a gym has no private classes");
+await matt.locator("#fName").fill("HYROX");
+await matt.locator("#fStart").fill("07:00");
+await matt.getByRole("button", { name: "Add to the schedule" }).click();
 await matt.getByText("Added to the week").waitFor();
 await matt.waitForTimeout(600);
 const openRow = matt.locator(".rotarow.rotaopen", { hasText: "HYROX" });
@@ -100,9 +105,9 @@ console.log("open slot ok (added, nobody on it)");
 
 // now put Tom on it
 await openRow.click();
-await matt.locator("#rotaCoach").waitFor();
-await matt.locator("#rotaCoach").selectOption({ label: "Tom" });
-await matt.getByRole("button", { name: "Save" }).click();
+await matt.locator("#fCoach").waitFor();
+await matt.locator("#fCoach").selectOption({ label: "Tom" });
+await matt.getByRole("button", { name: "Save changes" }).click();
 await matt.getByText("Saved").waitFor();
 await matt.waitForTimeout(600);
 const filled = matt.locator(".rotarow", { hasText: "HYROX" });
@@ -128,35 +133,42 @@ console.log("the coach is told ok");
 {
   await matt.goto(BASE + studioHref + "/manage");
   await matt.locator(".rotaday", { hasText: "Tuesday" }).getByRole("button", { name: "Add" }).click();
-  await matt.locator("#rotaPull").waitFor();
-  const options = await matt.locator("#rotaPull option").allInnerTexts();
+  // The same autocomplete a coach gets on the class-name field, over the same
+  // studio catalogue. No second way of doing it.
+  await matt.locator("#fName").click();
+  await matt.locator(".namesug button").first().waitFor();
+  const options = await matt.locator(".namesug button").allInnerTexts();
   if (!options.some((o) => /Warm Up/.test(o)))
     fail("a class already described here should be pullable: " + options.join(","));
-  await matt.locator("#rotaPull").selectOption({ label: "Warm Up" });
+  await matt.locator(".namesug button", { hasText: "Warm Up" }).first().click();
   await matt.waitForTimeout(300);
-  if ((await matt.locator("#rotaName").inputValue()) !== "Warm Up")
+  if ((await matt.locator("#fName").inputValue()) !== "Warm Up")
     fail("pulling one in should fill the name");
 
   // Everything a coach's class carries, on a gym's too.
-  await matt.locator("#rotaType").selectOption({ label: "Strength" });
-  await matt.locator("#rotaDesc").fill("Bring shoes you can lift in.");
-  await matt.getByRole("button", { name: "+ Add a link" }).click();
-  await matt.locator('input[aria-label="Booking link"]').fill("https://ironbound.example/book");
-  await matt.locator(".linktag").waitFor();
-  await matt.locator("#rotaTime").fill("12:00");
-  await matt.locator("#rotaCoach").selectOption({ label: "Julia" });
-  await matt.getByRole("button", { name: "Add it" }).click();
+  await matt.locator("#fType").selectOption({ label: "Strength" });
+  await matt.locator("#fDesc").fill("Bring shoes you can lift in.");
+  await matt.getByRole("button", { name: "+ Add link" }).click();
+  const linkBox = matt.locator('input[aria-label="Link"]').last();
+  await linkBox.fill("https://ironbound.example/book");
+  await matt.locator(".linktag").first().waitFor();
+  await matt.locator("#fStart").fill("12:00");
+  await matt.locator("#fCoach").selectOption({ label: "Julia" });
+  await matt.getByRole("button", { name: "Add to the schedule" }).click();
   await matt.getByText("Added to the week").waitFor();
   await matt.waitForTimeout(700);
   console.log("pulled a class in and filled the rest ok");
 
   // Reopening it shows what was saved rather than an empty form.
   await matt.locator(".rotarow", { hasText: "Warm Up" }).first().click();
-  await matt.locator("#rotaDesc").waitFor();
-  if (!(await matt.locator("#rotaDesc").inputValue()).includes("shoes you can lift"))
+  await matt.locator("#fDesc").waitFor();
+  if (!(await matt.locator("#fDesc").inputValue()).includes("shoes you can lift"))
     fail("the description didn't survive a save");
-  if ((await matt.locator('input[aria-label="Booking link"]').inputValue()) !== "https://ironbound.example/book")
-    fail("the booking link didn't survive a save");
+  const urls = await matt
+    .locator('input[aria-label="Link"]')
+    .evaluateAll((els) => els.map((e) => e.value));
+  if (!urls.includes("https://ironbound.example/book"))
+    fail("the booking link didn't survive a save: " + urls.join(","));
   await matt.locator(".sheetclose").click();
   console.log("the details come back on an edit ok");
 }
@@ -319,9 +331,9 @@ console.log("the coach is told ok");
 
   // Now hand the standing slot to Matt entirely.
   await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
-  await matt.locator("#rotaCoach").waitFor();
-  await matt.locator("#rotaCoach").selectOption({ label: "Matt" });
-  await matt.getByRole("button", { name: "Save" }).click();
+  await matt.locator("#fCoach").waitFor();
+  await matt.locator("#fCoach").selectOption({ label: "Matt" });
+  await matt.getByRole("button", { name: "Save changes" }).click();
   await matt.getByText("Saved").waitFor();
   await matt.waitForTimeout(800);
   await matt.locator(".sheetclose").click().catch(() => {});
@@ -334,9 +346,9 @@ console.log("the coach is told ok");
 
   // Put it back so the rest of the run sees the rota it expects.
   await covered.click();
-  await matt.locator("#rotaCoach").waitFor();
-  await matt.locator("#rotaCoach").selectOption({ label: "Tom" });
-  await matt.getByRole("button", { name: "Save" }).click();
+  await matt.locator("#fCoach").waitFor();
+  await matt.locator("#fCoach").selectOption({ label: "Tom" });
+  await matt.getByRole("button", { name: "Save changes" }).click();
   await matt.getByText("Saved").waitFor();
   await matt.waitForTimeout(600);
   await matt.locator(".sheetclose").click().catch(() => {});
@@ -486,6 +498,93 @@ console.log("the coach is told ok");
       fail("a coach was allowed to attend the shift they're teaching");
   }
   console.log("a coach can't attend their own shift ok");
+}
+
+// ---- the shapes the coach's adder has always had, now on a gym
+//
+// Several days at once, a date that only happens once, and taking a single
+// date out of a standing slot. A gym had none of these while it had a form of
+// its own, which is the argument for it not having one.
+{
+  const easternToday = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const mon = new Date(`${easternToday}T00:00:00Z`);
+  mon.setUTCDate(mon.getUTCDate() - ((mon.getUTCDay() + 6) % 7));
+  const dayIso = (i) => {
+    const d = new Date(mon);
+    d.setUTCDate(mon.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  };
+  const rowOn = (day, name) =>
+    matt.locator(".rotaday", { hasText: day }).locator(".rotarow", { hasText: name });
+
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#fName").waitFor();
+  await matt.locator("#fName").fill("Open Gym");
+  await matt.getByRole("button", { name: "Sa", exact: true }).click();
+  await matt.locator("#fStart").fill("10:00");
+  await matt.locator("#fCoach").selectOption({ label: "Julia" });
+  await matt.getByRole("button", { name: "Add to the schedule" }).click();
+  await matt.getByText("Added 2 classes").waitFor();
+  await matt.waitForTimeout(700);
+  for (const d of ["Saturday", "Sunday"])
+    if (!(await rowOn(d, "Open Gym").count()))
+      fail("picking two days should make two slots: " + d + " has none");
+  console.log("two days, two slots ok");
+
+  // A workshop is a date, not a habit.
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  await matt.locator(".rotaday", { hasText: "Wednesday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#fName").waitFor();
+  await matt.locator("#fName").fill("Barbell Clinic");
+  await matt.getByRole("button", { name: "One-time" }).click();
+  await matt.locator('input[aria-label="Class date"]').fill(dayIso(9));
+  await matt.locator("#fStart").fill("18:00");
+  await matt.getByRole("button", { name: "Add to the schedule" }).click();
+  await matt.getByText("Added to the week").waitFor();
+  await matt.waitForTimeout(700);
+  if (!(await rowOn("Wednesday", "Barbell Clinic").count()))
+    fail("a one-off should land on the week it falls in");
+  await matt.goto(BASE + studioHref + "/manage?w=2");
+  await matt.locator(".rota").waitFor();
+  await matt.waitForTimeout(400);
+  if (await matt.locator(".rotarow", { hasText: "Barbell Clinic" }).count())
+    fail("a one-off should not repeat");
+  console.log("a one-off runs once ok");
+
+  // One Sunday off: the slot keeps running, that date is stamped out of it.
+  await matt.goto(BASE + studioHref + "/manage");
+  await rowOn("Sunday", "Open Gym").click();
+  await matt.getByRole("button", { name: "Take it off the week" }).click();
+  await matt.getByRole("button", { name: /^Just / }).click();
+  await matt.waitForTimeout(900);
+  if (await rowOn("Sunday", "Open Gym").count())
+    fail("a cancelled date should come off the week");
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  await matt.locator(".rota").waitFor();
+  if (!(await rowOn("Sunday", "Open Gym").count()))
+    fail("cancelling one date should leave the standing slot alone");
+  console.log("one date off ok (the slot keeps running)");
+
+  // And the slot itself, gone. Its Sunday twin is a separate slot and stays.
+  await matt.goto(BASE + studioHref + "/manage");
+  await rowOn("Saturday", "Open Gym").click();
+  await matt.getByRole("button", { name: "Take it off the week" }).click();
+  await matt.getByRole("button", { name: /^Every / }).click();
+  await matt.getByText("Taken off the week").waitFor();
+  await matt.waitForTimeout(700);
+  if (await rowOn("Saturday", "Open Gym").count())
+    fail("the Saturday slot should be gone");
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  await matt.locator(".rota").waitFor();
+  if (!(await rowOn("Sunday", "Open Gym").count()))
+    fail("deleting one slot took its Sunday twin with it");
+  console.log("taking a slot off the week ok");
 }
 
 // Julia, the other manager, sees the same rota
