@@ -406,12 +406,7 @@ export async function PublicProfileView({
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
         {viewerId ? (
-          <AppChrome
-              userId={viewerId}
-              bar
-              active={isOwner ? "you" : undefined}
-              settings={!isOwner}
-            />
+          <AppChrome userId={viewerId} bar active={isOwner ? "you" : undefined} />
         ) : (
           <PublicTopBar handle={handle} />
         )}

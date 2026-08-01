@@ -284,14 +284,20 @@ homes and kept them: adding a class is the floating button, and Requests is a
 stat on the account. A lid over two buttons is where things go to be forgotten.
 `.ownermore` still exists, but only on a studio page (`StudioMenu`).
 
-**Settings live on the page they're about, and only once.** On a coach's own
-profile the gear sits in `.ownertop`, left of the three dots that hold
-everything else about their page, and `AppChrome` is passed `settings={false}`
-there so the app header drops its own. Two gears fifty pixels apart is a guess
-about which one you meant. Everywhere else, and on somebody else's page, the
-header keeps it. `.ownermore` still means the dots alone; the gear is
-`.ownergear` and they share only the circle in CSS, because an existing
-selector broke the moment they shared a class name.
+**The profile top is centred; nothing else is.** The face, the name, the city
+and the two pills all sit on one axis, because a profile is the one screen
+about a person rather than a list. `.profav` is 128px with a drop shadow: it's
+the only photograph on the page and the first thing on it.
+
+**Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
+coach's own profile and nowhere else: `AppHeader` carries none on any screen.
+Their profile is the You tab, so it is one tap from anywhere, and a member's
+settings were always `/you`, which the tab bar already is. `?acct=1` is the URL
+the gear links to and the only door into the account view, which is why a suite
+opening settings navigates there rather than clicking a gear. `.ownermore`
+means the studio page's dots; the profile's gear is `.ownergear` and they share
+only the circle in CSS, because an existing selector broke the moment they
+shared a class name.
 
 **A coach's profile is a route per tab, and the bare handle is the schedule.**
 `/{handle}` renders Schedule, `/{handle}/about` and `/{handle}/contact` the

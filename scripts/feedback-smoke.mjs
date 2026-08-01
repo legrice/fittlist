@@ -38,7 +38,7 @@ await ad.getByRole("heading", { name: "Your week is empty" }).waitFor();
 console.log("admin fixture ok");
 
 // the admin has nobody to send feedback to, so no row
-await ad.locator(".settingsbtn").click();
+await ad.goto(BASE + "/app?acct=1");
 await ad.waitForTimeout(500);
 if (await ad.getByText("Send feedback").isVisible().catch(() => false))
   fail("the admin is offered a feedback row pointing at themselves");

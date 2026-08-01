@@ -12,8 +12,6 @@ export function AppHeader({
   unread = 0,
   weekCount,
   avatar,
-  settingsHref,
-  onSettings,
   home = "/home",
   nav,
 }: {
@@ -22,8 +20,6 @@ export function AppHeader({
   unread?: number;
   /** Settings, for anyone whose face is already the You tab. A link where the
    *  account is its own route, a handler where it's an overlay. */
-  settingsHref?: string;
-  onSettings?: () => void;
   /** How many added classes are still ahead. Undefined hides the icon
    *  entirely, for anyone who has no week to keep. */
   weekCount?: number;
@@ -80,16 +76,6 @@ export function AppHeader({
           <Icon name="notifications" size={20} />
           {unread > 0 && <span className="inboxdot">{unread > 9 ? "9+" : unread}</span>}
         </Link>
-        {(settingsHref || onSettings) &&
-          (settingsHref ? (
-            <Link className="iconbtn settingsbtn" aria-label="Settings" href={settingsHref}>
-              <Icon name="settings" size={20} />
-            </Link>
-          ) : (
-            <button className="iconbtn settingsbtn" aria-label="Settings" onClick={onSettings}>
-              <Icon name="settings" size={20} />
-            </button>
-          ))}
         {avatar &&
           (() => {
             const face = avatar.photo ? (

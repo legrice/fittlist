@@ -1788,7 +1788,13 @@ button.ps-card { cursor: pointer; }
 /* The identity block: face, name, where, what, then what you can do about it.
    It scrolls; only the tabs below it pin. Pinning the name meant a bar that ate
    the top of every screen to repeat something you had already read. */
-.pubhead { display: flex; flex-direction: column; align-items: flex-start; padding-top: 32px; position: relative; }
+/* Centred, top to bottom: face, name, where, what, and the two things you can
+   do about it. A profile is the one screen that is about a person rather than
+   a list, so it gets the symmetry; every other screen stays left-aligned. */
+.pubhead {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding-top: 32px; position: relative;
+}
 /* The owner's controls, one row top-right across from the photo: the Add
    class pill and the three-dot, both on the same tan so they read as one
    set of page controls. */
@@ -1816,23 +1822,27 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .viewmore { background: var(--card); border: 1px solid var(--line); }
 
 .pubhead .evback { flex-shrink: 0; width: 38px; height: 38px; margin-bottom: 14px; }
+/* Bigger, and lifted off the paper. It is the first thing on the page and the
+   only photograph on it, so it can carry the weight. */
 .profav {
-  width: 100px; height: 100px; border-radius: 999px; object-fit: cover; display: block;
+  width: 128px; height: 128px; border-radius: 999px; object-fit: cover; display: block;
   margin-bottom: 18px; background: #eae3d2;
+  box-shadow: 0 14px 30px rgba(17, 17, 17, .18), 0 3px 8px rgba(17, 17, 17, .10);
 }
 .profav-empty {
   display: flex; align-items: center; justify-content: center; color: #fff;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 40px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 50px;
 }
 /* The name wraps rather than truncating — it's the one thing on the page that
    has to be readable in full. */
 .pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
+.pubhead .profname-row { justify-content: center; }
 .profwhere { font-size: 16px; font-weight: 500; color: var(--ol); margin: 10px 0 0; }
 .pubhead .proftitle { font-size: 16px; font-weight: 500; color: var(--ol); margin: 4px 0 0; }
 
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
-.profacts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.profacts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
 .actpill, .followpill {
   flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 13px 22px; border-radius: 999px; cursor: pointer;
