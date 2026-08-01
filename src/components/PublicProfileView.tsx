@@ -386,7 +386,7 @@ export async function PublicProfileView({
           tab={tab}
           tabs={[
             { key: "schedule", label: "Schedule" },
-            { key: "about", label: "About" },
+            { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
           ]}
           name={user.name}

@@ -397,14 +397,24 @@ is gone from this page, which is why availability moved with it: it was a dot
 on that circle and words in its overlay, and it is now a second tag beside
 Coach in `.profhero-tags`. A status nobody can read is the same as no status.
 
-**Everybody can hand a profile on.** `ProfileShare` faces the back control
-across the top of the picture and wears the same shape: an ink circle with a
-white glyph, in `.ownertop` alongside whatever else that corner holds. It is
-`navigator.share` with a copy-the-link fallback, and it exists on all three
-profiles because until it did, the only way a visitor could send somebody a
-coach was to copy the address bar. An owner's Share pill under the name is a
-different thing and stays: that one carries the story image, the QR code and
-the week as text.
+**Everything floating on a profile's photograph is the same light glass.** The
+back arrow, the share circle, the settings pill, a studio's dots and every
+badge above the name: white at 80% with a backdrop blur and ink on top, the
+same as the two action pills. A slab of ink over a photograph is a hole in it,
+and two treatments side by side read as two unrelated sets of controls. The
+hierarchy between the pills is fill weight rather than colour now: the one you
+came to do is nearly solid, the other is half of it with a white edge. The two
+badges that mean something (availability, Verified studio) keep their colour in
+the ink, because a pale tag can't say it with its fill.
+
+**Everybody can hand a profile on.** `ProfileShare` sits at the right of
+`.profhero-actrow`, across from the two action pills rather than up in the
+corner: it is a thing you do about this person, like the other two, and the
+corner is for the owner's own controls. It is `navigator.share` with a
+copy-the-link fallback, and it exists on all three profiles because until it
+did, the only way a visitor could send somebody a coach was to copy the address
+bar. An owner's Share pill under the name is a different thing and stays: that
+one carries the story image, the QR code and the week as text.
 
 **The floating action buttons are glass, not slabs.** Add class, Discover's
 filter and the two pills on a profile's photograph are all white with a
@@ -483,6 +493,9 @@ bar on a member's profile, and there is no separate "Request private session"
 door any more: it was the same action wearing a different heading.
 
 **A coach's profile is a route per tab, and the bare handle is the schedule.**
+The tab reads Info and the route is still `/about`: the label is what somebody
+reads and "About" was a heading pretending to be a section name, while the URL
+is out in the world and renaming it would break links for a word.
 `/{handle}` renders Schedule and `/{handle}/about` and `/{handle}/studios` the
 other two, and `/{handle}/schedule` still resolves because that link is already
 out in the world. The schedule leads because it's what the link is for, and a

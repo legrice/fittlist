@@ -179,7 +179,7 @@ export async function StudioView({
             hasSchedule
               ? [
                   { key: "schedule", label: "Schedule" },
-                  { key: "about", label: "About" },
+                  { key: "about", label: "Info" },
                 ]
               : []
           }

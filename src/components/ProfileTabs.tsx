@@ -168,13 +168,10 @@ export function ProfileTabs({
             </BackLink>
           </div>
         )}
-        {/* Across from the back control, in the same shape: everybody can hand
-            this page on, and until now only its owner could. Whatever else the
-            corner holds (a coach's gear, a studio's dots) sits inside it. */}
-        <div className="ownertop">
-          {ownerTop}
-          <ProfileShare path={base} name={name} />
-        </div>
+        {/* A coach's gear, a studio's dots. Nothing else: handing the page on
+            moved down to sit with the other two things you can do about this
+            person, rather than in a corner opposite the way out. */}
+        {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {/* Left aligned along the bottom: what they are, who they are, what
             they do. The badge leads because it's the one word that says which
             side of the app you're looking at. */}
@@ -187,9 +184,14 @@ export function ProfileTabs({
               <Icon name="place" size={14} /> {location.trim()}
             </p>
           )}
-          {/* On the image, under the name: the two things you can do about
-              this person sit with the person rather than on the paper below. */}
-          {actions}
+          {/* On the image, under the name: the things you can do about this
+              person sit with the person rather than on the paper below, with
+              handing the page on facing them across the row. Everybody can do
+              that one, which is why it is here and not in the owner's corner. */}
+          <div className="profhero-actrow">
+            {actions}
+            <ProfileShare path={base} name={name} />
+          </div>
         </div>
       </div>
       {/* Zero-height marker: when it slides under the header, the bar below

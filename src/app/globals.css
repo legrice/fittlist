@@ -1869,44 +1869,60 @@ button.ps-card { cursor: pointer; }
    a solid white slab over a photograph is a hole in it. Contact leads because
    it starts something; Follow is the lighter one until it's a yes, and then it
    fills to match. */
-.profhero .profacts { margin-top: 16px; }
+.profhero .profacts { margin-top: 0; }
+/* The two things you can do about this person, and handing the page on across
+   from them. Share is a circle rather than a pill because it is the same
+   control it was in the corner, just moved to where the other actions live. */
+.profhero-actrow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 16px;
+}
+.profhero-actrow .profshare-btn { flex-shrink: 0; }
 .profhero .actpill,
 .profhero .followpill {
-  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
+  color: #111;
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
-.profhero .followpill:not(.on) {
-  background: rgba(255, 255, 255, .2); color: #fff; border-color: rgba(255, 255, 255, .55);
-}
+/* Both are light now, so the hierarchy is fill weight rather than colour: the
+   one you came to do is nearly solid, the other is half of it with a white
+   edge to hold its shape against a busy photograph. */
+.profhero .actpill-primary,
 .profhero .followpill.on {
-  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
+  background: rgba(255, 255, 255, .86); border-color: transparent;
 }
-.profhero .actpill .icon { color: #111; }
-.profhero .followpill:not(.on) .icon { color: #fff; }
+.profhero .actpill:not(.actpill-primary),
+.profhero .followpill:not(.on) {
+  background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .85);
+}
+.profhero .actpill .icon,
+.profhero .followpill .icon { color: #111; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
 /* A pin beside the city, drawn in the same white as the words it labels. */
 .profwhere { display: inline-flex; align-items: center; gap: 4px; }
 .profwhere .icon { flex-shrink: 0; position: relative; top: -.5px; }
 .profhero .proftitle,
 .profhero .profwhere { color: rgba(255, 255, 255, .82); }
-/* The badge above the name, dark and blurred so it sits on the photo rather
-   than punching a pale hole in it. */
+/* The badges above the name, in the same light glass as everything else on
+   the picture. */
 .profhero .kindtag {
   display: inline-flex; align-self: flex-start;
-  background: rgba(0, 0, 0, .42); color: #fff; border: none;
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, .8); color: #111; border: none;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
-[data-mode="dark"] .profhero .kindtag { background: rgba(0, 0, 0, .5); border: none; }
+[data-mode="dark"] .profhero .kindtag { background: rgba(255, 255, 255, .82); color: #111; }
 /* Two of them side by side: what they are, and whether they're taking anyone
    on. Wraps rather than shrinks, because "Open for clients" is the sentence. */
 .profhero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
-/* The availability one keeps its colour: it's the one that changes. */
-.profhero .availtag-accepting { background: rgba(61, 139, 83, .82); }
-.profhero .availtag-waitlist { background: rgba(176, 122, 26, .82); }
-[data-mode="dark"] .profhero .availtag-accepting { background: rgba(61, 139, 83, .9); }
-[data-mode="dark"] .profhero .availtag-waitlist { background: rgba(176, 122, 26, .9); }
+/* The two that mean something keep their colour in the ink rather than the
+   fill, now that every tag is the same pale glass. */
+.profhero .availtag-accepting,
+[data-mode="dark"] .profhero .availtag-accepting { color: #2c6b3f; }
+.profhero .availtag-waitlist,
+[data-mode="dark"] .profhero .availtag-waitlist { color: #8a5c10; }
 /* What's left of the old centred block: just the actions, under the hero. */
 .pubhead { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
 /* The owner's controls, one row top-right across from the photo: the Add
@@ -1924,19 +1940,24 @@ button.ps-card { cursor: pointer; }
    with a white arrow, and clear of the corner rather than jammed into it. */
 .profhero .profback { top: 16px; margin-left: 6px; }
 /* Every control on the picture, in one treatment: back, share, the coach's
-   gear and the studio's dots. Two circle styles side by side on the same row
-   read as two unrelated things rather than one set of page controls. */
+   gear and the studio's dots, in the same light glass as the pills below them.
+   Two treatments side by side read as two unrelated things rather than one set
+   of page controls, and a slab of ink over a photograph is a hole in it. */
 .profhero .profback .evback,
 .profhero .profshare-btn,
 .profhero .ownergear,
 .profhero .ownermore {
-  background: var(--ink); color: #fff; border-color: transparent;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
 [data-mode="dark"] .profhero .profback .evback,
 [data-mode="dark"] .profhero .profshare-btn,
 [data-mode="dark"] .profhero .ownergear,
-[data-mode="dark"] .profhero .ownermore { background: rgba(0, 0, 0, .6); color: #fff; }
+[data-mode="dark"] .profhero .ownermore {
+  background: rgba(255, 255, 255, .82); color: #111;
+}
 /* It is a button rather than a link, so it has to be told what .evback gets
    for free from being an anchor. */
 .profshare-btn { cursor: pointer; padding: 0; }
@@ -3862,8 +3883,8 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 4px;
   border: none; cursor: pointer; font-size: 12px;
 }
-.profhero .studiokept { background: rgba(61, 139, 83, .82); }
-[data-mode="dark"] .profhero .studiokept { background: rgba(61, 139, 83, .9); }
+.profhero .studiokept,
+[data-mode="dark"] .profhero .studiokept { color: #2c6b3f; }
 
 /* Admin: who holds the keys to a studio page. */
 .adminclaimed { color: var(--go); font-weight: 700; }

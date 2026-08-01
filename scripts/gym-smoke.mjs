@@ -577,7 +577,7 @@ console.log("the coach is told ok");
   // without a public profile, and stops a schedule becoming a leaderboard.
   if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
     fail("the gym's public week named the coach");
-  await anon.locator(".pubtabs .pubtab", { hasText: "About" }).click();
+  await anon.locator(".pubtabs .pubtab", { hasText: "Info" }).click();
   await anon.waitForURL("**/about");
   await anon.getByRole("heading", { name: "Where it is" }).waitFor();
   if (await anon.locator(".ps-event").count()) fail("About should not carry the schedule");

@@ -542,8 +542,8 @@ await page.goto(BASE + "/matt/about");
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
 if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
-await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
-await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active on /about");
+await expect(page.locator(".pubtab", { hasText: "Info" }).isVisible(), "Info tab present");
+await expect(page.locator(".pubtab.sel", { hasText: "Info" }).isVisible(), "Info tab active on /about");
 // Schedule leads: it's the thing the page exists to surface.
 {
   const order = await page.locator(".pubtab").allInnerTexts();
@@ -1893,7 +1893,7 @@ await page.locator(".pubtab.sel").waitFor();
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
   // Landing on a section URL renders that section and only that section.
   await page.goto(BASE + "/matt/about");
-  await page.locator(".pubtab.sel", { hasText: "About" }).waitFor();
+  await page.locator(".pubtab.sel", { hasText: "Info" }).waitFor();
   await page.locator(".profabout").waitFor();
   if (await page.locator(".ps-event").count())
     fail("the about URL should not carry the schedule");
@@ -1921,14 +1921,14 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   if (await page.locator(".settingsbtn").count())
     fail("the app header should carry no gear anywhere");
   await page.locator(".ownergear").waitFor();
-  // Settings and the share control, which every profile carries across from
-  // the back arrow. Nothing else: the rest is on the two pills below, and the
-  // three-dot menu that used to live here is a studio's alone.
-  await page.locator(".ownertop .profshare-btn").waitFor();
+  // Settings, and nothing else. Handing the page on moved down to sit with the
+  // other things you can do about this person, and the three-dot menu that
+  // used to live up here is a studio's alone.
   {
     const controls = await page.locator(".ownertop a, .ownertop button").count();
-    if (controls !== 2) fail(`the corner should carry two controls, got ${controls}`);
+    if (controls !== 1) fail(`the corner should carry settings alone, got ${controls}`);
   }
+  await page.locator(".profhero-actrow .profshare-btn").waitFor();
   if (await page.locator(".ownertop .ownermore").count())
     fail("the three-dot menu belongs to a studio, not a person");
   if (await page.locator(".ownermore").count())
@@ -1990,14 +1990,14 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
     });
   const on = await read();
   if (!/^rgba\(255, 255, 255, 0\.8/.test(on.bg))
-    fail("Following should fill in white glass, got " + on.bg);
+    fail("Following should be the fuller white glass, got " + on.bg);
   if (!/blur/.test(on.blur)) fail("the pill should be blurred, got " + on.blur);
-  // And unfollowed it goes back to the lighter one, with a white border to
-  // read against whatever the photograph is doing.
+  // And unfollowed it goes back to the lighter one, with a white edge to hold
+  // its shape against whatever the photograph is doing.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
   const off = await read();
-  if (!/^rgba\(255, 255, 255, 0\.2/.test(off.bg))
+  if (!/^rgba\(255, 255, 255, 0\.5/.test(off.bg))
     fail("Follow should be the lighter glass, got " + off.bg);
   if (!/rgba?\(255, 255, 255/.test(off.border))
     fail("Follow's border should be white, got " + off.border);
