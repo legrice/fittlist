@@ -289,6 +289,16 @@ the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
+**Discover's controls read top down: search, then which half, then filter.**
+The box is first because searching is what people came to do; the segment under
+it says which half the box is searching; and the filter is the floating pill a
+class uses for Book and Save, because the one control you reach for while
+scrolling belongs where your thumb is rather than in a row you have already
+scrolled past. It says "Filter people" or "Filter studios" and wears the count.
+Nothing is on by default: a filter you didn't set is a list you can't explain.
+The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
+because the base rule is defined later in the file and wins on a tie.
+
 **A filter is only offered where it can narrow something.** Discover's What
 chips are built from what the lens in front of you actually holds: coaches'
 `disciplines` on People, `studios.types` on Studios. Pooling both offered
@@ -326,10 +336,13 @@ homes and kept them: adding a class is the floating button, and Requests is a
 stat on the account. A lid over two buttons is where things go to be forgotten.
 `.ownermore` still exists, but only on a studio page (`StudioMenu`).
 
-**The profile top is centred; nothing else is.** The face, the name, the city
-and the two pills all sit on one axis, because a profile is the one screen
-about a person rather than a list. `.profav` is 128px with a drop shadow: it's
-the only photograph on the page and the first thing on it.
+**The profile leads with the photo, full bleed.** `.profhero` runs to both
+edges and up under the app bar, with the badge, name, tagline and city stacked
+left along the bottom over it. The scrim exists only where there's a photograph
+to read against: a flat `avatarColor` already clears white text, and dimming it
+would only make it muddy. The action pills sit under the hero and are
+deliberately small, because two buttons shouldn't own a third of the screen.
+There is no avatar circle any more, so `AvatarZoom` is gone from this page.
 
 **Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
 coach's own profile and nowhere else: `AppHeader` carries none on any screen.

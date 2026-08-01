@@ -116,10 +116,11 @@ export function DiscoverList({
   const [tab, setTab] = useState<"people" | "studios">("people");
   const [q, setQ] = useState("");
   const [coachesOnly, setCoachesOnly] = useState(false);
-  // Near you is the default view when it would show anything: someone opening
-  // Discover is asking "who's around here", not "who is on fittlist".
-  const nearCity = myCity && cities.includes(myCity) ? myCity : null;
-  const [city, setCity] = useState<string | null>(nearCity);
+  // Nothing on by default. Opening Discover should show the whole directory;
+  // a filter you didn't set is a list you can't explain, and the count on the
+  // pill would be reporting a choice nobody made.
+  void myCity;
+  const [city, setCity] = useState<string | null>(null);
   const [discipline, setDiscipline] = useState<string | null>(null);
   const [acceptingOnly, setAcceptingOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -189,32 +190,8 @@ export function DiscoverList({
       {/* The page title, with the coaches-only switch directly across from
           it. Only when the list mixes kinds; all coaches leaves the switch
           nothing to do. */}
-      {/* No page title: the tab bar already says Discover, and the segment
-          below says which half you're in. */}
-      <div className="seg disseg">
-        <button
-          className={tab === "people" ? "sel" : ""}
-          onClick={() => {
-            setTab("people");
-            setDiscipline(null);
-          }}
-        >
-          People
-        </button>
-        <button
-          className={tab === "studios" ? "sel" : ""}
-          onClick={() => {
-            setTab("studios");
-            setDiscipline(null);
-          }}
-        >
-          Studios
-        </button>
-      </div>
-
-      {/* One row: the box, and one button for everything that narrows it. Four
-          controls strung across the top is most of a phone screen spent on
-          chrome, and three of them are usually irrelevant to what you came for. */}
+      {/* The box first, because searching is the thing people came to do, and
+          it searches whichever half the toggle below it is on. */}
       <div className="dissearchrow">
         <div className="dissearch">
           <Icon name="search" size={19} className="dissearch-ic" />
@@ -236,16 +213,44 @@ export function DiscoverList({
             </button>
           )}
         </div>
+      </div>
+
+      {/* No page title: the tab bar already says Discover, and the segment
+          says which half you're in. */}
+      <div className="seg disseg">
         <button
-          type="button"
-          className={`disfilterbtn${activeCount ? " on" : ""}`}
-          aria-label="Filters"
-          onClick={() => setFiltersOpen(true)}
+          className={tab === "people" ? "sel" : ""}
+          onClick={() => {
+            setTab("people");
+            setDiscipline(null);
+          }}
         >
-          <Icon name="tune" size={19} />
-          {activeCount > 0 && <span className="disfilterbtn-n">{activeCount}</span>}
+          People
+        </button>
+        <button
+          className={tab === "studios" ? "sel" : ""}
+          onClick={() => {
+            setTab("studios");
+            setDiscipline(null);
+          }}
+        >
+          Studios
         </button>
       </div>
+
+      {/* The same floating pill a class uses for Book and Save: the one thing
+          you reach for over a long list, in the place your thumb already is. */}
+      <button
+        type="button"
+        className="classoverlay-cta disfilterpill"
+        onClick={() => setFiltersOpen(true)}
+      >
+        <span className="ovcta-btn">
+          <Icon name="tune" size={17} />
+          Filter {tab === "people" ? "people" : "studios"}
+          {activeCount > 0 && <span className="disfilterpill-n">{activeCount}</span>}
+        </span>
+      </button>
 
       {filtersOpen && (
         <div

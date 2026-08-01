@@ -3235,7 +3235,7 @@ button.ps-card { cursor: pointer; }
 .disseg { margin: 2px 0 12px; }
 /* The box and its filter on one row. Two rows of chrome above a list is most
    of a phone screen spent on controls. */
-.dissearchrow { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; }
+.dissearchrow { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; }
 .dissearch {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 8px; padding: 0 13px;
@@ -3253,8 +3253,22 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; display: flex; border: none; background: none; padding: 4px; cursor: pointer;
   color: var(--ol);
 }
-/* Everything that narrows the list, behind one button. The count is the whole
-   status line: you can see that filters are on without reading them. */
+/* The filter pill floats over the list, the way Book and Save do on a class:
+   the one control you reach for while scrolling belongs where your thumb is,
+   not in a row at the top you have scrolled past. The count is the whole
+   status line: you can see filters are on without opening anything. */
+.classoverlay-cta.disfilterpill {
+  /* Over the tab bar, which is z-45: a control the bar covers is no control. */
+  border: none; cursor: pointer; z-index: 46;
+  /* Clearing the tab bar the same way the Add class button does. */
+  bottom: calc(96px + env(safe-area-inset-bottom));
+}
+.disfilterpill-n {
+  min-width: 20px; height: 20px; padding: 0 6px; margin-left: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; background: var(--si); color: #fff;
+  font-size: 12px; font-weight: 700;
+}
 .disfilterbtn {
   flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;
   width: 46px; height: 46px; border-radius: 999px;
