@@ -415,7 +415,7 @@ await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
 await page.reload();
 const shownAvatar = await page
-  .locator(".profav-empty")
+  .locator(".profhero-img")
   .evaluate((e) => getComputedStyle(e).backgroundColor);
 if (shownAvatar !== pickedColor)
   fail(`avatar colour didn't stick: picked ${pickedColor}, page shows ${shownAvatar}`);
@@ -1327,15 +1327,15 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-main").click();
-  await fan.locator(".pubhead").waitFor();
+  await fan.locator(".profhero").waitFor();
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/discover/);
   await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
-  await fan.locator(".pubhead, .mempro-top").first().waitFor();
+  await fan.locator(".profhero, .mempro-top").first().waitFor();
   if (!(await fan.locator(".profback .evback, .mempro-top .evback").count()))
     fail("a profile reached from Discover should offer the way back");
   await fan.goto(BASE + "/matt");
-  await fan.locator(".pubhead").waitFor();
+  await fan.locator(".profhero").waitFor();
   if (await fan.locator(".profback").count())
     fail("a cold open has no list behind it, so it gets no arrow into one");
   console.log("discover back ok (a list you came from is a list you can return to)");
@@ -1826,12 +1826,12 @@ if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a signed-in viewer should get the app header on a profile");
 if (!(await page.locator(".navbar").count()))
   fail("a signed-in viewer should get the tab bar on a profile");
-if (!(await page.locator(".pubhead .evback").count()))
+if (!(await page.locator(".profhero .evback").count()))
   fail("a profile reached from a list should offer the way back to it");
 // Nothing pins: each tab is its own page, so there is no long scroll to keep
 // a control in reach of.
 await expect(
-  page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position !== "sticky"),
+  page.locator(".profhero").evaluate((e) => getComputedStyle(e).position !== "sticky"),
   "the identity block is not pinned",
 );
 await expect(
@@ -1948,20 +1948,25 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
 if (await page.locator(".settingsbtn, .ownergear").count())
   fail("no settings door belongs on a page that isn't yours");
 
-// The profile top is centred on itself: the face, the name, and the two things
-// you can do about it, all on one axis.
+// The photo is the header: full bleed to both edges, the name over it on the
+// left, and a scrim only where there's a photograph to read against.
 {
   await page.goto(BASE + "/matt");
-  const head = await page.locator(".pubhead").boundingBox();
-  const av = await page.locator(".profav").boundingBox();
-  const acts = await page.locator(".profacts").boundingBox();
-  const mid = head.x + head.width / 2;
-  if (Math.abs(av.x + av.width / 2 - mid) > 6) fail("the face should sit on the centre line");
-  if (Math.abs(acts.x + acts.width / 2 - mid) > 6) fail("the pills should sit on it too");
-  if (av.width < 120) fail(`the face should be the big one, got ${av.width}`);
-  const lift = await page.locator(".profav").evaluate((e) => getComputedStyle(e).boxShadow);
-  if (lift === "none") fail("the face should be lifted off the paper");
-  console.log("profile top ok (centred, bigger, lifted)");
+  const hero = await page.locator(".profhero").boundingBox();
+  if (Math.round(hero.x) !== 0) fail(`the hero should run to the edge, starts at ${hero.x}`);
+  if (hero.width < 380) fail(`the hero should run full bleed, got ${hero.width}`);
+  if (hero.height < 280) fail(`the hero should be the header, got ${hero.height} tall`);
+  const nm = await page.locator(".profhero .profname").boundingBox();
+  if (nm.x > hero.x + 40) fail("the name should sit left, not centred");
+  // A flat colour clears white text on its own; dimming it would only make
+  // it muddy, so the scrim only exists over a photograph.
+  const hasPhoto = await page.locator("img.profhero-img").count();
+  const scrim = await page.locator(".profhero-scrim").count();
+  if (!!hasPhoto !== !!scrim) fail("the scrim belongs over a photo and nowhere else");
+  // The badge leads, dark over the image rather than a pale hole in it.
+  const badge = await page.locator(".profhero .kindtag").first().boundingBox();
+  if (badge && badge.y > nm.y) fail("the badge belongs above the name");
+  console.log("profile hero ok (full bleed, left aligned, scrim only on a photo)");
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 

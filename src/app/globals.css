@@ -1784,21 +1784,56 @@ button.ps-card { cursor: pointer; }
 /* The identity block: face, name, where, what, then what you can do about it.
    It scrolls; only the tabs below it pin. Pinning the name meant a bar that ate
    the top of every screen to repeat something you had already read. */
-/* Centred, top to bottom: face, name, where, what, and the two things you can
-   do about it. A profile is the one screen that is about a person rather than
-   a list, so it gets the symmetry; every other screen stays left-aligned. */
-.pubhead {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  padding-top: 32px; position: relative;
+/* The photo is the header. It runs to both edges and up under the app bar,
+   with the name over it: a profile is about a person, and the person is the
+   first thing on the page rather than a stamp in the middle of it.
+   The negative margin is the same full-bleed trick .pubstick uses. */
+.profhero {
+  position: relative;
+  margin: -14px calc(50% - 50vw) 0;
+  min-height: 340px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 18px calc(50vw - 50%);
+  overflow: hidden;
 }
+.profhero-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+/* Only where there is a photograph to read against. A flat colour already
+   clears white text, and dimming it would only make it muddy. */
+.profhero-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, .42) 0%,
+    rgba(0, 0, 0, .12) 34%,
+    rgba(0, 0, 0, .58) 78%,
+    rgba(0, 0, 0, .74) 100%
+  );
+}
+.profhero-txt { position: relative; text-align: left; }
+.profhero .profname { color: #fff; margin: 8px 0 0; }
+.profhero .proftitle,
+.profhero .profwhere { color: rgba(255, 255, 255, .82); }
+/* The badge above the name, dark and blurred so it sits on the photo rather
+   than punching a pale hole in it. */
+.profhero .kindtag {
+  display: inline-flex; align-self: flex-start;
+  background: rgba(0, 0, 0, .42); color: #fff; border: none;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+[data-mode="dark"] .profhero .kindtag { background: rgba(0, 0, 0, .5); border: none; }
+/* What's left of the old centred block: just the actions, under the hero. */
+.pubhead { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
 /* The owner's controls, one row top-right across from the photo: the Add
    class pill and the three-dot, both on the same tan so they read as one
    set of page controls. */
 /* Facing the gear across the top, the way the studio page and a class do it:
    out on the left, what you can do on the right. */
-.profback { position: absolute; top: 32px; left: 0; }
+.profback { position: absolute; top: 18px; left: calc(50vw - 50%); z-index: 2; }
 .ownertop {
-  position: absolute; top: 32px; right: 0;
+  position: absolute; top: 18px; right: calc(50vw - 50%); z-index: 2;
   display: flex; align-items: center; gap: 10px;
 }
 .sharepill {
@@ -1834,18 +1869,17 @@ button.ps-card { cursor: pointer; }
 }
 /* The name wraps rather than truncating — it's the one thing on the page that
    has to be readable in full. */
-.pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
-.pubhead .profname-row { justify-content: center; }
-.profwhere { font-size: 16px; font-weight: 500; color: var(--ol); margin: 10px 0 0; }
-.pubhead .proftitle { font-size: 16px; font-weight: 500; color: var(--ol); margin: 4px 0 0; }
+.profhero .profname { font-size: 34px; line-height: 1.03; overflow-wrap: anywhere; }
+.profwhere { font-size: 15px; font-weight: 500; color: var(--ol); margin: 3px 0 0; }
+.profhero .proftitle { font-size: 16px; font-weight: 500; margin: 6px 0 0; }
 
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
-.profacts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+.profacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .actpill, .followpill {
-  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 13px 22px; border-radius: 999px; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 17px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
   transition: transform .08s;
   border: 1.5px solid var(--line); background: transparent; color: var(--ink);
 }

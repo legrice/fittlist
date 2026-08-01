@@ -6,7 +6,6 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
-import { AvatarZoom } from "@/components/AvatarZoom";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
@@ -158,23 +157,6 @@ export async function PublicProfileView({
     if (items.length)
       days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(days.length / 7), items });
   }
-
-  // The face moved up into the header, above the name, so About starts with
-  // what they actually wrote. Tapping it blows it up with the person's
-  // follow/share/link/QR actions under it.
-  const avatar = (
-    <AvatarZoom
-      className="profav"
-      handle={handle}
-      name={user.name}
-      photo={user.photo}
-      color={avatarColor(user)}
-      follow={!isOwner && account ? account : null}
-      isOwner={isOwner}
-      availability={user.availability}
-      canMessage={!isOwner && user.messagesOpen}
-    />
-  );
 
   const about = (
     <>
@@ -447,7 +429,8 @@ export async function PublicProfileView({
           hasStudios={!!studios}
           trackSchedule={!isOwner}
           backTo={backTo}
-          avatar={avatar}
+          photo={user.photo}
+          color={avatarColor(user)}
           // The same two slots for everybody. A visitor gets Message and
           // Follow; the owner gets Share and Edit profile, which are the two
           // things they came to do with their own page.

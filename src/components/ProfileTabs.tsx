@@ -23,7 +23,8 @@ export function ProfileTabs({
   hasContact,
   hasStudios,
   trackSchedule,
-  avatar,
+  photo,
+  color,
   actions,
   avail,
   ownerTop,
@@ -41,8 +42,11 @@ export function ProfileTabs({
   /** Nowhere they coach on record means no Studios tab. */
   hasStudios: boolean;
   trackSchedule: boolean;
-  /** The face: photo or coloured initial, above the name. */
-  avatar: ReactNode;
+  /** The face, full bleed behind the name. Null falls back to the colour, and
+   *  then there is nothing to scrim: flat colour is already legible. */
+  photo: string | null;
+  /** Their colour, behind the name when there's no photo. */
+  color: string;
   /** The row of pills under the name. A visitor gets Message and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
@@ -115,7 +119,18 @@ export function ProfileTabs({
     <>
       {/* Who this is, top to bottom: face, name, where, what. Then the things
           you can do about it, then the section you asked for. */}
-      <div className="pubhead">
+      {/* The photo is the header rather than a circle inside one: it runs to
+          both edges, under the app bar, with the name over it. A scrim only
+          exists where there's a photo to read against; a flat colour already
+          clears white text, and dimming it would just make it muddy. */}
+      <div className={`profhero${photo ? " hasphoto" : ""}`}>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="profhero-img" src={photo} alt="" />
+        ) : (
+          <div className="profhero-img" style={{ background: color }} aria-hidden="true" />
+        )}
+        {photo && <div className="profhero-scrim" aria-hidden="true" />}
         {backTo && (
           <div className="profback">
             <BackLink className="evback" href={backTo.href} label={backTo.label}>
@@ -124,20 +139,17 @@ export function ProfileTabs({
           </div>
         )}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
-        {avatar}
-        {/* The badge rides with the name and wraps under it when the name is
-            long, rather than being pushed down the page by the lines between. */}
-        <div className="profname-row">
-          <h1 className="profname">{name}</h1>
+        {/* Left aligned along the bottom: what they are, who they are, what
+            they do. The badge leads because it's the one word that says which
+            side of the app you're looking at. */}
+        <div className="profhero-txt">
           {avail}
+          <h1 className="profname">{name}</h1>
+          {title.trim() && <p className="proftitle">{title.trim()}</p>}
+          {location.trim() && <p className="profwhere">{location.trim()}</p>}
         </div>
-        {/* Location and title on their own lines. Joined into "Strength coach in
-            Jersey City, NJ" they made one long line that wrapped to two anyway,
-            and the city is the thing people scan for. */}
-        {location.trim() && <p className="profwhere">{location.trim()}</p>}
-        {title.trim() && <p className="proftitle">{title.trim()}</p>}
-        {actions}
       </div>
+      <div className="pubhead">{actions}</div>
       {/* Zero-height marker: when it slides under the header, the bar below
           is stuck and the small name switches on. */}
       <div ref={sentRef} aria-hidden="true" />
