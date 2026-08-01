@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { initialOf } from "@/lib/avatar";
+import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 
@@ -33,10 +34,12 @@ export type DiscoverCoach = {
 // tapping again withdraws it), scoped to its own row.
 function FollowMini({
   handle,
+  name,
   following,
   requested,
 }: {
   handle: string;
+  name: string;
   following: boolean;
   requested: boolean;
 }) {
@@ -46,6 +49,7 @@ function FollowMini({
   // True only for a yes born of a tap, so the spring plays once at the moment
   // it means something and a page of already-green pills loads still.
   const [pop, setPop] = useState(false);
+  const [hint, setHint] = useState(false);
   const [pending, start] = useTransition();
   const tap = () =>
     start(async () => {
@@ -54,6 +58,7 @@ function FollowMini({
         if (res.ok) {
           setState(res.requested ? "asked" : "on");
           setPop(!res.requested);
+          if (!res.requested && !followHintOff()) setHint(true);
         }
       } else {
         const res = await unfollowTrainer(handle);
@@ -64,6 +69,8 @@ function FollowMini({
       }
     });
   return (
+    <>
+    <FollowHint name={name.trim().split(/\s+/)[0] || name} on={hint} onClose={() => setHint(false)} />
     <button
       className={`disfol${state === "on" ? " on" : ""}${pop ? " pop" : ""}`}
       disabled={pending}
@@ -73,6 +80,7 @@ function FollowMini({
       {state === "on" && <Icon name="check" size={13} />}
       {state === "on" ? "Following" : state === "asked" ? "Requested" : "Follow"}
     </button>
+    </>
   );
 }
 
@@ -473,7 +481,12 @@ export function DiscoverList({
                 </span>
                 <LinkPending />
               </Link>
-              <FollowMini handle={c.handle} following={c.following} requested={c.requested} />
+              <FollowMini
+                handle={c.handle}
+                name={c.name}
+                following={c.following}
+                requested={c.requested}
+              />
             </div>
           ))}
         </div>

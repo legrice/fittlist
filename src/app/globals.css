@@ -1791,7 +1791,9 @@ button.ps-card { cursor: pointer; }
 .profhero {
   position: relative;
   margin: -14px calc(50% - 50vw) 0;
-  min-height: 340px;
+  /* Most of the first screen. A profile's job is to introduce a person, and
+     a face at a stamp's size does not do that. */
+  min-height: 65vh;
   display: flex; flex-direction: column; justify-content: flex-end;
   padding: 18px calc(50vw - 50%);
   overflow: hidden;
@@ -1813,6 +1815,19 @@ button.ps-card { cursor: pointer; }
   );
 }
 .profhero-txt { position: relative; text-align: left; }
+/* On the image, so they read as white on the photograph rather than as page
+   furniture underneath it. Contact is solid because it starts something;
+   Follow is an outline until it's a yes, and then it fills in too. */
+.profhero .profacts { margin-top: 16px; }
+.profhero .actpill,
+.profhero .followpill {
+  background: #fff; color: #111; border-color: #fff;
+}
+.profhero .followpill:not(.on) {
+  background: transparent; color: #fff; border-color: rgba(255, 255, 255, .85);
+}
+.profhero .followpill.on { background: #fff; color: #111; border-color: #fff; }
+.profhero .actpill .icon { color: #111; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
 .profhero .proftitle,
 .profhero .profwhere { color: rgba(255, 255, 255, .82); }
@@ -1890,6 +1905,41 @@ button.ps-card { cursor: pointer; }
    the same yes as a Going mark, and that meaning is worth more than matching
    the outline. */
 .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
+/* One spring on the tap that means yes. It plays on the button that was just
+   pressed and nowhere else, so a page of green pills loads still. */
+@keyframes folpop {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.14); }
+  70% { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+.followpill.pop, .disfol.pop { animation: folpop .42s cubic-bezier(.34, 1.56, .64, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .followpill.pop, .disfol.pop { animation: none; }
+}
+
+/* What a follow actually did, said once. Above the tab bar, like a toast, but
+   it waits to be dismissed because it carries somewhere to go. */
+.folhint {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 46;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  width: min(calc(100vw - 32px), 420px);
+  background: var(--ink); color: var(--paper);
+  border-radius: 18px; padding: 14px 16px;
+  box-shadow: 0 14px 40px rgba(23, 26, 31, .34);
+  animation: folhintin .22s ease-out;
+}
+@keyframes folhintin { from { opacity: 0; transform: translate(-50%, 10px); } }
+.folhint-t { margin: 0; font-size: 14.5px; line-height: 1.4; }
+.folhint-row { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+.folhint-go {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px; color: var(--paper); text-decoration: underline;
+}
+.folhint-off {
+  margin-left: auto; border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; color: rgba(255, 255, 255, .62);
+}
 .followpill[disabled] { opacity: .55; pointer-events: none; }
 
 /* About / Contact / Schedule, as a scrolling rail of pills. Each one is a link

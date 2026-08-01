@@ -61,7 +61,7 @@ export function RequestSessionButton({
           </>
         ) : (
           <>
-            <Icon name="chat_bubble" size={17} /> Message
+            <Icon name="chat_bubble" size={17} /> Contact
           </>
         )}
       </button>

@@ -6,6 +6,7 @@ import { requestInvite } from "@/app/actions/invites";
 import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
 import { useFollowSync } from "@/components/FollowSync";
 import { Icon } from "@/components/Icon";
+import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { Toast, useToast } from "@/components/Toast";
 
 // The one action a visitor can take on a coach's page, sitting beside their
@@ -83,12 +84,16 @@ export function NotifyCta({
             toast(`Asked to follow ${firstName}`);
           } else {
             setFollowing(true);
-            toast(`You're following ${firstName}`);
+            // The hint says where their classes went; the toast only says the
+            // tap landed, so they don't both fire.
+            if (followHintOff()) toast(`You're following ${firstName}`);
+            else setHint(true);
           }
         } else toast(res.error ?? "Something went wrong");
       }
     });
   };
+  const [hint, setHint] = useState(false);
   const onCta = () => {
     if (account) {
       toggleFollow();
@@ -165,6 +170,8 @@ export function NotifyCta({
         {(following || subscribed) && <Icon name="check" size={compact ? 15 : 17} />}
         {label}
       </button>
+
+      <FollowHint name={firstName} on={hint} onClose={() => setHint(false)} />
 
       {open && (
         <div

@@ -147,9 +147,11 @@ export function ProfileTabs({
           <h1 className="profname">{name}</h1>
           {title.trim() && <p className="proftitle">{title.trim()}</p>}
           {location.trim() && <p className="profwhere">{location.trim()}</p>}
+          {/* On the image, under the name: the two things you can do about
+              this person sit with the person rather than on the paper below. */}
+          {actions}
         </div>
       </div>
-      <div className="pubhead">{actions}</div>
       {/* Zero-height marker: when it slides under the header, the bar below
           is stuck and the small name switches on. */}
       <div ref={sentRef} aria-hidden="true" />
