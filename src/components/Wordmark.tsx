@@ -14,7 +14,12 @@ export function Wordmark({
 }) {
   // The ink variant follows --ink so it flips with dark mode; the icon inherits
   // via currentColor. The cloud variant stays a fixed off-white on dark heroes.
-  const color = variant === "ink" ? "var(--ink)" : "#F5F5F5";
+  //
+  // --wm-ink is the escape hatch: the colour is an inline style, which no class
+  // can override, so a surface that needs a different one (the profile header,
+  // floating over a photograph) sets that property on an ancestor instead of
+  // this component growing a prop for every place it lands.
+  const color = variant === "ink" ? "var(--wm-ink, var(--ink))" : "#F5F5F5";
   return (
     <span
       className={`wm ${className}`}

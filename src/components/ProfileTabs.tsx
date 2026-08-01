@@ -146,6 +146,11 @@ export function ProfileTabs({
           <div className="profhero-img" style={{ background: color }} aria-hidden="true" />
         )}
         {photo && <div className="profhero-scrim" aria-hidden="true" />}
+        {/* A second, shorter one at the top, so the white header floating over
+            the picture has something to read against. Same rule as the one
+            below: only where there's a photograph, because a flat colour is
+            already legible and a band of grey over it is just a band. */}
+        {photo && <div className="profhero-topscrim" aria-hidden="true" />}
         {backTo && (
           <div className="profback">
             <BackLink className="evback" href={backTo.href} label={backTo.label}>

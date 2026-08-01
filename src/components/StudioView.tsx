@@ -14,6 +14,7 @@ import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
@@ -163,7 +164,10 @@ export async function StudioView({
   return (
     <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
-        {signedIn && viewerId && <AppChrome userId={viewerId} bar />}
+        {/* A stranger gets the wordmark and one way in, same as they do on a
+            person's page. This page had neither, so a shared studio link was a
+            dead end for anyone without an account. */}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}

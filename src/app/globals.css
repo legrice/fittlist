@@ -1067,18 +1067,41 @@ button.ps-card { cursor: pointer; }
   padding: calc(18px + env(safe-area-inset-top)) 18px 120px;
 }
 /* Signed in, a profile carries the tab bar, so the last row has to clear it.
-   The top matches the tabs shell exactly (14px wrapper, safe area on the
-   brandbar): the same header renders in both, and a profile opening from a
-   tab used to nudge it down a few pixels. */
-.pub.hasnav .profwrap { padding-top: 14px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
-.pub.hasnav .brandbar, .memberpub.hasnav .brandbar {
-  padding-top: calc(16px + env(safe-area-inset-top));
-  /* The one thing that pins on a profile is the name and the tabs. The header
-     scrolls away with the picture: two stacked bars over a schedule is most of
-     the screen spent on chrome, and the row that says whose week this is has
-     more claim on the top than the wordmark does. `.pubstick` then sticks at 0
-     rather than measuring a bar that is no longer there. */
-  position: static;
+   Nothing above the picture: the header floats over it, so the wrapper starts
+   at zero and the photograph runs to the top of the screen. */
+.pub .profwrap { position: relative; padding-top: 0; }
+.pub.hasnav .profwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+
+/* THE HEADER ON A PROFILE: over the picture, not above it.
+   Transparent, its wordmark and icons in white, floating on the photograph
+   with a short scrim behind them. The image is the page's first impression and
+   a bar of cream across the top of it was a lid. It is absolute rather than
+   sticky, so it scrolls away and the only thing that pins is the name and the
+   tabs. --wm-ink is how the wordmark's inline colour is reached. */
+.pub .brandbar, .pub .pubtop {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+  background: none; border-bottom: none; margin: 0;
+  padding: calc(16px + env(safe-area-inset-top)) 18px 12px;
+  --wm-ink: #fff;
+}
+.pub .pubtop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pub .brandbar-actions .iconbtn {
+  color: #fff; border-color: rgba(255, 255, 255, .4); background: rgba(0, 0, 0, .16);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.pub .brandbar-actions .iconbtn:hover { border-color: #fff; color: #fff; }
+/* The badge's ring is cut out of the paper everywhere else; here the paper is
+   a photograph, so it takes the scrim's darkness instead. */
+.pub .brandbar .inboxdot { border-color: rgba(0, 0, 0, .38); }
+/* A stranger's one door, in the same white as everything else up there. */
+.pub .pubtop-login { background: #fff; color: var(--ink); }
+
+/* The picture starts at the top of the screen and runs under all of it. */
+.pub .profhero { margin-top: 0; }
+/* Which means the corner controls have to start below the header rather than
+   in the same 18px everything else uses. */
+.pub .profhero .profback, .pub .profhero .ownertop {
+  top: calc(74px + env(safe-area-inset-top));
 }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
@@ -1828,6 +1851,17 @@ button.ps-card { cursor: pointer; }
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, .30) 46%,
     rgba(0, 0, 0, .62) 100%
+  );
+}
+/* Behind the header, and only that far down. The bottom one carries the name;
+   this one carries the wordmark and the bell. */
+.profhero-topscrim {
+  position: absolute; inset: 0 0 auto; height: calc(150px + env(safe-area-inset-top));
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, .46) 0%,
+    rgba(0, 0, 0, .22) 46%,
+    rgba(0, 0, 0, 0) 100%
   );
 }
 .profhero-txt { position: relative; text-align: left; }

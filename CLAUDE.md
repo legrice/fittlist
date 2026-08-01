@@ -385,9 +385,19 @@ the app's, it just isn't spent on a control that sits permanently over a
 schedule. Change one and change the other, or they stop reading as the same
 kind of thing.
 
+**The header floats over a profile's photograph, it doesn't sit above it.**
+`.pub .brandbar` and `.pub .pubtop` are `position: absolute` at the top of
+`.profwrap` with no background and no border, their wordmark and icons in
+white, and the picture runs full bleed underneath. `.profhero-topscrim` is what
+makes them readable, and like the one at the bottom it only exists over a real
+photograph: a band of grey across a flat `avatarColor` is just a band. The
+wordmark's colour is an inline style, so no class can reach it; `--wm-ink` on
+the header is the way in, and adding a prop for every surface it lands on is
+the thing that variable exists to avoid.
+
 **On a profile, the name and the tabs are the only thing that pins.** The app
-header is `position: static` there (`.pub.hasnav .brandbar`) and scrolls away
-with the picture: two stacked bars over a schedule is most of a phone screen
+header is absolute there rather than sticky, so it scrolls away with the
+picture: two stacked bars over a schedule is most of a phone screen
 spent on chrome, and the row that says whose week this is has more claim on the
 top than the wordmark. `.pubstick` therefore sticks at 0 and measures nothing.
 It used to read the brandbar's height on mount and hold that much space, which

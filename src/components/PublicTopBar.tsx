@@ -16,14 +16,17 @@ import { Wordmark } from "@/components/Wordmark";
 // and Follow, so the top of a coach's page was four controls deep. The log-in
 // sheet carries "Don't have an account? Sign up", which is where that choice
 // actually belongs: at the point someone has decided to come in.
-export function PublicTopBar({ handle }: { handle: string }) {
-  const via = `via=${encodeURIComponent(handle)}`;
+export function PublicTopBar({ handle }: { handle?: string }) {
+  // A studio has a slug rather than a handle, and the credit is a person's, so
+  // that page's bar carries the door without the attribution rather than
+  // crediting a coach who doesn't exist.
+  const via = handle ? `via=${encodeURIComponent(handle)}` : "";
   return (
     <div className="pubtop">
-      <Link className="pubtop-home" href={`/?${via}`} aria-label="fittlist, home">
+      <Link className="pubtop-home" href={via ? `/?${via}` : "/"} aria-label="fittlist, home">
         <Wordmark variant="ink" className="wordmark pubtop-wm" />
       </Link>
-      <Link className="pubtop-login" href={`/?${via}&join=login`}>
+      <Link className="pubtop-login" href={via ? `/?${via}&join=login` : "/?join=login"}>
         Log in
       </Link>
     </div>
