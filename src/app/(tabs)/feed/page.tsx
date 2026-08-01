@@ -8,6 +8,7 @@ import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
+import { weekCount } from "@/lib/week";
 import { avatarColor } from "@/lib/avatar";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
@@ -163,6 +164,8 @@ export default async function FeedPage({
         a.name.localeCompare(b.name),
     );
 
+  const myCount = await weekCount(userId);
+
   return (
     <>
         {/* "Nobody yet" is for an empty tab, not an empty week: someone who
@@ -179,6 +182,12 @@ export default async function FeedPage({
             </Link>
           </div>
         ) : (
+          <>
+          {myCount === 0 && (
+            <p className="feedhint">
+              Tap a class and heart it. It lands in your plans, ready to share.
+            </p>
+          )}
           <FeedAgenda
             coaches={railCoaches.map((c) => ({
               id: c.id,
@@ -190,6 +199,7 @@ export default async function FeedPage({
             days={days}
             meId={userId}
           />
+          </>
         )}
       {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
     </>

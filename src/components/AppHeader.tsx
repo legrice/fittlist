@@ -14,7 +14,7 @@ export function AppHeader({
   avatar,
   settingsHref,
   onSettings,
-  home = "/feed",
+  home = "/home",
   nav,
 }: {
   /** null = not an admin; a number shows the door, >0 lights the badge. */

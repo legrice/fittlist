@@ -44,6 +44,8 @@ export default async function YouPage({
           handle={me.handle}
           title={me.title ?? ""}
           about={me.about ?? ""}
+          instagram={me.instagram ?? ""}
+          highlights={me.highlights}
           location={me.location ?? ""}
           photo={me.photo}
           color={avatarColor(me)}

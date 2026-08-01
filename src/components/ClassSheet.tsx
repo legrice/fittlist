@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingCompanions } from "@/app/actions/going";
 import { claimShift, giveUpShift } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
+import { CompanionsEditor } from "@/components/CompanionsEditor";
 import { Icon } from "@/components/Icon";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
@@ -329,6 +330,44 @@ export function ClassSheet({
               </h3>
               <Roster people={c.roster} />
             </div>
+          )}
+
+          {/* The room introducing itself early: the other people who saved
+              it, shown only because this viewer saved it too. Non-null is the
+              server saying this viewer is allowed to look. */}
+          {c.alsoGoing && c.alsoGoing.length > 0 && (
+            <div className="classsheet-roster">
+              <h3 className="classsheet-roster-h">Also saved · {c.alsoGoing.length}</h3>
+              <Roster people={c.alsoGoing} />
+            </div>
+          )}
+          {/* An empty room is an invitation, not a verdict. This is where the
+              share lives now: at the moment it would actually help. */}
+          {c.alsoGoing && c.alsoGoing.length === 0 && (
+            <div className="emptyroom">
+              <h3 className="classsheet-roster-h">Also saved</h3>
+              <p className="emptyroom-p">
+                No one else yet. Fitness is better together, so bring somebody.
+              </p>
+              <button className="emptyroom-btn" onClick={share}>
+                <Icon name="campaign" size={17} /> Share with friends
+              </button>
+            </div>
+          )}
+
+          {/* Names, not accounts: Joanne doesn't need the app to count. */}
+          {added && (
+            <CompanionsEditor
+              value={c.myCompanions}
+              onSave={async (names) => {
+                const res = await setGoingCompanions(c.id, c.whenIso, names);
+                if (!res.ok) {
+                  toast(res.error ?? "Something went wrong");
+                  return null;
+                }
+                return res.companions ?? [];
+              }}
+            />
           )}
 
           {/* The rota, from the coach's side. Whoever is on this date can hand

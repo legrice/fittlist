@@ -623,17 +623,12 @@ console.log("owner tap opens the sheet, Edit goes to the editor ok");
   await sp.locator(".classoverlay").waitFor();
   // The overlay opens first and fills a beat later, so wait for the content.
   await sp.locator(".classoverlay-nm", { hasText: "Barbell Strength" }).waitFor();
-  await expect(sp.getByText("143 Newark Ave, Jersey City").isVisible(), "overlay shows address");
+  await expect(sp.getByText("143 Newark Ave, Jersey City").isVisible(), "sheet shows address");
   await expect(sp.locator(".ovcta-btn", { hasText: "Book" }).first().isVisible(), "overlay shows the Book pill");
-  await expect(sp.locator(".evtype", { hasText: "Strength" }).isVisible(), "overlay shows class type");
-  await expect(sp.getByText("Barbell club for all levels").isVisible(), "overlay shows description");
-  // Book opens the hand-off, not the site.
-  await sp.locator(".ovcta-btn", { hasText: "Book" }).click();
-  await sp.getByRole("heading", { name: "Book this class" }).waitFor();
-  await sp.locator(".bookout-links a", { hasText: "Book via Website" }).waitFor();
-  await sp.getByRole("button", { name: "Not now" }).click();
-  // The list is still there underneath — that's the point of an overlay.
-  if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the overlay");
+  await expect(sp.locator(".evtype", { hasText: "Strength" }).isVisible(), "sheet shows class type");
+  await expect(sp.getByText("Barbell club for all levels").isVisible(), "sheet shows description");
+  // The list is still there underneath — that's the point of a sheet.
+  if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the sheet");
   await sp.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
   await sp.locator(".ovcircle-back").click();
   await sp.waitForFunction(() => !document.querySelector(".classoverlay"));
@@ -1032,6 +1027,31 @@ await page.getByText("Published", { exact: false }).waitFor();
 await waitSchedule(page, schedBefore + 2);
 console.log("one-off future ok");
 
+// ---- the Events board: a coach posts a community happening (an expo, a
+// competition, a meetup) that isn't anyone's class. Multi-day, hosted by
+// someone who isn't the poster, one link out. No flyer here, so it lists as
+// a row; the card treatment is the flyer's job.
+{
+  await page.goto(BASE + "/discover");
+  await page.locator(".disseg button", { hasText: "Events" }).click();
+  await page.locator(".evpost").click();
+  await page.getByRole("heading", { name: "Post an event" }).waitFor();
+  await page.locator("#evName").fill("Hudson Fit Expo");
+  await page.locator("#evStart").fill(iso(nextWeekD));
+  const expoEnd = new Date(nextWeekD);
+  expoEnd.setUTCDate(nextWeekD.getUTCDate() + 1);
+  await page.locator("#evEnd").fill(iso(expoEnd));
+  await page.locator("#evPlace").fill("Harborside, Jersey City");
+  await page.locator("#evHost").fill("Hudson Fit Expo");
+  await page.locator("#evLink").fill("https://example.com/expo");
+  await page.getByRole("button", { name: "Post event" }).click();
+  await page.getByText("Event posted").waitFor();
+  await page.locator(".disposter", { hasText: "Hudson Fit Expo" }).waitFor();
+  const sub = await page.locator(".disposter", { hasText: "Hudson Fit Expo" }).locator(".disposter-sub").innerText();
+  if (!sub.includes(" to ")) fail("a multi-day event should say its range: " + sub);
+}
+console.log("event posted ok (multi-day, listed on the board)");
+
 // the public schedule is a continuous multi-week window - it renders events
 await page.goto(BASE + "/matt/schedule");
 // The URL is the section: landing here renders the week, no scrolling involved.
@@ -1148,7 +1168,7 @@ await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await fan.locator(".disseg").waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
@@ -1188,7 +1208,7 @@ await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasTex
 }
 console.log("discover ok (corner pill follows and unfollows on the row)");
 
-// Two halves of the directory, one row of controls. A studio is a place, so
+// Three lenses on one directory, one row of controls. A studio is a place, so
 // it isn't followable and carries no city filter: it has an address and
 // nothing normalised to group by.
 {
@@ -1196,7 +1216,6 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.locator(".dissearchrow").waitFor();
   if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search people")
     fail("the box should say what it's searching");
-  // The box and the filter sit on one line, filter to the right of it.
   if (await fan.locator(".discitysel").count()) {
     const box = await fan.locator(".dissearch").boundingBox();
     const fil = await fan.locator(".discitysel").boundingBox();
@@ -1212,13 +1231,11 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     fail("a studio has an address, not a city to filter by");
   if (await fan.locator(".disfol").count())
     fail("a studio is a place, not somebody you follow");
-  // A long gym name gets the width a Follow pill would have taken.
   const wide = await fan
     .locator(".disrow-studio .disrow-nmline")
     .first()
     .evaluate((e) => getComputedStyle(e).paddingRight);
   if (wide !== "0px") fail("a studio row shouldn't hold space for a pill it hasn't got");
-  // Searching an address finds the town, which is the filter studios lack.
   await fan.locator(".dissearch-in").fill("Ironbound");
   await fan.waitForTimeout(300);
   const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
@@ -1226,8 +1243,53 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     fail("searching studios found nothing: " + names.join(", "));
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
-  console.log("discover tabs ok (people and places, one row of controls)");
+  // The Events lens keeps its own name for the box.
+  await fan.goto(BASE + "/discover");
+  await fan.getByRole("button", { name: "Events", exact: true }).click();
+  await fan.waitForTimeout(300);
+  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search events")
+    fail("the box should follow the Events tab too");
+  console.log("discover lenses ok (people, places, events, one row of controls)");
 }
+
+// The Events lens: the one-off dated classes Matt posted earlier list as
+// event rows, soonest first, and a row opens the class page itself.
+{
+  await fan.locator(".disseg button", { hasText: "Events" }).click();
+  const evRows = fan.locator(".disposter", { hasText: "with Matt" });
+  await evRows.first().waitFor();
+  if ((await evRows.count()) < 2) fail("both one-offs should list under Events");
+  // A tap opens the overlay; the href still points at the real class page.
+  await evRows.first().click();
+  await fan.locator(".classoverlay-nm").waitFor();
+  await fan.locator(".ovcircle-back").click();
+  const oneOffHref = await evRows.first().getAttribute("href");
+  if (!/^\/matt\/[0-9a-f-]+\?d=/.test(oneOffHref ?? ""))
+    fail("a one-off should link at its class page: " + oneOffHref);
+  await fan.goto(BASE + "/discover");
+}
+console.log("events lens ok (one-offs listed, a row opens the class)");
+
+// The posted event sits on the same board. A member reads it but can't post
+// to it, and only the poster (or the admin) sees Remove on its page.
+{
+  await fan.locator(".disseg button", { hasText: "Events" }).click();
+  if (await fan.locator(".evpost").count()) fail("a member should not see Post an event");
+  // The overlay first, then the page a sent link would open.
+  await fan.locator(".disposter", { hasText: "Hudson Fit Expo" }).click();
+  await fan.locator(".classoverlay-nm", { hasText: "Hudson Fit Expo" }).waitFor();
+  await fan.locator(".ovcircle-back").click();
+  const expoHref = await fan.locator(".disposter", { hasText: "Hudson Fit Expo" }).getAttribute("href");
+  await fan.goto(BASE + expoHref);
+  await fan.waitForURL(/\/e\//);
+  await fan.getByRole("heading", { name: "Hudson Fit Expo" }).waitFor();
+  await fan.getByText("Hosted by Hudson Fit Expo").waitFor();
+  await fan.locator('a[href="https://example.com/expo"]').waitFor();
+  if (await fan.getByRole("button", { name: "Remove event" }).count())
+    fail("only the poster sees Remove on an event");
+  await fan.goto(BASE + "/discover");
+}
+console.log("event page ok (facts, link out, member can't post or remove)");
 
 // The studio directory is coach-editable, and a coach is kind, not handle:
 // members hold handles too, and testing the handle put the edit button on
@@ -1343,8 +1405,8 @@ await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
 await fan.reload();
 await fan.locator(".feedagenda .ps-event").first().click();
 await fan.locator(".ovcta-save.on").waitFor();
-// Share is here too, so a class can be passed on without leaving it.
-await fan.locator(".ovcircle-share").waitFor();
+// The room is empty, and an empty room is an invitation: share lives there.
+await fan.locator(".emptyroom-btn", { hasText: "Share with friends" }).waitFor();
 await fan.locator(".ovcircle-back").click();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
@@ -1484,9 +1546,9 @@ await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).cl
 await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
-// the wordmark is the way back to the week from anywhere
+// the wordmark is the way home from anywhere
 await fan.locator(".brandbar-home").click();
-await fan.waitForURL("**/feed");
+await fan.waitForURL("**/home");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -1525,7 +1587,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await fan.locator(".disseg").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -1586,20 +1648,20 @@ const ownWeek = await page.locator(".ps-week").innerText();
 if (/Conditioning/.test(ownWeek))
   fail("a class the coach attends showed up on their own schedule");
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
+await page.locator(".navtab.on", { hasText: "Classes" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();
 await page.locator(".navtab.on", { hasText: "You" }).waitFor();
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedagenda .ps-event").first().click();
 await page.locator(".classoverlay-nm").waitFor();
 await page.locator(".ovcircle-back").click();
@@ -1835,11 +1897,11 @@ if (!(await page.locator(".settingsbtn").count()))
   fail("the header gear should stay on a page that isn't yours");
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// three tabs only, and the account opens from the header avatar — back in the
+// four tabs, and the account opens from the header avatar — back in the
 // app, since a profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".fab").waitFor();
-if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
 await page.locator(".settingsbtn").click();
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();
@@ -1964,7 +2026,7 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 // the member side is still one tab away, and still theirs
 await page.locator(".acctclose").click();
 await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-await page.locator(".navtab", { hasText: "Following" }).click();
+await page.locator(".navtab", { hasText: "Classes" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 await page.locator(".profname").waitFor();

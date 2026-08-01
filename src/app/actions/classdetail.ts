@@ -4,9 +4,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
-import { isBlocked } from "@/lib/blocks";
-import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
+import { hiddenFrom, isBlocked } from "@/lib/blocks";
 import { fansVisible } from "@/lib/flags";
+import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
 
@@ -38,8 +38,6 @@ export type ClassDetail = {
   /** Calendar doors for the overflow menu, same targets as the class page. */
   googleUrl: string;
   icsHref: string;
-  /** The viewer's own handle, so a share can say who's going. */
-  myHandle: string | null;
   /** Whether this viewer can add it: signed in, not theirs, and public. */
   canAdd: boolean;
   added: boolean;
@@ -47,7 +45,15 @@ export type ClassDetail = {
   past: boolean;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
-  roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
+  roster: RosterFace[] | null;
+  /** The room introducing itself early: the other people going to this same
+   *  occurrence, shown only to a viewer who is going too. The price of seeing
+   *  the list is being on it, so nobody can lurk on a roster. */
+  alsoGoing: RosterFace[] | null;
+  /** Who this viewer said they're bringing, for the editor on the sheet. */
+  myCompanions: string[];
+  /** The viewer's own handle, so a share can say who's going. */
+  myHandle: string | null;
   /** The owner is a gym, not a person. Nothing here is "coached by" anybody:
    *  whether a coach's name is ever shown is the gym's own switch, and it is
    *  off. The studio row below says where, which is the whole truth of it. */
@@ -62,6 +68,15 @@ export type ClassDetail = {
     /** Nobody is on it and the viewer coaches here. */
     canClaim: boolean;
   } | null;
+};
+
+export type RosterFace = {
+  name: string;
+  photo: string | null;
+  color: string;
+  handle: string | null;
+  /** Names they're bringing: people in the room, not accounts. */
+  companions: string[];
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -166,26 +181,8 @@ export async function classDetail(
   // member looking at the same sheet sees the count of nobody: the field is
   // null for everyone but the owner.
   let roster: ClassDetail["roster"] = null;
-  if (isOwner) {
-    const marks = await db
-      .select({ userId: schema.attendances.userId })
-      .from(schema.attendances)
-      .where(
-        and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
-      );
-    const ids = [...new Set(marks.map((m) => m.userId))];
-    const people = ids.length
-      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
-      : [];
-    roster = people
-      .map((p) => ({
-        name: p.name.trim() || p.email.split("@")[0],
-        photo: p.photo,
-        color: avatarColor(p),
-        handle: p.handle,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }
+  let alsoGoing: ClassDetail["alsoGoing"] = null;
+  let myCompanions: string[] = [];
 
   // A gym's rota, from the coach's side. Whoever is on this date can hand it
   // back, and whoever teaches here can take it when nobody is. That is the
@@ -250,6 +247,38 @@ export async function classDetail(
       .where(eq(schema.users.id, viewerId));
     myHandle = viewer?.handle ?? null;
   }
+  if (isOwner || added) {
+    const marks = await db
+      .select({ userId: schema.attendances.userId, companions: schema.attendances.companions })
+      .from(schema.attendances)
+      .where(
+        and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
+      );
+    const companionsByUser = new Map(marks.map((m) => [m.userId, m.companions]));
+    myCompanions = (viewerId && companionsByUser.get(viewerId)) || [];
+    let ids = [...new Set(marks.map((m) => m.userId))];
+    if (!isOwner) {
+      // The fellow-goer's view: everyone but themselves, minus anyone either
+      // side has blocked. The coach's roster stays unfiltered; the mark was
+      // made at the coach.
+      const hidden = await hiddenFrom(viewerId!);
+      ids = ids.filter((id) => id !== viewerId && !hidden.has(id));
+    }
+    const people = ids.length
+      ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+      : [];
+    const faces = people
+      .map((p) => ({
+        name: p.name.trim() || p.email.split("@")[0],
+        photo: p.photo,
+        color: avatarColor(p),
+        handle: p.handle,
+        companions: companionsByUser.get(p.id) ?? [],
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (isOwner) roster = faces;
+    else alsoGoing = faces;
+  }
 
   // "Add to calendar", same as the page: Google gets a prefilled template
   // link, Apple and Outlook get the .ics. Weekly classes carry the rule.
@@ -296,11 +325,13 @@ export async function classDetail(
     // The per-class .ics route takes the bare key (handle or slug), not the
     // page's /s/ prefix.
     icsHref: `/api/cal/${key}/${c.id}`,
-    myHandle,
     canAdd,
     added,
     past,
     roster,
+    alsoGoing,
+    myCompanions,
+    myHandle,
     ownerIsGym: user.kind === "gym",
     shift,
   };

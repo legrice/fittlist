@@ -23,6 +23,8 @@ export function MemberAccount({
   handle,
   title,
   about,
+  instagram,
+  highlights,
   location,
   photo,
   color,
@@ -39,6 +41,8 @@ export function MemberAccount({
   handle: string | null;
   title: string;
   about: string;
+  instagram: string;
+  highlights: string[];
   location: string;
   photo: string | null;
   color: string;
@@ -88,6 +92,8 @@ export function MemberAccount({
           handle={handle}
           title={title}
           about={about}
+          instagram={instagram}
+          highlights={highlights}
           location={location}
           photo={photo}
           color={color}

@@ -66,24 +66,26 @@ await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 console.log("member setup ok (two steps, no studios, lands on their week)");
 
-// The same three tabs a coach gets. Only where You points differs.
+// The same four tabs a coach gets. Only where You points differs.
 {
   const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (onFeed.length !== 3) fail(`a member should get three tabs, got ${onFeed.join(",")}`);
-  if (!onFeed[0].includes("Following") || !onFeed[1].includes("Discover") || !onFeed[2].includes("You"))
-    fail(`a member's tabs should be Following, Discover, You, got ${onFeed.join(",")}`);
+  if (onFeed.length !== 4) fail(`a member should get four tabs, got ${onFeed.join(",")}`);
+  if (!onFeed[0].includes("Home") || !onFeed[1].includes("Classes") || !onFeed[2].includes("Discover") || !onFeed[3].includes("You"))
+    fail(`a member's tabs should be Home, Classes, Discover, You, got ${onFeed.join(",")}`);
   await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL("**/discover");
-  if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
+  if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "You" }).click();
   await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own page");
+  if ((await p.locator(".navtab").count()) !== 4) fail("and to their own page");
   if ((await p.locator(".navtab.on").innerText()).includes("You") === false)
     fail("their own page should light the You tab");
-  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.locator(".navtab", { hasText: "Classes" }).click();
   await p.waitForURL("**/feed");
+  await p.locator(".navtab", { hasText: "Home" }).click();
+  await p.waitForURL("**/home");
 }
-console.log("member tabs ok (Following, Discover, You, everywhere)");
+console.log("member tabs ok (Home, Classes, Discover, You, everywhere)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.
@@ -104,11 +106,11 @@ console.log("member tabs ok (Following, Discover, You, everywhere)");
     avatar: !!document.querySelector(".navav"),
     lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
   }));
-  if (mid.tabs !== 3) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.tabs !== 4) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL("**/discover");
-  await p.locator(".navtab", { hasText: "Following" }).click();
+  await p.locator(".navtab", { hasText: "Classes" }).click();
   await p.waitForURL("**/feed");
 }
 console.log("chrome survives the loading boundary ok");

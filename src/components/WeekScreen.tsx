@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { setEventGoing } from "@/app/actions/events";
 import { setGoing } from "@/app/actions/going";
 import { addPersonalClass, removePersonalClass } from "@/app/actions/personal";
 import { InviteSheet } from "@/components/InviteFriends";
@@ -40,7 +41,7 @@ export function WeekScreen({
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [share, setShare] = useState(false);
   // Removing is one tap next to a list of things you meant to do, so it asks.
-  const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string; personalId?: string } | null>(null);
+  const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string; personalId?: string; eventId?: string } | null>(null);
   // Your own standing class: the one your coach isn't on fittlist for yet.
   const [addOpen, setAddOpen] = useState(false);
   const [pName, setPName] = useState("");
@@ -63,13 +64,15 @@ export function WeekScreen({
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const remove = (classId: string, iso: string, key: string, personalId?: string) => {
+  const remove = (classId: string, iso: string, key: string, personalId?: string, eventId?: string) => {
     setConfirm(null);
     setGone((g) => ({ ...g, [key]: true }));
     start(async () => {
-      const res = personalId
-        ? await removePersonalClass(personalId)
-        : await setGoing(classId, iso, false);
+      const res = eventId
+        ? await setEventGoing(eventId, false)
+        : personalId
+          ? await removePersonalClass(personalId)
+          : await setGoing(classId, iso, false);
       if (!res.ok) {
         setGone((g) => ({ ...g, [key]: false }));
         toast(res.error ?? "Couldn't remove that");
@@ -81,8 +84,12 @@ export function WeekScreen({
   };
 
   const shown = days
-    .map((d) => ({ ...d, items: d.items.filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`]) }))
-    .filter((d) => d.items.length > 0);
+    .map((d) => ({
+      ...d,
+      items: d.items.filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`]),
+      events: (d.events ?? []).filter((e) => !gone[`ev|${e.eventId}`]),
+    }))
+    .filter((d) => d.items.length > 0 || d.events.length > 0);
   // The first named person on a personal entry, for the invite line.
   const namedCoach = days
     .flatMap((d) => d.items)
@@ -276,6 +283,35 @@ export function WeekScreen({
                       </div>
                     );
                   })}
+                  {/* Events you marked, riding the same day. The heart means
+                      one thing everywhere it appears. */}
+                  {d.events.map((e) => (
+                    <div key={`ev|${e.eventId}`} className="weekrow">
+                      <span className="ps-accent weekrow-accent weekrow-ev" aria-hidden="true" />
+                      <Link className="weekrow-main" href={`/e/${e.eventId}`}>
+                        <span className="weekrow-nm">{e.name}</span>
+                        <span className="weekrow-sub">
+                          {e.timeLabel ? `${e.timeLabel} · ` : ""}
+                          {e.place}
+                        </span>
+                      </Link>
+                      <button
+                        className="weekrow-x"
+                        aria-label={`Remove ${e.name}`}
+                        onClick={() =>
+                          setConfirm({
+                            classId: "",
+                            iso: d.iso,
+                            key: `ev|${e.eventId}`,
+                            name: e.name,
+                            eventId: e.eventId,
+                          })
+                        }
+                      >
+                        <Icon name="close" size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
@@ -440,7 +476,7 @@ export function WeekScreen({
             <div className="publishwrap nostick">
               <button
                 className="btn si"
-                onClick={() => remove(confirm.classId, confirm.iso, confirm.key, confirm.personalId)}
+                onClick={() => remove(confirm.classId, confirm.iso, confirm.key, confirm.personalId, confirm.eventId)}
               >
                 Remove it
               </button>

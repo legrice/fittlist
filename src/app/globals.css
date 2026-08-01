@@ -927,15 +927,21 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-daycol {
   font-weight: 500; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
 }
-.ps-agenda .ps-daycards { display: block; gap: 0; }
+.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+/* The event listing's poster manners, carried to classes: a white card per
+   row lifted on the same soft shadow the profile photo overlay wears, scaled
+   to a list. The day header names the date, so the card doesn't. */
 .ps-agenda .ps-event {
-  grid-template-columns: 3px 1fr auto; gap: 0 13px; align-items: center;
-  background: transparent; border-radius: 0; box-shadow: none; padding: 18px 2px;
-  border-bottom: 1px solid var(--line);
+  grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
+  background: var(--card);
+  border-radius: 16px; padding: 14px 16px; border-bottom: none;
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
 }
-.ps-agenda .ps-event:hover { box-shadow: none; }
-.ps-agenda .ps-event:active { background: #f3ecdf; }
-.ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
+.ps-agenda .ps-event:hover {
+  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
+}
+.ps-agenda .ps-event:active { background: var(--cl); }
+.ps-agenda .ps-accent { display: none; }
 /* The name and the studio are one thing, so they sit close; the air belongs
    between rows, which is what the padding above is for. */
 .ps-agenda .ps-ebody { gap: 3px; }
@@ -944,7 +950,7 @@ button.bl-band { cursor: pointer; }
    the size both went a step away and came back. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-size: 18px; line-height: 1.2; letter-spacing: .004em;
+  font-weight: 700; font-size: 19px; line-height: 1.15; letter-spacing: -.005em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
@@ -957,10 +963,11 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
 .ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
-/* Private sessions: no card fill, just a muted accent bar + the Private badge. */
-.ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
-.ps-agenda .ps-event-private:active { background: #f3ecdf; }
-.ps-agenda .ps-event-private .ps-accent { background: var(--sa); }
+/* Private sessions keep reading as drafts: muted fill, dashed edge. */
+.ps-agenda .ps-event-private {
+  background: var(--cl); border: 1.5px dashed #c7bf9f;
+}
+.ps-agenda .ps-event-private:active { background: var(--cl); }
 
 .ps-card {
   display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
@@ -3152,7 +3159,10 @@ button.ps-card { cursor: pointer; }
 }
 
 /* ---- "I'm going": a personal note on a class, never a booking ---- */
-.ps-agenda .ps-event.goingon .ps-accent { width: 5px; }
+/* The marked card wears a quiet green ring, the same yes the tag gives. */
+.ps-agenda .ps-event.goingon {
+  box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
+}
 /* "I'm going" lives on the class page; the week only reports it. */
 /* A member's account: who you are, then the switches. No public page, no QR,
    no stats — those are a coach's. */
@@ -3180,14 +3190,12 @@ button.ps-card { cursor: pointer; }
 
 
 /* ---- discover (the directory) ---- */
-/* People or places. The tab decides what the box below is searching, which is
-   why the box says so. */
-.disseg { margin: 2px 0 12px; }
-/* The box and its filter on one row. Two rows of chrome above a list is most
-   of a phone screen spent on controls. */
-.dissearchrow { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; }
+/* The box and its filters on one row. Two rows of chrome above a list is most
+   of a phone screen spent on controls. It wraps rather than crushing the box
+   when a narrow screen has to hold both filters. */
+.dissearchrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 2px 0 14px; }
 .dissearch {
-  flex: 1; min-width: 0;
+  flex: 1 1 190px; min-width: 0;
   display: flex; align-items: center; gap: 8px; padding: 0 13px;
   background: var(--card); border: 1.5px solid var(--line); border-radius: 999px;
 }
@@ -3203,15 +3211,21 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; display: flex; border: none; background: none; padding: 4px; cursor: pointer;
   color: var(--ol);
 }
-/* Not sixty chips. Every city lives behind one picker, which on a phone opens
-   the OS wheel and stays usable at any number of them; it opens on the
-   viewer's own city, which is what Discover is for, and fills in when a city
-   is chosen so the row says what it's showing without being read. */
-.discitysel {
-  flex-shrink: 0; position: relative; display: flex; align-items: center;
-  height: 46px; border-radius: 999px; border: 1.5px solid var(--line);
+/* Two controls, not sixty chips. Near you is the one people want, so it's a
+   button; everywhere else lives behind a picker, which on a phone opens the
+   OS wheel and stays usable at any number of cities. */
+.disfilter { display: flex; gap: 8px; margin: 0 0 14px; }
+.disnear, .discitysel {
+  flex-shrink: 0; height: 38px; border-radius: 999px; border: 1.5px solid var(--line);
   background: var(--card); color: var(--ink);
   font-family: inherit; font-weight: 600; font-size: 13px; white-space: nowrap;
+}
+.disnear {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 15px; cursor: pointer;
+}
+.disnear.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.discitysel {
+  position: relative; flex-shrink: 0; display: flex; align-items: center; height: 46px;
 }
 .discitysel.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .discitysel-ic { position: absolute; left: 13px; color: var(--ol); pointer-events: none; }
@@ -3321,6 +3335,199 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; padding: 4px 0; cursor: pointer;
   font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ol);
 }
+/* The People/Events switch leads the page; the title it sat under is gone. */
+.disseg { margin: 4px 0 14px; flex: none; }
+/* An event row: a small date tile carries the when, the text the what. The
+   row is one link to the class page, where Going and share already live. */
+.disev {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 2px; text-decoration: none; color: inherit;
+  border-bottom: 1px solid var(--line);
+}
+.disev:last-child { border-bottom: none; }
+.disev-date {
+  flex-shrink: 0; width: 48px; height: 52px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.disev-date .mo {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--si);
+}
+.disev-date .dy {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 700; line-height: 1; color: var(--ink);
+}
+.disev-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.disev-txt .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.disev-txt .sub {
+  font-size: 12px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.disev-txt .wk { font-size: 12px; font-weight: 600; color: var(--ol); }
+.disev-chev { flex-shrink: 0; color: var(--ol); display: flex; }
+
+/* Coaches only, as a chip among the filters: it toggles like Near you. */
+.dischip {
+  flex-shrink: 0; padding: 9px 14px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.dischip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* The coach's door onto the events board. */
+.evpost {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+}
+.evpost .icon { color: var(--si); }
+/* A posted event with a flyer: the image carries the card, the date tile
+   rides its corner. Flyers are portrait or square as often as wide, so the
+   image keeps its own shape under a cap instead of being forced to a crop. */
+.discard {
+  display: block; text-decoration: none; color: inherit;
+  padding: 14px 2px; border-bottom: 1px solid var(--line);
+}
+.discard:last-child { border-bottom: none; }
+.discard-imgwrap { position: relative; display: block; }
+.discard-img {
+  display: block; width: 100%; max-height: 300px; object-fit: cover;
+  border-radius: 16px; border: 1px solid var(--line);
+}
+.discard-date { position: absolute; top: 10px; left: 10px; }
+.discard-body { display: flex; flex-direction: column; gap: 1px; padding: 10px 2px 0; }
+.discard-body .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 17px;
+}
+.discard-body .sub { font-size: 12.5px; color: var(--ol); }
+.discard-body .wk { font-size: 12px; font-weight: 600; color: var(--ol); }
+
+/* The event's own page: flyer, facts, one link out. */
+.evhero {
+  display: block; width: 100%; max-height: 420px; object-fit: cover;
+  border-radius: 18px; border: 1px solid var(--line); margin-bottom: 18px;
+}
+.evtitle { margin-bottom: 12px; }
+.evfacts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.evfact { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.evfact .icon { color: var(--ol); flex-shrink: 0; }
+.evposter { font-size: 12.5px; color: var(--ol); margin-top: 18px; }
+.evposter a { color: inherit; font-weight: 600; }
+
+/* "Tell someone you're going": the share leaning forward at the moment of
+   commitment. Tinted, not solid: it's an offer, not the next required step. */
+.invitebtn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 10px; padding: 12px 16px; border-radius: 999px;
+  border: none; cursor: pointer;
+  background: var(--si-tint); color: var(--si-ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+}
+.invitebtn:active { transform: scale(.98); }
+/* The sheet's share button wearing the invitation. */
+.classsheet-share.invite { background: var(--si-tint); color: var(--si-ink); border-radius: 999px; }
+
+/* "With Joanne and Dave": the companions editor and the roster's sub-line. */
+.withbtn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 8px; padding: 10px 14px; border-radius: 999px;
+  border: none; background: none; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
+  color: var(--ol);
+}
+.withwrap { margin-top: 10px; text-align: left; }
+.withrow { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.withsave {
+  padding: 9px 20px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--ink); color: var(--paper);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
+}
+.rosterrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rosterrow-with { font-size: 12px; color: var(--ol); }
+
+/* The "You're in" second screen: two doors, both the person's to open. */
+.tellsheet-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.tellbtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--ink); color: var(--paper);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14.5px;
+}
+.tellbtn[disabled] { opacity: .75; }
+.tellbtn-text { background: var(--si-tint); color: var(--si-ink); }
+.tellsheet-done { display: block; margin: 16px auto 4px; }
+
+/* Following: the teach line over an empty week. */
+.feedhint { font-size: 13px; color: var(--ol); margin: 2px 0 14px; }
+/* A member's chips and their one link out. */
+.mempro-trains { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.mempro-insta {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink); text-decoration: none;
+  padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--card);
+}
+
+/* The invite picker: your mutuals as tappable rows, then the send. */
+.tellpick { margin-top: 16px; text-align: left; }
+.tellpick-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+  margin-bottom: 8px;
+}
+.tellpick-list { max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
+.tellrow {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 10px; border-radius: 12px; border: none; background: none; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+.tellrow.on { background: var(--cl); }
+.tellrow-av {
+  width: 34px; height: 34px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
+}
+.tellrow-av-empty {
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+}
+.tellrow-nm { flex: 1; min-width: 0; font-weight: 600; font-size: 14.5px; color: var(--ink); }
+.tellrow-check { color: var(--go); opacity: 0; display: flex; }
+.tellrow.on .tellrow-check { opacity: 1; }
+
+/* The admin's Activity door and its list. */
+.adminact { position: relative; }
+.adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
+.actsheet .actlist { margin-top: 6px; }
+.actrow {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 11px 2px; border-bottom: 1px solid var(--line);
+}
+.actrow:last-child { border-bottom: none; }
+.actrow-ic { color: var(--ol); flex-shrink: 0; margin-top: 2px; display: flex; }
+.actrow.fresh .actrow-ic { color: var(--si); }
+.actrow-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.actrow-txt .s { font-size: 12px; color: var(--ol); }
+
+.evwho { margin-top: 26px; }
+.evwho-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
+  margin-bottom: 10px;
+}
+
+/* The composer's two dates side by side, and the flyer preview. */
+.evdates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.evabout { resize: vertical; min-height: 70px; }
+.evflyer img {
+  display: block; width: 100%; max-height: 220px; object-fit: cover;
+  border-radius: 12px; border: 1px solid var(--line);
+}
+.evflyer .tertiary { display: block; margin: 8px auto 0; }
+.evpick { display: flex; }
+
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
@@ -3426,23 +3633,6 @@ button.ps-card { cursor: pointer; }
 /* The gap under the header while a tab loads. Holds the scroll position so
    the page doesn't jump when the content lands. */
 .tabloading { min-height: 60vh; }
-
-/* The admin's Activity door and its list. */
-.adminact { position: relative; }
-.adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
-.actsheet .actlist { margin-top: 6px; }
-.actrow {
-  display: flex; align-items: flex-start; gap: 11px;
-  padding: 11px 2px; border-bottom: 1px solid var(--line);
-}
-.actrow:last-child { border-bottom: none; }
-.actrow-ic { color: var(--ol); flex-shrink: 0; margin-top: 2px; display: flex; }
-.actrow.fresh .actrow-ic { color: var(--si); }
-.actrow-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.actrow-txt .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
-.actrow-txt .s { font-size: 12px; color: var(--ol); }
-
-/* ---- The class overlay and its manners ---- */
 
 /* The class overlay: full screen over a light blur of the page you were on,
    floating back and share circles, the class in open space, and a dark pill
@@ -3564,49 +3754,147 @@ button.ps-card { cursor: pointer; }
 .favtoast-heart svg { fill: currentColor; }
 .favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 
+/* The empty room: an invitation, not a verdict. The one place share lives. */
+.emptyroom { margin-top: 18px; }
+.emptyroom-p { font-size: 13.5px; color: var(--ol); margin: 4px 0 12px; }
+.emptyroom-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--si-tint); color: var(--si-ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
+}
+.emptyroom-btn:active { transform: scale(.98); }
+
+/* An event with no flyer gets a poster made for it: tinted card, date tile
+   riding the corner, the name set big. Ink stays ink in the dark theme too,
+   because the tints are paper whatever the sky is. */
+.disposter {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 150px; border-radius: 18px; padding: 16px; margin-bottom: 14px;
+  text-decoration: none; color: #191502; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.disposter:active { transform: scale(.99); }
+.disposter-date { position: absolute; top: 12px; left: 12px; background: #fff; color: #191502; }
+.disposter-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 800;
+  font-size: 24px; line-height: 1.06; letter-spacing: -.01em;
+}
+.disposter-sub { margin-top: 6px; font-size: 13px; font-weight: 600; opacity: .72; }
+.disposter-by { margin-top: 2px; font-size: 12px; font-weight: 600; opacity: .55; }
+
+/* The flyer inside the event overlay, under the floating circles. */
+.evsheet-hero {
+  display: block; width: 100%; max-height: 300px; object-fit: cover;
+  border-radius: 18px; margin-bottom: 18px;
+}
+/* The event page carries the same floating pill, so its tail needs room. */
+.profwrap:has(.classoverlay-cta) { padding-bottom: 110px; }
+
+/* Your plans: the top of Home. Everything hearted that's still ahead, in one
+   sideways row, each chip opening the same overlay as everywhere else. */
+.plans { margin: 2px 0 18px; }
+.plans-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  font-size: 15px; margin-bottom: 9px;
+}
+.plans-row {
+  display: flex; gap: 10px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.plans-row::-webkit-scrollbar { display: none; }
+.planchip {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-width: 150px; max-width: 220px; padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--card); cursor: pointer; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.planchip:active { transform: scale(.98); }
+.planchip-when {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--si);
+}
+.planchip-nm {
+  font-weight: 700; font-size: 14.5px; color: var(--ink);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.planchip-sub {
+  font-size: 12px; color: var(--ol);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Coaches near you: a quiet door to Discover at the bottom of Home. */
+.nearby { margin-top: 28px; }
+.nearby-h { display: flex; align-items: baseline; justify-content: space-between; }
+.nearby-all { font-size: 12.5px; font-weight: 600; color: var(--ol); text-decoration: none; }
+.nearby-row {
+  display: flex; gap: 14px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.nearby-row::-webkit-scrollbar { display: none; }
+.nearbyc {
+  flex: 0 0 auto; width: 76px; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; text-decoration: none; color: var(--ink);
+  font-weight: 600; font-size: 12.5px; text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.nearbyc:active { opacity: .7; }
+.nearbyc-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.nearbyc-av-empty {
+  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.nearbyc-nm { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* An event row on the week screen wears the brand accent; classes wear their
+   coach's colour. */
+.weekrow-ev { background: var(--si); }
+
+/* Home: the doors. A hint under an empty shelf, the door to the week, and
+   the events row as small posters. */
+.homehint { font-size: 13px; color: var(--ol); }
+.homedoor {
+  display: flex; align-items: center; gap: 12px;
+  padding: 15px 16px; margin: 0 0 6px; border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line);
+  text-decoration: none; color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.homedoor:active { transform: scale(.99); }
+.homedoor-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.homedoor-txt .t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15.5px;
+}
+.homedoor-txt .s { font-size: 12.5px; color: var(--ol); }
+.homedoor .icon { color: var(--ol); flex-shrink: 0; }
+.homeevs {
+  display: flex; gap: 10px; overflow-x: auto;
+  margin: 0 -18px; padding: 0 18px 4px;
+  scrollbar-width: none;
+}
+.homeevs::-webkit-scrollbar { display: none; }
+.disposter-mini {
+  flex: 0 0 230px; min-height: 120px; margin-bottom: 0; padding: 14px;
+  background: var(--card);
+}
+.disposter-mini .disposter-nm { font-size: 19px; position: relative; }
+.disposter-mini .disposter-sub { position: relative; }
+/* A flyer behind the words, dimmed enough for ink to win. */
+.disposter-mini-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5;
+}
+
 /* Section titles inside the overlay, About first among them. */
 .ovsec-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
   font-size: 15px; margin: 22px 0 6px;
 }
 .classoverlay-desc { margin-top: 0; }
-
 /* The booking hand-off: fittlist points the way, the studio takes the money. */
 .bookout-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-
-/* ---- Class rows as white cards on the profile overlay's soft shadow ---- */
-
-.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
-/* The event listing's poster manners, carried to classes: a white card per
-   row lifted on the same soft shadow the profile photo overlay wears, scaled
-   to a list. The day header names the date, so the card doesn't. */
-.ps-agenda .ps-event {
-  grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
-  background: var(--card);
-  border-radius: 16px; padding: 14px 16px; border-bottom: none;
-  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
-}
-.ps-agenda .ps-event:hover {
-  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
-}
-.ps-agenda .ps-event:active { background: var(--cl); }
-.ps-agenda .ps-accent { display: none; }
-
-.ps-agenda .ps-enm {
-  display: flex; align-items: center; gap: 8px;
-  font-weight: 700; font-size: 19px; line-height: 1.15; letter-spacing: -.005em;
-}
-
-/* Private sessions keep reading as drafts: muted fill, dashed edge. */
-.ps-agenda .ps-event-private {
-  background: var(--cl); border: 1.5px dashed #c7bf9f;
-}
-.ps-agenda .ps-event-private:active { background: var(--cl); }
-
-/* The marked card wears a quiet green ring, the same yes the tag gives. */
-.ps-agenda .ps-event.goingon {
-  box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
-}
 
 /* Studio page sections: a hairline seam between each, and room to breathe.
    The first (About) opens the page, so it carries no rule. */

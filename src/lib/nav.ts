@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: your week, updates, settings. */
-export type NavTab = "following" | "discover" | "you" | "none";
+export type NavTab = "home" | "following" | "discover" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -24,7 +24,11 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, youHref?: string): NavItem[] {
   return [
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // Home is the doors; Classes is the room. Home holds the entry points
+    // (your plans, your coaches, what's coming up); the agenda of classes
+    // from the coaches you follow lives one tab over, where it can be long.
+    { id: "home", href: "/home", icon: "home", label: "Home" },
+    { id: "following", href: "/feed", icon: "event", label: "Classes" },
     { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     // Your own page, as everyone else sees it. It carries your face rather
     // than an icon: it's the one tab that is a person rather than a place. A
@@ -40,6 +44,7 @@ export function navTabs(coach: boolean, youHref?: string): NavItem[] {
  *  the tab has to stay lit. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
+  if (pathname.startsWith("/home")) return "home";
   if (pathname.startsWith("/discover")) return "discover";
   if (pathname.startsWith("/feed")) return "following";
   if (pathname.startsWith("/app") || pathname.startsWith("/you")) return "you";

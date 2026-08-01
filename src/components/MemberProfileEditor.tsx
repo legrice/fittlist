@@ -18,6 +18,8 @@ export function MemberProfileEditor({
   handle,
   title,
   about,
+  instagram,
+  highlights,
   location,
   photo,
   color,
@@ -27,6 +29,8 @@ export function MemberProfileEditor({
   handle: string | null;
   title: string;
   about: string;
+  instagram: string;
+  highlights: string[];
   location: string;
   photo: string | null;
   color: string;
@@ -40,6 +44,8 @@ export function MemberProfileEditor({
   const [pHandle, setPHandle] = useState(handle ?? "");
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
+  const [pInsta, setPInsta] = useState(instagram);
+  const [pTrains, setPTrains] = useState(highlights.join(", "));
   const [pLocation, setPLocation] = useState(location);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
   const [err, setErr] = useState("");
@@ -100,9 +106,14 @@ export function MemberProfileEditor({
         about: pAbout,
         location: pLocation,
         photo: pPhoto,
-        // Contact fields are a coach's, and this sheet doesn't offer them.
-        // Empty is the honest value rather than a field left half-set.
-        instagram: "",
+        instagram: pInsta,
+        // "How I train", worn as chips: the member's version of a coach's
+        // What to Expect, stored in the same column.
+        highlights: pTrains
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .slice(0, 6),
         website: "",
       });
       if (!res.ok) {
@@ -234,6 +245,28 @@ export function MemberProfileEditor({
               placeholder="Six mornings a week, mostly barbells."
               value={pAbout}
               onChange={(e) => setPAbout(e.target.value)}
+            />
+
+            <label className="flabel" htmlFor="meTrains">
+              How you train <span>· a few words, separated by commas</span>
+            </label>
+            <input
+              id="meTrains"
+              className="editinput"
+              placeholder="Kettlebells, running, hot yoga"
+              value={pTrains}
+              onChange={(e) => setPTrains(e.target.value)}
+            />
+
+            <label className="flabel" htmlFor="meInsta">
+              Instagram <span>· optional</span>
+            </label>
+            <input
+              id="meInsta"
+              className="editinput"
+              placeholder="@yourhandle"
+              value={pInsta}
+              onChange={(e) => setPInsta(e.target.value)}
             />
 
             {err && (

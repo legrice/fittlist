@@ -10,6 +10,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
+import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { PublicTopBar } from "@/components/PublicTopBar";
 
@@ -142,6 +143,28 @@ export async function MemberProfileView({
         </div>
 
         {user.about?.trim() && <p className="mempro-about">{user.about}</p>}
+
+        {/* How they train, worn as chips: the reason a profile is worth
+            opening even before you follow each other. */}
+        {user.highlights.length > 0 && (
+          <div className="mempro-trains">
+            {user.highlights.map((t, i) => (
+              <span key={i} className="studiotype">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+        {user.instagram?.trim() && (
+          <a
+            className="mempro-insta"
+            href={`https://instagram.com/${user.instagram.replace(/^@/, "")}`}
+            target="_blank"
+            rel="noopener"
+          >
+            <InstagramGlyph size={16} /> @{user.instagram.replace(/^@/, "")}
+          </a>
+        )}
 
         {(mutual || isOwner) && week.length > 0 && (
           <div className="memweek">

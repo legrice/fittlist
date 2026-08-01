@@ -5,8 +5,8 @@ import { publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverCoach, type DiscoverStudio } from "@/components/DiscoverList";
+import { fmtTime, runsOn, todayIso } from "@/lib/format";
+import { DiscoverList, type DiscoverCoach, type DiscoverEvent, type DiscoverStudio } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -104,11 +104,11 @@ export default async function DiscoverPage() {
     a.localeCompare(b),
   );
 
-  // The other half of the directory. Every studio, in name order: a row here
-  // is a place, and a place doesn't get ranked by whether it signed up. The
-  // tag says which of them you can see a week for, which is the useful part.
-  const studioRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
-  const studios: DiscoverStudio[] = studioRows.map((st) => ({
+  // The third lens: every studio, in name order. A row here is a place, and a
+  // place doesn't get ranked by whether it signed up; the tag says which of
+  // them you can see a week for, which is the useful part.
+  const studioDirRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
+  const studios: DiscoverStudio[] = studioDirRows.map((st) => ({
     id: st.id,
     slug: st.slug ?? st.id,
     name: st.name,
@@ -118,6 +118,81 @@ export default async function DiscoverPage() {
     hasSchedule: !!st.accountUserId,
   }));
 
+  // Events: the one-off dated classes coaches have posted, over the next four
+  // weeks. Not a new object, a new lens: these are ordinary public class rows
+  // with a specificDate, so Going marks, the class page and the .ics already
+  // work on them. The window keeps the list honest; a "calendar" stretching
+  // into an empty future is how this feature would read as dead.
+  const today = todayIso();
+  const horizon = new Date(`${today}T00:00:00Z`);
+  horizon.setUTCDate(horizon.getUTCDate() + 28);
+  const horizonIso = horizon.toISOString().slice(0, 10);
+  const userRowById = new Map(rows.map((r) => [r.id, r]));
+  const eventRows = classRows
+    .filter((c) => c.specificDate && c.specificDate >= today && c.specificDate <= horizonIso)
+    .sort(
+      (a, b) =>
+        a.specificDate!.localeCompare(b.specificDate!) || a.startTime.localeCompare(b.startTime),
+    );
+  const eventStudioIds = [...new Set(eventRows.map((c) => c.studioId).filter((x): x is string => !!x))];
+  const eventStudios = eventStudioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, eventStudioIds))
+    : [];
+  const studioNameById = new Map(eventStudios.map((s) => [s.id, s.name]));
+  const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dateBits = (isoDay: string) => {
+    const d = new Date(`${isoDay}T00:00:00Z`);
+    return { wd: WD[(d.getUTCDay() + 6) % 7], mon: MO[d.getUTCMonth()], day: d.getUTCDate() };
+  };
+  const classEvents: DiscoverEvent[] = eventRows.flatMap((c) => {
+    const coach = userRowById.get(c.userId);
+    if (!coach?.handle) return [];
+    const b = dateBits(c.specificDate!);
+    const place = (c.studioId && studioNameById.get(c.studioId)) || c.location || "";
+    return [
+      {
+        id: c.id,
+        href: `/${coach.handle}/${c.id}?d=${c.specificDate}&from=discover`,
+        name: c.name,
+        ...b,
+        sub: [`${b.wd} · ${fmtTime(c.startTime)}`, place].filter(Boolean).join(" · "),
+        by: `with ${coach.name}`,
+        city: coach.location?.trim() ?? "",
+        photo: null,
+        sort: `${c.specificDate}T${c.startTime}`,
+      },
+    ];
+  });
+
+  // Posted events: the expos, competitions and meetups that aren't anyone's
+  // class. A multi-day one keeps listing while it's still running.
+  const postedRows2 = await db.select().from(schema.events);
+  const posted: DiscoverEvent[] = postedRows2
+    .filter((e) => e.endDate >= today && e.startDate <= horizonIso)
+    .map((e) => {
+      const b = dateBits(e.startDate);
+      const multi = e.endDate !== e.startDate;
+      const end = dateBits(e.endDate);
+      const whenBits = multi
+        ? [`${b.wd}, ${b.mon} ${b.day} to ${end.wd}, ${end.mon} ${end.day}`]
+        : [b.wd, e.startTime ? fmtTime(e.startTime) : null];
+      const poster = e.createdByUserId ? userRowById.get(e.createdByUserId) : undefined;
+      const host = e.hostName?.trim() || poster?.name || "";
+      return {
+        id: e.id,
+        href: `/e/${e.id}`,
+        name: e.name,
+        ...b,
+        sub: [...whenBits, e.place].filter(Boolean).join(" · "),
+        by: host ? `Hosted by ${host}` : "",
+        city: e.city?.trim() ?? "",
+        photo: e.photo,
+        sort: `${e.startDate}T${e.startTime ?? "00:00"}`,
+      };
+    });
+  const events = [...classEvents, ...posted].sort((a, b) => a.sort.localeCompare(b.sort));
+
   return (
     <>
       {/* The title lives inside the list now, so the coaches-only switch can
@@ -125,8 +200,10 @@ export default async function DiscoverPage() {
       <DiscoverList
         coaches={coaches}
         studios={studios}
+        events={events}
         cities={cities}
         myCity={me.location?.trim() || null}
+        canPost={isCoach}
         backHref="/feed"
         hideBack
       />

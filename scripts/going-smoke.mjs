@@ -97,6 +97,157 @@ const stillGoing = await m.locator(".ps-event.goingon").count();
 if (stillGoing !== 1) fail(`editing the class dropped the Going mark (${stillGoing} left)`);
 console.log("an edit keeps the Going marks ok");
 
+// --- the room introduces itself early. Ruth and Sarah agree to each other
+// (mutual follows), Ruth marks the same occurrence, and three things follow:
+// Sarah is told Ruth is going too, Ruth sees Sarah on the sheet, and a
+// stranger who hasn't committed sees no list at all.
+const c3 = await b.newContext({ viewport: { width: 390, height: 844 } });
+const r = await c3.newPage();
+r.setDefaultTimeout(15000);
+await r.goto(BASE + "/");
+await r.getByRole("button", { name: "Sign up with email" }).click();
+await r.locator(".roleseg button", { hasText: "here to train" }).click();
+await r.getByPlaceholder("you@example.com").fill("ruth@example.com");
+await r.getByPlaceholder("Password").fill("member-pass-123");
+await r.getByRole("button", { name: "Create account" }).click();
+await r.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await r.getByText("Pick your link.").waitFor();
+await r.getByPlaceholder("Your name").fill("Ruth");
+await r.getByRole("button", { name: "Claim it" }).click();
+await r.getByRole("heading", { name: "Add a photo." }).waitFor();
+await r.getByRole("button", { name: "Continue" }).click();
+await r.locator("#wLocation").fill("Jersey City, NJ");
+await r.getByRole("button", { name: "Finish setup" }).click();
+await r.waitForURL("**/feed");
+// the agreement, both directions
+await r.goto(BASE + "/sarah");
+await r.locator(".profacts .followpill").waitFor();
+await r.waitForTimeout(400);
+await r.locator(".profacts .followpill").click();
+await r.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await m.goto(BASE + "/ruth");
+await m.locator(".profacts .followpill").waitFor();
+await m.waitForTimeout(400);
+await m.locator(".profacts .followpill").click();
+await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+// Ruth follows Carina too and marks the same occurrence Sarah did: the
+// feed's first row, which is the next one that hasn't run yet.
+await r.goto(BASE + "/carina");
+await r.locator(".profacts .followpill").waitFor();
+await r.waitForTimeout(400);
+await r.locator(".profacts .followpill").click();
+await r.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await r.goto(BASE + "/feed");
+await r.locator(".feedagenda .ps-event").first().click();
+await r.locator(".ovcta-save").waitFor();
+await r.locator(".ovcta-save").click();
+// The note answers the heart: the favorites toast, with the door to the
+// list it joined. No second screen.
+await r.getByText("Added to your favorites").waitFor();
+await r.locator(".ovcta-save.on").waitFor();
+// the word leaves with the tap: just the filled heart now
+if ((await r.locator(".ovcta-save").innerText()).trim()) fail("the saved heart should drop the word");
+// reopening the overlay brings the room with it
+await r.locator(".ovcircle-back").click();
+await r.waitForTimeout(400);
+await r.locator(".feedagenda .ps-event").first().click();
+await r.getByText(/Also saved · 1/).waitFor();
+await r.locator(".classsheet-roster", { hasText: "Sarah" }).waitFor();
+await r.locator(".ovcircle-back").click();
+console.log("fellow goer sees the room ok (Sarah on Ruth's sheet)");
+
+// Ruth brings two friends who aren't on the app. Names, not accounts, and
+// they show exactly where the roster shows: Sarah's sheet and the coach's
+// roster, nowhere public.
+await r.locator(".feedagenda .ps-event").first().click();
+await r.locator(".withbtn", { hasText: "Bringing anyone" }).click();
+await r.locator("#withNames").fill("Joanne, Dave");
+await r.locator(".withsave").click();
+await r.locator(".withbtn", { hasText: "With Joanne and Dave" }).waitFor();
+await r.locator(".ovcircle-back").click();
+await m.goto(BASE + "/feed");
+await m.locator(".feedagenda .ps-event").first().click();
+await m.locator(".rosterrow", { hasText: "Ruth" }).getByText("with Joanne and Dave").waitFor();
+await m.locator(".ovcircle-back").click();
+await co.goto(BASE + "/app");
+await co.locator(".ps-event[data-cid]").first().click();
+await co.getByRole("heading", { name: /Edit class/ }).waitFor();
+await co.locator(".sheetclose").click().catch(() => {});
+console.log("companions ok (named friends ride the roster, no accounts needed)");
+// Sarah hears about it twice over: the automatic fellow-goer notice, and
+// the ask Ruth sent on purpose.
+await m.goto(BASE + "/updates");
+await m.getByText("Ruth is going too").waitFor();
+console.log("going-too ok (mutuals only, same occurrence)");
+// a stranger who hasn't committed sees no list
+const c4 = await b.newContext({ viewport: { width: 390, height: 844 } });
+const n = await c4.newPage();
+n.setDefaultTimeout(15000);
+await n.goto(BASE + "/");
+await n.getByRole("button", { name: "Sign up with email" }).click();
+await n.locator(".roleseg button", { hasText: "here to train" }).click();
+await n.getByPlaceholder("you@example.com").fill("nora@example.com");
+await n.getByPlaceholder("Password").fill("member-pass-123");
+await n.getByRole("button", { name: "Create account" }).click();
+await n.getByRole("button", { name: "Not now" }).click().catch(() => {});
+await n.getByText("Pick your link.").waitFor();
+await n.getByPlaceholder("Your name").fill("Nora");
+await n.getByRole("button", { name: "Claim it" }).click();
+await n.getByRole("heading", { name: "Add a photo." }).waitFor();
+await n.getByRole("button", { name: "Continue" }).click();
+await n.locator("#wLocation").fill("Jersey City, NJ");
+await n.getByRole("button", { name: "Finish setup" }).click();
+await n.waitForURL("**/feed");
+await n.goto(BASE + "/carina");
+await n.locator(".profacts .followpill").waitFor();
+await n.waitForTimeout(400);
+await n.locator(".profacts .followpill").click();
+await n.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
+await n.goto(BASE + "/feed");
+await n.locator(".feedagenda .ps-event").first().click();
+await n.locator(".ovcta-save").waitFor();
+if (await n.getByText(/Also saved/).count())
+  fail("someone who hasn't committed should see no roster");
+await n.locator(".ovcircle-back").click();
+console.log("no lurking ok (the price of the list is being on it)");
+
+// --- Going on an event: the poster sees the room, a fellow goer sees the
+// others, and the marker's mutuals hear about it without needing to be going.
+await co.goto(BASE + "/discover");
+await co.locator(".disseg button", { hasText: "Events" }).click();
+await co.locator(".evpost").click();
+await co.getByRole("heading", { name: "Post an event" }).waitFor();
+const evDate = new Date();
+evDate.setUTCDate(evDate.getUTCDate() + 5);
+await co.locator("#evName").fill("Harbor Throwdown");
+await co.locator("#evStart").fill(evDate.toISOString().slice(0, 10));
+await co.locator("#evPlace").fill("Harborside, Jersey City");
+await co.getByRole("button", { name: "Post event" }).click();
+await co.getByText("Event posted").waitFor();
+// Tapping the poster opens the overlay now; the href stays real for the
+// page a link opens, which is what the rest of this block drives.
+const evPath = await co.locator(".disposter", { hasText: "Harbor Throwdown" }).getAttribute("href");
+if (!/^\/e\//.test(evPath ?? "")) fail("an event poster should link at its page: " + evPath);
+const evUrl = BASE + evPath;
+// Sarah goes; her mutual Ruth hears even though Ruth isn't going yet
+await m.goto(evUrl);
+await m.getByRole("button", { name: "I'm going" }).click();
+await m.locator(".ovcta-save.on").waitFor();
+// first one in: the empty room offers the share
+await m.locator(".emptyroom-btn", { hasText: "Share with friends" }).waitFor();
+await r.goto(BASE + "/updates");
+await r.getByText("Sarah is going to Harbor Throwdown").waitFor();
+console.log("event going-notification ok (mutual told, without being marked)");
+// Ruth goes too and sees Sarah; the poster sees the pair
+await r.goto(evUrl);
+await r.getByRole("button", { name: "I'm going" }).click();
+await r.locator(".ovcta-save.on").waitFor();
+await r.getByText(/Also going · 1/).waitFor();
+await r.locator(".evwho", { hasText: "Sarah" }).waitFor();
+await co.goto(evUrl);
+await co.getByText(/Going · 2/).waitFor();
+console.log("event room ok (goers see each other, the poster sees the list)");
+
 // --- copy week as text, from Share on their own page
 await co.goto(BASE + "/carina");
 await co.locator(".profacts .actpill").first().waitFor();

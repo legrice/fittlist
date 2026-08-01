@@ -336,7 +336,7 @@ export function ScheduleScreen({
           unread={updatesUnread}
           weekCount={weekCount}
           adminNew={adminNew}
-          home={showFanView ? "/feed" : "/app"}
+          home={showFanView ? "/home" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "you", youHref: `/${handle}` } : undefined}
