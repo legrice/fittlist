@@ -1958,22 +1958,26 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 {
-  const on = await page
-    .locator(".profacts .followpill")
-    .evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (on !== "rgb(255, 255, 255)") fail("Following should fill white, got " + on);
-  // And unfollowed it goes back to the outline: transparent, with a white
-  // border to read against whatever the photograph is doing.
+  // Both pills are the same glass the floating buttons wear: white, but see
+  // through, so a photograph reads under them rather than being punched out.
+  const read = () =>
+    page.locator(".profacts .followpill").evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { bg: s.backgroundColor, border: s.borderTopColor, blur: s.backdropFilter };
+    });
+  const on = await read();
+  if (!/^rgba\(255, 255, 255, 0\.8/.test(on.bg))
+    fail("Following should fill in white glass, got " + on.bg);
+  if (!/blur/.test(on.blur)) fail("the pill should be blurred, got " + on.blur);
+  // And unfollowed it goes back to the lighter one, with a white border to
+  // read against whatever the photograph is doing.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
-  const off = await page.locator(".profacts .followpill").evaluate((e) => {
-    const s = getComputedStyle(e);
-    return `${s.backgroundColor}|${s.borderTopColor}`;
-  });
-  if (!off.startsWith("rgba(0, 0, 0, 0)") && !off.startsWith("transparent"))
-    fail("Follow should be an outline on the photo, got " + off);
-  if (!/rgba?\(255, 255, 255/.test(off.split("|")[1]))
-    fail("Follow's border should be white, got " + off);
+  const off = await read();
+  if (!/^rgba\(255, 255, 255, 0\.2/.test(off.bg))
+    fail("Follow should be the lighter glass, got " + off.bg);
+  if (!/rgba?\(255, 255, 255/.test(off.border))
+    fail("Follow's border should be white, got " + off.border);
   // Put it back, so the rest of the suite finds the follow it expects.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();

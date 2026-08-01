@@ -16,6 +16,7 @@ import { Icon } from "@/components/Icon";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -193,12 +194,9 @@ export async function StudioView({
               <span className="kindtag">Studio</span>
               {/* Said once, quietly: it explains why the pencil is gone for
                   everyone else, and it is the thing that makes the page worth
-                  trusting. */}
-              {access.claimed && (
-                <span className="kindtag studiokept">
-                  <Icon name="verified" size={13} /> Verified studio
-                </span>
-              )}
+                  trusting. Tapping it says so in full, and offers the way in to
+                  anyone who runs a place of their own. */}
+              {access.claimed && <VerifiedBadge studioId={s.id} name={s.name} />}
             </div>
           }
           ownerTop={

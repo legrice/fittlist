@@ -378,12 +378,21 @@ coach was to copy the address bar. An owner's Share pill under the name is a
 different thing and stays: that one carries the story image, the QR code and
 the week as text.
 
-**The floating action buttons are glass, not slabs.** Add class and Discover's
-filter both float over something somebody is reading, so both are white at 78%
-with a backdrop blur rather than a block of brand orange. The orange is still
-the app's, it just isn't spent on a control that sits permanently over a
-schedule. Change one and change the other, or they stop reading as the same
-kind of thing.
+**The floating action buttons are glass, not slabs.** Add class, Discover's
+filter and the two pills on a profile's photograph are all white with a
+backdrop blur rather than solid: a block of colour over a photograph is a hole
+in it, and the brand orange isn't spent on a control that sits permanently over
+a schedule. The primary one is white at 80%, the secondary at 20% with a white
+border, and following fills to match. Change one and change the rest, or they
+stop reading as the same kind of thing.
+
+**The Verified studio badge explains itself.** `VerifiedBadge` is a button, and
+tapping it says what the badge means (the people who run the place keep the
+page, which is why nobody else can edit it) and offers the way in for somebody
+who runs a studio of their own. That way in is the Suggest an edit sheet that
+already exists, whose relation field starts with "I own it": that is how a
+studio actually gets claimed today, so this points at it rather than inventing
+a second door. A badge nobody can ask about is a claim taken on faith.
 
 **The header floats over a profile's photograph, it doesn't sit above it.**
 `.pub .brandbar` and `.pub .pubtop` are `position: absolute` at the top of

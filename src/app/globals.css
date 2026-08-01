@@ -1866,18 +1866,26 @@ button.ps-card { cursor: pointer; }
 }
 .profhero-txt { position: relative; text-align: left; }
 /* On the image, so they read as white on the photograph rather than as page
-   furniture underneath it. Contact is solid because it starts something;
-   Follow is an outline until it's a yes, and then it fills in too. */
+   furniture underneath it, and in the same glass the floating buttons wear:
+   a solid white slab over a photograph is a hole in it. Contact leads because
+   it starts something; Follow is the lighter one until it's a yes, and then it
+   fills to match. */
 .profhero .profacts { margin-top: 16px; }
 .profhero .actpill,
 .profhero .followpill {
-  background: #fff; color: #111; border-color: #fff;
+  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
 .profhero .followpill:not(.on) {
-  background: transparent; color: #fff; border-color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .2); color: #fff; border-color: rgba(255, 255, 255, .55);
 }
-.profhero .followpill.on { background: #fff; color: #111; border-color: #fff; }
+.profhero .followpill.on {
+  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
+}
 .profhero .actpill .icon { color: #111; }
+.profhero .followpill:not(.on) .icon { color: #fff; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
 /* A pin beside the city, drawn in the same white as the words it labels. */
 .profwhere { display: inline-flex; align-items: center; gap: 4px; }
@@ -3840,7 +3848,12 @@ button.ps-card { cursor: pointer; }
 /* A studio that runs its own page says so, once, as a second badge beside
    Studio. It is why the pencil is gone for everyone else, and it is what makes
    the details worth trusting. */
-.studiokept { display: inline-flex; align-items: center; gap: 4px; }
+/* A button, not a label: it explains itself, so it has to be told the things a
+   span never needed. */
+.studiokept {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: none; cursor: pointer; font-size: 12px;
+}
 .profhero .studiokept { background: rgba(61, 139, 83, .82); }
 [data-mode="dark"] .profhero .studiokept { background: rgba(61, 139, 83, .9); }
 
