@@ -9,7 +9,16 @@ import { useEffect, useRef, type ReactNode } from "react";
 // /{handle}/contact redirects onto the schedule where that pill lives.
 export type ProfileTab = "about" | "studios" | "schedule";
 
-// The public profile header and one section under it.
+/** One tab: the key is the URL suffix, and the first in the list owns the
+ *  bare base rather than a suffix of its own. */
+export type TabDef = { key: string; label: string };
+
+// The profile header and one section under it. A coach, a member and a studio
+// all wear this: the same photograph, the same badge above the name, the same
+// two pills on the picture, the same tab row. What changes is what goes in the
+// slots, which is the point. Three near-identical headers is how they drift,
+// and a member's page looking like a lesser version of a coach's was exactly
+// what that drift produced.
 //
 // The tabs are links, not scroll anchors. Every section has its own URL, so a
 // coach can send someone straight to fittlist.co/{handle}/schedule and they
@@ -17,13 +26,14 @@ export type ProfileTab = "about" | "studios" | "schedule";
 // instruction to scroll. It also means the section survives a reload, a share
 // and the back button, none of which a replaceState-on-scroll managed.
 export function ProfileTabs({
-  handle,
+  base,
   tab,
+  tabs,
   name,
   title,
   location,
-  hasStudios,
-  trackSchedule,
+  trackSchedule = false,
+  trackHandle,
   photo,
   color,
   actions,
@@ -33,14 +43,20 @@ export function ProfileTabs({
   stickAction,
   children,
 }: {
-  handle: string;
-  tab: ProfileTab;
+  /** The page's own URL: "/matt" for a person, "/s/ironbound" for a studio.
+   *  Every tab but the first hangs its key off this. */
+  base: string;
+  /** Which tab's key is showing. */
+  tab: string;
+  /** In order. Empty means no tab row at all, which is right for a page with
+   *  only one section: two tabs over two short lists is worse than neither. */
+  tabs: TabDef[];
   name: string;
   title: string;
   location: string;
-  /** Nowhere they coach on record means no Studios tab. */
-  hasStudios: boolean;
-  trackSchedule: boolean;
+  /** Count one "schedule open" per visit, for a coach's own stats. */
+  trackSchedule?: boolean;
+  trackHandle?: string;
   /** The face, full bleed behind the name. Null falls back to the colour, and
    *  then there is nothing to scrim: flat colour is already legible. */
   photo: string | null;
@@ -49,10 +65,11 @@ export function ProfileTabs({
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
+  /** The badges above the name: what this is, and anything about it that
+   *  changes (a coach taking clients, a studio keeping its own page). */
   avail: ReactNode | null;
-  /** Top right of the header, owner only: the settings gear. Everything else
-   *  they do to this page is on the pills under the name or the floating Add
-   *  class button, so nothing else belongs in the corner. */
+  /** Top right of the header: a coach's settings gear, a studio's dots.
+   *  Everything else lives on the pills under the name. */
   ownerTop?: ReactNode;
   /** Where a back control should go, when they got here from a list. Null on
    *  a cold open: the tab bar is the way out and an arrow to nowhere is worse
@@ -90,27 +107,27 @@ export function ProfileTabs({
   // Count one "schedule open" per visit. It used to fire when the scroll-spy
   // reached the schedule section; landing on the URL is the event now.
   useEffect(() => {
-    if (tab !== "schedule" || !trackSchedule || tracked.current) return;
+    if (tab !== "schedule" || !trackSchedule || !trackHandle || tracked.current) return;
     tracked.current = true;
-    const url = `/api/track/schedule/${handle}`;
+    const url = `/api/track/schedule/${trackHandle}`;
     if (typeof navigator !== "undefined" && navigator.sendBeacon) navigator.sendBeacon(url);
     else fetch(url, { method: "POST", keepalive: true }).catch(() => {});
-  }, [tab, trackSchedule, handle]);
+  }, [tab, trackSchedule, trackHandle]);
 
-  // Schedule is the bare handle: it's what the link is for, and an About page
-  // a coach hasn't filled in is an awkward first thing to land on. /schedule
-  // still resolves, because people have already sent that link.
-  const tabLink = (t: ProfileTab, label: string) => (
+  // The first tab is the bare URL: it's what the link is for, and an About page
+  // somebody hasn't filled in is an awkward first thing to land on. The old
+  // suffix still resolves, because people have already sent that link.
+  const tabLink = (t: TabDef, i: number) => (
     <Link
-      key={t}
-      href={t === "schedule" ? `/${handle}` : `/${handle}/${t}`}
-      aria-current={tab === t ? "page" : undefined}
-      className={`pubtab${tab === t ? " sel" : ""}`}
+      key={t.key}
+      href={i === 0 ? base : `${base}/${t.key}`}
+      aria-current={tab === t.key ? "page" : undefined}
+      className={`pubtab${tab === t.key ? " sel" : ""}`}
       // Switching sections shouldn't throw you back to the top of a page you
       // are already partway down; the header above is identical either way.
       scroll={false}
     >
-      {label}
+      {t.label}
     </Link>
   );
 
@@ -120,8 +137,8 @@ export function ProfileTabs({
           you can do about it, then the section you asked for. */}
       {/* The photo is the header rather than a circle inside one: it runs to
           both edges, under the app bar, with the name over it. A scrim only
-          exists where there's a photo to read against; a flat colour already
-          clears white text, and dimming it would just make it muddy. */}
+          exists where there's a photo to read against, and only over the
+          bottom of it, where the words are. */}
       <div className={`profhero${photo ? " hasphoto" : ""}`}>
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -145,7 +162,11 @@ export function ProfileTabs({
           {avail}
           <h1 className="profname">{name}</h1>
           {title.trim() && <p className="proftitle">{title.trim()}</p>}
-          {location.trim() && <p className="profwhere">{location.trim()}</p>}
+          {location.trim() && (
+            <p className="profwhere">
+              <Icon name="place" size={14} /> {location.trim()}
+            </p>
+          )}
           {/* On the image, under the name: the two things you can do about
               this person sit with the person rather than on the paper below. */}
           {actions}
@@ -154,7 +175,7 @@ export function ProfileTabs({
       {/* Zero-height marker: when it slides under the header, the bar below
           is stuck and the small name switches on. */}
       <div ref={sentRef} aria-hidden="true" />
-      <div ref={stickRef} className="pubstick">
+      <div ref={stickRef} className={`pubstick${tabs.length ? "" : " pubstick-bare"}`}>
         <div className="pubstick-row">
           {/* A duplicate for the eyes only; the real name is the h1 above. */}
           <div className="pubstick-name" aria-hidden="true">
@@ -162,11 +183,11 @@ export function ProfileTabs({
           </div>
           {stickAction}
         </div>
-        <div className="pubtabs" aria-label="Profile sections">
-          {tabLink("schedule", "Schedule")}
-          {tabLink("about", "About")}
-          {hasStudios && tabLink("studios", "Studios")}
-        </div>
+        {tabs.length > 0 && (
+          <div className="pubtabs" aria-label="Profile sections">
+            {tabs.map(tabLink)}
+          </div>
+        )}
       </div>
       <div className="pubpanel">{children}</div>
     </>

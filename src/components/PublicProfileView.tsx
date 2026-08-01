@@ -383,13 +383,18 @@ export async function PublicProfileView({
           }}
         >
         <ProfileTabs
-          handle={handle}
+          base={`/${handle}`}
           tab={tab}
+          tabs={[
+            { key: "schedule", label: "Schedule" },
+            { key: "about", label: "About" },
+            ...(studios ? [{ key: "studios", label: "Studios" }] : []),
+          ]}
           name={user.name}
           title={user.title ?? ""}
           location={user.location ?? ""}
-          hasStudios={!!studios}
           trackSchedule={!isOwner}
+          trackHandle={handle}
           backTo={backTo}
           photo={user.photo}
           color={avatarColor(user)}

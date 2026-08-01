@@ -4,23 +4,25 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { fansVisible } from "@/lib/flags";
-import { avatarColor, initialOf } from "@/lib/avatar";
+import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
 import { AppChrome } from "@/components/AppChrome";
-import { BackLink } from "@/components/BackLink";
 import { backToFor } from "@/lib/nav";
+import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
-import { InstagramGlyph } from "@/components/InstagramGlyph";
+import { ProfileTabs } from "@/components/ProfileTabs";
 import { StudioMenu } from "@/components/StudioMenu";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** One section per URL, the same shape a person's profile uses. */
+/** One section per URL, the same shape a person's profile uses. Contact left
+ *  the tabs and became the pill on the header, exactly as it did for a coach;
+ *  /s/{slug}/contact still resolves and lands on the page with the pill. */
 export type StudioTab = "schedule" | "about" | "contact";
 
 // Slug is the address; the id still resolves, so links made before slugs (and
@@ -156,61 +158,104 @@ export async function StudioView({
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const base = `/s/${s.slug ?? s.id}`;
+
   return (
     <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
         {signedIn && viewerId && <AppChrome userId={viewerId} bar />}
-        <div className="pubhead">
-          {/* The two page controls face each other across the top, the way
-              they do on a class: out on the left, everything you can do on
-              the right. The name gets the width to itself underneath. */}
-          <div className="studiotop">
-            {signedIn ? (
-              <BackLink className="evback" href={backTo?.href} label={backTo?.label ?? "Back"}>
-                <Icon name="arrow_back" size={21} />
-              </BackLink>
-            ) : (
-              <span aria-hidden="true" />
-            )}
-            {/* Everything you can do with a studio, behind one set of dots:
-                share, suggest, report, and for coaches the edit. */}
+        {/* The same header a person wears. A studio is a place rather than a
+            face, but it is the same kind of page: a photograph, a badge, a
+            name, where it is, and the two things you can do about it. */}
+        <ProfileTabs
+          base={base}
+          tab={tab}
+          tabs={
+            hasSchedule
+              ? [
+                  { key: "schedule", label: "Schedule" },
+                  { key: "about", label: "About" },
+                ]
+              : []
+          }
+          name={s.name}
+          title=""
+          location={s.address}
+          photo={s.photo}
+          color={avatarColor({ id: s.id })}
+          backTo={signedIn ? backTo : null}
+          avail={
+            <div className="profhero-tags">
+              <span className="kindtag">Studio</span>
+              {/* Said once, quietly: it explains why the pencil is gone for
+                  everyone else, and it is the thing that makes the page worth
+                  trusting. */}
+              {access.claimed && (
+                <span className="kindtag studiokept">
+                  <Icon name="verified" size={13} /> Kept by the studio
+                </span>
+              )}
+            </div>
+          }
+          ownerTop={
+            /* Everything you can do with a studio, behind one set of dots:
+               share, suggest, report, and for coaches the edit. */
             <StudioMenu
-            slug={s.slug ?? ""}
-            canEdit={canEdit}
-            claimed={access.claimed}
-            signedIn={signedIn}
-            studio={{
-              id: s.id,
-              name: s.name,
-              address: s.address,
-              types: s.types,
-              about: s.about ?? "",
-              photo: s.photo,
-              contactEmail: s.contactEmail ?? "",
-              phone: s.phone ?? "",
-              website: s.website ?? "",
-              instagram: s.instagram ?? "",
-            }}
+              slug={s.slug ?? ""}
+              canEdit={canEdit}
+              claimed={access.claimed}
+              signedIn={signedIn}
+              studio={{
+                id: s.id,
+                name: s.name,
+                address: s.address,
+                types: s.types,
+                about: s.about ?? "",
+                photo: s.photo,
+                contactEmail: s.contactEmail ?? "",
+                phone: s.phone ?? "",
+                website: s.website ?? "",
+                instagram: s.instagram ?? "",
+              }}
             />
-          </div>
-          <h1 className="profname">{s.name}</h1>
-          {/* Said once, quietly: it explains why the pencil is gone for
-              everyone else, and it is the thing that makes the page worth
-              trusting. */}
-          {access.claimed && (
-            <p className="studiorun">
-              <Icon name="verified" size={15} /> Kept by the studio
-            </p>
-          )}
-          {/* The way into the rota, for the people who run the place. */}
-          {access.isManager && s.accountUserId && (
-            <Link className="btn ghost studiomanage" href={`/s/${s.slug ?? s.id}/manage`}>
-              <Icon name="calendar_month" size={17} /> The schedule
-            </Link>
-          )}
-        </div>
-        {s.types.length > 0 && (
-          <div className="studiotypes">
+          }
+          actions={
+            <div className="profacts">
+              {/* The same pill a person's page carries, opening the same
+                  sheet. Nobody is messaged on fittlist here: a studio has no
+                  account to write to, so the sheet is the ways in and no more. */}
+              {hasContact && (
+                <ContactSheet
+                  coachName={s.name}
+                  signedIn={signedIn}
+                  canMessage={false}
+                  ways={{
+                    email: s.contactEmail ?? "",
+                    phone: s.phone ?? "",
+                    whatsapp: "",
+                    instagram: s.instagram ?? "",
+                    website: s.website ?? "",
+                    links: [],
+                  }}
+                />
+              )}
+              {/* The way into the rota, for the people who run the place. */}
+              {access.isManager && s.accountUserId && (
+                <Link className="actpill" href={`${base}/manage`}>
+                  <Icon name="calendar_month" size={16} /> The schedule
+                </Link>
+              )}
+            </div>
+          }
+        >
+
+        {hasSchedule && tab === "schedule" && <StudioSchedule slug={s.slug ?? s.id} days={days} />}
+
+        {/* What kind of place this is, first thing under the tabs: it is the
+            answer to "is this for me", and it used to sit above the photo
+            where it read as a caption on the name. */}
+        {show("about") && s.types.length > 0 && (
+          <div className="studiotypes studiotypes-top">
             {s.types.map((t) => (
               <span key={t} className="studiotype">
                 {t}
@@ -218,56 +263,6 @@ export async function StudioView({
             ))}
           </div>
         )}
-
-        {s.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="profphoto" src={s.photo} alt={s.name} />
-        ) : (
-          <div
-            className="profphoto profphoto-empty"
-            style={{ background: avatarColor({ id: s.id }) }}
-            aria-hidden="true"
-          >
-            {initialOf(s.name)}
-          </div>
-        )}
-
-        {/* The tabs are links, one URL per section, exactly as a person's
-            profile does it. They only appear when there is a schedule to lead
-            with: two tabs over two short sections is worse than the sectioned
-            page underneath. */}
-        {hasSchedule && (
-          <div className="pubtabs studiotabs" aria-label="Studio sections">
-            <Link
-              href={`/s/${s.slug ?? s.id}`}
-              aria-current={tab === "schedule" ? "page" : undefined}
-              className={`pubtab${tab === "schedule" ? " sel" : ""}`}
-              scroll={false}
-            >
-              Schedule
-            </Link>
-            <Link
-              href={`/s/${s.slug ?? s.id}/about`}
-              aria-current={tab === "about" ? "page" : undefined}
-              className={`pubtab${tab === "about" ? " sel" : ""}`}
-              scroll={false}
-            >
-              About
-            </Link>
-            {hasContact && (
-              <Link
-                href={`/s/${s.slug ?? s.id}/contact`}
-                aria-current={tab === "contact" ? "page" : undefined}
-                className={`pubtab${tab === "contact" ? " sel" : ""}`}
-                scroll={false}
-              >
-                Contact
-              </Link>
-            )}
-          </div>
-        )}
-
-        {hasSchedule && tab === "schedule" && <StudioSchedule slug={s.slug ?? s.id} days={days} />}
 
         {show("about") && s.about?.trim() && (
           <div className="studsec studsec-first">
@@ -325,38 +320,7 @@ export async function StudioView({
           </div>
         )}
 
-        {show("contact") && hasContact && (
-          <div className={`studsec${hasSchedule ? " studsec-first" : ""}`}>
-            <h2 className="prof-sec-h">Contact</h2>
-            <div className="contactlist">
-              {s.contactEmail && (
-                <a className="proflink" href={`mailto:${s.contactEmail}`}>
-                  <Icon name="mail" size={18} /> Email
-                </a>
-              )}
-              {s.phone && (
-                <a className="proflink" href={`tel:${s.phone.replace(/[^\d+]/g, "")}`}>
-                  <Icon name="call" size={18} /> Call
-                </a>
-              )}
-              {s.instagram && (
-                <a
-                  className="proflink"
-                  href={`https://instagram.com/${s.instagram}`}
-                  target="_blank"
-                  rel="noopener nofollow"
-                >
-                  <InstagramGlyph /> Instagram
-                </a>
-              )}
-              {s.website && (
-                <a className="proflink" href={s.website} target="_blank" rel="noopener nofollow">
-                  <Icon name="public" size={18} /> Website
-                </a>
-              )}
-            </div>
-          </div>
-        )}
+        </ProfileTabs>
 
         {!signedIn && (
           <div className="madewith">

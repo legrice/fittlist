@@ -31,7 +31,9 @@ export function ContactSheet({
   canMessage,
   ways,
 }: {
-  handle: string;
+  /** Whose inbox the fittlist row writes to. A studio has no account to be
+   *  messaged, so it passes none and `canMessage` false with it. */
+  handle?: string;
   coachName: string;
   signedIn: boolean;
   /** Their messages are open and this isn't your own page. */
@@ -85,7 +87,7 @@ export function ContactSheet({
                 <>
                   {!sent && <h2 style={{ marginTop: 10 }}>Message {first}</h2>}
                   <MessageComposer
-                    handle={handle}
+                    handle={handle ?? ""}
                     coachName={coachName}
                     signedIn={signedIn}
                     onDone={() => setSent(true)}
@@ -102,7 +104,7 @@ export function ContactSheet({
                 <>
                   <h2 style={{ marginTop: 10 }}>Contact {first}</h2>
                   <div className="contactlist">
-                    {canMessage && (
+                    {canMessage && handle && (
                       <button className="proflink proflink-first" onClick={() => setWriting(true)}>
                         <Icon name="chat_bubble" size={18} /> Message on fittlist
                       </button>

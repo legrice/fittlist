@@ -2,17 +2,17 @@ import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
-import { BackLink } from "@/components/BackLink";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { mutualFollow, sharedWeek } from "@/lib/week";
 import { AppChrome } from "@/components/AppChrome";
-import { AvatarZoom } from "@/components/AvatarZoom";
+import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
+import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 
 // A member's public profile. Deliberately not the coach page: there's no
@@ -37,9 +37,7 @@ export async function MemberProfileView({
   viewerId?: string | null;
   from?: string;
 }) {
-  void from; // back arrows left profiles; the tabs are the way around now
   const name = user.name.trim() || user.email.split("@")[0];
-  const initial = (name.charAt(0) || "?").toUpperCase();
 
   // Members can follow members. Same table as following a coach, and it buys
   // less on purpose: nothing lands in your week, nothing public changes. Its
@@ -93,65 +91,80 @@ export async function MemberProfileView({
 
   const backTo = backToFor(from);
 
+  // The same ways in a coach's page offers, minus the one that needs a
+  // published week. A member with nothing filled in gets no pill at all.
+  const ways: ContactWays = {
+    email: user.contactEmail ?? "",
+    phone: user.phone ?? "",
+    whatsapp: user.whatsapp ?? "",
+    instagram: user.instagram ?? "",
+    website: user.website ?? "",
+    links: user.profileLinks,
+  };
+  const canMessage = !isOwner && user.messagesOpen;
+  const showContact =
+    !isOwner &&
+    !!user.handle &&
+    (canMessage ||
+      !!(
+        ways.email ||
+        ways.phone ||
+        ways.whatsapp ||
+        ways.instagram ||
+        ways.website ||
+        ways.links.length
+      ));
+
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
         {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={user.handle ?? ""} />}
-        <div className="mempro-top">
-          {backTo ? (
-            <BackLink className="evback" href={backTo.href} label={backTo.label}>
-              <Icon name="arrow_back" size={21} />
-            </BackLink>
-          ) : (
-            <span />
-          )}
-          {isOwner && <MemberProfileActions />}
-        </div>
-
-        <div className="mempro-id">
-          {user.handle ? (
-            <AvatarZoom
-              className="mempro-av"
-              handle={user.handle}
-              name={name}
-              photo={user.photo}
-              color={avatarColor(user)}
-              follow={follow}
-              isOwner={isOwner}
-              canMessage={!isOwner && user.messagesOpen}
-              signedIn={!!viewerId}
-            />
-          ) : user.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="mempro-av" src={user.photo} alt="" />
-          ) : (
-            <span
-              className="mempro-av mempro-av-empty"
-              style={{ background: avatarColor(user) }}
-              aria-hidden="true"
-            >
-              {initial}
-            </span>
-          )}
-          <h1 className="mempro-nm">{name}</h1>
-          {user.title?.trim() && <p className="mempro-title">{user.title}</p>}
-          {user.location?.trim() && (
-            <p className="mempro-loc">
-              <Icon name="place" size={14} /> {user.location}
-            </p>
-          )}
-          {follow && (
-            <div className="profacts">
-              <FollowMemberButton
-                handle={user.handle!}
-                name={name}
-                initialFollowing={follow.following}
-                initialRequested={follow.requested}
-              />
+        {/* The same header a coach and a studio wear. A member's page was the
+            odd one out: a small circle, a centred name, and none of the shape
+            that makes the other two read as the same app. */}
+        <ProfileTabs
+          base={`/${user.handle ?? ""}`}
+          tab="about"
+          tabs={[]}
+          name={name}
+          title={user.title ?? ""}
+          location={user.location ?? ""}
+          photo={user.photo}
+          color={avatarColor(user)}
+          backTo={backTo}
+          avail={
+            <div className="profhero-tags">
+              {/* Member, not follower: that names a relationship rather than a
+                  population, and a coach who follows two coaches is one too. */}
+              <span className="kindtag">Member</span>
             </div>
-          )}
-        </div>
-
+          }
+          actions={
+            isOwner && user.handle ? (
+              <MemberProfileActions handle={user.handle} />
+            ) : (
+              <div className="profacts">
+                {showContact && (
+                  <ContactSheet
+                    handle={user.handle!}
+                    coachName={name}
+                    signedIn={!!viewerId}
+                    canMessage={canMessage}
+                    ways={ways}
+                  />
+                )}
+                {follow && (
+                  <FollowMemberButton
+                    handle={user.handle!}
+                    name={name}
+                    initialFollowing={follow.following}
+                    initialRequested={follow.requested}
+                  />
+                )}
+              </div>
+            )
+          }
+        >
         {user.about?.trim() && <p className="mempro-about">{user.about}</p>}
 
         {(mutual || isOwner) && week.length > 0 && (
@@ -188,6 +201,7 @@ export async function MemberProfileView({
             ))}
           </div>
         )}
+        </ProfileTabs>
       </div>
     </div>
   );

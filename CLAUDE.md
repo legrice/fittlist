@@ -290,11 +290,14 @@ matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
 **Discover's controls read top down: search, then which half, then filter.**
-The box is first because searching is what people came to do; the segment under
-it says which half the box is searching; and the filter is the floating pill a
+The box is first because searching is what people came to do; it says just
+"Search", since the segment under it already names the half and saying it twice
+was two voices for one fact. The filter is the floating pill a
 class uses for Book and Save, because the one control you reach for while
 scrolling belongs where your thumb is rather than in a row you have already
-scrolled past. It says "Filter people" or "Filter studios" and wears the count.
+scrolled past. It is lighter and smaller than the pill it borrows from: that
+one is the point of a class page, this one floats over a list somebody is
+reading. It says "Filter people" or "Filter studios" and wears the count.
 Nothing is on by default: a filter you didn't set is a list you can't explain.
 The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
 because the base rule is defined later in the file and wins on a tie. A fixed
@@ -340,17 +343,39 @@ homes and kept them: adding a class is the floating button, and Requests is a
 stat on the account. A lid over two buttons is where things go to be forgotten.
 `.ownermore` still exists, but only on a studio page (`StudioMenu`).
 
+**One header, three kinds of page.** `ProfileTabs` is the hero, the tab row and
+the panel under it, and a coach, a member and a studio all render through it:
+same photograph, same badge above the name, same two pills on the picture, same
+tabs. It takes a `base` (`/matt`, or `/s/ironbound`) and a list of tabs rather
+than a handle, because a studio's URL has a prefix and a member has no tab row
+at all. An empty `tabs` means no row, which is right for a page with one
+section; the studio already worked that way and the member now does too. The
+badge says which: Coach, Member, Studio. What used to be three headers is one,
+and three headers is how a member's page ended up looking like a lesser version
+of a coach's.
+
 **The profile leads with the photo, full bleed.** `.profhero` runs to both
 edges and up under the app bar at 65vh, with the tags, name, tagline, city and
 both action pills stacked left along the bottom over it. The scrim exists only
-where there's a photograph to read against: a flat `avatarColor` already clears
-white text, and dimming it would only make it muddy. The pills are white
+where there's a photograph to read against, and only across the bottom 42% of
+it, under the words: dimming the whole frame made every photograph look like
+stock behind a caption, and the face and the room stay as they were shot. A
+flat `avatarColor` gets no scrim at all, because it already clears white text.
+The pills are white
 because they're on the picture: Contact filled, Follow an outline, and
 following fills Follow in with a short spring (`folpop`, skipped under
 `prefers-reduced-motion`). There is no avatar circle any more, so `AvatarZoom`
 is gone from this page, which is why availability moved with it: it was a dot
 on that circle and words in its overlay, and it is now a second tag beside
 Coach in `.profhero-tags`. A status nobody can read is the same as no status.
+
+**The hero's two corner slots must not own a stacking layer.** `.profback` and
+`.ownertop` are positioned but carry no `z-index`, on purpose. They hold
+arbitrary controls, and a control that opens a sheet needs that sheet at z-46
+over the z-45 tab bar; a `z-index: 2` on the slot trapped it in a layer of its
+own, and the studio's dots opened an editor whose Save button could not be
+tapped. DOM order already paints both slots over the picture. This is the same
+trap the account view has, where the fix is to portal instead.
 
 **Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
 coach's own profile and nowhere else: `AppHeader` carries none on any screen.
@@ -419,9 +444,12 @@ bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
 
-**Tapping Follow says what just happened.** A follow shows `FollowHint`: a bar
-reading that their classes are on your Following week, a link straight to it,
-and a Don't show again that means it. It renders from the profile pill
+**Tapping Follow says what just happened, but only for a coach.** A follow shows
+`FollowHint`: a bar reading that their classes are on your Following week, a
+link straight to it, and a Don't show again that means it. Following a *member*
+shows nothing, because the bar would be promising a week they don't have: what
+that follow buys is quiet and mutual, and until it can be said in a sentence it
+says nothing. It renders from the profile pill
 (`NotifyCta`) and from Discover's mini pill, because that's where most follows
 actually happen, and a button whose effect is invisible teaches nobody what the
 app is for. The dismissal is localStorage (`fl-follow-hint`), which is
@@ -622,8 +650,13 @@ EXDATE list and emits a one-off event for whoever took it. The rota screen is a
 real dated week (`?w=` offsets from this Monday) because a swap is about a date.
 
 **A studio running a schedule wears the same tabs a person does.** `/s/{slug}`
-is the schedule, `/s/{slug}/about` and `/s/{slug}/contact` the rest, and
-`/s/{slug}/schedule` resolves too. The schedule leads for the same reason it
+is the schedule and `/s/{slug}/about` the rest; `/s/{slug}/schedule` resolves
+too, and `/s/{slug}/contact` permanently redirects onto the page, because
+contact became the header pill and a sheet here exactly as it did for a coach.
+The sheet carries no fittlist row: a studio has no account to be written to, so
+`ContactSheet` takes an optional handle and `canMessage` false. What kind of
+place it is (`studios.types`) is the first thing in About, where it answers "is
+this for me"; above the photo it read as a caption on the name. The schedule leads for the same reason it
 does on a coach's page: it's what the link is for. A directory entry with no
 schedule has nothing to divide, so it keeps the single sectioned page it always
 had (`show()` in `StudioView`), which is almost every row in the table and

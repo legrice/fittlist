@@ -571,13 +571,13 @@ console.log("the coach is told ok");
   const anon = await anonCtx.newPage();
   anon.setDefaultTimeout(15000);
   await anon.goto(BASE + studioHref);
-  await anon.locator(".studiotabs .pubtab.sel", { hasText: "Schedule" }).waitFor();
+  await anon.locator(".pubtabs .pubtab.sel", { hasText: "Schedule" }).waitFor();
   await anon.locator(".ps-event", { hasText: "HYROX" }).waitFor();
   // Under the gym's name and nobody else's: this is what lets Tom teach here
   // without a public profile, and stops a schedule becoming a leaderboard.
   if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
     fail("the gym's public week named the coach");
-  await anon.locator(".studiotabs .pubtab", { hasText: "About" }).click();
+  await anon.locator(".pubtabs .pubtab", { hasText: "About" }).click();
   await anon.waitForURL("**/about");
   await anon.getByRole("heading", { name: "Where it is" }).waitFor();
   if (await anon.locator(".ps-event").count()) fail("About should not carry the schedule");

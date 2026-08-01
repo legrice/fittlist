@@ -35,11 +35,16 @@ export type DiscoverCoach = {
 function FollowMini({
   handle,
   name,
+  isCoach,
   following,
   requested,
 }: {
   handle: string;
   name: string;
+  /** The hint promises a week on Following, which only a coach has. Following
+   *  a member buys something quieter and mutual, and what it means is still
+   *  being worked out, so the bar stays quiet until it can say something true. */
+  isCoach: boolean;
   following: boolean;
   requested: boolean;
 }) {
@@ -58,7 +63,7 @@ function FollowMini({
         if (res.ok) {
           setState(res.requested ? "asked" : "on");
           setPop(!res.requested);
-          if (!res.requested && !followHintOff()) setHint(true);
+          if (isCoach && !res.requested && !followHintOff()) setHint(true);
         }
       } else {
         const res = await unfollowTrainer(handle);
@@ -207,7 +212,7 @@ export function DiscoverList({
             className="dissearch-in"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={tab === "people" ? "Search people" : "Search studios"}
+            placeholder="Search"
             aria-label={tab === "people" ? "Search people" : "Search studios"}
           />
           {q && (
@@ -484,6 +489,7 @@ export function DiscoverList({
               <FollowMini
                 handle={c.handle}
                 name={c.name}
+                isCoach={c.kind === "coach"}
                 following={c.following}
                 requested={c.requested}
               />

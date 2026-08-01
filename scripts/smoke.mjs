@@ -1192,8 +1192,10 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearchrow").waitFor();
-  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search people")
-    fail("the box should say what it's searching");
+  // One word for both halves: the segment under it already says which one is
+  // being searched, and "Search people" repeated that in a second voice.
+  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search")
+    fail("the box should just say Search");
   // The box and the filter sit on one line, filter to the right of it.
   if (await fan.locator(".discitysel").count()) {
     const box = await fan.locator(".dissearch").boundingBox();
@@ -1204,8 +1206,8 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.locator(".disrow-studio").first().waitFor();
-  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search studios")
-    fail("the box should follow the tab");
+  if ((await fan.locator(".dissearch-in").getAttribute("aria-label")) !== "Search studios")
+    fail("the box should still name the half it is searching, for a screen reader");
   if (await fan.locator(".discitysel").count())
     fail("a studio has an address, not a city to filter by");
   if (await fan.locator(".disfol").count())
@@ -1765,12 +1767,23 @@ await page.reload();
   if (types.join("|") !== "Strength|HYROX") fail("studio types didn't stick: " + types.join(","));
 }
 await page.getByText("Platforms, a turf strip").waitFor();
-// the @ comes off the handle, and contact rows render from what was saved
-await expect(
-  page.locator('.proflink[href="https://instagram.com/ironboundstrength"]').isVisible(),
-  "studio instagram link",
-);
-await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio email link");
+// The @ comes off the handle, and the ways to reach it render from what was
+// saved. They live behind the header's Contact pill now, the same door a
+// person's page carries, and there is no fittlist row: a studio has no
+// account to be written to.
+{
+  await page.locator(".profacts .actpill-primary", { hasText: "Contact" }).click();
+  await page.locator(".sheet .contactlist").waitFor();
+  if (await page.locator(".sheet .proflink-first").count())
+    fail("a studio has no inbox, so nothing should offer to message it");
+  await expect(
+    page.locator('.sheet .proflink[href="https://instagram.com/ironboundstrength"]').isVisible(),
+    "studio instagram link",
+  );
+  await expect(page.locator('.sheet .proflink[href^="mailto:"]').isVisible(), "studio email link");
+  await page.locator(".sheet .sheetclose").click();
+  await page.waitForFunction(() => !document.querySelector(".sheet"));
+}
 // renaming moves the slug, and the old address still resolves by id
 {
   const before = page.url();
