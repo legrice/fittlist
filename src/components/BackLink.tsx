@@ -15,10 +15,20 @@ export function useSlideBack() {
   // isn't. Pushing unconditionally is what made the coach page and a class
   // page trap you: both of them link to each other, so every "back" tap added
   // a step and the browser button could only walk back through the pile.
-  return (href?: string) => {
+  //
+  // `anywhere` widens that: pop to whatever is underneath whether or not it
+  // matches, and use the href only when nothing is. That is what a profile's
+  // arrow means now that it is the only way off the page: back to wherever you
+  // came from, and to the app's front door on a cold open, where "wherever you
+  // came from" is somebody else's website.
+  return (href?: string, anywhere = false) => {
     const go = () => {
       if (!href) return router.back();
       const beneath = pageBeneath();
+      if (anywhere) {
+        if (beneath) return router.back();
+        return router.push(href);
+      }
       // A destination carrying a query string is a different screen from the
       // bare one ("/app?acct=1" opens the account overlay), so it never counts
       // as already being underneath.
@@ -43,6 +53,7 @@ export function BackLink({
   href,
   className,
   label,
+  anywhere = false,
   children,
 }: {
   /** Omit to go back through history rather than to a known page. */
@@ -50,11 +61,19 @@ export function BackLink({
   className?: string;
   /** Names the destination when the button itself is only an arrow. */
   label?: string;
+  /** Pop to whatever is underneath rather than only to `href`, which becomes
+   *  the fallback for a page opened cold. */
+  anywhere?: boolean;
   children: React.ReactNode;
 }) {
   const back = useSlideBack();
   return (
-    <button type="button" className={className} aria-label={label} onClick={() => back(href)}>
+    <button
+      type="button"
+      className={className}
+      aria-label={label}
+      onClick={() => back(href, anywhere)}
+    >
       {children}
     </button>
   );

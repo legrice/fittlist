@@ -315,14 +315,24 @@ up on its own the day they do, and switching lens drops the pick, since the
 other half can't honour a word it doesn't use. Same rule as the city picker,
 which only appears on People.
 
-**`backToFor()` in `src/lib/nav.ts` is the one table for where back goes.**
-A named `from` (discover, home, schedule) gets a named destination so the
-control can pop to that list; anything else is null, and null means no arrow.
-A profile has the tab bar as its way out, so the arrow is a second door and
-only when a list actually sent them: a cold open (a shared link, a search
-result) would otherwise offer an arrow into somebody else's history. The
-studio page, a coach's profile and a member's all ask this one function, which
-is why they answer alike.
+**A profile carries no tab bar, and the arrow is the way off it.** Three layers
+of chrome stacked at the bottom of a schedule (the bar, the floating Add class,
+the pinned name and tabs) was most of a phone screen spent on furniture. The
+bar comes off all three profiles, the page stops reserving its height, and the
+floating button drops to where it sits on a screen with nothing under it. The
+cost is real and worth saying out loud: tapping You lands you somewhere with no
+bar, so the ways on from there are the arrow and the wordmark. Both go home.
+
+**`backToFor()` in `src/lib/nav.ts` is the one table for where back goes, and
+it never answers null.** A named `from` (discover, home, schedule) names the
+list so the control can say which one; anything else falls back to the front
+door, `/feed` signed in and `/` not. The arrow is the only way off a profile
+now, so it has to be on every one of them. `BackLink`'s `anywhere` prop is what
+makes that honest: it pops to whatever `pageBeneath()` reports rather than only
+to a matching href, and uses the href just for a page opened cold, where
+"wherever you came from" is somebody else's website. The studio page, a coach's
+profile and a member's all ask this one function, which is why they answer
+alike.
 
 **A "back" control has to pop, not push.** `useSlideBack` checks `pageBeneath()`
 (a small path stack kept in sessionStorage by `NavTrack`) and calls

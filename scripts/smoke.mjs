@@ -1316,22 +1316,38 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   console.log("discover chips ok (only what the lens can narrow)");
 }
 
-// Tapping through from a list leaves a way back to it, on both kinds of
-// profile and on a studio. A cold open gets none: there is no list behind you.
+// A profile carries no tab bar, so the arrow on the picture is the way off it
+// and has to be on every one of them. From a list it pops back to that list;
+// opened cold it goes to the app's front door, because there is nothing behind
+// it and a control that does nothing is worse than one that does something
+// plain.
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-main").click();
   await fan.locator(".profhero").waitFor();
+  if (await fan.locator(".navbar").count())
+    fail("a profile should carry no tab bar: the arrow is the way off it");
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/discover/);
   await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
-  await fan.locator(".profhero, .mempro-top").first().waitFor();
-  if (!(await fan.locator(".profback .evback, .mempro-top .evback").count()))
+  await fan.locator(".profhero").first().waitFor();
+  if (!(await fan.locator(".profback .evback").count()))
     fail("a profile reached from Discover should offer the way back");
-  await fan.goto(BASE + "/matt");
-  await fan.locator(".profhero").waitFor();
-  if (await fan.locator(".profback").count())
-    fail("a cold open has no list behind it, so it gets no arrow into one");
+  // Genuinely cold: a fresh tab, so the nav stack is empty and there is
+  // nothing underneath to pop to. Reusing this one would not be cold, because
+  // the stack survives a goto.
+  {
+    const coldCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const cold = await coldCtx.newPage();
+    cold.setDefaultTimeout(10000);
+    await cold.goto(BASE + "/matt");
+    await cold.locator(".profhero").waitFor();
+    if (!(await cold.locator(".profback .evback").count()))
+      fail("a cold open still needs a way off the page");
+    await cold.locator(".profback .evback").click();
+    await cold.waitForURL((u) => u.pathname === "/");
+    await coldCtx.close();
+  }
   console.log("discover back ok (a list you came from is a list you can return to)");
 }
 }
@@ -1699,9 +1715,14 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-// You is your public page now, seen exactly as a visitor sees it.
+// You is your public page now, seen exactly as a visitor sees it, which means
+// no tab bar: a profile's way off is the arrow on the picture, and it pops to
+// whatever sent you, which here is Discover.
 await page.locator(".profname").waitFor();
-await page.locator(".navtab.on", { hasText: "You" }).waitFor();
+if (await page.locator(".navbar").count())
+  fail("a profile carries no tab bar, even your own");
+await page.locator(".profback .evback").click();
+await page.waitForURL(/\/discover/);
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
@@ -1816,35 +1837,37 @@ await page.getByText("Platforms, a turf strip").waitFor();
 }
 console.log("studio pages ok (edit, types, slug follows the name)");
 
-// a profile is a screen of the app: the header above, the tabs below, and a
-// back arrow as well because a list is what sent them here
+// a profile is a screen of the app: the header floating over the picture, no
+// tab bar, and the arrow on the picture as the way off it
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".profacts .followpill").count()))
   fail("Follow should sit in the actions row under the name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
-// Signed in, this is still the app, so the whole shell comes with it: the
-// header above and the tabs below. The back arrow is a second way out, not the
-// only one, and it's here because Discover is what sent them.
+// Signed in, this is still the app, so the header comes with it: over the
+// picture rather than above it, and scrolling away with it. The tab bar does
+// not: three layers of chrome over a schedule is most of a phone screen, and
+// the arrow is the way off instead.
 if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a signed-in viewer should get the app header on a profile");
-if (!(await page.locator(".navbar").count()))
-  fail("a signed-in viewer should get the tab bar on a profile");
+if (await page.locator(".navbar").count())
+  fail("a profile carries no tab bar: the arrow on the picture is the way off");
 if (!(await page.locator(".profhero .evback").count()))
   fail("a profile reached from a list should offer the way back to it");
-// Nothing pins: each tab is its own page, so there is no long scroll to keep
-// a control in reach of.
+// The picture scrolls away and the row holding the name and the tabs is what
+// pins, so neither of those two is a sticky element itself: the wrapper around
+// them is.
 await expect(
   page.locator(".profhero").evaluate((e) => getComputedStyle(e).position !== "sticky"),
-  "the identity block is not pinned",
+  "the picture is not pinned",
 );
 await expect(
-  page.locator(".pubtabs").evaluate((e) => getComputedStyle(e).position !== "sticky"),
-  "the tabs are not pinned",
+  page.locator(".pubstick").evaluate((e) => getComputedStyle(e).position === "sticky"),
+  "the name and the tabs are what pins",
 );
-// The way off a profile is the tab bar, which is there however you arrived.
-await page.locator(".navtab", { hasText: "Discover" }).click();
+// The way off a profile is the arrow on the picture, however you arrived.
+await page.locator(".profback .evback").click();
 await page.waitForURL("**/discover");
 // the selected tab is an ink underline, not a filled pill (the pill came and
 // went; the underline is the design)

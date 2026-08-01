@@ -127,7 +127,7 @@ export async function StudioView({
   // what almost every row in the directory is and should remain.
   const show = (section: StudioTab) => !hasSchedule || tab === section;
 
-  const backTo = backToFor(from);
+  const backTo = backToFor(from, signedIn);
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
 
@@ -168,7 +168,7 @@ export async function StudioView({
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
             dead end for anyone without an account. */}
-        {signedIn && viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar />}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}
@@ -188,7 +188,7 @@ export async function StudioView({
           location={s.address}
           photo={s.photo}
           color={avatarColor({ id: s.id })}
-          backTo={signedIn ? backTo : null}
+          backTo={backTo}
           avail={
             <div className="profhero-tags">
               <span className="kindtag">Studio</span>

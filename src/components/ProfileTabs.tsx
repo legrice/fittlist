@@ -151,9 +151,13 @@ export function ProfileTabs({
             below: only where there's a photograph, because a flat colour is
             already legible and a band of grey over it is just a band. */}
         {photo && <div className="profhero-topscrim" aria-hidden="true" />}
+        {/* Always there, because it is the only way off this page: a profile
+            carries no tab bar any more. It pops to whatever is underneath, and
+            falls back to the named destination only on a cold open, where
+            "wherever you came from" is somebody else's website. */}
         {backTo && (
           <div className="profback">
-            <BackLink className="evback" href={backTo.href} label={backTo.label}>
+            <BackLink className="evback" href={backTo.href} label={backTo.label} anywhere>
               <Icon name="arrow_back" size={21} />
             </BackLink>
           </div>

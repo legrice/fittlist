@@ -64,11 +64,10 @@ export async function PublicProfileView({
    *  rides along on the class links below. */
   from?: string;
 }) {
-  // A profile is a screen of the app like any other: the header above it and
-  // the tab bar below. The back control is a second way out rather than the
-  // only one, and it only appears when a list actually sent them here; the
-  // page used to carry one unconditionally, which meant a cold open offered an
-  // arrow into somebody else's history.
+  // A profile carries the header and no tab bar. Its way out is the arrow on
+  // the picture, which pops to whatever is underneath and names the front door
+  // for a page opened cold. The bar was three layers of chrome over a schedule
+  // once the pinned name and the floating button are counted with it.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -117,7 +116,7 @@ export async function PublicProfileView({
     }
   }
 
-  const backTo = backToFor(from);
+  const backTo = backToFor(from, !!viewerId);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
@@ -368,7 +367,7 @@ export async function PublicProfileView({
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
         {viewerId ? (
-          <AppChrome userId={viewerId} bar active={isOwner ? "you" : undefined} />
+          <AppChrome userId={viewerId} active={isOwner ? "you" : undefined} />
         ) : (
           <PublicTopBar handle={handle} />
         )}

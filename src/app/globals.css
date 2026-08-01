@@ -1070,7 +1070,6 @@ button.ps-card { cursor: pointer; }
    Nothing above the picture: the header floats over it, so the wrapper starts
    at zero and the photograph runs to the top of the screen. */
 .pub .profwrap { position: relative; padding-top: 0; }
-.pub.hasnav .profwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 
 /* THE HEADER ON A PROFILE: over the picture, not above it.
    Transparent, its wordmark and icons in white, floating on the photograph
@@ -1830,7 +1829,7 @@ button.ps-card { cursor: pointer; }
   margin: -14px calc(50% - 50vw) 0;
   /* Most of the first screen. A profile's job is to introduce a person, and
      a face at a stamp's size does not do that. */
-  min-height: 65vh;
+  min-height: 75vh;
   display: flex; flex-direction: column; justify-content: flex-end;
   padding: 18px calc(50vw - 50%);
   overflow: hidden;
@@ -3253,9 +3252,16 @@ button.ps-card { cursor: pointer; }
 /* The nav is fixed over everything below it, so the account needs enough room
    that its last row can always scroll clear of the bar. */
 .hasnav .acctwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
-/* On a coach's page the subscribe bar has to clear the nav, and the page
-   itself needs room so the footer isn't stuck under it. */
-.pub.hasnav .profwrap { padding-bottom: 190px; }
+/* A profile carries no tab bar any more: its way out is the arrow on the
+   picture. So the page stops reserving a bar's worth of room at the bottom,
+   and the floating Add class button drops to where it sits on a screen with
+   nothing under it. These win over the .hasnav rules above by being later and
+   more specific; .hasnav still means "signed in" everywhere else. */
+/* Enough that the last row clears the floating Add class button, which now
+   sits low rather than above a bar. Without it the final class of the week is
+   a row nobody can tap, the same trap the Discover list had. */
+.pub .profwrap { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.pub .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
 /* The header's own copy of the tabs, for the width where the bottom bar hides.
    Words only: an icon earns its keep in a 60px thumb target, not in a row of
@@ -3328,8 +3334,11 @@ button.ps-card { cursor: pointer; }
     box-shadow: 0 1px 2px rgba(30, 24, 12, .08);
   }
   .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-  /* The FAB and the account view clear the pill, not the old full-width bar. */
+  /* The FAB and the account view clear the pill, not the old full-width bar.
+     A profile has no bar at all, so its own button stays low; this rule is
+     later in the file than the one that says so, and would otherwise win. */
   .hasnav .fab { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .pub .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
   [data-mode="dark"] .navtab.on { box-shadow: none; }
   [data-mode="dark"] .navbar {
     box-shadow:
@@ -3597,7 +3606,6 @@ button.ps-card { cursor: pointer; }
 }
 /* Signed in it carries the tab bar, so the bottom has to clear it; the top
    matches the tabs shell so the header holds still. */
-.memberpub.hasnav .profwrap { padding-top: 14px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 /* A member wears the shared hero now, so the centred circle, the centred name
    and the row of controls above them are gone. What is left is the body: their
    bio reads left, like every other page's does. */

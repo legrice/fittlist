@@ -89,7 +89,7 @@ export async function MemberProfileView({
   const week = mutual || (isOwner && (await fansVisible())) ? await sharedWeek(user.id) : [];
   const firstName = name.split(/\s+/)[0];
 
-  const backTo = backToFor(from);
+  const backTo = backToFor(from, !!viewerId);
 
   // The same ways in a coach's page offers, minus the one that needs a
   // published week. A member with nothing filled in gets no pill at all.
@@ -118,7 +118,7 @@ export async function MemberProfileView({
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
-        {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={user.handle ?? ""} />}
+        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={user.handle ?? ""} />}
         {/* The same header a coach and a studio wear. A member's page was the
             odd one out: a small circle, a centred name, and none of the shape
             that makes the other two read as the same app. */}

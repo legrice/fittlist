@@ -50,14 +50,17 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
 /**
  * Where a back control goes, given the tab that sent them.
  *
- * A named destination lets the control pop to that list rather than walk
- * history; null is a cold open (a shared link, a search result), where there
- * is no list behind you and an arrow would be a guess. The studio page, a
- * coach's profile and a member's all ask this, so they answer alike.
+ * A named destination lets the control name the list it pops to. It never
+ * returns null: a profile carries no tab bar, so its arrow is the way off the
+ * page and has to be on every one of them. The control pops to whatever is
+ * really underneath, so this is the destination only for a page opened cold (a
+ * shared link, a QR code, a search result), where nothing is underneath and
+ * the front door is the honest answer. The studio page, a coach's profile and
+ * a member's all ask this one function, which is why they answer alike.
  */
-export function backToFor(from?: string): { href: string; label: string } | null {
+export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
   if (from === "discover") return { href: "/discover", label: "Back to Discover" };
   if (from === "home") return { href: "/feed", label: "Back to Following" };
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
-  return null;
+  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
 }
