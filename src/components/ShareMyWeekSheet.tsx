@@ -152,34 +152,43 @@ export function ShareMyWeekSheet({
               </div>
             )}
           </div>
-          <label className="flabel" htmlFor="myFrom">
-            From <span>· the first day on the image</span>
-          </label>
-          <input
-            id="myFrom"
-            className="editinput"
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value || today)}
-          />
-          <label className="flabel" htmlFor="mySpan" style={{ marginTop: 12 }}>
-            How long <span>· up to a week</span>
-          </label>
-          <select
-            id="mySpan"
-            className="editinput"
-            value={span}
-            onChange={(e) => setSpan(Number(e.target.value))}
-          >
-            <option value={1}>Just that day</option>
-            <option value={2}>2 days</option>
-            <option value={3}>3 days</option>
-            <option value={4}>4 days</option>
-            <option value={5}>5 days</option>
-            <option value={6}>6 days</option>
-            <option value={7}>7 days</option>
-          </select>
-          <label className="flabel" htmlFor="myHeadline" style={{ marginTop: 12 }}>
+          {/* One question about when, so one row: stacked, the two of them
+              pushed the poster they describe off the bottom of the screen.
+              Same two-column grid the class editor uses for start and end. */}
+          <div className="timegrid two">
+            <div>
+              <label className="flabel" htmlFor="myFrom">
+                From
+              </label>
+              <input
+                id="myFrom"
+                className="editinput"
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value || today)}
+              />
+            </div>
+            <div>
+              <label className="flabel" htmlFor="mySpan">
+                How long
+              </label>
+              <select
+                id="mySpan"
+                className="editinput"
+                value={span}
+                onChange={(e) => setSpan(Number(e.target.value))}
+              >
+                <option value={1}>1 day</option>
+                <option value={2}>2 days</option>
+                <option value={3}>3 days</option>
+                <option value={4}>4 days</option>
+                <option value={5}>5 days</option>
+                <option value={6}>6 days</option>
+                <option value={7}>7 days</option>
+              </select>
+            </div>
+          </div>
+          <label className="flabel" htmlFor="myHeadline" style={{ marginTop: 16 }}>
             Headline <span>· the big text at the top</span>
           </label>
           <input

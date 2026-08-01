@@ -490,6 +490,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .timegrid.two .flabel { margin-top: 0; }
 .timegrid.two input.timeinput { width: 100%; min-width: 0; }
 .timegrid input.timeinput.invalid { border-color: var(--pg-day) !important; }
+/* The same two-column row for fields that aren't native time inputs: the
+   share sheet's date and length are one question about when, and stacked they
+   pushed the poster itself off the screen. */
+.timegrid.two .editinput { width: 100%; min-width: 0; }
 .durnote {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: var(--ol);
   margin-top: 8px;
@@ -1928,18 +1932,22 @@ button.ps-card { cursor: pointer; }
 .profhero .followpill.on {
   background: rgba(255, 255, 255, .74); border-color: transparent; color: #111;
 }
-.profhero .actpill:not(.actpill-primary) {
-  background: rgba(255, 255, 255, .4); border-color: rgba(255, 255, 255, .85);
-}
-/* Follow before it's a yes is an outline in white, so the pair reads as one
-   thing you have done and one you haven't. It fills in on the yes, and its ink
-   turns with it: white on a white fill was a word nobody could read, which is
-   the one thing a button that says "Following" has to do. */
+/* The second pill is an outline in white, so the pair reads as one thing you
+   came to do and one you might. It fills in on the yes, and its ink turns with
+   it: white on a white fill was a word nobody could read, which is the one
+   thing a button that says "Following" has to do.
+   The owner's Edit profile is the same rule as a visitor's Follow, in one
+   selector rather than two, because they are the same slot wearing the same
+   weight. Left apart, Edit profile kept a .4 fill and the base rule's ink and
+   was a third treatment nobody asked for, and dark words on a photograph is
+   the thing this whole hero is built to avoid. */
+.profhero .actpill:not(.actpill-primary),
 .profhero .followpill:not(.on) {
   background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .9); color: #fff;
 }
-.profhero .actpill .icon,
+.profhero .actpill-primary .icon,
 .profhero .followpill.on .icon { color: #111; }
+.profhero .actpill:not(.actpill-primary) .icon,
 .profhero .followpill:not(.on) .icon { color: #fff; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
 /* A pin beside the city, drawn in the same white as the words it labels. */

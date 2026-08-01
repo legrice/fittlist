@@ -2143,6 +2143,14 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   const filled = await pills.first().evaluate((e) => e.classList.contains("actpill-primary"));
   const outline = await pills.nth(1).evaluate((e) => e.classList.contains("actpill-primary"));
   if (!filled || outline) fail("Share should be the filled one and Edit the outline");
+  // Both sit on a photograph, so the outline one has to be white. It carried
+  // the base rule's ink for a while, which is dark words on somebody's picture
+  // and the one thing this hero is built to avoid.
+  {
+    const ink = await pills.evaluateAll((els) => els.map((e) => getComputedStyle(e).color));
+    if (ink[0] !== "rgb(17, 17, 17)") fail("the filled pill's ink should be dark: " + ink[0]);
+    if (ink[1] !== "rgb(255, 255, 255)") fail("the outline pill's ink should be white: " + ink[1]);
+  }
 
   await pills.first().click();
   await page.getByRole("heading", { name: "Share your page" }).waitFor();

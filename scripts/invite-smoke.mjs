@@ -288,6 +288,12 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await row.click();
   await pg.getByRole("heading", { name: "Your invite link" }).waitFor();
+  // The link is fetched after the sheet is up, so the heading is not the
+  // signal that it is there. Reading straight after it gave an empty string
+  // often enough to look like a real failure twice.
+  await pg.waitForFunction(
+    () => /\/j\/[a-z0-9]{8}$/.test(document.querySelector(".joinlink-url")?.textContent?.trim() ?? ""),
+  );
   const joinUrl = (await pg.locator(".joinlink-url").innerText()).trim();
   if (!/\/j\/[a-z0-9]{8}$/.test(joinUrl)) fail(`that doesn't look like a share link: ${joinUrl}`);
   await pg.screenshot({ path: OUT + "/shot-invite-friend.png", fullPage: true });

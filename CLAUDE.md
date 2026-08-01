@@ -447,9 +447,14 @@ badge above the name: white at 80% with a backdrop blur and ink on top, the
 same as the two action pills. A slab of ink over a photograph is a hole in it,
 and two treatments side by side read as two unrelated sets of controls. The
 hierarchy between the pills is fill weight rather than colour now: the one you
-came to do is nearly solid, the other is half of it with a white edge. The two
-badges that mean something (availability, Verified studio) keep their colour in
-the ink, because a pale tag can't say it with its fill.
+came to do is nearly solid with ink on it, the other is a white outline over a
+whisper of a fill with white words. That second treatment is one selector
+covering both slots (`.actpill:not(.actpill-primary)`, `.followpill:not(.on)`),
+because the owner's Edit profile and a visitor's Follow are the same slot
+wearing the same weight; left apart, Edit profile kept the base rule's dark ink
+and put dark words on somebody's photograph. The two badges that mean something
+(availability, Verified studio) keep their colour in the ink, because a pale tag
+can't say it with its fill.
 
 **Everybody can hand a profile on.** `ProfileShare` sits at the right of
 `.profhero-actrow`, across from the two action pills rather than up in the
