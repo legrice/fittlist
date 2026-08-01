@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { classColor } from "@/lib/avatar";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -21,6 +22,10 @@ export type AgendaItem = {
   ap: string;
   durationMin: number;
   where?: string | null;
+  /** The class photo, filling the card; without one the card wears the type's
+   *  colour, so Yoga is the same colour on every card it appears on. */
+  image?: string | null;
+  classType?: string | null;
   coachName?: string | null;
   coachPhoto?: string | null;
   coachColor: string;
@@ -62,6 +67,17 @@ export function AgendaAvatar({
   );
 }
 
+/** A hex colour pulled toward black, as rgba. The card's fade is tinted with
+ *  the class's own colour rather than plain black, which is what makes each
+ *  one read as cut from its poster instead of stamped from a template. */
+function shade(hex: string, keep: number, alpha: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.round(((n >> 16) & 255) * keep);
+  const g = Math.round(((n >> 8) & 255) * keep);
+  const b = Math.round((n & 255) * keep);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 /** The row itself: a link when something is behind it, a button otherwise. */
 export function ClassRow({
   item,
@@ -73,9 +89,30 @@ export function ClassRow({
   /** Anything the row says under the class name, like who else is going. */
   children?: ReactNode;
 }) {
+  const accent = classColor(item.classType, item.coachColor);
   const inner = (
     <>
       <span className="ps-accent" style={{ background: item.coachColor }} aria-hidden="true" />
+      {/* The photo fills the card; without one the type's colour does. The
+          fade at the bottom is that same colour pulled toward black, so the
+          words always sit on something dark enough to read against. */}
+      <span
+        className="evcard-media"
+        style={item.image ? undefined : { background: accent }}
+        aria-hidden="true"
+      >
+        {item.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="evcard-img" src={item.image} alt="" />
+        )}
+      </span>
+      <span
+        className="evcard-scrim"
+        style={{
+          background: `linear-gradient(to top, ${shade(accent, 0.34, 0.94)} 0%, ${shade(accent, 0.34, 0.55)} 34%, rgba(0, 0, 0, 0) 66%)`,
+        }}
+        aria-hidden="true"
+      />
       {/* Who first, then what, then where: on a list drawn from more than one
           coach, the coach is how you place the class. */}
       <span className="ps-ebody">

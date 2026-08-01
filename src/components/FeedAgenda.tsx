@@ -31,6 +31,9 @@ export type FeedItem = {
   ap: string;
   durationMin: number;
   where: string | null;
+  /** The class photo and type, for the card. */
+  image: string | null;
+  classType: string | null;
   going: boolean;
 };
 
@@ -176,7 +179,7 @@ export function FeedAgenda({
         // the studio line: a merged row already carries the coach's face above
         // the class name, and a second glyph under it is one mark too many.
         <Agenda
-          className="feedagenda"
+          className="feedagenda evcards"
           days={shown.map((d) => ({
             iso: d.iso,
             label: d.label,
@@ -187,6 +190,8 @@ export function FeedAgenda({
               ap: i.ap,
               durationMin: i.durationMin,
               where: i.where,
+              image: i.image,
+              classType: i.classType,
               coachName: i.coachName,
               coachPhoto: i.coachPhoto,
               coachColor: i.coachColor,
@@ -200,15 +205,31 @@ export function FeedAgenda({
             })),
           }))}
           row={(item, d) => (
-            <SwipeGoing
-              going={!!item.on}
-              onToggle={() => toggleGoing(item.classId!, d.iso, !item.on)}
-            >
-              <ClassRow
-                item={item}
-                onClick={() => setOpen({ handle: item.base!, classId: item.classId!, iso: d.iso })}
-              />
-            </SwipeGoing>
+            <>
+              <SwipeGoing
+                going={!!item.on}
+                onToggle={() => toggleGoing(item.classId!, d.iso, !item.on)}
+              >
+                <ClassRow
+                  item={item}
+                  onClick={() =>
+                    setOpen({ handle: item.base!, classId: item.classId!, iso: d.iso })
+                  }
+                />
+              </SwipeGoing>
+              {/* The one thing to do with a class, on the card itself: the
+                  same calendar the sheet's pill carries, so the swipe stops
+                  being the only way in. A sibling of the card, not a child,
+                  because a button inside a button is not a thing. */}
+              <button
+                className={`evcard-add${item.on ? " on" : ""}`}
+                aria-label={item.on ? "In your plans" : "Add to your plans"}
+                aria-pressed={!!item.on}
+                onClick={() => toggleGoing(item.classId!, d.iso, !item.on)}
+              >
+                <Icon name={item.on ? "event_added" : "calendar_today"} size={18} />
+              </button>
+            </>
           )}
         />
       )}

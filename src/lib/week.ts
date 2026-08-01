@@ -20,6 +20,9 @@ export type WeekItem = {
   ap: string;
   durationMin: number;
   where: string | null;
+  /** The class photo and type, for the card the lists draw. */
+  image?: string | null;
+  classType?: string | null;
   handle: string;
   coachName: string;
   coachPhoto: string | null;
@@ -359,6 +362,8 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ap: t.ap,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
+      image: c.image,
+      classType: c.classType,
       handle: base,
       coachName: coach.name,
       coachPhoto: coach.photo,
@@ -386,10 +391,14 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ap: t.ap,
       durationMin: p.durationMin,
       where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
+      image: p.image,
+      classType: p.classType,
       handle: "",
       coachName: p.withWho,
       coachPhoto: null,
-      coachColor: "#d6d1b3",
+      // Deep enough for white words: the card draws the class in this colour
+      // when there is no photo, and sand under white text was unreadable.
+      coachColor: "#77705a",
       personal: true,
     });
     byDay.set(iso, list);

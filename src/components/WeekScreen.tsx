@@ -174,6 +174,7 @@ export function WeekScreen({
                 personal one has no page, so it opens its own sheet. */}
             <ClassOpener handle="">
               <Agenda
+                className="evcards"
                 days={shown.map((d) => ({
                   iso: d.iso,
                   label: d.label,
@@ -184,6 +185,8 @@ export function WeekScreen({
                     ap: i.ap,
                     durationMin: i.durationMin,
                     where: i.where,
+                    image: i.image,
+                    classType: i.classType,
                     coachName: i.coachName,
                     coachPhoto: i.coachPhoto,
                     coachColor: i.coachColor,

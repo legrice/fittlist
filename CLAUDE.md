@@ -978,6 +978,23 @@ is `currentColor` and works on the dark pill, the dark toast, and whatever comes
 next. Nothing in CSS forces a fill on it any more; if that rule comes back it
 will paint over the tick.
 
+**A member's lists draw the class as a poster, and only a member's lists.**
+`.evcards` on the two `Agenda` callers (Plans and Following) turns the shared
+`.ps-event` row into a 4:3 card: the class photo fills it, and without one the
+class wears `classColor()` (`src/lib/avatar.ts`), keyed on the class type so
+Yoga is the same colour on every card and the palette means something, falling
+back to the coach's colour. The fade at the bottom is that same colour pulled
+toward black (`shade()` in `Agenda.tsx`, inline because CSS can't mix a colour
+it doesn't know), which is what makes each card read as cut from its own poster
+rather than stamped from a template. The actions sit on the card but are
+siblings of it, never children (a button inside a link is not a thing): the
+remove X top right on Plans, the Add calendar bottom right on Following. The
+coach's own schedule, the public page, the studio page and the rota keep the
+compact rows on purpose: those are working surfaces where density is the
+point, and the card CSS is scoped so it cannot reach them. The Added tag's DOM
+home stays `.ps-etimecol` even though it reads inline with the clock; the
+suites assert that parent.
+
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
 Following and Your plans render it. They had drifted into two designs for one
