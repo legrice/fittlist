@@ -465,16 +465,27 @@ own, and the studio's dots opened an editor whose Save button could not be
 tapped. DOM order already paints both slots over the picture. This is the same
 trap the account view has, where the fix is to portal instead.
 
-**Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
-coach's own profile and nowhere else, and it carries the words "Profile
-settings" rather than being a circle to guess at: `AppHeader` carries none on any screen.
-Their profile is the You tab, so it is one tap from anywhere, and a member's
-settings were always `/you`, which the tab bar already is. `?acct=1` is the URL
-the gear links to and the only door into the account view, which is why a suite
-opening settings navigates there rather than clicking a gear. `.ownermore`
-means the studio page's dots; the profile's gear is `.ownergear` and they share
-only the circle in CSS, because an existing selector broke the moment they
-shared a class name.
+**The You tab lands on a screen of the app, not on the page you publish.** A
+coach goes to `/app` and a member to `/you`; both keep the tab bar, which a
+profile no longer has. Pointing it at the profile meant the tab you had just
+used vanished the moment you arrived. `navTabs`' own fallback said this all
+along (`coach ? "/app" : "/you"`) and was being overridden.
+
+**Settings live on the page they're about, and only once, and that page is the
+one the You tab lands on.** For a coach that is `/app`: a labelled Settings
+pill and the eye that opens their public page, in `.ownertop.schedtop`, on
+their own row under the heading because beside it they pushed "Your schedule"
+onto two lines. `AppHeader` carries no gear on any screen, and the profile
+carries none either, since the gear there was only ever justified by the tab
+landing there. Two classes deep on that row: `.ownertop` is declared later and
+won the tie, which left the pair absolutely positioned under the sticky header
+where nothing could reach it. On `/app` the gear is a **button** rather than a
+link to `?acct=1`, because that navigation never remounts the screen and the
+effect that reads the query never runs; `?acct=1` is still the door from
+anywhere else, which is why a suite navigates there rather than clicking a
+gear. `.ownermore` means the studio page's dots and the schedule's eye; the
+gear is `.ownergear`, and they share only the circle in CSS, because an
+existing selector broke the moment they shared a class name.
 
 **Contact is a thing you do, not a section you read.** It was a tab; it is now
 the pill beside Follow and one sheet (`ContactSheet`). Message on fittlist
