@@ -74,6 +74,12 @@ const reg = await p.evaluate(async () => {
 if (!reg) fail("the service worker never registered, so Chrome won't offer an install");
 console.log("service worker registered at", reg);
 
+// Registering and installing are two things: addAll runs inside the install
+// event, so the cache is empty for a moment after the registration resolves.
+// Reading it straight away is a race, and a slow machine loses it.
+await p
+  .waitForFunction(async () => (await caches.keys()).length > 0, null, { timeout: 10000 })
+  .catch(() => {});
 const cached = await p.evaluate(async () => {
   const keys = await caches.keys();
   const out = [];

@@ -21,12 +21,21 @@ export function useSlideBack() {
   // arrow means now that it is the only way off the page: back to wherever you
   // came from, and to the app's front door on a cold open, where "wherever you
   // came from" is somebody else's website.
-  return (href?: string, anywhere = false) => {
+  //
+  // `notUnder` is what stops that becoming a trap. A class belongs to the
+  // profile it hangs off, and its own back points at that profile, so a
+  // profile that pops into one of its own classes bounces forever: open a
+  // class link cold, tap the coach, tap back, and you are on the class again
+  // with nothing but the same two taps available. A page underneath that lives
+  // inside this one is not somewhere you came from, it is somewhere you went,
+  // so the arrow steps over it to the named destination instead.
+  return (href?: string, anywhere = false, notUnder?: string) => {
     const go = () => {
       if (!href) return router.back();
       const beneath = pageBeneath();
       if (anywhere) {
-        if (beneath) return router.back();
+        const mine = !!beneath && !!notUnder && (beneath === notUnder || beneath.startsWith(`${notUnder}/`));
+        if (beneath && !mine) return router.back();
         return router.push(href);
       }
       // A destination carrying a query string is a different screen from the
@@ -54,6 +63,7 @@ export function BackLink({
   className,
   label,
   anywhere = false,
+  notUnder,
   children,
 }: {
   /** Omit to go back through history rather than to a known page. */
@@ -64,6 +74,10 @@ export function BackLink({
   /** Pop to whatever is underneath rather than only to `href`, which becomes
    *  the fallback for a page opened cold. */
   anywhere?: boolean;
+  /** With `anywhere`: a URL whose own pages don't count as somewhere you came
+   *  from. A profile passes its own base, so it never pops into one of its
+   *  classes and back into itself. */
+  notUnder?: string;
   children: React.ReactNode;
 }) {
   const back = useSlideBack();
@@ -72,7 +86,7 @@ export function BackLink({
       type="button"
       className={className}
       aria-label={label}
-      onClick={() => back(href, anywhere)}
+      onClick={() => back(href, anywhere, notUnder)}
     >
       {children}
     </button>

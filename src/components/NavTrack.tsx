@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // A record of the pages you've walked through in this tab.
 //
@@ -60,15 +60,48 @@ function write(stack: string[]) {
 
 export function NavTrack() {
   const pathname = usePathname();
+  // Whether the navigation about to be recorded was a step backwards.
+  //
+  // This used to be guessed from the pathname: landing on the page beneath the
+  // top was taken for a back. That guess is wrong exactly where it matters
+  // most, because a profile and a class link to each other. Tap into a class
+  // and then tap the coach's name and you arrive at a pathname that IS the one
+  // beneath, so a genuine step forward was recorded as a step back, the class
+  // fell off the stack, and the profile's arrow no longer knew you had come
+  // from it.
+  //
+  // popstate is the fact rather than the guess. It fires for the browser
+  // button, for a swipe, and for router.back(), and never for a push.
+  //
+  // It is only available for a navigation inside this document, though. A back
+  // that reloads the page (out of the bfcache, or off a hard-loaded entry)
+  // brings up a fresh listener that never saw the event, so the first run
+  // after a load still has to guess, and the old pathname test is the best
+  // guess there is. After that, popstate is authoritative.
+  const popped = useRef(false);
+  const first = useRef(true);
 
   useEffect(() => {
+    const onPop = () => {
+      popped.current = true;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  useEffect(() => {
+    const fresh = first.current;
+    first.current = false;
+    const popEvent = popped.current;
+    // Consumed either way, including on the early return: a popstate that
+    // didn't change the path (a hash, a query) must not leave the flag set for
+    // whatever navigation comes next.
+    popped.current = false;
     const stack = navStack();
     const top = stack[stack.length - 1];
     if (top === pathname) return;
-    // Landing on the page beneath the top means we went back, however that
-    // happened: our own control, the browser button, or a swipe. Drop the tip
-    // rather than recording the same page twice.
-    if (stack.length >= 2 && stack[stack.length - 2] === pathname) {
+    const wentBack = popEvent || (fresh && stack.length >= 2 && stack[stack.length - 2] === pathname);
+    if (wentBack && stack.length >= 2) {
       write(stack.slice(0, -1));
       return;
     }

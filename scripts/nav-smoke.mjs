@@ -113,5 +113,33 @@ await r.waitForURL(/\/sarah(\/schedule)?$/);
 await r.locator(".ps-event").first().waitFor();
 console.log("a cold class page still gets to the profile ok");
 
+// The one pair able to trap somebody: a class and the profile it belongs to
+// link at each other, so a profile that popped into one of its own classes
+// would bounce forever. Open a class link cold, tap through to the coach, tap
+// back, and you have to be somewhere other than that class.
+{
+  const trapCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const t = await trapCtx.newPage();
+  t.setDefaultTimeout(15000);
+  await t.goto(classUrl);
+  await t.locator(".classoverlay-nm").waitFor();
+  await t.waitForTimeout(500);
+  // Into the coach, the way the class offers.
+  const coach = t.locator(".classoverlay a[href^='/sarah']").first();
+  if (!(await coach.count())) fail("a class should name the coach it belongs to");
+  await coach.click();
+  await t.waitForURL(/\/sarah$/);
+  await t.locator(".profhero").waitFor();
+  await t.waitForTimeout(500);
+  await t.locator(".profback .evback").click();
+  await t.waitForTimeout(1100);
+  if (/\/sarah\/[0-9a-f-]{36}/.test(t.url()))
+    fail("the profile popped back into its own class: that is the loop");
+  if (!/\/(feed|discover)?$/.test(new URL(t.url()).pathname))
+    fail("a profile with nowhere real behind it should reach the app, got " + t.url());
+  await trapCtx.close();
+}
+console.log("no class/profile loop ok (a profile never pops into its own class)");
+
 await b.close();
 console.log("NAV CHECKS PASSED");

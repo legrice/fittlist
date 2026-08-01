@@ -157,7 +157,13 @@ export function ProfileTabs({
             "wherever you came from" is somebody else's website. */}
         {backTo && (
           <div className="profback">
-            <BackLink className="evback" href={backTo.href} label={backTo.label} anywhere>
+            <BackLink
+              className="evback"
+              href={backTo.href}
+              label={backTo.label}
+              anywhere
+              notUnder={base}
+            >
               <Icon name="arrow_back" size={21} />
             </BackLink>
           </div>

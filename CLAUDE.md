@@ -342,6 +342,24 @@ both link to each other, so every tap grew history and the browser button could
 only walk the pile. A coach's page answers to three URLs, so compare with
 `samePage()` rather than `===`.
 
+**A profile never pops into one of its own pages.** That same coach-and-class
+pair is the one able to trap somebody, and the profile's `anywhere` arrow put
+it back: a class link opened cold sends you to the coach, the coach pops to
+whatever is beneath, which is that class, whose own back sends you to the coach
+again. Two taps, forever. `notUnder` is the answer: `ProfileTabs` passes its
+own `base`, and a page underneath that lives inside this one is somewhere you
+went rather than somewhere you came from, so the arrow steps over it to the
+named destination. `scripts/nav-smoke.mjs` walks the trap.
+
+**`NavTrack` learns "we went back" from `popstate`, not from the pathname.** It
+used to treat landing on the page beneath the top as a back, which is wrong
+exactly where it matters: tap into a class, tap the coach's name, and you
+arrive at the pathname that is beneath, so a step forward was recorded as a
+step back and the class fell off the stack. `popstate` fires for the browser
+button, a swipe and `router.back()`, and never for a push. The old guess
+survives for the first run after a document load only, because a back that
+reloads the page brings up a listener that never saw the event.
+
 **The owner's page uses the visitor's two slots.** Where somebody else sees
 Message and Follow, a coach on their own page sees Share (filled) and Edit
 profile (outline): the same shapes, the same weights, the same spot. Share
