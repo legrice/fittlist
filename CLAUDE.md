@@ -261,6 +261,15 @@ both link to each other, so every tap grew history and the browser button could
 only walk the pile. A coach's page answers to three URLs, so compare with
 `samePage()` rather than `===`.
 
+**Settings live on the page they're about, and only once.** On a coach's own
+profile the gear sits in `.ownertop`, left of the three dots that hold
+everything else about their page, and `AppChrome` is passed `settings={false}`
+there so the app header drops its own. Two gears fifty pixels apart is a guess
+about which one you meant. Everywhere else, and on somebody else's page, the
+header keeps it. `.ownermore` still means the dots alone; the gear is
+`.ownergear` and they share only the circle in CSS, because an existing
+selector broke the moment they shared a class name.
+
 **A coach's profile is a route per tab, and the bare handle is the schedule.**
 `/{handle}` renders Schedule, `/{handle}/about` and `/{handle}/contact` the
 other two, and `/{handle}/schedule` still resolves because that link is already

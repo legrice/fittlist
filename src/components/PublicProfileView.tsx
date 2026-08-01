@@ -407,7 +407,12 @@ export async function PublicProfileView({
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
         {viewerId ? (
-          <AppChrome userId={viewerId} bar active={isOwner ? "you" : undefined} />
+          <AppChrome
+              userId={viewerId}
+              bar
+              active={isOwner ? "you" : undefined}
+              settings={!isOwner}
+            />
         ) : (
           <PublicTopBar handle={handle} />
         )}
@@ -455,6 +460,13 @@ export async function PublicProfileView({
             isOwner ? (
               <>
               {days.length > 0 && <ShareWeekPill handle={handle} />}
+              {/* Settings sit with the page they're about. Everything else a
+                  coach does to their page is behind the dots to the right of
+                  this, so the two live together rather than one being up in
+                  the app header two rows above. */}
+              <Link className="ownergear" href="/app?acct=1" aria-label="Settings">
+                <Icon name="settings" size={20} />
+              </Link>
               <ProfileOwnerBar
                 name={user.name}
                 title={user.title ?? ""}
