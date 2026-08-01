@@ -1105,9 +1105,10 @@ button.ps-card { cursor: pointer; }
   position: absolute; top: 0; left: 0; right: 0; z-index: 6;
   background: none; margin: 0;
   padding: calc(16px + env(safe-area-inset-top)) 18px 12px;
-  /* A hairline rather than nothing: with the icons' plates gone the bar had
-     no edge at all, and the wordmark floated in the middle of the picture. */
-  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  /* No edge at all. The hairline tried to give the bar one and read as a
+     seam across the photograph; the scrim is what makes the bar legible,
+     and the picture runs unbroken. */
+  border-bottom: none;
   --wm-ink: #fff;
 }
 .pub .pubtop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -1136,7 +1137,7 @@ button.ps-card { cursor: pointer; }
 /* Which means the top row has to start below the header rather than in the
    same 18px everything else uses. The hero's own padding is the 18px, so this
    is the rest of it. */
-.pub .profhero .profhero-top { padding-top: calc(56px + env(safe-area-inset-top)); }
+.pub .profhero .profhero-top { padding-top: calc(64px + env(safe-area-inset-top)); }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
