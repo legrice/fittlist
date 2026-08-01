@@ -723,6 +723,98 @@ console.log("the coach is told ok");
   console.log("taking a slot off the week ok");
 }
 
+// ---- the migration every gym has: the coach listed it first
+//
+// Tom's own Warm Up at Ironbound predates Ironbound running its schedule. The
+// gym now lists the same slot with him on it, so there are two of the same
+// class. Nobody should see it twice, and clearing it up must not tell the
+// people who saved it that their class was cancelled.
+{
+  // A member saves Tom's own copy, so the merge has something to carry.
+  const memCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const mem = await memCtx.newPage();
+  mem.setDefaultTimeout(15000);
+  await mem.goto(BASE + "/");
+  await mem.getByRole("button", { name: "Sign up with email" }).click();
+  await mem.locator(".roleseg button", { hasText: "here to train" }).click();
+  await mem.getByPlaceholder("you@example.com").fill("dupe@example.com");
+  await mem.getByPlaceholder("Password").fill("pass-word-123");
+  await mem.getByRole("button", { name: "Create account" }).click();
+  await mem.getByRole("button", { name: "Not now" }).click().catch(() => {});
+  await mem.getByText("Pick your link.").waitFor();
+  await mem.getByPlaceholder("Your name").fill("Dee Dupe");
+  await mem.getByRole("button", { name: "Claim it" }).click();
+  await mem.getByRole("heading", { name: "Add a photo." }).waitFor();
+  await mem.getByRole("button", { name: "Continue" }).click();
+  await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
+  await fillLocation(mem);
+  await mem.getByRole("button", { name: "Finish setup" }).click();
+  await mem.waitForURL("**/feed");
+  await mem.goto(BASE + "/tom");
+  await mem.locator(".ps-event", { hasText: "Warm Up" }).first().click();
+  await mem.locator(".classoverlay-nm", { hasText: "Warm Up" }).waitFor();
+  await mem.locator(".ovcta-save").click();
+  await mem.locator(".favtoast.on").waitFor();
+  await mem.goto(BASE + "/week");
+  await mem.locator(".weekrow-nm", { hasText: "Warm Up" }).waitFor();
+
+  // The gym lists the same slot: same name, same day, same time, same place.
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.locator(".rotaday", { hasText: "Monday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#fName").waitFor();
+  await matt.locator("#fName").fill("Warm Up");
+  await matt.locator("#fStart").fill("06:00");
+  await matt.locator("#fCoach").selectOption({ label: "Tom" });
+  await matt.getByRole("button", { name: "Add to the schedule" }).click();
+  await matt.getByText("Added to the week").waitFor();
+  await matt.waitForTimeout(800);
+
+  // Tom is told, rather than left to wonder why there are two.
+  await tom.goto(BASE + "/updates");
+  await tom.locator(".notifrow", { hasText: "lists Warm Up too" }).waitFor();
+
+  // His own screen keeps both, because it's the only place he can act on it.
+  await tom.goto(BASE + "/app");
+  const dupe = tom.locator(".ps-event", { hasText: "Warm Up" }).first();
+  await dupe.waitFor();
+  if (!/duplicate/i.test(await dupe.innerText()))
+    fail("his own copy should say it's a duplicate");
+
+  // Nobody else sees it twice, whether or not he shares his shifts.
+  await tom.goto(BASE + "/app?acct=1");
+  await tom.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+  await tom.waitForTimeout(900);
+  await tom.goto(BASE + "/tom");
+  await tom.waitForTimeout(400);
+  const mondays = await tom
+    .locator('.ps-event[data-d="' + weekDay(7) + '"]', { hasText: "Warm Up" })
+    .count();
+  if (mondays !== 1) fail(`Warm Up should appear once on his page, got ${mondays}`);
+  // And the one that shows is the gym's, which lives under the studio.
+  const href = await tom
+    .locator('.ps-event[data-d="' + weekDay(7) + '"]', { hasText: "Warm Up" })
+    .getAttribute("href");
+  if (!href?.startsWith("/s/")) fail("the gym's copy should be the one shown: " + href);
+  console.log("a duplicate shows once, and the gym's is the one ok");
+
+  // Hand it over: his row goes, and the person who saved it keeps their spot.
+  await tom.goto(BASE + "/app");
+  await tom.locator(".ps-event", { hasText: "Warm Up" }).first().click();
+  await tom.getByRole("heading", { name: /is the gym.s now/ }).waitFor();
+  await tom.getByRole("button", { name: "Hand it over" }).click();
+  await tom.getByText(/Handed over/).waitFor();
+  await tom.waitForTimeout(900);
+  if (await tom.locator(".ps-dupe").count()) fail("the duplicate should be gone");
+  await mem.goto(BASE + "/week");
+  await mem.locator(".weekrow-nm", { hasText: "Warm Up" }).waitFor();
+  const told = await mem.goto(BASE + "/updates");
+  void told;
+  if (await mem.locator(".notifrow", { hasText: "is off" }).count())
+    fail("handing a class over is not a cancellation and must not read as one");
+  await memCtx.close();
+  console.log("handing it over keeps the saves and cancels nothing ok");
+}
+
 // Julia, the other manager, sees the same rota
 await julia.goto(BASE + studioHref + "/manage");
 await julia.locator(".rotarow", { hasText: "HYROX" }).waitFor();

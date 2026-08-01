@@ -152,6 +152,7 @@ export default async function SchedulePage({
     shift: c.shift,
     // A shift's class page lives under the studio, because that is who owns it.
     shiftBase: c.shift && c.studioId ? studioById.get(c.studioId)?.slug ?? null : null,
+    duplicateOf: c.duplicateOf,
   }));
   const today = todayIso();
   const hasAnyClass = classRows.length > 0;
