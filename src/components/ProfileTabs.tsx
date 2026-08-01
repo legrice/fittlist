@@ -40,13 +40,13 @@ export function ProfileTabs({
   trackSchedule: boolean;
   /** The face: photo or coloured initial, above the name. */
   avatar: ReactNode;
-  /** The row of pills under the name: Message, Follow. */
+  /** The row of pills under the name. A visitor gets Message and Follow; the
+   *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
   avail: ReactNode | null;
-  /** The owner's controls, top right of the header: the three-dot in the
-   *  corner, and the labeled Add class pill across from the photo. Frequency
-   *  decides placement: adding is occasional maintenance and lives up top;
-   *  sharing is the weekly habit and owns the floating button below. */
+  /** Top right of the header, owner only: the settings gear. Everything else
+   *  they do to this page is on the pills under the name or the floating Add
+   *  class button, so nothing else belongs in the corner. */
   ownerTop?: ReactNode;
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */

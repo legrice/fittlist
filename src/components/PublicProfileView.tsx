@@ -14,7 +14,6 @@ import { Icon } from "@/components/Icon";
 import { FollowSync } from "@/components/FollowSync";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
-import { ShareWeekPill } from "@/components/ShareWeekFab";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { RequestSessionButton } from "@/components/RequestSessionButton";
@@ -436,37 +435,11 @@ export async function PublicProfileView({
           hasStudios={!!studios}
           trackSchedule={!isOwner}
           avatar={avatar}
+          // The same two slots for everybody. A visitor gets Message and
+          // Follow; the owner gets Share and Edit profile, which are the two
+          // things they came to do with their own page.
           actions={
-            // The owner previewing their own page has nobody to follow and
-            // nobody to write to.
-            !isOwner ? (
-              <div className="profacts">
-                {user.messagesOpen && (
-                  <RequestSessionButton handle={handle} coachName={user.name} variant="pill" />
-                )}
-                <NotifyCta
-                  trainerName={user.name}
-                  handle={handle}
-                  account={account}
-                  canSignUp={fansEnabled()}
-                />
-              </div>
-            ) : null
-          }
-          // The owner's controls, top right: the three-dot in the corner,
-          // the labeled Add class pill across from the photo. Nobody else
-          // sees either.
-          ownerTop={
             isOwner ? (
-              <>
-              {days.length > 0 && <ShareWeekPill handle={handle} />}
-              {/* Settings sit with the page they're about. Everything else a
-                  coach does to their page is behind the dots to the right of
-                  this, so the two live together rather than one being up in
-                  the app header two rows above. */}
-              <Link className="ownergear" href="/app?acct=1" aria-label="Settings">
-                <Icon name="settings" size={20} />
-              </Link>
               <ProfileOwnerBar
                 name={user.name}
                 title={user.title ?? ""}
@@ -485,7 +458,28 @@ export async function PublicProfileView({
                 userId={user.id}
                 handle={handle}
               />
-              </>
+            ) : (
+              <div className="profacts">
+                {user.messagesOpen && (
+                  <RequestSessionButton handle={handle} coachName={user.name} variant="pill" />
+                )}
+                <NotifyCta
+                  trainerName={user.name}
+                  handle={handle}
+                  account={account}
+                  canSignUp={fansEnabled()}
+                />
+              </div>
+            )
+          }
+          // Settings, and only settings. Everything else a coach does to this
+          // page is on the two pills under the name; a corner menu on top of
+          // those was a lid over things that already had a button.
+          ownerTop={
+            isOwner ? (
+              <Link className="ownergear" href="/app?acct=1" aria-label="Settings">
+                <Icon name="settings" size={20} />
+              </Link>
             ) : null
           }
           avail={

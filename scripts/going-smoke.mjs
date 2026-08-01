@@ -248,11 +248,11 @@ await co.goto(evUrl);
 await co.getByText(/Going · 2/).waitFor();
 console.log("event room ok (goers see each other, the poster sees the list)");
 
-// --- copy week as text, from the three-dot menu on their own page
+// --- copy week as text, from Share on their own page
 await co.goto(BASE + "/carina");
-await co.locator(".ownermore").waitFor();
+await co.locator(".profacts .actpill").first().waitFor();
 await c1.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
-await co.locator(".ownermore").click();
+await co.locator(".profacts .actpill", { hasText: "Share" }).click();
 await co.getByRole("button", { name: "Copy your week" }).click();
 await co.getByText("Week copied", { exact: false }).waitFor();
 const pasted = await co.evaluate(() => navigator.clipboard.readText());

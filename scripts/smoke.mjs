@@ -388,9 +388,12 @@ await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 // ---- tap the avatar -> public profile page with owner back + edit
 await page.locator(".acctwho-id").click();
 await page.waitForURL("**/matt");
-await expect(page.locator(".ownermore").isVisible(), "owner three-dot button on profile");
-await page.locator(".ownermore").click();
-await page.locator(".ownermenu .setrow", { hasText: "Edit profile" }).click();
+// Editing is one of the owner's two pills now, where a visitor sees Follow.
+await expect(
+  page.locator(".profacts .actpill", { hasText: "Edit profile" }).isVisible(),
+  "owner Edit profile pill",
+);
+await page.locator(".profacts .actpill", { hasText: "Edit profile" }).click();
 await page.getByRole("heading", { name: "Edit profile" }).waitFor();
 await page.locator("#pTitle").fill("Strength coach");
 await page.locator(".abouttext").fill("Strength coach across Jersey City.");
@@ -440,27 +443,31 @@ if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   if (!(await where.locator(".icon svg").count()))
     fail("your own schedule should still mark the studio with a pin");
 }
-// the three-dot menu holds every tool, and each row goes where it says
+// Share holds every way of sharing, and each row goes where it says
 await page.goto(BASE + "/matt");
-await page.locator(".ownermore").click();
 {
   const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = ["Add a class", "Edit profile", "Share your schedule", "Your QR code", "Copy your week", "Requests"];
+  if (rows.length) fail("nothing should be open before Share is tapped");
+}
+await page.locator(".profacts .actpill", { hasText: "Share" }).click();
+{
+  const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
+  const want = ["Share your schedule", "Copy your link", "Your QR code", "Copy your week"];
   if (rows.join("|") !== want.join("|"))
-    fail("the owner menu should be " + want.join(", ") + ", got " + rows.join(", "));
+    fail("the share sheet should be " + want.join(", ") + ", got " + rows.join(", "));
 }
 await page.locator(".ownermenu .setrow", { hasText: "Your QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
-await page.locator(".ownermore").click();
+await page.locator(".profacts .actpill", { hasText: "Share" }).click();
 await page.locator(".ownermenu .setrow", { hasText: "Share your schedule" }).click();
 await page.locator(".sheet .storyimg").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .storyimg"));
-// Add a class lands on the schedule with the adder open
-await page.locator(".ownermore").click();
-await page.locator(".ownermenu .setrow", { hasText: "Add a class" }).click();
+// Adding a class is the floating button, which is where it always was for
+// anyone who didn't go looking under the dots.
+await page.locator(".fab").click();
 await page.waitForURL("**/app**");
 await page.getByRole("heading", { name: /New class|Add a class/ }).waitFor();
 await page.locator(".sheet .sheetclose, .adderclose").first().click().catch(() => {});
@@ -553,7 +560,10 @@ await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "Abo
   if (order[0].trim() !== "Schedule") fail("Schedule should lead the tabs, got " + order.join(", "));
 }
 
-await expect(page.locator(".ownermore").isVisible(), "owner three-dot button on profile");
+await expect(
+  page.locator(".profacts .actpill", { hasText: "Share" }).isVisible(),
+  "owner Share pill on profile",
+);
 if (await page.getByText("Made with").count())
   fail("the made-with footer should be hidden from anyone signed in");
 // a logged-out visitor is who it's for, so it still shows for them
@@ -1782,15 +1792,48 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   await page.locator(".ownertop").waitFor();
   if (await page.locator(".settingsbtn").count())
     fail("two settings doors on the coach's own profile");
-  const gx = await page.locator(".ownergear").evaluate((e) => e.getBoundingClientRect().x);
-  const dx = await page
-    .locator(".ownermore")
-    .evaluate((e) => e.getBoundingClientRect().x);
-  if (!(gx < dx)) fail(`the gear should sit left of the dots: ${gx} vs ${dx}`);
+  await page.locator(".ownergear").waitFor();
+  // Only settings up there. Everything else is on the two pills below.
+  if ((await page.locator(".ownertop > *").count()) !== 1)
+    fail("the corner should carry the gear and nothing else");
+  if (await page.locator(".ownermore").count())
+    fail("the three-dot menu should be gone from a person's profile");
   await page.locator(".ownergear").click();
   await page.locator(".acctwrap").waitFor();
   await page.locator(".acctclose").click();
-  console.log("profile settings ok (one gear, left of the dots, opens the account)");
+  console.log("profile settings ok (one gear in the corner, opens the account)");
+}
+
+// The owner gets two pills where a visitor gets Message and Follow: Share
+// filled, Edit profile outline. Every way of sharing lives behind the first.
+{
+  await page.goto(BASE + "/matt");
+  const pills = page.locator(".profacts .actpill");
+  await pills.first().waitFor();
+  const labels = await pills.allInnerTexts();
+  if (labels.length !== 2 || !/Share/.test(labels[0]) || !/Edit profile/.test(labels[1]))
+    fail("expected Share then Edit profile: " + JSON.stringify(labels));
+  const filled = await pills.first().evaluate((e) => e.classList.contains("actpill-primary"));
+  const outline = await pills.nth(1).evaluate((e) => e.classList.contains("actpill-primary"));
+  if (!filled || outline) fail("Share should be the filled one and Edit the outline");
+
+  await pills.first().click();
+  await page.getByRole("heading", { name: "Share your page" }).waitFor();
+  const rows = await page.locator(".sheet .settingslist .setrow .t").allInnerTexts();
+  for (const want of ["Share your schedule", "Copy your link", "Your QR code", "Copy your week"])
+    if (!rows.includes(want)) fail(`the share sheet is missing ${want}: ${rows.join(", ")}`);
+  // Copying the link is the one people reach for, so prove it actually copies.
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
+  await page.locator(".setrow", { hasText: "Copy your link" }).click();
+  await page.getByText("Link copied, ready to paste").waitFor();
+  if (!(await page.evaluate(() => navigator.clipboard.readText())).endsWith("/matt"))
+    fail("Copy your link copied the wrong thing");
+
+  // And Edit profile still opens the editor it always did.
+  await page.locator(".profacts .actpill").nth(1).click();
+  await page.getByRole("heading", { name: "Edit profile" }).waitFor();
+  await page.locator(".sheetclose").first().click();
+  console.log("owner CTAs ok (Share filled, Edit outline, every share behind one)");
 }
 // following turns the pill green — the same yes as Going. Matt already
 // follows Sam by this point, so settle the state first rather than assuming.

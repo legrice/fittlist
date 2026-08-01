@@ -261,6 +261,17 @@ both link to each other, so every tap grew history and the browser button could
 only walk the pile. A coach's page answers to three URLs, so compare with
 `samePage()` rather than `===`.
 
+**The owner's page uses the visitor's two slots.** Where somebody else sees
+Message and Follow, a coach on their own page sees Share (filled) and Edit
+profile (outline): the same shapes, the same weights, the same spot. Share
+opens the one sheet holding every way of doing it (the story image, the link,
+the QR code, the week as text), and `ProfileOwnerBar` renders that whole pair
+plus its sheets, which is why it lives in `actions` rather than `ownerTop`.
+This replaced a three-dot menu beside the name. Its other two rows already had
+homes and kept them: adding a class is the floating button, and Requests is a
+stat on the account. A lid over two buttons is where things go to be forgotten.
+`.ownermore` still exists, but only on a studio page (`StudioMenu`).
+
 **Settings live on the page they're about, and only once.** On a coach's own
 profile the gear sits in `.ownertop`, left of the three dots that hold
 everything else about their page, and `AppChrome` is passed `settings={false}`
