@@ -377,10 +377,27 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
      against this so it sits flush on the sheet's edge instead of floating
      above the padding box (which was leaving a gap under the save button). */
   --pad-b: calc(22px + env(safe-area-inset-bottom));
-  background: var(--paper); color: var(--ink); width: 100%; border-radius: 16px 16px 0 0;
+  /* The same glass a class overlay wears: opaque enough to read against, with
+     a hint of the page it came up over. A flat panel severs the sheet from the
+     thing it is about. */
+  background: rgba(247, 244, 236, .86); color: var(--ink);
+  backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  width: 100%; border-radius: 16px 16px 0 0;
   padding: 14px 20px var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
+[data-mode="dark"] .sheet { background: rgba(20, 19, 16, .88); }
+
+/* Inside a sheet, a list of rows is not a card: the sheet is already the
+   surface, and a white block inside a white block is a box drawn for its own
+   sake. The rows sit straight on it, divided by a line, which is what the
+   dividers were always doing the work of. */
+.sheet .settingslist {
+  background: none; box-shadow: none; border-radius: 0; overflow: visible;
+  margin-left: -4px; margin-right: -4px;
+}
+.sheet .settingslist > .setrow { background: none; padding-left: 4px; padding-right: 4px; }
+.sheet .settingslist > .setrow:active { background: rgba(25, 21, 2, .05); }
 /* Freeze the background while a bottom sheet is open, so it can't scroll and
    break sticky footers / form editing. */
 body.sheet-open { overflow: hidden; }
@@ -1906,19 +1923,25 @@ button.ps-card { cursor: pointer; }
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
 }
-/* Both are light now, so the hierarchy is fill weight rather than colour: the
-   one you came to do is nearly solid, the other is half of it with a white
-   edge to hold its shape against a busy photograph. */
+/* Filled ones let a little more of the photograph through than they did, and
+   their ink is what makes them readable. */
 .profhero .actpill-primary,
 .profhero .followpill.on {
-  background: rgba(255, 255, 255, .86); border-color: transparent;
+  background: rgba(255, 255, 255, .74); border-color: transparent; color: #111;
 }
-.profhero .actpill:not(.actpill-primary),
+.profhero .actpill:not(.actpill-primary) {
+  background: rgba(255, 255, 255, .4); border-color: rgba(255, 255, 255, .85);
+}
+/* Follow before it's a yes is an outline in white, so the pair reads as one
+   thing you have done and one you haven't. It fills in on the yes, and its ink
+   turns with it: white on a white fill was a word nobody could read, which is
+   the one thing a button that says "Following" has to do. */
 .profhero .followpill:not(.on) {
-  background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .9); color: #fff;
 }
 .profhero .actpill .icon,
-.profhero .followpill .icon { color: #111; }
+.profhero .followpill.on .icon { color: #111; }
+.profhero .followpill:not(.on) .icon { color: #fff; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
 /* A pin beside the city, drawn in the same white as the words it labels. */
 .profwhere { display: inline-flex; align-items: center; gap: 4px; }

@@ -1992,21 +1992,30 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   const read = () =>
     page.locator(".profacts .followpill").evaluate((e) => {
       const s = getComputedStyle(e);
-      return { bg: s.backgroundColor, border: s.borderTopColor, blur: s.backdropFilter };
+      return {
+        bg: s.backgroundColor,
+        border: s.borderTopColor,
+        blur: s.backdropFilter,
+        color: s.color,
+      };
     });
   const on = await read();
-  if (!/^rgba\(255, 255, 255, 0\.8/.test(on.bg))
-    fail("Following should be the fuller white glass, got " + on.bg);
+  if (!/^rgba\(255, 255, 255, 0\.7/.test(on.bg))
+    fail("Following should be the filled white glass, got " + on.bg);
   if (!/blur/.test(on.blur)) fail("the pill should be blurred, got " + on.blur);
-  // And unfollowed it goes back to the lighter one, with a white edge to hold
-  // its shape against whatever the photograph is doing.
+  // Its ink turns with the fill. White on a white fill was a word nobody could
+  // read, which is the one thing a button saying "Following" has to do.
+  if (on.color !== "rgb(17, 17, 17)") fail("Following should read in ink, got " + on.color);
+  // And unfollowed it is an outline in white, so the pair reads as one thing
+  // you have done and one you haven't.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
   const off = await read();
-  if (!/^rgba\(255, 255, 255, 0\.5/.test(off.bg))
-    fail("Follow should be the lighter glass, got " + off.bg);
+  if (!/^rgba\(255, 255, 255, 0\.1/.test(off.bg))
+    fail("Follow should be an outline, got " + off.bg);
   if (!/rgba?\(255, 255, 255/.test(off.border))
     fail("Follow's border should be white, got " + off.border);
+  if (off.color !== "rgb(255, 255, 255)") fail("Follow should read in white, got " + off.color);
   // Put it back, so the rest of the suite finds the follow it expects.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();

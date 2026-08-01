@@ -397,6 +397,12 @@ is gone from this page, which is why availability moved with it: it was a dot
 on that circle and words in its overlay, and it is now a second tag beside
 Coach in `.profhero-tags`. A status nobody can read is the same as no status.
 
+**A bottom sheet is a surface, not a tray for cards.** `.sheet` wears the same
+glass a class overlay does, opaque enough to read against with a hint of the
+page it came up over, and a `.settingslist` inside one drops its own white
+block: rows sit straight on the sheet and the dividers do the separating. A
+white card inside a white card is a box drawn for its own sake.
+
 **Everything floating on a profile's photograph is the same light glass.** The
 back arrow, the share circle, the settings pill, a studio's dots and every
 badge above the name: white at 80% with a backdrop blur and ink on top, the
