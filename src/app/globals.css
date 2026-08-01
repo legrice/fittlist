@@ -1427,22 +1427,6 @@ button.ps-card { cursor: pointer; }
   margin: -22px calc(50% - 50vw) 18px; width: 100vw; max-width: 100vw;
 }
 
-/* The same corner pair on the coach's own schedule, which is where the You tab
-   lands. Not on a photograph here, so they wear the page's own colours, and
-   they sit in the row rather than floating over one.
-
-   Two classes deep on purpose: `.ownertop` is declared later in this file and
-   would win the tie, which left the pair absolutely positioned under the
-   sticky header where nothing could reach it. Same trap as the Discover
-   filter pill and the studio's dots before it. */
-.ownertop.schedtop {
-  position: static; justify-content: flex-end; margin: 14px 0 4px;
-}
-.schedtop .ownergear, .schedtop .ownermore {
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
-  box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
-}
-
 /* The class photo, in the adder: the picture beside the two controls that set
    it, so what you picked is what you see rather than a filename. */
 .classpho { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
@@ -3333,16 +3317,18 @@ button.ps-card { cursor: pointer; }
 /* The nav is fixed over everything below it, so the account needs enough room
    that its last row can always scroll clear of the bar. */
 .hasnav .acctwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
-/* A profile carries no tab bar any more: its way out is the arrow on the
-   picture. So the page stops reserving a bar's worth of room at the bottom,
-   and the floating Add class button drops to where it sits on a screen with
-   nothing under it. These win over the .hasnav rules above by being later and
-   more specific; .hasnav still means "signed in" everywhere else. */
+/* Somebody else's profile carries no tab bar: its way out is the arrow on the
+   picture. So it stops reserving a bar's worth of room at the bottom, and the
+   floating Add class button drops to where it sits on a screen with nothing
+   under it. Your own page is the exception, because it is the You tab and the
+   tabs have to survive arriving on it: `.ownbar` puts the room back. */
 /* Enough that the last row clears the floating Add class button, which now
    sits low rather than above a bar. Without it the final class of the week is
    a row nobody can tap, the same trap the Discover list had. */
 .pub .profwrap { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 .pub .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
+.pub.ownbar .profwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+.pub.ownbar .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
 [data-mode="dark"] .navtab:active { background: #2c2718; }
 /* The header's own copy of the tabs, for the width where the bottom bar hides.
    Words only: an icon earns its keep in a 60px thumb target, not in a row of
@@ -3420,6 +3406,9 @@ button.ps-card { cursor: pointer; }
      later in the file than the one that says so, and would otherwise win. */
   .hasnav .fab { bottom: calc(86px + env(safe-area-inset-bottom)); }
   .pub .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
+  .pub.ownbar .fab { bottom: calc(100px + env(safe-area-inset-bottom)); }
+.pub.ownbar .profwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+.pub.ownbar .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
   [data-mode="dark"] .navtab.on { box-shadow: none; }
   [data-mode="dark"] .navbar {
     box-shadow:

@@ -64,10 +64,10 @@ export async function PublicProfileView({
    *  rides along on the class links below. */
   from?: string;
 }) {
-  // A profile carries the header and no tab bar. Its way out is the arrow on
-  // the picture, which pops to whatever is underneath and names the front door
-  // for a page opened cold. The bar was three layers of chrome over a schedule
-  // once the pinned name and the floating button are counted with it.
+  // Somebody else's profile carries the header and no tab bar: its way out is
+  // the arrow on the picture, which pops to whatever is underneath and names
+  // the front door for a page opened cold. Your own keeps the bar, because it
+  // is the You tab and arriving on a tab must not take the tabs away.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -356,7 +356,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${viewerId ? " hasnav" : ""}`}
+      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -367,7 +367,11 @@ export async function PublicProfileView({
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
         {viewerId ? (
-          <AppChrome userId={viewerId} active={isOwner ? "you" : undefined} />
+          // The bar rides along on your own page and nowhere else: You is a
+          // tab, so landing on it must not take the tabs away. Somebody
+          // else's profile is a page you visited, and the arrow is its way
+          // off.
+          <AppChrome userId={viewerId} bar={isOwner} active={isOwner ? "you" : undefined} />
         ) : (
           <PublicTopBar handle={handle} />
         )}
@@ -441,10 +445,19 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // Nothing. Settings moved to the schedule with the You tab: this is
-          // the page you publish rather than a screen you live in, and a gear
-          // on it was only ever justified by the tab landing here.
-          ownerTop={null}
+          // Settings, and only settings. This is where the You tab lands, so
+          // this is the page they live on; everything else a coach does here
+          // is on the two pills under the name.
+          ownerTop={
+            isOwner ? (
+              // Named, not just drawn. A gear on its own is a guess, and the
+              // one thing behind it is worth saying out loud.
+              <Link className="ownergear" href="/app?acct=1">
+                <Icon name="settings" size={18} />
+                <span className="ownergear-lbl">Profile settings</span>
+              </Link>
+            ) : null
+          }
           avail={
             <div className="profhero-tags">
               {/* Says which side of the app this person is on. Members have

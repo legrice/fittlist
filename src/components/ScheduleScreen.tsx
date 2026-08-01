@@ -328,7 +328,7 @@ export function ScheduleScreen({
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "you", youHref: "/app" } : undefined}
+          nav={showFanView ? { active: "you", youHref: `/${handle}` } : undefined}
           // The face is the You tab now, so the corner holds settings. Two
           // taps on the same picture, one of which quietly meant "account",
           // was the confusing part.
@@ -345,25 +345,6 @@ export function ScheduleScreen({
             <h1>Your schedule</h1>
             <p className="adminsub">The classes you teach. Tap one to open it</p>
           </div>
-        </div>
-        {/* The two doors that used to live on the profile, now that the You tab
-            lands here instead of there: what your page looks like, and the
-            account behind it. Settings still live on the page they are about
-            and still only once; that page is this one now. Their own row,
-            because the pair beside the heading pushed "Your schedule" onto two
-            lines. */}
-        <div className="ownertop schedtop">
-            {/* A button rather than a link to ?acct=1: this screen already is
-                /app, so that navigation never remounts and the effect that
-                reads the query never runs. The query is still the door from
-                anywhere else. */}
-            <button className="ownergear" onClick={() => setProfileOpen(true)}>
-              <Icon name="settings" size={18} />
-              <span className="ownergear-lbl">Settings</span>
-            </button>
-            <Link className="ownermore" href={`/${handle}`} aria-label="View your profile">
-              <Icon name="visibility" size={19} />
-            </Link>
         </div>
         {!hasAnyClass ? (
           <div className="empty-block">
@@ -511,7 +492,7 @@ export function ScheduleScreen({
       {showFanView && (
         <NavBar
           active="you"
-          youHref="/app"
+          youHref={`/${handle}`}
           face={{
             photo,
             color: myAccent,
