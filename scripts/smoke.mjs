@@ -1774,6 +1774,24 @@ await page.locator(".pubtab.sel").waitFor();
   await page.locator(".ps-event").first().waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
+
+// Settings sit with the page they're about, and only once: the gear moved out
+// of the app header here, so there aren't two of them fifty pixels apart.
+{
+  await page.goto(BASE + "/matt");
+  await page.locator(".ownertop").waitFor();
+  if (await page.locator(".settingsbtn").count())
+    fail("two settings doors on the coach's own profile");
+  const gx = await page.locator(".ownergear").evaluate((e) => e.getBoundingClientRect().x);
+  const dx = await page
+    .locator(".ownermore")
+    .evaluate((e) => e.getBoundingClientRect().x);
+  if (!(gx < dx)) fail(`the gear should sit left of the dots: ${gx} vs ${dx}`);
+  await page.locator(".ownergear").click();
+  await page.locator(".acctwrap").waitFor();
+  await page.locator(".acctclose").click();
+  console.log("profile settings ok (one gear, left of the dots, opens the account)");
+}
 // following turns the pill green — the same yes as Going. Matt already
 // follows Sam by this point, so settle the state first rather than assuming.
 await page.goto(BASE + "/discover");
@@ -1787,6 +1805,9 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   const bg = await page.locator(".profacts .followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
   if (bg !== "rgb(61, 139, 83)") fail("Following should be green, got " + bg);
 }
+// Somebody else's page is not yours to configure, so the header keeps its gear.
+if (!(await page.locator(".settingsbtn").count()))
+  fail("the header gear should stay on a page that isn't yours");
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
 // four tabs, and the account opens from the header avatar — back in the

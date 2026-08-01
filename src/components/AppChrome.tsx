@@ -22,11 +22,17 @@ export async function AppChrome({
   userId,
   bar = false,
   active,
+  settings = true,
 }: {
   userId: string;
   bar?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
+  /** Off where the screen offers settings itself. A coach's own profile puts
+   *  the gear in the header of the profile, beside the three dots that hold
+   *  everything else about their page, and two gears fifty pixels apart is a
+   *  guess about which one you meant. */
+  settings?: boolean;
 }) {
   const db = await getDb();
   const [me] = await db
@@ -71,7 +77,7 @@ export async function AppChrome({
       home={(await fansVisible()) ? "/home" : "/app"}
       // The same corner for everyone: your week, the bell, settings. The face
       // left it when it became the You tab.
-      settingsHref={isCoach ? "/app?acct=1" : "/you"}
+      settingsHref={settings ? (isCoach ? "/app?acct=1" : "/you") : undefined}
     />
   );
   if (!bar) return header;

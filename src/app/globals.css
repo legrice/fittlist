@@ -2183,13 +2183,16 @@ button.ps-card { cursor: pointer; }
 /* The owner's three-dot button, beside their name. Everything they do with
    their page (add class, edit profile, share, QR, copy week, requests) lives
    in the sheet behind it. */
-.ownermore {
+/* The dots, and the gear beside them: one circle shape, two identities. They
+   share the look and nothing else, so .ownermore keeps meaning the dots. */
+.ownermore, .ownergear {
   /* White with the same light outline as the share pill beside it. */
   width: 38px; height: 38px; border-radius: 999px; background: var(--card);
   border: 1.5px solid var(--line); color: var(--ink);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
-.ownermore:active { background: var(--cl); }
+.ownermore:active, .ownergear:active { background: var(--cl); }
+.ownergear { text-decoration: none; }
 .ownermenu { margin-top: 14px; }
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */
