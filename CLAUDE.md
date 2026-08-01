@@ -690,6 +690,16 @@ Two things are coming that today's shapes should leave room for. Neither is
 built; don't build them until they're asked for, but don't paint them out
 either.
 
+**Charging.** `PRICING.md` holds the membership model: members free forever,
+a coach paying a few dollars a month to publish a schedule, a studio paying
+more for its page and its rota, and a free month for every coach you bring.
+Nothing is built and nothing should be until it's asked for, but two shapes
+already in the code are the ones it will lean on, so don't undo them: the gym
+account (`studios.accountUserId`) is what a studio would be billed against, and
+`studio_managers` is what "we run this page" means. The open questions are in
+that file, and the sharpest is what happens to a coach's page when they stop
+paying: the URL is out in the world and their followers have Going marks on it.
+
 **Teams.** A run club with six coaches, followed once instead of six times, with
 a team version of the profile and a merged team schedule. Anything that assumes
 a class belongs to exactly one `users` row, or that "follow" only ever points at
