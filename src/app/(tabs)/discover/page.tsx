@@ -6,7 +6,7 @@ import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverCoach } from "@/components/DiscoverList";
+import { DiscoverList, type DiscoverCoach, type DiscoverStudio } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -104,12 +104,27 @@ export default async function DiscoverPage() {
     a.localeCompare(b),
   );
 
+  // The other half of the directory. Every studio, in name order: a row here
+  // is a place, and a place doesn't get ranked by whether it signed up. The
+  // tag says which of them you can see a week for, which is the useful part.
+  const studioRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
+  const studios: DiscoverStudio[] = studioRows.map((st) => ({
+    id: st.id,
+    slug: st.slug ?? st.id,
+    name: st.name,
+    address: st.address,
+    photo: st.photo,
+    types: st.types,
+    hasSchedule: !!st.accountUserId,
+  }));
+
   return (
     <>
       {/* The title lives inside the list now, so the coaches-only switch can
           sit directly across from it. */}
       <DiscoverList
         coaches={coaches}
+        studios={studios}
         cities={cities}
         myCity={me.location?.trim() || null}
         backHref="/feed"

@@ -1188,6 +1188,47 @@ await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasTex
 }
 console.log("discover ok (corner pill follows and unfollows on the row)");
 
+// Two halves of the directory, one row of controls. A studio is a place, so
+// it isn't followable and carries no city filter: it has an address and
+// nothing normalised to group by.
+{
+  await fan.goto(BASE + "/discover");
+  await fan.locator(".dissearchrow").waitFor();
+  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search people")
+    fail("the box should say what it's searching");
+  // The box and the filter sit on one line, filter to the right of it.
+  if (await fan.locator(".discitysel").count()) {
+    const box = await fan.locator(".dissearch").boundingBox();
+    const fil = await fan.locator(".discitysel").boundingBox();
+    if (Math.abs(box.y - fil.y) > 5 || fil.x <= box.x)
+      fail("the filter should sit on the same row, to the right of the box");
+  }
+
+  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".disrow-studio").first().waitFor();
+  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search studios")
+    fail("the box should follow the tab");
+  if (await fan.locator(".discitysel").count())
+    fail("a studio has an address, not a city to filter by");
+  if (await fan.locator(".disfol").count())
+    fail("a studio is a place, not somebody you follow");
+  // A long gym name gets the width a Follow pill would have taken.
+  const wide = await fan
+    .locator(".disrow-studio .disrow-nmline")
+    .first()
+    .evaluate((e) => getComputedStyle(e).paddingRight);
+  if (wide !== "0px") fail("a studio row shouldn't hold space for a pill it hasn't got");
+  // Searching an address finds the town, which is the filter studios lack.
+  await fan.locator(".dissearch-in").fill("Ironbound");
+  await fan.waitForTimeout(300);
+  const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
+  if (!names.some((n) => /Ironbound/.test(n)))
+    fail("searching studios found nothing: " + names.join(", "));
+  await fan.locator(".disrow-studio").first().click();
+  await fan.waitForURL(/\/s\//);
+  console.log("discover tabs ok (people and places, one row of controls)");
+}
+
 // The studio directory is coach-editable, and a coach is kind, not handle:
 // members hold handles too, and testing the handle put the edit button on
 // every member's screen and left the action open behind it.

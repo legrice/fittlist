@@ -73,24 +73,42 @@ function FollowMini({
   );
 }
 
-// Search + city filter over the directory. The corner control follows from
-// the row now; the row's main job is still to get you to a person, and the
-// Coach badge across from the name is what tells you who you're looking at,
-// which is the distinction that matters once members can appear in a list.
+/** A place in the directory. Not followable: you follow a person, and a gym
+ *  is not a person. Its page is where its week lives. */
+export type DiscoverStudio = {
+  id: string;
+  slug: string;
+  name: string;
+  address: string;
+  photo: string | null;
+  types: string[];
+  /** It runs its schedule here, so there's a week to see. */
+  hasSchedule: boolean;
+};
+
+// Search over the directory, which has two halves: the people and the places.
+// One search box and one filter on a single row, and the tab above decides
+// what they're searching. The corner control follows from the row; the row's
+// main job is still to get you to a person, and the Coach badge across from
+// the name is what tells you who you're looking at, which is the distinction
+// that matters once members can appear in a list.
 export function DiscoverList({
   coaches,
+  studios = [],
   cities,
   myCity = null,
   backHref,
   hideBack = false,
 }: {
   coaches: DiscoverCoach[];
+  studios?: DiscoverStudio[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
 }) {
+  const [tab, setTab] = useState<"people" | "studios">("people");
   const [q, setQ] = useState("");
   const [coachesOnly, setCoachesOnly] = useState(false);
   // Near you is the default view when it would show anything: someone opening
@@ -112,6 +130,20 @@ export function DiscoverList({
     });
   }, [coaches, q, city, coachesOnly]);
 
+  // Studios have no city column, only a free-text address, so there is nothing
+  // honest to filter them by yet. The address carries the town, and searching
+  // it finds them.
+  const shownStudios = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return studios;
+    return studios.filter(
+      (st) =>
+        st.name.toLowerCase().includes(needle) ||
+        st.address.toLowerCase().includes(needle) ||
+        st.types.some((t) => t.toLowerCase().includes(needle)),
+    );
+  }, [studios, q]);
+
   return (
     <>
       {/* The page title, with the coaches-only switch directly across from
@@ -119,7 +151,7 @@ export function DiscoverList({
           nothing to do. */}
       <div className="calbar-title distitle">
         Discover
-        {coaches.some((c) => c.kind !== "coach") && (
+        {tab === "people" && coaches.some((c) => c.kind !== "coach") && (
           <button
             type="button"
             className="disonly"
@@ -134,38 +166,49 @@ export function DiscoverList({
           </button>
         )}
       </div>
-      <div className="dissearch">
-        <Icon name="search" size={19} className="dissearch-ic" />
-        <input
-          className="dissearch-in"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search"
-          aria-label="Search"
-        />
-        {q && (
-          <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
-            <Icon name="close" size={17} />
-          </button>
-        )}
+
+      {/* The directory has two halves. A studio is a place rather than a
+          person, so it isn't followable and doesn't mix into the same list:
+          the tab says which one you're looking at, and the search box below
+          says so too. */}
+      <div className="seg disseg">
+        <button className={tab === "people" ? "sel" : ""} onClick={() => setTab("people")}>
+          People
+        </button>
+        <button className={tab === "studios" ? "sel" : ""} onClick={() => setTab("studios")}>
+          Studios
+        </button>
       </div>
 
-      {/* Near you, then everywhere else. A row of city chips was fine at six
-          cities and unreadable at sixty, so the long list moved into a picker
-          and the one city that matters most got its own button. */}
-      {cities.length > 1 && (
-        <div className="disfilter">
-          {nearCity && (
+      {/* One row: the box, and the filter across from it. Two rows of chrome
+          above a list is most of a phone screen spent on controls. */}
+      <div className="dissearchrow">
+        <div className="dissearch">
+          <Icon name="search" size={19} className="dissearch-ic" />
+          <input
+            className="dissearch-in"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={tab === "people" ? "Search people" : "Search studios"}
+            aria-label={tab === "people" ? "Search people" : "Search studios"}
+          />
+          {q && (
             <button
               type="button"
-              className={`disnear${city === nearCity ? " on" : ""}`}
-              onClick={() => setCity(city === nearCity ? null : nearCity)}
+              className="dissearch-x"
+              onClick={() => setQ("")}
+              aria-label="Clear"
             >
-              <Icon name="place" size={17} /> Near you
+              <Icon name="close" size={17} />
             </button>
           )}
-          <div className="discitysel">
-            <Icon name="expand_more" size={18} className="discitysel-ic" />
+        </div>
+        {/* People carry a city; a studio carries a free-text address and
+            nothing to group by yet, so the filter isn't offered there. It
+            opens on your own city, which is what Discover is for. */}
+        {tab === "people" && cities.length > 1 && (
+          <div className={`discitysel${city ? " on" : ""}`}>
+            <Icon name="place" size={17} className="discitysel-ic" />
             <select
               className="discitysel-in"
               aria-label="Filter by city"
@@ -180,8 +223,49 @@ export function DiscoverList({
               ))}
             </select>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {tab === "studios" ? (
+        shownStudios.length === 0 ? (
+          <div className="empty-block">
+            <h2>{q ? "No studios match that" : "No studios yet"}</h2>
+            <p>
+              {q
+                ? "Try another name or town."
+                : "Studios arrive as coaches add the places they teach."}
+            </p>
+          </div>
+        ) : (
+          <div className="dislist dislist-bare">
+            {shownStudios.map((st) => (
+              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}`}>
+                <span className="disrow-avwrap">
+                  {st.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="disrow-av disrow-av-sq" src={st.photo} alt="" />
+                  ) : (
+                    <span className="disrow-av disrow-av-sq disrow-av-place" aria-hidden="true">
+                      <Icon name="place" size={20} />
+                    </span>
+                  )}
+                </span>
+                <span className="disrow-txt">
+                  <span className="disrow-nmline">
+                    <span className="nm">{st.name}</span>
+                    {st.hasSchedule && <span className="kindtag kindtag-sm">Schedule</span>}
+                  </span>
+                  <span className="disrow-sub">{st.address}</span>
+                </span>
+                <span className="disrow-chev">
+                  <Icon name="chevron_right" size={18} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : (
+      <>
 
 
       {shown.length === 0 ? (
@@ -247,6 +331,8 @@ export function DiscoverList({
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
 
       {/* Coaches have the bottom nav; fans need a way back. */}

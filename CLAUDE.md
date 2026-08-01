@@ -247,6 +247,18 @@ and the tab bar once, and `loading.tsx` sits under it so a tab that's still
 loading keeps its chrome. Put them back in the pages and the bar unmounts on
 every navigation, which is the thing the layout exists to prevent.
 
+**Discover has two halves, and only one of them is people.** A People/Studios
+segment above one row of controls: the search box, and the city filter across
+from it. The box says which half it's searching. Studios are not followable and
+never will be by this control, because you follow a person and a gym is a
+place; the row is the whole link to `/s/{slug}` and carries no pill. They also
+carry no city filter: a studio has a free-text `address` and nothing normalised
+to group by, so searching the address is how you find a town. Studios list in
+name order, not schedule-first: a directory of places shouldn't rank them by
+whether they signed up, and the Schedule tag says which have a week to see.
+`.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
+row has to take it back or long gym names truncate into empty space.
+
 **Locations are one string per place.** Discover groups by the exact value, so
 `normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
 the cities already in use. A bare city snaps onto its only match; with two
