@@ -1637,6 +1637,120 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
 }
 console.log("your week ok (count ahead, rows leave, points at a real calendar)");
 
+// ---- A class you go to is filled in with the coach's own form, lands in your
+// plans and nowhere else, and leaves its details at the studio for the next
+// person. The delineation is the one question a coach gets asked.
+{
+  await fan.goto(BASE + "/week");
+  await fan.getByRole("button", { name: "Add a class" }).first().click();
+  await fan.getByRole("heading", { name: "Add a class" }).waitFor();
+  // A member has one answer, so the question isn't asked; and there is no page
+  // for it to be public on, so that choice is gone too.
+  if (await fan.locator(".modetoggle", { hasText: "coaching" }).count())
+    fail("a member should not be asked whether they coach it");
+  if (await fan.locator(".modetoggle", { hasText: "Public" }).count())
+    fail("a class you go to has no public/private choice");
+  // The full form, not five fields: a studio, a description, a photo.
+  await fan.locator("#fDesc").waitFor();
+  await fan.locator(".classpho").waitFor();
+
+  await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await fan.getByRole("heading", { name: "Choose a studio" }).waitFor();
+  await fan.getByRole("button", { name: "+ New studio" }).click();
+  await fan.getByPlaceholder("e.g. Palisade Barbell").fill("Bright Room Yoga");
+  await fan
+    .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
+    .fill("88 Newark Ave, Jersey City");
+  await fan.getByRole("button", { name: "Add studio" }).click();
+  await fan.getByText("Added to the studio directory").waitFor();
+  await fan.getByPlaceholder("e.g. Barbell Strength").fill("Wellness Off the Mat");
+  await fan.locator("#fDesc").fill("Slow flow and a long savasana.");
+  await fan.locator("#fWith").fill("Erin Clyne");
+  await fan.getByRole("button", { name: "We", exact: true }).click();
+  await fan.locator("#fStart").fill("12:00");
+  await fan.locator(".publishwrap .btn").click({ force: true });
+  await fan.getByText("Added to your plans").waitFor();
+  await fan.waitForTimeout(800);
+  {
+    const row = fan.locator(".weekrow", { hasText: "Wellness Off the Mat" });
+    await row.waitFor();
+    const txt = await row.innerText();
+    // The studio owns the "where", exactly as on a coach's class.
+    for (const bit of ["Bright Room Yoga", "Erin Clyne"])
+      if (!txt.includes(bit)) fail(`the plan row is missing "${bit}": ${txt}`);
+  }
+  // The details stayed at the studio: opening the form there again offers it.
+  await fan.getByRole("button", { name: "Add a class" }).first().click();
+  await fan.getByRole("heading", { name: "Add a class" }).waitFor();
+  await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await fan.getByRole("button", { name: /Bright Room Yoga/ }).first().click();
+  await fan.locator(".flabel", { hasText: "pick one from this studio" }).waitFor();
+  await fan.locator(".sheetclose").first().click();
+  await fan.waitForTimeout(400);
+  console.log("your own class ok (the whole form, into your plans and the studio's list)");
+
+  // Nothing about it is public. Not on their profile, not in the feed.
+  {
+    const mine = await (await fan.request.get(`${BASE}/lindley`)).text();
+    if (/Wellness Off the Mat/.test(mine))
+      fail("a class you only go to must not appear on your own page");
+  }
+
+  // The poster covers the range you ask for, and it starts where your plans
+  // do: a class nine days out used to share as a blank image with no way to
+  // tell why.
+  await fan.locator(".weekshare .ovcta-btn").click();
+  await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
+  {
+    const from = await fan.locator("#myFrom").inputValue();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) fail("the share range needs a real start date: " + from);
+    const first = await fan.locator(".weekday .ps-daycol").first().innerText();
+    void first;
+    const src = await fan.locator(".storyimg").getAttribute("src");
+    if (!src?.includes(`from=${from}`) || !src.includes("days=7"))
+      fail("the image should be asked for over the chosen range: " + src);
+    // One day is the floor and it is a real option.
+    await fan.locator("#mySpan").selectOption("1");
+    await fan.waitForTimeout(300);
+    const one = await fan.locator(".storyimg").getAttribute("src");
+    if (!one?.includes("days=1")) fail("a one-day range should reach the image: " + one);
+    // And the image itself renders, with their own entry on it.
+    const png = await fan.request.get(`${BASE}/api/story/me?from=${from}&days=7`);
+    if (!png.ok()) fail("the story image should render for a range");
+    const buf = Buffer.from(await png.body());
+    if (buf.readUInt32BE(16) !== 1080 || buf.readUInt32BE(20) !== 1920)
+      fail("the story image should still be 1080x1920");
+    await fan.locator(".sheetclose").first().click();
+  }
+  console.log("share range ok (starts where the plans do, one day to seven)");
+  // Back where the next block expects to find them.
+  await fan.goto(BASE + "/feed");
+  await fan.locator(".feedagenda .ps-event").first().waitFor();
+}
+
+// A coach adding to their plans is asked which chair they're in, because both
+// are true for them: the class at their own gym might be theirs to teach.
+{
+  await page.goto(BASE + "/week");
+  await page.getByRole("button", { name: "Add a class" }).first().click();
+  await page.getByRole("heading", { name: "Add a class" }).waitFor();
+  const ask = page.locator(".adder-card", { hasText: "Is this yours to teach?" });
+  await ask.waitFor();
+  // Going is the answer that brought them here, so it leads.
+  if (!(await ask.locator("button.sel", { hasText: "going" }).count()))
+    fail("going should be the answer already selected");
+  if (await page.locator(".modetoggle", { hasText: "Public" }).count())
+    fail("going to a class has no public/private choice");
+  await ask.getByRole("button", { name: /coaching it/ }).click();
+  // Coaching it hands the rest of the form back to the one that publishes.
+  await page.locator(".modetoggle", { hasText: "Public" }).waitFor();
+  const label = (await page.locator(".publishwrap .btn").innerText()).trim();
+  if (label === "Add to your plans") fail("coaching it should publish, not add to plans");
+  await page.locator(".sheetclose").first().click();
+  await page.waitForTimeout(300);
+  console.log("coaching or going ok (a coach is asked, and the form follows the answer)");
+}
+
 // swiping a row right-to-left flips the same mark, without opening the class
 {
   const row = fan.locator(".feedagenda .swiperow").nth(1);

@@ -6,9 +6,21 @@ import { getDb, schema } from "@/db";
 import { hiddenFrom } from "@/lib/blocks";
 import { runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import type { BookingLink } from "@/db/schema";
 
-// A member's own standing class. Private by construction: nothing here can
-// make one public, so this whole file is allowed to be simple.
+// A class you go to, kept by you.
+//
+// Private by construction: nothing here can make one public, and there is no
+// column that could. What it does now carry is everything the coach's form
+// asks for, because it is the coach's form: a studio, a type, a description, a
+// picture, booking links, a one-off date or a weekly slot with an end.
+//
+// The one thing that leaves this table is the studio catalog write, and only
+// when a studio was picked. "Powerflow Yoga has a Vinyasa at six" is a fact
+// about the studio, not about who goes to it, and nothing rendered anywhere
+// says who wrote it down. A 1:1 in somebody's garage has no studio, so it
+// never travels; that is the same protection the coach path keeps by refusing
+// to log a private session.
 
 const MAX_ENTRIES = 30; // a week has room for a lot of training, not for a spreadsheet
 
@@ -22,11 +34,21 @@ export type PersonalMatch = {
 
 export async function addPersonalClass(input: {
   name: string;
-  dayOfWeek: number;
+  /** One row per day, same as the coach's form. A one-off passes the single
+   *  weekday its date falls on. */
+  days?: number[];
+  dayOfWeek?: number;
   startTime: string;
   durationMin: number;
   location?: string;
   withWho?: string;
+  studioId?: string | null;
+  classType?: string | null;
+  description?: string | null;
+  image?: string | null;
+  links?: BookingLink[];
+  specificDate?: string | null;
+  endsOn?: string | null;
   /** They saw the match and want their own entry anyway. */
   force?: boolean;
 }): Promise<{ ok: boolean; error?: string; match?: PersonalMatch }> {
@@ -34,13 +56,30 @@ export async function addPersonalClass(input: {
   if (!userId) return { ok: false, error: "Log in first." };
   const name = input.name.trim().slice(0, 80);
   if (!name) return { ok: false, error: "Give it a name." };
-  if (!Number.isInteger(input.dayOfWeek) || input.dayOfWeek < 0 || input.dayOfWeek > 6)
+  const specificDate = input.specificDate?.trim() || null;
+  if (specificDate && !/^\d{4}-\d{2}-\d{2}$/.test(specificDate))
+    return { ok: false, error: "Pick a date." };
+  // A one-off is one row, on the weekday its date lands on. Everything else is
+  // a row per day picked.
+  const days = specificDate
+    ? [(new Date(`${specificDate}T00:00:00Z`).getUTCDay() + 6) % 7]
+    : [...new Set(input.days ?? (input.dayOfWeek === undefined ? [] : [input.dayOfWeek]))];
+  if (!days.length) return { ok: false, error: "Pick a day." };
+  if (days.some((d) => !Number.isInteger(d) || d < 0 || d > 6))
     return { ok: false, error: "Pick a day." };
   if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Pick a time." };
   const durationMin = Math.round(input.durationMin);
   if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
+  const endsOn = specificDate ? null : input.endsOn?.trim() || null;
+  if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return { ok: false, error: "Pick an end date." };
 
   const db = await getDb();
+
+  // The studio has to be a real row in the directory, and the picker made it
+  // there before this ran. Anything else is dropped rather than trusted.
+  const [studio] = input.studioId
+    ? await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId))
+    : [];
 
   // If the class they're typing in already exists on fittlist (same day, same
   // start, similar name or place), offer the real one instead: it stays up to
@@ -55,7 +94,7 @@ export async function addPersonalClass(input: {
         .from(schema.classes)
         .where(
           and(
-            eq(schema.classes.dayOfWeek, input.dayOfWeek),
+            eq(schema.classes.dayOfWeek, days[0]),
             eq(schema.classes.startTime, input.startTime),
             eq(schema.classes.isPublic, true),
           ),
@@ -66,12 +105,12 @@ export async function addPersonalClass(input: {
       const iso = (() => {
         const d = new Date(`${todayIso()}T00:00:00Z`);
         const today = (d.getUTCDay() + 6) % 7;
-        d.setUTCDate(d.getUTCDate() + ((input.dayOfWeek - today + 7) % 7));
+        d.setUTCDate(d.getUTCDate() + ((days[0] - today + 7) % 7));
         return d.toISOString().slice(0, 10);
       })();
       const hit = candidates.find((c) => {
         if (hidden.has(c.userId)) return false;
-        if (!runsOn(c, iso, input.dayOfWeek)) return false;
+        if (!runsOn(c, iso, days[0])) return false;
         const haveName = fold(c.name);
         const nameClose =
           !!wantName && (haveName.includes(wantName) || wantName.includes(haveName));
@@ -102,17 +141,70 @@ export async function addPersonalClass(input: {
     .select({ id: schema.personalClasses.id })
     .from(schema.personalClasses)
     .where(eq(schema.personalClasses.userId, userId));
-  if (mine.length >= MAX_ENTRIES) return { ok: false, error: "That's plenty for one week." };
+  if (mine.length + days.length > MAX_ENTRIES)
+    return { ok: false, error: "That's plenty for one week." };
 
-  await db.insert(schema.personalClasses).values({
-    userId,
-    name,
-    dayOfWeek: input.dayOfWeek,
-    startTime: input.startTime,
-    durationMin,
-    location: input.location?.trim().slice(0, 120) ?? "",
-    withWho: input.withWho?.trim().slice(0, 80) ?? "",
-  });
+  const classType = input.classType?.trim().slice(0, 40) || null;
+  const description = input.description?.trim().slice(0, 600) || null;
+  const image = input.image?.trim() || null;
+  const links = (input.links ?? [])
+    .filter((l) => l?.url?.trim())
+    .slice(0, 6)
+    .map((l) => ({ label: String(l.label ?? "").slice(0, 40), url: String(l.url).slice(0, 500) }));
+
+  await db.insert(schema.personalClasses).values(
+    days.map((dayOfWeek) => ({
+      userId,
+      name,
+      dayOfWeek,
+      startTime: input.startTime,
+      durationMin,
+      // A studio owns the "where", exactly as it does on a coach's class, so
+      // the free-text line is only ever the fallback.
+      location: studio ? "" : (input.location?.trim().slice(0, 120) ?? ""),
+      withWho: input.withWho?.trim().slice(0, 80) ?? "",
+      studioId: studio?.id ?? null,
+      classType,
+      description,
+      image,
+      links,
+      specificDate,
+      endsOn,
+    })),
+  );
+
+  // Into the studio's shared catalog, so the next person to add this class
+  // gets the description and the picture rather than retyping them, and so a
+  // studio that isn't here yet arrives in the directory with a real class on
+  // it. Only with a studio: see the note at the top of this file.
+  if (studio) {
+    try {
+      await db
+        .insert(schema.studioClasses)
+        .values({
+          studioId: studio.id,
+          name,
+          nameKey: name.toLowerCase(),
+          classType,
+          description,
+          image,
+          createdByUserId: userId,
+        })
+        .onConflictDoUpdate({
+          target: [schema.studioClasses.studioId, schema.studioClasses.nameKey],
+          set: {
+            name,
+            ...(classType ? { classType } : {}),
+            ...(description ? { description } : {}),
+            ...(image ? { image } : {}),
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error("studio catalog upsert failed", err);
+    }
+  }
+
   revalidatePath("/week");
   return { ok: true };
 }

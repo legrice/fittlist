@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
-import { addPersonalClass, removePersonalClass } from "@/app/actions/personal";
+import { removePersonalClass, type PersonalMatch } from "@/app/actions/personal";
+import { Adder } from "@/components/Adder";
 import { InviteSheet } from "@/components/InviteFriends";
+import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
@@ -17,28 +19,37 @@ import { Toast, useToast } from "@/components/Toast";
 // It's a shortlist that empties itself as the week passes, and every row can
 // leave. That, and the fact that it only ever holds what you picked, is what
 // stops it reading as "fittlist wants to be your calendar now".
-export function WeekScreen({ days }: { days: WeekDay[] }) {
+export function WeekScreen({
+  days,
+  studios,
+  templates,
+  customTypes,
+  lastUsed,
+  canCoach,
+}: {
+  days: WeekDay[];
+  /** The adder's ingredients. Adding a class you go to is the same form as
+   *  adding one you teach, so it needs the same directory and the same memory
+   *  of what you filled in last time. */
+  studios: StudioDto[];
+  templates: TemplateDto[];
+  customTypes: string[];
+  lastUsed: LastUsed;
+  /** They coach too, so the form asks whether this one is theirs to teach. */
+  canCoach: boolean;
+}) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [share, setShare] = useState(false);
   // Removing is one tap next to a list of things you meant to do, so it asks.
   const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string; personalId?: string } | null>(null);
-  // Your own standing class: the one your coach isn't on fittlist for yet.
+  // A class you go to. It used to be five fields in a sheet of its own, which
+  // meant the thing you booked through ClassPass arrived with no studio, no
+  // description and no picture. It is the coach's own form now.
   const [addOpen, setAddOpen] = useState(false);
-  const [pName, setPName] = useState("");
-  const [pDay, setPDay] = useState(0);
-  const [pTime, setPTime] = useState("18:00");
-  const [pEnd, setPEnd] = useState("19:00");
-  // A public class already sits at that day and time; offer the real one.
-  const [match, setMatch] = useState<{
-    classId: string;
-    name: string;
-    coachName: string;
-    handle: string;
-    iso: string;
-  } | null>(null);
-  const [pWhere, setPWhere] = useState("");
-  const [pWith, setPWith] = useState("");
+  // A public class already sits at that day and time; offer the real one, and
+  // keep the way back to "mine anyway" so the answer costs them nothing.
+  const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
   const [pBusy, setPBusy] = useState(false);
   // "Is Jenny on fittlist?" — the invite sheet, opened from a personal row.
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -70,58 +81,12 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
     .flatMap((d) => d.items)
     .find((i) => i.personal && i.coachName.trim())?.coachName.trim();
 
-  // Duration comes from the two times; nobody thinks in minutes.
-  const minutesBetween = (a: string, b: string) => {
-    const [ah, am] = a.split(":").map(Number);
-    const [bh, bm] = b.split(":").map(Number);
-    return bh * 60 + bm - (ah * 60 + am);
-  };
-
-  const saveOwn = (force = false) => {
-    if (pBusy || !pName.trim()) return;
-    const durationMin = minutesBetween(pTime, pEnd);
-    if (durationMin <= 0) {
-      toast("It ends before it starts");
-      return;
-    }
-    setPBusy(true);
-    start(async () => {
-      const res = await addPersonalClass({
-        name: pName,
-        dayOfWeek: pDay,
-        startTime: pTime,
-        durationMin,
-        location: pWhere,
-        withWho: pWith,
-        force,
-      });
-      setPBusy(false);
-      if (!res.ok) {
-        if (res.match) {
-          // The match stands alone; two stacked sheets read as a collision.
-          // The form state stays, so "Add mine anyway" has everything.
-          setAddOpen(false);
-          setMatch(res.match);
-          return;
-        }
-        toast(res.error ?? "Couldn't add that");
-        return;
-      }
-      setAddOpen(false);
-      setMatch(null);
-      setPName("");
-      setPWhere("");
-      setPWith("");
-      toast("Added to your plans");
-      router.refresh();
-    });
-  };
-
   const addTheRealOne = () => {
     if (!match || pBusy) return;
+    const { m } = match;
     setPBusy(true);
     start(async () => {
-      const res = await setGoing(match.classId, match.iso, true);
+      const res = await setGoing(m.classId, m.iso, true);
       setPBusy(false);
       if (!res.ok) {
         toast(res.error ?? "Couldn't add that");
@@ -129,8 +94,7 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
       }
       setMatch(null);
       setAddOpen(false);
-      setPName("");
-      toast(`Added ${match.name} with ${match.coachName.trim().split(/\s+/)[0]}`);
+      toast(`Added ${m.name} with ${m.coachName.trim().split(/\s+/)[0]}`);
       router.refresh();
     });
   };
@@ -151,12 +115,12 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
                 : `${left} class${left === 1 ? "" : "es"} coming up`}
             </p>
           </div>
-          {/* The other way in, across from the title: the class you already
-              go to, whose coach isn't here yet. The empty state carries its
-              own copy of this door. */}
+          {/* The other way in, across from the title: a class you go to whose
+              coach isn't here yet, or one you booked somewhere else. The empty
+              state carries its own copy of this door. */}
           {shown.length > 0 && (
             <button className="weekinvite weekaddown weekaddtop" onClick={() => setAddOpen(true)}>
-              <Icon name="add" size={15} /> Add your own class
+              <Icon name="add" size={15} /> Add a class
             </button>
           )}
         </div>
@@ -171,10 +135,10 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
             <Link className="btn si" href="/feed">
               Find something to add
             </Link>
-            {/* The other way in: the class you already go to, whose coach
-                isn't here yet. Yours alone; nothing public. */}
+            {/* The other way in: a class you go to whose coach isn't here
+                yet. Yours alone; nothing public. */}
             <button className="btn ghost" onClick={() => setAddOpen(true)}>
-              Add your own class
+              Add a class
             </button>
           </div>
         ) : (
@@ -284,91 +248,33 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
         </div>
       )}
       {addOpen && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !pBusy) setAddOpen(false);
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach }}
+          onClose={() => setAddOpen(false)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setAddOpen(false);
+            toast(msg);
+            router.refresh();
           }}
-        >
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddOpen(false)}>
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Your own class</h2>
-            <p className="lead">
-              For the classes you already go to, whose coaches aren&rsquo;t on fittlist yet. Only
-              you see it, and it repeats weekly until you take it out.
-            </p>
-            <label className="flabel" htmlFor="ownName">Class</label>
-            <input
-              id="ownName"
-              type="text"
-              className="editinput"
-              maxLength={80}
-              placeholder="e.g. Spin"
-              value={pName}
-              onChange={(e) => setPName(e.target.value)}
-            />
-            <label className="flabel">Day</label>
-            <div className="seg ownday">
-              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d, idx) => (
-                <button key={d} className={pDay === idx ? "sel" : ""} onClick={() => setPDay(idx)}>
-                  {d}
-                </button>
-              ))}
-            </div>
-            {/* Same two-column time row as the coach's class editor: native
-                time inputs have a wide intrinsic minimum, and .editinput let
-                Ends run off the sheet on a phone. */}
-            <div className="timegrid two">
-              <div>
-                <label className="flabel" htmlFor="ownTime">Starts</label>
-                <input
-                  id="ownTime"
-                  type="time"
-                  className="timeinput"
-                  value={pTime}
-                  onChange={(e) => setPTime(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="flabel" htmlFor="ownEnd">Ends</label>
-                <input
-                  id="ownEnd"
-                  type="time"
-                  className="timeinput"
-                  value={pEnd}
-                  onChange={(e) => setPEnd(e.target.value)}
-                />
-              </div>
-            </div>
-            <label className="flabel" htmlFor="ownWhere">Where <span>· optional</span></label>
-            <input
-              id="ownWhere"
-              type="text"
-              className="editinput"
-              maxLength={120}
-              placeholder="e.g. CorePower, Grove St"
-              value={pWhere}
-              onChange={(e) => setPWhere(e.target.value)}
-            />
-            <label className="flabel" htmlFor="ownWith">Coach <span>· optional</span></label>
-            <input
-              id="ownWith"
-              type="text"
-              className="editinput"
-              maxLength={80}
-              placeholder="e.g. Jenny"
-              value={pWith}
-              onChange={(e) => setPWith(e.target.value)}
-            />
-            <div className="publishwrap nostick">
-              <button className="btn si" disabled={pBusy || !pName.trim()} onClick={() => saveOwn()}>
-                {pBusy ? "Adding…" : "Add to your plans"}
-              </button>
-            </div>
-          </div>
-        </div>
+          onDeleted={(msg) => {
+            setAddOpen(false);
+            toast(msg);
+            router.refresh();
+          }}
+          onMatch={(m, again) => {
+            // The match stands alone; two stacked sheets read as a collision.
+            // `again` still holds everything they typed.
+            setAddOpen(false);
+            setMatch({ m, again });
+          }}
+        />
       )}
       {match && (
         <div
@@ -380,20 +286,21 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
           <div className="sheet confirmsheet">
             <h2>That class is on fittlist</h2>
             <p className="lead">
-              {match.name} with {match.coachName} runs then. Add the real one and it stays up to
-              date when the coach changes it.
+              {match.m.name} with {match.m.coachName} runs then. Add the real one and it stays up
+              to date when the coach changes it.
             </p>
             <div className="publishwrap nostick">
               <button className="btn si" disabled={pBusy} onClick={addTheRealOne}>
-                Add {match.name}
+                Add {match.m.name}
               </button>
               <button
                 className="btn ghost"
                 style={{ marginTop: 8 }}
                 disabled={pBusy}
                 onClick={() => {
+                  const { again } = match;
                   setMatch(null);
-                  saveOwn(true);
+                  again();
                 }}
               >
                 Add mine anyway
@@ -435,7 +342,11 @@ export function WeekScreen({ days }: { days: WeekDay[] }) {
           </div>
         </div>
       )}
-      {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
+      {/* The range starts where their plans do, so the first poster they see
+          has their week on it rather than nothing. */}
+      {share && (
+        <ShareMyWeekSheet onClose={() => setShare(false)} firstIso={shown[0]?.iso} />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

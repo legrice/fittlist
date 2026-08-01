@@ -620,9 +620,9 @@ a blank circle for months.
 construction.** Beta members recreated their gyms' real classes because it was
 the only way to get their week into the app, so `publishClasses` now refuses a
 public class from a `kind === "fan"` account, and members get
-`personal_classes` instead: name, weekday, time, place and a free-text coach
-name, living only in their own week. There is deliberately no column that
-could make one public, so the wall can't be left open. Becoming a coach is an
+`personal_classes` instead, living only in their own week. There is
+deliberately no column that could make one public, so the wall can't be left
+open. Becoming a coach is an
 ask, not a switch: `requestCoaching` files it, the admin's People tab answers
 it, and `adminSetKind`/`adminAnswerCoachRequest` are the only things that flip
 `users.kind`. The named coach is an
@@ -630,6 +630,31 @@ invite lead ("Is Jenny on fittlist?"), not a users reference: naming your
 coach is not putting them on the platform. The admin Reports tab lists
 same-studio-same-time classes under two accounts, which is what the old leak
 looks like from above.
+
+**A class you go to is filled in with the same form as a class you teach.**
+It was five fields in a sheet of its own, so the thing you booked through
+ClassPass arrived with no studio, no description and no picture, and the next
+person to add it got none of that either. `Adder` takes a `personal` prop now
+and `personal_classes` carries what `classes` carries (studio, type,
+description, image, links, a one-off `specificDate` or a weekly slot with
+`endsOn`), field for field, so `runsOn` reads one without translation. What it
+still has no column for is being published.
+
+Two things travel out of that table and nothing else does. The class joins the
+studio's shared catalog, so the next person gets the details and a studio
+that isn't here yet arrives in the directory with a real class on it; and that
+write only happens **when a studio was picked**, because "Powerflow has a
+Vinyasa at six" is a fact about the studio while a 1:1 in somebody's garage is
+not. Nothing rendered anywhere says who wrote a catalog row. The form says so
+out loud under the studio field, which is the consent. The coach path keeps
+its own version of this rule by refusing to log a private session at all.
+
+**A coach adding to their plans is asked which chair they're in.** Both are
+true for them: the class at their own gym might be theirs to teach. "I'm
+going" writes a personal row; "I'm coaching it" hands the rest of the form
+back to the one that publishes, public/private toggle and all, and the toast
+says it went to their schedule, because it will not appear on the screen they
+added it from. A member is never asked: one answer is not a question.
 
 **A class report points at the `seriesId`, not a class row.** `class_reports`
 is how someone flags a class that isn't right, and a report keyed on a class
@@ -897,6 +922,18 @@ empty days, or a time gutter. The badge counts what's still ahead
 scoreboard rather than something you can act on. Following is everything from
 the coaches you follow; Your week is the ones you picked. Those have to stay
 legibly different.
+
+**The poster covers a range you choose, one day to seven, and it starts where
+your plans do.** It used to be the seven days from today and to draw only the
+Going marks, so a member whose only class was nine days out shared a blank
+image with nothing to tell them why, and a member whose week was all their own
+entries shared an empty one every time. `/api/story/me` takes `from` and
+`days` (clamped to 1..7) and draws both halves of a week; `ShareMyWeekSheet`
+defaults `from` to the first day the list actually holds something, which is
+what stops the empty poster being the first one anybody sees. Seven is the
+ceiling because the canvas is fixed and `planStory` has to fit it; one is the
+floor because "I'm at this tonight" is a real thing to post. The kicker names
+the range it drew rather than the day it was made.
 
 **Plans leads the tabs, and the header is search and the bell.** It was a heart
 in the corner, which is a control that only exists once you have used it:

@@ -1,5 +1,8 @@
+import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
+import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { myWeek } from "@/lib/week";
 import { WeekScreen } from "@/components/WeekScreen";
 
@@ -11,9 +14,64 @@ export const dynamic = "force-dynamic";
 // Plans would unmount the header and the bar and build a second copy of them,
 // which is the whole reason that layout exists. The header, the tab bar and
 // the dark-mode flag all come from the layout above this now.
+//
+// It loads the adder's ingredients too, because adding a class you go to is
+// the same form as adding one you teach: the studio directory, your own saved
+// classes, the shared type list.
 export default async function WeekPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
-  const days = await myWeek(userId);
-  return <WeekScreen days={days} />;
+  const db = await getDb();
+  const [days, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
+    myWeek(userId),
+    db.select().from(schema.studios).orderBy(schema.studios.seq),
+    db
+      .select()
+      .from(schema.classTemplates)
+      .where(eq(schema.classTemplates.userId, userId))
+      .orderBy(desc(schema.classTemplates.updatedAt)),
+    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+    db
+      .select({ kind: schema.users.kind, handle: schema.users.handle })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId)),
+  ]);
+
+  const studios: StudioDto[] = studioRows.map((s) => ({
+    id: s.id,
+    seq: s.seq,
+    name: s.name,
+    address: s.address,
+  }));
+  const templates: TemplateDto[] = templateRows.map((t) => ({
+    name: t.name,
+    classType: t.classType,
+    description: t.description,
+    startTime: t.startTime,
+    durationMin: t.durationMin,
+    studioId: t.studioId,
+    location: t.location,
+    isPublic: t.isPublic,
+    links: t.links,
+  }));
+  const lastUsed: LastUsed = templates.length
+    ? {
+        startTime: templates[0].startTime,
+        durationMin: templates[0].durationMin,
+        studioId: templates[0].studioId,
+      }
+    : { startTime: "18:00", durationMin: 60, studioId: null };
+
+  return (
+    <WeekScreen
+      days={days}
+      studios={studios}
+      templates={templates}
+      customTypes={customTypeRows.map((r) => r.name)}
+      lastUsed={lastUsed}
+      // Only a coach is asked whether they're teaching it; a member has one
+      // answer, and a question with one answer is furniture.
+      canCoach={me?.kind !== "fan" && !!me?.handle}
+    />
+  );
 }

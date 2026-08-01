@@ -489,6 +489,11 @@ export const classes = pgTable(
 // nowhere else, so it can never pollute Discover or a feed. `withWho` is free
 // text, not a users reference; naming your coach is not the same as putting
 // them on the platform, and every name in here is an invite lead.
+// It carries what a class carries, because it is one: the same form fills it
+// in, and a class you go to deserves a description and a picture as much as a
+// class you teach. The columns mirror `classes` field for field so `runsOn`
+// can read one without translation. What it still doesn't have is any way to
+// be published: no `isPublic`, no owner but you.
 export const personalClasses = pgTable("personal_classes", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id),
@@ -498,6 +503,20 @@ export const personalClasses = pgTable("personal_classes", {
   durationMin: integer("duration_min").notNull().default(60),
   location: text("location").notNull().default(""),
   withWho: text("with_who").notNull().default(""),
+  // The place, when it's a place in the directory rather than free text. This
+  // is also the gate on the catalog write: a class at a studio is a fact about
+  // that studio, a 1:1 in somebody's garage is not.
+  studioId: uuid("studio_id").references(() => studios.id),
+  classType: text("class_type"),
+  description: text("description"),
+  image: text("image"),
+  // How you book it. ClassPass, Mindbody, the studio's own page: yours alone,
+  // and the reason a plan is worth opening twice.
+  links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
+  // Set = a one-off on this date, and `dayOfWeek` is only its weekday. Null =
+  // it repeats. Same pair, same meaning, as on `classes`.
+  specificDate: text("specific_date"),
+  endsOn: text("ends_on"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

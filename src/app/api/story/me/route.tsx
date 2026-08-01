@@ -4,7 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
 import { getDb, schema } from "@/db";
 import { brandIcon } from "@/lib/brand";
-import { DAYS, fmtTime, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
+import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { listBudget, planStory } from "@/lib/storyplan";
 
@@ -45,13 +45,29 @@ export async function GET(req: Request) {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return new Response("Not found", { status: 404 });
 
-  const going = await db
-    .select({
-      classId: schema.attendances.classId,
-      occurrenceDate: schema.attendances.occurrenceDate,
-    })
-    .from(schema.attendances)
-    .where(eq(schema.attendances.userId, userId));
+  // The window. A week is the most it will ever be (the canvas can't hold
+  // more and nobody plans further than that out loud), a day is the least,
+  // and it starts wherever they asked. Defaulting to today is what made a
+  // poster come back empty for somebody whose only class was nine days out.
+  const todayIso = todayIsoNow();
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(qs.get("from") ?? "") ? qs.get("from")! : todayIso;
+  const span = Math.min(7, Math.max(1, Number(qs.get("days")) || 7));
+  const dates: string[] = [];
+  for (let i = 0; i < span; i++) {
+    dates.push(new Date(Date.parse(`${from}T00:00:00Z`) + i * 864e5).toISOString().slice(0, 10));
+  }
+  const inRange = new Set(dates);
+
+  const [going, own] = await Promise.all([
+    db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(eq(schema.attendances.userId, userId)),
+    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+  ]);
   const classIds = [...new Set(going.map((g) => g.classId))];
   const classRows = classIds.length
     ? (await db.select().from(schema.classes).where(inArray(schema.classes.id, classIds))).filter(
@@ -65,38 +81,72 @@ export async function GET(req: Request) {
     : [];
   const coachById = new Map(coaches.map((c) => [c.id, c]));
 
-  const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((x): x is string => !!x))];
+  const studioIds = [
+    ...new Set(
+      [...classRows.map((c) => c.studioId), ...own.map((p) => p.studioId)].filter(
+        (x): x is string => !!x,
+      ),
+    ),
+  ];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
   const studioName = new Map(studios.map((s) => [s.id, s.name]));
 
-  // Group by the days they actually marked — the image is their commitments,
-  // not every occurrence of a class they sometimes attend.
+  // Both halves of a week, on one poster. The classes they marked Going at a
+  // coach, and the ones they keep themselves: a poster that quietly dropped
+  // half of somebody's week is worse than no poster, and their own entries are
+  // exactly the ones with a coach who isn't here yet.
   const classById = new Map(classRows.map((c) => [c.id, c]));
-  const todayIso = todayIsoNow();
-  const endIso = new Date(Date.parse(`${todayIso}T00:00:00Z`) + 7 * 864e5)
-    .toISOString()
-    .slice(0, 10);
-  const dates = [
-    ...new Set(
-      going
-        .filter(
-          (g) =>
-            classById.has(g.classId) && g.occurrenceDate >= todayIso && g.occurrenceDate < endIso,
-        )
-        .map((g) => g.occurrenceDate),
-    ),
-  ].sort();
-  const byDay = dates.map((iso) => {
-    const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
-    const items = going
-      .filter((g) => g.occurrenceDate === iso)
-      .map((g) => classById.get(g.classId))
-      .filter((c): c is (typeof classRows)[number] => !!c)
-      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-    return { day: DAYS[dow], items };
-  }).filter((d) => d.items.length > 0);
+  type Row = { startTime: string; name: string; where: string; who: string };
+  const rowsByDate = new Map<string, Row[]>();
+  const put = (iso: string, r: Row) => rowsByDate.set(iso, [...(rowsByDate.get(iso) ?? []), r]);
+  for (const g of going) {
+    const c = classById.get(g.classId);
+    if (!c || !inRange.has(g.occurrenceDate)) continue;
+    put(g.occurrenceDate, {
+      startTime: c.startTime,
+      name: c.name,
+      where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
+      who: coachById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "",
+    });
+  }
+  for (const p of own) {
+    for (const iso of dates) {
+      const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+      if (!runsOn(p, iso, dow)) continue;
+      put(iso, {
+        startTime: p.startTime,
+        name: p.name,
+        where: (p.studioId && studioName.get(p.studioId)) || p.location || "",
+        who: p.withWho.trim().split(/\s+/)[0] ?? "",
+      });
+    }
+  }
+  const byDay = dates
+    .filter((iso) => (rowsByDate.get(iso) ?? []).length > 0)
+    .map((iso) => ({
+      day: DAYS[(new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7],
+      items: (rowsByDate.get(iso) ?? []).sort(
+        (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+      ),
+    }));
+
+  // What it says at the top. One day is a day, and a range that starts today
+  // is still "my week"; anything else names both ends.
+  const shortDate = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  const last = dates[dates.length - 1];
+  const kicker =
+    span === 1
+      ? shortDate(from)
+      : from === todayIso
+        ? `My week of ${shortDate(from)}`
+        : `${shortDate(from)} to ${shortDate(last)}`;
 
   const prefs = me.storyPrefs ?? {};
   let line1 = "Come train";
@@ -120,8 +170,8 @@ export async function GET(req: Request) {
       items: items.map((c) => ({
         time: fmtTime(c.startTime),
         name: c.name,
-        where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
-        who: coachById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "",
+        where: c.where,
+        who: c.who,
       })),
     })),
     listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78),
@@ -167,7 +217,10 @@ export async function GET(req: Request) {
             marginBottom: 30,
           }}
         >
-          {`My week of ${new Date(`${todayIso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`}
+          {/* The range it actually drew, not the day it was made. A poster
+              headed "My week of Aug 1" showing next Tuesday is a poster
+              nobody can trust. */}
+          {kicker}
         </div>
         {showPhoto && (
           // eslint-disable-next-line @next/next/no-img-element

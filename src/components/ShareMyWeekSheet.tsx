@@ -5,16 +5,38 @@ import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 
-// The member's "come train with me" image: the classes they marked Going,
-// across every coach and studio. Same pipeline and themes as the coach's share
+// The member's "come train with me" image: the week they're actually going to,
+// their own entries included. Same pipeline and themes as the coach's share
 // sheet, different subject.
-export function ShareMyWeekSheet({ onClose }: { onClose: () => void }) {
+//
+// It takes a range because a week is not always the week in front of you. The
+// poster used to be the seven days from today, so somebody whose only class
+// was nine days out shared a blank one and had no way to tell why. From is a
+// date, and the length is one to seven days: a day, because "I'm at this
+// tonight" is a real thing to post, and seven, because the canvas can't hold
+// more and nobody plans further than that out loud.
+export function ShareMyWeekSheet({
+  onClose,
+  firstIso,
+}: {
+  onClose: () => void;
+  /** The first day their plans actually hold something. The range starts
+   *  there, so the first thing they see is a poster with their week on it
+   *  rather than an empty one they have to debug. */
+  firstIso?: string;
+}) {
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [styleOpen, setStyleOpen] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [err, setErr] = useState("");
   const [bust, setBust] = useState(0);
+
+  // Local, not UTC: `new Date().toISOString()` is tomorrow from 8pm Eastern,
+  // which is the app's oldest bug and not one to reintroduce in a date field.
+  const today = new Date().toLocaleDateString("en-CA");
+  const [from, setFrom] = useState(firstIso && firstIso > today ? firstIso : today);
+  const [span, setSpan] = useState(7);
 
   const [headline, setHeadline] = useState("");
   const [showPhoto, setShowPhoto] = useState(true);
@@ -48,7 +70,7 @@ export function ShareMyWeekSheet({ onClose }: { onClose: () => void }) {
     setBust(Date.now());
   };
 
-  const storyUrl = `/api/story/me?theme=${themeId}&v=${bust}`;
+  const storyUrl = `/api/story/me?theme=${themeId}&from=${from}&days=${span}&v=${bust}`;
   const storyFileName = `fittlist-my-week-${themeId}.png`;
 
   const shareStory = async () => {
@@ -130,7 +152,34 @@ export function ShareMyWeekSheet({ onClose }: { onClose: () => void }) {
               </div>
             )}
           </div>
-          <label className="flabel" htmlFor="myHeadline">
+          <label className="flabel" htmlFor="myFrom">
+            From <span>· the first day on the image</span>
+          </label>
+          <input
+            id="myFrom"
+            className="editinput"
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value || today)}
+          />
+          <label className="flabel" htmlFor="mySpan" style={{ marginTop: 12 }}>
+            How long <span>· up to a week</span>
+          </label>
+          <select
+            id="mySpan"
+            className="editinput"
+            value={span}
+            onChange={(e) => setSpan(Number(e.target.value))}
+          >
+            <option value={1}>Just that day</option>
+            <option value={2}>2 days</option>
+            <option value={3}>3 days</option>
+            <option value={4}>4 days</option>
+            <option value={5}>5 days</option>
+            <option value={6}>6 days</option>
+            <option value={7}>7 days</option>
+          </select>
+          <label className="flabel" htmlFor="myHeadline" style={{ marginTop: 12 }}>
             Headline <span>· the big text at the top</span>
           </label>
           <input

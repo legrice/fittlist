@@ -42,6 +42,30 @@ function nextOccurrence(dayOfWeek: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * The next date one of your own entries runs that hasn't been and gone, or
+ * null once it has stopped: a one-off whose date has passed, or a weekly one
+ * past its end date. One function so the list, the count and the share image
+ * can't disagree about whether something is still ahead.
+ */
+export function personalNext(p: {
+  dayOfWeek: number;
+  startTime: string;
+  durationMin: number;
+  specificDate?: string | null;
+  endsOn?: string | null;
+}): string | null {
+  if (p.specificDate)
+    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin) ? null : p.specificDate;
+  let iso = nextOccurrence(p.dayOfWeek);
+  if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 7);
+    iso = d.toISOString().slice(0, 10);
+  }
+  return p.endsOn && iso > p.endsOn ? null : iso;
+}
+
 /** How many added classes are still ahead of them, personal entries included. */
 export async function weekCount(userId: string): Promise<number> {
   const db = await getDb();
@@ -57,11 +81,10 @@ export async function weekCount(userId: string): Promise<number> {
       ),
     db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
   ]);
-  // A personal entry recurs weekly; it counts once, for this week's occurrence,
-  // and drops out of the number once that has run, same as everything else.
-  const ownAhead = own.filter(
-    (p) => !occurrenceEnded(nextOccurrence(p.dayOfWeek), p.startTime, p.durationMin),
-  ).length;
+  // A weekly entry counts once, for its next occurrence; a one-off counts
+  // until its date has been and gone. Either way it drops out of the number
+  // once it has run, same as everything else.
+  const ownAhead = own.filter((p) => personalNext(p) !== null).length;
   return rows.length + ownAhead;
 }
 
@@ -218,11 +241,20 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
 
-  const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
+  // Both halves' studios in one query: a class's, and the places on your own
+  // entries, which have a real studio now rather than a line of free text.
+  const studioIds = [
+    ...new Set(
+      [...classRows.map((c) => c.studioId), ...own.map((p) => p.studioId)].filter(
+        (s): s is string => !!s,
+      ),
+    ),
+  ];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
+  const ownStudioById = studioById;
 
   // Who you know that's going: mutuals only. A follows B and B follows A, and
   // both added the same occurrence. One-way follows surface nothing, so
@@ -337,14 +369,11 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
   }
 
   // Personal entries land on their next occurrence that hasn't already run,
-  // so a weekly one reappears each week and the list still empties itself.
+  // so a weekly one reappears each week and the list still empties itself. A
+  // one-off whose date has passed, or a weekly one past its end, is gone.
   for (const p of own) {
-    let iso = nextOccurrence(p.dayOfWeek);
-    if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
-      const d = new Date(`${iso}T00:00:00Z`);
-      d.setUTCDate(d.getUTCDate() + 7);
-      iso = d.toISOString().slice(0, 10);
-    }
+    const iso = personalNext(p);
+    if (!iso) continue;
     const t = clockParts(p.startTime);
     const list = byDay.get(iso) ?? [];
     list.push({
@@ -356,7 +385,7 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       hm: t.hm,
       ap: t.ap,
       durationMin: p.durationMin,
-      where: p.location || null,
+      where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
       handle: "",
       coachName: p.withWho,
       coachPhoto: null,

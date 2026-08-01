@@ -8,6 +8,7 @@ import {
   updateClass,
 } from "@/app/actions/classes";
 import { addGymClass, deleteGymClass, updateGymClass } from "@/app/actions/gym";
+import { addPersonalClass, type PersonalMatch } from "@/app/actions/personal";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import {
@@ -70,6 +71,20 @@ export type AdderGym = {
   dateSwap?: React.ReactNode;
 };
 
+/**
+ * The same form, filling in a class you go to rather than one you teach.
+ *
+ * It was five fields in a sheet of its own, which meant the class you booked
+ * through ClassPass arrived with no studio, no description and no picture, and
+ * the next person to add it got none of that either. A class is a class; only
+ * where it lands differs, and that is one branch at the end.
+ *
+ * `canCoach` is the one question this mode asks that the other doesn't: a
+ * coach adding a class at their own gym might be teaching it, and the answer
+ * decides whether it goes to their page or only to their plans.
+ */
+export type AdderPersonal = { canCoach: boolean };
+
 type Stage = "start" | "form" | "pick" | "new";
 
 export function Adder({
@@ -81,10 +96,12 @@ export function Adder({
   prefill,
   firstPublish,
   gym,
+  personal,
   onClose,
   onToast,
   onPublished,
   onDeleted,
+  onMatch,
 }: {
   studios: StudioDto[];
   templates: TemplateDto[];
@@ -95,13 +112,26 @@ export function Adder({
   firstPublish: boolean;
   /** Set when a gym's manager is filling this in, not a coach. */
   gym?: AdderGym;
+  /** Set when this is going to somebody's plans rather than their page. */
+  personal?: AdderPersonal;
   onClose: () => void;
   onToast: (msg: string) => void;
   onPublished: (msg: string) => void;
   onDeleted: (msg: string) => void;
+  /** Personal mode only: the class they're describing is already on fittlist,
+   *  under somebody who keeps it up to date. The caller offers the real one,
+   *  and `again` is this same form resubmitted for "mine anyway", so the
+   *  answer doesn't cost them everything they typed. */
+  onMatch?: (m: PersonalMatch, again: () => void) => void;
 }) {
   const isEdit = Boolean(prefill?.classId);
   const isGym = Boolean(gym);
+  const isPersonal = Boolean(personal);
+  // Which chair you're in. A member is only ever going; a coach is asked, and
+  // "going" is the answer that brought them to this form.
+  const [role, setRole] = useState<"going" | "coaching">("going");
+  // Coaching it makes it a real class again, all the way down to the wording.
+  const mineOnly = isPersonal && role === "going";
   const [studios, setStudios] = useState(studiosProp);
   // Add always opens straight to the new-class form; saved classes are reused
   // via the class-name field's autocomplete rather than a separate stage.
@@ -109,7 +139,12 @@ export function Adder({
   // A prefill with no name is a starting point, not a copy: the rota opens the
   // form on the day that was tapped, and that is still a new class.
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
-    isEdit
+    personal
+      ? {
+          title: "Add a class",
+          lead: "A class you go to. It lands in your plans and nowhere else, and the studio gets the details so the next person doesn't type them again.",
+        }
+      : isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }
       : prefill?.name
         ? { title: "Duplicate class", lead: "Same class. Pick the new days." }
@@ -142,6 +177,9 @@ export function Adder({
   // The rota, on a gym's class. Null on a coach's own.
   const [coachUserId, setCoachUserId] = useState(gym?.coachUserId ?? "");
   const [location, setLocation] = useState(prefill?.location ?? "");
+  // Who teaches it, as free text. Not a users reference: naming your coach is
+  // not putting them on the platform, and every name here is an invite lead.
+  const [withWho, setWithWho] = useState("");
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -249,8 +287,9 @@ export function Adder({
   const oneTime = mode === "date";
   const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const whenChosen = oneTime ? dateValid : n > 0;
-  // Public classes need a studio; private ones don't. A gym always has one.
-  const needsStudio = !gym && isPublic && !selectedStudio;
+  // Public classes need a studio; private ones don't, and neither does one
+  // that's only ever going to sit in your own plans.
+  const needsStudio = !gym && !mineOnly && isPublic && !selectedStudio;
   const publishLabel = !whenChosen
     ? oneTime
       ? "Pick a date"
@@ -265,12 +304,44 @@ export function Adder({
           ? "Save changes"
           : gym
             ? "Add to the schedule"
-            : isPublic
-              ? "Publish event"
-              : "Save event";
+            : mineOnly
+              ? "Add to your plans"
+              : isPublic
+                ? "Publish event"
+                : "Save event";
+
+  // Your own plans. `force` is the second pass, after they've seen that the
+  // class is already here under a coach and said theirs anyway.
+  const savePersonal = async (force: boolean) => {
+    const res = await addPersonalClass({
+      name,
+      days: [...days],
+      startTime: time,
+      durationMin,
+      location,
+      withWho,
+      studioId,
+      classType,
+      description,
+      image,
+      links,
+      specificDate: oneTime ? date : null,
+      endsOn: oneTime ? null : endsOn || null,
+      force,
+    });
+    if (!res.ok) {
+      if (res.match && onMatch) {
+        onMatch(res.match, () => startTransition(() => void savePersonal(true)));
+        return;
+      }
+      onToast(res.error ?? "Couldn't add that");
+      return;
+    }
+    onPublished(n > 1 ? `Added ${n} classes to your plans` : "Added to your plans");
+  };
 
   const publish = () => {
-    if (!whenChosen || !durValid || (isPublic && !studioId)) return;
+    if (!whenChosen || !durValid || (!mineOnly && isPublic && !studioId)) return;
     startTransition(async () => {
       const input = {
         name,
@@ -287,6 +358,13 @@ export function Adder({
         isPublic,
         links,
       };
+      // Yours to go to: the same class, written to your plans and to the
+      // studio's catalog, and never to a page. No branch below this one can
+      // reach `classes`, which is what keeps the wall where it is.
+      if (mineOnly) {
+        await savePersonal(false);
+        return;
+      }
       // Same fields, same validation, one field more: who's on it.
       const res = gym
         ? isEdit
@@ -303,7 +381,12 @@ export function Adder({
         return;
       }
       onPublished(
-        isEdit
+        // Published from the plans screen, where it will not appear: it is a
+        // class you teach now, and those live on your schedule. Say where it
+        // went rather than leaving them looking for it.
+        isPersonal
+          ? "Added to your schedule"
+          : isEdit
           ? "Saved"
           : gym
             ? n > 1
@@ -437,9 +520,42 @@ export function Adder({
               </div>
             )}
 
+            {/* Coaching it, or going to it. Only a coach is asked: a member
+                has one answer and a question with one answer is furniture.
+                Saying "I'm coaching it" hands the rest of the form back to the
+                one that publishes, because from there it is a real class. */}
+            {personal?.canCoach && (
+              <div className="adder-card">
+                <label className="flabel">Is this yours to teach?</label>
+                <div className="modetoggle">
+                  <button
+                    type="button"
+                    className={role === "going" ? "sel" : ""}
+                    onClick={() => setRole("going")}
+                  >
+                    I&rsquo;m going
+                  </button>
+                  <button
+                    type="button"
+                    className={role === "coaching" ? "sel" : ""}
+                    onClick={() => setRole("coaching")}
+                  >
+                    I&rsquo;m coaching it
+                  </button>
+                </div>
+                <p className="durnote" style={{ marginTop: 8 }}>
+                  {role === "going"
+                    ? "It lands in your plans. Nothing about it appears on your page."
+                    : "It goes on your schedule and your public page, like any class you teach."}
+                </p>
+              </div>
+            )}
+
             {/* Public (on your page) vs private (your own clients / sessions).
-                A gym has no private classes: its schedule is what it publishes. */}
-            {!gym && (
+                A gym has no private classes: its schedule is what it publishes.
+                Neither does a class you're only going to: there is no page for
+                it to be on. */}
+            {!gym && !mineOnly && (
             <div className="adder-card">
             <label className="flabel">Who sees this?</label>
             <div className="modetoggle">
@@ -463,7 +579,7 @@ export function Adder({
             {!gym && (
             <div className="adder-card">
             <label className="flabel">
-              Studio{!isPublic && <span> · optional</span>}
+              Studio{(!isPublic || mineOnly) && <span> · optional</span>}
             </label>
             <button className="studio-sel" onClick={() => setStage("pick")}>
               {selectedStudio ? (
@@ -476,7 +592,7 @@ export function Adder({
               )}
               <span className="chev"><Icon name="chevron_right" size={18} /></span>
             </button>
-            {!isPublic && !selectedStudio && (
+            {(!isPublic || mineOnly) && !selectedStudio && (
               <>
                 <label className="flabel" htmlFor="fLoc" style={{ marginTop: 12 }}>
                   Or type a location <span>· optional</span>
@@ -484,11 +600,34 @@ export function Adder({
                 <input
                   id="fLoc"
                   className="editinput"
-                  placeholder="e.g. Client's home, Online"
+                  placeholder={mineOnly ? "e.g. Online, the park" : "e.g. Client's home, Online"}
                   value={location}
                   maxLength={120}
                   onChange={(e) => setLocation(e.target.value)}
                 />
+              </>
+            )}
+            {mineOnly && (
+              <>
+                <label className="flabel" htmlFor="fWith" style={{ marginTop: 12 }}>
+                  Who teaches it <span>· optional</span>
+                </label>
+                <input
+                  id="fWith"
+                  className="editinput"
+                  placeholder="e.g. Jenny"
+                  value={withWho}
+                  maxLength={80}
+                  onChange={(e) => setWithWho(e.target.value)}
+                />
+                {/* Said out loud, because it is the one thing here that leaves
+                    your own week. The class goes to the studio's list; you do
+                    not, and nothing anywhere says who added it. */}
+                <p className="durnote" style={{ marginTop: 10 }}>
+                  {selectedStudio
+                    ? `This class joins ${selectedStudio.name}'s list, so the next person to add it gets the details. Your plans stay yours.`
+                    : "Pick a studio and the class joins that studio's list, so the next person to add it gets the details. Your plans stay yours."}
+                </p>
               </>
             )}
             </div>
@@ -574,7 +713,12 @@ export function Adder({
                 schedule with no photos has to stay a good schedule, so this
                 never becomes a field somebody has to answer. */}
             <label className="flabel">
-              Photo <span>&middot; optional, and it carries the share card</span>
+              Photo{" "}
+              <span>
+                {mineOnly
+                  ? "· optional, and it goes to the studio's list with the class"
+                  : "· optional, and it carries the share card"}
+              </span>
             </label>
             <div className="classpho">
               {image ? (
