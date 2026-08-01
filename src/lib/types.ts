@@ -24,6 +24,9 @@ export type ClassDto = {
   shift?: boolean;
   /** The studio slug a shift's class page lives under. */
   shiftBase?: string | null;
+  /** Their own older copy of a slot the gym now runs. Hidden from every public
+   *  surface already; here so they can hand it over. */
+  duplicateOf?: string | null;
 };
 
 export type TemplateDto = {

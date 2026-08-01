@@ -26,6 +26,13 @@ export type ScheduleRow = typeof schema.classes.$inferSelect & {
   /** A gym's class this coach is on, rather than one of their own. Its page
    *  lives under the studio, because that is who the class belongs to. */
   shift: boolean;
+  /** This is the coach's own older copy of a slot a gym now runs, and the id
+   *  of the gym's row. Every coach at a gym listed their classes here before
+   *  the gym had a page, so the day it signs up every one of them is a pair.
+   *  Public surfaces drop this row and show the gym's, because the gym is the
+   *  source of truth once it runs its own schedule; their own screen keeps it,
+   *  because that is the only place they can hand it over. */
+  duplicateOf: string | null;
 };
 
 type Who = { id: string; shiftsPublic: boolean };
@@ -34,7 +41,18 @@ const own = (r: typeof schema.classes.$inferSelect): ScheduleRow => ({
   ...r,
   ownerUserId: r.userId,
   shift: false,
+  duplicateOf: null,
 });
+
+/** One slot at one place, the same rule the overlap notice uses, plus the
+ *  name. Day, time and studio alone would collapse the yoga room's six
+ *  o'clock into the spin room's, and a false pair hides a real class. */
+const slotKey = (r: {
+  studioId: string | null;
+  dayOfWeek: number;
+  startTime: string;
+  name: string;
+}) => `${r.studioId}|${r.dayOfWeek}|${r.startTime}|${r.name.trim().toLowerCase()}`;
 
 /**
  * The public schedule rows for one or more coaches, shifts folded in.
@@ -47,10 +65,13 @@ const own = (r: typeof schema.classes.$inferSelect): ScheduleRow => ({
 export async function publicSchedules(who: Who[]): Promise<ScheduleRow[]> {
   const ids = [...new Set(who.map((w) => w.id))];
   if (!ids.length) return [];
-  return build(
+  const rows = await build(
     ids,
     who.filter((w) => w.shiftsPublic).map((w) => w.id),
   );
+  // The gym's row is the one people see. Showing both is the double listing
+  // this whole flag exists to stop.
+  return rows.filter((r) => !r.duplicateOf);
 }
 
 /**
@@ -114,7 +135,19 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
       skipDates: off.length ? [...new Set([...s.skipDates, ...off])].sort() : s.skipDates,
       ownerUserId: s.coachUserId!,
       shift: true,
+      duplicateOf: null,
     });
+  }
+
+  // Pair each coach's own row with the gym row that has taken it over. Scoped
+  // per coach: two coaches at one studio listing the same slot is a different
+  // problem, and the overlap notice already tells them both about it.
+  const gymSlots = new Map<string, string>();
+  for (const s of standing) if (s.studioId) gymSlots.set(`${s.coachUserId}|${slotKey(s)}`, s.id);
+  for (const r of out) {
+    if (r.shift || !r.studioId) continue;
+    const gym = gymSlots.get(`${r.ownerUserId}|${slotKey(r)}`);
+    if (gym) r.duplicateOf = gym;
   }
 
   // A date handed to a coach on a slot somebody else normally teaches has no
@@ -137,6 +170,7 @@ async function build(ids: string[], sharing: string[]): Promise<ScheduleRow[]> {
       skipDates: [],
       ownerUserId: cv.coachUserId,
       shift: true,
+      duplicateOf: null,
     });
   }
 

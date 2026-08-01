@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { ClassSheet } from "@/components/ClassSheet";
+import { mergeIntoGym } from "@/app/actions/gym";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
@@ -264,6 +265,26 @@ export function ScheduleScreen({
     iso: string;
   } | null>(null);
 
+  // Their own copy of a slot the gym now runs. Nobody sees it twice (every
+  // public surface already shows the gym's and hides this), but it is still
+  // their row, and this is the only screen they can hand it over from.
+  const [dupe, setDupe] = useState<ClassDto | null>(null);
+  const [merging, startMerge] = useTransition();
+  const handOver = () => {
+    if (!dupe || merging) return;
+    const c = dupe;
+    startMerge(async () => {
+      const res = await mergeIntoGym(c.id);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't do that");
+        return;
+      }
+      setDupe(null);
+      toast(res.moved ? "Handed over, and everyone kept their spot" : "Handed over");
+      router.refresh();
+    });
+  };
+
   const days = useMemo(() => {
     const start = new Date(`${todayIso}T00:00:00Z`);
     const out: { iso: string; label: string; items: ClassDto[] }[] = [];
@@ -370,7 +391,9 @@ export function ScheduleScreen({
                             c.shift
                               ? c.shiftBase &&
                                 setShiftOpen({ base: c.shiftBase, classId: c.id, iso: d.iso })
-                              : edit(c, d.iso)
+                              : c.duplicateOf
+                                ? setDupe(c)
+                                : edit(c, d.iso)
                           }
                         >
                           <span
@@ -383,6 +406,7 @@ export function ScheduleScreen({
                               {c.name}
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.shift && <span className="ps-shift">Shift</span>}
+                              {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
                             {where && (
                               <span className="ps-estudio">
@@ -418,6 +442,47 @@ export function ScheduleScreen({
           </>
         )}
       </div>
+
+      {dupe && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDupe(null);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setDupe(null)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>{dupe.name} is the gym&rsquo;s now</h2>
+            <div className="dupebox">
+              <p className="dupebox-s">
+                You listed this before the studio ran its own schedule, so there are two of them.
+                Yours is already hidden from your page and your share, and the studio&rsquo;s is
+                what people see. Hand yours over and anyone who saved it keeps their spot.
+              </p>
+              <div className="publishwrap nostick">
+                <button className="btn si" disabled={merging} onClick={handOver}>
+                  {merging ? "One moment…" : "Hand it over"}
+                </button>
+              </div>
+              {/* The pairing is name, day, time and place. If it caught two
+                  different classes in two rooms, this is the way out. */}
+              <button
+                className="tertiary tellsheet-done"
+                disabled={merging}
+                onClick={() => {
+                  const c = dupe;
+                  setDupe(null);
+                  edit(c);
+                }}
+              >
+                It&rsquo;s not the same class
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {shiftOpen && (
         <ClassSheet

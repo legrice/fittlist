@@ -894,6 +894,17 @@ button.bl-band { cursor: pointer; }
 .shiftbox-s { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ol); }
 .shiftbox-btn { width: 100%; }
 
+/* Their own copy of a slot the gym now runs. Muted rather than accented: it is
+   not a state to be proud of, it is a thing to clear up. */
+.ps-dupe {
+  display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--ol);
+  background: var(--cl); border: 1px dashed var(--line); border-radius: 999px; padding: 2px 8px;
+}
+.dupebox { margin-top: 4px; }
+.dupebox-s { margin: 0 0 16px; font-size: 15px; line-height: 1.5; color: var(--ol); }
+
 /* A shift at a gym: the same tag shape as Private, saying the opposite thing.
    It's on your week and it isn't yours to edit, so the row has to say so
    before you tap it expecting the adder. */

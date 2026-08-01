@@ -399,6 +399,28 @@ under the studio: `classAddress()` returns the `base` for the href and the
 how a link 404s. A row can name its own base with `data-base`, which is how
 `ClassOpener` opens a shift under the gym from a coach's page.
 
+**The coach listed it first, and that is every gym's first day.** Coaches put
+their Ironbound classes on fittlist long before Ironbound had a page, so the
+moment a manager lists the same slot there are two of the same class.
+`publicSchedules()` pairs them and drops the coach's: the gym runs its own
+schedule now, so the gym's row is the one people see, and nobody is looking at
+a double listing while it gets sorted out. `mySchedule()` keeps both and tags
+theirs Duplicate, because their own screen is the only place they can act on it.
+
+The pairing is name, day, time and studio, per coach. Day, time and studio
+alone is what the overlap notice uses, and it is right for a notice and wrong
+here: two rooms at six o'clock would pair the yoga with the spin, and a wrong
+pair takes a real class off somebody's page. A name that doesn't quite match
+just leaves the duplicate standing, which costs nothing.
+
+`mergeIntoGym()` is the cleanup and it belongs to the coach, not the manager: it
+is their row, on their page, carrying their followers' Going marks. Deleting it
+through the adder would be wrong twice, telling everyone who saved it that the
+class was cancelled when it plainly wasn't, and losing them their spot. The
+marks from today forward move onto the gym's row first. Assigning a coach who
+already lists the slot tells them, once per slot, keyed on the notification body
+the same way the overlap notice is.
+
 **On their own screen the switch never applies.** `/app` asks `mySchedule()`,
 which always folds shifts in: `shiftsPublic` answers "does anyone else see
 these", and a coach who is on Thursday at seven has to be able to see that they

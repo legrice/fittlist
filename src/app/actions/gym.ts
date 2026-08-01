@@ -411,7 +411,15 @@ export async function addGymClass(
     })),
   );
   await catalogue(db, studioId, ctx.userId, input);
-  if (coachUserId) await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
+  if (coachUserId) {
+    await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
+    for (const dayOfWeek of days)
+      await tellAboutDuplicate(db, coachUserId, studio, {
+        name,
+        dayOfWeek,
+        startTime: input.startTime,
+      });
+  }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true, count: days.length };
 }
@@ -548,6 +556,8 @@ export async function updateGymClass(
       await tellCoach(existing.coachUserId, studio.name, existing.name, whenOfRow(existing), false);
     if (coachUserId) await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
   }
+  if (coachUserId)
+    await tellAboutDuplicate(db, coachUserId, studio, { name, dayOfWeek, startTime: input.startTime });
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
 }
@@ -891,6 +901,132 @@ export async function claimShift(
   revalidatePath("/app");
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   return { ok: true };
+}
+
+/**
+ * Hand a coach's own copy of a class over to the gym that now runs it.
+ *
+ * Every coach at a gym listed their classes here before the gym had a page, so
+ * the day it signs up each of them is holding a duplicate. Public surfaces
+ * already show the gym's row and hide theirs, so nobody sees it twice; this is
+ * the cleanup, and it is the coach's to do because it is their row.
+ *
+ * Deleting it outright would be wrong twice over: whoever saved it would be
+ * told their class was cancelled when it plainly wasn't, and they would lose
+ * their spot. The marks move to the gym's row first, so a member who said they
+ * were coming still is.
+ */
+export async function mergeIntoGym(
+  classId: string,
+): Promise<{ ok: boolean; error?: string; moved?: number }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const db = await getDb();
+  const [mine] = await db
+    .select()
+    .from(schema.classes)
+    .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
+  if (!mine?.studioId) return { ok: false, error: "Class not found." };
+
+  // The gym's row for the same slot: same place, same day, same time, same
+  // name. Anything looser pairs the yoga room's six o'clock with the spin
+  // room's, and a wrong pair takes a real class off somebody's page.
+  const atStudio = await db
+    .select()
+    .from(schema.classes)
+    .where(
+      and(
+        eq(schema.classes.studioId, mine.studioId),
+        eq(schema.classes.dayOfWeek, mine.dayOfWeek),
+        eq(schema.classes.startTime, mine.startTime),
+      ),
+    );
+  const owners = await db
+    .select({ id: schema.users.id, kind: schema.users.kind })
+    .from(schema.users)
+    .where(inArray(schema.users.id, [...new Set(atStudio.map((c) => c.userId))]));
+  const gyms = new Set(owners.filter((o) => o.kind === "gym").map((o) => o.id));
+  const key = mine.name.trim().toLowerCase();
+  const theirs = atStudio.find(
+    (c) => gyms.has(c.userId) && c.name.trim().toLowerCase() === key,
+  );
+  if (!theirs) return { ok: false, error: "No gym runs this one." };
+
+  // Only what is still ahead. A mark on a class that already ran is a record
+  // of turning up, and it belongs where it was made.
+  const today = todayIso();
+  const marks = await db
+    .select()
+    .from(schema.attendances)
+    .where(eq(schema.attendances.classId, classId));
+  const ahead = marks.filter((m) => m.occurrenceDate >= today);
+  if (ahead.length)
+    await db
+      .insert(schema.attendances)
+      .values(
+        ahead.map((m) => ({
+          userId: m.userId,
+          classId: theirs.id,
+          occurrenceDate: m.occurrenceDate,
+        })),
+      )
+      .onConflictDoNothing({
+        target: [
+          schema.attendances.userId,
+          schema.attendances.classId,
+          schema.attendances.occurrenceDate,
+        ],
+      });
+  await db.delete(schema.attendances).where(eq(schema.attendances.classId, classId));
+  await db.delete(schema.classes).where(eq(schema.classes.id, classId));
+
+  revalidatePath("/app");
+  revalidatePath("/feed");
+  return { ok: true, moved: ahead.length };
+}
+
+/** Tell a coach their own listing has been taken over, so the duplicate on
+ *  their schedule isn't a mystery. Once per slot: reassigning the same class
+ *  a second time shouldn't nag them again. */
+async function tellAboutDuplicate(
+  db: Awaited<ReturnType<typeof getDb>>,
+  coachUserId: string,
+  studio: typeof schema.studios.$inferSelect,
+  row: { name: string; dayOfWeek: number; startTime: string },
+) {
+  const key = row.name.trim().toLowerCase();
+  const theirs = (
+    await db
+      .select()
+      .from(schema.classes)
+      .where(
+        and(
+          eq(schema.classes.userId, coachUserId),
+          eq(schema.classes.studioId, studio.id),
+          eq(schema.classes.dayOfWeek, row.dayOfWeek),
+          eq(schema.classes.startTime, row.startTime),
+        ),
+      )
+  ).filter((c) => c.name.trim().toLowerCase() === key);
+  if (!theirs.length) return;
+  const body = `${studio.name} runs ${row.name} on ${DAYS[row.dayOfWeek]} at ${fmtTime(row.startTime)} now. Your own copy is hidden so nobody sees it twice. Hand it over on your schedule and anyone who saved yours keeps their spot.`;
+  const [already] = await db
+    .select({ id: schema.notifications.id })
+    .from(schema.notifications)
+    .where(
+      and(
+        eq(schema.notifications.userId, coachUserId),
+        eq(schema.notifications.type, "class_overlap"),
+        eq(schema.notifications.body, body),
+      ),
+    );
+  if (already) return;
+  await addNotification(coachUserId, {
+    type: "class_overlap",
+    title: `${studio.name} lists ${row.name} too`,
+    body,
+    href: "/app",
+  });
 }
 
 export type GymCountRow = {
