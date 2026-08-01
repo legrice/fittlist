@@ -34,7 +34,15 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
-/** The colour behind a coach's initial: their pick, else one derived from id. */
+/** The first letter, for the circle behind a missing photo. */
+export function initialOf(name: string): string {
+  return (name.trim().charAt(0) || "?").toUpperCase();
+}
+
+/** The colour behind a coach's initial: their pick, else one derived from id.
+ *  A studio has no pick of its own, so it always gets the derived one, and it
+ *  gets it from the same sixty: a directory of grey placeholder pins was
+ *  unreadable for the same reason a page of identical orange circles was. */
 export function avatarColor(user: { id: string; avatarColor?: string | null }): string {
   const picked = user.avatarColor;
   if (picked && AVATAR_COLORS.includes(picked)) return picked;

@@ -275,6 +275,14 @@ whether they signed up, and the Schedule tag says which have a week to see.
 `.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
 row has to take it back or long gym names truncate into empty space.
 
+**A studio with no photo wears a face, not a pin.** `avatarColor({ id })` and
+`initialOf(name)` are the same pair a coach without a photo uses, so a studio
+gets one of the same sixty colours, derived from its id and therefore identical
+in the directory row and on its own page. A grey placeholder pin on every row
+was unreadable for exactly the reason a page of identical orange circles was.
+There is no `studios.avatarColor`: a studio has no picker, so the derived
+colour is the only one it can have.
+
 **Locations are one string per place.** Discover groups by the exact value, so
 `normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
 the cities already in use. A bare city snaps onto its only match; with two

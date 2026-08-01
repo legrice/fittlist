@@ -1233,6 +1233,20 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
   if (!names.some((n) => /Ironbound/.test(n)))
     fail("searching studios found nothing: " + names.join(", "));
+  // A studio with no photo reads like a coach with no photo: the first letter
+  // on a colour off the same sixty, derived from the id so it never shifts.
+  {
+    const faces = await fan
+      .locator(".disrow-studio .disrow-av-empty")
+      .evaluateAll((els) =>
+        els.slice(0, 6).map((e) => [e.textContent.trim(), getComputedStyle(e).backgroundColor]),
+      );
+    if (!faces.length) fail("a studio with no photo should still have a face");
+    if (faces.some(([letter]) => !/^[A-Z0-9?]$/.test(letter)))
+      fail("expected one initial per studio: " + JSON.stringify(faces));
+    if (new Set(faces.map(([, bg]) => bg)).size < 2)
+      fail("a directory of one colour is as unreadable as a directory of pins");
+  }
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");

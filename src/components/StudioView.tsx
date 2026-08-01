@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { fansVisible } from "@/lib/flags";
-import { avatarColor } from "@/lib/avatar";
+import { avatarColor, initialOf } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
@@ -231,8 +231,12 @@ export async function StudioView({
           // eslint-disable-next-line @next/next/no-img-element
           <img className="profphoto" src={s.photo} alt={s.name} />
         ) : (
-          <div className="profphoto profphoto-empty" aria-hidden="true">
-            <Icon name="place" size={64} />
+          <div
+            className="profphoto profphoto-empty"
+            style={{ background: avatarColor({ id: s.id }) }}
+            aria-hidden="true"
+          >
+            {initialOf(s.name)}
           </div>
         )}
 

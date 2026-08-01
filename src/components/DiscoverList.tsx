@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { initialOf } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 
@@ -86,6 +87,8 @@ export type DiscoverStudio = {
   types: string[];
   /** It runs its schedule here, so there's a week to see. */
   hasSchedule: boolean;
+  /** Behind the initial when there's no photo, same sixty a coach draws from. */
+  color: string;
 };
 
 // Search over the directory, which has two halves: the people and the places.
@@ -363,10 +366,14 @@ export function DiscoverList({
                 <span className="disrow-avwrap">
                   {st.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img className="disrow-av disrow-av-sq" src={st.photo} alt="" />
+                    <img className="disrow-av" src={st.photo} alt="" />
                   ) : (
-                    <span className="disrow-av disrow-av-sq disrow-av-place" aria-hidden="true">
-                      <Icon name="place" size={20} />
+                    <span
+                      className="disrow-av disrow-av-empty"
+                      style={{ background: st.color }}
+                      aria-hidden="true"
+                    >
+                      {initialOf(st.name)}
                     </span>
                   )}
                 </span>

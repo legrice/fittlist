@@ -1074,9 +1074,12 @@ button.ps-card { cursor: pointer; }
   margin-top: 20px;
   box-shadow: 0 2px 8px rgba(25, 21, 2, .07), 0 14px 34px rgba(25, 21, 2, .12);
 }
+/* No photo: the first letter on a colour derived from the id, the same way a
+   coach without a photo reads. A directory of identical grey pins was as hard
+   to scan as a page of identical orange circles once was. */
 .profphoto-empty {
-  display: flex; align-items: center; justify-content: center; background: #eae3d2;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 76px; color: #cec6b0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 76px; color: #fff;
 }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
@@ -3264,11 +3267,7 @@ button.ps-card { cursor: pointer; }
    truncating into it. */
 .disrow-studio { text-decoration: none; color: var(--ink); gap: 12px; }
 .disrow.disrow-studio .disrow-nmline { padding-right: 0; }
-.disrow-av-sq { border-radius: 12px; }
-.disrow-av-place {
-  display: flex; align-items: center; justify-content: center;
-  background: var(--cl); color: var(--ol);
-}
+
 .disrow-sub {
   display: block; font-size: 13px; color: var(--ol); margin-top: 2px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

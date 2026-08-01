@@ -117,6 +117,7 @@ export default async function DiscoverPage() {
     photo: st.photo,
     types: st.types,
     hasSchedule: !!st.accountUserId,
+    color: avatarColor({ id: st.id }),
   }));
 
   return (
