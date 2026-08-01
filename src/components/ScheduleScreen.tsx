@@ -323,8 +323,9 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
-          weekCount={weekCount}
           adminNew={adminNew}
+          // Without the member side there is nobody to search for.
+          search={showFanView}
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
@@ -493,6 +494,7 @@ export function ScheduleScreen({
         <NavBar
           active="you"
           youHref={`/${handle}`}
+          plans={weekCount}
           face={{
             photo,
             color: myAccent,

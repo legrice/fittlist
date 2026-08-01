@@ -47,7 +47,8 @@ export async function AppChrome({
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
   const [unread, week, adminNew] = await Promise.all([
     unreadNotifications(userId),
-    weekCount(userId),
+    // Only the bar shows it, so only the bar pays for it.
+    bar ? weekCount(userId) : Promise.resolve(0),
     isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
   // A coach's You is their public page, so the tab shows them what the link
@@ -65,7 +66,6 @@ export async function AppChrome({
   const header = (
     <AppHeader
       unread={unread}
-      weekCount={week}
       adminNew={adminNew}
       // The logo goes to Following for everyone with the member side. It used
       // to send a coach to /app, which since the one-shell change is the bare
@@ -78,7 +78,7 @@ export async function AppChrome({
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} />
+      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} plans={week} />
     </>
   );
 }

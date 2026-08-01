@@ -20,6 +20,7 @@ export function NavBar({
   face,
   youHref,
   onYou,
+  plans,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
    *  The schedule passes it, because there the account is an overlay on the
@@ -35,6 +36,10 @@ export function NavBar({
   // On the schedule screen settings is an overlay on the same route, so You
   // closes it locally rather than routing.
   onYou?: () => void;
+  /** How many added classes are still ahead. It rode on the header's heart
+   *  until Plans became a tab. A count of what's coming, not of everything
+   *  ever added: a number that only grows is a scoreboard. */
+  plans?: number;
 }) {
   const here = activeTab(usePathname(), active);
 
@@ -57,9 +62,13 @@ export function NavBar({
           ) : (
             <Icon name={t.icon} size={26} />
           );
+        const count = t.id === "plans" ? plans : undefined;
         const inner = (
           <>
-            {glyph}
+            <span className="navglyph">
+              {glyph}
+              {!!count && <span className="navdot">{count > 9 ? "9+" : count}</span>}
+            </span>
             <span>{t.label}</span>
           </>
         );
@@ -68,13 +77,14 @@ export function NavBar({
             key={t.id}
             type="button"
             className={cls}
+            data-tab={t.id}
             aria-current={on ? "page" : undefined}
             onClick={local}
           >
             {inner}
           </button>
         ) : (
-          <Link key={t.id} className={cls} href={t.href} aria-current={on ? "page" : undefined}>
+          <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-current={on ? "page" : undefined}>
             {inner}
             <LinkPending className="tapspin-tab" />
           </Link>

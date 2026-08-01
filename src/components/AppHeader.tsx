@@ -10,7 +10,7 @@ import type { NavTab } from "@/lib/nav";
 export function AppHeader({
   adminNew = null,
   unread = 0,
-  weekCount,
+  search = true,
   avatar,
   home = "/feed",
   nav,
@@ -18,11 +18,10 @@ export function AppHeader({
   /** null = not an admin; a number shows the door, >0 lights the badge. */
   adminNew?: number | null;
   unread?: number;
-  /** Settings, for anyone whose face is already the You tab. A link where the
-   *  account is its own route, a handler where it's an overlay. */
-  /** How many added classes are still ahead. Undefined hides the icon
-   *  entirely, for anyone who has no week to keep. */
-  weekCount?: number;
+  /** The magnifier. On by default: search is something you do from wherever
+   *  you are, so the corner is where it belongs. Off for a shell that has no
+   *  member side to search. */
+  search?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -45,27 +44,20 @@ export function AppHeader({
       </Link>
       {nav && <HeaderNav coach={nav.coach} active={nav.active} youHref={nav.youHref} onYou={nav.onYou} />}
       <div className="brandbar-actions">
-        {/* Your week: the classes you've added, always one tap away. It sits
-            here rather than as a bubble that appears on add, because a control
-            that only exists just after you used it can't answer "what have I
-            got so far?". The count is what's still ahead, not everything you
-            ever added: a number that only grows is a scoreboard. */}
         {adminNew !== null && (
           <Link className="iconbtn inboxbtn adminbtn" aria-label="Admin" href="/admin?activity=1">
             <Icon name="shield" size={20} />
             {adminNew > 0 && <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>}
           </Link>
         )}
-        {weekCount !== undefined && (
-          <Link
-            className="iconbtn inboxbtn weekbtn"
-            aria-label={`Your plans${weekCount ? `, ${weekCount} classes` : ", empty"}`}
-            href="/week"
-          >
-            {/* A heart, not a calendar: the things here are saved, and the
-                heart on a class is how they got here. */}
-            <Icon name="favorite" size={20} />
-            {weekCount > 0 && <span className="inboxdot weekdot">{weekCount > 9 ? "9+" : weekCount}</span>}
+        {/* Your week used to be a heart here. It's the first tab now, where a
+            list you keep coming back to belongs; the corner is for the things
+            you reach for from wherever you happen to be. Search is the first
+            of those: Discover is where you browse, this is where you go when
+            you already know the name. */}
+        {search && (
+          <Link className="iconbtn inboxbtn" aria-label="Search" href="/discover">
+            <Icon name="search" size={20} />
           </Link>
         )}
         <Link

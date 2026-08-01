@@ -8,7 +8,6 @@ import { addPersonalClass, removePersonalClass } from "@/app/actions/personal";
 import { InviteSheet } from "@/components/InviteFriends";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
-import { NavBar } from "@/components/NavBar";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -18,24 +17,7 @@ import { Toast, useToast } from "@/components/Toast";
 // It's a shortlist that empties itself as the week passes, and every row can
 // leave. That, and the fact that it only ever holds what you picked, is what
 // stops it reading as "fittlist wants to be your calendar now".
-export function WeekScreen({
-  days,
-  header,
-  coach = true,
-  face,
-  youHref,
-}: {
-  days: WeekDay[];
-  /** The app header, built on the server and handed down. */
-  header?: React.ReactNode;
-  /** false drops the Schedule tab: a member has nothing behind it. */
-  coach?: boolean;
-  /** Your own face, for the You tab. */
-  face?: { photo: string | null; color: string; initial: string };
-  /** Where You goes: a coach's public page. Without it the tab fell back to
-   *  /app, which surfaced the bare schedule from this one screen. */
-  youHref?: string;
-}) {
+export function WeekScreen({ days }: { days: WeekDay[] }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [share, setShare] = useState(false);
@@ -155,9 +137,11 @@ export function WeekScreen({
   const left = shown.reduce((n, d) => n + d.items.length, 0);
 
   return (
-    <section className="screen hasnav">
-      <div className="pad" style={{ paddingTop: 14, paddingBottom: 186 }}>
-        {header}
+    // The tabs layout is the shell now: header above, bar below, and its .pad
+    // already leaves room for the bar. The extra room here is for the floating
+    // Share pill, which sits above it.
+    <>
+      <div className="weekwrap">
         <div className="admintop pagetop">
           <div>
             <h1>Your plans</h1>
@@ -452,8 +436,7 @@ export function WeekScreen({
         </div>
       )}
       {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
-      <NavBar coach={coach} face={face} youHref={youHref} />
       <Toast msg={toastMsg} on={toastOn} />
-    </section>
+    </>
   );
 }

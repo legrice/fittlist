@@ -247,11 +247,14 @@ migration nobody needs yet; everything a person reads says member. Not
 "follower": that names a relationship rather than a population, and a coach
 who follows two coaches is one too, so it can't be counted.
 
-**The tabbed shell is a layout, not per-page.** `/feed`, `/discover` and
-`/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
+**The tabbed shell is a layout, not per-page.** `/week`, `/feed`, `/discover`
+and `/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
 and the tab bar once, and `loading.tsx` sits under it so a tab that's still
 loading keeps its chrome. Put them back in the pages and the bar unmounts on
-every navigation, which is the thing the layout exists to prevent.
+every navigation, which is the thing the layout exists to prevent. A new tab
+moves into the group for that reason: `/week` was its own route with its own
+copy of the shell, and left there it would have rebuilt the header and the bar
+on every tap of Plans.
 
 **One vocabulary for what a place offers and what a person teaches.**
 `STUDIO_TYPES` was the studio editor's list; `users.disciplines` picks from the
@@ -848,9 +851,9 @@ points at exactly that. A server-rendered list keeps real `href`s and wraps in
 `classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
 the next date it runs) can't drift between them.
 
-**Your week is a shortlist, not a calendar.** `/week`, behind the header icon,
-lists only the classes someone added, from today forward, and empties itself as
-the week passes. Three things keep it from reading as "fittlist wants to be your
+**Your week is a shortlist, not a calendar.** `/week`, the first tab, lists
+only the classes someone added, from today forward, and empties itself as the
+week passes. Three things keep it from reading as "fittlist wants to be your
 calendar now": it is short and partial, every row can leave, and the bottom of
 it offers Share my week rather than a calendar export (the `.ics` feed lives on
 the account page until the Google Calendar work lands). Don't add a month grid,
@@ -859,6 +862,18 @@ empty days, or a time gutter. The badge counts what's still ahead
 scoreboard rather than something you can act on. Following is everything from
 the coaches you follow; Your week is the ones you picked. Those have to stay
 legibly different.
+
+**Plans leads the tabs, and the header is search and the bell.** It was a heart
+in the corner, which is a control that only exists once you have used it:
+nobody who had not yet added a class knew the list was there, and the one thing
+people come back for was the hardest thing to find. So `navTabs()` is four now
+(Plans, Following, Discover, You), the count moved onto the tab
+(`NavBar`'s `plans`), and Discover wears a compass rather than a magnifier,
+because the magnifier is search and two of them in one screen said one thing
+twice. Search sits in the corner the heart left, and points at Discover until
+there is a universal search to point it at. A hamburger there is deliberately
+not built: merch and an about page are the things that would go in it, and a
+lid over an empty shelf is where things go to be forgotten.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

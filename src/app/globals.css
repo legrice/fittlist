@@ -1252,12 +1252,11 @@ button.ps-card { cursor: pointer; }
   border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
 }
-/* Your week's count is a state, not an alert: nothing is wrong, you just have
-   four classes coming. Green, the same yes the add gives. */
-.weekdot { background: var(--go); }
-
 /* Your week (/week): the shortlist. A list, not a calendar — no grid, no empty
    days, and every row can leave. */
+/* The tabs layout supplies the shell and enough room for the bar; this is the
+   extra the floating Share pill needs on top of it. */
+.weekwrap { padding-bottom: 76px; }
 .weeklist { display: flex; flex-direction: column; gap: 26px; }
 .weekday { display: flex; flex-direction: column; }
 .weekday .ps-daycol {
@@ -3311,6 +3310,15 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
 }
 .navtab.on .navav { opacity: 1; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); }
+/* The Plans count, on the tab's glyph. It hung off the header's heart until
+   Plans became a tab. A state, not an alert: nothing is wrong, you just have
+   four classes coming. Green, the same yes the add gives. */
+.navglyph { position: relative; display: flex; }
+.navdot {
+  position: absolute; top: -5px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; background: var(--go); color: #fff; font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
+}
 .navtab:active { background: var(--cl); }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
