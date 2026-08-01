@@ -413,7 +413,8 @@ tapped. DOM order already paints both slots over the picture. This is the same
 trap the account view has, where the fix is to portal instead.
 
 **Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
-coach's own profile and nowhere else: `AppHeader` carries none on any screen.
+coach's own profile and nowhere else, and it carries the words "Profile
+settings" rather than being a circle to guess at: `AppHeader` carries none on any screen.
 Their profile is the You tab, so it is one tap from anywhere, and a member's
 settings were always `/you`, which the tab bar already is. `?acct=1` is the URL
 the gear links to and the only door into the account view, which is why a suite

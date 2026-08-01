@@ -2385,7 +2385,14 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
 .ownermore:active, .ownergear:active { background: var(--cl); }
-.ownergear { text-decoration: none; }
+/* The gear carries its word, so it is a pill rather than a circle: the round
+   one had to be guessed at, and what is behind it is worth a label. The
+   studio's dots stay a circle, because a menu of five things has no one name. */
+.ownergear {
+  text-decoration: none; width: auto; gap: 7px; padding: 0 15px 0 13px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 13.5px; white-space: nowrap;
+}
 .ownermenu { margin-top: 14px; }
 /* Gym types: a wrapped set of chips, several of which are usually true. */
 /* The gym types under a studio's name. */

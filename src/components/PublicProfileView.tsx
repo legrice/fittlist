@@ -447,8 +447,11 @@ export async function PublicProfileView({
           // those was a lid over things that already had a button.
           ownerTop={
             isOwner ? (
-              <Link className="ownergear" href="/app?acct=1" aria-label="Settings">
-                <Icon name="settings" size={20} />
+              // Named, not just drawn. A gear on its own is a guess, and the
+              // one thing behind it is worth saying out loud.
+              <Link className="ownergear" href="/app?acct=1">
+                <Icon name="settings" size={18} />
+                <span className="ownergear-lbl">Profile settings</span>
               </Link>
             ) : null
           }
