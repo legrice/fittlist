@@ -1427,6 +1427,22 @@ button.ps-card { cursor: pointer; }
   margin: -22px calc(50% - 50vw) 18px; width: 100vw; max-width: 100vw;
 }
 
+/* The same corner pair on the coach's own schedule, which is where the You tab
+   lands. Not on a photograph here, so they wear the page's own colours, and
+   they sit in the row rather than floating over one.
+
+   Two classes deep on purpose: `.ownertop` is declared later in this file and
+   would win the tie, which left the pair absolutely positioned under the
+   sticky header where nothing could reach it. Same trap as the Discover
+   filter pill and the studio's dots before it. */
+.ownertop.schedtop {
+  position: static; justify-content: flex-end; margin: 14px 0 4px;
+}
+.schedtop .ownergear, .schedtop .ownermore {
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+
 /* The class photo, in the adder: the picture beside the two controls that set
    it, so what you picked is what you see rather than a filename. */
 .classpho { display: flex; align-items: center; gap: 12px; margin-top: 8px; }

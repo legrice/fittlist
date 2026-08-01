@@ -1721,14 +1721,22 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-// You is your public page now, seen exactly as a visitor sees it, which means
-// no tab bar: a profile's way off is the arrow on the picture, and it pops to
-// whatever sent you, which here is Discover.
+// You is a screen of the app rather than the page you publish: a coach lands
+// on their schedule, which keeps the bar you just used. The page itself is one
+// tap from here, and so is the account behind it.
+await page.waitForURL((u) => u.pathname === "/app");
+await page.locator(".schedtop .ownergear").waitFor();
+if (!(await page.locator(".navbar").count()))
+  fail("the You tab has to land somewhere that still has the tab bar");
+await page.locator(".schedtop .ownermore").click();
+await page.waitForURL(/\/matt/);
 await page.locator(".profname").waitFor();
 if (await page.locator(".navbar").count())
   fail("a profile carries no tab bar, even your own");
+if (await page.locator(".profhero .ownergear").count())
+  fail("settings moved to the schedule with the You tab");
 await page.locator(".profback .evback").click();
-await page.waitForURL(/\/discover/);
+await page.waitForURL((u) => u.pathname === "/app");
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
@@ -1919,30 +1927,30 @@ await page.locator(".pubtab.sel").waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
 
-// Settings sit with the page they're about, and nowhere else: the gear is off
-// the app header on every screen, and this is the door.
+// Settings sit with the page they're about, and nowhere else. That page is the
+// schedule now, because it is where the You tab lands; the profile is the page
+// you publish and carries nothing but the things you do about it.
 {
   await page.goto(BASE + "/matt");
-  await page.locator(".ownertop").waitFor();
+  await page.locator(".profname").waitFor();
   if (await page.locator(".settingsbtn").count())
     fail("the app header should carry no gear anywhere");
-  await page.locator(".ownergear").waitFor();
-  // Settings, and nothing else. Handing the page on moved down to sit with the
-  // other things you can do about this person, and the three-dot menu that
-  // used to live up here is a studio's alone.
-  {
-    const controls = await page.locator(".ownertop a, .ownertop button").count();
-    if (controls !== 1) fail(`the corner should carry settings alone, got ${controls}`);
-  }
+  if (await page.locator(".profhero .ownergear").count())
+    fail("the profile's gear moved to the schedule with the You tab");
   await page.locator(".profhero-actrow .profshare-btn").waitFor();
-  if (await page.locator(".ownertop .ownermore").count())
+  if (await page.locator(".profhero .ownermore").count())
     fail("the three-dot menu belongs to a studio, not a person");
-  if (await page.locator(".ownermore").count())
-    fail("the three-dot menu should be gone from a person's profile");
-  await page.locator(".ownergear").click();
+
+  await page.goto(BASE + "/app");
+  await page.locator(".schedtop").waitFor();
+  {
+    const controls = await page.locator(".schedtop a, .schedtop button").count();
+    if (controls !== 2) fail(`the schedule should carry settings and the page, got ${controls}`);
+  }
+  await page.locator(".schedtop .ownergear").click();
   await page.locator(".acctwrap").waitFor();
   await page.locator(".acctclose").click();
-  console.log("profile settings ok (one gear in the corner, opens the account)");
+  console.log("settings ok (on the schedule, where the You tab lands)");
 }
 
 // The owner gets two pills where a visitor gets Message and Follow: Share
@@ -2179,7 +2187,7 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".profname").waitFor();
+await page.locator(".schedtop").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting

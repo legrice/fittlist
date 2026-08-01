@@ -441,19 +441,10 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // Settings, and only settings. Everything else a coach does to this
-          // page is on the two pills under the name; a corner menu on top of
-          // those was a lid over things that already had a button.
-          ownerTop={
-            isOwner ? (
-              // Named, not just drawn. A gear on its own is a guess, and the
-              // one thing behind it is worth saying out loud.
-              <Link className="ownergear" href="/app?acct=1">
-                <Icon name="settings" size={18} />
-                <span className="ownergear-lbl">Profile settings</span>
-              </Link>
-            ) : null
-          }
+          // Nothing. Settings moved to the schedule with the You tab: this is
+          // the page you publish rather than a screen you live in, and a gear
+          // on it was only ever justified by the tab landing here.
+          ownerTop={null}
           avail={
             <div className="profhero-tags">
               {/* Says which side of the app this person is on. Members have

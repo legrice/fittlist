@@ -52,7 +52,11 @@ export async function AppChrome({
   ]);
   // A coach's You is their public page, so the tab shows them what the link
   // shows everyone else.
-  const youHref = isCoach ? `/${me.handle}` : "/you";
+  // You is a screen of the app, not a page you publish. A coach lands on
+  // their schedule and a member on their account; both carry the tab bar, and
+  // both offer the way through to the public profile. Pointing it at the
+  // profile meant the tab you just used vanished when you arrived.
+  const youHref = isCoach ? "/app" : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
