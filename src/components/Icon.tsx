@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
+  SlidersHorizontal,
   Clock,
   CircleUserRound,
   Compass,
@@ -106,6 +107,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   send: Send,
   share: Share,
   travel_explore: Compass,
+  tune: SlidersHorizontal,
   visibility: Eye,
 };
 

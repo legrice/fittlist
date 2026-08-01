@@ -442,6 +442,13 @@
       "when": 1785538602284,
       "tag": "0062_giant_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1785555889137,
+      "tag": "0063_milky_gunslinger",
+      "breakpoints": true
     }
   ]
 }

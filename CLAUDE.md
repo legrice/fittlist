@@ -123,8 +123,14 @@ that quietly rots.
    ethos section below is the strongest form of this).
 2. **Simplicity first.** No speculative features, no abstraction until the
    third caller needs it. A new table, flag, or dependency must earn itself.
-3. **Surgical changes.** Touch what the task needs and match the style
-   around it. Don't refactor in passing; a cleanup is its own commit.
+3. **Surgical changes, and reuse before you build.** Touch what the task needs
+   and match the style around it. Don't refactor in passing; a cleanup is its
+   own commit. Before writing a new screen, list, sheet or vocabulary, go
+   looking for the one that already exists: a class row is `.ps-event`
+   everywhere it appears, a bottom sheet is `.sheet` with `.sheetclose`, a
+   settings row is `.setrow`, a chip grid is `TypePicker`, and what a place
+   offers and a person teaches are both `STUDIO_TYPES`. A second copy always
+   drifts, and the drift is invisible until somebody screenshots both.
 4. **Verify against the goal.** Every change ends with the build, a fresh-DB
    check of the actual behavior, and the affected suites. "It compiles" is
    not done; the suites in this file are the definition of done.
@@ -246,6 +252,16 @@ who follows two coaches is one too, so it can't be counted.
 and the tab bar once, and `loading.tsx` sits under it so a tab that's still
 loading keeps its chrome. Put them back in the pages and the bar unmounts on
 every navigation, which is the thing the layout exists to prevent.
+
+**One vocabulary for what a place offers and what a person teaches.**
+`STUDIO_TYPES` was the studio editor's list; `users.disciplines` picks from the
+same one, capped at four and validated against it in `updateProfile`, so a
+coach's "Yoga" is the same word as a studio's. That is what lets one filter in
+Discover narrow both halves. Free text would be a hundred spellings and a
+filter nobody could use, which is why `certifications` (free chips, a
+credential) and `disciplines` (a pick, a category) are different fields.
+`TypePicker` renders it for both, and "accepting clients" is a filter for free
+because `users.availability` already says it.
 
 **Discover has two halves, and only one of them is people.** A People/Studios
 segment above one row of controls: the search box, and the city filter across

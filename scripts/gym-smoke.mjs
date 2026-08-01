@@ -111,7 +111,7 @@ await matt.locator("#fStart").fill("07:00");
 await matt.getByRole("button", { name: "Add to the schedule" }).click();
 await matt.getByText("Added to the week").waitFor();
 await matt.waitForTimeout(600);
-const openRow = matt.locator(".rotarow.rotaopen", { hasText: "HYROX" });
+const openRow = matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" });
 await openRow.waitFor();
 if (!(await openRow.innerText()).includes("Nobody on it yet"))
   fail("an unassigned slot should say so");
@@ -124,9 +124,9 @@ await matt.locator("#fCoach").selectOption({ label: "Tom" });
 await matt.getByRole("button", { name: "Save changes" }).click();
 await matt.getByText("Saved").waitFor();
 await matt.waitForTimeout(600);
-const filled = matt.locator(".rotarow", { hasText: "HYROX" });
+const filled = matt.locator(".ps-event", { hasText: "HYROX" });
 if (!(await filled.innerText()).includes("Tom")) fail("the row should name the coach");
-if (await matt.locator(".rotarow.rotaopen", { hasText: "HYROX" }).count())
+if (await matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" }).count())
   fail("an assigned slot should stop reading as open");
 console.log("assignment ok (Tom is on it)");
 
@@ -174,7 +174,7 @@ console.log("the coach is told ok");
   console.log("pulled a class in and filled the rest ok");
 
   // Reopening it shows what was saved rather than an empty form.
-  await matt.locator(".rotarow", { hasText: "Warm Up" }).first().click();
+  await matt.locator(".ps-event", { hasText: "Warm Up" }).first().click();
   await matt.locator("#fDesc").waitFor();
   if (!(await matt.locator("#fDesc").inputValue()).includes("shoes you can lift"))
     fail("the description didn't survive a save");
@@ -211,7 +211,7 @@ console.log("the coach is told ok");
 // has to reach two calendars or somebody doesn't turn up.
 {
   await matt.goto(BASE + studioHref + "/manage");
-  const row = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const row = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   await row.waitFor();
   await row.click();
   await matt.locator("#rotaOn").waitFor();
@@ -222,7 +222,7 @@ console.log("the coach is told ok");
   await matt.getByText("Swapped").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const swapped = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const swapped = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   const txt = await swapped.innerText();
   if (!txt.includes("Julia")) fail("the row should show who's actually on: " + txt);
   if (!/covering/i.test(txt)) fail("a swapped date should be marked as an exception");
@@ -230,7 +230,7 @@ console.log("the coach is told ok");
 
   // Next week is untouched: a swap is one date, not a change to the class.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  const next = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const next = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   await next.waitFor();
   const nextTxt = await next.innerText();
   if (!nextTxt.includes("Tom")) fail("next week should still be the regular coach: " + nextTxt);
@@ -263,13 +263,13 @@ console.log("the coach is told ok");
 // Opening a slot up: nobody on it, said out loud rather than left blank.
 {
   await matt.goto(BASE + studioHref + "/manage");
-  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption("");
   await matt.getByText("Opened up").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const opened = matt.locator(".rotarow.rotaopen", { hasText: "HYROX" }).first();
+  const opened = matt.locator(".ps-event.ps-event-open", { hasText: "HYROX" }).first();
   await opened.waitFor();
   if (!(await opened.innerText()).includes("Nobody on it yet"))
     fail("an opened date should say nobody is on it");
@@ -281,7 +281,7 @@ console.log("the coach is told ok");
   await matt.getByText("Swapped").waitFor();
   await matt.waitForTimeout(700);
   await matt.locator(".sheetclose").click();
-  const back = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const back = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   if (/covering/i.test(await back.innerText()))
     fail("putting the regular coach back should clear the exception, not store one");
   console.log("back to normal clears the exception ok");
@@ -335,7 +335,7 @@ console.log("the coach is told ok");
 // property from the side the suite can see.)
 {
   await matt.goto(BASE + studioHref + "/manage");
-  const row = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const row = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   await row.click();
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Julia" });
@@ -344,7 +344,7 @@ console.log("the coach is told ok");
   await matt.locator(".sheetclose").click();
 
   // Now hand the standing slot to Matt entirely.
-  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
   await matt.locator("#fCoach").waitFor();
   await matt.locator("#fCoach").selectOption({ label: "Matt" });
   await matt.getByRole("button", { name: "Save changes" }).click();
@@ -352,7 +352,7 @@ console.log("the coach is told ok");
   await matt.waitForTimeout(800);
   await matt.locator(".sheetclose").click().catch(() => {});
 
-  const covered = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const covered = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   const txt = await covered.innerText();
   if (!txt.includes("Julia"))
     fail("handing the slot over took a covered date with it: " + txt);
@@ -366,7 +366,7 @@ console.log("the coach is told ok");
   await matt.getByText("Saved").waitFor();
   await matt.waitForTimeout(600);
   await matt.locator(".sheetclose").click().catch(() => {});
-  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Tom (usually)" });
   await matt.getByText("Swapped").waitFor();
@@ -455,7 +455,7 @@ console.log("the coach is told ok");
   // A date somebody else is covering is not a date he teaches, so it comes off
   // his page. Getting this wrong tells people to turn up to the wrong class.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  await matt.locator(".rotarow", { hasText: "HYROX" }).first().click();
+  await matt.locator(".ps-event", { hasText: "HYROX" }).first().click();
   await matt.locator("#rotaOn").waitFor();
   await matt.locator("#rotaOn").selectOption({ label: "Julia" });
   await matt.getByText("Swapped").waitFor();
@@ -521,7 +521,7 @@ console.log("the coach is told ok");
 
   // It moved, on the rota and on both their schedules.
   await matt.goto(BASE + studioHref + "/manage?w=1");
-  const onRota = matt.locator(".rotarow", { hasText: "HYROX" }).first();
+  const onRota = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   await onRota.waitFor();
   const txt = await onRota.innerText();
   if (!txt.includes("Julia") || !/covering/i.test(txt))
@@ -656,7 +656,7 @@ console.log("the coach is told ok");
 // its own, which is the argument for it not having one.
 {
   const rowOn = (day, name) =>
-    matt.locator(".rotaday", { hasText: day }).locator(".rotarow", { hasText: name });
+    matt.locator(".rotaday", { hasText: day }).locator(".ps-event", { hasText: name });
 
   await matt.goto(BASE + studioHref + "/manage");
   await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
@@ -689,7 +689,7 @@ console.log("the coach is told ok");
   await matt.goto(BASE + studioHref + "/manage?w=2");
   await matt.locator(".rota").waitFor();
   await matt.waitForTimeout(400);
-  if (await matt.locator(".rotarow", { hasText: "Barbell Clinic" }).count())
+  if (await matt.locator(".ps-event", { hasText: "Barbell Clinic" }).count())
     fail("a one-off should not repeat");
   console.log("a one-off runs once ok");
 
@@ -817,7 +817,7 @@ console.log("the coach is told ok");
 
 // Julia, the other manager, sees the same rota
 await julia.goto(BASE + studioHref + "/manage");
-await julia.locator(".rotarow", { hasText: "HYROX" }).waitFor();
+await julia.locator(".ps-event", { hasText: "HYROX" }).waitFor();
 console.log("the second manager sees the same week ok");
 
 // a coach who doesn't run the place can't reach it at all

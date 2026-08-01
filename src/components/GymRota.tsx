@@ -10,6 +10,7 @@ import {
   type GymCoachDto,
   type GymWeekDto,
 } from "@/app/actions/gym";
+import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
@@ -23,12 +24,6 @@ const fmtDay = (iso: string) =>
     day: "numeric",
     timeZone: "UTC",
   });
-
-const fmtTime = (v: string) => {
-  const [h, m] = v.split(":").map(Number);
-  const ap = h >= 12 ? "pm" : "am";
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")}${ap}`;
-};
 
 /** What the sheet is open on: a slot, or an empty day waiting for one. */
 type Open = { iso: string; dayOfWeek: number; cls: GymClassDto | null };
@@ -205,7 +200,7 @@ export function GymRota({
         </Link>
       </div>
 
-      <div className="rota">
+      <div className="rota ps-week ps-agenda">
         {days.map((day, d) => (
           <div key={day.iso} className="rotaday">
             <div className="rotaday-h">
@@ -220,18 +215,29 @@ export function GymRota({
               day.items.map((c) => (
                 <button
                   key={c.id}
-                  className={`rotarow${c.onUserId ? "" : " rotaopen"}`}
+                  className={`ps-event${c.onUserId ? "" : " ps-event-open"}`}
                   onClick={() => show(day.iso, d, c)}
                 >
-                  <span className="rotarow-t">{fmtTime(c.startTime)}</span>
-                  <span className="rotarow-main">
-                    <span className="rotarow-nm">{c.name}</span>
-                    <span className="rotarow-who">
-                      {c.onName || "Nobody on it yet"}
+                  <span className="ps-accent" aria-hidden="true" />
+                  <span className="ps-ebody">
+                    <span className="ps-enm">
+                      {c.name}
                       {c.covered && <span className="rotaswap">covering</span>}
                     </span>
+                    {/* Where a class card says the place, the rota says the
+                        person: on a gym's own page the place is a given. */}
+                    <span className="ps-estudio">
+                      <Icon name="person_add" size={13} className="ps-estudio-ic" />
+                      {c.onName || "Nobody on it yet"}
+                    </span>
                   </span>
-                  <span className="rotarow-dur">{c.durationMin} min</span>
+                  <span className="ps-etimecol">
+                    <span className="ps-etime">
+                      {clockParts(c.startTime).hm}
+                      <span className="ps-ap">{clockParts(c.startTime).ap}</span>
+                    </span>
+                    <span className="ps-edur">{c.durationMin} min</span>
+                  </span>
                 </button>
               ))
             )}

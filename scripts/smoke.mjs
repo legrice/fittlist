@@ -1153,7 +1153,11 @@ await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+// The page title is gone: the tab bar says Discover, and the segment says
+// which half of it you're in.
+await fan.locator(".disseg").waitFor();
+if (await fan.locator(".calbar-title", { hasText: "Discover" }).count())
+  fail("the page still spends a headline on what the tab bar already says");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
@@ -1232,6 +1236,50 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
+
+// Everything that narrows the list is behind one button, and the coach's own
+// disciplines are what it narrows by. One vocabulary: the same word a studio
+// picks for what it offers.
+{
+  await page.goto(BASE + "/matt");
+  await page.locator(".profacts .actpill", { hasText: "Edit profile" }).click();
+  await page.getByRole("heading", { name: "Edit profile" }).waitFor();
+  const yoga = page.locator(".typepick .chip", { hasText: "Yoga" }).first();
+  await yoga.scrollIntoViewIfNeeded();
+  await yoga.click();
+  await page.locator(".sheet .publishwrap .btn").first().click();
+  await page.getByText("Profile saved").waitFor();
+  await page.waitForTimeout(700);
+  // It shows on the page, so a coach can see what they said.
+  await page.goto(BASE + "/matt/about");
+  await page.locator(".studiotype", { hasText: "Yoga" }).waitFor();
+
+  await fan.goto(BASE + "/discover");
+  await fan.locator(".disfilterbtn").click();
+  await fan.getByRole("heading", { name: "Filters" }).waitFor();
+  await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
+  await fan.locator(".sheet .publishwrap .btn").click();
+  await fan.waitForTimeout(300);
+  if (!(await fan.locator(".disfilterbtn.on").count()))
+    fail("a live filter should say so on the button");
+  await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
+  if (await fan.locator(".disrow", { hasText: "Sam" }).count())
+    fail("filtering by what someone teaches should drop the ones who don't");
+  // The same pick narrows the other half of the directory.
+  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.waitForTimeout(300);
+  const left = await fan.locator(".disrow-studio .nm").allInnerTexts();
+  if (left.length && left.length === (await fan.locator(".disrow-studio").count()) && left.length > 20)
+    fail("the discipline filter did nothing to the studios");
+  // Clearing puts everything back.
+  await fan.locator(".disfilterbtn").click();
+  await fan.getByRole("button", { name: "Clear filters" }).click();
+  await fan.locator(".sheet .publishwrap .btn").click();
+  await fan.waitForTimeout(300);
+  if (await fan.locator(".disfilterbtn.on").count())
+    fail("cleared filters should leave the button quiet");
+  console.log("discover filters ok (one button, one vocabulary, both halves)");
+}
 }
 
 // The studio directory is coach-editable, and a coach is kind, not handle:
@@ -1530,7 +1578,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
-await fan.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await fan.locator(".disseg").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -1595,7 +1643,7 @@ await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".calbar-title", { hasText: "Discover" }).waitFor();
+await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is your public page now, seen exactly as a visitor sees it.
 await page.locator(".profname").waitFor();

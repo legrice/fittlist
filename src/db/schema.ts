@@ -83,6 +83,11 @@ export const users = pgTable("users", {
   // that answers "how do I train with you". Their answer only, and separate
   // from whether the *gym's* schedule ever names them, which is the gym's.
   shiftsPublic: boolean("shifts_public").notNull().default(false),
+  // What this person teaches, from the same curated list a studio picks from
+  // (STUDIO_TYPES). One vocabulary, so a single filter in Discover finds the
+  // yoga teachers and the studios that offer yoga. Free text would be a
+  // hundred spellings of the same word and a filter nobody could use.
+  disciplines: jsonb("disciplines").$type<string[]>().notNull().default([]),
   // Their pick from AVATAR_COLORS, behind the initial when there's no photo.
   // Null means "derive one from my id" — everyone looks distinct from day one.
   avatarColor: text("avatar_color"),

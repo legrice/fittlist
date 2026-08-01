@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { STUDIO_TYPES } from "@/lib/studio";
 import { AVATAR_COLORS } from "@/lib/avatar";
 import { fmtDateLong, RESERVED_HANDLES, slug, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
@@ -74,6 +75,7 @@ export async function updateProfile(input: {
   location?: string;
   certifications?: string[];
   highlights?: string[];
+  disciplines?: string[];
   availability?: string | null;
   instagram: string;
   website: string;
@@ -119,6 +121,7 @@ export async function updateProfile(input: {
     location?: string | null;
     certifications?: string[];
     highlights?: string[];
+    disciplines?: string[];
     availability?: string | null;
     instagram: string | null;
     website: string | null;
@@ -137,6 +140,12 @@ export async function updateProfile(input: {
   // which also took the "Request private session" button off their page.
   if (input.certifications !== undefined) set.certifications = cleanChips(input.certifications, 40, 12);
   if (input.highlights !== undefined) set.highlights = cleanChips(input.highlights, 60, 6);
+  // From the curated list only. Anything else is somebody's typo, and a filter
+  // built on typos is a filter nobody can use.
+  if (input.disciplines !== undefined)
+    set.disciplines = [...new Set(input.disciplines)]
+      .filter((d) => (STUDIO_TYPES as readonly string[]).includes(d))
+      .slice(0, 4);
   if (input.availability !== undefined) {
     set.availability =
       input.availability === "accepting" || input.availability === "waitlist"

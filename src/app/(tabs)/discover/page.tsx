@@ -93,6 +93,7 @@ export default async function DiscoverPage() {
       following: following.has(r.id),
       requested: requested.has(r.id),
       availability: r.kind === "fan" ? null : r.availability,
+      disciplines: r.disciplines,
       color: avatarColor(r),
     }))
     // Newest people first, coaches and members interleaved: the list doubles

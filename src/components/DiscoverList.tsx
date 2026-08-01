@@ -21,6 +21,8 @@ export type DiscoverCoach = {
   requested: boolean;
   /** Worn as a dot on the avatar, same as the profile photo. Coaches only. */
   availability: string | null;
+  /** What they teach, from the same list a studio picks its types from. */
+  disciplines: string[];
   color: string;
 };
 
@@ -115,12 +117,19 @@ export function DiscoverList({
   // Discover is asking "who's around here", not "who is on fittlist".
   const nearCity = myCity && cities.includes(myCity) ? myCity : null;
   const [city, setCity] = useState<string | null>(nearCity);
+  const [discipline, setDiscipline] = useState<string | null>(null);
+  const [acceptingOnly, setAcceptingOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return coaches.filter((c) => {
       if (coachesOnly && c.kind !== "coach") return false;
       if (city && c.location !== city) return false;
+      if (discipline && !c.disciplines.includes(discipline)) return false;
+      // Someone looking for a personal trainer is looking for a yes, not a
+      // waitlist. The coach already told us which they are.
+      if (acceptingOnly && c.availability !== "accepting") return false;
       if (!needle) return true;
       return (
         c.name.toLowerCase().includes(needle) ||
@@ -128,49 +137,55 @@ export function DiscoverList({
         c.location.toLowerCase().includes(needle)
       );
     });
-  }, [coaches, q, city, coachesOnly]);
+  }, [coaches, q, city, coachesOnly, discipline, acceptingOnly]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
   // it finds them.
   const shownStudios = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return studios;
-    return studios.filter(
-      (st) =>
+    return studios.filter((st) => {
+      // One vocabulary across the directory, so the same pick narrows both
+      // halves: the yoga teachers, and the places that offer yoga.
+      if (discipline && !st.types.includes(discipline)) return false;
+      if (!needle) return true;
+      return (
         st.name.toLowerCase().includes(needle) ||
         st.address.toLowerCase().includes(needle) ||
-        st.types.some((t) => t.toLowerCase().includes(needle)),
-    );
-  }, [studios, q]);
+        st.types.some((t) => t.toLowerCase().includes(needle))
+      );
+    });
+  }, [studios, q, discipline]);
+
+  // Only what this lens can actually narrow, so the sheet never offers a
+  // filter that would empty the list on principle.
+  const activeCount =
+    (tab === "studios" ? 0 : city ? 1 : 0) +
+    (discipline ? 1 : 0) +
+    (tab === "people" && coachesOnly ? 1 : 0) +
+    (tab === "people" && acceptingOnly ? 1 : 0);
+  const clearAll = () => {
+    setCity(null);
+    setDiscipline(null);
+    setCoachesOnly(false);
+    setAcceptingOnly(false);
+  };
+  // Every discipline anyone here actually has. Offering the whole vocabulary
+  // would be forty rows, most of them leading nowhere.
+  const disciplines = useMemo(() => {
+    const seen = new Set<string>();
+    for (const c of coaches) for (const d of c.disciplines) seen.add(d);
+    for (const st of studios) for (const t of st.types) seen.add(t);
+    return [...seen].sort((a, b) => a.localeCompare(b));
+  }, [coaches, studios]);
 
   return (
     <>
       {/* The page title, with the coaches-only switch directly across from
           it. Only when the list mixes kinds; all coaches leaves the switch
           nothing to do. */}
-      <div className="calbar-title distitle">
-        Discover
-        {tab === "people" && coaches.some((c) => c.kind !== "coach") && (
-          <button
-            type="button"
-            className="disonly"
-            role="switch"
-            aria-checked={coachesOnly}
-            onClick={() => setCoachesOnly((v) => !v)}
-          >
-            View coaches only
-            <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
-              <span className="switch-knob" />
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* The directory has two halves. A studio is a place rather than a
-          person, so it isn't followable and doesn't mix into the same list:
-          the tab says which one you're looking at, and the search box below
-          says so too. */}
+      {/* No page title: the tab bar already says Discover, and the segment
+          below says which half you're in. */}
       <div className="seg disseg">
         <button className={tab === "people" ? "sel" : ""} onClick={() => setTab("people")}>
           People
@@ -180,8 +195,9 @@ export function DiscoverList({
         </button>
       </div>
 
-      {/* One row: the box, and the filter across from it. Two rows of chrome
-          above a list is most of a phone screen spent on controls. */}
+      {/* One row: the box, and one button for everything that narrows it. Four
+          controls strung across the top is most of a phone screen spent on
+          chrome, and three of them are usually irrelevant to what you came for. */}
       <div className="dissearchrow">
         <div className="dissearch">
           <Icon name="search" size={19} className="dissearch-ic" />
@@ -203,28 +219,132 @@ export function DiscoverList({
             </button>
           )}
         </div>
-        {/* People carry a city; a studio carries a free-text address and
-            nothing to group by yet, so the filter isn't offered there. It
-            opens on your own city, which is what Discover is for. */}
-        {tab === "people" && cities.length > 1 && (
-          <div className={`discitysel${city ? " on" : ""}`}>
-            <Icon name="place" size={17} className="discitysel-ic" />
-            <select
-              className="discitysel-in"
-              aria-label="Filter by city"
-              value={city ?? ""}
-              onChange={(e) => setCity(e.target.value || null)}
-            >
-              <option value="">All cities</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <button
+          type="button"
+          className={`disfilterbtn${activeCount ? " on" : ""}`}
+          aria-label="Filters"
+          onClick={() => setFiltersOpen(true)}
+        >
+          <Icon name="tune" size={19} />
+          {activeCount > 0 && <span className="disfilterbtn-n">{activeCount}</span>}
+        </button>
       </div>
+
+      {filtersOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFiltersOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setFiltersOpen(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Filters</h2>
+
+            {/* A studio has a free-text address and nothing normalised to
+                group by, so the city only narrows people. */}
+            {tab === "people" && cities.length > 1 && (
+              <>
+                <label className="flabel" htmlFor="disCity">
+                  Where
+                </label>
+                <select
+                  id="disCity"
+                  className="editinput"
+                  value={city ?? ""}
+                  onChange={(e) => setCity(e.target.value || null)}
+                >
+                  <option value="">Anywhere</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+
+            {disciplines.length > 0 && (
+              <>
+                <label className="flabel">
+                  What <span>· one thing, so the list still says something</span>
+                </label>
+                <div className="typepick">
+                  {disciplines.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`chip${discipline === d ? " sel" : ""}`}
+                      aria-pressed={discipline === d}
+                      onClick={() => setDiscipline(discipline === d ? null : d)}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {tab === "people" && (
+              <div className="settingslist disfilterlist">
+                <button
+                  className="setrow"
+                  role="switch"
+                  aria-checked={acceptingOnly}
+                  onClick={() => setAcceptingOnly((v) => !v)}
+                >
+                  <span className="setrow-ic">
+                    <Icon name="event_available" size={22} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Taking new clients</span>
+                    <span className="s">Coaches with room for private sessions</span>
+                  </span>
+                  <span className={`switch${acceptingOnly ? " on" : ""}`} aria-hidden="true">
+                    <span className="switch-knob" />
+                  </span>
+                </button>
+                {coaches.some((c) => c.kind !== "coach") && (
+                  <button
+                    className="setrow"
+                    role="switch"
+                    aria-checked={coachesOnly}
+                    onClick={() => setCoachesOnly((v) => !v)}
+                  >
+                    <span className="setrow-ic">
+                      <Icon name="person_add" size={22} />
+                    </span>
+                    <span className="setrow-txt">
+                      <span className="t">Coaches only</span>
+                      <span className="s">Hide members from the list</span>
+                    </span>
+                    <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
+                      <span className="switch-knob" />
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="publishwrap nostick">
+              <button className="btn si" onClick={() => setFiltersOpen(false)}>
+                Show {tab === "people" ? shown.length : shownStudios.length}
+              </button>
+            </div>
+            {activeCount > 0 && (
+              <button className="tertiary tellsheet-done" onClick={clearAll}>
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {tab === "studios" ? (
         shownStudios.length === 0 ? (

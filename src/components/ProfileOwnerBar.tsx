@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { myWeekText } from "@/app/actions/weektext";
 import { ChipsField } from "@/components/ChipsField";
+import { TypePicker } from "@/components/TypePicker";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
@@ -32,6 +33,7 @@ export function ProfileOwnerBar({
   location,
   certifications,
   highlights,
+  disciplines,
   instagram,
   website,
   contactEmail,
@@ -49,6 +51,7 @@ export function ProfileOwnerBar({
   location: string;
   certifications: string[];
   highlights: string[];
+  disciplines: string[];
   instagram: string;
   website: string;
   contactEmail: string;
@@ -69,6 +72,7 @@ export function ProfileOwnerBar({
   const [pLocation, setPLocation] = useState(location);
   const [pCerts, setPCerts] = useState<string[]>(certifications);
   const [pHighlights, setPHighlights] = useState<string[]>(highlights);
+  const [pDisciplines, setPDisciplines] = useState<string[]>(disciplines);
   const [pInstagram, setPInstagram] = useState(instagram);
   const [pWebsite, setPWebsite] = useState(website);
   const [pEmail, setPEmail] = useState(contactEmail);
@@ -151,6 +155,7 @@ export function ProfileOwnerBar({
         location: pLocation,
         certifications: pCerts,
         highlights: pHighlights,
+        disciplines: pDisciplines,
         instagram: pInstagram,
         website: pWebsite,
         contactEmail: pEmail,
@@ -202,7 +207,7 @@ export function ProfileOwnerBar({
           bio is a thing you do twice a year. */}
       <div className="profacts">
         <button className="actpill actpill-primary" onClick={() => setShareMenu(true)}>
-          <Icon name="campaign" size={17} /> Share
+          Share profile
         </button>
         <button className="actpill" onClick={openEdit}>
           Edit profile
@@ -403,6 +408,11 @@ export function ProfileOwnerBar({
             <label className="flabel">
               Certifications <span>· optional</span>
             </label>
+            <label className="flabel">
+              What you teach <span>· up to four, and it&rsquo;s how people find you</span>
+            </label>
+            <TypePicker value={pDisciplines} onChange={setPDisciplines} max={4} />
+
             <ChipsField value={pCerts} onChange={setPCerts} placeholder="e.g. NASM CPT" maxLen={40} max={12} />
             <label className="flabel">
               Coaching focus <span>· a few short descriptors</span>

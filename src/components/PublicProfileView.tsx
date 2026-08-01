@@ -173,6 +173,18 @@ export async function PublicProfileView({
 
   const about = (
     <>
+      {user.disciplines.length > 0 && (
+        <div className="profsec">
+          <h2 className="prof-sec-h">Teaches</h2>
+          <div className="studiotypes">
+            {user.disciplines.map((d) => (
+              <span key={d} className="studiotype">
+                {d}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {user.about?.trim() && (
         <div className="profsec aboutsec">
           {/* Labelled like the sections after it. Without the label the bio
@@ -442,6 +454,7 @@ export async function PublicProfileView({
                 location={user.location ?? ""}
                 certifications={user.certifications}
                 highlights={user.highlights}
+                disciplines={user.disciplines}
                 instagram={user.instagram ?? ""}
                 website={user.website ?? ""}
                 contactEmail={user.contactEmail ?? ""}

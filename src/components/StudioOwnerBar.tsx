@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateStudio } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
-import { STUDIO_TYPES } from "@/lib/studio";
+import { TypePicker } from "@/components/TypePicker";
 import { Toast, useToast } from "@/components/Toast";
 
 export type StudioEditProps = {
@@ -156,19 +156,7 @@ export function StudioOwnerBar({
             <label className="flabel">
               Type <span>· pick every one that fits</span>
             </label>
-            <div className="typepick">
-              {STUDIO_TYPES.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`chip${pTypes.includes(t) ? " sel" : ""}`}
-                  aria-pressed={pTypes.includes(t)}
-                  onClick={() => toggleType(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <TypePicker value={pTypes} onChange={setPTypes} />
 
             <label className="flabel">Photo</label>
             <div className="editphoto">
