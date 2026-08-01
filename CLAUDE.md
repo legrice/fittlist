@@ -369,6 +369,22 @@ is gone from this page, which is why availability moved with it: it was a dot
 on that circle and words in its overlay, and it is now a second tag beside
 Coach in `.profhero-tags`. A status nobody can read is the same as no status.
 
+**Everybody can hand a profile on.** `ProfileShare` faces the back control
+across the top of the picture and wears the same shape: an ink circle with a
+white glyph, in `.ownertop` alongside whatever else that corner holds. It is
+`navigator.share` with a copy-the-link fallback, and it exists on all three
+profiles because until it did, the only way a visitor could send somebody a
+coach was to copy the address bar. An owner's Share pill under the name is a
+different thing and stays: that one carries the story image, the QR code and
+the week as text.
+
+**The floating action buttons are glass, not slabs.** Add class and Discover's
+filter both float over something somebody is reading, so both are white at 78%
+with a backdrop blur rather than a block of brand orange. The orange is still
+the app's, it just isn't spent on a control that sits permanently over a
+schedule. Change one and change the other, or they stop reading as the same
+kind of thing.
+
 **The hero's two corner slots must not own a stacking layer.** `.profback` and
 `.ownertop` are positioned but carry no `z-index`, on purpose. They hold
 arbitrary controls, and a control that opens a sheet needs that sheet at z-46
@@ -676,7 +692,7 @@ better kept right by the people who teach there than left wrong. One
 `studio_managers` row changes that. From the first manager on, the studio is
 claimed: only its managers (and `currentAdmin()`, who must be able to fix a gym
 that locks itself out) may edit, everyone else gets the Suggest an edit door
-they already had, and the page says "Kept by the studio" so the missing pencil
+they already had, and the page says "Verified studio" so the missing pencil
 has a reason. `studioAccess()` in `src/lib/studioaccess.ts` is the one answer
 both the page and `updateStudio` ask, so the button and the action can't
 disagree. It's a join table rather than a column because a gym is a place of

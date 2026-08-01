@@ -192,7 +192,7 @@ export async function StudioView({
                   trusting. */}
               {access.claimed && (
                 <span className="kindtag studiokept">
-                  <Icon name="verified" size={13} /> Kept by the studio
+                  <Icon name="verified" size={13} /> Verified studio
                 </span>
               )}
             </div>

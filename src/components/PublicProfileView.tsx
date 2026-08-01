@@ -490,8 +490,8 @@ export async function PublicProfileView({
           {tab === "about" ? about : tab === "studios" && studios ? studios : schedule}
         </ProfileTabs>
         </FollowSync>
-        {/* The primary action holds the thumb spot in solid brand orange;
-            sharing sits up top as the tinted pill. Schedule section only:
+        {/* The primary action holds the thumb spot, in the same glass the
+            Discover filter wears; sharing sits up top as the tinted pill. Schedule section only:
             About and Contact aren't places you add a class from. */}
         {isOwner && tab === "schedule" && (
           <Link className="fab" href="/app?add=1">

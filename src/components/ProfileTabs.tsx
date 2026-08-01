@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { ProfileShare } from "@/components/ProfileShare";
 import { useEffect, useRef, type ReactNode } from "react";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
@@ -154,7 +155,13 @@ export function ProfileTabs({
             </BackLink>
           </div>
         )}
-        {ownerTop && <div className="ownertop">{ownerTop}</div>}
+        {/* Across from the back control, in the same shape: everybody can hand
+            this page on, and until now only its owner could. Whatever else the
+            corner holds (a coach's gear, a studio's dots) sits inside it. */}
+        <div className="ownertop">
+          {ownerTop}
+          <ProfileShare path={base} name={name} />
+        </div>
         {/* Left aligned along the bottom: what they are, who they are, what
             they do. The badge leads because it's the one word that says which
             side of the app you're looking at. */}

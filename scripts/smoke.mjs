@@ -1898,9 +1898,16 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   if (await page.locator(".settingsbtn").count())
     fail("the app header should carry no gear anywhere");
   await page.locator(".ownergear").waitFor();
-  // Only settings up there. Everything else is on the two pills below.
-  if ((await page.locator(".ownertop > *").count()) !== 1)
-    fail("the corner should carry the gear and nothing else");
+  // Settings and the share control, which every profile carries across from
+  // the back arrow. Nothing else: the rest is on the two pills below, and the
+  // three-dot menu that used to live here is a studio's alone.
+  await page.locator(".ownertop .profshare-btn").waitFor();
+  {
+    const controls = await page.locator(".ownertop a, .ownertop button").count();
+    if (controls !== 2) fail(`the corner should carry two controls, got ${controls}`);
+  }
+  if (await page.locator(".ownertop .ownermore").count())
+    fail("the three-dot menu belongs to a studio, not a person");
   if (await page.locator(".ownermore").count())
     fail("the three-dot menu should be gone from a person's profile");
   await page.locator(".ownergear").click();
@@ -2477,7 +2484,7 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
   // anonPage signed up as Sam. Claimed by somebody else, his menu loses the
   // pencil and the page says why.
   await anonPage.goto(BASE + "/s/ironbound-strength");
-  await anonPage.getByText("Kept by the studio").waitFor();
+  await anonPage.getByText("Verified studio").waitFor();
   if (await hasEditRow(anonPage))
     fail("a claimed studio should not offer the editor to a coach who doesn't run it");
   console.log("claimed studio is closed to other coaches ok (suggest, not edit)");
