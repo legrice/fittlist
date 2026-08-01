@@ -157,11 +157,11 @@ export function FeedAgenda({
       {picked.length > 0 && (
         <div className="feedfilterbar">
           <span className="feedfilter-txt">Classes with {names}</span>
-          {/* One coach has a page to go to; several don't, so the link makes
-              way for the way back out. */}
+          {/* One coach has a profile to go to; several don't, so the link
+              makes way for the way back out. */}
           {picked.length === 1 ? (
             <Link href={`/${picked[0].handle}?from=home`} className="feedfilter-link">
-              View page <Icon name="chevron_right" size={16} />
+              View profile <Icon name="chevron_right" size={16} />
             </Link>
           ) : (
             <button className="feedfilter-link" onClick={() => setSel(new Set())}>
