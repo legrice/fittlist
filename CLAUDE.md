@@ -103,6 +103,10 @@ rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
   npm run start > server.log 2>&1 &
 node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, swap, count
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/plans-smoke.mjs      # your plans: the shared rows, your own class
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -420,6 +424,31 @@ badge says which: Coach, Member, Studio. What used to be three headers is one,
 and three headers is how a member's page ended up looking like a lesser version
 of a coach's.
 
+**The hero says the name, what they do and where, and nothing else.** There
+is no Coach/Member/Studio tag above the name and no availability tag beside it:
+a row of small badges over a photograph was the first thing to go when the page
+got busy, and "Coach" told nobody anything the schedule under it didn't. What
+they do and where they are share one line (`.profmeta`, a middot between them,
+no pin), because two stacked lines under a name is a paragraph nobody reads.
+Availability still does its work in Discover's filter and in whether there is
+anything to say when somebody writes in; it is a status, not a label to wear.
+The only badge left on any hero is a studio's Verified, which is not a "what
+kind of page" label but the reason the pencil is missing. Nothing floating over
+the picture carries a drop shadow, and the header's icons are flat white with
+no glass behind them: a hairline `rgba(255,255,255,.18)` bottom border on
+`.pub .brandbar` is what separates it from the photograph instead.
+
+**Signing in puts you back where you were.** `src/lib/afterauth.ts` is one pair
+of functions over one sessionStorage key: `rememberAfterAuth` on the way in,
+`takeAfterAuth` once, at the end. The header pill on a profile carries
+`?next=/{handle}`, `AuthFlow` reads it on mount, and whichever ending the flow
+has (straight through, or three steps of the wizard) consumes it there. It is
+not a query string all the way down because the way in is a sheet, a passkey
+prompt and sometimes a wizard, and the first step that forgot to pass it on
+would drop somebody silently. The word is "Sign in", everywhere, including the
+errors: it covers coming back and arriving for the first time, and two words
+for one door is two doors.
+
 **The profile leads with the photo, full bleed.** `.profhero` runs to both
 edges and up under the app bar at 65vh, with the tags, name, tagline, city and
 both action pills stacked left along the bottom over it. The scrim exists only
@@ -500,13 +529,23 @@ It used to read the brandbar's height on mount and hold that much space, which
 against a header that no longer pins would have left a band of paper under the
 tabs. If anything ever pins above it again, that measurement comes back.
 
+**The hero's top row shares the page's gutter, and it is a flex child to get
+there.** `.profback` and `.ownertop` sit in `.profhero-top`, the hero's first
+child, pushed apart by `justify-content` and holding the name down with
+`margin-bottom: auto`. They used to be absolute corners 6px from the viewport
+edge while the wordmark above and the name below sat on the page's 18px gutter,
+and no offset written into that rule could have matched it: the hero is full
+bleed, so a percentage there resolves against the viewport, while the gutter is
+whatever the parent column works out. Inside the hero's own padding they line
+up by construction, at 390px and at 1280px alike.
+
 **The hero's two corner slots must not own a stacking layer.** `.profback` and
 `.ownertop` are positioned but carry no `z-index`, on purpose. They hold
 arbitrary controls, and a control that opens a sheet needs that sheet at z-46
 over the z-45 tab bar; a `z-index: 2` on the slot trapped it in a layer of its
 own, and the studio's dots opened an editor whose Save button could not be
-tapped. DOM order already paints both slots over the picture. This is the same
-trap the account view has, where the fix is to portal instead.
+tapped. `position: relative` on the row is what paints it over the picture.
+This is the same trap the account view has, where the fix is to portal instead.
 
 **Your own profile is the You tab, and it is the one profile that keeps the tab
 bar.** Somebody else's has none: it is a page you visited, and the arrow on the
@@ -916,6 +955,12 @@ points at exactly that. A server-rendered list keeps real `href`s and wraps in
 `classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
 the next date it runs) can't drift between them.
 
+**The word is "add", never "save".** A class goes into your plans, the pill
+says Add, the note says Added, and the row that offers the calendar feed says
+"the classes you added". "Saved" is what a form does and what happens to an
+image, and using it for a class made the list sound like a folder rather than
+a plan.
+
 **The control that puts a class in your plans is a calendar, not a heart.**
 A heart says favourite and means "I like this"; what the tap actually does is
 put the class on a list called Plans, which is a tab with a calendar on it. So
@@ -932,6 +977,34 @@ The tick is a hole in one `fill-rule: evenodd` path instead, so the whole thing
 is `currentColor` and works on the dark pill, the dark toast, and whatever comes
 next. Nothing in CSS forces a fill on it any more; if that rule comes back it
 will paint over the tick.
+
+**One class row, on every list of them.** `src/components/Agenda.tsx` is the
+day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
+Following and Your plans render it. They had drifted into two designs for one
+idea: a card with the coach's face and the time down the right on one tab, a
+flat sub-line with no face at all on the other, and a member flipping between
+them was reading two apps. What wraps a row still differs, which is why the
+caller passes a render function rather than a flag: Following wraps it in
+`SwipeGoing`, Your plans puts the remove X beside it. The X is a sibling and
+not a child because a button inside a link is not a thing.
+
+**One of your own can be opened, changed and handed on as a picture.** A
+personal class had no page behind it and so no way in at all: a row somebody
+had typed out in full was grey text they could only delete. `PlanSheet` wears
+the class overlay (same gesture, same kind of row, so they ought to feel alike)
+and offers the two things there are: `Adder` again with `personal.editId` set,
+and the same `ShareCardSheet` a public class uses, pointed at
+`/api/card/plan/{id}`. That route is the one thing that can leave, and it
+leaves as a file: it is drawn only behind the owner's session, there is no URL
+anyone else can open, and posting the picture afterwards is theirs to decide,
+which is the same deal as a photo out of the camera roll. The card itself is
+drawn in `src/lib/cardimage.tsx` rather than in either route, because a coach's
+class and one of your own make the same picture from a different row.
+
+An edit is one row moving, not a set being rewritten: `updatePersonalClass`
+takes the first day picked and the pills go single-select, the same way a gym's
+rota slot behaves and for the same reason. Nothing points at a personal row the
+way a Going mark points at a class, so there is no delete-and-reinsert here.
 
 **Your week is a shortlist, not a calendar.** `/week`, the first tab, lists
 only the classes someone added, from today forward, and empties itself as the

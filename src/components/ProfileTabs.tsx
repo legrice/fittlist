@@ -38,7 +38,7 @@ export function ProfileTabs({
   photo,
   color,
   actions,
-  avail,
+  badges,
   ownerTop,
   backTo,
   stickAction,
@@ -66,9 +66,12 @@ export function ProfileTabs({
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
-  /** The badges above the name: what this is, and anything about it that
-   *  changes (a coach taking clients, a studio keeping its own page). */
-  avail: ReactNode | null;
+  /** Anything that has to sit above the name. Only a studio uses it now, for
+   *  the Verified badge that explains why the pencil is missing. The Coach /
+   *  Member / Studio tag and the availability tag came off all three: the page
+   *  is a photograph of a person with their name on it, and three chips over
+   *  the top of that is furniture in front of the thing you came to see. */
+  badges: ReactNode | null;
   /** Top right of the header: a coach's settings gear, a studio's dots.
    *  Everything else lives on the pills under the name. */
   ownerTop?: ReactNode;
@@ -155,33 +158,57 @@ export function ProfileTabs({
             carries no tab bar any more. It pops to whatever is underneath, and
             falls back to the named destination only on a cold open, where
             "wherever you came from" is somebody else's website. */}
-        {backTo && (
-          <div className="profback">
-            <BackLink
-              className="evback"
-              href={backTo.href}
-              label={backTo.label}
-              anywhere
-              notUnder={base}
-            >
-              <Icon name="arrow_back" size={21} />
-            </BackLink>
+        {/* The top row, and a flex child rather than two absolute corners: the
+            hero already indents its own content to the page's gutter, so a row
+            inside that padding lands on the same left and right edges as the
+            wordmark above it and the name below. Positioned at the corners it
+            was 6px off both, at every width, and no arithmetic here could have
+            matched a gutter the parent works out. */}
+        {(backTo || ownerTop) && (
+          <div className="profhero-top">
+            {/* Always there when there is anywhere to go, because it is the
+                only way off this page: a profile carries no tab bar any more.
+                It pops to whatever is underneath, and falls back to the named
+                destination only on a cold open, where "wherever you came from"
+                is somebody else's website. */}
+            <div className="profback">
+              {backTo && (
+                <BackLink
+                  className="evback"
+                  href={backTo.href}
+                  label={backTo.label}
+                  anywhere
+                  notUnder={base}
+                >
+                  <Icon name="arrow_back" size={21} />
+                </BackLink>
+              )}
+            </div>
+            {/* A coach's gear, a studio's dots. Nothing else: handing the page
+                on moved down to sit with the other two things you can do about
+                this person, rather than in a corner opposite the way out. */}
+            {ownerTop && <div className="ownertop">{ownerTop}</div>}
           </div>
         )}
-        {/* A coach's gear, a studio's dots. Nothing else: handing the page on
-            moved down to sit with the other two things you can do about this
-            person, rather than in a corner opposite the way out. */}
-        {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {/* Left aligned along the bottom: what they are, who they are, what
             they do. The badge leads because it's the one word that says which
             side of the app you're looking at. */}
         <div className="profhero-txt">
-          {avail}
+          {badges}
           <h1 className="profname">{name}</h1>
-          {title.trim() && <p className="proftitle">{title.trim()}</p>}
-          {location.trim() && (
-            <p className="profwhere">
-              <Icon name="place" size={14} /> {location.trim()}
+          {/* What they do and where, on one line and quieter than the name.
+              Two stacked lines under a big name was three sizes of text in a
+              column; the pin came off because "Jersey City, NJ" is already
+              plainly a place and the icon was only there to say so. */}
+          {(title.trim() || location.trim()) && (
+            <p className="profmeta">
+              {title.trim() && <span className="proftitle">{title.trim()}</span>}
+              {title.trim() && location.trim() && (
+                <span className="profmeta-sep" aria-hidden="true">
+                  &middot;
+                </span>
+              )}
+              {location.trim() && <span className="profwhere">{location.trim()}</span>}
             </p>
           )}
           {/* On the image, under the name: the things you can do about this

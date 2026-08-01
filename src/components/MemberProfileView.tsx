@@ -118,7 +118,7 @@ export async function MemberProfileView({
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
-        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={user.handle ?? ""} />}
+        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />}
         {/* The same header a coach and a studio wear. A member's page was the
             odd one out: a small circle, a centred name, and none of the shape
             that makes the other two read as the same app. */}
@@ -132,13 +132,8 @@ export async function MemberProfileView({
           photo={user.photo}
           color={avatarColor(user)}
           backTo={backTo}
-          avail={
-            <div className="profhero-tags">
-              {/* Member, not follower: that names a relationship rather than a
-                  population, and a coach who follows two coaches is one too. */}
-              <span className="kindtag">Member</span>
-            </div>
-          }
+          // Nothing above the name; see PublicProfileView.
+          badges={null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

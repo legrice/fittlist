@@ -51,7 +51,7 @@ import {
   Settings, ShieldCheck, Zap } from "lucide-react";
 
 /**
- * A calendar with the tick cut out of it: the saved state of "this is in my
+ * A calendar with the tick cut out of it: the added state of "this is in my
  * plans". Lucide's CalendarCheck is an outline, and filling it swallows the
  * tick; drawing the tick on top would mean knowing what colour it is sitting
  * on, which the icon can't know and shouldn't have to. So the tick is a hole

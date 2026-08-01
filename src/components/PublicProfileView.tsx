@@ -373,7 +373,7 @@ export async function PublicProfileView({
           // off.
           <AppChrome userId={viewerId} bar={isOwner} headerNav={false} active={isOwner ? "you" : undefined} />
         ) : (
-          <PublicTopBar handle={handle} />
+          <PublicTopBar handle={handle} next={`/${handle}`} />
         )}
         {/* The Follow control renders twice below (the header pill and the
             sticky bar's compact copy); this provider is the one place the
@@ -458,23 +458,12 @@ export async function PublicProfileView({
               </Link>
             ) : null
           }
-          avail={
-            <div className="profhero-tags">
-              {/* Says which side of the app this person is on. Members have
-                  the same shape of page now, so the page itself no longer
-                  answers it. */}
-              <span className="kindtag">Coach</span>
-              {/* Whether they're taking private clients, back on the page
-                  itself. It used to be a dot on the profile photo with the
-                  words in the photo overlay, and the hero took both away;
-                  a status nobody can read is the same as no status. */}
-              {user.availability && (
-                <span className={`kindtag availtag availtag-${user.availability}`}>
-                  {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
-                </span>
-              )}
-            </div>
-          }
+          // Nothing above the name. The Coach tag said which side of the app
+          // this is, which the page's own shape already says, and the
+          // availability tag put a status chip over somebody's photograph.
+          // Whether they take private clients is still on the account and
+          // still gates the Contact pill; it just isn't a badge any more.
+          badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
           stickAction={

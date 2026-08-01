@@ -134,7 +134,7 @@ console.log("the merged week loses their classes ok");
 // The follow row went with the block, and so did the mark on their class.
 await m.goto(BASE + "/week");
 await m.waitForTimeout(800);
-if ((await m.locator(".weekrow").count()) !== 0)
+if ((await m.locator(".ps-erow").count()) !== 0)
   fail("a class the blocked member had added is still in their week");
 console.log("their added class is cleared ok");
 

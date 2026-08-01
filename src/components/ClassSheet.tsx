@@ -344,7 +344,7 @@ export function ClassSheet({
             </>
           )}
 
-          {/* Owner only: who saved this occurrence. */}
+          {/* Owner only: who added this occurrence. */}
           {c.roster && (
             <div className="classsheet-roster">
               <h3 className="classsheet-roster-h">

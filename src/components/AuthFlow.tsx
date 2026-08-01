@@ -14,6 +14,7 @@ import {
   requestMagicLink,
 } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
+import { rememberAfterAuth, takeAfterAuth } from "@/lib/afterauth";
 import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
@@ -104,11 +105,15 @@ export function AuthFlow({
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
   }, []);
   // Arriving from a coach's page with a door already chosen: "?join=login"
-  // opens the log-in sheet, "?join=signup" the sign-up one. Tapping Log in on
+  // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
   // a profile and landing on the marketing page would just be a second tap.
   useEffect(() => {
     const join = search.get("join");
     if (join === "login" || join === "signup") setSheet(join);
+    // The page they left, kept for the far side of the flow. It goes into
+    // storage now because the flow from here is a sheet, a passkey prompt and
+    // sometimes a three-step wizard, and none of those carry a query string.
+    rememberAfterAuth(search.get("next"));
     // Read once on arrival; changing the sheet afterwards is the user's job.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -123,7 +128,10 @@ export function AuthFlow({
     pendingFan.current = fan;
     if (fan) setRole("fan");
     if (needsProfile) setStage("claim");
-    else router.push(fans || fan ? "/feed" : "/app");
+    // Somebody who tapped Follow on a coach's page came here to do that, not
+    // to read their own feed. The wizard consumes it instead when there's one
+    // still to come, so this only reads it when the flow ends here.
+    else router.push(takeAfterAuth() ?? (fans || fan ? "/feed" : "/app"));
   };
 
   const submitPassword = () => {
@@ -325,7 +333,7 @@ export function AuthFlow({
                 here to do, so they sit together. Everything else is a fallback
                 and lives below them. */}
             <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
-              Already have an account? <b>Log in</b>
+              Already have an account? <b>Sign in</b>
             </button>
             {/* Asking for an invite is a real action with a form behind it, so
                 it gets a button rather than a second line of link text.
@@ -457,7 +465,7 @@ export function AuthFlow({
         )}
       </div>
 
-      {/* email + password bottom sheet (sign up or log in) */}
+      {/* email + password bottom sheet (sign up or sign in) */}
       {sheet && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
           <div className="sheet">
@@ -469,7 +477,7 @@ export function AuthFlow({
                 ? invited || inviter
                   ? "Claim your invite"
                   : "Sign up with email"
-                : "Log in"}
+                : "Sign in"}
             </h2>
             {fans && sheet === "signup" && (
               <div className="seg roleseg">
@@ -554,10 +562,10 @@ export function AuthFlow({
             )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={submitPassword} disabled={pending}>
-                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
+                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Sign in"}
               </button>
             </div>
-            {/* The other door, under the button. Someone who opened Log in from
+            {/* The other door, under the button. Someone who opened Sign in from
                 a coach's page and has never been here before had nothing to tap
                 but the close button: the way to sign up was back where they
                 came from. Each sheet names the one it isn't. */}
@@ -570,7 +578,7 @@ export function AuthFlow({
             >
               {sheet === "signup" ? (
                 <>
-                  Already have an account? <b>Log in</b>
+                  Already have an account? <b>Sign in</b>
                 </>
               ) : (
                 <>
@@ -589,7 +597,7 @@ export function AuthFlow({
             <div className="bioicon"><Icon name="fingerprint" size={30} /></div>
             <h2>Sign in faster next time?</h2>
             <p className="lead">
-              Add Face ID, Touch ID, or your fingerprint and skip the password next time you log in.
+              Add Face ID, Touch ID, or your fingerprint and skip the password next time you sign in.
             </p>
             <div className="publishwrap">
               <button className="btn si" onClick={enrollBiometric} disabled={pending}>

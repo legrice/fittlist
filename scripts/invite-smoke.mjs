@@ -117,7 +117,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
     await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
     await ad.getByPlaceholder("Password").fill("admin-pass-123");
-    await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
     await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
     await ad.goto(BASE + "/admin");
     await ad.getByRole("button", { name: "Invites", exact: true }).click();
@@ -164,7 +164,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await ad2.locator(".obloginlink", { hasText: "Already have an account" }).click();
     await ad2.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
     await ad2.getByPlaceholder("Password").fill("admin-pass-123");
-    await ad2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad2.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
     await ad2.getByRole("button", { name: "Not now" }).click().catch(() => {});
     await ad2.goto(BASE + "/admin");
     await ad2.getByRole("heading", { name: "Wants to coach" }).waitFor();
@@ -252,7 +252,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.locator(".obloginlink", { hasText: "Already have an account" }).click();
   await pg.getByPlaceholder("you@example.com").fill("riley@example.com");
   await pg.getByPlaceholder("Password").fill("invited-pass-123");
-  await pg.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await pg.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
   await pg.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await pg.getByText("Pick your link.").waitFor();
   await pg.getByPlaceholder("Your name").fill("Riley Requestor");
@@ -374,10 +374,10 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     const op = await other.newPage();
     op.setDefaultTimeout(15000);
     await op.goto(BASE + "/");
-    await op.getByRole("button", { name: /Log in/i }).first().click();
+    await op.getByRole("button", { name: /Sign in/i }).first().click();
     await op.getByPlaceholder("you@example.com").fill("riley@example.com");
     await op.getByPlaceholder("Password").fill("invited-pass-123");
-    await op.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await op.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
     await op.waitForURL(/\/feed/);
     await op.waitForTimeout(900);
     if (await op.locator(".invbanner").count())
@@ -395,7 +395,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
   await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
   await ad.getByPlaceholder("Password").fill("admin-pass-123");
-  await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await ad.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
   await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await ad.goto(BASE + "/admin");
   await ad.getByRole("button", { name: "Invites", exact: true }).click();

@@ -6,6 +6,7 @@ import { LocationInput } from "@/components/LocationInput";
 import { updateProfile } from "@/app/actions/profile";
 import { completeOnboarding, setCoachStudios } from "@/app/actions/onboarding";
 import { createStudio } from "@/app/actions/studios";
+import { takeAfterAuth } from "@/lib/afterauth";
 import type { StudioDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
@@ -132,7 +133,9 @@ export function OnboardingWizard({
       }
       if (!fan) await setCoachStudios([...selected]);
       await completeOnboarding();
-      router.push(fan ? "/feed" : "/app");
+      // Back to whatever they were part way through, if signing in was in the
+      // middle of something. Set on the way in by AuthFlow.
+      router.push(takeAfterAuth() ?? (fan ? "/feed" : "/app"));
       router.refresh();
     });
   };

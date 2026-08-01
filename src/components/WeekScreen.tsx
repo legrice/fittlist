@@ -4,9 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
-import { removePersonalClass, type PersonalMatch } from "@/app/actions/personal";
-import { Adder } from "@/components/Adder";
+import {
+  removePersonalClass,
+  type PersonalDetail,
+  type PersonalMatch,
+} from "@/app/actions/personal";
+import { Adder, type AdderPrefill } from "@/components/Adder";
+import { Agenda, ClassRow } from "@/components/Agenda";
+import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
+import { PlanSheet } from "@/components/PlanSheet";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
@@ -47,6 +54,16 @@ export function WeekScreen({
   // meant the thing you booked through ClassPass arrived with no studio, no
   // description and no picture. It is the coach's own form now.
   const [addOpen, setAddOpen] = useState(false);
+  // One of your own, opened: it had no page behind it and so no way in at all.
+  const [plan, setPlan] = useState<string | null>(null);
+  // The same form again, this time on a row that already exists.
+  const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
+  // Just added one. A row in a list doesn't say that a picture of it exists,
+  // and the picture is the only thing one of your own can hand on, so the note
+  // offers it once rather than a toast that reports the save and leaves.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  // The same sheet, opened straight onto its card.
+  const [shareId, setShareId] = useState<string | null>(null);
   // A public class already sits at that day and time; offer the real one, and
   // keep the way back to "mine anyway" so the answer costs them nothing.
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
@@ -99,6 +116,14 @@ export function WeekScreen({
     });
   };
   const left = shown.reduce((n, d) => n + d.items.length, 0);
+  // One key per row, shared by the agenda item and the entry it came from: the
+  // shared row only carries what every list needs, and removing one still wants
+  // the whole thing.
+  type Entry = WeekDay["items"][number];
+  const rowKey = (i: Entry) => `${i.personal ? i.id : i.classId}|${i.iso}`;
+  const byKey: Record<string, Entry> = Object.fromEntries(
+    shown.flatMap((d) => d.items.map((i) => [rowKey(i), i] as const)),
+  );
 
   return (
     // The tabs layout is the shell now: header above, bar below, and its .pad
@@ -143,26 +168,50 @@ export function WeekScreen({
           </div>
         ) : (
           <>
-            <div className="weeklist">
-              {shown.map((d) => (
-                <div key={d.iso} className="weekday">
-                  <div className="ps-daycol">{d.label}</div>
-                  {d.items.map((i) => {
-                    const key = `${i.personal ? i.id : i.classId}|${i.iso}`;
-                    const body = (
-                      <>
-                        <span className="weekrow-nm">{i.name}</span>
-                        <span className="weekrow-sub">
-                          {i.hm}
-                          <span className="ps-ap">{i.ap}</span> · {i.durationMin} min
-                          {i.where ? ` · ${i.where}` : ""}
-                        </span>
-                        {i.coachName.trim() && <span className="weekrow-who">with {i.coachName}</span>}
+            {/* The same rows Following draws. A member flipping between the two
+                tabs is looking at one list of one kind of thing, and it used to
+                be two designs. ClassOpener catches the tap on a real class; a
+                personal one has no page, so it opens its own sheet. */}
+            <ClassOpener handle="">
+              <Agenda
+                days={shown.map((d) => ({
+                  iso: d.iso,
+                  label: d.label,
+                  items: d.items.map((i) => ({
+                    key: rowKey(i),
+                    name: i.name,
+                    hm: i.hm,
+                    ap: i.ap,
+                    durationMin: i.durationMin,
+                    where: i.where,
+                    coachName: i.coachName,
+                    coachPhoto: i.coachPhoto,
+                    coachColor: i.coachColor,
+                    // Yours alone, so the row says so rather than pretending to
+                    // a coach's page it hasn't got.
+                    tag: i.personal ? "Yours" : null,
+                    // No green ring here: on this screen every row is one they
+                    // added, and a mark on all of them says nothing.
+                    on: false,
+                    href: i.personal ? null : `/${i.handle}/${i.classId}?d=${i.iso}&from=week`,
+                    classId: i.personal ? undefined : i.classId,
+                    iso: i.iso,
+                    base: i.personal ? undefined : i.handle,
+                  })),
+                }))}
+                row={(item) => {
+                  const src = byKey[item.key];
+                  return (
+                    <>
+                      <ClassRow
+                        item={item}
+                        onClick={src.personal ? () => setPlan(src.id) : undefined}
+                      >
                         {/* People you both follow, going to the same one. The
                             whole payoff of following a member. */}
-                        {i.alsoGoing && i.alsoGoing.length > 0 && (
+                        {src.alsoGoing && src.alsoGoing.length > 0 && (
                           <span className="weekrow-also">
-                            {i.alsoGoing.slice(0, 3).map((p, idx) => (
+                            {src.alsoGoing.slice(0, 3).map((p, idx) =>
                               p.photo ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img key={idx} className="weekrow-alsoav" src={p.photo} alt="" />
@@ -175,58 +224,41 @@ export function WeekScreen({
                                 >
                                   {(p.name.charAt(0) || "?").toUpperCase()}
                                 </span>
-                              )
-                            ))}
+                              ),
+                            )}
                             <span className="weekrow-alsotxt">
-                              {i.alsoGoing.length === 1
-                                ? `${i.alsoGoing[0].name.split(/\s+/)[0]} is going too`
-                                : `${i.alsoGoing[0].name.split(/\s+/)[0]} and ${
-                                    i.alsoGoing.length - 1
+                              {src.alsoGoing.length === 1
+                                ? `${src.alsoGoing[0].name.split(/\s+/)[0]} is going too`
+                                : `${src.alsoGoing[0].name.split(/\s+/)[0]} and ${
+                                    src.alsoGoing.length - 1
                                   } more are going too`}
                             </span>
                           </span>
                         )}
-                      </>
-                    );
-                    return (
-                      <div key={key} className="weekrow">
-                        <span
-                          className="ps-accent weekrow-accent"
-                          style={{ background: i.coachColor }}
-                          aria-hidden="true"
-                        />
-                        {i.personal ? (
-                          /* Yours alone: no class page behind it, so no link. */
-                          <span className="weekrow-main">{body}</span>
-                        ) : (
-                          <Link className="weekrow-main" href={`/${i.handle}/${i.classId}?d=${i.iso}&from=week`}>
-                            {body}
-                          </Link>
-                        )}
-                        {/* Every row can leave. A calendar's entries don't; a
-                            list's do, and that difference is most of what keeps
-                            this from reading as one. */}
-                        <button
-                          className="weekrow-x"
-                          aria-label={`Remove ${i.name}`}
-                          onClick={() =>
-                            setConfirm({
-                              classId: i.classId,
-                              iso: i.iso,
-                              key,
-                              name: i.name,
-                              personalId: i.personal ? i.id : undefined,
-                            })
-                          }
-                        >
-                          <Icon name="close" size={16} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+                      </ClassRow>
+                      {/* Every row can leave. A calendar's entries don't; a
+                          list's do, and that difference is most of what keeps
+                          this from reading as one. */}
+                      <button
+                        className="weekrow-x"
+                        aria-label={`Remove ${src.name}`}
+                        onClick={() =>
+                          setConfirm({
+                            classId: src.classId,
+                            iso: src.iso,
+                            key: item.key,
+                            name: src.name,
+                            personalId: src.personal ? src.id : undefined,
+                          })
+                        }
+                      >
+                        <Icon name="close" size={16} />
+                      </button>
+                    </>
+                  );
+                }}
+              />
+            </ClassOpener>
             {namedCoach && (
               <button className="weekinvite" onClick={() => setInviteOpen(true)}>
                 Is {namedCoach.split(/\s+/)[0]} on fittlist? Send them your invite link
@@ -243,7 +275,7 @@ export function WeekScreen({
       {shown.length > 0 && (
         <div className="classoverlay-cta weekshare">
           <button className="ovcta-btn" onClick={() => setShare(true)}>
-            <Icon name="campaign" size={17} /> Share your schedule
+            <Icon name="campaign" size={17} /> Share your plans
           </button>
         </div>
       )}
@@ -258,10 +290,11 @@ export function WeekScreen({
           personal={{ canCoach }}
           onClose={() => setAddOpen(false)}
           onToast={toast}
-          onPublished={(msg) => {
+          onPublished={(msg, planId) => {
             setAddOpen(false);
-            toast(msg);
             router.refresh();
+            if (planId) setJustAdded(planId);
+            else toast(msg);
           }}
           onDeleted={(msg) => {
             setAddOpen(false);
@@ -274,6 +307,89 @@ export function WeekScreen({
             setAddOpen(false);
             setMatch({ m, again });
           }}
+        />
+      )}
+      {plan && (
+        <PlanSheet
+          id={plan}
+          onClose={() => setPlan(null)}
+          onToast={toast}
+          onEdit={(p) => {
+            setPlan(null);
+            setEdit({
+              id: p.id,
+              prefill: {
+                name: p.name,
+                classType: p.classType,
+                description: p.description,
+                image: p.image,
+                startTime: p.startTime,
+                durationMin: p.durationMin,
+                studioId: p.studioId,
+                location: p.location,
+                withWho: p.withWho,
+                links: p.links,
+                days: [p.dayOfWeek],
+                dayOfWeek: p.dayOfWeek,
+                endsOn: p.endsOn,
+                specificDate: p.specificDate,
+              },
+            });
+          }}
+        />
+      )}
+      {edit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach, editId: edit.id }}
+          prefill={edit.prefill}
+          onClose={() => setEdit(null)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
+            setEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+        />
+      )}
+      {/* The same shape the follow hint uses: a line, one thing to do about
+          it, and a way to say no. */}
+      {justAdded && (
+        <div className="folhint weekadded" role="status" aria-live="polite">
+          <p className="folhint-t">Added to your plans.</p>
+          <div className="folhint-row">
+            <button
+              className="folhint-go"
+              onClick={() => {
+                setShareId(justAdded);
+                setJustAdded(null);
+              }}
+            >
+              Share it as a picture
+            </button>
+            <button className="folhint-off" onClick={() => setJustAdded(null)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {shareId && (
+        <PlanSheet
+          id={shareId}
+          share
+          onClose={() => setShareId(null)}
+          onToast={toast}
+          onEdit={() => setShareId(null)}
         />
       )}
       {match && (

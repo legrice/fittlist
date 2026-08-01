@@ -168,7 +168,7 @@ export async function StudioView({
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
             dead end for anyone without an account. */}
-        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar />}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}
@@ -189,15 +189,16 @@ export async function StudioView({
           photo={s.photo}
           color={avatarColor({ id: s.id })}
           backTo={backTo}
-          avail={
-            <div className="profhero-tags">
-              <span className="kindtag">Studio</span>
-              {/* Said once, quietly: it explains why the pencil is gone for
-                  everyone else, and it is the thing that makes the page worth
-                  trusting. Tapping it says so in full, and offers the way in to
-                  anyone who runs a place of their own. */}
-              {access.claimed && <VerifiedBadge studioId={s.id} name={s.name} />}
-            </div>
+          badges={
+            /* The Studio tag came off with the other two, but Verified stays:
+               it is not a label saying what kind of page this is, it is the
+               reason the pencil is missing for everyone else, and tapping it
+               says so. A page that can be trusted has to say why. */
+            access.claimed ? (
+              <div className="profhero-tags">
+                <VerifiedBadge studioId={s.id} name={s.name} />
+              </div>
+            ) : null
           }
           ownerTop={
             /* Everything you can do with a studio, behind one set of dots:

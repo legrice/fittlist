@@ -152,7 +152,7 @@ export function DiscoverList({
         </button>
       </div>
 
-      {/* The same floating pill a class uses for Book and Save: the one thing
+      {/* The same floating pill a class uses for Book and Add: the one thing
           you reach for over a long list, in the place your thumb already is. */}
       <button
         type="button"

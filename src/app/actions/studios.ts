@@ -231,7 +231,7 @@ export async function reportStudio(
   noteRaw = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const reason = reasonRaw.trim().slice(0, 60);
   const note = noteRaw.trim().slice(0, 300);
   if (!reason) return { ok: false, error: "Pick a reason." };

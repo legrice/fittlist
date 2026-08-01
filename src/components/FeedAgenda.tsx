@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
+import { Agenda, AgendaAvatar, ClassRow } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { ClassSheet } from "@/components/ClassSheet";
@@ -105,16 +106,6 @@ export function FeedAgenda({
     .map((d) => ({ ...d, items: d.items.filter((i) => sel.size === 0 || sel.has(i.coachId)) }))
     .filter((d) => d.items.length > 0);
 
-  const avatar = (photo: string | null, name: string, cls: string, color: string) =>
-    photo ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img className={cls} src={photo} alt="" />
-    ) : (
-      <span className={`${cls} ${cls}-empty`} style={{ background: color }} aria-hidden="true">
-        {(name.trim().charAt(0) || "?").toUpperCase()}
-      </span>
-    );
-
   return (
     <>
       {/* No coach has anything coming up, so there is nothing to filter. */}
@@ -145,7 +136,7 @@ export function FeedAgenda({
             aria-pressed={sel.has(c.id)}
             onClick={() => toggle(c.id)}
           >
-            {avatar(c.photo, c.name, "feedav-img", c.color)}
+            <AgendaAvatar photo={c.photo} name={c.name} cls="feedav-img" color={c.color} />
             <span className="feedav-nm">{c.name.trim().split(/\s+/)[0]}</span>
           </button>
         ))}
@@ -181,65 +172,45 @@ export function FeedAgenda({
           </p>
         </div>
       ) : (
-        <div className="ps-week ps-agenda feedagenda">
-          {shown.map((d) => (
-            <div key={d.iso} className="ps-daygroup">
-              <div className="ps-daycol">{d.label}</div>
-              <div className="ps-daycards">
-                {d.items.map((i) => {
-                  const on = going[`${i.classId}|${d.iso}`];
-                  return (
-                    <SwipeGoing
-                      key={`${d.iso}-${i.classId}`}
-                      going={on}
-                      onToggle={() => toggleGoing(i.classId, d.iso, !on)}
-                    >
-                      <button
-                        className={`ps-event${on ? " goingon" : ""}`}
-                        onClick={() => setOpen({ handle: i.handle, classId: i.classId, iso: d.iso })}
-                      >
-                        <span
-                          className="ps-accent"
-                          style={{ background: i.coachColor }}
-                          aria-hidden="true"
-                        />
-                        {/* Who first, then what, then where — on a merged week
-                            the coach is how you place the class. */}
-                        <span className="ps-ebody">
-                          <span className="ps-ecoach">
-                            {avatar(i.coachPhoto, i.coachName, "ps-ecoachav", i.coachColor)}
-                            <span className="ps-ecoach-txt">{i.coachName}</span>
-                            {i.coachId === meId && <span className="ps-youtag">You</span>}
-                          </span>
-                          <span className="ps-enm">{i.name}</span>
-                          {/* No pin here. A merged row already carries the
-                              coach's face above the class name, and a second
-                              glyph on the line under it is one mark too many.
-                              Your own schedule keeps its pin: nothing else on
-                              that row competes for the eye. */}
-                          {i.where && <span className="ps-estudio ps-ewhere">{i.where}</span>}
-                        </span>
-                        <span className="ps-etimecol">
-                          {/* Level with the coach's name, above the time — the
-                              row reads who, then when, and Saved sits with the
-                              commitment rather than in the class title. */}
-                          {/* The control says Add and the note says Added to
-                              your plans, so the row says the same word. */}
-                          {on && <span className="ps-goingtag">Added</span>}
-                          <span className="ps-etime">
-                            {i.hm}
-                            <span className="ps-ap">{i.ap}</span>
-                          </span>
-                          <span className="ps-edur">{i.durationMin} min</span>
-                        </span>
-                      </button>
-                    </SwipeGoing>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        // The row is the shared one; what wraps it here is the swipe. No pin on
+        // the studio line: a merged row already carries the coach's face above
+        // the class name, and a second glyph under it is one mark too many.
+        <Agenda
+          className="feedagenda"
+          days={shown.map((d) => ({
+            iso: d.iso,
+            label: d.label,
+            items: d.items.map((i) => ({
+              key: i.classId,
+              name: i.name,
+              hm: i.hm,
+              ap: i.ap,
+              durationMin: i.durationMin,
+              where: i.where,
+              coachName: i.coachName,
+              coachPhoto: i.coachPhoto,
+              coachColor: i.coachColor,
+              you: i.coachId === meId,
+              // The control says Add and the note says Added to your plans, so
+              // the row says the same word.
+              tag: going[`${i.classId}|${d.iso}`] ? "Added" : null,
+              on: going[`${i.classId}|${d.iso}`],
+              classId: i.classId,
+              base: i.handle,
+            })),
+          }))}
+          row={(item, d) => (
+            <SwipeGoing
+              going={!!item.on}
+              onToggle={() => toggleGoing(item.classId!, d.iso, !item.on)}
+            >
+              <ClassRow
+                item={item}
+                onClick={() => setOpen({ handle: item.base!, classId: item.classId!, iso: d.iso })}
+              />
+            </SwipeGoing>
+          )}
+        />
       )}
 
       {open && (

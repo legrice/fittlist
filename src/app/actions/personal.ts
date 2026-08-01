@@ -4,8 +4,9 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { hiddenFrom } from "@/lib/blocks";
-import { runsOn, todayIso } from "@/lib/format";
+import { clockParts, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { personalNext } from "@/lib/week";
 import type { BookingLink } from "@/db/schema";
 
 // A class you go to, kept by you.
@@ -21,6 +22,8 @@ import type { BookingLink } from "@/db/schema";
 // says who wrote it down. A 1:1 in somebody's garage has no studio, so it
 // never travels; that is the same protection the coach path keeps by refusing
 // to log a private session.
+
+const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const MAX_ENTRIES = 30; // a week has room for a lot of training, not for a spreadsheet
 
@@ -51,9 +54,12 @@ export async function addPersonalClass(input: {
   endsOn?: string | null;
   /** They saw the match and want their own entry anyway. */
   force?: boolean;
-}): Promise<{ ok: boolean; error?: string; match?: PersonalMatch }> {
+  // `id` comes back when exactly one row was written: the screen offers to
+  // share it, and a picture needs to know which one. Several days at once is
+  // several rows and no single answer.
+}): Promise<{ ok: boolean; error?: string; match?: PersonalMatch; id?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const name = input.name.trim().slice(0, 80);
   if (!name) return { ok: false, error: "Give it a name." };
   const specificDate = input.specificDate?.trim() || null;
@@ -152,26 +158,29 @@ export async function addPersonalClass(input: {
     .slice(0, 6)
     .map((l) => ({ label: String(l.label ?? "").slice(0, 40), url: String(l.url).slice(0, 500) }));
 
-  await db.insert(schema.personalClasses).values(
-    days.map((dayOfWeek) => ({
-      userId,
-      name,
-      dayOfWeek,
-      startTime: input.startTime,
-      durationMin,
-      // A studio owns the "where", exactly as it does on a coach's class, so
-      // the free-text line is only ever the fallback.
-      location: studio ? "" : (input.location?.trim().slice(0, 120) ?? ""),
-      withWho: input.withWho?.trim().slice(0, 80) ?? "",
-      studioId: studio?.id ?? null,
-      classType,
-      description,
-      image,
-      links,
-      specificDate,
-      endsOn,
-    })),
-  );
+  const written = await db
+    .insert(schema.personalClasses)
+    .values(
+      days.map((dayOfWeek) => ({
+        userId,
+        name,
+        dayOfWeek,
+        startTime: input.startTime,
+        durationMin,
+        // A studio owns the "where", exactly as it does on a coach's class, so
+        // the free-text line is only ever the fallback.
+        location: studio ? "" : (input.location?.trim().slice(0, 120) ?? ""),
+        withWho: input.withWho?.trim().slice(0, 80) ?? "",
+        studioId: studio?.id ?? null,
+        classType,
+        description,
+        image,
+        links,
+        specificDate,
+        endsOn,
+      })),
+    )
+    .returning({ id: schema.personalClasses.id });
 
   // Into the studio's shared catalog, so the next person to add this class
   // gets the description and the picture rather than retyping them, and so a
@@ -206,12 +215,157 @@ export async function addPersonalClass(input: {
   }
 
   revalidatePath("/week");
+  return { ok: true, id: written.length === 1 ? written[0].id : undefined };
+}
+
+export type PersonalDetail = {
+  id: string;
+  name: string;
+  dayOfWeek: number;
+  dayLabel: string;
+  startTime: string;
+  hm: string;
+  ap: string;
+  durationMin: number;
+  location: string;
+  withWho: string;
+  studioId: string | null;
+  studioName: string | null;
+  classType: string | null;
+  description: string | null;
+  image: string | null;
+  links: BookingLink[];
+  specificDate: string | null;
+  endsOn: string | null;
+  /** The next date it runs, or null once it has been and gone. */
+  nextIso: string | null;
+};
+
+/** One of your own entries, for the sheet that opens when you tap it. Scoped
+ *  to the owner: nobody else has a reason to read it, and there is no page. */
+export async function personalDetail(id: string): Promise<PersonalDetail | null> {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [p] = await db
+    .select()
+    .from(schema.personalClasses)
+    .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)));
+  if (!p) return null;
+  const [studio] = p.studioId
+    ? await db.select().from(schema.studios).where(eq(schema.studios.id, p.studioId))
+    : [];
+  const { hm, ap } = clockParts(p.startTime);
+  const nextIso = personalNext(p);
+  return {
+    id: p.id,
+    name: p.name,
+    dayOfWeek: p.dayOfWeek,
+    dayLabel: DAY_FULL[p.dayOfWeek] ?? "",
+    startTime: p.startTime,
+    hm,
+    ap,
+    durationMin: p.durationMin,
+    location: p.location ?? "",
+    withWho: p.withWho ?? "",
+    studioId: p.studioId,
+    studioName: studio?.name ?? null,
+    classType: p.classType,
+    description: p.description,
+    image: p.image,
+    links: p.links ?? [],
+    specificDate: p.specificDate,
+    endsOn: p.endsOn,
+    nextIso,
+  };
+}
+
+/**
+ * Change one of your own entries.
+ *
+ * One row, edited in place: unlike a coach's weekly class this is never a set
+ * of weekday rows sharing a series, so there is nothing to delete and reinsert
+ * and no Going mark pointing at it. Moving it to another day moves this row.
+ */
+export async function updatePersonalClass(
+  id: string,
+  input: {
+    name: string;
+    days?: number[];
+    dayOfWeek?: number;
+    startTime: string;
+    durationMin: number;
+    location?: string;
+    withWho?: string;
+    studioId?: string | null;
+    classType?: string | null;
+    description?: string | null;
+    image?: string | null;
+    links?: BookingLink[];
+    specificDate?: string | null;
+    endsOn?: string | null;
+  },
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in first." };
+  const name = input.name.trim().slice(0, 80);
+  if (!name) return { ok: false, error: "Give it a name." };
+  const specificDate = input.specificDate?.trim() || null;
+  if (specificDate && !/^\d{4}-\d{2}-\d{2}$/.test(specificDate))
+    return { ok: false, error: "Pick a date." };
+  // One row stays one row, so an edit takes the first day picked rather than
+  // fanning out into several. Same reasoning as a gym's rota slot.
+  const dayOfWeek = specificDate
+    ? (new Date(`${specificDate}T00:00:00Z`).getUTCDay() + 6) % 7
+    : (input.days ?? (input.dayOfWeek === undefined ? [] : [input.dayOfWeek]))[0];
+  if (dayOfWeek === undefined) return { ok: false, error: "Pick a day." };
+  if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6)
+    return { ok: false, error: "Pick a day." };
+  if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Pick a time." };
+  const durationMin = Math.round(input.durationMin);
+  if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
+  const endsOn = specificDate ? null : input.endsOn?.trim() || null;
+  if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return { ok: false, error: "Pick an end date." };
+
+  const db = await getDb();
+  const [studio] = input.studioId
+    ? await db.select().from(schema.studios).where(eq(schema.studios.id, input.studioId))
+    : [];
+
+  const res = await db
+    .update(schema.personalClasses)
+    .set({
+      name,
+      dayOfWeek,
+      startTime: input.startTime,
+      durationMin,
+      location: studio ? "" : (input.location?.trim().slice(0, 120) ?? ""),
+      withWho: input.withWho?.trim().slice(0, 80) ?? "",
+      studioId: studio?.id ?? null,
+      classType: input.classType?.trim().slice(0, 40) || null,
+      description: input.description?.trim().slice(0, 600) || null,
+      image: input.image?.trim() || null,
+      links: (input.links ?? [])
+        .filter((l) => l?.url?.trim())
+        .slice(0, 6)
+        .map((l) => ({
+          label: String(l.label ?? "").slice(0, 40),
+          url: String(l.url).slice(0, 500),
+        })),
+      specificDate,
+      endsOn,
+    })
+    .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)))
+    .returning({ id: schema.personalClasses.id });
+  if (!res.length) return { ok: false, error: "That class isn't there any more." };
+
+  revalidatePath("/week");
   return { ok: true };
 }
 
 export async function removePersonalClass(id: string): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   await db
     .delete(schema.personalClasses)

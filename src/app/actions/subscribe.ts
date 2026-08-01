@@ -90,10 +90,10 @@ export async function followTrainer(
 ): Promise<{ ok: boolean; error?: string; requested?: boolean }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Log in first." };
+  if (!me) return { ok: false, error: "Sign in first." };
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!trainer) return { ok: false, error: "Page not found." };
   if (trainer.id === userId) return { ok: false, error: "That's your own page." };
@@ -181,7 +181,7 @@ export async function followTrainer(
 export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; error?: string }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -252,7 +252,7 @@ export async function answerFollowRequest(
 ): Promise<{ ok: boolean; error?: string }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [req] = await db
     .select()

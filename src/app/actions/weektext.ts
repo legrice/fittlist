@@ -18,7 +18,7 @@ import { getSessionUserId } from "@/lib/session";
 // Public classes only. A private client session is not for the group chat.
 export async function myWeekText(): Promise<{ ok: boolean; text?: string; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db
     .select({

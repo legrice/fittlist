@@ -1012,7 +1012,7 @@ async function tellAboutDuplicate(
       )
   ).filter((c) => c.name.trim().toLowerCase() === key);
   if (!theirs.length) return;
-  const body = `${studio.name} runs ${row.name} on ${DAYS[row.dayOfWeek]} at ${fmtTime(row.startTime)} now. Your own copy is hidden so nobody sees it twice. Hand it over on your schedule and anyone who saved yours keeps their spot.`;
+  const body = `${studio.name} runs ${row.name} on ${DAYS[row.dayOfWeek]} at ${fmtTime(row.startTime)} now. Your own copy is hidden so nobody sees it twice. Hand it over on your schedule and anyone who added yours keeps their spot.`;
   const [already] = await db
     .select({ id: schema.notifications.id })
     .from(schema.notifications)

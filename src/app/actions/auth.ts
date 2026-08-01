@@ -113,12 +113,12 @@ export async function setPassword(
   currentPassword: string = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const problem = passwordProblem(newPassword);
   if (problem) return { ok: false, error: problem };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (!user) return { ok: false, error: "Session expired. Sign in again." };
   if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
     return { ok: false, error: "Current password is incorrect." };
   }
@@ -134,12 +134,12 @@ export async function changeEmail(
   currentPassword: string = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const email = newEmailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (!user) return { ok: false, error: "Session expired. Sign in again." };
   if (email === user.email) return { ok: true };
   if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
     return { ok: false, error: "Enter your current password to change your email." };
@@ -289,10 +289,10 @@ export async function beginPasskeyRegistration(): Promise<
   { ok: true; options: PublicKeyCredentialCreationOptionsJSON } | { ok: false; error: string }
 > {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Log in first." };
+  if (!user) return { ok: false, error: "Sign in first." };
   const existing = await db
     .select()
     .from(schema.credentials)
@@ -320,7 +320,7 @@ export async function finishPasskeyRegistration(
   label: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const challenge = await takeChallenge();
   if (!challenge) return { ok: false, error: "That took too long. Try again." };
   const { rpID, origin } = await rpInfo();
@@ -403,10 +403,10 @@ export async function finishPasskeyLogin(
 // has no schedule behind it. Reversible from /you, which offers coaching.
 export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
   // A claimed handle means they're already a coach with a live page; don't
   // quietly demote them.
   if (me.handle) return { ok: false, error: "You already have a page." };
@@ -422,10 +422,10 @@ export async function requestCoaching(
   noteRaw = "",
 ): Promise<{ ok: boolean; pending?: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
   if (me.kind !== "fan") return { ok: true }; // already a coach; nothing to ask
   if (!me.handle) {
     return { ok: false, error: "Set up your profile first, so your page has a link." };
@@ -481,7 +481,7 @@ export async function claimProfile(
   as: "coach" | "fan" = "coach",
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const name = nameRaw.trim();
   if (!name) return { ok: false, error: "Enter your name." };
   // Growth-loop attribution: signup arrived through a public page's footer.

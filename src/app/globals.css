@@ -982,6 +982,9 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-etimecol { flex-direction: column; align-items: flex-end; gap: 1px; align-self: end; }
 .ps-agenda .ps-etime { font-weight: 700; font-size: 15px; color: var(--ink); }
 .ps-agenda .ps-edur { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 500; font-size: 13px; color: var(--ol); white-space: nowrap; }
+/* The am/pm marker, wherever a time is set beside one: it needs air whether
+   it's in a row's clock column or in a sentence in a sheet. */
+.ps-ap { margin-left: 2px; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
 /* Private sessions: no card fill, just a muted accent bar + the Private badge. */
 .ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
@@ -1100,29 +1103,40 @@ button.ps-card { cursor: pointer; }
    tabs. --wm-ink is how the wordmark's inline colour is reached. */
 .pub .brandbar, .pub .pubtop {
   position: absolute; top: 0; left: 0; right: 0; z-index: 6;
-  background: none; border-bottom: none; margin: 0;
+  background: none; margin: 0;
   padding: calc(16px + env(safe-area-inset-top)) 18px 12px;
+  /* A hairline rather than nothing: with the icons' plates gone the bar had
+     no edge at all, and the wordmark floated in the middle of the picture. */
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
   --wm-ink: #fff;
 }
 .pub .pubtop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* Bare white glyphs. They wore a blurred dark circle each, which made three
+   little plates across the top of somebody's photograph; the scrim behind the
+   bar is what makes them readable, and that is enough. */
 .pub .brandbar-actions .iconbtn {
-  color: #fff; border-color: rgba(255, 255, 255, .4); background: rgba(0, 0, 0, .16);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  color: #fff; border-color: transparent; background: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
 }
-.pub .brandbar-actions .iconbtn:hover { border-color: #fff; color: #fff; }
+.pub .brandbar-actions .iconbtn:hover { border-color: transparent; color: #fff; }
 /* The badge's ring is cut out of the paper everywhere else; here the paper is
    a photograph, so it takes the scrim's darkness instead. */
 .pub .brandbar .inboxdot { border-color: rgba(0, 0, 0, .38); }
-/* A stranger's one door, in the same white as everything else up there. */
-.pub .pubtop-login { background: #fff; color: var(--ink); }
+/* A stranger's one door. The same light glass the pills on the picture wear,
+   because it sits on the same picture; solid white up there was the brightest
+   thing on the page and the first thing your eye went to. */
+.pub .pubtop-login {
+  background: rgba(255, 255, 255, .8); color: #111;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
 
 /* The picture starts at the top of the screen and runs under all of it. */
 .pub .profhero { margin-top: 0; }
-/* Which means the corner controls have to start below the header rather than
-   in the same 18px everything else uses. */
-.pub .profhero .profback, .pub .profhero .ownertop {
-  top: calc(74px + env(safe-area-inset-top));
-}
+/* Which means the top row has to start below the header rather than in the
+   same 18px everything else uses. The hero's own padding is the 18px, so this
+   is the rest of it. */
+.pub .profhero .profhero-top { padding-top: calc(56px + env(safe-area-inset-top)); }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
@@ -1141,9 +1155,9 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -.03em; line-height: 1;
   color: var(--ink); margin: 0;
 }
-.proftitle { font-size: 15px; font-weight: 500; color: var(--ol); margin: 6px 0 0; }
-.profloc { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ol); margin: 5px 0 0; }
-.profloc-ic { color: var(--si); position: relative; top: -.5px; }
+/* What they do and where, on one line. They used to be two stacked lines with
+   a pin on the second; .profmeta below sets the type for both, and these two
+   names survive only so the row can be read a piece at a time. */
 .profabout { font-size: 15px; line-height: 1.55; color: var(--ink); margin-top: 18px; white-space: pre-wrap; }
 /* one horizontal, left/right-scrollable rail; bleeds to the content edges */
 .proflinks {
@@ -1261,27 +1275,11 @@ button.ps-card { cursor: pointer; }
 /* The tabs layout supplies the shell and enough room for the bar; this is the
    extra the floating Share pill needs on top of it. */
 .weekwrap { padding-bottom: 76px; }
-.weeklist { display: flex; flex-direction: column; gap: 26px; }
-.weekday { display: flex; flex-direction: column; }
-.weekday .ps-daycol {
-  font-weight: 400; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
-  padding-bottom: 10px; border-bottom: 1px solid var(--line);
-}
-.weekrow {
-  display: flex; align-items: center; gap: 12px; padding: 14px 2px;
-  border-bottom: 1px solid var(--line);
-}
-.weekrow-accent { align-self: stretch; width: 3px; border-radius: 2px; flex-shrink: 0; }
-.weekrow-main {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px;
-  text-decoration: none; color: inherit;
-}
-.weekrow-nm {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 18px;
-  color: var(--ink); letter-spacing: .004em;
-}
-.weekrow-sub { font-size: 13px; color: var(--ol); }
-.weekrow-who { font-size: 13px; font-weight: 600; color: var(--ol); }
+/* Your plans draws the same rows Following does, so it has no list of its own
+   any more. What it adds is the way off: an X beside the card rather than
+   inside it, because a button inside a link is not a thing. */
+.ps-erow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ps-erow > .ps-event, .ps-erow > .swiperow { flex: 1; min-width: 0; }
 .weekrow-x {
   flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
@@ -1470,6 +1468,14 @@ button.ps-card { cursor: pointer; }
   color: #fff; font-size: 9px; font-weight: 700;
 }
 .weekrow-alsotxt { font-size: 12px; font-weight: 600; color: var(--go); }
+
+/* One of your own, opened. Same overlay a public class wears; what it says
+   under the name is a name somebody typed rather than an account. */
+.plansheet-who { font-size: 15px; font-weight: 600; color: var(--ol); margin: 8px 0 0; }
+.plansheet-note {
+  font-size: 13px; line-height: 1.5; color: var(--ol); margin: 22px 0 0;
+  padding-top: 16px; border-top: 1px solid var(--line);
+}
 
 /* A member's week on their profile: mutuals only, plus the owner. Rows echo
    the coach-list shape on the studio page, quieter than Your week's cards. */
@@ -1851,9 +1857,9 @@ button.ps-card { cursor: pointer; }
 /* The one way in, as a filled pill: it's the only control up here now, so it
    can carry the weight without competing with anything. */
 .pubtop-login {
-  flex-shrink: 0; text-decoration: none; padding: 11px 22px; border-radius: 999px;
+  flex-shrink: 0; text-decoration: none; padding: 8px 16px; border-radius: 999px;
   background: var(--ink); color: var(--paper);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
   transition: transform .08s;
 }
 .pubtop-login:active { transform: scale(.97); }
@@ -1919,12 +1925,16 @@ button.ps-card { cursor: pointer; }
   gap: 12px; margin-top: 16px;
 }
 .profhero-actrow .profshare-btn { flex-shrink: 0; }
+/* No drop shadow on any of it. Every control over the photograph was casting
+   one, so the picture wore a set of floating cards; the glass and the white
+   edge are what lift them, and a shadow on top of that is a second answer to
+   a question already answered. */
 .profhero .actpill,
 .profhero .followpill {
   color: #111;
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+  box-shadow: none;
 }
 /* Filled ones let a little more of the photograph through than they did, and
    their ink is what makes them readable. */
@@ -1950,11 +1960,14 @@ button.ps-card { cursor: pointer; }
 .profhero .actpill:not(.actpill-primary) .icon,
 .profhero .followpill:not(.on) .icon { color: #fff; }
 .profhero .profname { color: #fff; margin: 8px 0 0; }
-/* A pin beside the city, drawn in the same white as the words it labels. */
-.profwhere { display: inline-flex; align-items: center; gap: 4px; }
-.profwhere .icon { flex-shrink: 0; position: relative; top: -.5px; }
-.profhero .proftitle,
-.profhero .profwhere { color: rgba(255, 255, 255, .82); }
+/* What they do and where, on one line under the name and a size down from it.
+   Two stacked paragraphs meant three type sizes in a column over a face. */
+.profmeta {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  font-size: 13.5px; font-weight: 500; color: var(--ol); margin: 5px 0 0;
+}
+.profmeta-sep { opacity: .55; }
+.profhero .profmeta { color: rgba(255, 255, 255, .8); }
 /* The badges above the name, in the same light glass as everything else on
    the picture. */
 .profhero .kindtag {
@@ -1987,9 +2000,15 @@ button.ps-card { cursor: pointer; }
    from the studio's dots came up UNDER the z-45 tab bar with its save button
    unreachable. A slot that holds arbitrary controls must not own a layer. */
 .profback { position: absolute; top: 18px; left: calc(50vw - 50%); }
-/* On the photograph, so it wears the photograph's colours: the app's dark ink
-   with a white arrow, and clear of the corner rather than jammed into it. */
-.profhero .profback { top: 16px; margin-left: 6px; }
+/* Inside the hero it is a flex child, not a corner: the row below carries the
+   page's gutter, so the arrow and the dots line up with the wordmark above and
+   the name underneath. margin-bottom: auto pushes the name to the bottom, which
+   is the job the hero's justify-content used to do on its own. */
+.profhero-top {
+  position: relative; display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px; margin-bottom: auto;
+}
+.profhero .profback { position: static; top: auto; left: auto; }
 /* Every control on the picture, in one treatment: back, share, the coach's
    gear and the studio's dots, in the same light glass as the pills below them.
    Two treatments side by side read as two unrelated things rather than one set
@@ -2001,8 +2020,11 @@ button.ps-card { cursor: pointer; }
   background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+  box-shadow: none;
 }
+/* The way off the page, not the point of it: small enough to read as a
+   control rather than a button somebody is meant to press first. */
+.profhero .profback .evback { width: 34px; height: 34px; }
 [data-mode="dark"] .profhero .profback .evback,
 [data-mode="dark"] .profhero .profshare-btn,
 [data-mode="dark"] .profhero .ownergear,
@@ -2016,7 +2038,7 @@ button.ps-card { cursor: pointer; }
   position: absolute; top: 18px; right: calc(50vw - 50%);
   display: flex; align-items: center; gap: 10px;
 }
-.profhero .ownertop { top: 16px; margin-right: 6px; }
+.profhero .ownertop { position: static; top: auto; right: auto; margin-left: auto; }
 .sharepill {
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
   padding: 0 16px; border-radius: 999px; cursor: pointer;
@@ -2051,8 +2073,7 @@ button.ps-card { cursor: pointer; }
 /* The name wraps rather than truncating — it's the one thing on the page that
    has to be readable in full. */
 .profhero .profname { font-size: 34px; line-height: 1.03; overflow-wrap: anywhere; }
-.profwhere { font-size: 15px; font-weight: 500; color: var(--ol); margin: 3px 0 0; }
-.profhero .proftitle { font-size: 16px; font-weight: 500; margin: 6px 0 0; }
+.profhero .profmeta { font-size: 13.5px; margin: 5px 0 0; }
 
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
@@ -2096,11 +2117,20 @@ button.ps-card { cursor: pointer; }
   animation: folhintin .22s ease-out;
 }
 @keyframes folhintin { from { opacity: 0; transform: translate(-50%, 10px); } }
+/* Your plans already floats Share your plans above the tab bar, so the note
+   sits above that in turn. Two things in one spot means the top one wins and
+   the other is a shape behind it. */
+.folhint.weekadded { bottom: calc(152px + env(safe-area-inset-bottom)); }
+@media (min-width: 940px) {
+  .folhint.weekadded { bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
 .folhint-t { margin: 0; font-size: 14.5px; line-height: 1.4; }
 .folhint-row { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
 .folhint-go {
+  border: none; background: none; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; color: var(--paper); text-decoration: underline;
+  padding: 0;
 }
 .folhint-off {
   margin-left: auto; border: none; background: none; cursor: pointer;
@@ -3521,7 +3551,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; display: flex; border: none; background: none; padding: 4px; cursor: pointer;
   color: var(--ol);
 }
-/* The filter pill floats over the list, the way Book and Save do on a class:
+/* The filter pill floats over the list, the way Book and Add do on a class:
    the one control you reach for while scrolling belongs where your thumb is,
    not in a row at the top you have scrolled past. The count is the whole
    status line: you can see filters are on without opening anything. */

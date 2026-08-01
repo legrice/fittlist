@@ -8,7 +8,11 @@ import {
   updateClass,
 } from "@/app/actions/classes";
 import { addGymClass, deleteGymClass, updateGymClass } from "@/app/actions/gym";
-import { addPersonalClass, type PersonalMatch } from "@/app/actions/personal";
+import {
+  addPersonalClass,
+  updatePersonalClass,
+  type PersonalMatch,
+} from "@/app/actions/personal";
 import { createStudio } from "@/app/actions/studios";
 import type { BookingLink } from "@/db/schema";
 import {
@@ -35,6 +39,7 @@ export type AdderPrefill = {
   location?: string | null;
   isPublic?: boolean;
   links: BookingLink[];
+  withWho?: string | null; // personal only: the name they typed for the coach
   days?: number[]; // preselected (edit); empty for duplicate
   dayOfWeek?: number; // the weekday actually opened, for the delete choice
   endsOn?: string | null; // weekly only: last date it runs
@@ -83,7 +88,12 @@ export type AdderGym = {
  * coach adding a class at their own gym might be teaching it, and the answer
  * decides whether it goes to their page or only to their plans.
  */
-export type AdderPersonal = { canCoach: boolean };
+export type AdderPersonal = {
+  canCoach: boolean;
+  /** Set = editing this personal_classes row rather than adding one. One row
+   *  is one entry, so the day pills move it instead of fanning it out. */
+  editId?: string;
+};
 
 type Stage = "start" | "form" | "pick" | "new";
 
@@ -116,7 +126,10 @@ export function Adder({
   personal?: AdderPersonal;
   onClose: () => void;
   onToast: (msg: string) => void;
-  onPublished: (msg: string) => void;
+  /** The second argument is the personal_classes row, set only when adding
+   *  one of your own and only when it was a single row: the plans screen
+   *  offers to share it, and a picture needs to know which one. */
+  onPublished: (msg: string, planId?: string) => void;
   onDeleted: (msg: string) => void;
   /** Personal mode only: the class they're describing is already on fittlist,
    *  under somebody who keeps it up to date. The caller offers the real one,
@@ -125,6 +138,10 @@ export function Adder({
   onMatch?: (m: PersonalMatch, again: () => void) => void;
 }) {
   const isEdit = Boolean(prefill?.classId);
+  // Yours alone, and already saved. Kept apart from isEdit because that one
+  // carries a coach's class with it: a delete that walks a series, a rota, a
+  // studio catalog. This is one row.
+  const isPersonalEdit = Boolean(personal?.editId);
   const isGym = Boolean(gym);
   const isPersonal = Boolean(personal);
   // Which chair you're in. A member is only ever going; a coach is asked, and
@@ -140,10 +157,15 @@ export function Adder({
   // form on the day that was tapped, and that is still a new class.
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
     personal
-      ? {
-          title: "Add a class",
-          lead: "A class you go to. It lands in your plans and nowhere else, and the studio gets the details so the next person doesn't type them again.",
-        }
+      ? isPersonalEdit
+        ? {
+            title: "Edit class",
+            lead: "Yours alone. Change anything; none of it is published.",
+          }
+        : {
+            title: "Add a class",
+            lead: "A class you go to. It lands in your plans and nowhere else, and the studio gets the details so the next person doesn't type them again.",
+          }
       : isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }
       : prefill?.name
@@ -179,7 +201,7 @@ export function Adder({
   const [location, setLocation] = useState(prefill?.location ?? "");
   // Who teaches it, as free text. Not a users reference: naming your coach is
   // not putting them on the platform, and every name here is an invite lead.
-  const [withWho, setWithWho] = useState("");
+  const [withWho, setWithWho] = useState(prefill?.withWho ?? "");
   const [links, setLinks] = useState<BookingLink[]>(prefill?.links ?? []);
   const [sugOpen, setSugOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -270,8 +292,9 @@ export function Adder({
   const toggleDay = (i: number) => {
     // One row is one slot on a rota, so editing a gym's class moves the day it
     // runs rather than fanning it across more of them. A second day is a second
-    // slot, added from the day it belongs to.
-    if (isGym && isEdit) {
+    // slot, added from the day it belongs to. One of your own entries is one
+    // row for the same reason.
+    if ((isGym && isEdit) || isPersonalEdit) {
       setDays(new Set([i]));
       return;
     }
@@ -300,7 +323,7 @@ export function Adder({
       ? "Pick a studio"
       : !durValid
         ? "End time must be after start"
-        : isEdit
+        : isEdit || isPersonalEdit
           ? "Save changes"
           : gym
             ? "Add to the schedule"
@@ -313,7 +336,7 @@ export function Adder({
   // Your own plans. `force` is the second pass, after they've seen that the
   // class is already here under a coach and said theirs anyway.
   const savePersonal = async (force: boolean) => {
-    const res = await addPersonalClass({
+    const input = {
       name,
       days: [...days],
       startTime: time,
@@ -327,8 +350,20 @@ export function Adder({
       links,
       specificDate: oneTime ? date : null,
       endsOn: oneTime ? null : endsOn || null,
-      force,
-    });
+    };
+    // Editing is its own call and its own ending: one row moves, and there is
+    // no "this is already on fittlist" to offer somebody who wrote it down
+    // weeks ago.
+    if (personal?.editId) {
+      const res = await updatePersonalClass(personal.editId, input);
+      if (!res.ok) {
+        onToast(res.error ?? "Couldn't save that");
+        return;
+      }
+      onPublished("Saved");
+      return;
+    }
+    const res = await addPersonalClass({ ...input, force });
     if (!res.ok) {
       if (res.match && onMatch) {
         onMatch(res.match, () => startTransition(() => void savePersonal(true)));
@@ -337,7 +372,7 @@ export function Adder({
       onToast(res.error ?? "Couldn't add that");
       return;
     }
-    onPublished(n > 1 ? `Added ${n} classes to your plans` : "Added to your plans");
+    onPublished(n > 1 ? `Added ${n} classes to your plans` : "Added to your plans", res.id);
   };
 
   const publish = () => {
@@ -524,7 +559,7 @@ export function Adder({
                 has one answer and a question with one answer is furniture.
                 Saying "I'm coaching it" hands the rest of the form back to the
                 one that publishes, because from there it is a real class. */}
-            {personal?.canCoach && (
+            {personal?.canCoach && !isPersonalEdit && (
               <div className="adder-card">
                 <label className="flabel">Is this yours to teach?</label>
                 <div className="modetoggle">
@@ -923,7 +958,7 @@ export function Adder({
 
             <div className="publishwrap">
               <button className="btn si" disabled={!whenChosen || pending} onClick={publish}>
-                {pending ? (isEdit ? "Saving…" : "Publishing…") : publishLabel}
+                {pending ? (isEdit || isPersonalEdit ? "Saving…" : "Publishing…") : publishLabel}
               </button>
             </div>
 

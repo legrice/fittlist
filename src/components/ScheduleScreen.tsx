@@ -448,7 +448,7 @@ export function ScheduleScreen({
               <p className="dupebox-s">
                 You listed this before the studio ran its own schedule, so there are two of them.
                 Yours is already hidden from your page and your share, and the studio&rsquo;s is
-                what people see. Hand yours over and anyone who saved it keeps their spot.
+                what people see. Hand yours over and anyone who added it keeps their spot.
               </p>
               <div className="publishwrap nostick">
                 <button className="btn si" disabled={merging} onClick={handOver}>

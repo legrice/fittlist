@@ -16,7 +16,7 @@ export async function setGoing(
   on: boolean,
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)) return { ok: false, error: "Bad date." };
   const db = await getDb();
   const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));

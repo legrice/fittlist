@@ -914,16 +914,16 @@ if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch
   // sat right above Contact and Follow.
   if (await bar.getByText("Sign up").count())
     fail("the visitor bar carries one door; sign up lives inside the sheet");
-  await bar.getByText("Log in").click();
+  await bar.getByText("Sign in").click();
   await lp.waitForURL(/join=login/);
-  await lp.getByRole("heading", { name: "Log in" }).waitFor();
+  await lp.getByRole("heading", { name: "Sign in" }).waitFor();
   // The other door is under the button, so someone who has never been here
   // isn't stuck with only the close button.
   await lp.locator(".authswitch").getByText("Sign up").click();
   await lp.getByRole("heading", { name: "Sign up with email" }).waitFor();
   // And back the other way.
-  await lp.locator(".authswitch").getByText("Log in").click();
-  await lp.getByRole("heading", { name: "Log in" }).waitFor();
+  await lp.locator(".authswitch").getByText("Sign in").click();
+  await lp.getByRole("heading", { name: "Sign in" }).waitFor();
   await look.close();
   console.log("visitor header ok (one door, the sheet carries the other, credit kept)");
 }
@@ -1091,8 +1091,8 @@ console.log("logout ok");
 
 // ---- magic link: request one from the login sheet, follow the URL, land in /app
 await page.goto(BASE + "/");
-await page.getByRole("button", { name: "Already have an account? Log in" }).click();
-await page.getByRole("heading", { name: "Log in" }).waitFor();
+await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
+await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByPlaceholder("you@example.com").fill("matt@example.com");
 await page.getByRole("button", { name: "Email me a magic link" }).click();
 await page.getByText("Check your inbox.").waitFor();
@@ -1115,8 +1115,8 @@ console.log("magic-link login ok");
 await openProfile(page);
 await page.getByRole("button", { name: "Log out" }).click();
 await page.waitForURL(BASE + "/");
-await page.getByRole("button", { name: "Already have an account? Log in" }).click();
-await page.getByRole("heading", { name: "Log in" }).waitFor();
+await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
+await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
 // Every login lands on Following now; /app stopped being anyone's front door.
 await page.waitForURL(BASE + "/feed");
@@ -1584,14 +1584,15 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   // was clipped at the viewport and nothing moved.
   {
     const bar = await fan.locator(".weekshare").evaluate((e) => getComputedStyle(e).position);
-    if (bar !== "fixed") fail("Share your schedule should float, got " + bar);
+    if (bar !== "fixed") fail("Share your plans should float, got " + bar);
     const clipped = await fan.evaluate(
       () => getComputedStyle(document.querySelector(".weekshare").closest("div[data-mode], body"))
         .overflow === "hidden",
     );
     if (clipped) fail("your week is inside a clipped shell, so it can never scroll");
   }
-  const rows = fan.locator(".weekrow");
+  // The rows are the shared class rows now, the same ones Following draws.
+  const rows = fan.locator(".ps-erow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
   // The row carries what you'd need to decide: what, when, where, whose.
   const txt = await rows.first().innerText();
@@ -1599,7 +1600,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
   // A coach shares their week as an image; this is the same move from the
   // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekshare .ovcta-btn", { hasText: "Share your schedule" }).waitFor();
+  await fan.locator(".weekshare .ovcta-btn", { hasText: "Share your plans" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
@@ -1685,7 +1686,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.getByText("Added to your plans").waitFor();
   await fan.waitForTimeout(800);
   {
-    const row = fan.locator(".weekrow", { hasText: "Wellness Off the Mat" });
+    const row = fan.locator(".ps-erow", { hasText: "Wellness Off the Mat" });
     await row.waitFor();
     const txt = await row.innerText();
     // The studio owns the "where", exactly as on a coach's class.
@@ -1696,7 +1697,9 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.getByRole("button", { name: "Add a class" }).first().click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
   await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
-  await fan.getByRole("button", { name: /Bright Room Yoga/ }).first().click();
+  // Scoped to the picker: a class row is a button too now, and the one behind
+  // the sheet carries the studio's name on it.
+  await fan.locator(".studio-list .studio-row", { hasText: "Bright Room Yoga" }).first().click();
   await fan.locator(".flabel", { hasText: "pick one from this studio" }).waitFor();
   await fan.locator(".sheetclose").first().click();
   await fan.waitForTimeout(400);
@@ -1717,7 +1720,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   {
     const from = await fan.locator("#myFrom").inputValue();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) fail("the share range needs a real start date: " + from);
-    const first = await fan.locator(".weekday .ps-daycol").first().innerText();
+    const first = await fan.locator(".ps-agenda .ps-daycol").first().innerText();
     void first;
     const src = await fan.locator(".storyimg").getAttribute("src");
     if (!src?.includes(`from=${from}`) || !src.includes("days=7"))
@@ -2247,9 +2250,14 @@ if (await page.locator(".settingsbtn, .ownergear").count())
   const hasPhoto = await page.locator("img.profhero-img").count();
   const scrim = await page.locator(".profhero-scrim").count();
   if (!!hasPhoto !== !!scrim) fail("the scrim belongs over a photo and nowhere else");
-  // The badge leads, dark over the image rather than a pale hole in it.
-  const badge = await page.locator(".profhero .kindtag").first().boundingBox();
-  if (badge && badge.y > nm.y) fail("the badge belongs above the name");
+  // No label above the name: "Coach" on a coach's own page told nobody
+  // anything they couldn't read off the schedule under it.
+  if (await page.locator(".profhero .kindtag").count())
+    fail("a coach's hero should carry no kind tag");
+  // What they do and where are one line, and the pin is gone with them.
+  const meta = await page.locator(".profhero .profmeta").innerText();
+  if (!meta.includes("Strength coach") || !meta.includes("Jersey City"))
+    fail("the meta line should carry the title and the city, got " + meta);
   console.log("profile hero ok (full bleed, left aligned, scrim only on a photo)");
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
@@ -2425,15 +2433,15 @@ await page.waitForTimeout(450); // the account slides up
   await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
   await page.locator(".sheet .sheetclose").click();
 }
-// And it shows on the page, next to the Coach badge above the name. The photo
-// is the hero now, so there's no circle to hang a dot on and no overlay to say
-// the words in.
+// It no longer shows on the profile. The hero is a photograph with a name on
+// it, and a row of small tags over the top was the first thing to go when it
+// got busy; the status still does its work in Discover's filter and in whether
+// there's anything to say when somebody writes in.
 {
   await page.goto(BASE + "/matt");
-  const tag = page.locator(".profhero-tags .availtag-accepting");
-  await tag.waitFor();
-  if (!(await tag.innerText()).includes("Open for clients"))
-    fail("the hero should say the status, got " + (await tag.innerText()));
+  await page.locator(".profhero .profname").waitFor();
+  if (await page.locator(".profhero-tags").count())
+    fail("the hero should carry no tag row");
   if (await page.locator(".profname-row .availbadge").count())
     fail("the old status badge should have left the name row");
 }

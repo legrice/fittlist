@@ -628,7 +628,7 @@ console.log("the coach is told ok");
   await mem.locator(".ovcta-save").click();
   await mem.locator(".favtoast.on").waitFor();
   await mem.goto(BASE + "/week");
-  await mem.locator(".weekrow-nm", { hasText: "HYROX" }).waitFor();
+  await mem.locator(".ps-enm", { hasText: "HYROX" }).waitFor();
   await memCtx.close();
   console.log("a member can add the gym's class ok (it lands in their plans)");
 }
@@ -756,7 +756,7 @@ console.log("the coach is told ok");
   await mem.locator(".ovcta-save").click();
   await mem.locator(".favtoast.on").waitFor();
   await mem.goto(BASE + "/week");
-  await mem.locator(".weekrow-nm", { hasText: "Warm Up" }).waitFor();
+  await mem.locator(".ps-enm", { hasText: "Warm Up" }).waitFor();
 
   // The gym lists the same slot: same name, same day, same time, same place.
   await matt.goto(BASE + studioHref + "/manage");
@@ -806,7 +806,7 @@ console.log("the coach is told ok");
   await tom.waitForTimeout(900);
   if (await tom.locator(".ps-dupe").count()) fail("the duplicate should be gone");
   await mem.goto(BASE + "/week");
-  await mem.locator(".weekrow-nm", { hasText: "Warm Up" }).waitFor();
+  await mem.locator(".ps-enm", { hasText: "Warm Up" }).waitFor();
   const told = await mem.goto(BASE + "/updates");
   void told;
   if (await mem.locator(".notifrow", { hasText: "is off" }).count())
