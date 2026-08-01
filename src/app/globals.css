@@ -1073,6 +1073,12 @@ button.ps-card { cursor: pointer; }
 .pub.hasnav .profwrap { padding-top: 14px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 .pub.hasnav .brandbar, .memberpub.hasnav .brandbar {
   padding-top: calc(16px + env(safe-area-inset-top));
+  /* The one thing that pins on a profile is the name and the tabs. The header
+     scrolls away with the picture: two stacked bars over a schedule is most of
+     the screen spent on chrome, and the row that says whose week this is has
+     more claim on the top than the wordmark does. `.pubstick` then sticks at 0
+     rather than measuring a bar that is no longer there. */
+  position: static;
 }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;

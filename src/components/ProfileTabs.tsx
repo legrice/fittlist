@@ -85,21 +85,19 @@ export function ProfileTabs({
   const stickRef = useRef<HTMLDivElement>(null);
   const sentRef = useRef<HTMLDivElement>(null);
 
-  // The tab row pins to the top as the page scrolls, and once the big header
-  // is gone it grows a small copy of the name, so a long schedule never loses
-  // whose it is. The offset is the app header's height when there is one (a
-  // signed-in viewer keeps the app chrome, which is sticky itself); a
-  // stranger's bar owns the top of the screen.
+  // The tab row pins to the very top as the page scrolls, and once the big
+  // header is gone it grows a small copy of the name, so a long schedule never
+  // loses whose it is. Nothing above it sticks: the app header and a stranger's
+  // bar both scroll away with the picture, which is why there is no offset to
+  // measure here any more. It used to read the brandbar's height and hold that
+  // much space, and a bar that no longer pins would have left a gap.
   useEffect(() => {
     const stick = stickRef.current;
     const sent = sentRef.current;
     if (!stick || !sent) return;
-    const bar = document.querySelector(".brandbar");
-    const off = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
-    if (off) stick.style.top = off + "px";
     const ob = new IntersectionObserver(
       ([e]) => stick.classList.toggle("stuck", !e.isIntersecting),
-      { rootMargin: `-${off + 1}px 0px 0px 0px` },
+      { rootMargin: "-1px 0px 0px 0px" },
     );
     ob.observe(sent);
     return () => ob.disconnect();

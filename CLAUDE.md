@@ -385,6 +385,15 @@ the app's, it just isn't spent on a control that sits permanently over a
 schedule. Change one and change the other, or they stop reading as the same
 kind of thing.
 
+**On a profile, the name and the tabs are the only thing that pins.** The app
+header is `position: static` there (`.pub.hasnav .brandbar`) and scrolls away
+with the picture: two stacked bars over a schedule is most of a phone screen
+spent on chrome, and the row that says whose week this is has more claim on the
+top than the wordmark. `.pubstick` therefore sticks at 0 and measures nothing.
+It used to read the brandbar's height on mount and hold that much space, which
+against a header that no longer pins would have left a band of paper under the
+tabs. If anything ever pins above it again, that measurement comes back.
+
 **The hero's two corner slots must not own a stacking layer.** `.profback` and
 `.ownertop` are positioned but carry no `z-index`, on purpose. They hold
 arbitrary controls, and a control that opens a sheet needs that sheet at z-46
