@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { AvatarZoom } from "@/components/AvatarZoom";
+import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
@@ -61,13 +62,15 @@ export async function PublicProfileView({
   user: UserRow;
   isOwner: boolean;
   tab: ProfileTab;
-  /** Which tab sent them here. Kept for the class links below; there's no back
-   *  arrow any more, because the tab bar is the way out. */
+  /** Which tab sent them here: it names the back control's destination, and
+   *  rides along on the class links below. */
   from?: string;
 }) {
   // A profile is a screen of the app like any other: the header above it and
-  // the tab bar below. It used to carry a back arrow instead, which meant the
-  // only way off a coach's page was the one route you arrived by.
+  // the tab bar below. The back control is a second way out rather than the
+  // only one, and it only appears when a list actually sent them here; the
+  // page used to carry one unconditionally, which meant a cold open offered an
+  // arrow into somebody else's history.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -115,6 +118,8 @@ export async function PublicProfileView({
       }
     }
   }
+
+  const backTo = backToFor(from);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
@@ -441,6 +446,7 @@ export async function PublicProfileView({
           hasContact={hasContact}
           hasStudios={!!studios}
           trackSchedule={!isOwner}
+          backTo={backTo}
           avatar={avatar}
           // The same two slots for everybody. A visitor gets Message and
           // Follow; the owner gets Share and Edit profile, which are the two

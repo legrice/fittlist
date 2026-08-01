@@ -1794,6 +1794,9 @@ button.ps-card { cursor: pointer; }
 /* The owner's controls, one row top-right across from the photo: the Add
    class pill and the three-dot, both on the same tan so they read as one
    set of page controls. */
+/* Facing the gear across the top, the way the studio page and a class do it:
+   out on the left, what you can do on the right. */
+.profback { position: absolute; top: 32px; left: 0; }
 .ownertop {
   position: absolute; top: 32px; right: 0;
   display: flex; align-items: center; gap: 10px;

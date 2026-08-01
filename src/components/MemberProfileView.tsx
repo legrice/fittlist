@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { backToFor } from "@/lib/nav";
+import { BackLink } from "@/components/BackLink";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -89,12 +91,20 @@ export async function MemberProfileView({
   const week = mutual || (isOwner && (await fansVisible())) ? await sharedWeek(user.id) : [];
   const firstName = name.split(/\s+/)[0];
 
+  const backTo = backToFor(from);
+
   return (
     <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
       <div className="profwrap">
         {viewerId ? <AppChrome userId={viewerId} bar /> : <PublicTopBar handle={user.handle ?? ""} />}
         <div className="mempro-top">
-          <span />
+          {backTo ? (
+            <BackLink className="evback" href={backTo.href} label={backTo.label}>
+              <Icon name="arrow_back" size={21} />
+            </BackLink>
+          ) : (
+            <span />
+          )}
           {isOwner && <MemberProfileActions />}
         </div>
 

@@ -289,6 +289,24 @@ the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
+**A filter is only offered where it can narrow something.** Discover's What
+chips are built from what the lens in front of you actually holds: coaches'
+`disciplines` on People, `studios.types` on Studios. Pooling both offered
+People the studios' vocabulary, and every chip there filtered to nobody,
+because coaches haven't started saying what they teach yet. The section shows
+up on its own the day they do, and switching lens drops the pick, since the
+other half can't honour a word it doesn't use. Same rule as the city picker,
+which only appears on People.
+
+**`backToFor()` in `src/lib/nav.ts` is the one table for where back goes.**
+A named `from` (discover, home, schedule) gets a named destination so the
+control can pop to that list; anything else is null, and null means no arrow.
+A profile has the tab bar as its way out, so the arrow is a second door and
+only when a list actually sent them: a cold open (a shared link, a search
+result) would otherwise offer an arrow into somebody else's history. The
+studio page, a coach's profile and a member's all ask this one function, which
+is why they answer alike.
+
 **A "back" control has to pop, not push.** `useSlideBack` checks `pageBeneath()`
 (a small path stack kept in sessionStorage by `NavTrack`) and calls
 `router.back()` when the page underneath is where the control points. Pushing

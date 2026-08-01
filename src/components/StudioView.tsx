@@ -11,6 +11,7 @@ import { mapsUrlFor } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
 import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
+import { backToFor } from "@/lib/nav";
 import { Icon } from "@/components/Icon";
 import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { StudioMenu } from "@/components/StudioMenu";
@@ -122,16 +123,7 @@ export async function StudioView({
   // what almost every row in the directory is and should remain.
   const show = (section: StudioTab) => !hasSchedule || tab === section;
 
-  // A tab we know by name gets a named destination; anything else walks back
-  // through history, which is where they actually tapped from.
-  const backTo =
-    from === "discover"
-      ? { href: "/discover", label: "Back to Discover" }
-      : from === "home"
-        ? { href: "/feed", label: "Back to Following" }
-        : from === "schedule"
-          ? { href: "/app", label: "Back to your schedule" }
-          : null;
+  const backTo = backToFor(from);
 
   const hasContact = !!(s.contactEmail || s.phone || s.website || s.instagram);
 

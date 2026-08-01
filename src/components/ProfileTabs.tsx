@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
+import { Icon } from "@/components/Icon";
 import { useEffect, useRef, type ReactNode } from "react";
 
 export type ProfileTab = "about" | "studios" | "contact" | "schedule";
@@ -25,6 +27,7 @@ export function ProfileTabs({
   actions,
   avail,
   ownerTop,
+  backTo,
   stickAction,
   children,
 }: {
@@ -48,6 +51,10 @@ export function ProfileTabs({
    *  they do to this page is on the pills under the name or the floating Add
    *  class button, so nothing else belongs in the corner. */
   ownerTop?: ReactNode;
+  /** Where a back control should go, when they got here from a list. Null on
+   *  a cold open: the tab bar is the way out and an arrow to nowhere is worse
+   *  than none. */
+  backTo?: { href: string; label: string } | null;
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */
   stickAction?: ReactNode;
@@ -109,6 +116,13 @@ export function ProfileTabs({
       {/* Who this is, top to bottom: face, name, where, what. Then the things
           you can do about it, then the section you asked for. */}
       <div className="pubhead">
+        {backTo && (
+          <div className="profback">
+            <BackLink className="evback" href={backTo.href} label={backTo.label}>
+              <Icon name="arrow_back" size={21} />
+            </BackLink>
+          </div>
+        )}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {avatar}
         {/* The badge rides with the name and wraps under it when the name is

@@ -1227,12 +1227,6 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     .first()
     .evaluate((e) => getComputedStyle(e).paddingRight);
   if (wide !== "0px") fail("a studio row shouldn't hold space for a pill it hasn't got");
-  // Searching an address finds the town, which is the filter studios lack.
-  await fan.locator(".dissearch-in").fill("Ironbound");
-  await fan.waitForTimeout(300);
-  const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
-  if (!names.some((n) => /Ironbound/.test(n)))
-    fail("searching studios found nothing: " + names.join(", "));
   // A studio with no photo reads like a coach with no photo: the first letter
   // on a colour off the same sixty, derived from the id so it never shifts.
   {
@@ -1247,6 +1241,12 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     if (new Set(faces.map(([, bg]) => bg)).size < 2)
       fail("a directory of one colour is as unreadable as a directory of pins");
   }
+  // Searching an address finds the town, which is the filter studios lack.
+  await fan.locator(".dissearch-in").fill("Ironbound");
+  await fan.waitForTimeout(300);
+  const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
+  if (!names.some((n) => /Ironbound/.test(n)))
+    fail("searching studios found nothing: " + names.join(", "));
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
@@ -1279,13 +1279,18 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
   if (await fan.locator(".disrow", { hasText: "Sam" }).count())
     fail("filtering by what someone teaches should drop the ones who don't");
-  // The same pick narrows the other half of the directory.
+  // Switching lens drops the pick with it: the other half offers its own
+  // vocabulary, and carrying a coach's word over would filter to nobody.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
-  const left = await fan.locator(".disrow-studio .nm").allInnerTexts();
-  if (left.length && left.length === (await fan.locator(".disrow-studio").count()) && left.length > 20)
-    fail("the discipline filter did nothing to the studios");
+  await fan.locator(".disfilterbtn").click();
+  await fan.getByRole("heading", { name: "Filters" }).waitFor();
+  if (await fan.locator(".sheet .typepick .chip.sel").count())
+    fail("a pick the other lens can't honour should not survive the switch");
+  await fan.locator(".sheetclose").click();
   // Clearing puts everything back.
+  await fan.getByRole("button", { name: "People", exact: true }).click();
+  await fan.waitForTimeout(200);
   await fan.locator(".disfilterbtn").click();
   await fan.getByRole("button", { name: "Clear filters" }).click();
   await fan.locator(".sheet .publishwrap .btn").click();
@@ -1293,6 +1298,47 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   if (await fan.locator(".disfilterbtn.on").count())
     fail("cleared filters should leave the button quiet");
   console.log("discover filters ok (one button, one vocabulary, both halves)");
+}
+
+// A filter is only offered where it can narrow something. The chips come from
+// what the lens in front of you actually has, so People stays quiet until
+// coaches start saying what they teach.
+{
+  await fan.goto(BASE + "/discover");
+  await fan.locator(".disfilterbtn").click();
+  await fan.getByRole("heading", { name: "Filters" }).waitFor();
+  const peopleChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
+  await fan.locator(".sheetclose").click();
+  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".disfilterbtn").click();
+  await fan.getByRole("heading", { name: "Filters" }).waitFor();
+  const studioChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
+  await fan.locator(".sheetclose").click();
+  // Matt is the only one who has said anything, and he said Yoga.
+  if (peopleChips.join(",") !== "Yoga")
+    fail("People should only offer what a coach here actually teaches: " + peopleChips.join(","));
+  if (studioChips.some((c) => !peopleChips.includes(c)) === false && studioChips.length)
+    fail("the two lenses should not be offering the same list by accident");
+  console.log("discover chips ok (only what the lens can narrow)");
+}
+
+// Tapping through from a list leaves a way back to it, on both kinds of
+// profile and on a studio. A cold open gets none: there is no list behind you.
+{
+  await fan.goto(BASE + "/discover");
+  await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-main").click();
+  await fan.locator(".pubhead").waitFor();
+  await fan.locator(".profback .evback").click();
+  await fan.waitForURL(/\/discover/);
+  await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
+  await fan.locator(".pubhead, .mempro-top").first().waitFor();
+  if (!(await fan.locator(".profback .evback, .mempro-top .evback").count()))
+    fail("a profile reached from Discover should offer the way back");
+  await fan.goto(BASE + "/matt");
+  await fan.locator(".pubhead").waitFor();
+  if (await fan.locator(".profback").count())
+    fail("a cold open has no list behind it, so it gets no arrow into one");
+  console.log("discover back ok (a list you came from is a list you can return to)");
 }
 }
 
@@ -1765,8 +1811,8 @@ await expect(page.locator('.proflink[href^="mailto:"]').isVisible(), "studio ema
 }
 console.log("studio pages ok (edit, types, slug follows the name)");
 
-// a profile reads like a class page: no app header, no bottom tabs, a back
-// arrow above the identity block, and the tab pills pin instead of the name
+// a profile is a screen of the app: the header above, the tabs below, and a
+// back arrow as well because a list is what sent them here
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
@@ -1774,14 +1820,14 @@ if (!(await page.locator(".profacts .followpill").count()))
   fail("Follow should sit in the actions row under the name");
 if (await page.locator(".profshare").count()) fail("the share button should be gone");
 // Signed in, this is still the app, so the whole shell comes with it: the
-// header above and the tabs below. There's no back arrow any more, because the
-// tab bar is the way out and it doesn't depend on how you arrived.
+// header above and the tabs below. The back arrow is a second way out, not the
+// only one, and it's here because Discover is what sent them.
 if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a signed-in viewer should get the app header on a profile");
 if (!(await page.locator(".navbar").count()))
   fail("a signed-in viewer should get the tab bar on a profile");
-if (await page.locator(".pubhead .evback").count())
-  fail("a profile shouldn't carry a back arrow now the tabs are there");
+if (!(await page.locator(".pubhead .evback").count()))
+  fail("a profile reached from a list should offer the way back to it");
 // Nothing pins: each tab is its own page, so there is no long scroll to keep
 // a control in reach of.
 await expect(

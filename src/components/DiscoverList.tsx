@@ -173,14 +173,16 @@ export function DiscoverList({
     setCoachesOnly(false);
     setAcceptingOnly(false);
   };
-  // Every discipline anyone here actually has. Offering the whole vocabulary
-  // would be forty rows, most of them leading nowhere.
+  // What the lens in front of you can actually be narrowed by, and nothing
+  // else. Pooling both halves offered People the studios' vocabulary, so every
+  // chip there filtered to nobody: coaches haven't started saying what they
+  // teach yet. The section appears on its own the day they do.
   const disciplines = useMemo(() => {
     const seen = new Set<string>();
-    for (const c of coaches) for (const d of c.disciplines) seen.add(d);
-    for (const st of studios) for (const t of st.types) seen.add(t);
+    if (tab === "people") for (const c of coaches) for (const d of c.disciplines) seen.add(d);
+    else for (const st of studios) for (const t of st.types) seen.add(t);
     return [...seen].sort((a, b) => a.localeCompare(b));
-  }, [coaches, studios]);
+  }, [coaches, studios, tab]);
 
   return (
     <>
@@ -190,10 +192,22 @@ export function DiscoverList({
       {/* No page title: the tab bar already says Discover, and the segment
           below says which half you're in. */}
       <div className="seg disseg">
-        <button className={tab === "people" ? "sel" : ""} onClick={() => setTab("people")}>
+        <button
+          className={tab === "people" ? "sel" : ""}
+          onClick={() => {
+            setTab("people");
+            setDiscipline(null);
+          }}
+        >
           People
         </button>
-        <button className={tab === "studios" ? "sel" : ""} onClick={() => setTab("studios")}>
+        <button
+          className={tab === "studios" ? "sel" : ""}
+          onClick={() => {
+            setTab("studios");
+            setDiscipline(null);
+          }}
+        >
           Studios
         </button>
       </div>
@@ -362,7 +376,7 @@ export function DiscoverList({
         ) : (
           <div className="dislist dislist-bare">
             {shownStudios.map((st) => (
-              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}`}>
+              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}?from=discover`}>
                 <span className="disrow-avwrap">
                   {st.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element

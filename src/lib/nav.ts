@@ -45,3 +45,19 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (pathname.startsWith("/app") || pathname.startsWith("/you")) return "you";
   return "none";
 }
+
+
+/**
+ * Where a back control goes, given the tab that sent them.
+ *
+ * A named destination lets the control pop to that list rather than walk
+ * history; null is a cold open (a shared link, a search result), where there
+ * is no list behind you and an arrow would be a guess. The studio page, a
+ * coach's profile and a member's all ask this, so they answer alike.
+ */
+export function backToFor(from?: string): { href: string; label: string } | null {
+  if (from === "discover") return { href: "/discover", label: "Back to Discover" };
+  if (from === "home") return { href: "/feed", label: "Back to Following" };
+  if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
+  return null;
+}
