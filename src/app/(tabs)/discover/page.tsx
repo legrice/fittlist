@@ -6,7 +6,7 @@ import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { fmtTime, runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverCoach, type DiscoverEvent } from "@/components/DiscoverList";
+import { DiscoverList, type DiscoverCoach, type DiscoverEvent, type DiscoverStudio } from "@/components/DiscoverList";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -104,6 +104,20 @@ export default async function DiscoverPage() {
     a.localeCompare(b),
   );
 
+  // The third lens: every studio, in name order. A row here is a place, and a
+  // place doesn't get ranked by whether it signed up; the tag says which of
+  // them you can see a week for, which is the useful part.
+  const studioDirRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
+  const studios: DiscoverStudio[] = studioDirRows.map((st) => ({
+    id: st.id,
+    slug: st.slug ?? st.id,
+    name: st.name,
+    address: st.address,
+    photo: st.photo,
+    types: st.types,
+    hasSchedule: !!st.accountUserId,
+  }));
+
   // Events: the one-off dated classes coaches have posted, over the next four
   // weeks. Not a new object, a new lens: these are ordinary public class rows
   // with a specificDate, so Going marks, the class page and the .ics already
@@ -185,6 +199,7 @@ export default async function DiscoverPage() {
           sit directly across from it. */}
       <DiscoverList
         coaches={coaches}
+        studios={studios}
         events={events}
         cities={cities}
         myCity={me.location?.trim() || null}

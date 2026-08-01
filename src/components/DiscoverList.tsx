@@ -34,6 +34,19 @@ export type DiscoverCoach = {
  *  where Going and share already work) and a posted community event (an expo,
  *  a competition, a meetup), which links to its own page and may carry a
  *  flyer. The photo is what decides row versus card. */
+/** A place in the directory. Not followable: you follow a person, and a gym
+ *  is not a person. Its page is where its week lives. */
+export type DiscoverStudio = {
+  id: string;
+  slug: string;
+  name: string;
+  address: string;
+  photo: string | null;
+  types: string[];
+  /** It runs its schedule here, so there's a week to see. */
+  hasSchedule: boolean;
+};
+
 export type DiscoverEvent = {
   id: string;
   href: string;
@@ -106,6 +119,7 @@ function FollowMini({
 export function DiscoverList({
   coaches,
   events = [],
+  studios = [],
   cities,
   myCity = null,
   canPost = false,
@@ -114,6 +128,7 @@ export function DiscoverList({
 }: {
   coaches: DiscoverCoach[];
   events?: DiscoverEvent[];
+  studios?: DiscoverStudio[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
@@ -123,7 +138,7 @@ export function DiscoverList({
   hideBack?: boolean;
 }) {
   const [q, setQ] = useState("");
-  const [view, setView] = useState<"people" | "events">("people");
+  const [view, setView] = useState<"people" | "studios" | "events">("people");
   const [coachesOnly, setCoachesOnly] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
@@ -167,6 +182,20 @@ export function DiscoverList({
     });
   }, [coaches, q, city, coachesOnly]);
 
+  // Studios have no city column, only a free-text address, so there is nothing
+  // honest to filter them by yet. The address carries the town, and searching
+  // it finds them.
+  const shownStudios = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return studios;
+    return studios.filter(
+      (st) =>
+        st.name.toLowerCase().includes(needle) ||
+        st.address.toLowerCase().includes(needle) ||
+        st.types.some((t) => t.toLowerCase().includes(needle)),
+    );
+  }, [studios, q]);
+
   const shownEvents = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return events.filter((e) => {
@@ -190,74 +219,76 @@ export function DiscoverList({
         <button className={view === "people" ? "sel" : ""} onClick={() => setView("people")}>
           People
         </button>
+        <button className={view === "studios" ? "sel" : ""} onClick={() => setView("studios")}>
+          Studios
+        </button>
         <button className={view === "events" ? "sel" : ""} onClick={() => setView("events")}>
           Events
         </button>
       </div>
-      <div className="dissearch">
-        <Icon name="search" size={19} className="dissearch-ic" />
-        <input
-          className="dissearch-in"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search"
-          aria-label="Search"
-        />
-        {q && (
-          <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
-            <Icon name="close" size={17} />
-          </button>
-        )}
-      </div>
 
-      {/* Near you, then everywhere else. A row of city chips was fine at six
-          cities and unreadable at sixty, so the long list moved into a picker
-          and the one city that matters most got its own button. Coaches only
-          lives here too now, as a chip: the title that used to hold it is
-          gone, and a filter belongs with the filters. */}
-      {(cities.length > 1 || (view === "people" && coaches.some((c) => c.kind !== "coach"))) && (
-        <div className="disfilter">
-          {cities.length > 1 && nearCity && (
+      {/* One row: the box, and the filters across from it. Two rows of chrome
+          above a list is most of a phone screen spent on controls. It wraps
+          rather than crushes the box when a narrow screen holds both filters. */}
+      <div className="dissearchrow">
+        <div className="dissearch">
+          <Icon name="search" size={19} className="dissearch-ic" />
+          <input
+            className="dissearch-in"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={
+              view === "studios" ? "Search studios" : view === "events" ? "Search events" : "Search people"
+            }
+            aria-label={
+              view === "studios" ? "Search studios" : view === "events" ? "Search events" : "Search people"
+            }
+          />
+          {q && (
             <button
               type="button"
-              className={`disnear${city === nearCity ? " on" : ""}`}
-              onClick={() => setCity(city === nearCity ? null : nearCity)}
+              className="dissearch-x"
+              onClick={() => setQ("")}
+              aria-label="Clear"
             >
-              <Icon name="place" size={17} /> Near you
-            </button>
-          )}
-          {cities.length > 1 && (
-            <div className="discitysel">
-              <Icon name="expand_more" size={18} className="discitysel-ic" />
-              <select
-                className="discitysel-in"
-                aria-label="Filter by city"
-                value={city ?? ""}
-                onChange={(e) => setCity(e.target.value || null)}
-              >
-                <option value="">All cities</option>
-                {cities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          {view === "people" && coaches.some((c) => c.kind !== "coach") && (
-            <button
-              type="button"
-              className={`dischip${coachesOnly ? " on" : ""}`}
-              role="switch"
-              aria-checked={coachesOnly}
-              onClick={() => setCoachesOnly((v) => !v)}
-            >
-              Coaches only
+              <Icon name="close" size={17} />
             </button>
           )}
         </div>
-      )}
-
+        {/* People and events carry a city; a studio carries a free-text
+            address and nothing to group by yet, so the filter isn't offered
+            there. It opens on the viewer's own city, which is what Discover
+            is for, and fills in so the row says what it's showing. */}
+        {view !== "studios" && cities.length > 1 && (
+          <div className={`discitysel${city ? " on" : ""}`}>
+            <Icon name="place" size={17} className="discitysel-ic" />
+            <select
+              className="discitysel-in"
+              aria-label="Filter by city"
+              value={city ?? ""}
+              onChange={(e) => setCity(e.target.value || null)}
+            >
+              <option value="">All cities</option>
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {view === "people" && coaches.some((c) => c.kind !== "coach") && (
+          <button
+            type="button"
+            className={`dischip${coachesOnly ? " on" : ""}`}
+            role="switch"
+            aria-checked={coachesOnly}
+            onClick={() => setCoachesOnly((v) => !v)}
+          >
+            Coaches only
+          </button>
+        )}
+      </div>
 
       {/* Coaches seed the board; it shows above the empty state on purpose,
           because the empty board is exactly when posting matters most. */}
@@ -267,7 +298,45 @@ export function DiscoverList({
         </button>
       )}
 
-      {view === "events" ? (
+      {view === "studios" ? (
+        shownStudios.length === 0 ? (
+          <div className="empty-block">
+            <h2>{q ? "No studios match that" : "No studios yet"}</h2>
+            <p>
+              {q
+                ? "Try another name or town."
+                : "Studios arrive as coaches add the places they teach."}
+            </p>
+          </div>
+        ) : (
+          <div className="dislist dislist-bare">
+            {shownStudios.map((st) => (
+              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}`}>
+                <span className="disrow-avwrap">
+                  {st.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="disrow-av disrow-av-sq" src={st.photo} alt="" />
+                  ) : (
+                    <span className="disrow-av disrow-av-sq disrow-av-place" aria-hidden="true">
+                      <Icon name="place" size={20} />
+                    </span>
+                  )}
+                </span>
+                <span className="disrow-txt">
+                  <span className="disrow-nmline">
+                    <span className="nm">{st.name}</span>
+                    {st.hasSchedule && <span className="kindtag kindtag-sm">Schedule</span>}
+                  </span>
+                  <span className="disrow-sub">{st.address}</span>
+                </span>
+                <span className="disrow-chev">
+                  <Icon name="chevron_right" size={18} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : view === "events" ? (
         shownEvents.length === 0 ? (
           <div className="empty-block">
             <h2>{city && !q ? `Nothing coming up in ${city}` : "Nothing coming up"}</h2>

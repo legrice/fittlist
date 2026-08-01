@@ -3190,8 +3190,13 @@ button.ps-card { cursor: pointer; }
 
 
 /* ---- discover (the directory) ---- */
+/* The box and its filters on one row. Two rows of chrome above a list is most
+   of a phone screen spent on controls. It wraps rather than crushing the box
+   when a narrow screen has to hold both filters. */
+.dissearchrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 2px 0 14px; }
 .dissearch {
-  display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; padding: 0 13px;
+  flex: 1 1 190px; min-width: 0;
+  display: flex; align-items: center; gap: 8px; padding: 0 13px;
   background: var(--card); border: 1.5px solid var(--line); border-radius: 999px;
 }
 .dissearch-ic { color: var(--ol); flex-shrink: 0; }
@@ -3219,15 +3224,17 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 6px; padding: 0 15px; cursor: pointer;
 }
 .disnear.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.discitysel { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
-.discitysel-ic {
-  position: absolute; right: 12px; color: var(--ol); pointer-events: none;
+.discitysel {
+  position: relative; flex-shrink: 0; display: flex; align-items: center; height: 46px;
 }
+.discitysel.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.discitysel-ic { position: absolute; left: 13px; color: var(--ol); pointer-events: none; }
+.discitysel.on .discitysel-ic { color: var(--paper); }
 .discitysel-in {
-  appearance: none; -webkit-appearance: none; width: 100%; height: 100%;
-  padding: 0 34px 0 15px; border: 0; background: none; color: inherit;
+  appearance: none; -webkit-appearance: none; max-width: 148px; height: 100%;
+  padding: 0 15px 0 34px; border: 0; background: none; color: inherit;
   font-family: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
-  border-radius: 999px;
+  border-radius: 999px; text-overflow: ellipsis;
 }
 .dislist {
   display: flex; flex-direction: column; background: var(--card); border-radius: 16px;
@@ -3238,6 +3245,22 @@ button.ps-card { cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .disrow:last-child { border-bottom: none; }
+/* A studio row is the whole link: there's no corner control, because a place
+   is not somebody you follow. Which also means the 96px a person's row keeps
+   clear for the Follow pill is dead space here, and long gym names were
+   truncating into it. */
+.disrow-studio { text-decoration: none; color: var(--ink); gap: 12px; }
+.disrow.disrow-studio .disrow-nmline { padding-right: 0; }
+.disrow-av-sq { border-radius: 12px; }
+.disrow-av-place {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cl); color: var(--ol);
+}
+.disrow-sub {
+  display: block; font-size: 13px; color: var(--ol); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.disrow-chev { flex-shrink: 0; color: rgba(17, 17, 17, .32); display: flex; }
 .disrow-main {
   flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
   text-decoration: none; color: var(--ink);
