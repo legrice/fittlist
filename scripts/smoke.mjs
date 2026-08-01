@@ -1533,8 +1533,8 @@ await fan.locator(".classoverlay-nm").waitFor();
 if (!(await fan.locator(".feedagenda .ps-event").count()))
   fail("the week should stay behind the overlay");
 await fan.locator(".ovcta-save").click();
-// The note answers the heart, up in the top third, with the door to the list.
-await fan.getByText("Added to your favorites").waitFor();
+// The note answers the tap, up in the top third, and it names the list.
+await fan.getByText("Added to your plans").waitFor();
 await fan.locator(".ovcta-save.on").waitFor();
 // Reopening it says the same thing: the save is on the server, not in the tab.
 await fan.locator(".ovcircle-back").click();
@@ -1618,15 +1618,28 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     fail("an empty week should carry no count");
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
+  // Before the tap: an empty calendar and the word.
+  {
+    const off = (await fan.locator(".ovcta-save").innerText()).trim();
+    if (off !== "Add") fail(`the control should read Add before the tap, got "${off}"`);
+  }
   await fan.locator(".ovcta-save").click();
-  await fan.getByText("Added to your favorites").waitFor();
-  // The heart fills in and the word leaves with the tap.
+  await fan.getByText("Added to your plans").waitFor();
+  // The calendar fills in, tick and all, and the word leaves with the tap. It
+  // was a heart, which said "favourite" and meant "I'm going".
   await fan.locator(".ovcta-save.on").waitFor();
   if ((await fan.locator(".ovcta-save").innerText()).trim())
-    fail("the saved heart should drop the word");
+    fail("the added calendar should drop the word");
   {
-    const fill = await fan.locator(".ovcta-save.on .icon svg").evaluate((e) => getComputedStyle(e).fill);
-    if (fill !== "rgb(250, 248, 242)") fail("the saved heart should fill paper-white on the dark pill, got " + fill);
+    const paint = await fan
+      .locator(".ovcta-save.on .icon svg path")
+      .last()
+      .evaluate((e) => ({ fill: getComputedStyle(e).fill, rule: getComputedStyle(e).fillRule }));
+    if (paint.fill !== "rgb(250, 248, 242)")
+      fail("the added calendar should fill paper-white on the dark pill, got " + paint.fill);
+    // evenodd is what cuts the tick out of the fill; without it the tick is
+    // swallowed and the glyph is a solid box.
+    if (paint.rule !== "evenodd") fail("the tick should be a hole in the fill, got " + paint.rule);
   }
   // Whose class it is, as a face and a name.
   await fan.locator(".classoverlay-coach .classsheet-av").waitFor();

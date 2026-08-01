@@ -3857,10 +3857,11 @@ button.ps-card { cursor: pointer; }
 .ovcta-btn[disabled] { opacity: .7; }
 /* currentColor so the hairline follows the pill through both themes. */
 .ovcta-div { width: 1px; align-self: stretch; margin: 6px 0; background: currentColor; opacity: .3; }
-/* The heart fills in and the word leaves with the tap. White on the dark
-   pill (currentColor, so the dark theme's inverted pill stays right too):
-   an orange fill fought the black background. */
-.ovcta-save.on .icon svg { fill: currentColor; }
+/* The glyph swaps for its filled twin and the word leaves with the tap. The
+   fill is currentColor, so the dark theme's inverted pill stays right too; an
+   orange fill fought the black background. Nothing here forces the fill any
+   more: `event_added` paints its own, with the tick cut out of it, which is
+   what a filled calendar needs and a filled heart never did. */
 .ovbook-menu {
   position: fixed; left: 50%; transform: translateX(-50%); z-index: 2;
   bottom: calc(86px + env(safe-area-inset-bottom));
@@ -3909,7 +3910,6 @@ button.ps-card { cursor: pointer; }
   pointer-events: none; transition: opacity .18s ease, transform .18s ease;
 }
 .favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
-.favtoast-heart svg { fill: currentColor; }
 .favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Section titles inside the overlay, About first among them. */

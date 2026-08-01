@@ -223,7 +223,9 @@ export function FeedAgenda({
                           {/* Level with the coach's name, above the time — the
                               row reads who, then when, and Saved sits with the
                               commitment rather than in the class title. */}
-                          {on && <span className="ps-goingtag">Saved</span>}
+                          {/* The control says Add and the note says Added to
+                              your plans, so the row says the same word. */}
+                          {on && <span className="ps-goingtag">Added</span>}
                           <span className="ps-etime">
                             {i.hm}
                             <span className="ps-ap">{i.ap}</span>

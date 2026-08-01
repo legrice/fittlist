@@ -916,6 +916,23 @@ points at exactly that. A server-rendered list keeps real `href`s and wraps in
 `classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
 the next date it runs) can't drift between them.
 
+**The control that puts a class in your plans is a calendar, not a heart.**
+A heart says favourite and means "I like this"; what the tap actually does is
+put the class on a list called Plans, which is a tab with a calendar on it. So
+the pill is an empty calendar and the word Add, and the tap swaps it for the
+same calendar with a tick cut into it, exactly the glyph the Plans tab wears.
+The toast names the list (`Added to your plans`) and links to it. The swipe on
+a feed row is the same pair of words and the same glyph, because a swipe and a
+tap are the same thing done two ways.
+
+`event_added` in `Icon.tsx` is hand-drawn rather than Lucide's `CalendarCheck`,
+and the reason is the fill: filling an outline calendar swallows the tick, and
+drawing the tick on top would mean knowing what colour the glyph is sitting on.
+The tick is a hole in one `fill-rule: evenodd` path instead, so the whole thing
+is `currentColor` and works on the dark pill, the dark toast, and whatever comes
+next. Nothing in CSS forces a fill on it any more; if that rule comes back it
+will paint over the tick.
+
 **Your week is a shortlist, not a calendar.** `/week`, the first tab, lists
 only the classes someone added, from today forward, and empties itself as the
 week passes. Three things keep it from reading as "fittlist wants to be your

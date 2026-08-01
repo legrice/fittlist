@@ -50,6 +50,28 @@ import {
   Pencil,
   Settings, ShieldCheck, Zap } from "lucide-react";
 
+/**
+ * A calendar with the tick cut out of it: the saved state of "this is in my
+ * plans". Lucide's CalendarCheck is an outline, and filling it swallows the
+ * tick; drawing the tick on top would mean knowing what colour it is sitting
+ * on, which the icon can't know and shouldn't have to. So the tick is a hole
+ * in one evenodd path, the whole glyph is currentColor, and it reads on any
+ * background the pill or the toast happens to have.
+ */
+function CalendarAdded({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M8 2.5v4M16 2.5v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6 6h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3Zm1.02 8.18 3.58 3.58 6.38-6.38-1.56-1.56-4.82 4.82-2.02-2.02-1.56 1.56Z"
+      />
+    </svg>
+  );
+}
+
 // Lucide, drawn inline as SVG. Call sites keep the old Material names — this
 // map is the only place that knows the difference — so changing sets again is
 // a one-file job. No icon font also means no blocking request to Google and no
@@ -83,6 +105,8 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   dark_mode: Moon,
   event: Calendar,
   event_available: CalendarCheck,
+  // The pair on a class: an empty calendar, and one with the tick in it.
+  event_added: CalendarAdded,
   expand_more: ChevronDown,
   favorite: Heart,
   fingerprint: Fingerprint,

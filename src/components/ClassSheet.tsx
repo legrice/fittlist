@@ -403,7 +403,7 @@ export function ClassSheet({
         </div>
       )}
 
-      {/* The floating pill: Book on the left, the heart on the right. The
+      {/* The floating pill: Book on the left, the calendar on the right. The
           owner's pill is their one action instead. */}
       {c && (isOwner || showBook || c.canAdd) && (
         <>
@@ -425,11 +425,15 @@ export function ClassSheet({
                     className={`ovcta-btn ovcta-save${added ? " on" : ""}`}
                     disabled={pending}
                     aria-pressed={added}
-                    aria-label={added ? "Saved" : "Save"}
+                    aria-label={added ? "In your plans" : "Add to your plans"}
                     onClick={toggle}
                   >
-                    <Icon name="favorite" size={19} />
-                    {!added && "Save"}
+                    {/* An empty calendar, then the same calendar with the tick
+                        cut into it. It was a heart, which said "favourite" and
+                        meant "I'm going": the list it joins is Plans, and the
+                        control should look like the place it puts things. */}
+                    <Icon name={added ? "event_added" : "calendar_today"} size={19} />
+                    {!added && "Add"}
                   </button>
                 )}
               </>
@@ -520,11 +524,13 @@ export function ClassSheet({
           </div>
         </div>
       )}
-      {/* "It went somewhere": the note that answers the heart, up in the top
-          third where the eye already is, with the way to the list it joined. */}
+      {/* "It went somewhere": the note that answers the tap, up in the top
+          third where the eye already is, with the way to the list it joined.
+          It names that list, because the list has a name and it is the tab
+          they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
-        <Icon name="favorite" size={16} className="favtoast-heart" />
-        Added to your favorites
+        <Icon name="event_added" size={16} />
+        Added to your plans
         <Link className="favtoast-link" href="/week" onClick={() => setFavOn(false)}>
           See them
         </Link>
