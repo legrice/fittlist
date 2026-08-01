@@ -1,108 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
-import { initialOf } from "@/lib/avatar";
-import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { Icon } from "@/components/Icon";
-import { LinkPending } from "@/components/LinkPending";
-
-export type DiscoverCoach = {
-  id: string;
-  handle: string;
-  name: string;
-  /** Members list here too now; the badge is what tells them apart. */
-  kind: "coach" | "member";
-  photo: string | null;
-  title: string;
-  location: string;
-  classesThisWeek: number;
-  following: boolean;
-  /** A pending ask at a coach who approves their followers. */
-  requested: boolean;
-  /** Worn as a dot on the avatar, same as the profile photo. Coaches only. */
-  availability: string | null;
-  /** What they teach, from the same list a studio picks its types from. */
-  disciplines: string[];
-  color: string;
-};
-
-// The row's corner control: a small Follow that flips green when it's a yes,
-// so following someone doesn't require the round trip through their page.
-// Same tri-state as the profile pill (a gated coach's tap reads Requested,
-// tapping again withdraws it), scoped to its own row.
-function FollowMini({
-  handle,
-  name,
-  isCoach,
-  following,
-  requested,
-}: {
-  handle: string;
-  name: string;
-  /** The hint promises a week on Following, which only a coach has. Following
-   *  a member buys something quieter and mutual, and what it means is still
-   *  being worked out, so the bar stays quiet until it can say something true. */
-  isCoach: boolean;
-  following: boolean;
-  requested: boolean;
-}) {
-  const [state, setState] = useState<"off" | "asked" | "on">(
-    following ? "on" : requested ? "asked" : "off",
-  );
-  // True only for a yes born of a tap, so the spring plays once at the moment
-  // it means something and a page of already-green pills loads still.
-  const [pop, setPop] = useState(false);
-  const [hint, setHint] = useState(false);
-  const [pending, start] = useTransition();
-  const tap = () =>
-    start(async () => {
-      if (state === "off") {
-        const res = await followTrainer(handle);
-        if (res.ok) {
-          setState(res.requested ? "asked" : "on");
-          setPop(!res.requested);
-          if (isCoach && !res.requested && !followHintOff()) setHint(true);
-        }
-      } else {
-        const res = await unfollowTrainer(handle);
-        if (res.ok) {
-          setState("off");
-          setPop(false);
-        }
-      }
-    });
-  return (
-    <>
-    <FollowHint name={name.trim().split(/\s+/)[0] || name} on={hint} onClose={() => setHint(false)} />
-    <button
-      className={`disfol${state === "on" ? " on" : ""}${pop ? " pop" : ""}`}
-      disabled={pending}
-      aria-pressed={state === "on"}
-      onClick={tap}
-    >
-      {state === "on" && <Icon name="check" size={13} />}
-      {state === "on" ? "Following" : state === "asked" ? "Requested" : "Follow"}
-    </button>
-    </>
-  );
-}
-
-/** A place in the directory. Not followable: you follow a person, and a gym
- *  is not a person. Its page is where its week lives. */
-export type DiscoverStudio = {
-  id: string;
-  slug: string;
-  name: string;
-  address: string;
-  photo: string | null;
-  types: string[];
-  /** It runs its schedule here, so there's a week to see. */
-  hasSchedule: boolean;
-  /** Behind the initial when there's no photo, same sixty a coach draws from. */
-  color: string;
-};
+import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 
 // Search over the directory, which has two halves: the people and the places.
 // One search box and one filter on a single row, and the tab above decides
@@ -118,8 +19,8 @@ export function DiscoverList({
   backHref,
   hideBack = false,
 }: {
-  coaches: DiscoverCoach[];
-  studios?: DiscoverStudio[];
+  coaches: DirPerson[];
+  studios?: DirStudio[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
@@ -394,32 +295,7 @@ export function DiscoverList({
         ) : (
           <div className="dislist dislist-bare">
             {shownStudios.map((st) => (
-              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}?from=discover`}>
-                <span className="disrow-avwrap">
-                  {st.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="disrow-av" src={st.photo} alt="" />
-                  ) : (
-                    <span
-                      className="disrow-av disrow-av-empty"
-                      style={{ background: st.color }}
-                      aria-hidden="true"
-                    >
-                      {initialOf(st.name)}
-                    </span>
-                  )}
-                </span>
-                <span className="disrow-txt">
-                  <span className="disrow-nmline">
-                    <span className="nm">{st.name}</span>
-                    {st.hasSchedule && <span className="kindtag kindtag-sm">Schedule</span>}
-                  </span>
-                  <span className="disrow-sub">{st.address}</span>
-                </span>
-                <span className="disrow-chev">
-                  <Icon name="chevron_right" size={18} />
-                </span>
-              </Link>
+              <StudioRow key={st.id} studio={st} from="discover" />
             ))}
           </div>
         )
@@ -446,54 +322,7 @@ export function DiscoverList({
       ) : (
         <div className="dislist dislist-bare">
           {shown.map((c) => (
-            <div key={c.id} className="disrow">
-              <Link className="disrow-main" href={`/${c.handle}?from=discover`}>
-                <span className="disrow-avwrap">
-                  {c.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="disrow-av" src={c.photo} alt="" />
-                  ) : (
-                    <span
-                      className="disrow-av disrow-av-empty"
-                      style={{ background: c.color }}
-                      aria-hidden="true"
-                    >
-                      {(c.name.trim().charAt(0) || "?").toUpperCase()}
-                    </span>
-                  )}
-                  {c.availability && (
-                    <span className={`avphotodot avphotodot-${c.availability}`} aria-hidden="true" />
-                  )}
-                </span>
-                <span className="disrow-txt">
-                  {/* The tag rides right beside the name; the Follow pill
-                      is the row's corner control, pinned top-right. */}
-                  <span className="disrow-nmline">
-                    <span className="nm">{c.name}</span>
-                    {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
-                  </span>
-                  {/* The tagline only. The city came off the line: the filter
-                      above already speaks location, and the repeated city name
-                      crowded out the taglines it sat beside. */}
-                  <span className="sub">{c.title || `fittlist.co/${c.handle}`}</span>
-                  {c.kind === "coach" && (
-                    <span className="wk">
-                      {c.classesThisWeek
-                        ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`
-                        : "No classes posted yet"}
-                    </span>
-                  )}
-                </span>
-                <LinkPending />
-              </Link>
-              <FollowMini
-                handle={c.handle}
-                name={c.name}
-                isCoach={c.kind === "coach"}
-                following={c.following}
-                requested={c.requested}
-              />
-            </div>
+            <PersonRow key={c.id} person={c} from="discover" />
           ))}
         </div>
       )}

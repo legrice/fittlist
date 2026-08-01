@@ -1358,6 +1358,76 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 }
 }
 
+// ---- Universal search: one box, both halves under it, told apart by a
+// heading. The point is that you don't have to know which half a thing is in
+// before you look for it.
+{
+  await fan.goto(BASE + "/feed");
+  await fan.locator(".searchbtn").click();
+  await fan.waitForURL(/\/search/);
+  // Nothing typed yet: a prompt and the door to browsing, not the directory.
+  await fan.locator(".empty-block", { hasText: "Search fittlist" }).waitFor();
+  if (await fan.locator(".disrow").count()) fail("search should list nothing until it is asked");
+  // The box takes the caret on arrival, so the keyboard is already up.
+  if (!(await fan.evaluate(() => document.activeElement?.classList.contains("dissearch-in"))))
+    fail("the search box should be focused on arrival");
+  // One letter is not a question: the floor keeps a stray keystroke from
+  // asking for the whole directory.
+  await fan.locator(".dissearch-in").fill("m");
+  await fan.waitForTimeout(600);
+  if (await fan.locator(".srchhead").count()) fail("one character should not search");
+
+  // A coach and a studio that share a word: both sections, both named.
+  await fan.locator(".dissearch-in").fill("ironbound");
+  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
+  {
+    const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) => t.split("\n")[0]);
+    if (!heads.includes("STUDIOS"))
+      fail("a studio match should sit under a Studios heading: " + heads.join(","));
+    // The directory is seeded with a second Ironbound, so take the first.
+    await fan.locator(".disrow-studio", { hasText: "Ironbound Strength" }).first().waitFor();
+  }
+
+  // A person by name, with the directory's own row: the Coach badge, the
+  // week count and the corner Follow, not a second thinner copy of them.
+  await fan.locator(".dissearch-in").fill("matt");
+  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
+  {
+    const row = fan.locator(".disrow", { hasText: "Matt" }).first();
+    await row.locator(".kindtag", { hasText: "Coach" }).waitFor();
+    await row.locator(".disrow-txt .wk").waitFor();
+    await row.locator(".disfol").waitFor();
+  }
+
+  // A town finds the people who train there, and the places in it, in one go:
+  // the whole reason this isn't two boxes.
+  await fan.locator(".dissearch-in").fill("jersey city");
+  // Wait for the half that wasn't on screen a moment ago. The people section
+  // was already up from the search before this one, so waiting on it returns
+  // at once and reads the old render.
+  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
+  {
+    const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) => t.split("\n")[0]);
+    if (heads.join(",") !== "PEOPLE,STUDIOS")
+      fail("a town should turn up both halves, people first: " + heads.join(","));
+  }
+
+  // Nothing matches says so, once, and offers no rows.
+  await fan.locator(".dissearch-in").fill("zzqqxx");
+  await fan.locator(".empty-block", { hasText: "Nothing matches that" }).waitFor();
+  if (await fan.locator(".srchhead").count()) fail("an empty result should carry no headings");
+
+  // Tapping through and back: the arrow names the list you came from.
+  await fan.locator(".dissearch-in").fill("matt");
+  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
+  await fan.locator(".disrow", { hasText: "Matt" }).first().locator(".disrow-main").click();
+  await fan.locator(".profhero").waitFor();
+  if (!/from=search/.test(fan.url())) fail("a search result should say where it came from: " + fan.url());
+  await fan.locator(".profback .evback").click();
+  await fan.waitForURL(/\/search/);
+  console.log("search ok (one box, People and Studios named under it)");
+}
+
 // The studio directory is coach-editable, and a coach is kind, not handle:
 // members hold handles too, and testing the handle put the edit button on
 // every member's screen and left the action open behind it.

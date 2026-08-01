@@ -71,6 +71,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
  */
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
   if (from === "discover") return { href: "/discover", label: "Back to Discover" };
+  if (from === "search") return { href: "/search", label: "Back to search" };
   if (from === "home") return { href: "/feed", label: "Back to Following" };
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
   return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };

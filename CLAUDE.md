@@ -266,6 +266,41 @@ credential) and `disciplines` (a pick, a category) are different fields.
 `TypePicker` renders it for both, and "accepting clients" is a filter for free
 because `users.availability` already says it.
 
+**Search is one box over both halves; Discover is a segment you pick first.**
+`/search` sits behind the header's magnifier and shows People and Studios as
+two headed sections at once, because you don't know which half the thing you
+want is in: type "Stacey" and you want Stacey, and Stacey's gym, on the same
+screen. A heading only exists when its section has something in it, so a
+search that finds only places says "Studios" once and nothing about people.
+Both rows are the directory's own (`PersonRow`, `StudioRow` in
+`DirectoryRows.tsx`, shared with `DiscoverList`): the Coach badge, the
+availability dot, the classes-this-week line and the corner Follow have to
+mean the same thing on both screens, and a second copy would drift where
+nobody was looking.
+
+`searchAll` runs on the server rather than filtering a list the page already
+shipped, which is what Discover does. A directory has to arrive whole; a
+search is a question, and sending every account to every device so the answer
+can be computed there stops being reasonable well before it stops working. It
+keeps two rules and they are why it can't be a plain LIKE: blocked in either
+direction is not in the results, and `discoverable = false` is not either,
+because that switch means delisted with the page still public and a search
+that ignored it would make the setting a lie. Discover's *other* filter (a
+coach needs a schedule or a bio to be worth listing) is deliberately not
+applied here: that is a quality bar for a list somebody is browsing, and you
+asked for this person by name. Two characters is the floor, and the number
+lives twice (the action and `SearchScreen`) because a `"use server"` file can
+only export async functions. Each keystroke's request carries a sequence
+number and only the newest may paint, or a slow "st" lands after "stacey" and
+the results go backwards while you type.
+
+**A screen with the bottom bar needs the header links too.** `AppChrome`'s
+`headerNav` follows `bar` by default: above 940px the bottom bar hides and
+`HeaderNav` is the only navigation left, so a screen that had tabs at 390px
+and none at 1280px is a dead end. The single opt-out is a profile
+(`headerNav={false}`), whose header floats over a photograph in white, where a
+row of ink links is a row nobody can read.
+
 **Discover has two halves, and only one of them is people.** A People/Studios
 segment above one row of controls: the search box, and the city filter across
 from it. The box says which half it's searching. Studios are not followable and

@@ -21,10 +21,18 @@ import type { NavTab } from "@/lib/nav";
 export async function AppChrome({
   userId,
   bar = false,
+  headerNav,
   active,
 }: {
   userId: string;
   bar?: boolean;
+  /** The tabs as header links too, for the width where the bottom bar hides.
+   *  Follows `bar` by default, because a screen with tabs has to keep them at
+   *  every width: above 940px the bottom bar is gone and without these there
+   *  is no navigation at all. The one opt-out is a profile, whose header
+   *  floats over a photograph in white, where a row of ink links is a row
+   *  nobody can read. */
+  headerNav?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
 }) {
@@ -72,6 +80,7 @@ export async function AppChrome({
       // editable schedule: a page with no identity that read as showing up at
       // random.
       home={(await fansVisible()) ? "/feed" : "/app"}
+      nav={(headerNav ?? bar) ? { coach: isCoach, youHref, active } : undefined}
     />
   );
   if (!bar) return header;

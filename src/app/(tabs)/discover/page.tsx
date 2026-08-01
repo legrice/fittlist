@@ -6,7 +6,8 @@ import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverCoach, type DiscoverStudio } from "@/components/DiscoverList";
+import { DiscoverList } from "@/components/DiscoverList";
+import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ export default async function DiscoverPage() {
   const requested = new Set(askRows.map((r) => r.trainerUserId));
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
-  const coaches: DiscoverCoach[] = rows
+  const coaches: DirPerson[] = rows
     // A coach's page has to be worth opening: a schedule, or enough profile.
     // A member only needs a name; their profile is who they are, and the whole
     // point of listing them is being findable by the people they train with.
@@ -109,7 +110,7 @@ export default async function DiscoverPage() {
   // is a place, and a place doesn't get ranked by whether it signed up. The
   // tag says which of them you can see a week for, which is the useful part.
   const studioRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
-  const studios: DiscoverStudio[] = studioRows.map((st) => ({
+  const studios: DirStudio[] = studioRows.map((st) => ({
     id: st.id,
     slug: st.slug ?? st.id,
     name: st.name,

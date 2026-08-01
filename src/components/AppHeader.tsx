@@ -56,7 +56,7 @@ export function AppHeader({
             of those: Discover is where you browse, this is where you go when
             you already know the name. */}
         {search && (
-          <Link className="iconbtn inboxbtn" aria-label="Search" href="/discover">
+          <Link className="iconbtn inboxbtn searchbtn" aria-label="Search" href="/search">
             <Icon name="search" size={20} />
           </Link>
         )}

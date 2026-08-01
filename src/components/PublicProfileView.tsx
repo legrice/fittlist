@@ -371,7 +371,7 @@ export async function PublicProfileView({
           // tab, so landing on it must not take the tabs away. Somebody
           // else's profile is a page you visited, and the arrow is its way
           // off.
-          <AppChrome userId={viewerId} bar={isOwner} active={isOwner ? "you" : undefined} />
+          <AppChrome userId={viewerId} bar={isOwner} headerNav={false} active={isOwner ? "you" : undefined} />
         ) : (
           <PublicTopBar handle={handle} />
         )}
