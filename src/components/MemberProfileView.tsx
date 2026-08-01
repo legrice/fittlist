@@ -119,6 +119,7 @@ export async function MemberProfileView({
               follow={follow}
               isOwner={isOwner}
               canMessage={!isOwner && user.messagesOpen}
+              signedIn={!!viewerId}
             />
           ) : user.photo ? (
             // eslint-disable-next-line @next/next/no-img-element

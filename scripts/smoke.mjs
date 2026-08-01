@@ -529,26 +529,15 @@ await expect(
   "Studios tab lists the studio",
 );
 await page.goto(BASE + "/matt/about");
-// The ways to reach them live on their own URL now, not under the bio.
+// The ways to reach them live behind the Contact pill now, not under the bio.
 if (await page.locator(".proflink").count())
-  fail("contact links belong on /matt/contact, not on About");
-await page.goto(BASE + "/matt/contact");
-await expect(
-  page.locator('.proflink[href="https://instagram.com/mattlifts"]').isVisible(),
-  "contact shows instagram link",
-);
-await expect(
-  page.locator('.proflink[href="https://mattlifts.com/"]').isVisible(),
-  "contact shows website link",
-);
-await expect(
-  page.locator('.proflink[href="mailto:matt@ironbound.co"]').isVisible(),
-  "contact shows email contact button",
-);
-await expect(
-  page.locator('.proflink[href^="tel:"]').isVisible(),
-  "contact shows call contact button",
-);
+  fail("contact links belong in the Contact sheet, not on About");
+// And the pill is a visitor's: the owner's two slots are Share and Edit, and
+// their own contact details are in settings. What's behind it is checked from
+// a visitor's side further down, once counting views is no longer at stake.
+await page.goto(BASE + "/matt");
+if (await page.locator(".profacts .actpill-primary", { hasText: "Contact" }).count())
+  fail("the owner should not be offered a way to contact themselves");
 await page.goto(BASE + "/matt/about");
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
 if (await page.locator(".profacts .followpill").count())
@@ -916,7 +905,7 @@ if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch
     fail(`a header link drops the coach's credit: ${JSON.stringify(hrefs)}`);
   // One door up here, and it opens on arrival rather than dropping them on the
   // pitch. Two side by side made the visitor pick before reading anything, and
-  // sat right above Message and Follow.
+  // sat right above Contact and Follow.
   if (await bar.getByText("Sign up").count())
     fail("the visitor bar carries one door; sign up lives inside the sheet");
   await bar.getByText("Log in").click();
@@ -1251,7 +1240,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
 
-// Everything that narrows the list is behind one button, and the coach's own
+// Everything that narrows the list is behind one floating pill, and the coach's own
 // disciplines are what it narrows by. One vocabulary: the same word a studio
 // picks for what it offers.
 {
@@ -1269,13 +1258,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await page.locator(".studiotype", { hasText: "Yoga" }).waitFor();
 
   await fan.goto(BASE + "/discover");
-  await fan.locator(".disfilterbtn").click();
+  await fan.locator(".disfilterpill").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
   await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
   await fan.locator(".sheet .publishwrap .btn").click();
   await fan.waitForTimeout(300);
-  if (!(await fan.locator(".disfilterbtn.on").count()))
-    fail("a live filter should say so on the button");
+  if (!(await fan.locator(".disfilterpill-n").count()))
+    fail("a live filter should show its count on the pill");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
   if (await fan.locator(".disrow", { hasText: "Sam" }).count())
     fail("filtering by what someone teaches should drop the ones who don't");
@@ -1283,21 +1272,24 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // vocabulary, and carrying a coach's word over would filter to nobody.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
-  await fan.locator(".disfilterbtn").click();
+  await fan.locator(".disfilterpill").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
   if (await fan.locator(".sheet .typepick .chip.sel").count())
     fail("a pick the other lens can't honour should not survive the switch");
   await fan.locator(".sheetclose").click();
-  // Clearing puts everything back.
+  // Clearing puts everything back. Picking again first: the lens switch above
+  // already dropped the filter, so there'd be nothing to clear otherwise, and
+  // Clear filters only shows when something is on.
   await fan.getByRole("button", { name: "People", exact: true }).click();
   await fan.waitForTimeout(200);
-  await fan.locator(".disfilterbtn").click();
+  await fan.locator(".disfilterpill").click();
+  await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
   await fan.getByRole("button", { name: "Clear filters" }).click();
   await fan.locator(".sheet .publishwrap .btn").click();
   await fan.waitForTimeout(300);
-  if (await fan.locator(".disfilterbtn.on").count())
-    fail("cleared filters should leave the button quiet");
-  console.log("discover filters ok (one button, one vocabulary, both halves)");
+  if (await fan.locator(".disfilterpill-n").count())
+    fail("cleared filters should leave the pill without a count");
+  console.log("discover filters ok (one pill, one vocabulary, both halves)");
 }
 
 // A filter is only offered where it can narrow something. The chips come from
@@ -1305,12 +1297,12 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // coaches start saying what they teach.
 {
   await fan.goto(BASE + "/discover");
-  await fan.locator(".disfilterbtn").click();
+  await fan.locator(".disfilterpill").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
   const peopleChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
   await fan.locator(".sheetclose").click();
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
-  await fan.locator(".disfilterbtn").click();
+  await fan.locator(".disfilterpill").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
   const studioChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
   await fan.locator(".sheetclose").click();
@@ -1858,18 +1850,23 @@ await page.locator(".pubtab.sel").waitFor();
   const hrefs = await page
     .locator(".pubtabs a")
     .evaluateAll((els) => els.map((e) => new URL(e.href).pathname));
-  const want = ["/matt", "/matt/about", "/matt/studios", "/matt/contact"];
+  // Contact is a pill and a sheet now, not a tab: how to reach somebody is a
+  // thing you do rather than a section you read.
+  const want = ["/matt", "/matt/about", "/matt/studios"];
   if (hrefs.join("|") !== want.join("|"))
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
   // Landing on a section URL renders that section and only that section.
-  await page.goto(BASE + "/matt/contact");
-  await page.locator(".pubtab.sel", { hasText: "Contact" }).waitFor();
-  await page.locator('.proflink[href^="mailto:"]').waitFor();
+  await page.goto(BASE + "/matt/about");
+  await page.locator(".pubtab.sel", { hasText: "About" }).waitFor();
+  await page.locator(".profabout").waitFor();
   if (await page.locator(".ps-event").count())
-    fail("the contact URL should not carry the schedule");
-  if (await page.locator(".profabout").count())
-    fail("the contact URL should not carry the bio");
+    fail("the about URL should not carry the schedule");
+  // The old /contact link still resolves: people have already sent it. It
+  // lands on the schedule, with the Contact pill right there.
+  await page.goto(BASE + "/matt/contact");
+  await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
   // And back to the schedule, which is the bare handle.
+  await page.goto(BASE + "/matt/about");
   await page.locator(".pubtab", { hasText: "Schedule" }).click();
   await page.waitForURL((u) => u.pathname === "/matt");
   await page.locator(".ps-event").first().waitFor();
@@ -1930,7 +1927,8 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   await page.locator(".sheetclose").first().click();
   console.log("owner CTAs ok (Share filled, Edit outline, every share behind one)");
 }
-// following turns the pill green — the same yes as Going. Matt already
+// The two pills sit on the photograph now, so they're white against it:
+// Contact filled, Follow outlined, and following fills Follow in. Matt already
 // follows Sam by this point, so settle the state first rather than assuming.
 await page.goto(BASE + "/discover");
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
@@ -1940,8 +1938,25 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 {
-  const bg = await page.locator(".profacts .followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (bg !== "rgb(61, 139, 83)") fail("Following should be green, got " + bg);
+  const on = await page
+    .locator(".profacts .followpill")
+    .evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (on !== "rgb(255, 255, 255)") fail("Following should fill white, got " + on);
+  // And unfollowed it goes back to the outline: transparent, with a white
+  // border to read against whatever the photograph is doing.
+  await page.locator(".profacts .followpill").click();
+  await page.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
+  const off = await page.locator(".profacts .followpill").evaluate((e) => {
+    const s = getComputedStyle(e);
+    return `${s.backgroundColor}|${s.borderTopColor}`;
+  });
+  if (!off.startsWith("rgba(0, 0, 0, 0)") && !off.startsWith("transparent"))
+    fail("Follow should be an outline on the photo, got " + off);
+  if (!/rgba?\(255, 255, 255/.test(off.split("|")[1]))
+    fail("Follow's border should be white, got " + off);
+  // Put it back, so the rest of the suite finds the follow it expects.
+  await page.locator(".profacts .followpill").click();
+  await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 // Somebody else's page is not yours to configure, and the header carries no
 // gear anywhere now, so there is nothing here to open settings with.
@@ -2141,20 +2156,17 @@ await page.waitForTimeout(450); // the account slides up
   await page.locator(".availopt.sel", { hasText: "Accepting" }).waitFor();
   await page.locator(".sheet .sheetclose").click();
 }
-// And it shows on the page as a dot on the profile photo; the words live in
-// the photo overlay, under the picture.
+// And it shows on the page, next to the Coach badge above the name. The photo
+// is the hero now, so there's no circle to hang a dot on and no overlay to say
+// the words in.
 {
   await page.goto(BASE + "/matt");
-  await page.locator(".avzoom-trigger .avphotodot-accepting").waitFor();
+  const tag = page.locator(".profhero-tags .availtag-accepting");
+  await tag.waitFor();
+  if (!(await tag.innerText()).includes("Open for clients"))
+    fail("the hero should say the status, got " + (await tag.innerText()));
   if (await page.locator(".profname-row .availbadge").count())
     fail("the old status badge should have left the name row");
-  await page.locator(".avzoom-trigger").click();
-  const badge = page.locator(".avoverlay .availbadge");
-  await badge.waitFor();
-  if (!(await badge.innerText()).includes("Open for clients"))
-    fail("the overlay should say the status, got " + (await badge.innerText()));
-  await page.locator(".avoverlay").click({ position: { x: 10, y: 10 } });
-  await page.waitForFunction(() => !document.querySelector(".avoverlay"));
 }
 // Back on the account, the row reports it without being opened.
 await page.goto(BASE + "/app");
@@ -2189,6 +2201,9 @@ await page.waitForTimeout(450);
 await page.locator(".setrow", { hasText: "Contact info" }).click();
 await page.locator("#cEmail").waitFor();
 await page.locator("#cEmail").fill("matt@coach.example.com");
+// The phone rides on this screen too, so it has to be re-stated here or the
+// save clears it and the Contact sheet loses a row further down.
+await page.locator("#cPhone").fill("+1 555 123 4567");
 await page.getByRole("button", { name: "Save contact info" }).click();
 await page.getByText("Contact info saved").waitFor();
 await page.goto(BASE + "/matt/about");
@@ -2209,30 +2224,50 @@ console.log("saving contact info leaves the rest alone ok");
   const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const vp = await visitor.newPage();
   vp.setDefaultTimeout(10000);
-  // The Contact tab's CTA, on its own URL now.
-  await vp.goto(BASE + "/matt/contact");
-  await vp.getByRole("button", { name: "Request private session" }).click();
+  // The Contact pill is the one door, and it opens on the ways to reach them
+  // with fittlist first: every other row hands the conversation to somebody
+  // else's app.
+  await vp.goto(BASE + "/matt");
+  await vp.locator(".profacts .actpill-primary", { hasText: "Contact" }).click();
+  await vp.locator(".sheet .contactlist").waitFor();
+  {
+    const rows = await vp.locator(".sheet .contactlist .proflink").allInnerTexts();
+    if (!/fittlist/i.test(rows[0] ?? "")) fail("fittlist should lead the ways: " + rows.join(", "));
+  }
+  // Everything they saved is a row, and each one still points where it did
+  // when this lived under a Contact tab.
+  for (const [sel, what] of [
+    ['[href="https://instagram.com/mattlifts"]', "instagram"],
+    ['[href="https://mattlifts.com/"]', "website"],
+    ['[href="mailto:matt@coach.example.com"]', "email"],
+    ['[href^="tel:"]', "call"],
+  ]) {
+    await expect(vp.locator(`.sheet .proflink${sel}`).isVisible(), `the sheet shows ${what}`);
+  }
+  await vp.locator(".sheet .proflink-first").click();
   await vp.locator("#rqName").fill("Priya Visitor");
   await vp.locator("#rqEmail").fill("priya@example.com");
   // The phone is optional and stays optional: a second visitor sends without
   // one below, and the send has to go through either way.
   await vp.locator("#rqPhone").fill("555 867 5309");
   await vp.locator("#rqMsg").fill("Any Saturday mornings free for 1:1?");
-  await vp.getByRole("button", { name: "Send message" }).click();
+  await vp.getByRole("button", { name: "Send to Matt" }).click();
   await vp.getByRole("heading", { name: "Message sent" }).waitFor();
+  await vp.getByRole("button", { name: "Done" }).click();
 
-  // The header's Message pill is the main door, and it opens the same composer.
+  // A second one, no phone, from a cold open.
   await vp.goto(BASE + "/matt");
-  await vp.locator(".profacts .actpill-primary", { hasText: "Message" }).click();
+  await vp.locator(".profacts .actpill-primary", { hasText: "Contact" }).click();
+  await vp.locator(".sheet .proflink-first").click();
   await vp.getByRole("heading", { name: "Message Matt" }).waitFor();
   await vp.locator("#rqName").fill("Theo Nophone");
   await vp.locator("#rqEmail").fill("theo@example.com");
   await vp.locator("#rqMsg").fill("Do you take beginners?");
-  await vp.getByRole("button", { name: "Send message" }).click();
+  await vp.getByRole("button", { name: "Send to Matt" }).click();
   await vp.getByRole("heading", { name: "Message sent" }).waitFor();
   await visitor.close();
 }
-console.log("private session requests sent ok (Contact CTA and the Message pill)");
+console.log("messages sent ok (the Contact sheet, twice)");
 
 // ---- Messages is a switch of its own. Availability says whether you're taking
 // private clients; this says whether anyone can write to you at all, and a
@@ -2258,11 +2293,12 @@ await page.locator(".acctclose").click();
   vp.setDefaultTimeout(10000);
   await vp.goto(BASE + "/matt");
   await vp.locator(".profacts").waitFor();
-  if (await vp.locator(".actpill-primary", { hasText: "Message" }).count())
-    fail("messages off should take the Message pill off the page");
-  await vp.goto(BASE + "/matt/contact");
-  if (await vp.getByRole("button", { name: "Request private session" }).count())
-    fail("messages off should close the Contact door too");
+  // The pill stays, because a coach's email and links are still ways to reach
+  // them; what closes is the fittlist row inside it.
+  await vp.locator(".profacts .actpill-primary", { hasText: "Contact" }).click();
+  await vp.locator(".sheet .contactlist").waitFor();
+  if (await vp.locator(".sheet .proflink-first").count())
+    fail("messages off should take Message on fittlist out of the sheet");
   await vp.goto(BASE + "/matt");
   // Following is unaffected: not writing to someone is not not following them.
   if (!(await vp.locator(".profacts .followpill").count()))

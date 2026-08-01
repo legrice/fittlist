@@ -26,14 +26,25 @@ export async function sendInquiry(
   messageRaw: string,
   phoneRaw = "",
 ): Promise<Result> {
-  const email = emailRaw.trim().toLowerCase();
-  const name = nameRaw.trim().slice(0, 80);
   const message = messageRaw.trim().slice(0, 2000);
   const phone = phoneRaw.trim().slice(0, 40);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email." };
   if (message.length < 2) return { ok: false, error: "Write a short message." };
 
   const db = await getDb();
+  // Somebody signed in is not a stranger, so the composer asks them for the
+  // message and nothing else. Their name and email come from the account here
+  // rather than from the form, which is what makes the fields safe to drop: a
+  // client that sent its own would be sending something we already know
+  // better. A visitor still fills them in, because a coach's reply has to
+  // reach somebody.
+  const viewerId = await getSessionUserId();
+  const viewer = viewerId
+    ? (await db.select().from(schema.users).where(eq(schema.users.id, viewerId)))[0]
+    : undefined;
+  const email = (viewer?.email ?? emailRaw).trim().toLowerCase();
+  const name = (viewer?.name ?? nameRaw).trim().slice(0, 80);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Enter a valid email." };
+
   const [coach] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!coach) return { ok: false, error: "Page not found." };
   // Blocking has to close the message door as well as the page, or it only
@@ -77,7 +88,7 @@ export async function sendInquiry(
 
   // The bell has to know: the Messages tab lives behind it, and a badge that
   // only counts per-thread unreads never lit it. Best effort, like follows.
-  const senderId = await getSessionUserId();
+  const senderId = viewerId;
   try {
     await addNotification(coach.id, {
       type: "message",

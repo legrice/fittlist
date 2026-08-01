@@ -5,7 +5,9 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { useEffect, useRef, type ReactNode } from "react";
 
-export type ProfileTab = "about" | "studios" | "contact" | "schedule";
+// Contact is not among them: it's the pill in the header and a sheet, and
+// /{handle}/contact redirects onto the schedule where that pill lives.
+export type ProfileTab = "about" | "studios" | "schedule";
 
 // The public profile header and one section under it.
 //
@@ -20,7 +22,6 @@ export function ProfileTabs({
   name,
   title,
   location,
-  hasContact,
   hasStudios,
   trackSchedule,
   photo,
@@ -37,8 +38,6 @@ export function ProfileTabs({
   name: string;
   title: string;
   location: string;
-  /** No contact details and no way to write to them means no Contact tab. */
-  hasContact: boolean;
   /** Nowhere they coach on record means no Studios tab. */
   hasStudios: boolean;
   trackSchedule: boolean;
@@ -47,7 +46,7 @@ export function ProfileTabs({
   photo: string | null;
   /** Their colour, behind the name when there's no photo. */
   color: string;
-  /** The row of pills under the name. A visitor gets Message and Follow; the
+  /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
   avail: ReactNode | null;
@@ -167,7 +166,6 @@ export function ProfileTabs({
           {tabLink("schedule", "Schedule")}
           {tabLink("about", "About")}
           {hasStudios && tabLink("studios", "Studios")}
-          {hasContact && tabLink("contact", "Contact")}
         </div>
       </div>
       <div className="pubpanel">{children}</div>

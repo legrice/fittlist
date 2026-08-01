@@ -1107,8 +1107,13 @@ button.ps-card { cursor: pointer; }
 .proflink:active { background: #efe8d8; }
 /* Contact section: the same link pills, stacked full-width as rows */
 .contactlist { display: flex; flex-direction: column; gap: 10px; }
-.reqbtn + .contactlist { margin-top: 16px; }
 .contactlist .proflink { width: 100%; padding: 14px 16px; border-radius: 16px; }
+/* The fittlist row is a button, not a link, so it has to be told the things a
+   link gets for free. It leads the sheet in ink: every other way here hands
+   the conversation to somebody else's app. */
+.contactlist button.proflink { text-align: left; cursor: pointer; font-size: 14px; }
+.contactlist .proflink-first { background: var(--ink); border-color: var(--ink); color: #fff; }
+.contactlist .proflink-first:active { background: #2b2510; }
 
 /* Studios: the places a coach is associated with, as its own tab. First
    thing on the page, so the sibling gap moves inside, between rows. */
@@ -1177,7 +1182,6 @@ button.ps-card { cursor: pointer; }
 .chipsfield-add:disabled { opacity: .4; }
 
 /* Request private session — CTA + composer */
-.reqbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; }
 .reqmsg { resize: none; line-height: 1.5; }
 
 /* Inbox button in the schedule header */
@@ -1839,6 +1843,14 @@ button.ps-card { cursor: pointer; }
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 [data-mode="dark"] .profhero .kindtag { background: rgba(0, 0, 0, .5); border: none; }
+/* Two of them side by side: what they are, and whether they're taking anyone
+   on. Wraps rather than shrinks, because "Open for clients" is the sentence. */
+.profhero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
+/* The availability one keeps its colour: it's the one that changes. */
+.profhero .availtag-accepting { background: rgba(61, 139, 83, .82); }
+.profhero .availtag-waitlist { background: rgba(176, 122, 26, .82); }
+[data-mode="dark"] .profhero .availtag-accepting { background: rgba(61, 139, 83, .9); }
+[data-mode="dark"] .profhero .availtag-waitlist { background: rgba(176, 122, 26, .9); }
 /* What's left of the old centred block: just the actions, under the hero. */
 .pubhead { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
 /* The owner's controls, one row top-right across from the photo: the Add
@@ -2874,6 +2886,11 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .profstudio {
   background: var(--si-tint); color: var(--si-ink); border-color: transparent;
 }
+/* The fittlist row still leads. Ink on dark is the background, so it wears the
+   brand colour there instead. Defined after the tint above, which it ties with. */
+[data-mode="dark"] .contactlist .proflink-first {
+  background: var(--si); color: #fff; border-color: transparent;
+}
 [data-mode="dark"] .proflink:active,
 [data-mode="dark"] .profstudio:active { background: #2c2718; }
 /* The coach's studio rows carry no fill, so only the text and the rule between
@@ -3313,24 +3330,13 @@ button.ps-card { cursor: pointer; }
   /* Clearing the tab bar the same way the Add class button does. */
   bottom: calc(96px + env(safe-area-inset-bottom));
 }
+/* No tab bar up here, so it sits where a floating control normally would. */
+@media (min-width: 940px) { .classoverlay-cta.disfilterpill { bottom: 28px; } }
 .disfilterpill-n {
   min-width: 20px; height: 20px; padding: 0 6px; margin-left: 2px;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 999px; background: var(--si); color: #fff;
   font-size: 12px; font-weight: 700;
-}
-.disfilterbtn {
-  flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;
-  width: 46px; height: 46px; border-radius: 999px;
-  border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
-}
-.disfilterbtn.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.disfilterbtn:active { transform: scale(.96); }
-.disfilterbtn-n {
-  position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 5px;
-  display: flex; align-items: center; justify-content: center; border-radius: 999px;
-  background: var(--si); color: #fff;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11px;
 }
 .disfilterlist { margin-top: 18px; }
 
@@ -3356,6 +3362,9 @@ button.ps-card { cursor: pointer; }
 .dislist {
   display: flex; flex-direction: column; background: var(--card); border-radius: 16px;
   box-shadow: var(--soft-shadow); overflow: hidden;
+  /* Room under the floating filter pill, or the last coach in the directory
+     is a row nobody can tap. */
+  margin-bottom: 76px;
 }
 .disrow {
   display: flex; align-items: center; gap: 10px; padding: 13px 14px;

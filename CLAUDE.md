@@ -297,7 +297,11 @@ scrolling belongs where your thumb is rather than in a row you have already
 scrolled past. It says "Filter people" or "Filter studios" and wears the count.
 Nothing is on by default: a filter you didn't set is a list you can't explain.
 The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
-because the base rule is defined later in the file and wins on a tie.
+because the base rule is defined later in the file and wins on a tie. A fixed
+pill floats over whatever is under it, so `.dislist` carries bottom margin to
+clear it, and above 940px the pill drops to a normal offset because there is no
+tab bar up there to sit above. Without both, the last coach in the directory
+was a row nobody could tap.
 
 **A filter is only offered where it can narrow something.** Discover's What
 chips are built from what the lens in front of you actually holds: coaches'
@@ -337,12 +341,16 @@ stat on the account. A lid over two buttons is where things go to be forgotten.
 `.ownermore` still exists, but only on a studio page (`StudioMenu`).
 
 **The profile leads with the photo, full bleed.** `.profhero` runs to both
-edges and up under the app bar, with the badge, name, tagline and city stacked
-left along the bottom over it. The scrim exists only where there's a photograph
-to read against: a flat `avatarColor` already clears white text, and dimming it
-would only make it muddy. The action pills sit under the hero and are
-deliberately small, because two buttons shouldn't own a third of the screen.
-There is no avatar circle any more, so `AvatarZoom` is gone from this page.
+edges and up under the app bar at 65vh, with the tags, name, tagline, city and
+both action pills stacked left along the bottom over it. The scrim exists only
+where there's a photograph to read against: a flat `avatarColor` already clears
+white text, and dimming it would only make it muddy. The pills are white
+because they're on the picture: Contact filled, Follow an outline, and
+following fills Follow in with a short spring (`folpop`, skipped under
+`prefers-reduced-motion`). There is no avatar circle any more, so `AvatarZoom`
+is gone from this page, which is why availability moved with it: it was a dot
+on that circle and words in its overlay, and it is now a second tag beside
+Coach in `.profhero-tags`. A status nobody can read is the same as no status.
 
 **Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
 coach's own profile and nowhere else: `AppHeader` carries none on any screen.
@@ -354,8 +362,30 @@ means the studio page's dots; the profile's gear is `.ownergear` and they share
 only the circle in CSS, because an existing selector broke the moment they
 shared a class name.
 
+**Contact is a thing you do, not a section you read.** It was a tab; it is now
+the pill beside Follow and one sheet (`ContactSheet`). Message on fittlist
+leads it in ink, because every other row hands the conversation to somebody
+else's app, where a coach loses the thread and a member loses the reply. The
+rest are still offered: a coach who put their number up meant it. The pill only
+appears when there is something behind it, and never on your own page, and
+`users.messagesOpen` off removes the fittlist row rather than the pill, since
+an email is still a way to be reached. `/{handle}/contact` permanently
+redirects to the schedule after the block check, so an old link still lands
+somewhere real. The predicate for "is there anything behind the pill" lives in
+`PublicProfileView`, not beside the sheet: a `"use client"` module's exports
+can't be called from a server component, only rendered.
+
+**A signed-in member is never asked who they are.** `MessageComposer` drops the
+name, email and phone fields when the viewer has an account, and `sendInquiry`
+reads both off the session rather than the form, which is what makes dropping
+them safe: a client sending its own would be sending something we already know
+better. A stranger still fills them in, because a coach's reply has to reach
+somebody. `MessageBar` is the same composer behind the photo overlay's Contact
+bar on a member's profile, and there is no separate "Request private session"
+door any more: it was the same action wearing a different heading.
+
 **A coach's profile is a route per tab, and the bare handle is the schedule.**
-`/{handle}` renders Schedule, `/{handle}/about` and `/{handle}/contact` the
+`/{handle}` renders Schedule and `/{handle}/about` and `/{handle}/studios` the
 other two, and `/{handle}/schedule` still resolves because that link is already
 out in the world. The schedule leads because it's what the link is for, and a
 coach who hasn't written a bio would otherwise hand people a near-empty page.
@@ -388,6 +418,15 @@ header can't drift. Run it only when the mark changes.
 bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
 bar and its bottom button can't be tapped. Portal such sheets to `document.body`
 (see `InviteFriends.tsx`).
+
+**Tapping Follow says what just happened.** A follow shows `FollowHint`: a bar
+reading that their classes are on your Following week, a link straight to it,
+and a Don't show again that means it. It renders from the profile pill
+(`NotifyCta`) and from Discover's mini pill, because that's where most follows
+actually happen, and a button whose effect is invisible teaches nobody what the
+app is for. The dismissal is localStorage (`fl-follow-hint`), which is
+per-device and unlike the invites banner's column on the account; a column is
+the fix if that starts to matter.
 
 **The invites banner is announced once, then never again.**
 `invitesBannerCount()` returns 0 unless the beta gate is up, they're onboarded,

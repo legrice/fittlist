@@ -11,12 +11,11 @@ import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { Icon } from "@/components/Icon";
+import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
-import { InstagramGlyph } from "@/components/InstagramGlyph";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ScheduleMore } from "@/components/ScheduleMore";
 import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
-import { RequestSessionButton } from "@/components/RequestSessionButton";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
@@ -235,69 +234,33 @@ export async function PublicProfileView({
       </div>
     ) : null;
 
-  // Contact is its own page: the private-session request plus the ways to
-  // reach the coach, stacked as full-width rows. No "Contact" heading on it,
-  // because the tab you tapped to get here already says that.
-  const hasContactDetails = !!(
-    user.contactEmail ||
-    user.phone ||
-    user.whatsapp ||
-    user.instagram ||
-    user.website ||
-    user.profileLinks.length
-  );
-  // The header's Message pill is the main door. This one stays for the person
-  // who scrolled to Contact looking for exactly this, and only while the coach
-  // is taking private clients.
-  const canRequest = !isOwner && !!user.availability && user.messagesOpen;
-  const hasContact = hasContactDetails || canRequest;
-  const contact = hasContact ? (
-    <>
-      {canRequest && <RequestSessionButton handle={handle} coachName={user.name} />}
-      <div className="contactlist">
-        {user.contactEmail && (
-          <a className="proflink" href={`mailto:${user.contactEmail}`}>
-            <Icon name="mail" size={18} /> Email
-          </a>
-        )}
-        {user.phone && (
-          <a className="proflink" href={`tel:${user.phone.replace(/[^\d+]/g, "")}`}>
-            <Icon name="call" size={18} /> Call
-          </a>
-        )}
-        {user.whatsapp && (
-          <a
-            className="proflink"
-            href={`https://wa.me/${user.whatsapp.replace(/\D/g, "")}`}
-            target="_blank"
-            rel="noopener nofollow"
-          >
-            <Icon name="chat" size={18} /> WhatsApp
-          </a>
-        )}
-        {user.instagram && (
-          <a
-            className="proflink"
-            href={`https://instagram.com/${user.instagram}`}
-            target="_blank"
-            rel="noopener nofollow"
-          >
-            <InstagramGlyph /> Instagram
-          </a>
-        )}
-        {user.website && (
-          <a className="proflink" href={user.website} target="_blank" rel="noopener nofollow">
-            <Icon name="public" size={18} /> Website
-          </a>
-        )}
-        {user.profileLinks.map((l, i) => (
-          <a key={i} className="proflink" href={l.url} target="_blank" rel="noopener nofollow">
-            <Icon name="link" size={18} /> {l.label}
-          </a>
-        ))}
-      </div>
-    </>
-  ) : null;
+  // How to reach them is a thing you do, not a section you read, so it lives
+  // behind the Contact pill in the header rather than in a tab of its own.
+  // /{handle}/contact still resolves, because that link is already out in the
+  // world; it lands on the schedule and the pill is right there.
+  const ways: ContactWays = {
+    email: user.contactEmail ?? "",
+    phone: user.phone ?? "",
+    whatsapp: user.whatsapp ?? "",
+    instagram: user.instagram ?? "",
+    website: user.website ?? "",
+    links: user.profileLinks,
+  };
+  const canMessage = !isOwner && user.messagesOpen;
+  // Nothing behind the pill means no pill. The predicate lives here rather
+  // than beside the sheet because a "use client" module's exports can't be
+  // called from a server component, only rendered.
+  const showContact =
+    !isOwner &&
+    (canMessage ||
+      !!(
+        ways.email ||
+        ways.phone ||
+        ways.whatsapp ||
+        ways.instagram ||
+        ways.website ||
+        ways.links.length
+      ));
 
   const schedule = (
     <>
@@ -425,7 +388,6 @@ export async function PublicProfileView({
           name={user.name}
           title={user.title ?? ""}
           location={user.location ?? ""}
-          hasContact={hasContact}
           hasStudios={!!studios}
           trackSchedule={!isOwner}
           backTo={backTo}
@@ -457,8 +419,14 @@ export async function PublicProfileView({
               />
             ) : (
               <div className="profacts">
-                {user.messagesOpen && (
-                  <RequestSessionButton handle={handle} coachName={user.name} variant="pill" />
+                {showContact && (
+                  <ContactSheet
+                    handle={handle}
+                    coachName={user.name}
+                    signedIn={signedIn}
+                    canMessage={canMessage}
+                    ways={ways}
+                  />
                 )}
                 <NotifyCta
                   trainerName={user.name}
@@ -480,13 +448,21 @@ export async function PublicProfileView({
             ) : null
           }
           avail={
-            <>
+            <div className="profhero-tags">
               {/* Says which side of the app this person is on. Members have
                   the same shape of page now, so the page itself no longer
-                  answers it. Availability left this row for the photo: the
-                  dot wears the colour, and the overlay says the words. */}
+                  answers it. */}
               <span className="kindtag">Coach</span>
-            </>
+              {/* Whether they're taking private clients, back on the page
+                  itself. It used to be a dot on the profile photo with the
+                  words in the photo overlay, and the hero took both away;
+                  a status nobody can read is the same as no status. */}
+              {user.availability && (
+                <span className={`kindtag availtag availtag-${user.availability}`}>
+                  {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
+                </span>
+              )}
+            </div>
           }
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
@@ -502,17 +478,11 @@ export async function PublicProfileView({
             ) : null
           }
         >
-          {/* One section, the one they asked for. Contact and Studios can
-              vanish (nothing to show means no tab), so each falls back to the
-              schedule rather than rendering an empty page under a tab that
-              isn't there. */}
-          {tab === "about"
-            ? about
-            : tab === "studios" && studios
-              ? studios
-              : tab === "contact" && contact
-                ? contact
-                : schedule}
+          {/* One section, the one they asked for. Studios can vanish (nothing
+              to show means no tab) and Contact is a sheet now, so both fall
+              back to the schedule rather than rendering an empty page under a
+              tab that isn't there. */}
+          {tab === "about" ? about : tab === "studios" && studios ? studios : schedule}
         </ProfileTabs>
         </FollowSync>
         {/* The primary action holds the thumb spot in solid brand orange;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
 import { QrSheet } from "@/components/QrSheet";
-import { RequestSessionButton } from "@/components/RequestSessionButton";
+import { MessageBar } from "@/components/MessageComposer";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -25,6 +25,7 @@ export function AvatarZoom({
   isOwner = false,
   availability = null,
   canMessage = false,
+  signedIn = false,
 }: {
   handle: string;
   name: string;
@@ -41,6 +42,8 @@ export function AvatarZoom({
   availability?: string | null;
   /** They said messages are open, so the overlay carries the Message door. */
   canMessage?: boolean;
+  /** Signed in, so the composer skips asking who they are. */
+  signedIn?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -202,7 +205,7 @@ export function AvatarZoom({
             {/* The Message door, spanning the action row. Only when they've
                 said messages are open, and never on your own photo. */}
             {canMessage && !isOwner && (
-              <RequestSessionButton handle={handle} coachName={name} variant="wide" />
+              <MessageBar handle={handle} coachName={name} signedIn={signedIn} />
             )}
             </div>
             <QrSheet
