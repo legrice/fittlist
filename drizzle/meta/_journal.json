@@ -449,6 +449,20 @@
       "when": 1785555889137,
       "tag": "0063_milky_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1785603370906,
+      "tag": "0064_closed_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1785603572151,
+      "tag": "0065_light_silhouette",
+      "breakpoints": true
     }
   ]
 }

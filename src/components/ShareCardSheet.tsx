@@ -4,15 +4,28 @@ import { useEffect, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 
-// The profile card sheet: a square Instagram image about the person, not
-// their week. Pick a style, save or share. The story image has the schedule;
-// this one is the introduction.
+// The card sheet: a square Instagram image, pick a style, save or share.
+//
+// One sheet, two subjects. It was the profile card's alone; a class card is
+// the same sheet pointed at a different route, so it takes the path and the
+// words rather than a handle. Two copies of a theme picker, a share-file
+// dance and a download fallback would have drifted the first time one of them
+// gained a style.
 export function ShareCardSheet({
-  handle,
+  path,
+  fileName,
+  title,
+  lead,
+  alt,
   onClose,
   onToast,
 }: {
-  handle: string;
+  /** The image route, without its query: "/api/card/matt". */
+  path: string;
+  fileName: string;
+  title: string;
+  lead: string;
+  alt: string;
   onClose: () => void;
   onToast: (m: string) => void;
 }) {
@@ -32,8 +45,8 @@ export function ShareCardSheet({
     );
   }, []);
 
-  const cardUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
-  const cardFileName = `fittlist-${handle}-card.png`;
+  const cardUrl = `${path}?theme=${themeId}&v=${bust}-${themeId}`;
+  const cardFileName = fileName;
 
   const shareCard = async () => {
     if (sharing) return;
@@ -64,18 +77,17 @@ export function ShareCardSheet({
     <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="sheet sheet-full">
         <div className="adderhead">
-          <h2>Share your card</h2>
+          <h2>{title}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={16} />
           </button>
         </div>
         <p className="lead" style={{ marginTop: 0 }}>
-          A square image of your profile, made for a post or a story. Your page is one tap from
-          the link on it.
+          {lead}
         </p>
         <div className="storycustom">
           <label className="flabel" htmlFor="cardTheme">
-            Style <span>· colours for your card</span>
+            Style <span>· colours for the card</span>
           </label>
           <div className="stylepick">
             <button
@@ -117,7 +129,7 @@ export function ShareCardSheet({
           </div>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="cardimg" src={cardUrl} alt="Your profile card" />
+        <img className="cardimg" src={cardUrl} alt={alt} />
         <div className="publishwrap">
           {canShareFiles ? (
             <button className="btn" disabled={sharing} onClick={shareCard}>

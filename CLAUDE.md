@@ -805,6 +805,28 @@ profile header and the Request private session button under Contact. A coach
 whose books are full still wants the question about Tuesday's class, so "full"
 must not mean "unreachable".
 
+**A class can carry a picture, and it is the thing the share card is made of.**
+`classes.image` is a small data URL like every other photo here, optional
+forever, and it rides along on `class_templates` and `studio_classes` too: a
+picture belongs to the class rather than to whoever wrote it down first, so
+pulling a class in from the studio's catalog brings it. Every picker in the app
+resizes through `readPhoto` in `src/lib/photo.ts` now. There were four copies of
+that routine and a class photo would have been the fifth; four copies of the
+thing that decides how big every image in the database is, drifting apart, is
+how one screen starts storing megabytes. The member editor is the one that
+stays its own: it centre-crops to a square because a member's picture is only
+ever shown in a circle.
+
+**One card sheet, two subjects.** `ShareCardSheet` takes a route and its words
+rather than a handle, so `/api/card/{handle}` and `/api/card/class/{classId}`
+share the theme picker, the share-a-file dance and the download fallback. The
+class card leads with the photo behind the same two scrims a profile wears, and
+falls back to the owner's `avatarColor` without one, so a class with no picture
+still makes something worth sending. Satori lays an absolute child out against
+the **padding** box, so the frame carries no padding and the content column
+inside it does: a picture inset by the padding and still 1080 wide hangs off
+the edge.
+
 **A class opens as a sheet from a list, and as a page from a link.**
 `ClassSheet` pulls up over whatever list you tapped, so adding reads as picking
 something up rather than going somewhere; `/{handle}/{classId}` stays because a

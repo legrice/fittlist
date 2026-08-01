@@ -25,6 +25,7 @@ export type ClassDetail = {
   name: string;
   classType: string | null;
   description: string | null;
+  image: string | null;
   whenIso: string;
   dateLong: string;
   time: string;
@@ -280,6 +281,7 @@ export async function classDetail(
     name: c.name,
     classType: c.classType,
     description: c.description,
+    image: c.image,
     whenIso,
     dateLong: fmtDateLong(whenIso),
     time: fmtTime(c.startTime),

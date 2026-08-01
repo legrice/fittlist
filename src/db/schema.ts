@@ -374,6 +374,8 @@ export const classTemplates = pgTable(
     classType: text("class_type"),
     // Short blurb shown on the public class page.
     description: text("description"),
+    // The picture comes back with the class name, same as the description.
+    image: text("image"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     // Null for private items with no listed studio; `location` holds a free-form
@@ -401,6 +403,9 @@ export const studioClasses = pgTable(
     nameKey: text("name_key").notNull(), // lowercased name, for dedupe
     classType: text("class_type"),
     description: text("description"),
+    // Shared with the description: a picture belongs to the class rather than
+    // to whichever coach wrote it down first.
+    image: text("image"),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -461,6 +466,11 @@ export const classes = pgTable(
     description: text("description"),
     studioId: uuid("studio_id").references(() => studios.id),
     location: text("location"),
+    // A picture of the class, as a small data URL, the same way every other
+    // photo here is stored. It is the thing that makes a shared class look
+    // like something rather than a line of text, and it is optional forever:
+    // a schedule with no photos has to stay a good schedule.
+    image: text("image"),
     // false = private (own schedule only, hidden from the public page).
     isPublic: boolean("is_public").notNull().default(true),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),

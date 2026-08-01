@@ -52,8 +52,10 @@ export function MemberProfileEditor({
     if (openOnMount) window.history.replaceState(null, "", "/you");
   }, [openOnMount]);
 
-  // Same client-side resize the coach editor uses: a data URL small enough to
-  // live in a row without a blob store behind it.
+  // Not `readPhoto`: this one centre-crops to a square, because a member's
+  // picture is only ever shown in a circle and letting a tall photo through
+  // means a head cropped by CSS instead of by us. The shared helper fits to
+  // the long edge, which is right for everything that fills a width.
   const pickPhoto = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {

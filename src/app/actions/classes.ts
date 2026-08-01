@@ -21,6 +21,7 @@ export type PublishInput = {
   name: string;
   classType?: string | null;
   description?: string | null;
+  image?: string | null;
   days: number[]; // 0 = Monday … 6 = Sunday
   // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
   specificDate?: string | null;
@@ -44,7 +45,7 @@ function cleanType(t: string | null | undefined): string | null {
 // picker so a coach reuses an existing class (with its type + description).
 export async function getStudioCatalog(
   studioId: string,
-): Promise<{ name: string; classType: string | null; description: string | null }[]> {
+): Promise<{ name: string; classType: string | null; description: string | null; image: string | null }[]> {
   const userId = await getSessionUserId();
   if (!userId) return [];
   const db = await getDb();
@@ -53,6 +54,7 @@ export async function getStudioCatalog(
       name: schema.studioClasses.name,
       classType: schema.studioClasses.classType,
       description: schema.studioClasses.description,
+      image: schema.studioClasses.image,
     })
     .from(schema.studioClasses)
     .where(eq(schema.studioClasses.studioId, studioId))
@@ -140,6 +142,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const links = cleanLinks(input.links ?? []);
   const classType = cleanType(input.classType);
   const description = input.description?.trim().slice(0, 500) || null;
+  const image = input.image?.trim() || null;
 
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.
@@ -257,10 +260,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // values used, so autofill always reflects the most recent version.
   const [template] = await db
     .insert(schema.classTemplates)
-    .values({ userId, name, classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
+    .values({ userId, name, classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
+      set: { classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
     })
     .returning();
 
@@ -278,6 +281,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       name,
       classType,
       description,
+      image,
       studioId,
       location,
       isPublic,
@@ -314,6 +318,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
           nameKey: name.toLowerCase(),
           classType,
           description,
+          image,
           createdByUserId: userId,
         })
         .onConflictDoUpdate({
@@ -322,6 +327,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
             name,
             ...(classType ? { classType } : {}),
             ...(description ? { description } : {}),
+            ...(image ? { image } : {}),
             updatedAt: new Date(),
           },
         });

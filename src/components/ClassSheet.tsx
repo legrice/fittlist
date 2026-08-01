@@ -7,6 +7,7 @@ import { setGoing } from "@/app/actions/going";
 import { claimShift, giveUpShift } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
@@ -56,6 +57,7 @@ export function ClassSheet({
   const [bookOpen, setBookOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [reported, setReported] = useState(false);
   const [favOn, setFavOn] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -221,6 +223,19 @@ export function ClassSheet({
               >
                 <Icon name="calendar_today" size={17} /> Add to Apple or Outlook
               </a>
+              {/* The share circle above hands over a link. This hands over a
+                  picture, which is what a story wants. Same sheet the profile
+                  card uses, pointed at this class. */}
+              <button
+                className="ovmenu-item"
+                role="menuitem"
+                onClick={() => {
+                  setMoreOpen(false);
+                  setCardOpen(true);
+                }}
+              >
+                <Icon name="auto_awesome" size={17} /> Share as an image
+              </button>
               {c.canAdd && !reported && (
                 <button
                   className="ovmenu-item ovmenu-quiet"
@@ -250,6 +265,14 @@ export function ClassSheet({
         <div className="classoverlay-body" aria-hidden="true" />
       ) : (
         <div className="classoverlay-body">
+          {/* The picture, when there is one: full bleed across the top of the
+              sheet, the same way a profile leads with a face. A class without
+              one reads exactly as it did, which is the point of it staying
+              optional. */}
+          {c.image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="classoverlay-img" src={c.image} alt="" />
+          )}
           {c.classType && <span className="evtype classoverlay-type">{c.classType}</span>}
           <h2 className="classoverlay-nm">{c.name}</h2>
           {/* Whose class it is, as a face and a name, and a way to them: from
@@ -456,6 +479,17 @@ export function ClassSheet({
             </div>
           </div>
         </div>
+      )}
+      {cardOpen && c && (
+        <ShareCardSheet
+          path={`/api/card/class/${c.id}`}
+          fileName={`fittlist-${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
+          title="Share this class"
+          lead="A square image of the class, made for a post or a story. The link on it opens this page."
+          alt={`${c.name} as a card`}
+          onClose={() => setCardOpen(false)}
+          onToast={(m) => toast(m)}
+        />
       )}
       {reportOpen && (
         <div

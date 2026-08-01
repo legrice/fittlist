@@ -1402,6 +1402,27 @@ button.ps-card { cursor: pointer; }
 }
 [data-mode="dark"] .kindtag { background: var(--card); border: 1px solid var(--line); }
 .kindtag-sm { padding: 3px 8px; font-size: 10.5px; }
+/* The class photo on its sheet: full bleed across the top, under the circle
+   controls, the way a profile leads with a face. */
+.classoverlay-img {
+  width: auto; display: block; object-fit: cover;
+  height: 34vh; min-height: 200px;
+  margin: -22px calc(50% - 50vw) 18px; width: 100vw; max-width: 100vw;
+}
+
+/* The class photo, in the adder: the picture beside the two controls that set
+   it, so what you picked is what you see rather than a filename. */
+.classpho { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.classpho-img {
+  width: 88px; height: 66px; border-radius: 12px; object-fit: cover;
+  display: block; flex-shrink: 0; background: var(--cl);
+}
+.classpho-empty {
+  display: flex; align-items: center; justify-content: center; color: var(--ol);
+  border: 1.5px dashed var(--line); background: none;
+}
+.classpho-acts { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+
 /* Your own class: the add sheet's day row and time/length pair. */
 .ownday { margin-top: 4px; }
 .ownday button { flex: 1; padding: 10px 0; }

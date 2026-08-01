@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   deleteClass,
   getStudioCatalog,
@@ -21,11 +21,13 @@ import {
 } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Icon } from "@/components/Icon";
+import { readPhoto } from "@/lib/photo";
 
 export type AdderPrefill = {
   name: string;
   classType?: string | null;
   description?: string | null;
+  image?: string | null;
   startTime: string;
   durationMin: number;
   studioId: string | null;
@@ -46,6 +48,7 @@ type CatalogItem = {
   name: string;
   classType: string | null;
   description: string | null;
+  image?: string | null;
   links?: BookingLink[];
 };
 
@@ -118,6 +121,8 @@ export function Adder({
   const [name, setName] = useState(prefill?.name ?? "");
   const [classType, setClassType] = useState<string | null>(prefill?.classType ?? null);
   const [description, setDescription] = useState(prefill?.description ?? "");
+  const [image, setImage] = useState<string | null>(prefill?.image ?? null);
+  const imgRef = useRef<HTMLInputElement>(null);
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
   // null = runs forever (the default); a string = the picker is showing.
@@ -172,6 +177,9 @@ export function Adder({
     setName(c.name);
     setClassType(c.classType ?? null);
     setDescription(c.description ?? "");
+    // The photograph comes with the description: it belongs to the class, not
+    // to whoever happened to write it down first.
+    if (c.image) setImage(c.image);
     // The studio catalog is shared across coaches and deliberately carries no
     // booking links: another coach's booking page isn't yours. But if this
     // coach has run the class before, their own links come back with it. A gym
@@ -268,6 +276,7 @@ export function Adder({
         name,
         classType,
         description,
+        image,
         days: [...days],
         specificDate: oneTime ? date : null,
         endsOn: oneTime ? null : endsOn || null,
@@ -560,6 +569,44 @@ export function Adder({
               placeholder="What to expect, what to bring, who it's for…"
               onChange={(e) => setDescription(e.target.value)}
             />
+
+            {/* A picture of the room, or the class. Optional forever: a
+                schedule with no photos has to stay a good schedule, so this
+                never becomes a field somebody has to answer. */}
+            <label className="flabel">
+              Photo <span>&middot; optional, and it carries the share card</span>
+            </label>
+            <div className="classpho">
+              {image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="classpho-img" src={image} alt="" />
+              ) : (
+                <div className="classpho-img classpho-empty" aria-hidden="true">
+                  <Icon name="image" size={22} />
+                </div>
+              )}
+              <div className="classpho-acts">
+                <button type="button" className="btn ghost" onClick={() => imgRef.current?.click()}>
+                  {image ? "Change photo" : "Add a photo"}
+                </button>
+                {image && (
+                  <button type="button" className="tertiary" onClick={() => setImage(null)}>
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input
+                ref={imgRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) readPhoto(f, setImage);
+                  e.target.value = "";
+                }}
+              />
+            </div>
             </div>
 
             <div className="adder-card">

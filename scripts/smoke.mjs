@@ -453,7 +453,13 @@ await page.goto(BASE + "/matt");
 await page.locator(".profacts .actpill", { hasText: "Share" }).click();
 {
   const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = ["Share your schedule", "Copy your link", "Your QR code", "Copy your week"];
+  const want = [
+    "Share your schedule",
+    "Copy your link",
+    "Your QR code",
+    "Your profile card",
+    "Copy your week",
+  ];
   if (rows.join("|") !== want.join("|"))
     fail("the share sheet should be " + want.join(", ") + ", got " + rows.join(", "));
 }

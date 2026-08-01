@@ -10,8 +10,10 @@ import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
+import { readPhoto } from "@/lib/photo";
 import { LocationInput } from "@/components/LocationInput";
 import { QrSheet } from "@/components/QrSheet";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -86,36 +88,13 @@ export function ProfileOwnerBar({
   const [colorOpen, setColorOpen] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const shownColor = avatarColor({ id: userId, avatarColor: pColor });
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Resize the picked image to a small JPEG data URL before storing it.
-  const pickPhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 640;
-        let { width, height } = img;
-        if (width > height && width > max) {
-          height = (height * max) / width;
-          width = max;
-        } else if (height > max) {
-          width = (width * max) / height;
-          height = max;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+  const pickPhoto = (file: File) => readPhoto(file, setPPhoto);
 
   // ?edit=1 arrives from the account tile's Edit profile — open straight into
   // the editor rather than making them find the button again.
@@ -267,6 +246,24 @@ export function ProfileOwnerBar({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
+              {/* The square one: your face and your name rather than your
+                  week. It lost its door when the avatar circle came off the
+                  hero, and a made image with no way to reach it is the same as
+                  no image. */}
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setCardOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Your profile card</span>
+                  <span className="s">A square image for a post</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
               {/* The story image is for a story. This is for the group chat,
                   where an image is no use and a coach ends up typing it out. */}
               <button className="setrow" onClick={copyWeek}>
@@ -289,6 +286,17 @@ export function ProfileOwnerBar({
         onToast={toast}
       />
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+      {cardOpen && (
+        <ShareCardSheet
+          path={`/api/card/${handle}`}
+          fileName={`fittlist-${handle}-card.png`}
+          title="Share your card"
+          lead="A square image of your profile, made for a post or a story. Your page is one tap from the link on it."
+          alt="Your profile card"
+          onClose={() => setCardOpen(false)}
+          onToast={toast}
+        />
+      )}
 
       {editOpen && (
         <div

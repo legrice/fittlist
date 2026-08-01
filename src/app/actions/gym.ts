@@ -48,6 +48,7 @@ export type GymClassDto = {
   startTime: string;
   durationMin: number;
   description: string | null;
+  image: string | null;
   links: { label: string; url: string }[];
   /** Who normally teaches it, week in week out. */
   coachUserId: string | null;
@@ -180,6 +181,7 @@ export async function gymSchedule(studioId: string, offset = 0): Promise<GymWeek
           startTime: r.startTime,
           durationMin: r.durationMin,
           description: r.description,
+          image: r.image,
           links: r.links,
           coachUserId: r.coachUserId,
           coachName: (r.coachUserId && nameOf.get(r.coachUserId)) || "",
@@ -209,6 +211,7 @@ export type GymClassInput = {
   name: string;
   classType?: string | null;
   description?: string | null;
+  image?: string | null;
   /** 0 = Monday. Adding several makes several slots; one row is one slot. */
   days: number[];
   /** Set = a one-off pinned to this ISO date rather than a standing weekly. */
