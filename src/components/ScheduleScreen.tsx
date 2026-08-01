@@ -153,11 +153,10 @@ export function ScheduleScreen({
   // Coming back from the profile preview reopens the account page. Clear any
   // leftover slide-direction flag now that we're back on the schedule.
   //
-  // ?acct=1 only ever arrives from another screen's settings gear (the gear on
-  // this screen opens the overlay locally, with no navigation). So it doubles
-  // as the signal for what closing should do: whoever came here for settings
-  // goes back where they were, rather than being left on the schedule they
-  // never asked for.
+  // ?acct=1 is now the only door into settings: the gear lives on the coach's
+  // own profile and links here. So it doubles as the signal for what closing
+  // should do, sending whoever came for settings back where they were rather
+  // than leaving them on a schedule they never asked for.
   const settingsWasDoor = useRef(false);
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
@@ -169,16 +168,6 @@ export function ScheduleScreen({
       setProfileOpen(true);
     }
   }, []);
-
-  // The URL says settings is open the whole time it is. It used to be
-  // rewritten to /app on arrival, which meant a refresh mid-settings reloaded
-  // the bare schedule underneath: a page you never asked for, appearing at
-  // what read as random.
-  const openSettings = () => {
-    window.history.replaceState(null, "", "/app?acct=1");
-    setAcctAnim("up");
-    setProfileOpen(true);
-  };
 
   const closeSettings = () => {
     // A cold landing (an emailed link, the Google redirect) has nothing to go
@@ -343,7 +332,6 @@ export function ScheduleScreen({
           // The face is the You tab now, so the corner holds settings. Two
           // taps on the same picture, one of which quietly meant "account",
           // was the confusing part.
-          onSettings={openSettings}
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}

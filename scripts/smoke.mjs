@@ -27,11 +27,13 @@ const waitSchedule = (pg, n, timeout = 10000) =>
     n,
     { timeout },
   );
-// The account page is a full-screen view reached from the header avatar.
+// The account page. The header gear is gone, so this is the URL the profile's
+// own gear links to. A navigation rather than a local open, so the rows need a
+// beat to hydrate before a click lands on one.
 const openProfile = async (pg) => {
-  await pg.goto(BASE + "/app");
-  await pg.locator(".settingsbtn, .usericon").first().click();
+  await pg.goto(BASE + "/app?acct=1");
   await pg.locator(".acctwrap").waitFor();
+  await pg.waitForTimeout(450);
 };
 
 // Studio-first: pick the studio, then reuse a class from that studio's shared
@@ -56,8 +58,7 @@ const addSaved = async (pg) => {
 // so reload for that rather than waiting on router.refresh() (which stalls
 // under load and made this the flakiest step in the suite).
 const setDark = async (pg, want) => {
-  await pg.goto(BASE + "/app");
-  await pg.locator(".settingsbtn, .usericon").first().click();
+  await pg.goto(BASE + "/app?acct=1");
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
   const row = pg.locator(".setrow", { hasText: "Dark mode" });
@@ -373,7 +374,7 @@ await expect(
   page.locator(".navtab.on .navav-empty").filter({ hasText: "M" }).isVisible(),
   "the You tab carries their face (initial fallback)",
 );
-await page.locator(".settingsbtn").click();
+await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
 await expect(page.getByRole("heading", { name: "Settings" }).isVisible(), "settings opens");
 await expect(page.locator(".acctwho .acctwho-nm", { hasText: "Matt" }).isVisible(), "the who row shows their name");
@@ -631,7 +632,11 @@ console.log("owner tap opens the sheet, Edit goes to the editor ok");
   await sp.locator(".ovcta-btn", { hasText: "Book" }).click();
   await sp.getByRole("heading", { name: "Book this class" }).waitFor();
   await sp.locator(".bookout-links a", { hasText: "Book via Website" }).waitFor();
-  await sp.getByRole("button", { name: "Not now" }).click();
+  // The corner X, like every other sheet: a worded decline was an answer to a
+  // question nobody asked.
+  if (await sp.getByText("Not now").count()) fail("the booking sheet still offers a worded decline");
+  await sp.locator(".confirmsheet .sheetclose").click();
+  await sp.waitForFunction(() => !document.querySelector(".confirmsheet"));
   // The list is still there underneath — that's the point of an overlay.
   if (!(await sp.locator(".ps-event").count())) fail("the schedule should stay behind the overlay");
   await sp.screenshot({ path: SCRATCH + "/shot-event-sheet.png" });
@@ -1767,13 +1772,13 @@ await page.locator(".pubtab.sel").waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
 
-// Settings sit with the page they're about, and only once: the gear moved out
-// of the app header here, so there aren't two of them fifty pixels apart.
+// Settings sit with the page they're about, and nowhere else: the gear is off
+// the app header on every screen, and this is the door.
 {
   await page.goto(BASE + "/matt");
   await page.locator(".ownertop").waitFor();
   if (await page.locator(".settingsbtn").count())
-    fail("two settings doors on the coach's own profile");
+    fail("the app header should carry no gear anywhere");
   await page.locator(".ownergear").waitFor();
   // Only settings up there. Everything else is on the two pills below.
   if ((await page.locator(".ownertop > *").count()) !== 1)
@@ -1830,9 +1835,26 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   const bg = await page.locator(".profacts .followpill").evaluate((e) => getComputedStyle(e).backgroundColor);
   if (bg !== "rgb(61, 139, 83)") fail("Following should be green, got " + bg);
 }
-// Somebody else's page is not yours to configure, so the header keeps its gear.
-if (!(await page.locator(".settingsbtn").count()))
-  fail("the header gear should stay on a page that isn't yours");
+// Somebody else's page is not yours to configure, and the header carries no
+// gear anywhere now, so there is nothing here to open settings with.
+if (await page.locator(".settingsbtn, .ownergear").count())
+  fail("no settings door belongs on a page that isn't yours");
+
+// The profile top is centred on itself: the face, the name, and the two things
+// you can do about it, all on one axis.
+{
+  await page.goto(BASE + "/matt");
+  const head = await page.locator(".pubhead").boundingBox();
+  const av = await page.locator(".profav").boundingBox();
+  const acts = await page.locator(".profacts").boundingBox();
+  const mid = head.x + head.width / 2;
+  if (Math.abs(av.x + av.width / 2 - mid) > 6) fail("the face should sit on the centre line");
+  if (Math.abs(acts.x + acts.width / 2 - mid) > 6) fail("the pills should sit on it too");
+  if (av.width < 120) fail(`the face should be the big one, got ${av.width}`);
+  const lift = await page.locator(".profav").evaluate((e) => getComputedStyle(e).boxShadow);
+  if (lift === "none") fail("the face should be lifted off the paper");
+  console.log("profile top ok (centred, bigger, lifted)");
+}
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
 // three tabs only, and the account opens from the header avatar — back in the
@@ -1840,7 +1862,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 await page.goto(BASE + "/app");
 await page.locator(".fab").waitFor();
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
-await page.locator(".settingsbtn").click();
+await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();
 // what a coach attends is private: it must not leak onto their public page
@@ -1871,7 +1893,7 @@ if ((await anonPage.locator(".profacts .followpill").innerText()).trim() !== "Fo
   await anonPage.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 await page.goto(BASE + "/app");
-await page.locator(".settingsbtn").click();
+await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctstats button.acctstat", { hasText: "Followers" }).click();
 await page.waitForURL("**/followers");
@@ -1913,7 +1935,7 @@ console.log("followers list ok (email subscriber listed, coach can be followed b
 // the three stats read as a column: number centred over its label
 {
   await page.goto(BASE + "/app");
-  await page.locator(".settingsbtn").click();
+  await page.goto(BASE + "/app?acct=1");
   await page.locator(".acctstat").first().waitFor();
   const off = await page.locator(".acctstat").first().evaluate((el) => {
     const box = el.getBoundingClientRect();

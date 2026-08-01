@@ -425,6 +425,15 @@ export function ClassSheet({
           }}
         >
           <div className="sheet confirmsheet">
+            {/* The way out is the corner, like every other sheet. A worded
+                decline reads as an answer to a question nobody asked. */}
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setBookOpen(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
             <h2>Book this class</h2>
             <p className="lead">
               Booking and payment happen on the studio&rsquo;s site, not on fittlist.
@@ -445,9 +454,6 @@ export function ClassSheet({
                 </a>
               ))}
             </div>
-            <button className="tertiary tellsheet-done" onClick={() => setBookOpen(false)}>
-              Not now
-            </button>
           </div>
         </div>
       )}

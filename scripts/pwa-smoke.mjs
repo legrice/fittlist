@@ -105,7 +105,7 @@ await p.getByPlaceholder("Your name").fill("Sarah");
 await p.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p);
 await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
-await p.locator(".settingsbtn").click();
+await p.goto(BASE + "/app?acct=1");
 await p.waitForTimeout(700);
 if (await p.getByText("Add to home screen").isVisible().catch(() => false))
   fail("the install row is supposed to be gone from settings");
@@ -114,7 +114,7 @@ const ios = await b.newContext({ ...devices["iPhone 13"], storageState: await c.
 const q = await ios.newPage();
 q.setDefaultTimeout(15000);
 await q.goto(BASE + "/app");
-await q.locator(".settingsbtn").click();
+await q.goto(BASE + "/app?acct=1");
 await q.waitForTimeout(700);
 if (await q.getByText("Add to home screen").isVisible().catch(() => false))
   fail("the install row is supposed to be gone from settings, on iOS too");

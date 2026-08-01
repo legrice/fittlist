@@ -280,7 +280,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   }
 
   // The invite is a link now, not an address we have to be told in advance.
-  await pg.locator(".settingsbtn").click();
+  await pg.goto(BASE + "/app?acct=1");
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
   const row = pg.locator(".setrow", { hasText: "Invite people to the beta" });

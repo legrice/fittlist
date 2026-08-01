@@ -61,7 +61,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           nav={{ coach: isCoach, youHref }}
           // The same corner for everyone: your week, the bell, settings. The
           // face left it when it became the You tab.
-          settingsHref={isCoach ? "/app?acct=1" : "/you"}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
