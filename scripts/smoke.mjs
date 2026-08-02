@@ -1547,16 +1547,12 @@ await fan.locator(".ovcircle-share").waitFor();
 await fan.locator(".ovcircle-back").click();
 // and the week reports it back
 await fan.goto(BASE + "/feed");
-await fan.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
+// The filled ribbon in the card's corner is the whole report: no Added tag,
+// because a word beside the time was the state said twice.
+await fan.locator(".feedagenda .ps-erow").filter({ has: fan.locator(".ps-event.goingon") }).locator(".evcard-add.on").first().waitFor();
+if (await fan.locator(".feedagenda .ps-goingtag").count())
+  fail("Following should carry no Added tag; the ribbon says it");
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
-// the Going tag sits at the top of the time column, not in the class name
-{
-  const where = await fan
-    .locator(".feedagenda .ps-event.goingon")
-    .first()
-    .evaluate((e) => e.querySelector(".ps-goingtag")?.parentElement?.className ?? "");
-  if (!where.includes("ps-etimecol")) fail("Going tag should live in the time column: " + where);
-}
 
 // ---- Your plans: the first tab. Not a calendar — only what they added, every
 // row can leave, and the count is what's still ahead.
@@ -1781,7 +1777,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   // past the 78px commit point, in steps so the drag is decided as horizontal
   for (const step of [35, 70, 100, 120]) await fan.mouse.move(from - step, y, { steps: 3 });
   await fan.mouse.up();
-  await row.locator(".ps-event.goingon .ps-goingtag").waitFor();
+  await row.locator(".ps-event.goingon").waitFor();
   // and it's on the server, not just in the tab
   await fan.reload();
   const marked = await fan.locator(".feedagenda .ps-event.goingon").count();
@@ -1890,7 +1886,7 @@ await page.locator(".ovcta-save").click();
 await page.locator(".ovcta-save.on").waitFor();
 // it shows on the following page
 await page.goto(BASE + "/feed");
-await page.locator(".feedagenda .ps-event.goingon .ps-goingtag").first().waitFor();
+await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
 
 // but they can't attend what they teach — swiping their own row says so and
 // leaves the row unmarked

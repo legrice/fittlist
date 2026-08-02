@@ -4136,6 +4136,13 @@ button.ps-card { cursor: pointer; }
 /* What you can do with it, on the card itself. Siblings of the card, never
    children: a button inside a link is not a thing. Add sits bottom right
    where the thumb is; the remove X keeps its corner up top. */
+/* Yours, in the Add button's corner. White rather than green: a colour chip
+   over these dark cards read as a status light, and the only thing it has to
+   say is whose the class is. */
+.evcards .ps-goingtag {
+  position: absolute; right: 14px; bottom: 14px; z-index: 1;
+  background: rgba(255, 255, 255, .92); color: #111;
+}
 .evcard-add {
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
   width: 42px; height: 42px; border-radius: 999px;

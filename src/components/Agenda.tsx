@@ -160,8 +160,12 @@ export function ClassRow({
         {item.where && <span className="ps-estudio ps-ewhere">{item.where}</span>}
         {children}
       </span>
+      {/* The corner, not the time row: leading the clock shoved the time
+          sideways on tagged cards, so tagged and untagged rows stopped lining
+          up. Bottom right is the Add button's spot, and a personal card has
+          no Add button, so the two never meet. */}
+      {item.tag && <span className="ps-goingtag">{item.tag}</span>}
       <span className="ps-etimecol">
-        {item.tag && <span className="ps-goingtag">{item.tag}</span>}
         <span className="ps-etime">
           {item.hm}
           <span className="ps-ap">{item.ap}</span>

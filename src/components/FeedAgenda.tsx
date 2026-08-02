@@ -196,9 +196,9 @@ export function FeedAgenda({
               coachPhoto: i.coachPhoto,
               coachColor: i.coachColor,
               you: i.coachId === meId,
-              // The control says Add and the note says Added to your plans, so
-              // the row says the same word.
-              tag: going[`${i.classId}|${d.iso}`] ? "Added" : null,
+              // No Added tag: the filled ribbon in the corner already says it,
+              // and a word beside the time was the state said twice.
+              tag: null,
               on: going[`${i.classId}|${d.iso}`],
               classId: i.classId,
               base: i.handle,
