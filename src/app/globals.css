@@ -612,8 +612,16 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its
-   pill: a control you can see is a control you use. */
-.pubtabs.caltabs { margin: 2px 0 8px; }
+   pill: a control you can see is a control you use. Only the vertical
+   margins are ours: the base row is full bleed, and overriding the shorthand
+   put gutters back on a rule that should run edge to edge. */
+.pubtabs.caltabs { margin-top: 0; margin-bottom: 8px; padding-top: 6px; }
+/* The calendar's name, between the rail of doors and the tabs that slice it. */
+.calhead {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 22px; letter-spacing: -.02em;
+  margin: 18px 0 0;
+}
 /* Which hat a row wears, beside the name: Coaching quiet, Going in the same
    green a yes always is. Shift keeps its own chip above. */
 .ps-role {

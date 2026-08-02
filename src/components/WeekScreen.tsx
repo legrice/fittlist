@@ -181,6 +181,7 @@ export function WeekScreen({
           </Link>
         </div>
 
+        <h2 className="calhead">Your schedule</h2>
         {/* The slices of the calendar, under the rail: All, the classes you
             added, your own private entries. Only when both kinds are here;
             one kind would make All a tab with no job. */}
@@ -189,7 +190,7 @@ export function WeekScreen({
             {(
               [
                 { k: "all" as const, t: "All" },
-                { k: "added" as const, t: "Added" },
+                { k: "added" as const, t: "Attending" },
                 { k: "private" as const, t: "Private" },
               ]
             ).map((x) => (

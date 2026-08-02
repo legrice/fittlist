@@ -195,6 +195,16 @@ today during that window, which is a legal end date, not a passed one. A
 timezone per coach or per viewer is the real fix someday, and it lands in
 those three functions.
 
+**A class that has ended is off every schedule.** `occurrenceEnded()` drops
+the been-and-gone occurrence from the public page, the studio page (the
+gym's week and the community one), both You calendars, Following and a
+member's week; a schedule is what's still coming. The class page itself
+stays reachable by dated link and says "This one has already run", because
+an old shared link has to land somewhere real, and the bare URL falls
+forward to the next date it runs. The share images deliberately keep the
+whole range they were asked to draw: a poster of the week is a record, not
+a schedule.
+
 **The story image has three levels of detail, and the sums have to match the
 paint.** The canvas is a fixed 1080x1920 with no scroll, and the routes used to
 draw rows until they ran out of it: eight classes clipped a real coach's poster
@@ -829,8 +839,11 @@ studio's rows.
 
 On the class itself, a coach's own shift puts Manage shift on the floating
 pill (the spot a member's Book and Add live, because the date is theirs to
-manage, not to book) and a sheet behind it holds the hand-back and the
-hand-to rows; the old boxed "I can't make this one" CTA is gone. An open slot
+manage, not to book) and a sheet behind it holds two rows: Give up this
+shift, and one Transfer shift door that opens the gym's list as a second
+sheet, because eight names under one verb read as eight options. The
+Transfer row only exists when the list has somebody on it, and the old boxed
+"I can't make this one" CTA is gone. An open slot
 seen by a coach here keeps the box ("Open shift", I'll take it). All of it is
 offered by `classDetail().shift`, which is null for anyone it means nothing
 to. A member sees no trace of the rota, and no name: whether a coach is
@@ -1140,15 +1153,16 @@ straight away, because one answer is not a question.
 **The calendar's slices are tabs under the rail, not switches behind a
 circle.** `.caltabs` is the same underline row every other screen wears: All
 leads, then Coaching (the classes you teach and the shifts a gym has you on,
-one word because both are you working), Added (the ribbon's list), Private
-(your own entries). A member's row skips Coaching. It replaced a floating
+one word because both are you working), Attending (the ribbon's list),
+Private (your own entries). A member's row skips Coaching. It replaced a floating
 glass circle of switches (`fl-cal-hide`), for the same reason Discover's
 rail replaced its pill: a control you can see is a control you use, and
 switches that hide things leave a list you can't explain. The row only
 renders when the calendar holds at least two kinds (a tab that can't narrow
 is furniture), the pick resets to All on arrival rather than persisting, and
 a tab whose kind leaves the calendar falls back to All rather than to
-nothing. The word is Added, never Saved, same as the ribbon it points at.
+nothing. The tab reads Attending: it names what you're doing, where Added
+named what the button did, and Saved is still not a word a class wears.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the
