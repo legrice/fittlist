@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
@@ -194,20 +194,30 @@ export function ScheduleScreen({
   const settingsWasDoor = useRef(false);
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
-    if (new URLSearchParams(window.location.search).get("acct")) {
+  }, []);
+  // Reactive to the query, not just mount: tapping the gear while already on
+  // /app is a client-side navigation to the same route, so the screen never
+  // remounts. A mount-only check lit the gear and opened nothing.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("acct")) {
       // Returning from the public preview: the public page already slid out to
       // the right, so the account view should just be here, not animate in.
       settingsWasDoor.current = true;
       setAcctAnim("none");
       setProfileOpen(true);
     }
-  }, []);
+  }, [searchParams]);
 
   const closeSettings = () => {
     // A cold landing (an emailed link, the Google redirect) has nothing to go
     // back to, so it falls through to the schedule.
     const beneath = pageBeneath();
     if (settingsWasDoor.current && beneath && beneath !== "/app") {
+      // Close before going back: when the gear was tapped on /app itself,
+      // back lands on this same screen without remounting it, and a close
+      // that only navigates would leave the account sitting open.
+      setProfileOpen(false);
       router.back();
       return;
     }

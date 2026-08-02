@@ -2419,6 +2419,19 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   console.log("profile settings ok (the header's gear opens the account)");
 }
 
+// The same gear, tapped while already on /app: a same-route navigation, so
+// the screen never remounts, and a mount-only check lit the icon and opened
+// nothing. The account has to open anyway.
+{
+  await page.goto(BASE + "/app");
+  await page.locator(".calhead-add").waitFor();
+  await page.locator(".settingsbtn").click();
+  await page.locator(".acctwrap").waitFor();
+  await page.locator(".acctclose").click();
+  await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+  console.log("gear on the You tab ok (same-route tap still opens settings)");
+}
+
 // The owner gets two pills where a visitor gets Message and Follow: Share
 // filled, Edit profile outline. Every way of sharing lives behind the first.
 {
