@@ -28,7 +28,6 @@ export function DiscoverList({
   hideBack?: boolean;
 }) {
   const [tab, setTab] = useState<"people" | "studios">("people");
-  const [q, setQ] = useState("");
   const [coachesOnly, setCoachesOnly] = useState(false);
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
@@ -40,7 +39,6 @@ export function DiscoverList({
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
     return coaches.filter((c) => {
       if (coachesOnly && c.kind !== "coach") return false;
       if (city && c.location !== city) return false;
@@ -48,32 +46,21 @@ export function DiscoverList({
       // Someone looking for a personal trainer is looking for a yes, not a
       // waitlist. The coach already told us which they are.
       if (acceptingOnly && c.availability !== "accepting") return false;
-      if (!needle) return true;
-      return (
-        c.name.toLowerCase().includes(needle) ||
-        c.title.toLowerCase().includes(needle) ||
-        c.location.toLowerCase().includes(needle)
-      );
+      return true;
     });
-  }, [coaches, q, city, coachesOnly, discipline, acceptingOnly]);
+  }, [coaches, city, coachesOnly, discipline, acceptingOnly]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
   // it finds them.
   const shownStudios = useMemo(() => {
-    const needle = q.trim().toLowerCase();
     return studios.filter((st) => {
       // One vocabulary across the directory, so the same pick narrows both
       // halves: the yoga teachers, and the places that offer yoga.
       if (discipline && !st.types.includes(discipline)) return false;
-      if (!needle) return true;
-      return (
-        st.name.toLowerCase().includes(needle) ||
-        st.address.toLowerCase().includes(needle) ||
-        st.types.some((t) => t.toLowerCase().includes(needle))
-      );
+      return true;
     });
-  }, [studios, q, discipline]);
+  }, [studios, discipline]);
 
   // Only what this lens can actually narrow, so the sheet never offers a
   // filter that would empty the list on principle.
@@ -104,29 +91,17 @@ export function DiscoverList({
       {/* The page title, with the coaches-only switch directly across from
           it. Only when the list mixes kinds; all coaches leaves the switch
           nothing to do. */}
-      {/* The box first, because searching is the thing people came to do, and
-          it searches whichever half the toggle below it is on. */}
+      {/* The box first, because searching is the thing people came to do. It
+          is a door now, not a filter: tapping it opens the universal search,
+          which covers both halves at once and the people you follow besides.
+          Two search behaviours behind one drawing of a box was the confusing
+          part; the magnifier left the header for this tab, so this is the one
+          place searching starts. */}
       <div className="dissearchrow">
-        <div className="dissearch">
+        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
           <Icon name="search" size={19} className="dissearch-ic" />
-          <input
-            className="dissearch-in"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search"
-            aria-label={tab === "people" ? "Search people" : "Search studios"}
-          />
-          {q && (
-            <button
-              type="button"
-              className="dissearch-x"
-              onClick={() => setQ("")}
-              aria-label="Clear"
-            >
-              <Icon name="close" size={17} />
-            </button>
-          )}
-        </div>
+          <span className="dissearch-ph">Search</span>
+        </Link>
       </div>
 
       {/* No page title: the tab bar already says Discover, and the segment
@@ -285,12 +260,8 @@ export function DiscoverList({
       {tab === "studios" ? (
         shownStudios.length === 0 ? (
           <div className="empty-block">
-            <h2>{q ? "No studios match that" : "No studios yet"}</h2>
-            <p>
-              {q
-                ? "Try another name or town."
-                : "Studios arrive as coaches add the places they teach."}
-            </p>
+            <h2>No studios yet</h2>
+            <p>Studios arrive as coaches add the places they teach.</p>
           </div>
         ) : (
           <div className="dislist dislist-bare">
@@ -305,15 +276,13 @@ export function DiscoverList({
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>{city && !q ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
+          <h2>{city ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
           <p>
-            {q
-              ? "Nothing matches that. Try another name or city."
-              : city
-                ? "Nobody is listed there. Switch to All cities to see everyone."
-                : "The list fills up as people join and coaches publish their schedules."}
+            {city
+              ? "Nobody is listed there. Switch to All cities to see everyone."
+              : "The list fills up as people join and coaches publish their schedules."}
           </p>
-          {city && !q && (
+          {city && (
             <button className="btn ghost" onClick={() => setCity(null)}>
               Show all cities
             </button>

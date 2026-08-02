@@ -283,7 +283,10 @@ mean the same thing on both screens, and a second copy would drift where
 nobody was looking.
 
 `searchAll` runs on the server rather than filtering a list the page already
-shipped, which is what Discover does. A directory has to arrive whole; a
+shipped. Discover no longer filters by text at all: its box is a door
+(`.dissearch-door`), drawn like the field it opens, and tapping it lands on
+`/search`. The header carries no magnifier; the Discover tab wears it, so the
+one search has one door and the tab names where searching lives. A directory has to arrive whole; a
 search is a question, and sending every account to every device so the answer
 can be computed there stops being reasonable well before it stops working. It
 keeps two rules and they are why it can't be a plain LIKE: blocked in either
@@ -331,10 +334,10 @@ the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
-**Discover's controls read top down: search, then which half, then filter.**
-The box is first because searching is what people came to do; it says just
-"Search", since the segment under it already names the half and saying it twice
-was two voices for one fact. The filter is the floating pill a
+**Discover's controls read top down: the search door, then which half, then
+filter.** The box is first because searching is what people came to do, and it
+opens the universal search rather than filtering the list in place: two search
+behaviours behind one drawing of a box was the confusing part. The filter is the floating pill a
 class uses for Book and Save, because the one control you reach for while
 scrolling belongs where your thumb is rather than in a row you have already
 scrolled past. It is lighter and smaller than the pill it borrows from: that
@@ -424,19 +427,18 @@ badge says which: Coach, Member, Studio. What used to be three headers is one,
 and three headers is how a member's page ended up looking like a lesser version
 of a coach's.
 
-**The hero says the name, what they do and where, and nothing else.** There
-is no Coach/Member/Studio tag above the name and no availability tag beside it:
-a row of small badges over a photograph was the first thing to go when the page
-got busy, and "Coach" told nobody anything the schedule under it didn't. What
-they do and where they are share one line (`.profmeta`, a middot between them,
-no pin), because two stacked lines under a name is a paragraph nobody reads.
-Availability still does its work in Discover's filter and in whether there is
-anything to say when somebody writes in; it is a status, not a label to wear.
-The only badge left on any hero is a studio's Verified, which is not a "what
-kind of page" label but the reason the pencil is missing. Nothing floating over
-the picture carries a drop shadow, and the header's icons are flat white with
-no glass behind them: a hairline `rgba(255,255,255,.18)` bottom border on
-`.pub .brandbar` is what separates it from the photograph instead.
+**A profile is a circle of a face over a centred name, and that is the
+point.** The full-bleed photo hero shipped and came back out: a screen of
+photograph before any schedule said editorial when the product says calendar.
+`.pubhead` is centred (face, name, one `.profmeta` line of what and where, the
+two big pills), then a rule, then the tabs as pills, selected filled with ink.
+The big picture still exists one tap away: the avatar is `AvatarZoom`, which
+blows the photo up over the blurred page with Follow, Share, Copy link and QR
+under it (the owner gets their card there too). There is no Coach/Member/
+Studio tag and no availability tag; the only badge left is a studio's
+Verified, in `badges` beside the name. Contact is the filled pill and the
+bottom sheet; Follow is the outline that turns green (`--go`) when it's a
+yes, same green as a Going mark.
 
 **Signing in puts you back where you were.** `src/lib/afterauth.ts` is one pair
 of functions over one sessionStorage key: `rememberAfterAuth` on the way in,
@@ -449,58 +451,22 @@ would drop somebody silently. The word is "Sign in", everywhere, including the
 errors: it covers coming back and arriving for the first time, and two words
 for one door is two doors.
 
-**The profile leads with the photo, full bleed.** `.profhero` runs to both
-edges and up under the app bar at 65vh, with the tags, name, tagline, city and
-both action pills stacked left along the bottom over it. The scrim exists only
-where there's a photograph to read against, and only across the bottom 42% of
-it, under the words: dimming the whole frame made every photograph look like
-stock behind a caption, and the face and the room stay as they were shot. A
-flat `avatarColor` gets no scrim at all, because it already clears white text.
-The pills are white
-because they're on the picture: Contact filled, Follow an outline, and
-following fills Follow in with a short spring (`folpop`, skipped under
-`prefers-reduced-motion`). There is no avatar circle any more, so `AvatarZoom`
-is gone from this page, which is why availability moved with it: it was a dot
-on that circle and words in its overlay, and it is now a second tag beside
-Coach in `.profhero-tags`. A status nobody can read is the same as no status.
-
 **A bottom sheet is a surface, not a tray for cards.** `.sheet` wears the same
 glass a class overlay does, opaque enough to read against with a hint of the
 page it came up over, and a `.settingslist` inside one drops its own white
 block: rows sit straight on the sheet and the dividers do the separating. A
 white card inside a white card is a box drawn for its own sake.
 
-**Everything floating on a profile's photograph is the same light glass.** The
-back arrow, the share circle, the settings pill, a studio's dots and every
-badge above the name: white at 80% with a backdrop blur and ink on top, the
-same as the two action pills. A slab of ink over a photograph is a hole in it,
-and two treatments side by side read as two unrelated sets of controls. The
-hierarchy between the pills is fill weight rather than colour now: the one you
-came to do is nearly solid with ink on it, the other is a white outline over a
-whisper of a fill with white words. That second treatment is one selector
-covering both slots (`.actpill:not(.actpill-primary)`, `.followpill:not(.on)`),
-because the owner's Edit profile and a visitor's Follow are the same slot
-wearing the same weight; left apart, Edit profile kept the base rule's dark ink
-and put dark words on somebody's photograph. The two badges that mean something
-(availability, Verified studio) keep their colour in the ink, because a pale tag
-can't say it with its fill.
+**Handing a profile on lives behind the face, not in a row of circles.**
+A person's share/copy/QR actions sit under the blown-up photo in `AvatarZoom`;
+a studio has no face to blow up, so `ProfileShare` (native share, copy
+fallback) rides with its pills instead.
 
-**Everybody can hand a profile on.** `ProfileShare` sits at the right of
-`.profhero-actrow`, across from the two action pills rather than up in the
-corner: it is a thing you do about this person, like the other two, and the
-corner is for the owner's own controls. It is `navigator.share` with a
-copy-the-link fallback, and it exists on all three profiles because until it
-did, the only way a visitor could send somebody a coach was to copy the address
-bar. An owner's Share pill under the name is a different thing and stays: that
-one carries the story image, the QR code and the week as text.
-
-**The floating action buttons are glass, not slabs.** Add class, Discover's
-filter and the two pills on a profile's photograph are all white with a
-backdrop blur rather than solid: a block of colour over a photograph is a hole
-in it, and the brand orange isn't spent on a control that sits permanently over
-a schedule. The primary one is white at 80%, the secondary at 20% with a white
-border, and following fills to match. Change one and change the rest, or they
-stop reading as the same kind of thing.
+**Add class is brand orange with white words; Discover's filter stays glass.**
+The one button that makes a coach's page exist gets the one loud colour, by
+request, after a glass version read as furniture. The filter pill keeps the
+glass: it floats over a list somebody is reading and is not the point of the
+screen.
 
 **The Verified studio badge explains itself.** `VerifiedBadge` is a button, and
 tapping it says what the badge means (the people who run the place keep the
@@ -510,59 +476,40 @@ already exists, whose relation field starts with "I own it": that is how a
 studio actually gets claimed today, so this points at it rather than inventing
 a second door. A badge nobody can ask about is a claim taken on faith.
 
-**The header floats over a profile's photograph, it doesn't sit above it.**
-`.pub .brandbar` and `.pub .pubtop` are `position: absolute` at the top of
-`.profwrap` with no background and no border, their wordmark and icons in
-white, and the picture runs full bleed underneath. `.profhero-topscrim` is what
-makes them readable, and like the one at the bottom it only exists over a real
-photograph: a band of grey across a flat `avatarColor` is just a band. The
-wordmark's colour is an inline style, so no class can reach it; `--wm-ink` on
-the header is the way in, and adding a prop for every surface it lands on is
-the thing that variable exists to avoid.
+**On a profile the header sits above the page again, and only the name and
+tabs pin.** `.pubstick` sticks under the app header, measuring the brandbar's
+height on mount (a stranger has no app header, so it measures zero and owns
+the top). Once the big head scrolls away it grows the small copy of the name
+and the compact Follow.
 
-**On a profile, the name and the tabs are the only thing that pins.** The app
-header is absolute there rather than sticky, so it scrolls away with the
-picture: two stacked bars over a schedule is most of a phone screen
-spent on chrome, and the row that says whose week this is has more claim on the
-top than the wordmark. `.pubstick` therefore sticks at 0 and measures nothing.
-It used to read the brandbar's height on mount and hold that much space, which
-against a header that no longer pins would have left a band of paper under the
-tabs. If anything ever pins above it again, that measurement comes back.
-
-**The hero's top row shares the page's gutter, and it is a flex child to get
-there.** `.profback` and `.ownertop` sit in `.profhero-top`, the hero's first
-child, pushed apart by `justify-content` and holding the name down with
-`margin-bottom: auto`. They used to be absolute corners 6px from the viewport
-edge while the wordmark above and the name below sat on the page's 18px gutter,
-and no offset written into that rule could have matched it: the hero is full
-bleed, so a percentage there resolves against the viewport, while the gutter is
-whatever the parent column works out. Inside the hero's own padding they line
-up by construction, at 390px and at 1280px alike.
-
-**The hero's two corner slots must not own a stacking layer.** `.profback` and
-`.ownertop` are positioned but carry no `z-index`, on purpose. They hold
+**The head's two corner slots must not own a stacking layer.** `.profback`
+and `.ownertop` are positioned but carry no `z-index`, on purpose. They hold
 arbitrary controls, and a control that opens a sheet needs that sheet at z-46
 over the z-45 tab bar; a `z-index: 2` on the slot trapped it in a layer of its
 own, and the studio's dots opened an editor whose Save button could not be
-tapped. `position: relative` on the row is what paints it over the picture.
-This is the same trap the account view has, where the fix is to portal instead.
+tapped. This is the same trap the account view has, where the fix is to
+portal instead.
 
-**Your own profile is the You tab, and it is the one profile that keeps the tab
-bar.** Somebody else's has none: it is a page you visited, and the arrow on the
-picture is its way off. Yours is a tab, and arriving on a tab must not take the
-tabs away. `.ownbar` is what puts the bar's room back at the bottom of the page
+**Your own profile keeps the tab bar; somebody else's has none.** Theirs is
+a page you visited, and the arrow is its way off. Yours is one pill from the
+You tab's calendar, and it keeps the bar so the way back stays under your
+thumb. `.ownbar` is what puts the bar's room back at the bottom of the page
 and lifts the floating Add class button over it.
 
-**Settings live on the page they're about, and only once, and that page is the
-one the You tab lands on.** The gear sits in `.ownertop` on a coach's own
-profile and nowhere else, carrying the words "Profile settings" rather than
-being a circle to guess at; `AppHeader` carries none on any screen. A member's
-settings were always `/you`, which the tab bar already is. `?acct=1` is the URL
-the gear links to and the only door into the account view, which is why a suite
-opening settings navigates there rather than clicking a gear. `.ownermore`
-means the studio page's dots; the profile's gear is `.ownergear` and they share
-only the circle in CSS, because an existing selector broke the moment they
-shared a class name.
+**A coach's You tab is their coaching calendar, and the tools ride across
+its top.** It pointed at their public profile for a while, and the working
+screen ended up behind a gear. `/app` is the tab, with `.schedtools` across
+the top: Your profile first, wearing their face; then Share your week (the
+story sheet) and Share your profile (the card image sheet, in the spot the QR
+pill had). The calendar draws the member lists' paper cards, minus the coach
+chip, because every class here is theirs.
+
+**A coach's settings are the header's gear; the profile carries no door to
+somewhere else.** `AppHeader`'s `settings` prop (coach only: a member's rows
+live on `/you`) links to `/app?acct=1`, the only door into the account view,
+which is why a suite opening settings navigates there rather than clicking a
+gear. `.ownermore` means the studio page's dots; nothing on a person's
+profile opens settings any more.
 
 **Contact is a thing you do, not a section you read.** It was a tab; it is now
 the pill beside Follow and one sheet (`ContactSheet`). Message on fittlist
@@ -1066,9 +1013,8 @@ corner with its count (`AppHeader`'s `plans`, omitted for a shell with no
 member side): a fourth tab crowded the bar for a list you visit rather than
 live on, and Following leads the tabs because the merged week is the thing the
 app is for. `/week` stays in the `(tabs)` route group so the shell survives
-navigation, even though no tab lights there. Discover wears a compass rather
-than a magnifier, because the magnifier is search and two of them in one
-screen said one thing twice. A hamburger is deliberately not built: merch and
+navigation, even though no tab lights there. Discover wears the magnifier now that
+the header does not: one search, one door, and the tab names where it lives. A hamburger is deliberately not built: merch and
 an about page are the things that would go in it, and a lid over an empty
 shelf is where things go to be forgotten.
 

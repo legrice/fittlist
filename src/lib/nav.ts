@@ -29,11 +29,10 @@ export function navTabs(coach: boolean, youHref?: string): NavItem[] {
     // a list you visit rather than live on. Following leads because the
     // merged week is the thing the app is for.
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // A compass, not a magnifier: the magnifier is search, which is its own
-    // control in the header now, and two of them in one screen said one thing
-    // twice. Discover is where you browse; search is what you do from
-    // anywhere.
-    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
+    // The magnifier lives here now: the header lost its search icon, the
+    // Discover box is the door to the universal search, and two doors to one
+    // search said one thing twice.
+    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     // Your own page, as everyone else sees it. It carries your face rather
     // than an icon: it's the one tab that is a person rather than a place. A
     // coach's is their public profile (the caller passes the handle URL in),

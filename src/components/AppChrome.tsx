@@ -80,6 +80,7 @@ export async function AppChrome({
       // random.
       home={fans ? "/feed" : "/app"}
       plans={fans ? week : undefined}
+      settings={isCoach ? "/app?acct=1" : undefined}
       nav={(headerNav ?? bar) ? { coach: isCoach, youHref, active } : undefined}
     />
   );

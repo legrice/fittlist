@@ -10,6 +10,7 @@ import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
+import { AvatarZoom } from "@/components/AvatarZoom";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
@@ -399,8 +400,20 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           trackHandle={handle}
           backTo={backTo}
-          photo={user.photo}
-          color={avatarColor(user)}
+          // The face is a circle again; tapping it blows it up with the
+          // person's follow/share/link/QR actions under it.
+          avatar={
+            <AvatarZoom
+              className="profav"
+              handle={handle}
+              name={user.name}
+              photo={user.photo}
+              color={avatarColor(user)}
+              follow={!isOwner && account ? account : null}
+              isOwner={isOwner}
+              availability={user.availability}
+            />
+          }
           // The same two slots for everybody. A visitor gets Message and
           // Follow; the owner gets Share and Edit profile, which are the two
           // things they came to do with their own page.
@@ -445,24 +458,9 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // Settings, and only settings. This is where the You tab lands, so
-          // this is the page they live on; everything else a coach does here
-          // is on the two pills under the name.
-          ownerTop={
-            isOwner ? (
-              // Named, not just drawn. A gear on its own is a guess, and the
-              // one thing behind it is worth saying out loud.
-              <Link className="ownergear" href="/app?acct=1">
-                <Icon name="settings" size={18} />
-                <span className="ownergear-lbl">Profile settings</span>
-              </Link>
-            ) : null
-          }
-          // Nothing above the name. The Coach tag said which side of the app
-          // this is, which the page's own shape already says, and the
-          // availability tag put a status chip over somebody's photograph.
-          // Whether they take private clients is still on the account and
-          // still gates the Contact pill; it just isn't a badge any more.
+          // No gear here any more: settings live behind the app header's
+          // gear, so the profile stops carrying a door to somewhere else.
+          ownerTop={null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

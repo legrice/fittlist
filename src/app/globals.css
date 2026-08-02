@@ -590,14 +590,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   bottom: calc(22px + env(safe-area-inset-bottom));
   display: inline-flex; align-items: center; gap: 8px;
   padding: 15px 22px 15px 18px; border-radius: 999px;
-  /* The same glass the Discover filter wears. It floats over a week somebody
-     is reading, and a slab of orange over their Thursday was the loudest thing
-     on a screen whose job is the schedule underneath it. */
-  background: rgba(255, 255, 255, .78); color: var(--ink);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  /* Brand orange, back by request: the one button that makes a coach's page
+     exist gets the one loud colour. It tried being glass and read as
+     furniture. */
+  background: var(--si); color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
-  box-shadow: 0 6px 20px rgba(17, 17, 17, .14), 0 0 0 1px rgba(17, 17, 17, .06);
+  box-shadow: 0 6px 20px rgba(17, 17, 17, .18);
   transition: transform .08s;
   /* It's a Link on the You tab and a button on /app; the link one was
      shipping with a default underline. */
@@ -1098,54 +1096,8 @@ button.ps-card { cursor: pointer; }
   flex: 1; width: 100%; max-width: 660px; margin: 0 auto;
   padding: calc(18px + env(safe-area-inset-top)) 18px 120px;
 }
-/* Signed in, a profile carries the tab bar, so the last row has to clear it.
-   Nothing above the picture: the header floats over it, so the wrapper starts
-   at zero and the photograph runs to the top of the screen. */
-.pub .profwrap { position: relative; padding-top: 0; }
-
-/* THE HEADER ON A PROFILE: over the picture, not above it.
-   Transparent, its wordmark and icons in white, floating on the photograph
-   with a short scrim behind them. The image is the page's first impression and
-   a bar of cream across the top of it was a lid. It is absolute rather than
-   sticky, so it scrolls away and the only thing that pins is the name and the
-   tabs. --wm-ink is how the wordmark's inline colour is reached. */
-.pub .brandbar, .pub .pubtop {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
-  background: none; margin: 0;
-  padding: calc(16px + env(safe-area-inset-top)) 18px 12px;
-  /* No edge at all. The hairline tried to give the bar one and read as a
-     seam across the photograph; the scrim is what makes the bar legible,
-     and the picture runs unbroken. */
-  border-bottom: none;
-  --wm-ink: #fff;
-}
-.pub .pubtop { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-/* Bare white glyphs. They wore a blurred dark circle each, which made three
-   little plates across the top of somebody's photograph; the scrim behind the
-   bar is what makes them readable, and that is enough. */
-.pub .brandbar-actions .iconbtn {
-  color: #fff; border-color: transparent; background: none;
-  backdrop-filter: none; -webkit-backdrop-filter: none;
-}
-.pub .brandbar-actions .iconbtn:hover { border-color: transparent; color: #fff; }
-/* The badge's ring is cut out of the paper everywhere else; here the paper is
-   a photograph, so it takes the scrim's darkness instead. */
-.pub .brandbar .inboxdot { border-color: rgba(0, 0, 0, .38); }
-/* A stranger's one door. The same light glass the pills on the picture wear,
-   because it sits on the same picture; solid white up there was the brightest
-   thing on the page and the first thing your eye went to. */
-.pub .pubtop-login {
-  background: rgba(255, 255, 255, .8); color: #111;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-}
-
-/* The picture starts at the top of the screen and runs under all of it. */
-.pub .profhero { margin-top: 0; }
-/* Which means the top row has to start below the header rather than in the
-   same 18px everything else uses. The hero's own padding is the 18px, so this
-   is the rest of it. */
-.pub .profhero .profhero-top { padding-top: calc(64px + env(safe-area-inset-top)); }
+/* Signed in, a profile carries the tab bar, so the last row has to clear it. */
+.pub .profwrap { position: relative; }
 .profphoto {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; display: block;
   margin-top: 20px;
@@ -1880,124 +1832,22 @@ button.ps-card { cursor: pointer; }
    with the name over it: a profile is about a person, and the person is the
    first thing on the page rather than a stamp in the middle of it.
    The negative margin is the same full-bleed trick .pubstick uses. */
-.profhero {
-  position: relative;
-  margin: -14px calc(50% - 50vw) 0;
-  /* Most of the first screen. A profile's job is to introduce a person, and
-     a face at a stamp's size does not do that. */
-  min-height: 75vh;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 18px calc(50vw - 50%);
-  overflow: hidden;
+/* The identity block, centred: face, name, what and where, then the two
+   things you can do about it, then a rule and the tabs. A profile is the one
+   screen about a person rather than a list, so it gets the symmetry. The
+   full-bleed hero shipped and came back out: a screen of photograph before
+   any schedule said editorial when the product says calendar, and the big
+   picture still exists one tap behind the avatar. */
+.pubhead {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding-top: 26px; padding-bottom: 24px; position: relative;
+  border-bottom: 1px solid var(--line);
 }
-.profhero-img {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; display: block;
-}
-/* Only where there is a photograph to read against. A flat colour already
-   clears white text, and dimming it would only make it muddy. */
-.profhero-scrim {
-  /* Only the bottom of the picture, where the words are. Dimming the whole
-     frame made every photograph look like a stock image behind a caption; the
-     face and the room stay as sharp as they were shot. */
-  position: absolute; inset: auto 0 0; height: 42%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, .30) 46%,
-    rgba(0, 0, 0, .62) 100%
-  );
-}
-/* Behind the header, and only that far down. The bottom one carries the name;
-   this one carries the wordmark and the bell. */
-.profhero-topscrim {
-  position: absolute; inset: 0 0 auto; height: calc(150px + env(safe-area-inset-top));
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, .46) 0%,
-    rgba(0, 0, 0, .22) 46%,
-    rgba(0, 0, 0, 0) 100%
-  );
-}
-.profhero-txt { position: relative; text-align: left; }
-/* On the image, so they read as white on the photograph rather than as page
-   furniture underneath it, and in the same glass the floating buttons wear:
-   a solid white slab over a photograph is a hole in it. Contact leads because
-   it starts something; Follow is the lighter one until it's a yes, and then it
-   fills to match. */
-.profhero .profacts { margin-top: 0; }
-/* The two things you can do about this person, and handing the page on across
-   from them. Share is a circle rather than a pill because it is the same
-   control it was in the corner, just moved to where the other actions live. */
-.profhero-actrow {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin-top: 16px;
-}
-.profhero-actrow .profshare-btn { flex-shrink: 0; }
-/* No drop shadow on any of it. Every control over the photograph was casting
-   one, so the picture wore a set of floating cards; the glass and the white
-   edge are what lift them, and a shadow on top of that is a second answer to
-   a question already answered. */
-.profhero .actpill,
-.profhero .followpill {
-  color: #111;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: none;
-}
-/* Filled ones let a little more of the photograph through than they did, and
-   their ink is what makes them readable. */
-.profhero .actpill-primary,
-.profhero .followpill.on {
-  background: rgba(255, 255, 255, .74); border-color: transparent; color: #111;
-}
-/* The second pill is an outline in white, so the pair reads as one thing you
-   came to do and one you might. It fills in on the yes, and its ink turns with
-   it: white on a white fill was a word nobody could read, which is the one
-   thing a button that says "Following" has to do.
-   The owner's Edit profile is the same rule as a visitor's Follow, in one
-   selector rather than two, because they are the same slot wearing the same
-   weight. Left apart, Edit profile kept a .4 fill and the base rule's ink and
-   was a third treatment nobody asked for, and dark words on a photograph is
-   the thing this whole hero is built to avoid. */
-.profhero .actpill:not(.actpill-primary),
-.profhero .followpill:not(.on) {
-  background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .9); color: #fff;
-}
-.profhero .actpill-primary .icon,
-.profhero .followpill.on .icon { color: #111; }
-.profhero .actpill:not(.actpill-primary) .icon,
-.profhero .followpill:not(.on) .icon { color: #fff; }
-.profhero .profname { color: #fff; margin: 8px 0 0; }
-/* What they do and where, on one line under the name and a size down from it.
-   Two stacked paragraphs meant three type sizes in a column over a face. */
-.profmeta {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
-  font-size: 13.5px; font-weight: 500; color: var(--ol); margin: 5px 0 0;
-}
-.profmeta-sep { opacity: .55; }
-.profhero .profmeta { color: rgba(255, 255, 255, .8); }
-/* The badges above the name, in the same light glass as everything else on
-   the picture. */
-.profhero .kindtag {
-  display: inline-flex; align-self: flex-start;
-  background: rgba(255, 255, 255, .8); color: #111; border: none;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
-}
-[data-mode="dark"] .profhero .kindtag { background: rgba(255, 255, 255, .82); color: #111; }
-/* Two of them side by side: what they are, and whether they're taking anyone
-   on. Wraps rather than shrinks, because "Open for clients" is the sentence. */
-.profhero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
-/* The two that mean something keep their colour in the ink rather than the
-   fill, now that every tag is the same pale glass. */
-.profhero .availtag-accepting,
-[data-mode="dark"] .profhero .availtag-accepting { color: #2c6b3f; }
-.profhero .availtag-waitlist,
-[data-mode="dark"] .profhero .availtag-waitlist { color: #8a5c10; }
-/* What's left of the old centred block: just the actions, under the hero. */
-.pubhead { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
+.pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
+.pubhead .profname-row { justify-content: center; }
+.profname-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.profbadges { display: inline-flex; align-items: center; gap: 6px; }
+.pubhead .profmeta { justify-content: center; font-size: 14.5px; margin: 8px 0 0; }
 /* The owner's controls, one row top-right across from the photo: the Add
    class pill and the three-dot, both on the same tan so they read as one
    set of page controls. */
@@ -2008,46 +1858,16 @@ button.ps-card { cursor: pointer; }
    them a stack of their own trapped whatever they hold, and a sheet opened
    from the studio's dots came up UNDER the z-45 tab bar with its save button
    unreachable. A slot that holds arbitrary controls must not own a layer. */
-.profback { position: absolute; top: 18px; left: calc(50vw - 50%); }
-/* Inside the hero it is a flex child, not a corner: the row below carries the
-   page's gutter, so the arrow and the dots line up with the wordmark above and
-   the name underneath. margin-bottom: auto pushes the name to the bottom, which
-   is the job the hero's justify-content used to do on its own. */
-.profhero-top {
-  position: relative; display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 12px; margin-bottom: auto;
-}
-.profhero .profback { position: static; top: auto; left: auto; }
-/* Every control on the picture, in one treatment: back, share, the coach's
-   gear and the studio's dots, in the same light glass as the pills below them.
-   Two treatments side by side read as two unrelated things rather than one set
-   of page controls, and a slab of ink over a photograph is a hole in it. */
-.profhero .profback .evback,
-.profhero .profshare-btn,
-.profhero .ownergear,
-.profhero .ownermore {
-  background: rgba(255, 255, 255, .8); color: #111; border-color: transparent;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: none;
-}
-/* The way off the page, not the point of it: small enough to read as a
-   control rather than a button somebody is meant to press first. */
-.profhero .profback .evback { width: 34px; height: 34px; }
-[data-mode="dark"] .profhero .profback .evback,
-[data-mode="dark"] .profhero .profshare-btn,
-[data-mode="dark"] .profhero .ownergear,
-[data-mode="dark"] .profhero .ownermore {
-  background: rgba(255, 255, 255, .82); color: #111;
+/* No z-index on either corner slot, deliberately: a slot that holds
+   arbitrary controls must not own a layer (see the account view). */
+.profback { position: absolute; top: 26px; left: 0; }
+.ownertop {
+  position: absolute; top: 26px; right: 0;
+  display: flex; align-items: center; gap: 10px;
 }
 /* It is a button rather than a link, so it has to be told what .evback gets
    for free from being an anchor. */
 .profshare-btn { cursor: pointer; padding: 0; }
-.ownertop {
-  position: absolute; top: 18px; right: calc(50vw - 50%);
-  display: flex; align-items: center; gap: 10px;
-}
-.profhero .ownertop { position: static; top: auto; right: auto; margin-left: auto; }
 .sharepill {
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
   padding: 0 16px; border-radius: 999px; cursor: pointer;
@@ -2079,18 +1899,19 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 50px;
 }
-/* The name wraps rather than truncating — it's the one thing on the page that
-   has to be readable in full. */
-.profhero .profname { font-size: 34px; line-height: 1.03; overflow-wrap: anywhere; }
-.profhero .profmeta { font-size: 13.5px; margin: 5px 0 0; }
+
 
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
-.profacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.profacts {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px;
+}
+/* Big pills again: on the paper page they are the two things to do, and the
+   photo no longer competes with them for the thumb. */
 .actpill, .followpill {
-  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 9px 17px; border-radius: 999px; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px 22px; border-radius: 999px; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   transition: transform .08s;
   border: 1.5px solid var(--line); background: transparent; color: var(--ink);
 }
@@ -2158,9 +1979,7 @@ button.ps-card { cursor: pointer; }
 .pubstick {
   position: sticky; top: 0; z-index: 7;
   background: var(--paper);
-  /* Close under the picture. The tabs belong to the person above them, and a
-     wide band of paper between the two read as a page break. */
-  margin: 6px calc(50% - 50vw) 0;
+  margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
 }
 .pubstick-row {
@@ -2178,12 +1997,8 @@ button.ps-card { cursor: pointer; }
 /* The sticky bar's Follow, sized to ride beside the small name. */
 .followpill.mini { padding: 8px 16px; font-size: 14px; gap: 6px; }
 .pubtabs {
-  display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
-  /* The rule sits under the tabs as an inset shadow rather than a border:
-     children paint above an inset shadow, so the selected tab's underline
-     sits in front of the line instead of being clipped behind it by the
-     row's own horizontal scroll. */
-  box-shadow: inset 0 -1px 0 var(--line);
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  padding-bottom: 14px;
   /* Full bleed again inside the sticky shell, so a tab can still slide half
      off the screen rather than stopping at the column edge. */
   margin: 0 calc(50% - 50vw);
@@ -2200,8 +2015,10 @@ button.ps-card { cursor: pointer; }
    one family. */
 /* Selected reads as an underline, not a pill: ink text, a black rule
    beneath, nothing filled. */
-.pubtab { border-radius: 0; padding-left: 6px; padding-right: 6px; border-bottom: 3px solid transparent; }
-.pubtab.sel { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
+/* Pills, not underlines: the selected one fills with ink, the rest sit as
+   quiet chips, and the rule above the row is the head's own bottom border. */
+.pubtab { padding: 10px 19px; background: var(--cl); font-size: 16px; }
+.pubtab.sel { color: var(--paper); background: var(--ink); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -3966,6 +3783,14 @@ button.ps-card { cursor: pointer; }
   .favtoast.listadded { bottom: calc(28px + env(safe-area-inset-bottom)); }
 }
 
+/* The Discover box as a door: drawn like the search field it opens, so the
+   hand that reaches for it is right. A span stands in for the input. */
+.dissearch-door { text-decoration: none; }
+.dissearch-ph {
+  flex: 1; font-size: 16px; color: var(--ol);
+  font-family: inherit; text-align: left;
+}
+
 /* Recent searches: rows of what you asked before, kept on this device only
    and offered when the box is empty. */
 .recentrow {
@@ -4039,8 +3864,8 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 4px;
   border: none; cursor: pointer; font-size: 12px;
 }
-.profhero .studiokept,
-[data-mode="dark"] .profhero .studiokept { color: #2c6b3f; }
+.pubhead .studiokept,
+[data-mode="dark"] .pubhead .studiokept { color: #2c6b3f; }
 
 /* Admin: who holds the keys to a studio page. */
 .adminclaimed { color: var(--go); font-weight: 700; }

@@ -415,7 +415,7 @@ await page.getByRole("button", { name: "Save profile" }).click();
 await page.getByText("Profile saved").waitFor();
 await page.reload();
 const shownAvatar = await page
-  .locator(".profhero-img")
+  .locator(".profav")
   .evaluate((e) => getComputedStyle(e).backgroundColor);
 if (shownAvatar !== pickedColor)
   fail(`avatar colour didn't stick: picked ${pickedColor}, page shows ${shownAvatar}`);
@@ -1156,12 +1156,7 @@ if (await fan.locator(".calbar-title", { hasText: "Discover" }).count())
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
-// search narrows, and a miss says so
-await fan.locator(".dissearch-in").fill("zzzz");
-await fan.getByText("Nobody here yet").waitFor();
-await fan.locator(".dissearch-in").fill("Matt");
-await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
-await fan.locator(".dissearch-x").click();
+// The box is a door to the universal search; the list itself is browsed.
 // every row carries the small corner pill: outline Follow before, green
 // Following after, so following doesn't require the trip through the page.
 await fan
@@ -1198,22 +1193,14 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearchrow").waitFor();
-  // One word for both halves: the segment under it already says which one is
-  // being searched, and "Search people" repeated that in a second voice.
-  if ((await fan.locator(".dissearch-in").getAttribute("placeholder")) !== "Search")
-    fail("the box should just say Search");
-  // The box and the filter sit on one line, filter to the right of it.
-  if (await fan.locator(".discitysel").count()) {
-    const box = await fan.locator(".dissearch").boundingBox();
-    const fil = await fan.locator(".discitysel").boundingBox();
-    if (Math.abs(box.y - fil.y) > 5 || fil.x <= box.x)
-      fail("the filter should sit on the same row, to the right of the box");
-  }
+  // The box is a door now: drawn like a search field, opening the universal
+  // search. Two search behaviours behind one drawing of a box was confusing.
+  await fan.locator(".dissearch-door").waitFor();
+  if (await fan.locator(".dissearch-in").count())
+    fail("Discover's box should be a door, not a filter");
 
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.locator(".disrow-studio").first().waitFor();
-  if ((await fan.locator(".dissearch-in").getAttribute("aria-label")) !== "Search studios")
-    fail("the box should still name the half it is searching, for a screen reader");
   if (await fan.locator(".discitysel").count())
     fail("a studio has an address, not a city to filter by");
   if (await fan.locator(".disfol").count())
@@ -1238,12 +1225,15 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     if (new Set(faces.map(([, bg]) => bg)).size < 2)
       fail("a directory of one colour is as unreadable as a directory of pins");
   }
-  // Searching an address finds the town, which is the filter studios lack.
+  // Searching an address finds the town, through the universal search the
+  // box now opens.
+  await fan.locator(".dissearch-door").click();
+  await fan.waitForURL(/\/search/);
   await fan.locator(".dissearch-in").fill("Ironbound");
-  await fan.waitForTimeout(300);
-  const names = await fan.locator(".disrow-studio .nm").allInnerTexts();
-  if (!names.some((n) => /Ironbound/.test(n)))
-    fail("searching studios found nothing: " + names.join(", "));
+  await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
+  await fan.goBack();
+  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".disrow-studio").first().waitFor();
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
@@ -1330,13 +1320,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 {
   await fan.goto(BASE + "/discover");
   await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-main").click();
-  await fan.locator(".profhero").waitFor();
+  await fan.locator(".pubhead").waitFor();
   if (await fan.locator(".navbar").count())
     fail("a profile should carry no tab bar: the arrow is the way off it");
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/discover/);
   await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
-  await fan.locator(".profhero").first().waitFor();
+  await fan.locator(".pubhead").first().waitFor();
   if (!(await fan.locator(".profback .evback").count()))
     fail("a profile reached from Discover should offer the way back");
   // Genuinely cold: a fresh tab, so the nav stack is empty and there is
@@ -1347,7 +1337,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     const cold = await coldCtx.newPage();
     cold.setDefaultTimeout(10000);
     await cold.goto(BASE + "/matt");
-    await cold.locator(".profhero").waitFor();
+    await cold.locator(".pubhead").waitFor();
     if (!(await cold.locator(".profback .evback").count()))
       fail("a cold open still needs a way off the page");
     await cold.locator(".profback .evback").click();
@@ -1362,8 +1352,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // heading. The point is that you don't have to know which half a thing is in
 // before you look for it.
 {
+  // The header lost its magnifier; the Discover tab and its box are the way
+  // in, and the box is a door rather than a filter now.
   await fan.goto(BASE + "/feed");
-  await fan.locator(".searchbtn").click();
+  if (await fan.locator(".searchbtn").count())
+    fail("the header should carry no magnifier any more");
+  await fan.goto(BASE + "/discover");
+  await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
   // Nothing typed yet: a prompt and the door to browsing, not the directory.
   await fan.locator(".empty-block", { hasText: "Search fittlist" }).waitFor();
@@ -1421,7 +1416,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.locator(".dissearch-in").fill("matt");
   await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
   await fan.locator(".disrow", { hasText: "Matt" }).first().locator(".disrow-main").click();
-  await fan.locator(".profhero").waitFor();
+  await fan.locator(".pubhead").waitFor();
   if (!/from=search/.test(fan.url())) fail("a search result should say where it came from: " + fan.url());
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/search/);
@@ -2062,14 +2057,14 @@ if (!(await page.locator(".profwrap > .brandbar").count()))
   fail("a signed-in viewer should get the app header on a profile");
 if (await page.locator(".navbar").count())
   fail("a profile carries no tab bar: the arrow on the picture is the way off");
-if (!(await page.locator(".profhero .evback").count()))
+if (!(await page.locator(".pubhead .evback").count()))
   fail("a profile reached from a list should offer the way back to it");
-// The picture scrolls away and the row holding the name and the tabs is what
+// The head scrolls away and the row holding the name and the tabs is what
 // pins, so neither of those two is a sticky element itself: the wrapper around
 // them is.
 await expect(
-  page.locator(".profhero").evaluate((e) => getComputedStyle(e).position !== "sticky"),
-  "the picture is not pinned",
+  page.locator(".pubhead").evaluate((e) => getComputedStyle(e).position !== "sticky"),
+  "the head is not pinned",
 );
 await expect(
   page.locator(".pubstick").evaluate((e) => getComputedStyle(e).position === "sticky"),
@@ -2078,17 +2073,17 @@ await expect(
 // The way off a profile is the arrow on the picture, however you arrived.
 await page.locator(".profback .evback").click();
 await page.waitForURL("**/discover");
-// the selected tab is an ink underline, not a filled pill (the pill came and
-// went; the underline is the design)
+// the selected tab is a filled pill again (the underline came and went; the
+// pill is the design)
 await page.goto(BASE + "/matt");
 await page.locator(".pubtab.sel").waitFor();
 {
   const t = await page.locator(".pubtab.sel").evaluate((e) => {
     const cs = getComputedStyle(e);
-    return { bg: cs.backgroundColor, line: cs.borderBottomColor, w: parseFloat(cs.borderBottomWidth) };
+    return { bg: cs.backgroundColor, radius: parseFloat(cs.borderRadius) };
   });
-  if (t.bg !== "rgba(0, 0, 0, 0)") fail("the selected tab should not be filled, got " + t.bg);
-  if (!(t.w >= 2)) fail("the selected tab needs its underline, width " + t.w);
+  if (t.bg === "rgba(0, 0, 0, 0)") fail("the selected tab should be a filled pill");
+  if (!(t.radius > 20)) fail("the tabs should be pill shapes, radius " + t.radius);
 }
 // ---- each tab is a link with its own URL, so a coach can send someone to one
 {
@@ -2122,25 +2117,19 @@ await page.locator(".pubtab.sel").waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
 
-// Settings sit with the page they're about, and nowhere else: the page the You
-// tab lands on, which is your own profile.
+// Settings live behind the app header's gear now; the profile carries no
+// door to somewhere else.
 {
   await page.goto(BASE + "/matt");
-  await page.locator(".ownertop").waitFor();
-  if (await page.locator(".settingsbtn").count())
-    fail("the app header should carry no gear anywhere");
-  await page.locator(".profhero .ownergear").waitFor();
-  {
-    const controls = await page.locator(".ownertop a, .ownertop button").count();
-    if (controls !== 1) fail(`the corner should carry settings alone, got ${controls}`);
-  }
-  await page.locator(".profhero-actrow .profshare-btn").waitFor();
-  if (await page.locator(".profhero .ownermore").count())
+  await page.locator(".pubhead").waitFor();
+  if (await page.locator(".ownergear").count())
+    fail("the profile should carry no gear; the header does");
+  if (await page.locator(".ownermore").count())
     fail("the three-dot menu belongs to a studio, not a person");
-  await page.locator(".profhero .ownergear").click();
+  await page.locator(".settingsbtn").click();
   await page.locator(".acctwrap").waitFor();
   await page.locator(".acctclose").click();
-  console.log("profile settings ok (one gear in the corner, opens the account)");
+  console.log("profile settings ok (the header's gear opens the account)");
 }
 
 // The owner gets two pills where a visitor gets Message and Follow: Share
@@ -2155,13 +2144,11 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   const filled = await pills.first().evaluate((e) => e.classList.contains("actpill-primary"));
   const outline = await pills.nth(1).evaluate((e) => e.classList.contains("actpill-primary"));
   if (!filled || outline) fail("Share should be the filled one and Edit the outline");
-  // Both sit on a photograph, so the outline one has to be white. It carried
-  // the base rule's ink for a while, which is dark words on somebody's picture
-  // and the one thing this hero is built to avoid.
+  // On paper: the filled pill is ink with light words, the outline dark ink.
   {
     const ink = await pills.evaluateAll((els) => els.map((e) => getComputedStyle(e).color));
-    if (ink[0] !== "rgb(17, 17, 17)") fail("the filled pill's ink should be dark: " + ink[0]);
-    if (ink[1] !== "rgb(255, 255, 255)") fail("the outline pill's ink should be white: " + ink[1]);
+    if (ink[0] === "rgb(17, 17, 17)") fail("the filled pill's words should be light: " + ink[0]);
+    if (ink[1] === "rgb(255, 255, 255)") fail("the outline pill's ink should be dark: " + ink[1]);
   }
 
   await pills.first().click();
@@ -2193,68 +2180,52 @@ if ((await page.locator(".profacts .followpill").innerText()).trim() !== "Follow
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
 {
-  // Both pills are the same glass the floating buttons wear: white, but see
-  // through, so a photograph reads under them rather than being punched out.
+  // Following is green: the same yes as a Going mark, and that meaning is
+  // worth more than matching the outline beside it.
   const read = () =>
     page.locator(".profacts .followpill").evaluate((e) => {
       const s = getComputedStyle(e);
-      return {
-        bg: s.backgroundColor,
-        border: s.borderTopColor,
-        blur: s.backdropFilter,
-        color: s.color,
-      };
+      return { bg: s.backgroundColor, color: s.color };
     });
   const on = await read();
-  if (!/^rgba\(255, 255, 255, 0\.7/.test(on.bg))
-    fail("Following should be the filled white glass, got " + on.bg);
-  if (!/blur/.test(on.blur)) fail("the pill should be blurred, got " + on.blur);
-  // Its ink turns with the fill. White on a white fill was a word nobody could
-  // read, which is the one thing a button saying "Following" has to do.
-  if (on.color !== "rgb(17, 17, 17)") fail("Following should read in ink, got " + on.color);
-  // And unfollowed it is an outline in white, so the pair reads as one thing
-  // you have done and one you haven't.
+  if (!/^rgb\(6[0-5], 1[0-9]{2}, 8[0-9]\)/.test(on.bg) && on.bg !== "rgb(61, 139, 83)")
+    fail("Following should be green, got " + on.bg);
+  if (on.color !== "rgb(255, 255, 255)") fail("Following should read in white, got " + on.color);
+  // And unfollowed it is a quiet outline in ink, so the pair reads as one
+  // thing you have done and one you haven't.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Follow$/ }).waitFor();
   const off = await read();
-  if (!/^rgba\(255, 255, 255, 0\.1/.test(off.bg))
-    fail("Follow should be an outline, got " + off.bg);
-  if (!/rgba?\(255, 255, 255/.test(off.border))
-    fail("Follow's border should be white, got " + off.border);
-  if (off.color !== "rgb(255, 255, 255)") fail("Follow should read in white, got " + off.color);
+  if (off.bg !== "rgba(0, 0, 0, 0)") fail("Follow should be an outline, got " + off.bg);
+  if (off.color === "rgb(255, 255, 255)") fail("Follow should read in ink, got " + off.color);
   // Put it back, so the rest of the suite finds the follow it expects.
   await page.locator(".profacts .followpill").click();
   await page.locator(".profacts .followpill", { hasText: /^Following$/ }).waitFor();
 }
-// Somebody else's page is not yours to configure, and the header carries no
-// gear anywhere now, so there is nothing here to open settings with.
-if (await page.locator(".settingsbtn, .ownergear").count())
+// Somebody else's page is not yours to configure: the only gear is the app
+// header's own, which opens the viewer's settings and nobody else's.
+if (await page.locator(".ownergear").count())
   fail("no settings door belongs on a page that isn't yours");
 
-// The photo is the header: full bleed to both edges, the name over it on the
-// left, and a scrim only where there's a photograph to read against.
+// The head is a circle of a face over a centred name: the full-bleed hero
+// came and went, because a screen of photograph before any schedule said
+// editorial when the product says calendar.
 {
   await page.goto(BASE + "/matt");
-  const hero = await page.locator(".profhero").boundingBox();
-  if (Math.round(hero.x) !== 0) fail(`the hero should run to the edge, starts at ${hero.x}`);
-  if (hero.width < 380) fail(`the hero should run full bleed, got ${hero.width}`);
-  if (hero.height < 280) fail(`the hero should be the header, got ${hero.height} tall`);
-  const nm = await page.locator(".profhero .profname").boundingBox();
-  if (nm.x > hero.x + 40) fail("the name should sit left, not centred");
-  // A flat colour clears white text on its own; dimming it would only make
-  // it muddy, so the scrim only exists over a photograph.
-  const hasPhoto = await page.locator("img.profhero-img").count();
-  const scrim = await page.locator(".profhero-scrim").count();
-  if (!!hasPhoto !== !!scrim) fail("the scrim belongs over a photo and nowhere else");
-  // No label above the name: "Coach" on a coach's own page told nobody
-  // anything they couldn't read off the schedule under it.
-  if (await page.locator(".profhero .kindtag").count())
-    fail("a coach's hero should carry no kind tag");
-  // What they do and where are one line, and the pin is gone with them.
-  const meta = await page.locator(".profhero .profmeta").innerText();
+  await page.locator(".pubhead .profav").waitFor();
+  if (await page.locator(".profhero").count()) fail("the hero should be gone");
+  // Tapping the face blows it up with the share actions under it.
+  await page.locator(".avzoom-trigger").click();
+  await page.locator(".avoverlay").waitFor();
+  await page.locator(".avoverlay-close").click();
+  await page.waitForFunction(() => !document.querySelector(".avoverlay"));
+  // No label above the name, and one line for what they do and where.
+  if (await page.locator(".pubhead .kindtag").count())
+    fail("the head should carry no kind tag");
+  const meta = await page.locator(".pubhead .profmeta").innerText();
   if (!meta.includes("Strength coach") || !meta.includes("Jersey City"))
     fail("the meta line should carry the title and the city, got " + meta);
-  console.log("profile hero ok (full bleed, left aligned, scrim only on a photo)");
+  console.log("profile head ok (circle face, zoom overlay, one meta line)");
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
@@ -2435,8 +2406,8 @@ await page.waitForTimeout(450); // the account slides up
 // there's anything to say when somebody writes in.
 {
   await page.goto(BASE + "/matt");
-  await page.locator(".profhero .profname").waitFor();
-  if (await page.locator(".profhero-tags").count())
+  await page.locator(".pubhead .profname").waitFor();
+  if (await page.locator(".profbadges").count())
     fail("the hero should carry no tag row");
   if (await page.locator(".profname-row .availbadge").count())
     fail("the old status badge should have left the name row");

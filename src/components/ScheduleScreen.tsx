@@ -328,10 +328,8 @@ export function ScheduleScreen({
         <AppHeader
           unread={updatesUnread}
           adminNew={adminNew}
-          // Without the member side there is nobody to search for, and no
-          // plans to keep.
-          search={showFanView}
           plans={showFanView ? weekCount : undefined}
+          settings="/app?acct=1"
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.

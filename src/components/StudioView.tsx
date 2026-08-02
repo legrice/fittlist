@@ -15,6 +15,7 @@ import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
+import { ProfileShare } from "@/components/ProfileShare";
 import { StudioMenu } from "@/components/StudioMenu";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
@@ -186,8 +187,22 @@ export async function StudioView({
           name={s.name}
           title=""
           location={s.address}
-          photo={s.photo}
-          color={avatarColor({ id: s.id })}
+          // A studio's face is a plain circle: there is no person behind it
+          // to blow up, and its share lives on the pills below.
+          avatar={
+            s.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="profav" src={s.photo} alt={s.name} />
+            ) : (
+              <span
+                className="profav profav-empty"
+                style={{ background: avatarColor({ id: s.id }) }}
+                aria-hidden="true"
+              >
+                {(s.name.trim().charAt(0) || "?").toUpperCase()}
+              </span>
+            )
+          }
           backTo={backTo}
           badges={
             /* The Studio tag came off with the other two, but Verified stays:
@@ -195,7 +210,7 @@ export async function StudioView({
                reason the pencil is missing for everyone else, and tapping it
                says so. A page that can be trusted has to say why. */
             access.claimed ? (
-              <div className="profhero-tags">
+              <div className="profbadges">
                 <VerifiedBadge studioId={s.id} name={s.name} />
               </div>
             ) : null
@@ -248,6 +263,9 @@ export async function StudioView({
                   <Icon name="calendar_month" size={16} /> The schedule
                 </Link>
               )}
+              {/* Handing the page on. A person's lives behind their photo;
+                  a studio's face is plain, so the circle sits with the pills. */}
+              <ProfileShare path={base} name={s.name} />
             </div>
           }
         >

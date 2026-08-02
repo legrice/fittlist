@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { ProfileShare } from "@/components/ProfileShare";
 import { useEffect, useRef, type ReactNode } from "react";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
@@ -15,17 +14,19 @@ export type ProfileTab = "about" | "studios" | "schedule";
 export type TabDef = { key: string; label: string };
 
 // The profile header and one section under it. A coach, a member and a studio
-// all wear this: the same photograph, the same badge above the name, the same
-// two pills on the picture, the same tab row. What changes is what goes in the
-// slots, which is the point. Three near-identical headers is how they drift,
-// and a member's page looking like a lesser version of a coach's was exactly
-// what that drift produced.
+// all wear this: the same circle of a face, the same name, the same two pills,
+// the same tab row. What changes is what goes in the slots, which is the
+// point: three near-identical headers is how they drift.
+//
+// The face is a circle again, not a full-bleed photograph. The hero shipped
+// and it was handsome, and it was also the wrong app: a screen of photograph
+// before any schedule said editorial when the product says calendar. The big
+// picture still exists, one tap away, behind the avatar.
 //
 // The tabs are links, not scroll anchors. Every section has its own URL, so a
 // coach can send someone straight to fittlist.co/{handle}/schedule and they
 // land on the schedule rather than at the top of a long page with an implied
-// instruction to scroll. It also means the section survives a reload, a share
-// and the back button, none of which a replaceState-on-scroll managed.
+// instruction to scroll.
 export function ProfileTabs({
   base,
   tab,
@@ -35,8 +36,7 @@ export function ProfileTabs({
   location,
   trackSchedule = false,
   trackHandle,
-  photo,
-  color,
+  avatar,
   actions,
   badges,
   ownerTop,
@@ -58,26 +58,19 @@ export function ProfileTabs({
   /** Count one "schedule open" per visit, for a coach's own stats. */
   trackSchedule?: boolean;
   trackHandle?: string;
-  /** The face, full bleed behind the name. Null falls back to the colour, and
-   *  then there is nothing to scrim: flat colour is already legible. */
-  photo: string | null;
-  /** Their colour, behind the name when there's no photo. */
-  color: string;
+  /** The face: a person's AvatarZoom (tap it, see it big, with the share
+   *  actions under it), a studio's plain circle. */
+  avatar: ReactNode;
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
-  /** Anything that has to sit above the name. Only a studio uses it now, for
-   *  the Verified badge that explains why the pencil is missing. The Coach /
-   *  Member / Studio tag and the availability tag came off all three: the page
-   *  is a photograph of a person with their name on it, and three chips over
-   *  the top of that is furniture in front of the thing you came to see. */
+  /** Beside the name: only a studio uses it now, for the Verified badge that
+   *  explains why the pencil is missing. */
   badges: ReactNode | null;
-  /** Top right of the header: a coach's settings gear, a studio's dots.
-   *  Everything else lives on the pills under the name. */
+  /** Top right of the header: a studio's dots. A coach's settings moved to
+   *  the app header's gear, so a person's corner is empty. */
   ownerTop?: ReactNode;
-  /** Where a back control should go, when they got here from a list. Null on
-   *  a cold open: the tab bar is the way out and an arrow to nowhere is worse
-   *  than none. */
+  /** Where a back control should go, when they got here from a list. */
   backTo?: { href: string; label: string } | null;
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */
@@ -88,19 +81,20 @@ export function ProfileTabs({
   const stickRef = useRef<HTMLDivElement>(null);
   const sentRef = useRef<HTMLDivElement>(null);
 
-  // The tab row pins to the very top as the page scrolls, and once the big
-  // header is gone it grows a small copy of the name, so a long schedule never
-  // loses whose it is. Nothing above it sticks: the app header and a stranger's
-  // bar both scroll away with the picture, which is why there is no offset to
-  // measure here any more. It used to read the brandbar's height and hold that
-  // much space, and a bar that no longer pins would have left a gap.
+  // The tab row pins under the app header as the page scrolls, and once the
+  // big header is gone it grows a small copy of the name, so a long schedule
+  // never loses whose it is. The offset is measured because the header only
+  // exists for a signed-in viewer; a stranger's bar owns the top itself.
   useEffect(() => {
     const stick = stickRef.current;
     const sent = sentRef.current;
     if (!stick || !sent) return;
+    const bar = document.querySelector(".brandbar");
+    const off = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+    if (off) stick.style.top = off + "px";
     const ob = new IntersectionObserver(
       ([e]) => stick.classList.toggle("stuck", !e.isIntersecting),
-      { rootMargin: "-1px 0px 0px 0px" },
+      { rootMargin: `-${off + 1}px 0px 0px 0px` },
     );
     ob.observe(sent);
     return () => ob.disconnect();
@@ -135,91 +129,44 @@ export function ProfileTabs({
 
   return (
     <>
-      {/* Who this is, top to bottom: face, name, where, what. Then the things
-          you can do about it, then the section you asked for. */}
-      {/* The photo is the header rather than a circle inside one: it runs to
-          both edges, under the app bar, with the name over it. A scrim only
-          exists where there's a photo to read against, and only over the
-          bottom of it, where the words are. */}
-      <div className={`profhero${photo ? " hasphoto" : ""}`}>
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="profhero-img" src={photo} alt="" />
-        ) : (
-          <div className="profhero-img" style={{ background: color }} aria-hidden="true" />
-        )}
-        {photo && <div className="profhero-scrim" aria-hidden="true" />}
-        {/* A second, shorter one at the top, so the white header floating over
-            the picture has something to read against. Same rule as the one
-            below: only where there's a photograph, because a flat colour is
-            already legible and a band of grey over it is just a band. */}
-        {photo && <div className="profhero-topscrim" aria-hidden="true" />}
-        {/* Always there, because it is the only way off this page: a profile
-            carries no tab bar any more. It pops to whatever is underneath, and
-            falls back to the named destination only on a cold open, where
-            "wherever you came from" is somebody else's website. */}
-        {/* The top row, and a flex child rather than two absolute corners: the
-            hero already indents its own content to the page's gutter, so a row
-            inside that padding lands on the same left and right edges as the
-            wordmark above it and the name below. Positioned at the corners it
-            was 6px off both, at every width, and no arithmetic here could have
-            matched a gutter the parent works out. */}
-        {(backTo || ownerTop) && (
-          <div className="profhero-top">
-            {/* Always there when there is anywhere to go, because it is the
-                only way off this page: a profile carries no tab bar any more.
-                It pops to whatever is underneath, and falls back to the named
-                destination only on a cold open, where "wherever you came from"
-                is somebody else's website. */}
-            <div className="profback">
-              {backTo && (
-                <BackLink
-                  className="evback"
-                  href={backTo.href}
-                  label={backTo.label}
-                  anywhere
-                  notUnder={base}
-                >
-                  <Icon name="arrow_back" size={21} />
-                </BackLink>
-              )}
-            </div>
-            {/* A coach's gear, a studio's dots. Nothing else: handing the page
-                on moved down to sit with the other two things you can do about
-                this person, rather than in a corner opposite the way out. */}
-            {ownerTop && <div className="ownertop">{ownerTop}</div>}
+      {/* Who this is, top to bottom and centred: face, name, what and where,
+          then the two things you can do about it. A profile is the one screen
+          about a person rather than a list, so it gets the symmetry. */}
+      <div className="pubhead">
+        {backTo && (
+          <div className="profback">
+            <BackLink
+              className="evback"
+              href={backTo.href}
+              label={backTo.label}
+              anywhere
+              notUnder={base}
+            >
+              <Icon name="arrow_back" size={21} />
+            </BackLink>
           </div>
         )}
-        {/* Left aligned along the bottom: what they are, who they are, what
-            they do. The badge leads because it's the one word that says which
-            side of the app you're looking at. */}
-        <div className="profhero-txt">
-          {badges}
+        {ownerTop && <div className="ownertop">{ownerTop}</div>}
+        {avatar}
+        {/* The badge rides with the name and wraps under it when the name is
+            long, rather than being pushed down the page by the lines between. */}
+        <div className="profname-row">
           <h1 className="profname">{name}</h1>
-          {/* What they do and where, on one line and quieter than the name.
-              Two stacked lines under a big name was three sizes of text in a
-              column; the pin came off because "Jersey City, NJ" is already
-              plainly a place and the icon was only there to say so. */}
-          {(title.trim() || location.trim()) && (
-            <p className="profmeta">
-              {title.trim() && <span className="proftitle">{title.trim()}</span>}
-              {title.trim() && location.trim() && (
-                <span className="profmeta-sep" aria-hidden="true">
-                  &middot;
-                </span>
-              )}
-              {location.trim() && <span className="profwhere">{location.trim()}</span>}
-            </p>
-          )}
-          {/* On the image, under the name: the things you can do about this
-              person sit with the person rather than on the paper below, with
-              handing the page on facing them across the row. Everybody can do
-              that one, which is why it is here and not in the owner's corner. */}
-          <div className="profhero-actrow">
-            {actions}
-            <ProfileShare path={base} name={name} />
-          </div>
+          {badges}
         </div>
+        {/* What they do and where, on one line and quieter than the name. */}
+        {(title.trim() || location.trim()) && (
+          <p className="profmeta">
+            {title.trim() && <span className="proftitle">{title.trim()}</span>}
+            {title.trim() && location.trim() && (
+              <span className="profmeta-sep" aria-hidden="true">
+                &middot;
+              </span>
+            )}
+            {location.trim() && <span className="profwhere">{location.trim()}</span>}
+          </p>
+        )}
+        {actions}
       </div>
       {/* Zero-height marker: when it slides under the header, the bar below
           is stuck and the small name switches on. */}

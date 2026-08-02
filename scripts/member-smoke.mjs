@@ -163,7 +163,7 @@ await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
 // Scoped to the hero's own line: the coaches they train with carry cities too.
-await p.locator(".profhero .profwhere", { hasText: "Jersey City, NJ" }).waitFor();
+await p.locator(".pubhead .profwhere", { hasText: "Jersey City, NJ" }).waitFor();
 console.log("member profile edit ok (location normalized to City, ST)");
 
 // Now that Jersey City, NJ exists, a bare "Jersey City" joins it instead of
@@ -186,7 +186,7 @@ await p.locator("#meLoc").fill("jersey city");
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
 await p.goto(BASE + "/member");
-await p.locator(".profhero .profwhere", { hasText: "Jersey City, NJ" }).waitFor();
+await p.locator(".pubhead .profwhere", { hasText: "Jersey City, NJ" }).waitFor();
 console.log("bare city snaps to the one that exists ok");
 await ctx.close();
 await b.close();

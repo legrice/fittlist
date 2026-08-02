@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { AvatarZoom } from "@/components/AvatarZoom";
 import { backToFor } from "@/lib/nav";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
@@ -129,8 +130,16 @@ export async function MemberProfileView({
           name={name}
           title={user.title ?? ""}
           location={user.location ?? ""}
-          photo={user.photo}
-          color={avatarColor(user)}
+          avatar={
+            <AvatarZoom
+              className="profav"
+              handle={user.handle ?? ""}
+              name={name}
+              photo={user.photo}
+              color={avatarColor(user)}
+              isOwner={isOwner}
+            />
+          }
           backTo={backTo}
           // Nothing above the name; see PublicProfileView.
           badges={null}

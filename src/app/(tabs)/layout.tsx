@@ -60,6 +60,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           unread={unread}
           adminNew={adminNew}
           plans={week}
+          settings={isCoach ? "/app?acct=1" : undefined}
           nav={{ coach: isCoach, youHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

@@ -129,7 +129,7 @@ console.log("a cold class page still gets to the profile ok");
   if (!(await coach.count())) fail("a class should name the coach it belongs to");
   await coach.click();
   await t.waitForURL(/\/sarah$/);
-  await t.locator(".profhero").waitFor();
+  await t.locator(".pubhead").waitFor();
   await t.waitForTimeout(500);
   await t.locator(".profback .evback").click();
   await t.waitForTimeout(1100);
