@@ -523,6 +523,17 @@ console.log("the coach is told ok");
       fail("before a shift list exists the sheet should only give up: " + rows.join("|"));
   }
   await tom.locator(".sheet .setrow", { hasText: "Give up this shift" }).click();
+  // It asks first: the notice goes out the moment it happens, so no single
+  // tap does it. Keep it changes nothing; Give it up does the thing.
+  await tom.getByRole("heading", { name: "Give up this shift?" }).waitFor();
+  await tom.getByRole("button", { name: "Keep it" }).click();
+  await tom.waitForTimeout(400);
+  if (await tom.getByText("Handed back").count())
+    fail("Keep it should not have handed the shift back");
+  await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
+  await tom.locator(".sheet .setrow", { hasText: "Give up this shift" }).click();
+  await tom.getByRole("heading", { name: "Give up this shift?" }).waitFor();
+  await tom.getByRole("button", { name: "Give it up" }).click();
   await tom.getByText("Handed back").waitFor();
   await tom.waitForTimeout(900);
   // The sheet now says what is true: nobody is on it, and he teaches here, so
@@ -610,6 +621,9 @@ console.log("the coach is told ok");
       fail("Transfer should offer the shift list, nobody else: " + rows.join("|"));
   }
   await tom.locator(".sheet .setrow", { hasText: "Julia" }).click();
+  // Named, then asked: the confirm says who takes it before anyone is told.
+  await tom.getByRole("heading", { name: "Transfer to Julia?" }).waitFor();
+  await tom.getByRole("button", { name: "Transfer to Julia" }).click();
   await tom.getByText("Transferred to Julia").waitFor();
   await tom.waitForTimeout(900);
   console.log("a date handed straight to a coach ok");

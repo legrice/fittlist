@@ -879,7 +879,10 @@ manage, not to book) and a sheet behind it holds two rows: Give up this
 shift, and one Transfer shift door that opens the gym's list as a second
 sheet, because eight names under one verb read as eight options. The
 Transfer row only exists when the list has somebody on it, and the old boxed
-"I can't make this one" CTA is gone. An open slot
+"I can't make this one" CTA is gone. Both acts confirm first (the same
+`.confirmsheet` shape removing a plan uses: what happens, the doing button,
+Keep it), because the notice goes out the moment they run and a single tap
+was texting the whole gym. An open slot
 seen by a coach here keeps the box ("Open shift", I'll take it). All of it is
 offered by `classDetail().shift`, which is null for anyone it means nothing
 to. A member sees no trace of the rota, and no name: whether a coach is
@@ -979,8 +982,12 @@ members' personal entries that named the studio (`community` in
 real pages to open. A member's entry surfaces as a plain row: name, time,
 length, no link, and never one word about the member; the consent is the
 line under the personal adder's studio field, which says exactly this. The
-page says out loud that it is drawn from what people added (`.commnote`)
-and points at the dots for whoever runs the place. The moment the studio is
+week explains itself from an info dot beside the Schedule tab
+(`CommunityNote`, rendered through `TabDef.info` as a sibling of the tab
+link, never inside it): the sheet says the page is built by the people who
+train here and carries the same Own this page ask the badge's sheet does.
+It was a paragraph over the list (`.commnote`), read once and scrolled past
+forever after. The moment the studio is
 claimed the community week is gone: from then on what the page says is
 theirs to say, and a gym account replaces it with the real rota. This is
 the inventory building itself, and it is also the pitch: a studio arriving

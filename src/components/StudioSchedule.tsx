@@ -29,17 +29,7 @@ export type StudioDay = {
 // Rows are real links wrapped in ClassOpener, the same as a coach's schedule:
 // an ordinary tap opens the class over the list, a modified click or a crawler
 // gets the page underneath.
-export function StudioSchedule({
-  slug,
-  days,
-  community = false,
-}: {
-  slug: string;
-  days: StudioDay[];
-  /** Nobody runs this page: the week is drawn from what the people who train
-   *  and teach here have added, and the page says so out loud. */
-  community?: boolean;
-}) {
+export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[] }) {
   if (days.length === 0) {
     return (
       <div className="empty-block">
@@ -52,13 +42,6 @@ export function StudioSchedule({
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
-      {community && (
-        <p className="durnote commnote">
-          Drawn from what the coaches and members here have added, so anyone can see the
-          week and the studio can see what its page could be. Nobody runs this page yet;
-          the dots above are the way to say it&rsquo;s yours.
-        </p>
-      )}
       <div className="ps-week ps-agenda">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">

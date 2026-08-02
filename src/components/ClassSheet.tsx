@@ -206,6 +206,11 @@ export function ClassSheet({
   // The second level: who takes the date. One Transfer row rather than a row
   // per coach, because eight names under one verb read as eight options.
   const [transferOpen, setTransferOpen] = useState(false);
+  // The pause before the notice goes out. Both acts tell people the moment
+  // they happen, so the tap that does it is asked once first.
+  const [confirmShift, setConfirmShift] = useState<
+    null | { kind: "giveup" } | { kind: "send"; id: string; name: string }
+  >(null);
   // Giving a date up and taking one are the same shape: one call, then reload
   // the sheet so it says what is true now rather than what was true.
   const act = (
@@ -624,7 +629,7 @@ export function ClassSheet({
                 disabled={shifting}
                 onClick={() => {
                   setManageOpen(false);
-                  act(giveUpShift, "Handed back");
+                  setConfirmShift({ kind: "giveup" });
                 }}
               >
                 <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
@@ -688,7 +693,7 @@ export function ClassSheet({
                   disabled={shifting}
                   onClick={() => {
                     setTransferOpen(false);
-                    send(p.id, p.name);
+                    setConfirmShift({ kind: "send", id: p.id, name: p.name });
                   }}
                 >
                   <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
@@ -698,6 +703,61 @@ export function ClassSheet({
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Are you sure: both acts notify people the moment they happen, so
+          neither runs off a single tap. Same confirm shape as removing a
+          plan: what happens, the doing button, and Keep it. */}
+      {confirmShift && c?.shift?.canGiveUp && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmShift(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            {confirmShift.kind === "giveup" ? (
+              <>
+                <h2>Give up this shift?</h2>
+                <p className="lead">
+                  {c.name}, {c.dateLong} opens up, and the gym and every coach who could
+                  cover it are told. If nobody takes it, you can claim it back.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2>Transfer to {confirmShift.name}?</h2>
+                <p className="lead">
+                  {c.name}, {c.dateLong} becomes theirs. They and the gym are told; the
+                  rest of the week is unchanged.
+                </p>
+              </>
+            )}
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={shifting}
+                onClick={() => {
+                  const cs = confirmShift;
+                  setConfirmShift(null);
+                  if (cs.kind === "giveup") act(giveUpShift, "Handed back");
+                  else send(cs.id, cs.name);
+                }}
+              >
+                {confirmShift.kind === "giveup"
+                  ? "Give it up"
+                  : `Transfer to ${confirmShift.name}`}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                onClick={() => setConfirmShift(null)}
+              >
+                Keep it
+              </button>
             </div>
           </div>
         </div>

@@ -52,7 +52,7 @@ export function VerifiedBadge({
               if (e.target === e.currentTarget) setOpen(false);
             }}
           >
-            <div className="sheet">
+            <div className="sheet infosheet">
               <button
                 className="iconbtn sheetclose"
                 aria-label="Close"
@@ -64,17 +64,11 @@ export function VerifiedBadge({
                 <>
                   <h2 style={{ marginTop: 10 }}>Verified</h2>
                   <p className="lead">
-                    The people who run {name} keep this page. They write the details and they
-                    answer for what it says, which is why nobody else can edit it.
+                    This page is managed by the studio, so the schedule and details come
+                    directly from the people who run it.
                   </p>
                   <p className="lead">
-                    Every other studio in fittlist is a shared entry: any coach can correct one,
-                    because a page nobody owns is better kept right by the people who teach there
-                    than left wrong.
-                  </p>
-                  <p className="lead">
-                    Run a studio? Tell us and we&rsquo;ll hand you the keys to yours: your own
-                    schedule, your own details, and this badge on it.
+                    <strong>Run a studio? Verify yours to take ownership of your page.</strong>
                   </p>
                 </>
               ) : (

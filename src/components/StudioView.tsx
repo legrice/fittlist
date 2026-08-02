@@ -15,6 +15,7 @@ import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
 import { InviteCoach } from "@/components/InviteCoach";
+import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
@@ -237,7 +238,15 @@ export async function StudioView({
           base={base}
           tab={tab}
           tabs={[
-            { key: "schedule", label: "Schedule" },
+            {
+              key: "schedule",
+              label: "Schedule",
+              // The commons' week explains itself from an info dot beside the
+              // tab: the note was a paragraph over the list, read once and
+              // scrolled past forever after. Its sheet carries the same Own
+              // this page ask the badge's does.
+              info: community ? <CommunityNote studioId={s.id} name={s.name} /> : undefined,
+            },
             { key: "about", label: "Info" },
             { key: "coaches", label: "Coaches" },
           ]}
@@ -325,7 +334,7 @@ export async function StudioView({
 
         {tab === "schedule" &&
           (hasSchedule ? (
-            <StudioSchedule slug={s.slug ?? s.id} days={days} community={community} />
+            <StudioSchedule slug={s.slug ?? s.id} days={days} />
           ) : (
             <div className="empty-block">
               <h2>No classes listed yet</h2>

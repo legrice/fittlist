@@ -1878,7 +1878,15 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   // (there is no page behind it), and nothing anywhere says who.
   await fan.goto(BASE + "/s/bright-room-yoga");
   await fan.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
-  await fan.locator(".commnote").waitFor();
+  // The note is an info dot beside the tab now, and its sheet carries the
+  // claim ask.
+  await fan.locator(".pubtab-info").click();
+  await fan.getByText("Built by coaches and members who train here").waitFor();
+  await fan.getByRole("button", { name: "Get in touch" }).waitFor();
+  await fan.locator(".sheetclose").first().click();
+  await fan.waitForFunction(() => !document.querySelector(".sheet"));
+  if (await fan.locator(".commnote").count())
+    fail("the paragraph should have become the info dot's sheet");
   await fan.locator(".ps-event-plain", { hasText: "Wellness Off the Mat" }).waitFor();
   {
     const body = (await fan.locator("body").innerText()).toLowerCase();
@@ -2226,7 +2234,7 @@ await page.getByText("Studio updated").waitFor();
 // About content lives behind Info.
 await page.goto(BASE + "/s/ironbound-strength");
 await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
-await page.locator(".commnote").waitFor();
+await page.locator(".pubtab-info").waitFor();
 {
   const row = page.locator(".ps-event", { hasText: "Barbell Strength" }).first();
   await row.waitFor();

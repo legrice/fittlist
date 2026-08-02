@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
+  Info,
   SlidersHorizontal,
   Clock,
   CircleUserRound,
@@ -124,6 +125,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   content_copy: Copy,
   dark_mode: Moon,
   event: Calendar,
+  info: Info,
   event_available: CalendarCheck,
   // The pair on a class: an empty calendar, and one with the tick in it.
   event_added: CalendarAdded,

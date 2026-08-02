@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -11,7 +11,13 @@ export type ProfileTab = "about" | "studios" | "schedule";
 
 /** One tab: the key is the URL suffix, and the first in the list owns the
  *  bare base rather than a suffix of its own. */
-export type TabDef = { key: string; label: string };
+export type TabDef = {
+  key: string;
+  label: string;
+  /** A control rendered beside the tab, outside its link: a button inside a
+   *  link is not a thing, so the info dot rides as a sibling. */
+  info?: ReactNode;
+};
 
 // The profile header and one section under it. A coach, a member and a studio
 // all wear this: the same circle of a face, the same name, the same two pills,
@@ -114,17 +120,19 @@ export function ProfileTabs({
   // somebody hasn't filled in is an awkward first thing to land on. The old
   // suffix still resolves, because people have already sent that link.
   const tabLink = (t: TabDef, i: number) => (
-    <Link
-      key={t.key}
-      href={i === 0 ? base : `${base}/${t.key}`}
-      aria-current={tab === t.key ? "page" : undefined}
-      className={`pubtab${tab === t.key ? " sel" : ""}`}
-      // Switching sections shouldn't throw you back to the top of a page you
-      // are already partway down; the header above is identical either way.
-      scroll={false}
-    >
-      {t.label}
-    </Link>
+    <Fragment key={t.key}>
+      <Link
+        href={i === 0 ? base : `${base}/${t.key}`}
+        aria-current={tab === t.key ? "page" : undefined}
+        className={`pubtab${tab === t.key ? " sel" : ""}`}
+        // Switching sections shouldn't throw you back to the top of a page you
+        // are already partway down; the header above is identical either way.
+        scroll={false}
+      >
+        {t.label}
+      </Link>
+      {t.info}
+    </Fragment>
   );
 
   return (
