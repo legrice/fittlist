@@ -48,27 +48,24 @@ export default async function YouPage({
     ]);
 
     return (
-      <>
-        <div className="calbar-title">You</div>
-        <MemberAccount
-          name={me.name}
-          email={me.email}
-          handle={me.handle}
-          title={me.title ?? ""}
-          about={me.about ?? ""}
-          location={me.location ?? ""}
-          photo={me.photo}
-          color={avatarColor(me)}
-          look={me.look}
-          goingCount={going.length}
-          firstIso={week[0]?.iso}
-          openEditor={edit === "1"}
-          canSendFeedback={canSendFeedback}
-          discoverable={me.discoverable}
-          approveFollowers={me.approveFollowers}
-          messagesOpen={me.messagesOpen}
-        />
-      </>
+      <MemberAccount
+        name={me.name}
+        email={me.email}
+        handle={me.handle}
+        title={me.title ?? ""}
+        about={me.about ?? ""}
+        location={me.location ?? ""}
+        photo={me.photo}
+        color={avatarColor(me)}
+        look={me.look}
+        goingCount={going.length}
+        firstIso={week[0]?.iso}
+        openEditor={edit === "1"}
+        canSendFeedback={canSendFeedback}
+        discoverable={me.discoverable}
+        approveFollowers={me.approveFollowers}
+        messagesOpen={me.messagesOpen}
+      />
     );
   }
 

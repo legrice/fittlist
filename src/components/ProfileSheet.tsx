@@ -355,9 +355,9 @@ export function ProfileSheet({
         role={page ? undefined : "dialog"}
         aria-label={page ? undefined : "Your account"}
       >
-        {page ? (
-          <div className="calbar-title">You</div>
-        ) : (
+        {/* As the You tab the face row leads and no heading repeats the tab's
+            own name; the overlay skin keeps its close row. */}
+        {!page && (
           <div className="accttop">
             <h1 className="acct-h">Settings</h1>
             <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>

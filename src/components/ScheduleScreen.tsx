@@ -448,12 +448,7 @@ export function ScheduleScreen({
                                 </span>
                               )}
                               <span className="ps-enm">{p.name}</span>
-                              {p.where && (
-                                <span className="ps-estudio">
-                                  <Icon name="place" size={13} className="ps-estudio-ic" />
-                                  {p.where}
-                                </span>
-                              )}
+                              {p.where && <span className="ps-estudio">{p.where}</span>}
                             </span>
                             <span className="ps-etimecol">
                               <span className="ps-etime">
@@ -521,12 +516,7 @@ export function ScheduleScreen({
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
-                            {where && (
-                              <span className="ps-estudio">
-                                <Icon name="place" size={13} className="ps-estudio-ic" />
-                                {where}
-                              </span>
-                            )}
+                            {where && <span className="ps-estudio">{where}</span>}
                           </span>
                           <span className="ps-etimecol">
                             <span className="ps-etime">

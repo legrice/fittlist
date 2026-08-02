@@ -338,12 +338,7 @@ export async function PublicProfileView({
                         />
                         <span className="ps-ebody">
                           <span className="ps-enm">{c.name}</span>
-                          {where && (
-                            <span className="ps-estudio">
-                              <Icon name="place" size={13} className="ps-estudio-ic" />
-                              {where}
-                            </span>
-                          )}
+                          {where && <span className="ps-estudio">{where}</span>}
                         </span>
                         <span className="ps-etimecol">
                           <span className="ps-etime">

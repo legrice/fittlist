@@ -411,7 +411,9 @@ await expect(
 await page.goto(BASE + "/app?acct=1");
 await page.waitForURL("**/you");
 await page.locator(".acctwrap").waitFor();
-await expect(page.locator(".calbar-title", { hasText: "You" }).isVisible(), "the You tab opens");
+// The tab bar already says You; the page leads with the face row, no heading.
+if (await page.locator(".calbar-title", { hasText: "You" }).count())
+  fail("the You heading should be gone from the You tab");
 await expect(page.locator(".acctwho .acctwho-nm", { hasText: "Matt" }).isVisible(), "the who row shows their name");
 if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three analytics stats");
 if (await page.getByText("Schedule opens").count()) fail("Schedule opens should be gone");
@@ -470,13 +472,12 @@ await page.locator(".calfab-add").waitFor();
 if (await page.locator(".dashlinks").count()) fail("the pill strip should be gone from the schedule");
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
-// Your own week keeps the pin. Only the merged one drops it, where the coach's
-// face is already doing the marking.
+// The studio line is words alone now: the pin came off every schedule listing.
 {
   const where = page.locator(".ps-agenda .ps-estudio").first();
   await where.waitFor();
-  if (!(await where.locator(".icon svg").count()))
-    fail("your own schedule should still mark the studio with a pin");
+  if (await where.locator(".icon svg").count())
+    fail("the map pin should be gone from schedule listings");
 }
 // Share holds every way of sharing, and each row goes where it says
 await page.goto(BASE + "/matt");
