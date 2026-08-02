@@ -14,16 +14,20 @@ import { Agenda, ClassRow } from "@/components/Agenda";
 import {
   CalBottomBar,
   CalHead,
+  CalSticky,
   KindChecks,
   MonthGrid,
   ViewSheet,
   loadCalView,
   monthLabel,
   saveCalView,
+  usePastReveal,
   type CalKind,
   type CalView,
   type MonthCellItem,
 } from "@/components/CalendarBits";
+import { CAL_PAST_DAYS } from "@/lib/format";
+import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -105,6 +109,10 @@ export function WeekScreen({
   useEffect(() => setView(loadCalView()), []);
   const [viewSheet, setViewSheet] = useState(false);
   const [ym, setYm] = useState(todayIso.slice(0, 7));
+  // Scrolling up reveals the past, a couple of weeks at a time.
+  const { pastWeeks, sentinel } = usePastReveal(CAL_PAST_DAYS / 7);
+  // The floating Share pill: the week as a poster.
+  const [shareWeek, setShareWeek] = useState(false);
   const pickView = (v: CalView) => {
     if (v === "month") setYm(todayIso.slice(0, 7));
     setView(v);
@@ -147,7 +155,9 @@ export function WeekScreen({
   const presentKinds = new Set<CalKind>(
     days.flatMap((d) => d.items.map((i) => (i.personal ? "private" : "added"))),
   );
-  const shown = days
+  // Every day the loader handed over (past window included), minus what was
+  // removed and what the checkmarks hide.
+  const allShown = days
     .map((d) => ({
       ...d,
       items: d.items
@@ -155,10 +165,19 @@ export function WeekScreen({
         .filter((i) => kindOn(i.personal ? "private" : "added")),
     }))
     .filter((d) => d.items.length > 0);
+  // The list leads with today; the past renders above only as far as the
+  // scroll has asked for it.
+  const pastFloor = (() => {
+    const d = new Date(`${todayIso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - pastWeeks * 7);
+    return d.toISOString().slice(0, 10);
+  })();
+  const shown = allShown.filter((d) => d.iso >= todayIso);
+  const pastShown = allShown.filter((d) => d.iso < todayIso && d.iso >= pastFloor);
   // The month, whole, from the same rows: past days dim rather than drop.
   const monthItems = (() => {
     const map = new Map<string, MonthCellItem[]>();
-    for (const d of shown) {
+    for (const d of allShown) {
       if (!d.iso.startsWith(ym)) continue;
       const rows = d.items.map((i) => {
         const [h, m] = i.hm.split(":").map(Number);
@@ -202,7 +221,7 @@ export function WeekScreen({
   type Entry = WeekDay["items"][number];
   const rowKey = (i: Entry) => `${i.personal ? i.id : i.classId}|${i.iso}`;
   const byKey: Record<string, Entry> = Object.fromEntries(
-    shown.flatMap((d) => d.items.map((i) => [rowKey(i), i] as const)),
+    allShown.flatMap((d) => d.items.map((i) => [rowKey(i), i] as const)),
   );
 
   return (
@@ -211,21 +230,26 @@ export function WeekScreen({
     // Share pill, which sits above it.
     <>
       <div className="weekwrap">
-        {/* The month is the calendar's name now, with the view menu beside
-            it; the rail lives on the You tab, so the week leads. */}
-        <CalHead
-          label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
-          onMenu={() => setViewSheet(true)}
-        >
-          {null}
-        </CalHead>
-        {/* The kind filters: colour-coded checkmarks, also the legend for the
-            colours the cards wear. */}
-        <KindChecks
-          present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
-          on={new Set((["added", "private"] as CalKind[]).filter(kindOn))}
-          onToggle={toggleKind}
-        />
+        {/* The calendar's own header, pinned under the app's: the month with
+            the view menu, Add across from them, and the kind checkmarks, with
+            the divider underneath the lot. */}
+        <CalSticky>
+          <CalHead
+            label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+            onMenu={() => setViewSheet(true)}
+          >
+            <button className="calhead-add" onClick={() => setAddMenu(true)}>
+              <Icon name="add" size={18} /> Add
+            </button>
+          </CalHead>
+          {/* The kind filters: colour-coded checkmarks, also the legend for the
+              colours the cards wear. */}
+          <KindChecks
+            present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
+            on={new Set((["added", "private"] as CalKind[]).filter(kindOn))}
+            onToggle={toggleKind}
+          />
+        </CalSticky>
 
         {view === "month" ? (
           <MonthGrid
@@ -236,7 +260,7 @@ export function WeekScreen({
             onNext={() => moveMonth(1)}
             onDay={openDay}
           />
-        ) : shown.length === 0 ? (
+        ) : shown.length === 0 && allShown.length === 0 ? (
           <div className="empty-block">
             <h2>Nothing added yet</h2>
             <p>
@@ -260,6 +284,9 @@ export function WeekScreen({
           </div>
         ) : (
           <>
+            {/* The way back in time: while this is on screen the list grows
+                upward, so scrolling up walks into what has been. */}
+            {sentinel}
             {/* The same rows Following draws. A member flipping between the two
                 tabs is looking at one list of one kind of thing, and it used to
                 be two designs. ClassOpener catches the tap on a real class; a
@@ -267,7 +294,8 @@ export function WeekScreen({
             <ClassOpener handle="">
               <Agenda
                 className="callist"
-                days={shown.map((d) => ({
+                dimBefore={todayIso}
+                days={[...pastShown, ...shown].map((d) => ({
                   iso: d.iso,
                   label: d.label,
                   items: d.items.map((i) => ({
@@ -361,13 +389,12 @@ export function WeekScreen({
           </>
         )}
       </div>
-      <CalBottomBar
-        onToday={() => {
-          pickView("list");
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-        onAdd={() => setAddMenu(true)}
-      />
+      {/* The one floating door: the week as a poster, to hand on. */}
+      <CalBottomBar onShare={() => setShareWeek(true)} />
+
+      {shareWeek && (
+        <ShareMyWeekSheet onClose={() => setShareWeek(false)} firstIso={shown[0]?.iso} />
+      )}
 
       {viewSheet && (
         <ViewSheet view={view} onPick={pickView} onClose={() => setViewSheet(false)} />

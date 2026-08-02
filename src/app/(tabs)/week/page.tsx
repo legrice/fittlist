@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { todayIso } from "@/lib/format";
+import { CAL_PAST_DAYS, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { myWeek } from "@/lib/week";
@@ -24,7 +24,8 @@ export default async function WeekPage() {
   if (!userId) redirect("/");
   const db = await getDb();
   const [days, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
-    myWeek(userId),
+    // The past window rides along so the list can scroll back in time.
+    myWeek(userId, { pastDays: CAL_PAST_DAYS }),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select()

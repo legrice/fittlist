@@ -2,7 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
+import {
+  CAL_PAST_DAYS,
+  clockParts,
+  fmtDayHeader,
+  occurrenceEnded,
+  runsOn,
+  timeToMinutes,
+} from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -19,16 +26,20 @@ import { avatarColor } from "@/lib/avatar";
 import {
   CalBottomBar,
   CalHead,
+  CalSticky,
   KindChecks,
   MonthGrid,
   ViewSheet,
   loadCalView,
   monthLabel,
   saveCalView,
+  usePastReveal,
   type CalKind,
   type CalView,
   type MonthCellItem,
 } from "@/components/CalendarBits";
+import { ShareWeekSheet } from "@/components/ShareWeekSheet";
+import { myWeekText } from "@/app/actions/weektext";
 import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { Toast, useToast } from "@/components/Toast";
@@ -36,6 +47,16 @@ import { Toast, useToast } from "@/components/Toast";
 // One week at a time: the button at the bottom asks for the next one.
 const INITIAL_WEEKS = 1;
 const MAX_WEEKS = 52;
+// And backwards: scrolling up reveals what has been, to the loaded window.
+const MAX_PAST_WEEKS = CAL_PAST_DAYS / 7;
+
+type CalDay = {
+  iso: string;
+  label: string;
+  items: ClassDto[];
+  extras: WeekItem[];
+  past?: boolean;
+};
 
 export function ScheduleScreen({
   classes,
@@ -132,6 +153,11 @@ export function ScheduleScreen({
       return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
     });
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
+  // Scrolling up reveals the past, a couple of weeks at a time.
+  const { pastWeeks, sentinel } = usePastReveal(MAX_PAST_WEEKS);
+  // The Share pill at the bottom: the menu of ways, then the story sheet.
+  const [shareMenu, setShareMenu] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   // The coach's own colour marks the classes they teach.
   const myAccent = avatarColor({ id: userId, avatarColor: myColor });
   const [toastMsg, toastOn, toast] = useToast();
@@ -260,7 +286,7 @@ export function ScheduleScreen({
   const days = useMemo(() => {
     const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
     const start = new Date(`${todayIso}T00:00:00Z`);
-    const out: { iso: string; label: string; items: ClassDto[]; extras: WeekItem[] }[] = [];
+    const out: CalDay[] = [];
     for (let i = 0; i < MAX_WEEKS * 7 && out.length < weeks * 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
@@ -286,6 +312,35 @@ export function ScheduleScreen({
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes, plans, todayIso, weeks, offKinds]);
+
+  // The days already run, revealed by scrolling up: calendar days this time
+  // (the past has a fixed shape), no ended-filter (been-and-gone is the
+  // point), dimmed by the CSS the way the month grid dims them.
+  const pastDays = useMemo(() => {
+    if (!pastWeeks) return [] as CalDay[];
+    const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
+    const start = new Date(`${todayIso}T00:00:00Z`);
+    const out: CalDay[] = [];
+    for (let i = 1; i <= pastWeeks * 7; i++) {
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const dow = (d.getUTCDay() + 6) % 7;
+      const items = kindOn("coaching")
+        ? classes
+            .filter((c) => runsOn(c, iso, dow))
+            .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+        : [];
+      const extras = (plansByIso.get(iso) ?? []).filter((p) =>
+        kindOn(p.personal ? "private" : "added"),
+      );
+      if (items.length || extras.length) {
+        out.push({ iso, label: fmtDayHeader(iso), items, extras, past: true });
+      }
+    }
+    return out.reverse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes, plans, todayIso, pastWeeks, offKinds]);
 
   // The month, whole: every date the anchor month holds, kinds filtered the
   // same way. No ended-filter here: the grid can look back, and a day that
@@ -364,25 +419,32 @@ export function ScheduleScreen({
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The month is the calendar's name now, with the view menu beside
-            it. Adding lives on the floating plus below, with Today across
-            from it: the two things a calendar is for stay on screen. */}
-        <CalHead
-          label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
-          onMenu={() => setViewSheet(true)}
-        >
-          {null}
-        </CalHead>
-        {/* The kind filters: colour-coded checkmarks, which are also the
-            legend for the colours the cards wear. Only when there is more
-            than one kind to tell apart. */}
-        <KindChecks
-          present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
-            presentKinds.has(k),
-          )}
-          on={new Set((["coaching", "added", "private"] as CalKind[]).filter(kindOn))}
-          onToggle={toggleKind}
-        />
+        {/* The calendar's own header, pinned under the app's: the month with
+            the view menu, Add across from them, and the kind checkmarks, with
+            the divider underneath the lot. The list scrolls beneath it. */}
+        <CalSticky>
+          <CalHead
+            label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+            onMenu={() => setViewSheet(true)}
+          >
+            <button
+              className="calhead-add"
+              onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+            >
+              <Icon name="add" size={18} /> Add
+            </button>
+          </CalHead>
+          {/* The kind filters: colour-coded checkmarks, which are also the
+              legend for the colours the cards wear. Only when there is more
+              than one kind to tell apart. */}
+          <KindChecks
+            present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
+              presentKinds.has(k),
+            )}
+            on={new Set((["coaching", "added", "private"] as CalKind[]).filter(kindOn))}
+            onToggle={toggleKind}
+          />
+        </CalSticky>
         {view === "month" ? (
           <MonthGrid
             ym={ym}
@@ -403,13 +465,21 @@ export function ScheduleScreen({
               Add your first class
             </button>
           </div>
-        ) : days.length === 0 ? (
-          <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
+            {/* The way back in time: while this is on screen the list grows
+                upward, so scrolling up walks into what has been. */}
+            {sentinel}
+            {days.length === 0 && pastDays.length === 0 ? (
+              <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
+            ) : (
             <div className="ps-week ps-agenda callist">
-              {days.map((d) => (
-                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
+              {[...pastDays, ...days].map((d) => (
+                <div
+                  key={d.iso}
+                  id={`day-${d.iso}`}
+                  className={`ps-daygroup${d.past ? " ps-pastday" : ""}`}
+                >
                   <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
                     {/* One day, both hats, in time order: the classes you
@@ -542,6 +612,7 @@ export function ScheduleScreen({
                 </div>
               ))}
             </div>
+            )}
             {/* A week at a time, on request. The old behavior loaded four and
                 kept loading on scroll, which made the schedule feel endless;
                 asking is one tap and the list stays the size you asked for.
@@ -819,13 +890,93 @@ export function ScheduleScreen({
         </div>
       )}
 
-      <CalBottomBar
-        raised={showFanView}
-        onToday={() => {
-          pickView("list");
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-        onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+      {/* The one floating door: every way of handing the calendar on. */}
+      <CalBottomBar raised={showFanView} onShare={() => setShareMenu(true)} />
+
+      {shareMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShareMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setShareMenu(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Share your schedule</h2>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setShareOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share your week</span>
+                  <span className="s">A story image with your link</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={async () => {
+                  setShareMenu(false);
+                  const res = await myWeekText();
+                  if (!res.ok || !res.text) {
+                    toast(res.error ?? "Couldn't copy that");
+                    return;
+                  }
+                  try {
+                    await navigator.clipboard.writeText(res.text);
+                    toast("Week copied, ready to paste");
+                  } catch {
+                    toast("Couldn't copy that");
+                  }
+                }}
+              >
+                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy your week</span>
+                  <span className="s">As text, ready to paste</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={async () => {
+                  setShareMenu(false);
+                  try {
+                    await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
+                    toast("Link copied, ready to paste");
+                  } catch {
+                    toast("Couldn't copy that");
+                  }
+                }}
+              >
+                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy your link</span>
+                  <span className="s">Straight to your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ShareWeekSheet
+        handle={handle}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onToast={toast}
       />
 
       {viewSheet && (

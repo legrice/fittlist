@@ -72,8 +72,8 @@ await m.waitForTimeout(400);
 
 // one of their own
 await m.goto(BASE + "/week");
-await m.locator(".calfab-add").waitFor();
-await m.locator(".calfab-add").click();
+await m.locator(".calhead-add").waitFor();
+await m.locator(".calhead-add").click();
 await m.getByRole("heading", { name: "Add to your calendar" }).waitFor();
 await m.locator(".sheet .setrow", { hasText: "going to" }).click();
 await m.getByPlaceholder("e.g. Barbell Strength").fill("Swag by LWL");

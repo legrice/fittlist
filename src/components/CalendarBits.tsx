@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 
 // The calendar's chrome, shared by both calendars (a coach's /app, a member's
@@ -48,30 +48,42 @@ export function monthLabel(ym: string, todayIso: string) {
   return y === thisYear ? MONTHS[m - 1] : `${MONTHS[m - 1]} ${y}`;
 }
 
-/** The two persistent doors under every calendar view: Today on the left
- *  (back to now, in the list), the plus on the right (add, wherever you
- *  are). Google keeps them on screen for the same reason: the two things a
- *  calendar is for should never be a scroll away. */
+/** The one persistent door under every calendar view: Share, centred. It
+ *  replaced the Today button (the list starts at today, and the month has
+ *  its chevrons) and the floating plus, which went back up beside the
+ *  month. Sharing your week is the habit the whole app leans on, so it is
+ *  the thing that never scrolls away. */
 export function CalBottomBar({
   raised = true,
-  onToday,
-  onAdd,
+  onShare,
 }: {
   /** Sitting above a tab bar, or on a screen without one. */
   raised?: boolean;
-  onToday: () => void;
-  onAdd: () => void;
+  onShare: () => void;
 }) {
   const lift = raised ? "" : " calfabs-low";
   return (
-    <>
-      <button className={`todayfab${lift}`} onClick={onToday}>
-        Today
-      </button>
-      <button className={`calfab-add${lift}`} aria-label="Add" onClick={onAdd}>
-        <Icon name="add" size={26} />
-      </button>
-    </>
+    <button className={`sharefab${lift}`} onClick={onShare}>
+      <Icon name="ios_share" size={16} /> Share
+    </button>
+  );
+}
+
+/** The calendar's header as one sticky block: the month row and the kind
+ *  checkmarks pin under the app header, with the divider underneath them,
+ *  so the list scrolls beneath the chrome. The offset is the brandbar's
+ *  measured height, because the brandbar is itself sticky and the two must
+ *  not overlap. */
+export function CalSticky({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const bb = document.querySelector<HTMLElement>(".brandbar");
+    if (bb && ref.current) ref.current.style.top = `${bb.offsetHeight}px`;
+  }, []);
+  return (
+    <div ref={ref} className="calsticky">
+      {children}
+    </div>
   );
 }
 
@@ -191,6 +203,58 @@ export function KindChecks({
       })}
     </div>
   );
+}
+
+/** Scrolling up reveals what has been. The list starts at today as ever; a
+ *  sentinel above it watches for the top of the page, and each time it comes
+ *  into view another slice of past days renders above, with the scroll
+ *  position compensated so the screen doesn't jump. Capped so the walk back
+ *  ends where the loaded window does. */
+export function usePastReveal(maxWeeks: number, step = 2) {
+  const [pastWeeks, setPastWeeks] = useState(0);
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const prevH = useRef<number | null>(null);
+  const scrollerRef = useRef<HTMLElement | null>(null);
+  // The page's scroller differs by shell: the tabs layout scrolls the body,
+  // the coach shell scrolls its .stage. Walk up from the sentinel so both
+  // get their height read and their position compensated in the right place.
+  const scrollerOf = (el: HTMLElement): HTMLElement => {
+    let n = el.parentElement;
+    while (n) {
+      const o = getComputedStyle(n).overflowY;
+      if (o === "auto" || o === "scroll") return n;
+      n = n.parentElement;
+    }
+    return (document.scrollingElement as HTMLElement) || document.documentElement;
+  };
+  useEffect(() => {
+    if (!node) return;
+    scrollerRef.current = scrollerOf(node);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        setPastWeeks((w) => {
+          if (w >= maxWeeks) return w;
+          prevH.current = scrollerRef.current?.scrollHeight ?? 0;
+          return Math.min(maxWeeks, w + step);
+        });
+      },
+      { rootMargin: "200px 0px 0px 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [node, maxWeeks, step]);
+  // Prepending content above the viewport would shove today down the screen;
+  // scroll by exactly what was added and the view stays put.
+  useLayoutEffect(() => {
+    const sc = scrollerRef.current;
+    if (prevH.current == null || !sc) return;
+    const delta = sc.scrollHeight - prevH.current;
+    prevH.current = null;
+    if (delta > 0) sc.scrollTop += delta;
+  }, [pastWeeks]);
+  const sentinel = pastWeeks < maxWeeks ? <div ref={setNode} aria-hidden="true" /> : null;
+  return { pastWeeks, sentinel };
 }
 
 /** One row of the month: what to draw in a day's cell. */

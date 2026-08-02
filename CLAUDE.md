@@ -203,7 +203,11 @@ stays reachable by dated link and says "This one has already run", because
 an old shared link has to land somewhere real, and the bare URL falls
 forward to the next date it runs. The share images deliberately keep the
 whole range they were asked to draw: a poster of the week is a record, not
-a schedule.
+a schedule. The one deliberate exception is your own calendar looking
+back: the Month grid dims past days rather than dropping them, and the
+List scrolls up into them (see the calendar's views below), because a
+record of what you did is a thing a calendar owes its owner. Every public
+surface keeps the rule.
 
 **The story image has three levels of detail, and the sums have to match the
 paint.** The canvas is a fixed 1080x1920 with no scroll, and the routes used to
@@ -1176,7 +1180,11 @@ classes they added, and their own private entries, one day list in time
 order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
 (weekly personal entries expand across a nine-week horizon now, because a
 recurring entry that only showed its next date read as a class that
-stopped); `mySchedule()` is the coaching half. Every row wears its
+stopped); `mySchedule()` is the coaching half. The calendar pages pass
+`myWeek` a `pastDays` window (`CAL_PAST_DAYS` in `format.ts`, eight weeks)
+so the scroll back in time has data under it; every other caller takes the
+default of none, which is why the share poster's starting day stays a
+future one. Every row wears its
 relationship as its colour (see the colour doctrine below), and tapping
 does what the row is (a teaching row opens the editor, a shift or a Going
 row opens the class sheet, a personal row opens `PlanSheet`). The List view
@@ -1186,27 +1194,45 @@ everyone you follow; Schedule is you. Those stay legibly different.
 **The calendar has views, and the month is its name.** `CalendarBits.tsx`
 is the chrome both calendars share: the month as the title where "Your
 schedule" was, a circled menu beside it opening the view sheet (List and
-Month for now; Day and Week are the next phase), and the Month grid itself.
+Month for now; Day and Week are deliberately not built yet), and the Month
+grid itself.
 The view is a preference (`fl-cal-view`, localStorage) and survives
 arrival, unlike the filters. Month draws the anchor month whole with a
 colour pill per class, chevrons to move months, today ringed; past days
-dim rather than drop, which is the one place the ended-filter deliberately
-does not apply, because a grid you can look back across is a record. A tap
-on a future day lands on that day in the List (`day-{iso}` ids on the day
-groups are the landing spots). The grid's plans data comes from `myWeek`'s
-nine-week horizon, so months beyond it show teaching rows only. The List's
-dates are heading rows, everywhere: a left date rail was tried for a night
-and came back out, because one list grammar across Following and the
-calendars beat the grid-flavoured margin.
+dim rather than drop, because a grid you can look back across is a record.
+A tap on a future day lands on that day in the List (`day-{iso}` ids on
+the day groups are the landing spots). The grid's plans data comes from
+`myWeek`'s nine-week horizon, so months beyond it show teaching rows only.
+The List's dates are heading rows, everywhere, each with a hairline rule
+under it on the calendars (`.callist .ps-daycol`): a left date rail was
+tried for a night and came back out, because one list grammar across
+Following and the calendars beat the grid-flavoured margin.
 
-**The calendar keeps two doors on screen: Today and the plus.**
-`CalBottomBar` floats them over every view on both calendars, Today bottom
-left (back to now, in the List) and the orange plus bottom right
-(`.calfab-add`), because the two things a calendar is for should never be
-a scroll away. The plus has now been a floating button, a header pill and
-a floating button again; this time it came back with a companion, which is
-what the corner was being kept clear for. The plus asks which kind
-first: both
+**The calendar's header sticks, and the List scrolls back in time.**
+`CalSticky` pins the month row, the Add pill and the kind checkmarks under
+the app header (it measures the brandbar, which is itself sticky, for its
+offset), with the divider under the checkmarks as its own bottom edge; the
+list slides beneath the chrome. `usePastReveal` is the way back: the list
+still starts at today, and a sentinel above it prepends a slice of past
+days each time the top comes into view, compensating the scroll so the
+screen doesn't jump. It finds the real scroller by walking up from the
+sentinel, because the tabs layout scrolls the body and the coach shell
+scrolls its `.stage`, and reading the wrong one put the compensation on a
+container that never moves. Past days render dimmed (`.ps-pastday`), the
+window is `CAL_PAST_DAYS`, and a standing weekly class extrapolates into
+it without a start bound: eight weeks of "your Tuesday class ran on
+Tuesdays" is almost always true, and the honest alternative (bounding on
+`createdAt`) breaks the moment an edit reinserts the rows.
+
+**The calendar keeps one door on screen: Share, centred.** `CalBottomBar`
+floats it over every view on both calendars (`.sharefab`), because handing
+your week on is the habit the whole app leans on. It replaced the Today
+button (the list starts at today, and the month has its chevrons) and the
+floating plus, which went back up beside the month as the header's Add
+pill (`.calhead-add`). On a coach's calendar Share opens a small sheet
+(the story image, the week as text, the link); on a member's it opens
+`ShareMyWeekSheet` straight, because that sheet already is the options.
+The Add pill asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class
 you're coaching, a class you're going to, anything else), a member's the
@@ -1232,8 +1258,9 @@ a poster wall, which is the lesson the photo cards taught first; the bar
 says the same thing at a glance without shouting. The corner badges
 (`.ps-corner`, `.ps-goingtag`) said it in words and are gone. The filters
 are colour-coded checkmarks (`KindChecks`, `.kindcheck`) in place of the
-old All-led tabs: each chip's swatch is the colour its rows wear, so the
-row is the legend and the filter at once. They multi-select, everything is
+old All-led tabs: each chip's swatch is a filled circle (round, so it
+nestles into the pill's own round ends) in the colour its rows wear, so
+the row is the legend and the filter at once. They multi-select, everything is
 on on arrival (the off-set resets; a filter is a way of looking, not a
 fact worth storing), unchecking all empties the list honestly, and the row
 only renders when the calendar holds at least two kinds. Colour by

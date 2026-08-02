@@ -644,8 +644,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 13px;
 }
+/* A circle, not a rounded square: it nestles into the pill's own round
+   ends instead of arguing with them. */
 .kindcheck-box {
-  width: 18px; height: 18px; border-radius: 5px; display: inline-flex;
+  width: 18px; height: 18px; border-radius: 999px; display: inline-flex;
   align-items: center; justify-content: center; color: #fff;
   border: 1.5px solid var(--ol); background: transparent;
 }
@@ -661,6 +663,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .callist .ps-event.ev-coaching .ps-accent { background: var(--si); }
 .callist .ps-event.ev-added .ps-accent { background: var(--go); }
 .callist .ps-event.ev-private .ps-accent { background: #5b6b8c; }
+/* A rule under each date heading, so a day reads as a section wherever the
+   list has grown long. Calendars only; Following keeps its plain headings. */
+.callist .ps-daycol { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+/* Scrolled-back days are a record, not the plan: dimmed the way the month
+   grid dims them. */
+.callist .ps-pastday { opacity: .55; }
 /* The month, whole and airy: no cell boxes, a hairline between week rows,
    the day number big and centred with today filled in the brand orange, and
    tinted pills (the kind's colour as a wash with the colour's own ink) so
@@ -708,28 +716,33 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
 [data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
 [data-mode="dark"] .monthpill.ev-private { color: #9fb0d1; }
-/* The persistent doors: Today bottom-left, the plus bottom-right, floating
-   over the list above the tab bar. `.calfabs-low` drops them to the screen
+/* The one persistent door: Share, centred, floating over the list above
+   the tab bar. It replaced the Today button and the floating plus, which
+   went back up beside the month. `.calfabs-low` drops it to the screen
    edge where no bar renders (the coaches-only mode). */
-.todayfab {
-  position: fixed; left: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
-  z-index: 44; height: 46px; padding: 0 20px; border-radius: 999px;
+.sharefab {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; height: 46px; padding: 0 22px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 7px;
   background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.calfab-add {
-  position: fixed; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
-  z-index: 44; width: 54px; height: 54px; border-radius: 17px;
-  background: var(--si); color: #fff; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 22px rgba(221, 106, 53, .38);
+.sharefab:active { transform: translateX(-50%) scale(.95); }
+.sharefab.calfabs-low { bottom: calc(20px + env(safe-area-inset-bottom)); }
+/* The calendar's own header, stuck under the app's: the month row and the
+   checkmarks pin (top is set to the brandbar's measured height), the
+   divider under them is the wrapper's own edge, and the list slides
+   beneath. Under the brandbar's z-8; over the rows. */
+.calsticky {
+  position: sticky; top: 0; z-index: 7;
+  background: var(--paper);
+  margin: 0 -18px 12px; padding: 6px 18px 0;
+  border-bottom: 1px solid var(--line);
 }
-.todayfab:active, .calfab-add:active { transform: scale(.95); }
-.todayfab.calfabs-low, .calfab-add.calfabs-low {
-  bottom: calc(20px + env(safe-area-inset-bottom));
-}
+.calsticky .calhead-row { margin-top: 0; }
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its

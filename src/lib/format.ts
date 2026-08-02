@@ -207,6 +207,11 @@ export function appTz(): string {
   return APP_TZ;
 }
 
+/** How far back the calendars scroll: eight weeks of what has been. One
+ *  number, shared by the loader that fetches the window and the screens
+ *  that reveal it, so the scroll can't outrun the data. */
+export const CAL_PAST_DAYS = 56;
+
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
 export function todayIso(now = new Date()): string {

@@ -2,7 +2,7 @@ import { desc, eq, inArray, isNull, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { mySchedule } from "@/lib/coachweek";
-import { todayIso } from "@/lib/format";
+import { CAL_PAST_DAYS, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
@@ -93,8 +93,9 @@ export default async function SchedulePage({
         .where(eq(schema.inquiryThreads.coachUserId, userId)),
       unreadNotifications(userId),
       // A coach goes to classes too: the same loader the member calendar
-      // reads, so the schedule is one calendar of everything.
-      myWeek(userId),
+      // reads, so the schedule is one calendar of everything. The past
+      // window rides along so the list can scroll back in time.
+      myWeek(userId, { pastDays: CAL_PAST_DAYS }),
     ]);
 
   const customTypes = customTypeRows.map((r) => r.name);

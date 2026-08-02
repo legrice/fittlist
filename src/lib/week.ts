@@ -187,16 +187,28 @@ export async function sharedWeek(
     }));
 }
 
-/** The shortlist itself, grouped by day. */
-export async function myWeek(userId: string): Promise<WeekDay[]> {
+/** The shortlist itself, grouped by day. With `pastDays` the same list also
+ *  reaches back: the calendars let you scroll into what has been, so the
+ *  marks and entries inside that window come along. Every other caller gets
+ *  today forward, exactly as before. */
+export async function myWeek(
+  userId: string,
+  opts?: { pastDays?: number },
+): Promise<WeekDay[]> {
   const db = await getDb();
+  const pastDays = opts?.pastDays ?? 0;
+  const sinceIso = (() => {
+    const d = new Date(`${todayIso()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - pastDays);
+    return d.toISOString().slice(0, 10);
+  })();
   const marks = await db
     .select()
     .from(schema.attendances)
     .where(
       and(
         eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, todayIso()),
+        gte(schema.attendances.occurrenceDate, sinceIso),
       ),
     )
     .orderBy(asc(schema.attendances.occurrenceDate));
@@ -351,21 +363,43 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
   // entry that only showed its next date read as a class that stopped. A
   // one-off whose date has passed, or a weekly one past its end, is gone.
   const HORIZON_WEEKS = 9;
+  const today = todayIso();
   for (const p of own) {
     const first = personalNext(p);
-    if (!first) continue;
     const dates: string[] = [];
-    if (p.specificDate) dates.push(first);
-    else {
-      let iso = first;
-      for (let k = 0; k < HORIZON_WEEKS; k++) {
-        if (p.endsOn && iso > p.endsOn) break;
-        dates.push(iso);
-        const d = new Date(`${iso}T00:00:00Z`);
-        d.setUTCDate(d.getUTCDate() + 7);
-        iso = d.toISOString().slice(0, 10);
+    if (p.specificDate) {
+      // Still ahead as ever; been-and-gone only inside the past window.
+      if (first) dates.push(first);
+      else if (pastDays > 0 && p.specificDate >= sinceIso && p.specificDate < today)
+        dates.push(p.specificDate);
+    } else {
+      if (first) {
+        let iso = first;
+        for (let k = 0; k < HORIZON_WEEKS; k++) {
+          if (p.endsOn && iso > p.endsOn) break;
+          dates.push(iso);
+          const d = new Date(`${iso}T00:00:00Z`);
+          d.setUTCDate(d.getUTCDate() + 7);
+          iso = d.toISOString().slice(0, 10);
+        }
+      }
+      // The past window walks the weekday back from the last date it could
+      // have run: yesterday, or the entry's end if that came first. Only
+      // dates before `first` so the two halves can't double a day.
+      if (pastDays > 0) {
+        const upper = p.endsOn && p.endsOn < today ? p.endsOn : today;
+        const d = new Date(`${upper}T00:00:00Z`);
+        const dow = (d.getUTCDay() + 6) % 7;
+        d.setUTCDate(d.getUTCDate() - ((dow - p.dayOfWeek + 7) % 7));
+        let iso = d.toISOString().slice(0, 10);
+        while (iso >= sinceIso) {
+          if ((!first || iso < first) && iso < today && !dates.includes(iso)) dates.push(iso);
+          d.setUTCDate(d.getUTCDate() - 7);
+          iso = d.toISOString().slice(0, 10);
+        }
       }
     }
+    if (!dates.length) continue;
     const t = clockParts(p.startTime);
     for (const iso of dates) {
       const list = byDay.get(iso) ?? [];

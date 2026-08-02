@@ -140,10 +140,14 @@ export function ClassRow({
 export function Agenda({
   days,
   className = "",
+  dimBefore,
   row,
 }: {
   days: AgendaDay[];
   className?: string;
+  /** Days before this iso render dimmed: the scrolled-back past is a record,
+   *  not the plan, and it says so the way the month grid does. */
+  dimBefore?: string;
   row: (item: AgendaItem, day: AgendaDay) => ReactNode;
 }) {
   return (
@@ -151,7 +155,11 @@ export function Agenda({
       {days.map((d) => (
         // The id is the month grid's landing spot: a tapped day scrolls the
         // list here.
-        <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
+        <div
+          key={d.iso}
+          id={`day-${d.iso}`}
+          className={`ps-daygroup${dimBefore && d.iso < dimBefore ? " ps-pastday" : ""}`}
+        >
           <div className="ps-daycol">{d.label}</div>
           <div className="ps-daycards">
             {d.items.map((i) => (
