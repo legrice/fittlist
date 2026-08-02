@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
-import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
+import { gymCatalog, gymCoaches, gymSchedule, rotaPool } from "@/app/actions/gym";
 import { GymRota } from "@/components/GymRota";
 
 export const dynamic = "force-dynamic";
@@ -43,11 +43,12 @@ export default async function ManageStudioPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [week, coaches, catalog, typeRows] = await Promise.all([
+  const [week, coaches, catalog, typeRows, pool] = await Promise.all([
     gymSchedule(studio.id, Number(w) || 0),
     gymCoaches(studio.id),
     gymCatalog(studio.id),
     db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+    rotaPool(studio.id),
   ]);
 
   return (
@@ -62,6 +63,7 @@ export default async function ManageStudioPage({
       coaches={coaches}
       catalog={catalog}
       customTypes={typeRows.map((t) => t.name)}
+      pool={pool}
     />
   );
 }

@@ -470,6 +470,13 @@
       "when": 1785618822307,
       "tag": "0066_sloppy_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1785666427445,
+      "tag": "0067_fast_titania",
+      "breakpoints": true
     }
   ]
 }

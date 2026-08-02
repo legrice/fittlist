@@ -118,6 +118,65 @@ export async function gymCoaches(studioId: string): Promise<GymCoachDto[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export type RotaPoolDto = { id: string; name: string; inPool: boolean };
+
+/**
+ * The shift list, for the manager: every coach who says they teach here, and
+ * whether the gym has named them able to take shifts.
+ *
+ * The candidates come from the same union as everything else (they listed the
+ * place), but the list itself is the gym's own claim: anyone may say they
+ * coach at a gym, and not everyone who does teaches the group classes on the
+ * rota. A coach handing a date on picks from this list and nobody else.
+ */
+export async function rotaPool(studioId: string): Promise<RotaPoolDto[]> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return [];
+  const { db } = ctx;
+  const [candidates, pool] = await Promise.all([
+    gymCoaches(studioId),
+    db
+      .select()
+      .from(schema.studioRotaCoaches)
+      .where(eq(schema.studioRotaCoaches.studioId, studioId)),
+  ]);
+  const inPool = new Set(pool.map((r) => r.userId));
+  return candidates.map((c) => ({ id: c.id, name: c.name, inPool: inPool.has(c.id) }));
+}
+
+/** Put a coach on the shift list, or take them off. Managers only. */
+export async function setRotaCoach(
+  studioId: string,
+  userId: string,
+  on: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await actingFor(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, studio } = ctx;
+  if (on) {
+    const [person] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    if (!person || person.kind === "fan" || person.kind === "gym")
+      return { ok: false, error: "That's not a coach." };
+    if (!(await coachesHere(db, studioId)).has(userId))
+      return { ok: false, error: "They don't list this studio." };
+    await db
+      .insert(schema.studioRotaCoaches)
+      .values({ studioId, userId })
+      .onConflictDoNothing();
+  } else {
+    await db
+      .delete(schema.studioRotaCoaches)
+      .where(
+        and(
+          eq(schema.studioRotaCoaches.studioId, studioId),
+          eq(schema.studioRotaCoaches.userId, userId),
+        ),
+      );
+  }
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage`);
+  return { ok: true };
+}
+
 /**
  * A real week of the rota, dates and all, because a swap is about a date. The
  * standing slots are expanded with runsOn (the same predicate every surface
@@ -895,6 +954,85 @@ export async function claimShift(
     {
       type: "shift_assigned",
       title: `${who} took ${cls.name}`,
+      body: `${when} at ${studio.name}.`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+      actorUserId: userId,
+    },
+    false,
+  );
+  revalidatePath("/app");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  return { ok: true };
+}
+
+/**
+ * Hand a date straight to a named coach.
+ *
+ * Giving up opens the slot and hopes; this is the other thing that actually
+ * happens at a gym, where the swap was agreed over the counter and just needs
+ * writing down. Only the coach on the date can hand it on, and only to
+ * somebody on the gym's shift list: anyone may say they coach here, and the
+ * list is the gym saying who really takes these classes. Like the rest of the
+ * rota it is a notice, not a request: the swap was already agreed, and the
+ * managers hear about it rather than sitting in the middle of it.
+ */
+export async function sendShiftTo(
+  classId: string,
+  occurrenceDate: string,
+  toUserId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await shiftFor(classId, occurrenceDate);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, me, cls, studio, cover, on } = ctx;
+  if (on !== userId) return { ok: false, error: "You aren't on that one." };
+  if (toUserId === userId) return { ok: false, error: "That's already you." };
+  const [target] = await db.select().from(schema.users).where(eq(schema.users.id, toUserId));
+  if (!target || target.kind === "fan" || target.kind === "gym")
+    return { ok: false, error: "That's not a coach here." };
+  const [listed] = await db
+    .select({ id: schema.studioRotaCoaches.id })
+    .from(schema.studioRotaCoaches)
+    .where(
+      and(
+        eq(schema.studioRotaCoaches.studioId, studio.id),
+        eq(schema.studioRotaCoaches.userId, toUserId),
+      ),
+    );
+  if (!listed) return { ok: false, error: "They aren't on this gym's shift list." };
+
+  if (toUserId === cls.coachUserId) {
+    // Handing it back to whoever normally teaches it: the exception stops
+    // existing rather than being restated.
+    if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+  } else if (cover) {
+    await db
+      .update(schema.shiftCovers)
+      .set({ coachUserId: toUserId, createdByUserId: userId })
+      .where(eq(schema.shiftCovers.id, cover.id));
+  } else {
+    await db
+      .insert(schema.shiftCovers)
+      .values({ classId, occurrenceDate, coachUserId: toUserId, createdByUserId: userId });
+  }
+
+  const when = `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  const who = me?.name?.trim() || "A coach";
+  const toName = target.name.trim() || target.email.split("@")[0];
+  await addNotification(toUserId, {
+    type: "shift_assigned",
+    title: `You're covering ${cls.name}`,
+    body: `${when} at ${studio.name}. ${who} handed it to you.`,
+    href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+    actorUserId: userId,
+  });
+  // Managers only: the two coaches sorted it out, and this is the receipt.
+  await tellTheGym(
+    db,
+    studio,
+    [userId, toUserId],
+    {
+      type: "shift_assigned",
+      title: `${who} handed ${cls.name} to ${toName}`,
       body: `${when} at ${studio.name}.`,
       href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
       actorUserId: userId,

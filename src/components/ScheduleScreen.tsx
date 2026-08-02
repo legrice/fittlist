@@ -122,9 +122,12 @@ export function ScheduleScreen({
   const [profileOpen, setProfileOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  // "Share your profile": the card image sheet, in the spot the QR pill had.
-  // The QR still lives in the profile's Share sheet and on the account.
+  // The card image sheet, reached through the Share sheet and the profile menu.
   const [cardOpen, setCardOpen] = useState(false);
+  // The two rail menus: everything about your page behind Your profile, both
+  // images behind one Share.
+  const [profMenu, setProfMenu] = useState(false);
+  const [shareMenu, setShareMenu] = useState(false);
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
@@ -181,7 +184,9 @@ export function ScheduleScreen({
       router.back();
       return;
     }
-    window.history.replaceState(null, "", "/app");
+    // Through the router rather than bare replaceState, so the header's gear
+    // (which reads the query string for its filled state) hears about it.
+    router.replace("/app", { scroll: false });
     setProfileOpen(false);
   };
 
@@ -322,6 +327,15 @@ export function ScheduleScreen({
     }
   };
 
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
+      toast("Link copied, ready to paste");
+    } catch {
+      toast(`fittlist.co/${handle}`);
+    }
+  };
+
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
@@ -344,10 +358,12 @@ export function ScheduleScreen({
         {/* The tools, back across the top of the calendar where they began:
             they moved onto the profile for a while, and a coach looking at
             their own week (which is where the thought strikes) had nothing to
-            act with. Your profile leads and wears your face, because the page
-            this calendar publishes is the thing the other two share. */}
+            act with. Your profile leads and wears your face, and opens the
+            menu of everything about your page; Share holds both images behind
+            one word. Edit profile sits last: it's the thing you do twice a
+            year, and the rail scrolls to it. */}
         <div className="schedtools">
-          <Link className="schedtool" href={`/${handle}`}>
+          <button className="schedtool" onClick={() => setProfMenu(true)}>
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className="schedtool-av" src={photo} alt="" />
@@ -361,13 +377,16 @@ export function ScheduleScreen({
               </span>
             )}
             Your profile
+          </button>
+          <button className="schedtool" onClick={() => setShareMenu(true)}>
+            <Icon name="auto_awesome" size={16} /> Share
+          </button>
+          <button className="schedtool" onClick={() => setQrOpen(true)}>
+            <Icon name="qr_code_2" size={16} /> QR code
+          </button>
+          <Link className="schedtool" href={`/${handle}?edit=1`}>
+            <Icon name="edit" size={16} /> Edit profile
           </Link>
-          <button className="schedtool" onClick={() => setShareOpen(true)}>
-            <Icon name="campaign" size={16} /> Share your week
-          </button>
-          <button className="schedtool" onClick={() => setCardOpen(true)}>
-            <Icon name="auto_awesome" size={16} /> Share your profile
-          </button>
         </div>
         {!hasAnyClass ? (
           <div className="empty-block">
@@ -583,6 +602,155 @@ export function ScheduleScreen({
             router.refresh();
           }}
         />
+      )}
+
+      {/* Everything about your page, behind the pill that wears your face.
+          The rows a visitor can't have: the way in to look at it, the way in
+          to change it, and every way of handing it on. */}
+      {profMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setProfMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setProfMenu(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your profile</h2>
+            <div className="settingslist ownermenu">
+              <Link className="setrow" href={`/${handle}`}>
+                <span className="setrow-ic"><Icon name="visibility" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">View public profile</span>
+                  <span className="s">Your page, as everyone else sees it</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </Link>
+              <Link className="setrow" href={`/${handle}?edit=1`}>
+                <span className="setrow-ic"><Icon name="edit" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Edit profile</span>
+                  <span className="s">Photo, name, bio and the rest</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </Link>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setProfMenu(false);
+                  setCardOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share profile</span>
+                  <span className="s">A square card for a post or a story</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setProfMenu(false);
+                  copyLink();
+                }}
+              >
+                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy profile link</span>
+                  <span className="s">Straight to your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setProfMenu(false);
+                  setQrOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">QR code</span>
+                  <span className="s">A scannable code that opens your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setProfMenu(false);
+                  copyWeek();
+                }}
+              >
+                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy schedule as text</span>
+                  <span className="s">Your week, ready to paste</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* One Share, two images: the story of your week and the card of your
+          page. Each row opens its builder. */}
+      {shareMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShareMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setShareMenu(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Share</h2>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setShareOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share your schedule</span>
+                  <span className="s">A story image of your week</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setCardOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Share your profile</span>
+                  <span className="s">A square card for a post or a story</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <ShareWeekSheet

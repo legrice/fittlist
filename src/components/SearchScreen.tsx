@@ -15,6 +15,11 @@ import { Icon } from "@/components/Icon";
 // gym, on the same screen, told apart by a heading. So there is no segment
 // here, and the two sections only appear when they have something in them.
 //
+// Under the box, a place. Its own field rather than words in the box, because
+// "yoga in Montclair" is two questions sharing a string and neither matches
+// anything whole. A location alone is a real search too: "who's here" is the
+// question most worth asking in a new town.
+//
 // Every row is the directory's own row, not a copy: same badge, same
 // availability dot, same corner Follow.
 
@@ -25,25 +30,43 @@ const MIN = 2;
 // What you asked before, on this device and nowhere else. A question is only
 // remembered once it worked: tapping a result is what writes it down, so the
 // list holds names that led somewhere rather than every half-typed guess.
+// Places keep their own list, with a pin, and tapping one fills the place
+// field: a town you searched once is a town you'll search again.
 const RECENT_KEY = "fl-recent-searches";
+const RECENT_LOC_KEY = "fl-recent-locations";
 const RECENT_MAX = 8;
 
-function readRecent(): string[] {
+function readList(key: string): string[] {
   try {
-    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    const v = JSON.parse(localStorage.getItem(key) ?? "[]");
     return Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, RECENT_MAX) : [];
   } catch {
     return [];
   }
 }
 
+function writeList(key: string, needle: string): string[] {
+  const next = [
+    needle,
+    ...readList(key).filter((r) => r.toLowerCase() !== needle.toLowerCase()),
+  ].slice(0, RECENT_MAX);
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    // Private mode: the search still works, it just isn't remembered.
+  }
+  return next;
+}
+
 export function SearchScreen() {
   const [q, setQ] = useState("");
+  const [loc, setLoc] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  const [recentLoc, setRecentLoc] = useState<string[]>([]);
   const box = useRef<HTMLInputElement>(null);
   // Each keystroke starts a request; only the newest one is allowed to write
   // its answer to the screen, or a slow "st" lands after "stacey" and the
@@ -52,25 +75,19 @@ export function SearchScreen() {
 
   useEffect(() => {
     box.current?.focus();
-    setRecent(readRecent());
+    setRecent(readList(RECENT_KEY));
+    setRecentLoc(readList(RECENT_LOC_KEY));
   }, []);
 
-  const remember = (needle: string) => {
-    const next = [
-      needle,
-      ...readRecent().filter((r) => r.toLowerCase() !== needle.toLowerCase()),
-    ].slice(0, RECENT_MAX);
-    setRecent(next);
-    try {
-      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-    } catch {
-      // Private mode: the search still works, it just isn't remembered.
-    }
+  const remember = () => {
+    if (asked.trim().length >= MIN) setRecent(writeList(RECENT_KEY, asked.trim()));
+    if (loc.trim().length >= MIN) setRecentLoc(writeList(RECENT_LOC_KEY, loc.trim()));
   };
 
   useEffect(() => {
     const needle = q.trim();
-    if (needle.length < MIN) {
+    const place = loc.trim();
+    if (needle.length < MIN && place.length < MIN) {
       setPeople([]);
       setStudios([]);
       setBusy(false);
@@ -82,7 +99,7 @@ export function SearchScreen() {
     setBusy(true);
     // Long enough that typing a name is one request rather than six.
     const t = setTimeout(async () => {
-      const res = await searchAll(needle);
+      const res = await searchAll(needle, place);
       if (run.current !== mine) return;
       setPeople(res.people);
       setStudios(res.studios);
@@ -90,9 +107,9 @@ export function SearchScreen() {
       setBusy(false);
     }, 220);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, loc]);
 
-  const short = q.trim().length < MIN;
+  const short = q.trim().length < MIN && loc.trim().length < MIN;
   const nothing = !short && !busy && asked === q.trim() && !people.length && !studios.length;
 
   return (
@@ -115,9 +132,31 @@ export function SearchScreen() {
           )}
         </div>
       </div>
+      <div className="dissearchrow srchlocrow">
+        <div className="dissearch">
+          <Icon name="place" size={19} className="dissearch-ic" />
+          <input
+            className="dissearch-in"
+            value={loc}
+            onChange={(e) => setLoc(e.target.value)}
+            placeholder="Location"
+            aria-label="Filter by location"
+          />
+          {loc && (
+            <button
+              type="button"
+              className="dissearch-x"
+              onClick={() => setLoc("")}
+              aria-label="Clear location"
+            >
+              <Icon name="close" size={17} />
+            </button>
+          )}
+        </div>
+      </div>
 
       {short ? (
-        recent.length > 0 ? (
+        recent.length > 0 || recentLoc.length > 0 ? (
           <div className="srchsec">
             <h2 className="srchhead">
               Recent
@@ -126,8 +165,10 @@ export function SearchScreen() {
                 className="srchclear"
                 onClick={() => {
                   setRecent([]);
+                  setRecentLoc([]);
                   try {
                     localStorage.removeItem(RECENT_KEY);
+                    localStorage.removeItem(RECENT_LOC_KEY);
                   } catch {
                     // Nothing to clear is the state they asked for anyway.
                   }
@@ -139,6 +180,12 @@ export function SearchScreen() {
             {recent.map((r) => (
               <button key={r} type="button" className="recentrow" onClick={() => setQ(r)}>
                 <Icon name="search" size={17} />
+                {r}
+              </button>
+            ))}
+            {recentLoc.map((r) => (
+              <button key={`loc-${r}`} type="button" className="recentrow" onClick={() => setLoc(r)}>
+                <Icon name="place" size={17} />
                 {r}
               </button>
             ))}
@@ -163,7 +210,7 @@ export function SearchScreen() {
       ) : (
         // A tap on any result is what writes the question down: it led
         // somewhere, so it earned a place in Recent.
-        <div onClickCapture={(e) => { if ((e.target as HTMLElement).closest("a")) remember(asked); }}>
+        <div onClickCapture={(e) => { if ((e.target as HTMLElement).closest("a")) remember(); }}>
           {people.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">

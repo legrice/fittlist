@@ -248,11 +248,17 @@ export function DiscoverList({
                 Show {tab === "people" ? shown.length : shownStudios.length}
               </button>
             </div>
-            {activeCount > 0 && (
-              <button className="tertiary tellsheet-done" onClick={clearAll}>
-                Clear filters
-              </button>
-            )}
+            {/* Always in the layout, invisible until it has work: appearing
+                and disappearing changed the sheet's height, which made the
+                whole sheet jump the moment a switch was toggled. */}
+            <button
+              className="tertiary tellsheet-done"
+              onClick={clearAll}
+              disabled={activeCount === 0}
+              style={activeCount === 0 ? { visibility: "hidden" } : undefined}
+            >
+              Clear filters
+            </button>
           </div>
         </div>
       )}

@@ -66,6 +66,9 @@ export type ClassDetail = {
     canGiveUp: boolean;
     /** Nobody is on it and the viewer coaches here. */
     canClaim: boolean;
+    /** Who this date can be handed straight to: the gym's shift list, minus
+     *  the viewer. Only filled when the viewer is the one on it. */
+    sendable: { id: string; name: string }[];
   } | null;
 };
 
@@ -239,11 +242,29 @@ export async function classDetail(
         teachesHere = !!picked || !!taught;
       }
     }
+    // The gym's shift list, so the coach on this date can hand it straight to
+    // somebody rather than only opening it up and hoping. Managers name the
+    // list, because anyone may say they coach here and not everyone who does
+    // takes these classes.
+    let sendable: { id: string; name: string }[] = [];
+    if (on === viewerId) {
+      const pool = await db
+        .select({ userId: schema.studioRotaCoaches.userId })
+        .from(schema.studioRotaCoaches)
+        .where(eq(schema.studioRotaCoaches.studioId, c.studioId));
+      const ids = pool.map((p) => p.userId).filter((id) => id !== viewerId);
+      if (ids.length) {
+        const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
+        sendable = people
+          .map((p) => ({ id: p.id, name: p.name.trim() || p.email.split("@")[0] }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
     // Only shown to somebody it means something to: the person on it, or a
     // coach here looking at a slot with nobody on. A member sees none of this,
     // and no name: whether a coach is listed is a separate switch.
     if (on === viewerId || (!on && teachesHere))
-      shift = { onName, canGiveUp: on === viewerId, canClaim: !on && teachesHere };
+      shift = { onName, canGiveUp: on === viewerId, canClaim: !on && teachesHere, sendable };
   }
 
   // The viewer's handle rides the share once they've saved, so the link

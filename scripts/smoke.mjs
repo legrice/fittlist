@@ -1229,7 +1229,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // box now opens.
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
-  await fan.locator(".dissearch-in").fill("Ironbound");
+  await fan.locator(".dissearch-in").first().fill("Ironbound");
   await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
   await fan.goBack();
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
@@ -1258,6 +1258,18 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.goto(BASE + "/discover");
   await fan.locator(".disfilterpill").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
+  // Toggling a switch must not change the sheet's height: the Clear button is
+  // always in the layout, invisible until it has work, so nothing jumps.
+  {
+    const h1 = await fan.evaluate(() => document.querySelector(".sheet").getBoundingClientRect().height);
+    await fan.getByRole("switch", { name: /Taking new clients/ }).click();
+    await fan.waitForTimeout(200);
+    const h2 = await fan.evaluate(() => document.querySelector(".sheet").getBoundingClientRect().height);
+    if (Math.abs(h1 - h2) > 1)
+      fail("the filter sheet should not jump when a switch flips: " + h1 + " vs " + h2);
+    await fan.getByRole("switch", { name: /Taking new clients/ }).click();
+    await fan.waitForTimeout(200);
+  }
   await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
   await fan.locator(".sheet .publishwrap .btn").click();
   await fan.waitForTimeout(300);
@@ -1368,12 +1380,12 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     fail("the search box should be focused on arrival");
   // One letter is not a question: the floor keeps a stray keystroke from
   // asking for the whole directory.
-  await fan.locator(".dissearch-in").fill("m");
+  await fan.locator(".dissearch-in").first().fill("m");
   await fan.waitForTimeout(600);
   if (await fan.locator(".srchhead").count()) fail("one character should not search");
 
   // A coach and a studio that share a word: both sections, both named.
-  await fan.locator(".dissearch-in").fill("ironbound");
+  await fan.locator(".dissearch-in").first().fill("ironbound");
   await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
   {
     const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) => t.split("\n")[0]);
@@ -1385,7 +1397,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 
   // A person by name, with the directory's own row: the Coach badge, the
   // week count and the corner Follow, not a second thinner copy of them.
-  await fan.locator(".dissearch-in").fill("matt");
+  await fan.locator(".dissearch-in").first().fill("matt");
   await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
   {
     const row = fan.locator(".disrow", { hasText: "Matt" }).first();
@@ -1396,7 +1408,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 
   // A town finds the people who train there, and the places in it, in one go:
   // the whole reason this isn't two boxes.
-  await fan.locator(".dissearch-in").fill("jersey city");
+  await fan.locator(".dissearch-in").first().fill("jersey city");
   // Wait for the half that wasn't on screen a moment ago. The people section
   // was already up from the search before this one, so waiting on it returns
   // at once and reads the old render.
@@ -1407,13 +1419,25 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
       fail("a town should turn up both halves, people first: " + heads.join(","));
   }
 
+  // The place field narrows the answer without sharing the box: the same
+  // name in the wrong town is nobody.
+  await fan.locator(".srchlocrow .dissearch-in").fill("jersey city");
+  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
+  await fan.locator(".srchlocrow .dissearch-in").fill("zurich");
+  await fan.locator(".empty-block", { hasText: "Nothing matches that" }).waitFor();
+  // A place alone is a question too: who is around there.
+  await fan.locator(".dissearch-in").first().fill("");
+  await fan.locator(".srchlocrow .dissearch-in").fill("jersey city");
+  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
+  await fan.locator(".srchlocrow .dissearch-in").fill("");
+
   // Nothing matches says so, once, and offers no rows.
-  await fan.locator(".dissearch-in").fill("zzqqxx");
+  await fan.locator(".dissearch-in").first().fill("zzqqxx");
   await fan.locator(".empty-block", { hasText: "Nothing matches that" }).waitFor();
   if (await fan.locator(".srchhead").count()) fail("an empty result should carry no headings");
 
   // Tapping through and back: the arrow names the list you came from.
-  await fan.locator(".dissearch-in").fill("matt");
+  await fan.locator(".dissearch-in").first().fill("matt");
   await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
   await fan.locator(".disrow", { hasText: "Matt" }).first().locator(".disrow-main").click();
   await fan.locator(".pubhead").waitFor();
@@ -1547,6 +1571,31 @@ await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-erow").filter({ has: fan.locator(".ps-event.goingon") }).locator(".evcard-add.on").first().waitFor();
 if (await fan.locator(".feedagenda .ps-goingtag").count())
   fail("Following should carry no Added tag; the ribbon says it");
+// The card wears a whisper of a shadow, the added ribbon fills brand orange
+// rather than ink, and Share sits on the card to the ribbon's left.
+{
+  const card = await fan.evaluate(() => {
+    const ev = document.querySelector(".evcards .ps-event");
+    const add = document.querySelector(".evcard-add.on");
+    const share = document.querySelector(".evcard-share");
+    return {
+      shadow: getComputedStyle(ev).boxShadow,
+      addBg: add ? getComputedStyle(add).backgroundColor : null,
+      addX: add?.getBoundingClientRect().x ?? null,
+      shareX: share?.getBoundingClientRect().x ?? null,
+    };
+  });
+  if (card.shadow === "none") fail("a class card should carry a small shadow");
+  if (card.addBg !== "rgb(221, 106, 53)")
+    fail("the added ribbon should fill brand orange, got " + card.addBg);
+  if (card.shareX === null || card.shareX >= card.addX)
+    fail("the share button should sit left of the ribbon");
+}
+// The day heading pins under the header while its cards scroll.
+{
+  const pos = await fan.evaluate(() => getComputedStyle(document.querySelector(".evcards .ps-daycol")).position);
+  if (pos !== "sticky") fail("day headings on the card lists should be sticky, got " + pos);
+}
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
 // ---- Your plans: the ribbon in the header corner. Not a calendar — only
@@ -1922,7 +1971,43 @@ await page.locator(".navtab", { hasText: "You" }).click();
 // is the first pill and wears the coach's face.
 await page.waitForURL(/\/app/);
 await page.locator(".schedtools").waitFor();
-await page.getByRole("link", { name: "Your profile" }).click();
+// Four pills: the face, one Share, the QR code, and Edit profile last.
+{
+  const pills = (await page.locator(".schedtool").allInnerTexts()).map((t) => t.trim());
+  if (pills.length !== 4) fail("the rail should hold four pills, got " + pills.join("|"));
+  if (!pills[3].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
+}
+// Share is one pill and a sheet with both images behind it.
+await page.locator(".schedtool", { hasText: "Share" }).nth(0).click();
+{
+  const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+  if (rows.join("|") !== "Share your schedule|Share your profile")
+    fail("the Share sheet should offer the schedule and the profile: " + rows.join("|"));
+}
+await page.locator(".sheetclose").first().click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+// The QR pill is back on the rail.
+await page.locator(".schedtool", { hasText: "QR code" }).click();
+await page.locator(".sheet .qrframe").waitFor();
+await page.locator(".sheet .sheetclose").click();
+await page.waitForFunction(() => !document.querySelector(".sheet"));
+// Your profile is a sheet of everything about your page; the first row is
+// the page itself.
+await page.getByRole("button", { name: "Your profile" }).click();
+{
+  const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+  const want = [
+    "View public profile",
+    "Edit profile",
+    "Share profile",
+    "Copy profile link",
+    "QR code",
+    "Copy schedule as text",
+  ];
+  if (rows.join("|") !== want.join("|"))
+    fail("the profile sheet should be " + want.join(", ") + ", got " + rows.join(", "));
+}
+await page.locator(".sheet .setrow", { hasText: "View public profile" }).click();
 await page.waitForURL(/\/matt/);
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".navbar").count()))

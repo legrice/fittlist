@@ -943,8 +943,8 @@ button.bl-band { cursor: pointer; }
 .ps-shift {
   display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
-  letter-spacing: .05em; text-transform: uppercase; color: var(--accent);
-  background: var(--cl); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 8px;
+  letter-spacing: .05em; text-transform: uppercase; color: #191502;
+  background: #f8ddca; border: 1px solid #f8ddca; border-radius: 999px; padding: 2px 8px;
 }
 .ps-echev { color: rgba(17, 17, 17, .32); display: flex; align-items: center; justify-content: center; }
 
@@ -1225,6 +1225,10 @@ button.ps-card { cursor: pointer; }
   overflow: visible;
 }
 .brandbar-actions .iconbtn:active { background: var(--cl); }
+/* Standing on an icon's own screen fills its glyph in, the way the tab bar
+   marks its active tab. First path only: the shield's tick and the bell's
+   clapper are open strokes, and filling those paints shapes nobody drew. */
+.brandbar-actions .iconbtn.onroute svg path:first-of-type { fill: currentColor; }
 .inboxbtn { position: relative; }
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
@@ -1382,11 +1386,14 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .kindtag { background: var(--card); border: 1px solid var(--line); }
 .kindtag-sm { padding: 3px 8px; font-size: 10.5px; }
 /* The class photo on its sheet: full bleed across the top, under the circle
-   controls, the way a profile leads with a face. */
+   controls, the way a profile leads with a face. The top margin swallows the
+   body's own top padding and the safe area, so the picture runs to the very
+   edge of the screen and the floating circles sit on it rather than above it. */
 .classoverlay-img {
   width: auto; display: block; object-fit: cover;
-  height: 34vh; min-height: 200px;
-  margin: -22px calc(50% - 50vw) 18px; width: 100vw; max-width: 100vw;
+  height: calc(28vh + 74px + env(safe-area-inset-top)); min-height: 240px;
+  margin: calc(-74px - env(safe-area-inset-top)) calc(50% - 50vw) 18px;
+  width: 100vw; max-width: 100vw;
 }
 
 /* The class photo, in the adder: the picture beside the two controls that set
@@ -3346,6 +3353,8 @@ button.ps-card { cursor: pointer; }
 /* The box and its filter on one row. Two rows of chrome above a list is most
    of a phone screen spent on controls. */
 .dissearchrow { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; }
+/* The place field rides right under the box it narrows: one pair, one search. */
+.dissearchrow.srchlocrow { margin-top: -4px; }
 .dissearch {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 8px; padding: 0 13px;
@@ -3652,11 +3661,19 @@ button.ps-card { cursor: pointer; }
    floating back and share circles, the class in open space, and a dark pill
    at the bottom holding the two things to do with it. */
 .classoverlay {
-  position: fixed; inset: 0; z-index: 46; overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  position: fixed; inset: 0; z-index: 46;
   background: rgba(247, 244, 236, .8);
   backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1);
   animation: fadeIn .16s ease;
+}
+/* The scroll lives on an inner layer, not on the overlay itself. The
+   backdrop-filter above makes the overlay the containing block for every
+   `fixed` child, so when the overlay was the scroller, the circles and the
+   bottom pill scrolled away with the content. With the scrolling inside,
+   the fixed chrome stays put, which is the whole point of it floating. */
+.classoverlay-scroll {
+  position: absolute; inset: 0; overflow-y: auto;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
 [data-mode="dark"] .classoverlay { background: rgba(20, 19, 16, .8); }
 .ovcircle {
@@ -3937,15 +3954,17 @@ button.ps-card { cursor: pointer; }
 .countnm { font-weight: 700; }
 .counttot { font-weight: 700; }
 
-/* The way through from the rota to what it adds up to. */
+/* The way through from the rota to what it adds up to, and the shift list
+   beside it. */
 .rotacounts { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; }
+.rotapool { margin-left: 8px; }
 
 /* The calendar's tools, across the top of the coach's own week: the page it
    publishes, and the two ways to hand it on. A rail rather than a stack, and
    it scrolls sideways before it ever wraps. */
 .schedtools {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: 2px calc(50% - 50vw) 18px; padding: 2px 18px;
+  margin: 16px calc(50% - 50vw) 14px; padding: 2px 18px;
 }
 .schedtools::-webkit-scrollbar { display: none; }
 .schedtool {
@@ -3976,6 +3995,13 @@ button.ps-card { cursor: pointer; }
    photo lives on the overlay and the share card, where one class has the
    whole screen. */
 .evcards .ps-daycards { gap: 12px; }
+/* The date pins under the app header while its day scrolls by, so a long
+   list never loses what day you're looking at. Paper behind it, or the cards
+   slide through the words; under the brandbar's z-index 8, over the cards. */
+.evcards .ps-daycol {
+  position: sticky; top: calc(64px + env(safe-area-inset-top)); z-index: 3;
+  background: var(--paper); padding: 6px 0; margin: -6px 0;
+}
 .evcards .ps-erow { position: relative; gap: 0; }
 .evcards .ps-event {
   /* align-items back to stretch: the base row rule centres its grid cells,
@@ -3988,9 +4014,14 @@ button.ps-card { cursor: pointer; }
   min-height: 112px;
   padding: 14px 16px; color: var(--ink);
   background: var(--card); border: 1px solid var(--line); border-bottom: 1px solid var(--line);
-  box-shadow: none;
+  /* A whisper of lift, the same on every class listing: enough that the card
+     sits on the page rather than in it, small enough that a week of them
+     still reads as a calendar. */
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .04), 0 2px 8px rgba(17, 17, 17, .05);
 }
-.evcards .ps-event:hover { box-shadow: none; }
+.evcards .ps-event:hover {
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .04), 0 2px 8px rgba(17, 17, 17, .05);
+}
 .evcards .ps-event:active { background: var(--cl); }
 .evcards .ps-ebody { position: relative; gap: 3px; padding-right: 54px; }
 /* Who is coaching is the most important thing on the card, so the coach
@@ -4008,7 +4039,6 @@ button.ps-card { cursor: pointer; }
 }
 .evcards .ps-etime { font-size: 14px; }
 /* Marked: the filled ribbon in the corner says it, so the card stays paper. */
-.evcards .ps-event.goingon { box-shadow: none; }
 /* Private items keep reading as drafts on the coach's own calendar. */
 .evcards .ps-event-private { background: var(--cl); border: 1.5px dashed #c7bf9f; }
 .evcards .ps-event-private:active { background: var(--cl); }
@@ -4021,13 +4051,18 @@ button.ps-card { cursor: pointer; }
    children: a button inside a link is not a thing. Add sits bottom right
    where the thumb is; the remove X keeps its corner up top, in the same
    neutral it wears on every other list. */
-.evcard-add {
+.evcard-add, .evcard-share {
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
   width: 42px; height: 42px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
   background: var(--card); color: var(--ink); border: 1.5px solid var(--line);
   transition: transform .08s;
 }
-.evcard-add.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.evcard-add:active { transform: scale(.93); }
+/* Added is the brand's orange, not ink: the filled ribbon is the one moment
+   of colour a card earns, and it is the same orange the Add class button
+   wears, because both mean the same commitment. */
+.evcard-add.on { background: var(--si); color: #fff; border-color: var(--si); }
+.evcard-add:active, .evcard-share:active { transform: scale(.93); }
+/* Share sits to the ribbon's left: hand the class on, then keep it. */
+.evcard-share { right: 62px; }
 .evcards .weekrow-x { position: absolute; top: 10px; right: 10px; z-index: 2; }

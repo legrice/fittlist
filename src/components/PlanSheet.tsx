@@ -58,6 +58,10 @@ export function PlanSheet({
         <Icon name="arrow_back" size={19} />
       </button>
 
+      {/* Scrolls inside, like the class overlay: the overlay's blur makes it
+          the containing block for fixed children, so the scroll has to live a
+          layer in for the pill to stay put. */}
+      <div className="classoverlay-scroll">
       {missing ? (
         <div className="classoverlay-body">
           <p className="lead" style={{ textAlign: "center", marginTop: "30vh" }}>
@@ -136,6 +140,7 @@ export function PlanSheet({
           </p>
         </div>
       )}
+      </div>
 
       {p && (
         <div className="classoverlay-cta">

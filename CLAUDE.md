@@ -295,9 +295,16 @@ because that switch means delisted with the page still public and a search
 that ignored it would make the setting a lie. Discover's *other* filter (a
 coach needs a schedule or a bio to be worth listing) is deliberately not
 applied here: that is a quality bar for a list somebody is browsing, and you
-asked for this person by name. Two characters is the floor, and the number
-lives twice (the action and `SearchScreen`) because a `"use server"` file can
-only export async functions. Each keystroke's request carries a sequence
+asked for this person by name. Under the box sits a place field
+(`.srchlocrow`): its own input rather than words in the box, because "yoga in
+Montclair" is two questions sharing a string and neither matches anything
+whole. It narrows people by `users.location` and studios by their address,
+and a place alone is a real search (who's here), so either field clears the
+floor on its own. Recent places keep their own localStorage list
+(`fl-recent-locations`, a pin beside the magnifier's `fl-recent-searches`),
+written like the query recents only when a result was tapped. Two characters
+is the floor, and the number lives twice (the action and `SearchScreen`)
+because a `"use server"` file can only export async functions. Each keystroke's request carries a sequence
 number and only the newest may paint, or a slow "st" lands after "stacey" and
 the results go backwards while you type.
 
@@ -344,6 +351,9 @@ scrolled past. It is lighter and smaller than the pill it borrows from: that
 one is the point of a class page, this one floats over a list somebody is
 reading. It says "Filter people" or "Filter studios" and wears the count.
 Nothing is on by default: a filter you didn't set is a list you can't explain.
+Inside the sheet, Clear filters is always in the layout and merely invisible
+until something is on: appearing and disappearing changed the sheet's height,
+which made the whole sheet jump the moment a switch was toggled.
 The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
 because the base rule is defined later in the file and wins on a tie. A fixed
 pill floats over whatever is under it, so `.dislist` carries bottom margin to
@@ -499,10 +509,15 @@ and lifts the floating Add class button over it.
 **A coach's You tab is their coaching calendar, and the tools ride across
 its top.** It pointed at their public profile for a while, and the working
 screen ended up behind a gear. `/app` is the tab, with `.schedtools` across
-the top: Your profile first, wearing their face; then Share your week (the
-story sheet) and Share your profile (the card image sheet, in the spot the QR
-pill had). The calendar draws the member lists' paper cards, minus the coach
-chip, because every class here is theirs.
+the top, 16px under the header: Your profile first, wearing their face, and
+opening a sheet of everything about their page (view it, edit it, the card,
+the link, the QR, the week as text); then one Share pill whose sheet offers
+the two images (the schedule story and the profile card, each opening its
+builder); then the QR code pill; then Edit profile last, because it's the
+thing you do twice a year and the rail scrolls to it. Two pills per share
+were four pills for two pictures, which is how the rail earned its sheets.
+The calendar draws the member lists' paper cards, minus the coach chip,
+because every class here is theirs.
 
 **A coach's settings are the header's gear; the profile carries no door to
 somewhere else.** `AppHeader`'s `settings` prop (coach only: a member's rows
@@ -737,20 +752,39 @@ out: the token feed already carries shifts, and syncing them too would double
 them for anyone using both.
 
 **A coach works their own half of the rota, and the manager only hears about
-it.** `giveUpShift` and `claimShift` in `gym.ts` are the coach-side pair, and
-unlike everything else there they run on a session rather than `actingFor()`:
-giving up needs only that you are the one on that date, taking needs only that
-you coach at that studio. Both write the same `shift_covers` row a manager's
-`setShiftCover` would, so a swap is a swap however it happened. Handing a date
-back opens the slot (`coachUserId` null) and tells the managers **and** every
-coach at the studio, because a dropped class needs a taker and that notice is
-what the lost text message was for; taking one tells the managers only, since
-everyone else was told so that one of them would do exactly this. It is a
-notice, not a request: nobody asks permission, and nobody finds out too late.
+it.** `giveUpShift`, `claimShift` and `sendShiftTo` in `gym.ts` are the
+coach-side set, and unlike everything else there they run on a session rather
+than `actingFor()`: giving up or handing on needs only that you are the one on
+that date, taking needs only that you coach at that studio. All write the same
+`shift_covers` row a manager's `setShiftCover` would, so a swap is a swap
+however it happened. Handing a date back opens the slot (`coachUserId` null)
+and tells the managers **and** every coach at the studio, because a dropped
+class needs a taker and that notice is what the lost text message was for;
+taking one tells the managers only, since everyone else was told so that one
+of them would do exactly this. Handing a date *to* somebody writes the cover
+straight onto them and tells them and the managers: the swap was agreed over
+the counter, and this is the writing-down. All of it is a notice, not a
+request: nobody asks permission, and nobody finds out too late.
 
-Both controls live on the class itself, offered by `classDetail().shift`,
-which is null for anyone it means nothing to. A member sees no trace of the
-rota, and no name: whether a coach is listed is still the gym's switch.
+**Who a shift can be handed to is the gym's list, not the directory's.**
+Anyone may say they coach at a gym (the directory runs on trust), and not
+everyone listed teaches the group classes, so `studio_rota_coaches` is the
+managers naming the pool: the Shift list sheet on the rota screen
+(`rotaPool`/`setRotaCoach`, manager-only) toggles coaches from the same union
+`gymCoaches` offers. `sendShiftTo` refuses anyone not on it, and
+`classDetail().shift.sendable` is that list minus the viewer, so the sheet
+and the action can't disagree. An empty list just leaves the hand-back. Both
+directions clear in `adminDeleteUser`, and `adminDeleteStudio` clears the
+studio's rows.
+
+On the class itself, a coach's own shift puts Manage shift on the floating
+pill (the spot a member's Book and Add live, because the date is theirs to
+manage, not to book) and a sheet behind it holds the hand-back and the
+hand-to rows; the old boxed "I can't make this one" CTA is gone. An open slot
+seen by a coach here keeps the box ("Open shift", I'll take it). All of it is
+offered by `classDetail().shift`, which is null for anyone it means nothing
+to. A member sees no trace of the rota, and no name: whether a coach is
+listed is still the gym's switch.
 
 **A gym is a place, not a face.** `classDetail` returns `ownerIsGym`, and the
 sheet drops the "Coached by" row entirely for one: the gym has no page at
@@ -917,6 +951,20 @@ points at exactly that. A server-rendered list keeps real `href`s and wraps in
 `classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
 the next date it runs) can't drift between them.
 
+**The class overlay scrolls inside a layer, never on itself.** The overlay's
+backdrop blur makes it the containing block for every `position: fixed`
+descendant, so when the overlay was its own scroller, the back and share
+circles and the bottom pill all rode away with the content. The scroll lives
+in `.classoverlay-scroll` now (ClassSheet and PlanSheet both), and the fixed
+chrome stays put, which is what "floating" meant. The class photo runs to the
+very top edge of the screen (`.classoverlay-img` swallows the body's top
+padding and the safe area with a negative margin), and the circles sit on the
+picture rather than in a band of paper above it. While any overlay or bottom
+sheet is up, `ScrollLock` freezes the page behind it (`body.sheet-open`,
+watching `.sheet-scrim`, `.classoverlay` and `.avoverlay`): a background that
+scrolls under an overlay breaks sticky footers and loses the list you came
+from.
+
 **The word is "add", never "save".** A class goes into your plans, the pill
 says Add, the note says Added, and the row that offers the calendar feed says
 "the classes you added". "Saved" is what a form does and what happens to an
@@ -939,21 +987,27 @@ would mean knowing what colour it sits on. The tick is a hole in one
 `fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
 the dark pill, the card and the tab bar alike.
 
-**A member's lists draw the class as paper with a hairline, and nothing
-else.** `.evcards` on the two `Agenda` callers (Plans and Following) turns the
-shared `.ps-event` row into a compact white card, as tall as what it says:
-ink text, a `--line` stroke, no shadow, no colour, no photograph. The card
-tried a photo per row, then the class type's colour, and both read as a
-poster wall rather than a week (the same class twice in a row was the same
-picture twice); the overlay and the share card keep the photo, where one
-class has the whole screen. The actions sit on the card but are siblings of
-it, never children (a button inside a link is not a thing): the remove X top
-right on Plans, the Add ribbon bottom right on Following (paper circle,
-filling to ink when it's in), and the Yours chip in the ribbon's corner,
-which is why the card carries a min-height on the shortest rows. The coach's
-own schedule, the public page, the studio page and the rota keep the flat
-rows on purpose: those are working surfaces where density is the point, and
-the card CSS is scoped so it cannot reach them.
+**A member's lists draw the class as paper with a hairline and a whisper of
+a shadow, and nothing else.** `.evcards` on its `Agenda` callers (Plans,
+Following, and the coach's own calendar) turns the shared `.ps-event` row
+into a compact white card, as tall as what it says: ink text, a `--line`
+stroke, a very small shadow (the same on every class listing, so the lists
+agree), no colour, no photograph. The card tried a photo per row, then the
+class type's colour, and both read as a poster wall rather than a week (the
+same class twice in a row was the same picture twice); the overlay and the
+share card keep the photo, where one class has the whole screen. The actions
+sit on the card but are siblings of it, never children (a button inside a
+link is not a thing): the remove X top right on Plans, and on Following the
+share circle and the Add ribbon bottom right, the ribbon filling brand
+orange (`--si`) when it's in, because the one mark of colour a card earns
+should be the same orange every Add wears. The Yours chip sits in the
+ribbon's corner, which is why the card carries a min-height on the shortest
+rows. The day headings on these lists are sticky (`.evcards .ps-daycol`,
+pinned under the brandbar with paper behind them), because a wall of
+same-shaped cards loses its dates as it scrolls. The public page, the studio
+page and the rota keep the flat rows on purpose: those are working surfaces
+where density is the point, and the card CSS is scoped so it cannot reach
+them.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
@@ -1013,7 +1067,13 @@ corner with its count (`AppHeader`'s `plans`, omitted for a shell with no
 member side): a fourth tab crowded the bar for a list you visit rather than
 live on, and Following leads the tabs because the merged week is the thing the
 app is for. `/week` stays in the `(tabs)` route group so the shell survives
-navigation, even though no tab lights there. Discover wears the magnifier now that
+navigation, even though no tab lights there. Every header icon fills in on
+its own screen (`HeaderIconLink`, a client component over `usePathname`; the
+gear reads `?acct` instead, which is why closing settings goes through
+`router.replace` rather than bare `replaceState`): the fill is the same "you
+are here" the tab bar says, said once per door. The fill is CSS on the first
+SVG path only, because the shield's tick and the bell's clapper are open
+strokes and filling those paints shapes nobody drew. Discover wears the magnifier now that
 the header does not: one search, one door, and the tab names where it lives. A hamburger is deliberately not built: merch and
 an about page are the things that would go in it, and a lid over an empty
 shelf is where things go to be forgotten.

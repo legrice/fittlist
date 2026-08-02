@@ -500,7 +500,18 @@ console.log("the coach is told ok");
   await mine.click();
   // The class, not the adder. It belongs to the gym.
   await tom.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
-  await tom.getByRole("button", { name: /can.t make this one/i }).click();
+  // His own shift: the floating pill is Manage shift, not Book or Add, and
+  // the old boxed CTA is gone with it.
+  if (await tom.getByRole("button", { name: /can.t make this one/i }).count())
+    fail("the Your shift box should have made way for the Manage shift pill");
+  await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
+  // No shift list yet, so the sheet holds only the hand-back.
+  {
+    const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (rows.length !== 1 || !/can.t make this one/i.test(rows[0]))
+      fail("before a shift list exists the sheet should only hand back: " + rows.join("|"));
+  }
+  await tom.locator(".sheet .setrow", { hasText: /can.t make this one/i }).click();
   await tom.getByText("Handed back").waitFor();
   await tom.waitForTimeout(900);
   // The sheet now says what is true: nobody is on it, and he teaches here, so
@@ -538,6 +549,66 @@ console.log("the coach is told ok");
   await matt.goto(BASE + "/updates");
   await matt.locator(".notifrow", { hasText: "took HYROX" }).waitFor();
   console.log("the manager is told without having to do it ok");
+}
+
+// ---- the shift list, and handing a date straight to somebody
+//
+// Anyone may say they coach at a gym, and not everyone who does takes the
+// group classes, so the managers name who a shift can be handed to. Once the
+// list exists, "can you take my Thursday" stops being a text message plus a
+// manager: the coach hands the date over and everybody who should know hears.
+{
+  // The manager names Julia, and only Julia.
+  await matt.goto(BASE + studioHref + "/manage");
+  await matt.getByRole("button", { name: "Shift list" }).click();
+  await matt.locator(".sheet h2", { hasText: "Shift list" }).waitFor();
+  {
+    const names = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (!names.includes("Julia") || !names.includes("Tom"))
+      fail("the list should offer everyone who lists the studio: " + names.join("|"));
+  }
+  await matt.locator(".sheet .setrow", { hasText: "Julia" }).click();
+  await matt.waitForTimeout(600);
+  if ((await matt.locator('.sheet .setrow[aria-checked="true"]').count()) !== 1)
+    fail("only Julia should be on the shift list");
+  await matt.locator(".sheetclose").first().click();
+  console.log("the manager names the shift list ok");
+
+  // Tom hands a Thursday he is on straight to her. Matt coaches here too and
+  // is not on the list, so he is not offered.
+  const nextThu = weekDay(17);
+  await tom.goto(BASE + "/app");
+  const mine = tom.locator(`#day-${nextThu} .ps-event`, { hasText: "HYROX" });
+  await mine.waitFor();
+  await mine.click();
+  await tom.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
+  await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
+  {
+    const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (rows.length !== 2 || !/Hand it to Julia/.test(rows.join("|")) || /Matt/.test(rows.join("|")))
+      fail("the sheet should offer the hand-back and Julia, nobody else: " + rows.join("|"));
+  }
+  await tom.locator(".sheet .setrow", { hasText: "Hand it to Julia" }).click();
+  await tom.getByText("Handed to Julia").waitFor();
+  await tom.waitForTimeout(900);
+  console.log("a date handed straight to a coach ok");
+
+  // She hears it came from him; the manager gets the receipt; the rota says
+  // who is really on it.
+  await julia.goto(BASE + "/updates");
+  const got = julia.locator(".notifrow", { hasText: "You're covering HYROX" }).first();
+  await got.waitFor();
+  if (!/Tom handed it to you/.test(await got.innerText()))
+    fail("the hand-off should say who it came from");
+  await matt.goto(BASE + "/updates");
+  await matt.locator(".notifrow", { hasText: "Tom handed HYROX to Julia" }).first().waitFor();
+  await matt.goto(BASE + studioHref + "/manage?w=2");
+  const onRota = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+  await onRota.waitFor();
+  const txt = await onRota.innerText();
+  if (!txt.includes("Julia") || !/covering/i.test(txt))
+    fail("the rota should show the hand-off: " + txt);
+  console.log("both sides and the rota hear about the hand-off ok");
 }
 
 // And it's in his calendar, which is the fix for not knowing you were on.

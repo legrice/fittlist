@@ -33,13 +33,19 @@ const MIN = 2;
 
 export async function searchAll(
   query: string,
+  /** Narrows both halves to a place: a person's city, a studio's address.
+   *  Its own field rather than words in the box, so "yoga" in "Montclair"
+   *  doesn't have to share one string. Either field alone is a real search:
+   *  a location by itself asks "who's here", which is a question too. */
+  loc = "",
 ): Promise<{ people: DirPerson[]; studios: DirStudio[] }> {
   const empty = { people: [] as DirPerson[], studios: [] as DirStudio[] };
   const userId = await getSessionUserId();
   if (!userId) return empty;
   if (!(await fansVisible())) return empty;
   const needle = query.trim().toLowerCase();
-  if (needle.length < MIN) return empty;
+  const locNeedle = loc.trim().toLowerCase();
+  if (needle.length < MIN && locNeedle.length < MIN) return empty;
 
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
@@ -69,11 +75,13 @@ export async function searchAll(
     .filter((r) => !hidden.has(r.id) && r.id !== userId && r.name.trim())
     .filter(
       (r) =>
+        needle.length < MIN ||
         r.name.toLowerCase().includes(needle) ||
         (r.handle ?? "").toLowerCase().includes(needle) ||
         (r.title ?? "").toLowerCase().includes(needle) ||
         (r.location ?? "").toLowerCase().includes(needle),
-    );
+    )
+    .filter((r) => !locNeedle || (r.location ?? "").toLowerCase().includes(locNeedle));
 
   // Only for the people who matched, so the count on a row still means what it
   // does on Discover without loading every schedule to say it.
@@ -116,10 +124,13 @@ export async function searchAll(
   const studios: DirStudio[] = studioRows
     .filter(
       (st) =>
+        needle.length < MIN ||
         st.name.toLowerCase().includes(needle) ||
         st.address.toLowerCase().includes(needle) ||
         st.types.some((t) => t.toLowerCase().includes(needle)),
     )
+    // A studio has no city column, so its address is what a place means.
+    .filter((st) => !locNeedle || st.address.toLowerCase().includes(locNeedle))
     .map((st) => ({
       id: st.id,
       slug: st.slug ?? st.id,

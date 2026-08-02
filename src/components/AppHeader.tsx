@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { HeaderIconLink } from "@/components/HeaderIconLink";
 import { HeaderNav } from "@/components/HeaderNav";
-import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
@@ -50,37 +50,52 @@ export function AppHeader({
       {nav && <HeaderNav coach={nav.coach} active={nav.active} youHref={nav.youHref} onYou={nav.onYou} />}
       <div className="brandbar-actions">
         {adminNew !== null && (
-          <Link className="iconbtn inboxbtn adminbtn" aria-label="Admin" href="/admin?activity=1">
-            <Icon name="shield" size={20} />
-            {adminNew > 0 && <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>}
-          </Link>
+          <HeaderIconLink
+            className="adminbtn"
+            label="Admin"
+            icon="shield"
+            href="/admin?activity=1"
+            match="/admin"
+            badge={
+              adminNew > 0 ? (
+                <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>
+              ) : undefined
+            }
+          />
         )}
         {/* The ribbon, the bell, the gear: the corner is for the things you
             reach for from wherever you happen to be. The magnifier moved onto
             the Discover tab, where searching starts; two doors to one search
             said one thing twice. */}
         {plans !== undefined && (
-          <Link
-            className="iconbtn inboxbtn plansbtn"
-            aria-label={`Your plans${plans ? `, ${plans} coming up` : ""}`}
+          <HeaderIconLink
+            className="plansbtn"
+            label={`Your plans${plans ? `, ${plans} coming up` : ""}`}
+            icon="bookmark"
             href="/week"
-          >
-            <Icon name="bookmark" size={20} />
-            {plans > 0 && <span className="inboxdot plansdot">{plans > 9 ? "9+" : plans}</span>}
-          </Link>
+            match="/week"
+            badge={
+              plans > 0 ? (
+                <span className="inboxdot plansdot">{plans > 9 ? "9+" : plans}</span>
+              ) : undefined
+            }
+          />
         )}
-        <Link
-          className="iconbtn inboxbtn"
-          aria-label={`Updates${unread ? `, ${unread} unread` : ""}`}
+        <HeaderIconLink
+          label={`Updates${unread ? `, ${unread} unread` : ""}`}
+          icon="notifications"
           href="/updates"
-        >
-          <Icon name="notifications" size={20} />
-          {unread > 0 && <span className="inboxdot">{unread > 9 ? "9+" : unread}</span>}
-        </Link>
+          match="/updates"
+          badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
+        />
         {settings && (
-          <Link className="iconbtn inboxbtn settingsbtn" aria-label="Settings" href={settings}>
-            <Icon name="settings" size={20} />
-          </Link>
+          <HeaderIconLink
+            className="settingsbtn"
+            label="Settings"
+            icon="settings"
+            href={settings}
+            match="?acct"
+          />
         )}
         {avatar &&
           (() => {

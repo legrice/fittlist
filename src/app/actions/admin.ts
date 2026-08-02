@@ -382,7 +382,9 @@ export async function adminDeleteStudio(
   }
 
   // studio_classes are just catalog groundwork — safe to clear before removing.
-  // The edit history and the keys go with the studio they describe.
+  // The edit history, the keys and the shift list go with the studio they
+  // describe.
+  await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.studioId, id));
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.studioId, id));
   await db.delete(schema.studioEdits).where(eq(schema.studioEdits.studioId, id));
   await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
@@ -497,7 +499,10 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     .set({ createdByUserId: null })
     .where(eq(schema.shiftCovers.createdByUserId, id));
   // Their keys go with them; a page they ran alone returns to the commons
-  // rather than being left locked with nobody holding it.
+  // rather than being left locked with nobody holding it. Their place on any
+  // gym's shift list goes too: a list naming somebody who left is a hand-off
+  // to nobody.
+  await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.userId, id));
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
   await db
     .update(schema.studioManagers)

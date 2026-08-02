@@ -274,6 +274,23 @@ export const shiftCovers = pgTable(
   (t) => [uniqueIndex("shift_covers_once").on(t.classId, t.occurrenceDate)],
 );
 
+// Who a shift can be handed to. Anyone may say they coach at a gym (the
+// directory runs on trust), but not everyone listed there teaches the group
+// classes on the rota, so the managers name the pool: a coach handing a date
+// on picks from these people and nobody else. Its own table rather than a
+// flag on coach_studios because that row is the coach's own claim about
+// themselves, and this is the gym's claim about the coach.
+export const studioRotaCoaches = pgTable(
+  "studio_rota_coaches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("studio_rota_coaches_once").on(t.studioId, t.userId)],
+);
+
 // Who runs a studio's page. A studio with no rows here is unclaimed, which is
 // the directory's normal state: anyone coaching can correct it, because an
 // entry nobody owns is better maintained by the people who teach there than

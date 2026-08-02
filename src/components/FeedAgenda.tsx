@@ -94,6 +94,24 @@ export function FeedAgenda({
     return `${n[0]}, ${n[1]} and ${n.length - 2} others`;
   })();
 
+  // Hand the class on from the card itself: the same link the sheet's share
+  // circle carries, without opening the sheet first. The system sheet where it
+  // exists, the clipboard where it doesn't.
+  const shareClass = async (item: { base?: string | null; classId?: string | null; name: string }, iso: string) => {
+    if (!item.base || !item.classId) return;
+    const url = `${window.location.origin}/${item.base}/${item.classId}?d=${iso}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: item.name, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast("Link copied, ready to paste");
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") toast(url);
+    }
+  };
+
   // Swipe commits straight away and shows the result; if the server refuses,
   // the row goes back where it was and says why.
   const toggleGoing = (classId: string, iso: string, next: boolean, name?: string) => {
@@ -226,10 +244,17 @@ export function FeedAgenda({
                   }
                 />
               </SwipeGoing>
-              {/* The one thing to do with a class, on the card itself: the
-                  same calendar the sheet's pill carries, so the swipe stops
-                  being the only way in. A sibling of the card, not a child,
-                  because a button inside a button is not a thing. */}
+              {/* What you do with a class, on the card itself: share it on,
+                  and the same ribbon the sheet's pill carries, so the swipe
+                  stops being the only way in. Siblings of the card, not
+                  children, because a button inside a button is not a thing. */}
+              <button
+                className="evcard-share"
+                aria-label={`Share ${item.name}`}
+                onClick={() => shareClass(item, d.iso)}
+              >
+                <Icon name="ios_share" size={17} />
+              </button>
               <button
                 className={`evcard-add${item.on ? " on" : ""}`}
                 aria-label={item.on ? "In your plans" : "Add to your plans"}

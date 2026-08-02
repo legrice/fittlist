@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { adminSetClassImage } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
-import { claimShift, giveUpShift } from "@/app/actions/gym";
+import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
@@ -180,6 +180,9 @@ export function ClassSheet({
   const where = c?.studioName ?? c?.location ?? null;
   const showBook = !!c && c.links.length > 0 && !c.past;
   const [shifting, startShift] = useTransition();
+  // The coach's own shift: the floating pill becomes Manage shift, and this
+  // sheet holds the two things there are to do with a date that is yours.
+  const [manageOpen, setManageOpen] = useState(false);
   // Giving a date up and taking one are the same shape: one call, then reload
   // the sheet so it says what is true now rather than what was true.
   const act = (
@@ -199,6 +202,23 @@ export function ClassSheet({
       onChanged?.(added);
     });
   };
+  // Hand the date straight to a named coach. Agreed over the counter, written
+  // down here: a notice, not a request, same as the rest of the rota.
+  const send = (toId: string, toName: string) => {
+    if (!c || shifting) return;
+    startShift(async () => {
+      const res = await sendShiftTo(c.id, c.whenIso, toId);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't do that");
+        return;
+      }
+      toast(`Handed to ${toName}`);
+      const fresh = await classDetail(handle, classId, c.whenIso);
+      if (fresh) setC(fresh);
+      onChanged?.(added);
+    });
+  };
+
   const isOwner = !!c?.roster;
 
   return (
@@ -322,6 +342,9 @@ export function ClassSheet({
           }}
         />
       )}
+      {/* The scroll layer: the overlay itself must not scroll, or the fixed
+          circles and the bottom pill ride away with the content. */}
+      <div className="classoverlay-scroll">
       {missing ? (
         <div className="classoverlay-body">
           <p className="lead" style={{ textAlign: "center", marginTop: "30vh" }}>
@@ -423,39 +446,20 @@ export function ClassSheet({
             </div>
           )}
 
-          {/* The rota, from the coach's side. Whoever is on this date can hand
-              it back; whoever teaches here can take it when nobody is. The
-              manager never has to be in the middle of it, which is what the
-              text message they send today was for. */}
-          {c.shift && (
+          {/* The rota, from the coach's side: a slot with nobody on it, seen
+              by somebody who teaches here. Their own shift has no box any
+              more; the floating pill says Manage shift and holds both moves. */}
+          {c.shift?.canClaim && (
             <div className="shiftbox">
-              <h3 className="ovsec-h">Your shift</h3>
-              {c.shift.canGiveUp ? (
-                <>
-                  <p className="shiftbox-s">
-                    You&rsquo;re on this one. Hand it back and the slot opens up; the gym and
-                    everyone who could cover it are told.
-                  </p>
-                  <button
-                    className="btn ghost shiftbox-btn"
-                    disabled={shifting}
-                    onClick={() => act(giveUpShift, "Handed back")}
-                  >
-                    {shifting ? "One moment…" : "I can't make this one"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="shiftbox-s">Nobody is on this one yet.</p>
-                  <button
-                    className="btn si shiftbox-btn"
-                    disabled={shifting}
-                    onClick={() => act(claimShift, "It's yours")}
-                  >
-                    {shifting ? "One moment…" : "I'll take it"}
-                  </button>
-                </>
-              )}
+              <h3 className="ovsec-h">Open shift</h3>
+              <p className="shiftbox-s">Nobody is on this one yet.</p>
+              <button
+                className="btn si shiftbox-btn"
+                disabled={shifting}
+                onClick={() => act(claimShift, "It's yours")}
+              >
+                {shifting ? "One moment…" : "I'll take it"}
+              </button>
             </div>
           )}
 
@@ -471,16 +475,22 @@ export function ClassSheet({
           )}
         </div>
       )}
+      </div>
 
       {/* The floating pill: Book on the left, the calendar on the right. The
-          owner's pill is their one action instead. */}
-      {c && (isOwner || showBook || c.canAdd) && (
+          owner's pill is their one action instead, and so is the coach's on
+          their own shift: the date is theirs to manage, not to book. */}
+      {c && (isOwner || c.shift?.canGiveUp || showBook || c.canAdd) && (
         <>
           <div className="classoverlay-cta">
             {isOwner ? (
               <Link className="ovcta-btn" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
                 <Icon name="edit" size={17} /> Edit this class
               </Link>
+            ) : c.shift?.canGiveUp ? (
+              <button className="ovcta-btn" onClick={() => setManageOpen(true)}>
+                <Icon name="person_add" size={17} /> Manage shift
+              </button>
             ) : (
               <>
                 {showBook && (
@@ -510,6 +520,69 @@ export function ClassSheet({
             )}
           </div>
         </>
+      )}
+
+      {/* Your shift, managed: hand the date back to the pool, or straight to
+          a coach the gym has named. The list is the gym's shift list, because
+          anyone may say they coach here and not everyone who does takes these
+          classes; an empty list just leaves the hand-back. */}
+      {manageOpen && c?.shift?.canGiveUp && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setManageOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setManageOpen(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your shift</h2>
+            <p className="lead">
+              You&rsquo;re on {c.name}, {c.dateLong}. Hand the date back and the slot opens up,
+              or hand it straight to a coach you&rsquo;ve already squared it with.
+            </p>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                disabled={shifting}
+                onClick={() => {
+                  setManageOpen(false);
+                  act(giveUpShift, "Handed back");
+                }}
+              >
+                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">I can&rsquo;t make this one</span>
+                  <span className="s">Opens the slot; the gym and every coach who could cover it are told</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              {c.shift.sendable.map((p) => (
+                <button
+                  key={p.id}
+                  className="setrow"
+                  disabled={shifting}
+                  onClick={() => {
+                    setManageOpen(false);
+                    send(p.id, p.name);
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Hand it to {p.name}</span>
+                    <span className="s">They and the gym are told; the rest of the week is unchanged</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* The hand-off: booking and money live on the studio's site, and
