@@ -22,12 +22,28 @@ import { Icon } from "@/components/Icon";
 // can only export async functions.
 const MIN = 2;
 
+// What you asked before, on this device and nowhere else. A question is only
+// remembered once it worked: tapping a result is what writes it down, so the
+// list holds names that led somewhere rather than every half-typed guess.
+const RECENT_KEY = "fl-recent-searches";
+const RECENT_MAX = 8;
+
+function readRecent(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, RECENT_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function SearchScreen() {
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
+  const [recent, setRecent] = useState<string[]>([]);
   const box = useRef<HTMLInputElement>(null);
   // Each keystroke starts a request; only the newest one is allowed to write
   // its answer to the screen, or a slow "st" lands after "stacey" and the
@@ -36,7 +52,21 @@ export function SearchScreen() {
 
   useEffect(() => {
     box.current?.focus();
+    setRecent(readRecent());
   }, []);
+
+  const remember = (needle: string) => {
+    const next = [
+      needle,
+      ...readRecent().filter((r) => r.toLowerCase() !== needle.toLowerCase()),
+    ].slice(0, RECENT_MAX);
+    setRecent(next);
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch {
+      // Private mode: the search still works, it just isn't remembered.
+    }
+  };
 
   useEffect(() => {
     const needle = q.trim();
@@ -87,23 +117,53 @@ export function SearchScreen() {
       </div>
 
       {short ? (
-        <div className="empty-block">
-          <h2>Search fittlist</h2>
-          <p>
-            Find a coach, a member or a studio by name. A city or a handle works
-            too. To browse instead, Discover has the whole list.
-          </p>
-          <Link className="btn ghost" href="/discover">
-            Open Discover
-          </Link>
-        </div>
+        recent.length > 0 ? (
+          <div className="srchsec">
+            <h2 className="srchhead">
+              Recent
+              <button
+                type="button"
+                className="srchclear"
+                onClick={() => {
+                  setRecent([]);
+                  try {
+                    localStorage.removeItem(RECENT_KEY);
+                  } catch {
+                    // Nothing to clear is the state they asked for anyway.
+                  }
+                }}
+              >
+                Clear
+              </button>
+            </h2>
+            {recent.map((r) => (
+              <button key={r} type="button" className="recentrow" onClick={() => setQ(r)}>
+                <Icon name="search" size={17} />
+                {r}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-block">
+            <h2>Search fittlist</h2>
+            <p>
+              Find a coach, a member or a studio by name. A city or a handle works
+              too. To browse instead, Discover has the whole list.
+            </p>
+            <Link className="btn ghost" href="/discover">
+              Open Discover
+            </Link>
+          </div>
+        )
       ) : nothing ? (
         <div className="empty-block">
           <h2>Nothing matches that</h2>
           <p>Try another name, a town, or the link somebody gave you.</p>
         </div>
       ) : (
-        <>
+        // A tap on any result is what writes the question down: it led
+        // somewhere, so it earned a place in Recent.
+        <div onClickCapture={(e) => { if ((e.target as HTMLElement).closest("a")) remember(asked); }}>
           {people.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">
@@ -128,7 +188,7 @@ export function SearchScreen() {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </>
   );

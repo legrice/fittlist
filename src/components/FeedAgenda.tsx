@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
@@ -60,6 +60,12 @@ export function FeedAgenda({
   const [toastMsg, toastOn, toast] = useToast();
   // Tapping a row opens the class from the bottom, so the week stays behind it.
   const [open, setOpen] = useState<{ handle: string; classId: string; iso: string } | null>(null);
+  // The note that answers the ribbon: which class went to the plans, and the
+  // way there. The ribbon filling says it happened; this says where it went,
+  // which is the thing a first tap can't know.
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  const addTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (addTimer.current) clearTimeout(addTimer.current); }, []);
   const [, startTransition] = useTransition();
   // Keyed by class AND day: a weekly class is a different commitment each week.
   const going: Record<string, boolean> = Object.fromEntries(
@@ -90,13 +96,21 @@ export function FeedAgenda({
 
   // Swipe commits straight away and shows the result; if the server refuses,
   // the row goes back where it was and says why.
-  const toggleGoing = (classId: string, iso: string, next: boolean) => {
+  const toggleGoing = (classId: string, iso: string, next: boolean, name?: string) => {
     const k = `${classId}|${iso}`;
     setSwiped((s) => ({ ...s, [k]: next }));
+    if (next && name) {
+      setJustAdded(name);
+      if (addTimer.current) clearTimeout(addTimer.current);
+      addTimer.current = setTimeout(() => setJustAdded(null), 4200);
+    } else if (!next) {
+      setJustAdded(null);
+    }
     startTransition(async () => {
       const res = await setGoing(classId, iso, next);
       if (!res.ok) {
         setSwiped((s) => ({ ...s, [k]: !next }));
+        setJustAdded(null);
         toast(res.error ?? "Something went wrong.");
       }
     });
@@ -203,7 +217,7 @@ export function FeedAgenda({
             <>
               <SwipeGoing
                 going={!!item.on}
-                onToggle={() => toggleGoing(item.classId!, d.iso, !item.on)}
+                onToggle={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
               >
                 <ClassRow
                   item={item}
@@ -220,7 +234,7 @@ export function FeedAgenda({
                 className={`evcard-add${item.on ? " on" : ""}`}
                 aria-label={item.on ? "In your plans" : "Add to your plans"}
                 aria-pressed={!!item.on}
-                onClick={() => toggleGoing(item.classId!, d.iso, !item.on)}
+                onClick={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
               >
                 <Icon name={item.on ? "bookmark_added" : "bookmark"} size={18} />
               </button>
@@ -243,6 +257,22 @@ export function FeedAgenda({
           }}
         />
       )}
+      {/* Same note the class sheet shows for the same tap, so the two ways
+          of adding answer in one voice. */}
+      <div className={`favtoast listadded${justAdded ? " on" : ""}`} aria-hidden={!justAdded}>
+        {/* Words only while it speaks: the faded-out shell otherwise still
+            holds matching text, and anything looking for the sheet's own
+            toast finds two. */}
+        {justAdded && (
+          <>
+            <Icon name="bookmark_added" size={16} />
+            <span className="favtoast-t">Added {justAdded} to your plans</span>
+            <Link className="favtoast-link" href="/week" onClick={() => setJustAdded(null)}>
+              See it
+            </Link>
+          </>
+        )}
+      </div>
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

@@ -3950,6 +3950,35 @@ button.ps-card { cursor: pointer; }
 }
 .favtoast.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
 .favtoast-link { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+/* It names the class now, and a long name must trim rather than push the
+   link off the screen. */
+.favtoast { max-width: calc(100vw - 32px); }
+.favtoast-t { overflow: hidden; text-overflow: ellipsis; }
+/* On a list the note rises from the bottom like every other toast: the top
+   third is where the overlay's version sits, and here it landed on the first
+   card's face. */
+.favtoast.listadded {
+  top: auto; bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(8px);
+}
+.favtoast.listadded.on { transform: translateX(-50%) translateY(0); }
+@media (min-width: 940px) {
+  .favtoast.listadded { bottom: calc(28px + env(safe-area-inset-bottom)); }
+}
+
+/* Recent searches: rows of what you asked before, kept on this device only
+   and offered when the box is empty. */
+.recentrow {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  padding: 13px 2px; border-bottom: 1px solid var(--line);
+  font-family: inherit; font-size: 15.5px; color: var(--ink); cursor: pointer;
+}
+.recentrow .icon { color: var(--ol); flex-shrink: 0; }
+.srchhead .srchclear {
+  margin-left: auto; border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ol);
+  text-transform: none; letter-spacing: 0;
+}
 
 /* Section titles inside the overlay, About first among them. */
 .ovsec-h {
@@ -4113,7 +4142,13 @@ button.ps-card { cursor: pointer; }
 .evcards .ps-event:hover { box-shadow: none; }
 .evcards .ps-event:active { background: var(--cl); }
 .evcards .ps-ebody { position: relative; gap: 3px; padding-right: 54px; }
-.evcards .ps-ecoach { align-self: flex-start; margin-bottom: 6px; font-size: 12.5px; }
+/* Who is coaching is the most important thing on the card, so the coach
+   wears a quiet chip: light fill, ink name. */
+.evcards .ps-ecoach {
+  align-self: flex-start; margin-bottom: 4px; font-size: 12.5px;
+  background: var(--cl); border-radius: 999px; padding: 3px 11px 3px 4px;
+}
+.evcards .ps-ecoach-txt { color: var(--ink); font-weight: 600; }
 .evcards .ps-enm { font-weight: 700; font-size: 19px; letter-spacing: -.008em; }
 /* The clock reads across under the name rather than down the right edge. */
 .evcards .ps-etimecol {
