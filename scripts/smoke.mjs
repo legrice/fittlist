@@ -1923,13 +1923,15 @@ await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".disseg").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-// You is your own page, seen exactly as a visitor sees it, and it keeps the
-// tab bar: landing on a tab must not take the tabs away. Only yours does;
-// somebody else's profile is a page you visited and the arrow is its way off.
+// You is the coaching calendar again, tools across the top; the public page
+// is the first pill and wears the coach's face.
+await page.waitForURL(/\/app/);
+await page.locator(".schedtools").waitFor();
+await page.getByRole("link", { name: "Your profile" }).click();
 await page.waitForURL(/\/matt/);
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".navbar").count()))
-  fail("your own profile is the You tab, so it keeps the bar");
+  fail("your own profile keeps the bar");
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
@@ -2388,7 +2390,7 @@ await page.waitForFunction(() => !document.querySelector(".acctwrap"));
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".profname").waitFor();
+await page.locator(".schedtools").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting

@@ -17,6 +17,7 @@ import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { QrSheet } from "@/components/QrSheet";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -121,6 +122,9 @@ export function ScheduleScreen({
   const [profileOpen, setProfileOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  // "Share your profile": the card image sheet, in the spot the QR pill had.
+  // The QR still lives in the profile's Share sheet and on the account.
+  const [cardOpen, setCardOpen] = useState(false);
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
@@ -331,7 +335,7 @@ export function ScheduleScreen({
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "you", youHref: `/${handle}` } : undefined}
+          nav={showFanView ? { active: "you", youHref: "/app" } : undefined}
           // The face is the You tab now, so the corner holds settings. Two
           // taps on the same picture, one of which quietly meant "account",
           // was the confusing part.
@@ -339,15 +343,33 @@ export function ScheduleScreen({
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The action pills that used to sit here moved onto the profile,
-            behind the three-dot button beside the name. Losing them also lost
-            the page's identity: this became a bare list that read as showing
-            up at random, so it says what it is like every other screen does. */}
-        <div className="admintop pagetop">
-          <div>
-            <h1>Your schedule</h1>
-            <p className="adminsub">The classes you teach. Tap one to open it</p>
-          </div>
+        {/* The tools, back across the top of the calendar where they began:
+            they moved onto the profile for a while, and a coach looking at
+            their own week (which is where the thought strikes) had nothing to
+            act with. Your profile leads and wears your face, because the page
+            this calendar publishes is the thing the other two share. */}
+        <div className="schedtools">
+          <Link className="schedtool" href={`/${handle}`}>
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="schedtool-av" src={photo} alt="" />
+            ) : (
+              <span
+                className="schedtool-av schedtool-av-empty"
+                style={{ background: myAccent }}
+                aria-hidden="true"
+              >
+                {(name.trim().charAt(0) || "?").toUpperCase()}
+              </span>
+            )}
+            Your profile
+          </Link>
+          <button className="schedtool" onClick={() => setShareOpen(true)}>
+            <Icon name="campaign" size={16} /> Share your week
+          </button>
+          <button className="schedtool" onClick={() => setCardOpen(true)}>
+            <Icon name="auto_awesome" size={16} /> Share your profile
+          </button>
         </div>
         {!hasAnyClass ? (
           <div className="empty-block">
@@ -364,7 +386,7 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
-            <div className="ps-week ps-agenda">
+            <div className="ps-week ps-agenda evcards">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
                   <div className="ps-daycol">{d.label}</div>
@@ -495,7 +517,7 @@ export function ScheduleScreen({
       {showFanView && (
         <NavBar
           active="you"
-          youHref={`/${handle}`}
+          youHref="/app"
           face={{
             photo,
             color: myAccent,
@@ -572,6 +594,17 @@ export function ScheduleScreen({
         onToast={toast}
       />
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+      {cardOpen && (
+        <ShareCardSheet
+          path={`/api/card/${handle}`}
+          fileName={`fittlist-${handle}-card.png`}
+          title="Share your profile"
+          lead="A square card for a post or a story. The link on it goes to your page."
+          alt="Your profile card"
+          onClose={() => setCardOpen(false)}
+          onToast={toast}
+        />
+      )}
 
       <Toast msg={toastMsg} on={toastOn} />
     </section>

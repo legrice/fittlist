@@ -44,10 +44,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // Your own page, as everyone else sees it. It keeps the tab bar (and only
-  // there: somebody else's profile has none), so the tab you just used is
-  // still under your thumb when you arrive.
-  const youHref = isCoach ? `/${me.handle}` : "/you";
+  // A coach's You is their coaching calendar; a member's is their page. The
+  // coach's public profile is one pill away from the calendar.
+  const youHref = isCoach ? "/app" : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),

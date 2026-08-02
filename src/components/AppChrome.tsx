@@ -60,12 +60,10 @@ export async function AppChrome({
     fans ? weekCount(userId) : Promise.resolve(0),
     isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
-  // A coach's You is their public page, so the tab shows them what the link
-  // shows everyone else.
-  // Your own page, as everyone else sees it. It keeps the tab bar (and only
-  // there: somebody else's profile has none), so the tab you just used is
-  // still under your thumb when you arrive.
-  const youHref = isCoach ? `/${me.handle}` : "/you";
+  // A coach's You is their coaching calendar: the working screen, with the
+  // tools across the top and their public page one pill away. It pointed at
+  // the public profile for a while, and the calendar ended up behind a gear.
+  const youHref = isCoach ? "/app" : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),

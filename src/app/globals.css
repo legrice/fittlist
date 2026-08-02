@@ -4115,6 +4115,32 @@ button.ps-card { cursor: pointer; }
 /* The way through from the rota to what it adds up to. */
 .rotacounts { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; }
 
+/* The calendar's tools, across the top of the coach's own week: the page it
+   publishes, and the two ways to hand it on. A rail rather than a stack, and
+   it scrolls sideways before it ever wraps. */
+.schedtools {
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  margin: 2px calc(50% - 50vw) 18px; padding: 2px 18px;
+}
+.schedtools::-webkit-scrollbar { display: none; }
+.schedtool {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 15px; border-radius: 999px; cursor: pointer;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 13.5px; white-space: nowrap; text-decoration: none;
+}
+.schedtool:active { background: var(--cl); }
+.schedtool .icon { color: var(--si); }
+.schedtool-av {
+  width: 24px; height: 24px; border-radius: 999px; object-fit: cover;
+  margin-left: -6px; flex-shrink: 0;
+}
+.schedtool-av-empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 700;
+}
+
 /* ---- The class card: Plans and Following draw the shared row as a quiet
    calendar block ----
    Scoped to .evcards (the two Agenda callers) and nowhere else: the coach's
@@ -4158,6 +4184,9 @@ button.ps-card { cursor: pointer; }
 .evcards .ps-etime { font-size: 14px; }
 /* Marked: the filled ribbon in the corner says it, so the card stays paper. */
 .evcards .ps-event.goingon { box-shadow: none; }
+/* Private items keep reading as drafts on the coach's own calendar. */
+.evcards .ps-event-private { background: var(--cl); border: 1.5px dashed #c7bf9f; }
+.evcards .ps-event-private:active { background: var(--cl); }
 /* Yours, in the Add button's corner: a quiet chip, not a status light. */
 .evcards .ps-goingtag {
   position: absolute; right: 14px; bottom: 14px; z-index: 1;
