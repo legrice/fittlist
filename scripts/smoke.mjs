@@ -1448,17 +1448,10 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
       fail("a town should turn up both halves, people first: " + heads.join(","));
   }
 
-  // The place field narrows the answer without sharing the box: the same
-  // name in the wrong town is nobody.
-  await fan.locator(".srchlocrow .dissearch-in").fill("jersey city");
-  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
-  await fan.locator(".srchlocrow .dissearch-in").fill("zurich");
-  await fan.locator(".empty-block", { hasText: "Nothing matches that" }).waitFor();
-  // A place alone is a question too: who is around there.
-  await fan.locator(".dissearch-in").first().fill("");
-  await fan.locator(".srchlocrow .dissearch-in").fill("jersey city");
-  await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
-  await fan.locator(".srchlocrow .dissearch-in").fill("");
+  // One box only: the place field came off for now, so the town rides the
+  // same box a name does.
+  if (await fan.locator(".srchlocrow").count())
+    fail("the location field should be gone from search");
 
   // Nothing matches says so, once, and offers no rows.
   await fan.locator(".dissearch-in").first().fill("zzqqxx");
@@ -1473,7 +1466,27 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   if (!/from=search/.test(fan.url())) fail("a search result should say where it came from: " + fan.url());
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/search/);
-  console.log("search ok (one box, People and Studios named under it)");
+
+  // Recent holds what was tapped, not what was typed: one visit to Matt's
+  // page means one row, wearing his name and linking straight there. None of
+  // the queries along the way ("ironbound", "jersey city", "zzqqxx") earned a
+  // place, because a string you typed is the work and the row is the answer.
+  {
+    await fan.locator(".srchsec", { hasText: "Recent" }).waitFor();
+    const rec = fan.locator("a.recentrow");
+    if ((await rec.count()) !== 1)
+      fail("one tapped result should mean exactly one recent: " + (await rec.count()));
+    if (!/Matt/.test(await rec.first().innerText()))
+      fail("recent should carry the tapped row's name, not the typed text");
+    await rec.first().click();
+    await fan.waitForURL(/\/matt\?from=search/);
+    await fan.locator(".profback .evback").click();
+    await fan.waitForURL(/\/search/);
+    // Clear means it: the list empties and the prompt returns.
+    await fan.locator(".srchclear").click();
+    await fan.locator(".empty-block", { hasText: "Search fittlist" }).waitFor();
+  }
+  console.log("search ok (one box, tapped rows are the recents)");
 }
 
 // The studio directory is coach-editable, and a coach is kind, not handle:

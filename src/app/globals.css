@@ -3432,7 +3432,6 @@ button.ps-card { cursor: pointer; }
    of a phone screen spent on controls. */
 .dissearchrow { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; }
 /* The place field rides right under the box it narrows: one pair, one search. */
-.dissearchrow.srchlocrow { margin-top: -4px; }
 .dissearch {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 8px; padding: 0 13px;
@@ -3871,12 +3870,14 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; text-align: left;
 }
 
-/* Recent searches: rows of what you asked before, kept on this device only
-   and offered when the box is empty. */
+/* Recent finds: rows of what you tapped before (the person or place itself,
+   not the typed string), kept on this device only and offered when the box
+   is empty. Each is a link straight to the page it named. */
 .recentrow {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
   padding: 13px 2px; border-bottom: 1px solid var(--line);
   font-family: inherit; font-size: 15.5px; color: var(--ink); cursor: pointer;
+  text-decoration: none;
 }
 .recentrow .icon { color: var(--ol); flex-shrink: 0; }
 .srchhead .srchclear {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { searchAll } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
@@ -14,11 +15,6 @@ import { Icon } from "@/components/Icon";
 // gym, on the same screen, told apart by a heading. So there is no segment
 // here, and the two sections only appear when they have something in them.
 //
-// Under the box, a place. Its own field rather than words in the box, because
-// "yoga in Montclair" is two questions sharing a string and neither matches
-// anything whole. A location alone is a real search too: "who's here" is the
-// question most worth asking in a new town.
-//
 // Every row is the directory's own row, not a copy: same badge, same
 // availability dot, same corner Follow.
 
@@ -26,31 +22,47 @@ import { Icon } from "@/components/Icon";
 // can only export async functions.
 const MIN = 2;
 
-// What you asked before, on this device and nowhere else. A question is only
-// remembered once it worked: tapping a result is what writes it down, so the
-// list holds names that led somewhere rather than every half-typed guess.
-// Places keep their own list, with a pin, and tapping one fills the place
-// field: a town you searched once is a town you'll search again.
+// What you found before, on this device and nowhere else. Recent holds the
+// rows you tapped, not the strings you typed: "iron" was only ever a way of
+// reaching Ironbound, and offering the half-typed guess back is offering the
+// work instead of the answer. Each entry is the place or person itself, and
+// tapping it goes straight there.
 const RECENT_KEY = "fl-recent-searches";
-const RECENT_LOC_KEY = "fl-recent-locations";
 const RECENT_MAX = 8;
 
-function readList(key: string): string[] {
+type RecentHit = {
+  /** Person or studio: which icon the row wears. */
+  t: "p" | "s";
+  name: string;
+  /** The URL base: a handle, or `s/{slug}` for a place. */
+  base: string;
+};
+
+function readRecents(): RecentHit[] {
   try {
-    const v = JSON.parse(localStorage.getItem(key) ?? "[]");
-    return Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, RECENT_MAX) : [];
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    if (!Array.isArray(v)) return [];
+    // Older entries were plain strings (the typed query); they don't lead
+    // anywhere on their own, so they just fall out here.
+    return v
+      .filter(
+        (x): x is RecentHit =>
+          !!x &&
+          typeof x === "object" &&
+          (x.t === "p" || x.t === "s") &&
+          typeof x.name === "string" &&
+          typeof x.base === "string",
+      )
+      .slice(0, RECENT_MAX);
   } catch {
     return [];
   }
 }
 
-function writeList(key: string, needle: string): string[] {
-  const next = [
-    needle,
-    ...readList(key).filter((r) => r.toLowerCase() !== needle.toLowerCase()),
-  ].slice(0, RECENT_MAX);
+function writeRecent(hit: RecentHit): RecentHit[] {
+  const next = [hit, ...readRecents().filter((r) => r.base !== hit.base)].slice(0, RECENT_MAX);
   try {
-    localStorage.setItem(key, JSON.stringify(next));
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
   } catch {
     // Private mode: the search still works, it just isn't remembered.
   }
@@ -59,13 +71,11 @@ function writeList(key: string, needle: string): string[] {
 
 export function SearchScreen() {
   const [q, setQ] = useState("");
-  const [loc, setLoc] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
-  const [recent, setRecent] = useState<string[]>([]);
-  const [recentLoc, setRecentLoc] = useState<string[]>([]);
+  const [recent, setRecent] = useState<RecentHit[]>([]);
   const box = useRef<HTMLInputElement>(null);
   // Each keystroke starts a request; only the newest one is allowed to write
   // its answer to the screen, or a slow "st" lands after "stacey" and the
@@ -79,20 +89,19 @@ export function SearchScreen() {
   useEffect(() => {
     box.current?.focus();
     const t = setTimeout(() => box.current?.focus(), 300);
-    setRecent(readList(RECENT_KEY));
-    setRecentLoc(readList(RECENT_LOC_KEY));
+    setRecent(readRecents());
+    try {
+      // The place field is gone for now, and its recents with it.
+      localStorage.removeItem("fl-recent-locations");
+    } catch {
+      // Nothing stored is fine.
+    }
     return () => clearTimeout(t);
   }, []);
 
-  const remember = () => {
-    if (asked.trim().length >= MIN) setRecent(writeList(RECENT_KEY, asked.trim()));
-    if (loc.trim().length >= MIN) setRecentLoc(writeList(RECENT_LOC_KEY, loc.trim()));
-  };
-
   useEffect(() => {
     const needle = q.trim();
-    const place = loc.trim();
-    if (needle.length < MIN && place.length < MIN) {
+    if (needle.length < MIN) {
       setPeople([]);
       setStudios([]);
       setBusy(false);
@@ -104,7 +113,7 @@ export function SearchScreen() {
     setBusy(true);
     // Long enough that typing a name is one request rather than six.
     const t = setTimeout(async () => {
-      const res = await searchAll(needle, place);
+      const res = await searchAll(needle, "");
       if (run.current !== mine) return;
       setPeople(res.people);
       setStudios(res.studios);
@@ -112,9 +121,9 @@ export function SearchScreen() {
       setBusy(false);
     }, 220);
     return () => clearTimeout(t);
-  }, [q, loc]);
+  }, [q]);
 
-  const short = q.trim().length < MIN && loc.trim().length < MIN;
+  const short = q.trim().length < MIN;
   const nothing = !short && !busy && asked === q.trim() && !people.length && !studios.length;
 
   return (
@@ -139,31 +148,9 @@ export function SearchScreen() {
           )}
         </div>
       </div>
-      <div className="dissearchrow srchlocrow">
-        <div className="dissearch">
-          <Icon name="place" size={19} className="dissearch-ic" />
-          <input
-            className="dissearch-in"
-            value={loc}
-            onChange={(e) => setLoc(e.target.value)}
-            placeholder="Location"
-            aria-label="Filter by location"
-          />
-          {loc && (
-            <button
-              type="button"
-              className="dissearch-x"
-              onClick={() => setLoc("")}
-              aria-label="Clear location"
-            >
-              <Icon name="close" size={17} />
-            </button>
-          )}
-        </div>
-      </div>
 
       {short ? (
-        recent.length > 0 || recentLoc.length > 0 ? (
+        recent.length > 0 ? (
           <div className="srchsec">
             <h2 className="srchhead">
               Recent
@@ -172,10 +159,8 @@ export function SearchScreen() {
                 className="srchclear"
                 onClick={() => {
                   setRecent([]);
-                  setRecentLoc([]);
                   try {
                     localStorage.removeItem(RECENT_KEY);
-                    localStorage.removeItem(RECENT_LOC_KEY);
                   } catch {
                     // Nothing to clear is the state they asked for anyway.
                   }
@@ -185,16 +170,10 @@ export function SearchScreen() {
               </button>
             </h2>
             {recent.map((r) => (
-              <button key={r} type="button" className="recentrow" onClick={() => setQ(r)}>
-                <Icon name="search" size={17} />
-                {r}
-              </button>
-            ))}
-            {recentLoc.map((r) => (
-              <button key={`loc-${r}`} type="button" className="recentrow" onClick={() => setLoc(r)}>
-                <Icon name="place" size={17} />
-                {r}
-              </button>
+              <Link key={r.base} className="recentrow" href={`/${r.base}?from=search`}>
+                <Icon name={r.t === "s" ? "place" : "account_circle"} size={17} />
+                {r.name}
+              </Link>
             ))}
           </div>
         ) : (
@@ -211,9 +190,24 @@ export function SearchScreen() {
           <p>Try another name, a town, or the link somebody gave you.</p>
         </div>
       ) : (
-        // A tap on any result is what writes the question down: it led
-        // somewhere, so it earned a place in Recent.
-        <div onClickCapture={(e) => { if ((e.target as HTMLElement).closest("a")) remember(); }}>
+        // A tap on any result is what writes Recent: not the string in the
+        // box, the row it led to. The anchor's own href says which one.
+        <div
+          onClickCapture={(e) => {
+            const a = (e.target as HTMLElement).closest("a");
+            if (!a) return;
+            const m = (a.getAttribute("href") ?? "").match(/^\/(s\/[^/?]+|[^/?]+)(?:\?|$)/);
+            if (!m) return;
+            const base = m[1];
+            if (base.startsWith("s/")) {
+              const st = studios.find((x) => `s/${x.slug}` === base);
+              if (st) setRecent(writeRecent({ t: "s", name: st.name, base }));
+            } else {
+              const p = people.find((x) => x.handle === base);
+              if (p) setRecent(writeRecent({ t: "p", name: p.name, base }));
+            }
+          }}
+        >
           {people.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">

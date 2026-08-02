@@ -300,14 +300,15 @@ because that switch means delisted with the page still public and a search
 that ignored it would make the setting a lie. Discover's *other* filter (a
 coach needs a schedule or a bio to be worth listing) is deliberately not
 applied here: that is a quality bar for a list somebody is browsing, and you
-asked for this person by name. Under the box sits a place field
-(`.srchlocrow`): its own input rather than words in the box, because "yoga in
-Montclair" is two questions sharing a string and neither matches anything
-whole. It narrows people by `users.location` and studios by their address,
-and a place alone is a real search (who's here), so either field clears the
-floor on its own. Recent places keep their own localStorage list
-(`fl-recent-locations`, a pin beside the magnifier's `fl-recent-searches`),
-written like the query recents only when a result was tapped. Two characters
+asked for this person by name. There is no separate place field for now (it
+shipped and came back out; the one box already matches towns through
+`users.location` and a studio's address), so a city is typed where a name
+is. Recent (`fl-recent-searches`, localStorage, this device only) holds the
+rows that were tapped, not the strings that were typed: "iron" was only ever
+a way of reaching Ironbound, and offering the half-typed guess back is
+offering the work instead of the answer. Each entry is the person or place
+itself and links straight there; clearing the box is what brings them back,
+and Clear empties the list. Two characters
 is the floor, and the number lives twice (the action and `SearchScreen`)
 because a `"use server"` file can only export async functions. Each keystroke's request carries a sequence
 number and only the newest may paint, or a slow "st" lands after "stacey" and
