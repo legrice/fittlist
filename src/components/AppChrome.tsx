@@ -53,10 +53,11 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
+  const fans = await fansVisible();
   const [unread, week, adminNew] = await Promise.all([
     unreadNotifications(userId),
-    // Only the bar shows it, so only the bar pays for it.
-    bar ? weekCount(userId) : Promise.resolve(0),
+    // The header's ribbon wears it, so every screen with a header pays for it.
+    fans ? weekCount(userId) : Promise.resolve(0),
     isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
   // A coach's You is their public page, so the tab shows them what the link
@@ -79,7 +80,8 @@ export async function AppChrome({
       // to send a coach to /app, which since the one-shell change is the bare
       // editable schedule: a page with no identity that read as showing up at
       // random.
-      home={(await fansVisible()) ? "/feed" : "/app"}
+      home={fans ? "/feed" : "/app"}
+      plans={fans ? week : undefined}
       nav={(headerNav ?? bar) ? { coach: isCoach, youHref, active } : undefined}
     />
   );
@@ -87,7 +89,7 @@ export async function AppChrome({
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} plans={week} />
+      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} />
     </>
   );
 }

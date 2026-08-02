@@ -24,12 +24,10 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, youHref?: string): NavItem[] {
   return [
-    // Your plans lead, because the thing you came back for is what you already
-    // picked. It was a heart in the header, which is a control that only
-    // exists once you have used it: nobody who had not added a class knew the
-    // list was there. A calendar glyph rather than the heart, because the
-    // heart is how a class gets here and this is where they land.
-    { id: "plans", href: "/week", icon: "bookmark", label: "Plans" },
+    // Plans lives in the header corner as the ribbon with its count, not
+    // here: it tried leading the tabs, and a fourth tab crowded the bar for
+    // a list you visit rather than live on. Following leads because the
+    // merged week is the thing the app is for.
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // A compass, not a magnifier: the magnifier is search, which is its own
     // control in the header now, and two of them in one screen said one thing

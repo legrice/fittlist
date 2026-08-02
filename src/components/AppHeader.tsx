@@ -11,6 +11,7 @@ export function AppHeader({
   adminNew = null,
   unread = 0,
   search = true,
+  plans,
   avatar,
   home = "/feed",
   nav,
@@ -22,6 +23,11 @@ export function AppHeader({
    *  you are, so the corner is where it belongs. Off for a shell that has no
    *  member side to search. */
   search?: boolean;
+  /** Your plans, as the ribbon with how many are still ahead. A number shows
+   *  the door; omit it for a shell with no member side. It tried being the
+   *  first tab, and a fourth tab crowded the bar for a list you visit rather
+   *  than live on; the corner is where it started and where it belongs. */
+  plans?: number;
   avatar?: {
     photo: string | null;
     color: string;
@@ -50,11 +56,19 @@ export function AppHeader({
             {adminNew > 0 && <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>}
           </Link>
         )}
-        {/* Your week used to be a heart here. It's the first tab now, where a
-            list you keep coming back to belongs; the corner is for the things
-            you reach for from wherever you happen to be. Search is the first
-            of those: Discover is where you browse, this is where you go when
-            you already know the name. */}
+        {/* The ribbon, the magnifier, the bell: the corner is for the things
+            you reach for from wherever you happen to be, and your plans are
+            the first of those. */}
+        {plans !== undefined && (
+          <Link
+            className="iconbtn inboxbtn plansbtn"
+            aria-label={`Your plans${plans ? `, ${plans} coming up` : ""}`}
+            href="/week"
+          >
+            <Icon name="bookmark" size={20} />
+            {plans > 0 && <span className="inboxdot plansdot">{plans > 9 ? "9+" : plans}</span>}
+          </Link>
+        )}
         {search && (
           <Link className="iconbtn inboxbtn searchbtn" aria-label="Search" href="/search">
             <Icon name="search" size={20} />

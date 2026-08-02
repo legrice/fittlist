@@ -4145,8 +4145,8 @@ button.ps-card { cursor: pointer; }
 /* Who is coaching is the most important thing on the card, so the coach
    wears a quiet chip: light fill, ink name. */
 .evcards .ps-ecoach {
-  align-self: flex-start; margin-bottom: 4px; font-size: 12.5px;
-  background: var(--cl); border-radius: 999px; padding: 3px 11px 3px 4px;
+  align-self: flex-start; margin-bottom: 4px; font-size: 13.5px;
+  background: var(--cl); border-radius: 999px; padding: 3px 12px 3px 4px;
 }
 .evcards .ps-ecoach-txt { color: var(--ink); font-weight: 600; }
 .evcards .ps-enm { font-weight: 700; font-size: 19px; letter-spacing: -.008em; }

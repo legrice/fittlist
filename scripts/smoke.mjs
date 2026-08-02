@@ -1554,27 +1554,25 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
   fail("Following should carry no Added tag; the ribbon says it");
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
-// ---- Your plans: the first tab. Not a calendar — only what they added, every
-// row can leave, and the count is what's still ahead.
+// ---- Your plans: the ribbon in the header corner. Not a calendar — only
+// what they added, every row can leave, and the count is what's still ahead.
 {
   await fan.goto(BASE + "/feed");
-  // The heart left the header when Plans became a tab; the count went with it.
-  if (await fan.locator(".weekbtn").count()) fail("the header should carry no week heart");
-  const plansTab = fan.locator('.navtab[data-tab="plans"]');
-  const dot = plansTab.locator(".navdot");
+  // Plans tried being the first tab; the bar is three again and the ribbon
+  // carries the count in the corner where the heart began.
+  if (await fan.locator('.navtab[data-tab="plans"]').count())
+    fail("Plans should have left the tab bar");
+  if ((await fan.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+  const plansBtn = fan.locator(".plansbtn");
+  const dot = plansBtn.locator(".inboxdot");
   await dot.waitFor();
   if ((await dot.innerText()).trim() !== "1") fail("the week count should be 1, got " + (await dot.innerText()));
-  // Plans leads: the thing you came back for is what you already picked.
-  if ((await fan.locator(".navtab").first().getAttribute("data-tab")) !== "plans")
-    fail("Plans should be the first tab");
-  await plansTab.click();
+  await plansBtn.click();
   await fan.waitForURL(/\/week/);
   await fan.getByRole("heading", { name: "Your plans" }).waitFor();
   // It's in the tabs group now, so the shell above it never unmounts.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
-  if (!(await fan.locator('.navtab[data-tab="plans"].on').count()))
-    fail("the Plans tab should be lit on /week");
   // Share my week is pinned, so a long week can't push it off the bottom. The
   // page also has to actually scroll: wrapped in .appshell without a .stage it
   // was clipped at the viewport and nothing moved.
@@ -1610,8 +1608,8 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
   // The badge goes with it: the count is state, not a running total.
   await fan.goto(BASE + "/feed");
-  await fan.locator('.navtab[data-tab="plans"]').waitFor();
-  if (await fan.locator('.navtab[data-tab="plans"] .navdot').count())
+  await fan.locator(".plansbtn").waitFor();
+  if (await fan.locator(".plansbtn .inboxdot").count())
     fail("an empty week should carry no count");
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
@@ -2262,7 +2260,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 // app, since a profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".fab").waitFor();
-if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
+if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
 await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
 await page.locator(".acctclose").click();

@@ -1060,17 +1060,17 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**Plans leads the tabs, and the header is search and the bell.** It was a heart
-in the corner, which is a control that only exists once you have used it:
-nobody who had not yet added a class knew the list was there, and the one thing
-people come back for was the hardest thing to find. So `navTabs()` is four now
-(Plans, Following, Discover, You), the count moved onto the tab
-(`NavBar`'s `plans`), and Discover wears a compass rather than a magnifier,
-because the magnifier is search and two of them in one screen said one thing
-twice. Search sits in the corner the heart left, and points at Discover until
-there is a universal search to point it at. A hamburger there is deliberately
-not built: merch and an about page are the things that would go in it, and a
-lid over an empty shelf is where things go to be forgotten.
+**Plans is the ribbon in the header, and the tabs are three.** It has been a
+heart in the corner, the first tab, and now the bookmark ribbon back in the
+corner with its count (`AppHeader`'s `plans`, omitted for a shell with no
+member side): a fourth tab crowded the bar for a list you visit rather than
+live on, and Following leads the tabs because the merged week is the thing the
+app is for. `/week` stays in the `(tabs)` route group so the shell survives
+navigation, even though no tab lights there. Discover wears a compass rather
+than a magnifier, because the magnifier is search and two of them in one
+screen said one thing twice. A hamburger is deliberately not built: merch and
+an about page are the things that would go in it, and a lid over an empty
+shelf is where things go to be forgotten.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

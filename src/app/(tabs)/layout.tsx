@@ -60,15 +60,13 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           adminNew={adminNew}
+          plans={week}
           nav={{ coach: isCoach, youHref }}
-          // The same corner for everyone: search and the bell. The face left
-          // it when it became the You tab, and the heart left it when your
-          // plans became the first one.
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} face={face} youHref={youHref} plans={week} />
+      <NavBar coach={isCoach} face={face} youHref={youHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );
