@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
@@ -338,6 +338,9 @@ export function ScheduleScreen({
         tab === "all" || tab === "coaching"
           ? classes
               .filter((c) => runsOn(c, iso, dow))
+              // Been and gone: once the hour has passed the row comes off,
+              // here and on every other schedule, the same as a member's week.
+              .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
               .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
           : [];
       // The other half of your calendar: the classes you added and your own
@@ -458,6 +461,7 @@ export function ScheduleScreen({
             <Icon name="edit" size={16} /> Edit profile
           </Link>
         </div>
+        <h2 className="calhead">Your schedule</h2>
         {/* The slices of the calendar, as the same underline tabs a profile's
             sections wear. All leads, then only the kinds this calendar
             actually holds; one kind would make All a tab with no job, so the
@@ -468,7 +472,7 @@ export function ScheduleScreen({
               [
                 { k: "all" as const, t: "All" },
                 { k: "coaching" as const, t: "Coaching" },
-                { k: "added" as const, t: "Added" },
+                { k: "added" as const, t: "Attending" },
                 { k: "private" as const, t: "Private" },
               ]
             )

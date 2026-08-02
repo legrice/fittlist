@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
@@ -177,6 +177,9 @@ export async function PublicProfileView({
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
       .filter((c) => runsOn(c, iso, dow))
+      // A class that has already ended is not something anyone can still go
+      // to, so no schedule shows it.
+      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length)
       days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(days.length / 7), items });

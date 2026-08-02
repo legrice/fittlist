@@ -183,6 +183,9 @@ export function ClassSheet({
   // The coach's own shift: the floating pill becomes Manage shift, and this
   // sheet holds the two things there are to do with a date that is yours.
   const [manageOpen, setManageOpen] = useState(false);
+  // The second level: who takes the date. One Transfer row rather than a row
+  // per coach, because eight names under one verb read as eight options.
+  const [transferOpen, setTransferOpen] = useState(false);
   // Giving a date up and taking one are the same shape: one call, then reload
   // the sheet so it says what is true now rather than what was true.
   const act = (
@@ -212,7 +215,7 @@ export function ClassSheet({
         toast(res.error ?? "Couldn't do that");
         return;
       }
-      toast(`Handed to ${toName}`);
+      toast(`Transferred to ${toName}`);
       const fresh = await classDetail(handle, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
@@ -543,8 +546,7 @@ export function ClassSheet({
             </button>
             <h2>Your shift</h2>
             <p className="lead">
-              You&rsquo;re on {c.name}, {c.dateLong}. Hand the date back and the slot opens up,
-              or hand it straight to a coach you&rsquo;ve already squared it with.
+              You&rsquo;re on {c.name}, {c.dateLong}.
             </p>
             <div className="settingslist ownermenu">
               <button
@@ -557,25 +559,71 @@ export function ClassSheet({
               >
                 <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
                 <span className="setrow-txt">
-                  <span className="t">I can&rsquo;t make this one</span>
+                  <span className="t">Give up this shift</span>
                   <span className="s">Opens the slot; the gym and every coach who could cover it are told</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
+              {c.shift.sendable.length > 0 && (
+                <button
+                  className="setrow"
+                  disabled={shifting}
+                  onClick={() => {
+                    setManageOpen(false);
+                    setTransferOpen(true);
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Transfer shift</span>
+                    <span className="s">Hand the date to a coach you&rsquo;ve already squared it with</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Who takes the date. The list is the gym's shift list, because anyone
+          may say they coach here and not everyone who does takes these
+          classes. The consequence is said once up top rather than under every
+          name. */}
+      {transferOpen && c?.shift?.canGiveUp && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setTransferOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setTransferOpen(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Transfer shift</h2>
+            <p className="lead">
+              Who takes {c.name}, {c.dateLong}? They and the gym are told; the rest of the
+              week is unchanged.
+            </p>
+            <div className="settingslist ownermenu">
               {c.shift.sendable.map((p) => (
                 <button
                   key={p.id}
                   className="setrow"
                   disabled={shifting}
                   onClick={() => {
-                    setManageOpen(false);
+                    setTransferOpen(false);
                     send(p.id, p.name);
                   }}
                 >
                   <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
                   <span className="setrow-txt">
-                    <span className="t">Hand it to {p.name}</span>
-                    <span className="s">They and the gym are told; the rest of the week is unchanged</span>
+                    <span className="t">{p.name}</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </button>

@@ -512,16 +512,17 @@ console.log("the coach is told ok");
   await tom.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
   // His own shift: the floating pill is Manage shift, not Book or Add, and
   // the old boxed CTA is gone with it.
-  if (await tom.getByRole("button", { name: /can.t make this one/i }).count())
+  if (await tom.getByRole("button", { name: /give up this shift/i }).count())
     fail("the Your shift box should have made way for the Manage shift pill");
   await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
-  // No shift list yet, so the sheet holds only the hand-back.
+  // No shift list yet, so the sheet holds only the give-up: Transfer has
+  // nobody to offer, and a door to an empty room is not a door.
   {
     const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-    if (rows.length !== 1 || !/can.t make this one/i.test(rows[0]))
-      fail("before a shift list exists the sheet should only hand back: " + rows.join("|"));
+    if (rows.length !== 1 || !/Give up this shift/.test(rows[0]))
+      fail("before a shift list exists the sheet should only give up: " + rows.join("|"));
   }
-  await tom.locator(".sheet .setrow", { hasText: /can.t make this one/i }).click();
+  await tom.locator(".sheet .setrow", { hasText: "Give up this shift" }).click();
   await tom.getByText("Handed back").waitFor();
   await tom.waitForTimeout(900);
   // The sheet now says what is true: nobody is on it, and he teaches here, so
@@ -593,13 +594,23 @@ console.log("the coach is told ok");
   await mine.click();
   await tom.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
   await tom.locator(".classoverlay-cta").getByRole("button", { name: "Manage shift" }).click();
+  // Two rows, two verbs: the give-up, and one Transfer door over the whole
+  // list, however long the gym's shift list grows.
   {
     const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-    if (rows.length !== 2 || !/Hand it to Julia/.test(rows.join("|")) || /Matt/.test(rows.join("|")))
-      fail("the sheet should offer the hand-back and Julia, nobody else: " + rows.join("|"));
+    if (rows.length !== 2 || !/Give up this shift/.test(rows.join("|")) || !/Transfer shift/.test(rows.join("|")))
+      fail("the sheet should offer the give-up and one Transfer row: " + rows.join("|"));
   }
-  await tom.locator(".sheet .setrow", { hasText: "Hand it to Julia" }).click();
-  await tom.getByText("Handed to Julia").waitFor();
+  await tom.locator(".sheet .setrow", { hasText: "Transfer shift" }).click();
+  await tom.getByRole("heading", { name: "Transfer shift" }).waitFor();
+  // Behind it, the gym's list and nobody else: Julia is on it, Matt is not.
+  {
+    const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (rows.length !== 1 || !/Julia/.test(rows[0]) || /Matt/.test(rows.join("|")))
+      fail("Transfer should offer the shift list, nobody else: " + rows.join("|"));
+  }
+  await tom.locator(".sheet .setrow", { hasText: "Julia" }).click();
+  await tom.getByText("Transferred to Julia").waitFor();
   await tom.waitForTimeout(900);
   console.log("a date handed straight to a coach ok");
 

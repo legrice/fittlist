@@ -2,7 +2,7 @@ import { and, eq, inArray, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
@@ -113,6 +113,8 @@ export async function StudioView({
       const dow = (dt.getUTCDay() + 6) % 7;
       const items = rows
         .filter((c) => runsOn(c, iso, dow))
+        // Been and gone comes off here too: a schedule is what's still coming.
+        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
         .map((c) => ({
           id: c.id,
@@ -156,6 +158,7 @@ export async function StudioView({
       // the row that can be opened wins.
       for (const c of pub) {
         if (!runsOn(c, iso, dow)) continue;
+        if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
         const base = handleOf.get(c.userId);
         if (!base) continue;
         const key = `${c.name.trim().toLowerCase()}|${c.startTime}`;
@@ -165,6 +168,7 @@ export async function StudioView({
       }
       for (const p of own) {
         if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
+        if (occurrenceEnded(iso, p.startTime, p.durationMin)) continue;
         const key = `${p.name.trim().toLowerCase()}|${p.startTime}`;
         if (seen.has(key)) continue;
         seen.add(key);
