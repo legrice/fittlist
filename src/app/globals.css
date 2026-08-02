@@ -3464,36 +3464,17 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; display: flex; border: none; background: none; padding: 4px; cursor: pointer;
   color: var(--ol);
 }
-/* The filter pill floats over the list, the way Book and Add do on a class:
-   the one control you reach for while scrolling belongs where your thumb is,
-   not in a row at the top you have scrolled past. The count is the whole
-   status line: you can see filters are on without opening anything. */
-.classoverlay-cta.disfilterpill {
-  /* Over the tab bar, which is z-45: a control the bar covers is no control. */
-  border: none; cursor: pointer; z-index: 46;
-  /* Clearing the tab bar the same way the Add class button does. */
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  /* Light and blurred rather than a slab of ink. It floats over a list people
-     are reading, so it has to be legible without taking the page over. */
-  background: rgba(255, 255, 255, .78); color: var(--ink);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 6px 20px rgba(17, 17, 17, .14), 0 0 0 1px rgba(17, 17, 17, .06);
+/* Filters leads the chip rail on both halves: the door to the sheet, wearing
+   the count of every live pick, so you can see filters are on without opening
+   anything. It reads as one of the chips because it is one. */
+.chip.chip-filters {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
 }
-[data-mode="dark"] .classoverlay-cta.disfilterpill {
-  background: rgba(32, 29, 22, .74); color: var(--ink);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .4), 0 0 0 1px rgba(255, 255, 255, .08);
-}
-/* Smaller than the Book/Save pill it borrows from: that one is the point of a
-   class page, and this one sits beside a list you are already reading. */
-.disfilterpill .ovcta-btn { padding: 9px 16px; font-size: 14px; gap: 6px; }
-/* No tab bar up here, so it sits where a floating control normally would. */
-@media (min-width: 940px) { .classoverlay-cta.disfilterpill { bottom: 28px; } }
-.disfilterpill-n {
-  min-width: 20px; height: 20px; padding: 0 6px; margin-left: 2px;
+.chip-n {
+  min-width: 18px; height: 18px; padding: 0 5px; margin: -2px -4px -2px 0;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 999px; background: var(--si); color: #fff;
-  font-size: 12px; font-weight: 700;
+  font-size: 11px; font-weight: 700;
 }
 .disfilterlist { margin-top: 18px; }
 
@@ -3523,9 +3504,7 @@ button.ps-card { cursor: pointer; }
 .dislist {
   display: flex; flex-direction: column; background: var(--card); border-radius: 16px;
   box-shadow: var(--soft-shadow); overflow: hidden;
-  /* Room under the floating filter pill, or the last coach in the directory
-     is a row nobody can tap. */
-  margin-bottom: 76px;
+  margin-bottom: 16px;
 }
 .disrow {
   display: flex; align-items: center; gap: 10px; padding: 13px 14px;

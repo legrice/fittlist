@@ -1254,9 +1254,10 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
 
-// Everything that narrows the list is behind one floating pill, and the coach's own
-// disciplines are what it narrows by. One vocabulary: the same word a studio
-// picks for what it offers.
+// Filtering lives in the chip rail now: Filters leads it and opens the sheet,
+// the chips after it are the same filters in the open, and every one is
+// multiselect, so the count on Filters adds up as picks accumulate. One
+// vocabulary: the same word a studio picks for what it offers.
 {
   await page.goto(BASE + "/matt");
   await page.locator(".profacts .actpill", { hasText: "Edit profile" }).click();
@@ -1272,7 +1273,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await page.locator(".studiotype", { hasText: "Yoga" }).waitFor();
 
   await fan.goto(BASE + "/discover");
-  await fan.locator(".disfilterpill").click();
+  await fan.locator(".chip-filters").click();
   await fan.getByRole("heading", { name: "Filters" }).waitFor();
   // Toggling a switch must not change the sheet's height: the Clear button is
   // always in the layout, invisible until it has work, so nothing jumps.
@@ -1291,12 +1292,20 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // The type chips sit on the page now: one tap, no sheet in the middle.
   await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
   await fan.waitForTimeout(300);
-  if (!(await fan.locator(".disfilterpill-n").count()))
-    fail("a live filter should show its count on the pill");
+  if (!(await fan.locator(".chip-n").count()))
+    fail("a live filter should show its count on the Filters chip");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
   if (await fan.locator(".disrow", { hasText: "Sam" }).count())
     fail("filtering by what someone teaches should drop the ones who don't");
-  // Switching lens drops the pick with it: the other half offers its own
+  // Multiselect: a second pick adds to the count rather than replacing the
+  // first.
+  await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
+  await fan.waitForTimeout(300);
+  if ((await fan.locator(".chip-n").innerText()).trim() !== "2")
+    fail("two live picks should count as two on the Filters chip");
+  await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
+  await fan.waitForTimeout(200);
+  // Switching lens drops the type pick with it: the other half offers its own
   // vocabulary, and carrying a coach's word over would filter to nobody.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
@@ -1308,13 +1317,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.getByRole("button", { name: "People", exact: true }).click();
   await fan.waitForTimeout(200);
   await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
-  await fan.locator(".disfilterpill").click();
+  await fan.locator(".chip-filters").click();
   await fan.getByRole("button", { name: "Clear filters" }).click();
   await fan.locator(".sheet .publishwrap .btn").click();
   await fan.waitForTimeout(300);
-  if (await fan.locator(".disfilterpill-n").count())
-    fail("cleared filters should leave the pill without a count");
-  console.log("discover filters ok (one pill, chips in the open, both halves)");
+  if (await fan.locator(".chip-n").count())
+    fail("cleared filters should leave the Filters chip without a count");
+  console.log("discover filters ok (Filters leads the rail, multiselect picks)");
 }
 
 // A filter is only offered where it can narrow something. The chips come from
@@ -1322,16 +1331,22 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // coaches start saying what they teach.
 {
   // The chips sit on the page now, under the tabs, so reading them is just
-  // looking.
+  // looking. Filters and the kind chips lead the rail everywhere; the type
+  // chips after them are the lens's own vocabulary.
   await fan.goto(BASE + "/discover");
-  const peopleChips = await fan.locator(".dischips .chip").allInnerTexts();
+  const FIXED = ["Coaches", "Members", "Available for clients"];
+  const typeChips = async () =>
+    (await fan.locator(".dischips .chip:not(.chip-filters)").allInnerTexts())
+      .map((c) => c.trim())
+      .filter((c) => !FIXED.includes(c));
+  const peopleChips = await typeChips();
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(200);
-  const studioChips = await fan.locator(".dischips .chip").allInnerTexts();
+  const studioChips = await typeChips();
   // Matt is the only one who has said anything, and he said Yoga.
   if (peopleChips.join(",") !== "Yoga")
     fail("People should only offer what a coach here actually teaches: " + peopleChips.join(","));
-  if (studioChips.some((c) => !peopleChips.includes(c)) === false && studioChips.length)
+  if (studioChips.length && studioChips.every((c) => peopleChips.includes(c)))
     fail("the two lenses should not be offering the same list by accident");
   console.log("discover chips ok (only what the lens can narrow)");
 }

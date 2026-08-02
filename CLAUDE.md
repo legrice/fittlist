@@ -370,32 +370,27 @@ matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
 **Discover's top is one stack: the search door, the halves as underline
-tabs, and the quick chips riding under them.** The People/Studios segment
-became the same underline tabs a profile's sections wear (`.pubtabs
-.distabs`), and the discipline chips left the filter sheet for a rail in the
-open (`.dischips`, scrolling off the edge): a chip you can see is a chip you
-use, and the sheet keeps what needs a form (the city, the switches). The
-pill's count still includes a chip pick, and switching lens still drops it.
-
-**Discover's controls read top down: the search door, then which half, then
-filter.** The box is first because searching is what people came to do, and it
-opens the universal search rather than filtering the list in place: two search
-behaviours behind one drawing of a box was the confusing part. The filter is the floating pill a
-class uses for Book and Save, because the one control you reach for while
-scrolling belongs where your thumb is rather than in a row you have already
-scrolled past. It is lighter and smaller than the pill it borrows from: that
-one is the point of a class page, this one floats over a list somebody is
-reading. It says "Filter people" or "Filter studios" and wears the count.
-Nothing is on by default: a filter you didn't set is a list you can't explain.
-Inside the sheet, Clear filters is always in the layout and merely invisible
-until something is on: appearing and disappearing changed the sheet's height,
-which made the whole sheet jump the moment a switch was toggled.
-The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
-because the base rule is defined later in the file and wins on a tie. A fixed
-pill floats over whatever is under it, so `.dislist` carries bottom margin to
-clear it, and above 940px the pill drops to a normal offset because there is no
-tab bar up there to sit above. Without both, the last coach in the directory
-was a row nobody could tap.
+tabs, and the chip rail under them, led by Filters.** The People/Studios
+segment is the same underline tabs a profile's sections wear (`.pubtabs
+.distabs`), and every filter lives in the rail (`.dischips`, scrolling off
+the edge) or behind its first chip: a chip you can see is a chip you use.
+There is no floating filter pill any more; it floated over the list for a
+while and the rail replaced it, which is also why `.dislist` no longer
+carries a big bottom margin. The Filters chip (`.chip-filters`) leads the
+rail on both halves, opens the sheet, and wears the count of every live pick
+(`.chip-n`), so the studios' half keeps the door even while types are its
+only filter: more studio filters will come, and the door is already there.
+The chips after it are multiselect, every one: on People the kind pair
+(Coaches, Members, only when the list mixes kinds) and Available for
+clients, then the lens's type chips; picking two types means either, not
+both, and two picks count as two on the Filters chip. The sheet holds the
+same filters again (the city, which needs a form; the switches; the type
+grid), reading and writing the same state as the rail, so either place can
+change a pick. Nothing is on by default: a filter you didn't set is a list
+you can't explain. Inside the sheet, Clear filters is always in the layout
+and merely invisible until something is on: appearing and disappearing
+changed the sheet's height, which made the whole sheet jump the moment a
+switch was toggled.
 
 **A filter is only offered where it can narrow something.** Discover's What
 chips are built from what the lens in front of you actually holds: coaches'
@@ -488,7 +483,9 @@ The big picture still exists one tap away: the avatar is `AvatarZoom`, which
 blows the photo up over the blurred page with Follow, Share, Copy link and QR
 under it (the owner gets their card there too). There is no Coach/Member/
 Studio tag and no availability tag; the only badge left is a studio's
-Verified, in `badges` beside the name. Contact is the filled pill and the
+Verified, in `badges` beside the name. The share card image follows the same
+rule: it wore a Coach or Member pill above the name and dropped it, because
+the card is the page said as a picture. Contact is the filled pill and the
 bottom sheet; Follow is the outline that turns green (`--go`) when it's a
 yes, same green as a Going mark.
 

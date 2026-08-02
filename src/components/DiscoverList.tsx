@@ -6,11 +6,13 @@ import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 
 // Search over the directory, which has two halves: the people and the places.
-// One search box and one filter on a single row, and the tab above decides
-// what they're searching. The corner control follows from the row; the row's
-// main job is still to get you to a person, and the Coach badge across from
-// the name is what tells you who you're looking at, which is the distinction
-// that matters once members can appear in a list.
+// The box is a door to the universal search; the tabs pick a half; and the
+// chip rail under them is where filtering lives now. The first chip is
+// Filters, which opens the sheet holding everything (the city, and whatever
+// studios grow later); the chips after it are the reach-for narrowings in the
+// open. Every chip is multiselect: picking Yoga and Pilates means either, and
+// the count on the Filters chip adds up as picks accumulate, so you can see
+// filters are on without opening anything.
 export function DiscoverList({
   coaches,
   studios = [],
@@ -28,27 +30,46 @@ export function DiscoverList({
   hideBack?: boolean;
 }) {
   const [tab, setTab] = useState<"people" | "studios">("people");
-  const [coachesOnly, setCoachesOnly] = useState(false);
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
-  // pill would be reporting a choice nobody made.
+  // Filters chip would be reporting a choice nobody made.
   void myCity;
   const [city, setCity] = useState<string | null>(null);
-  const [discipline, setDiscipline] = useState<string | null>(null);
+  // Which kind of person: coach, member, either. Multiselect, so both on is
+  // the same list as both off, which keeps the toggle harmless.
+  const [kinds, setKinds] = useState<Set<"coach" | "fan">>(new Set());
+  const [types, setTypes] = useState<Set<string>>(new Set());
   const [acceptingOnly, setAcceptingOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  const toggleKind = (k: "coach" | "fan") =>
+    setKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  const toggleType = (t: string) =>
+    setTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+
   const shown = useMemo(() => {
     return coaches.filter((c) => {
-      if (coachesOnly && c.kind !== "coach") return false;
+      if (kinds.size > 0 && !kinds.has(c.kind === "coach" ? "coach" : "fan")) return false;
       if (city && c.location !== city) return false;
-      if (discipline && !c.disciplines.includes(discipline)) return false;
+      // Multiselect means any-of: two picks widen to either, they don't
+      // demand both.
+      if (types.size > 0 && !c.disciplines.some((d) => types.has(d))) return false;
       // Someone looking for a personal trainer is looking for a yes, not a
       // waitlist. The coach already told us which they are.
       if (acceptingOnly && c.availability !== "accepting") return false;
       return true;
     });
-  }, [coaches, city, coachesOnly, discipline, acceptingOnly]);
+  }, [coaches, city, kinds, types, acceptingOnly]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
@@ -57,22 +78,20 @@ export function DiscoverList({
     return studios.filter((st) => {
       // One vocabulary across the directory, so the same pick narrows both
       // halves: the yoga teachers, and the places that offer yoga.
-      if (discipline && !st.types.includes(discipline)) return false;
+      if (types.size > 0 && !st.types.some((t) => types.has(t))) return false;
       return true;
     });
-  }, [studios, discipline]);
+  }, [studios, types]);
 
-  // Only what this lens can actually narrow, so the sheet never offers a
-  // filter that would empty the list on principle.
+  // Every live pick counts once, so the badge on Filters is the number of
+  // things you'd have to switch off to get the whole list back.
   const activeCount =
-    (tab === "studios" ? 0 : city ? 1 : 0) +
-    (discipline ? 1 : 0) +
-    (tab === "people" && coachesOnly ? 1 : 0) +
-    (tab === "people" && acceptingOnly ? 1 : 0);
+    types.size +
+    (tab === "people" ? (city ? 1 : 0) + kinds.size + (acceptingOnly ? 1 : 0) : 0);
   const clearAll = () => {
     setCity(null);
-    setDiscipline(null);
-    setCoachesOnly(false);
+    setKinds(new Set());
+    setTypes(new Set());
     setAcceptingOnly(false);
   };
   // What the lens in front of you can actually be narrowed by, and nothing
@@ -85,12 +104,12 @@ export function DiscoverList({
     else for (const st of studios) for (const t of st.types) seen.add(t);
     return [...seen].sort((a, b) => a.localeCompare(b));
   }, [coaches, studios, tab]);
+  // The kind chips only exist when the list mixes kinds: all coaches leaves
+  // them nothing to do.
+  const mixedKinds = coaches.some((c) => c.kind !== "coach");
 
   return (
     <>
-      {/* The page title, with the coaches-only switch directly across from
-          it. Only when the list mixes kinds; all coaches leaves the switch
-          nothing to do. */}
       {/* The box first, because searching is the thing people came to do. It
           is a door now, not a filter: tapping it opens the universal search,
           which covers both halves at once and the people you follow besides.
@@ -105,17 +124,17 @@ export function DiscoverList({
       </div>
 
       {/* No page title: the tab bar already says Discover. The halves are
-          underline tabs now, the same drawing a profile's sections wear, and
-          the quick chips ride under them: search, tabs, chips, one stack
-          across the top, so the reach-for filters are in sight rather than
-          behind the sheet. */}
+          underline tabs, the same drawing a profile's sections wear, and the
+          chips ride under them: search, tabs, chips, one stack across the
+          top, so every filter is in sight rather than behind a floating
+          pill. */}
       <div className="pubtabs distabs" aria-label="Discover sections">
         <button
           className={`pubtab${tab === "people" ? " sel" : ""}`}
           aria-current={tab === "people" ? "page" : undefined}
           onClick={() => {
             setTab("people");
-            setDiscipline(null);
+            setTypes(new Set());
           }}
         >
           People
@@ -125,45 +144,68 @@ export function DiscoverList({
           aria-current={tab === "studios" ? "page" : undefined}
           onClick={() => {
             setTab("studios");
-            setDiscipline(null);
+            setTypes(new Set());
           }}
         >
           Studios
         </button>
       </div>
 
-      {/* The one-tap narrowing, in the open: what this lens can be narrowed
-          by, scrolling off the edge. The sheet keeps the rest (the city, the
-          switches); a chip you can see is a chip you use. */}
-      {disciplines.length > 0 && (
-        <div className="dischips" aria-label="Filter by type">
-          {disciplines.map((d) => (
+      {/* Filters leads the rail on both halves: it opens the sheet holding
+          everything, and wears the count of every live pick. The chips after
+          it are the same filters in the open, one tap each. */}
+      <div className="dischips" aria-label="Filters">
+        <button
+          type="button"
+          className="chip chip-filters"
+          onClick={() => setFiltersOpen(true)}
+        >
+          <Icon name="tune" size={14} />
+          Filters
+          {activeCount > 0 && <span className="chip-n">{activeCount}</span>}
+        </button>
+        {tab === "people" && mixedKinds && (
+          <>
             <button
-              key={d}
               type="button"
-              className={`chip${discipline === d ? " sel" : ""}`}
-              aria-pressed={discipline === d}
-              onClick={() => setDiscipline(discipline === d ? null : d)}
+              className={`chip${kinds.has("coach") ? " sel" : ""}`}
+              aria-pressed={kinds.has("coach")}
+              onClick={() => toggleKind("coach")}
             >
-              {d}
+              Coaches
             </button>
-          ))}
-        </div>
-      )}
-
-      {/* The same floating pill a class uses for Book and Add: the one thing
-          you reach for over a long list, in the place your thumb already is. */}
-      <button
-        type="button"
-        className="classoverlay-cta disfilterpill"
-        onClick={() => setFiltersOpen(true)}
-      >
-        <span className="ovcta-btn">
-          <Icon name="tune" size={17} />
-          Filter {tab === "people" ? "people" : "studios"}
-          {activeCount > 0 && <span className="disfilterpill-n">{activeCount}</span>}
-        </span>
-      </button>
+            <button
+              type="button"
+              className={`chip${kinds.has("fan") ? " sel" : ""}`}
+              aria-pressed={kinds.has("fan")}
+              onClick={() => toggleKind("fan")}
+            >
+              Members
+            </button>
+          </>
+        )}
+        {tab === "people" && (
+          <button
+            type="button"
+            className={`chip${acceptingOnly ? " sel" : ""}`}
+            aria-pressed={acceptingOnly}
+            onClick={() => setAcceptingOnly((v) => !v)}
+          >
+            Available for clients
+          </button>
+        )}
+        {disciplines.map((d) => (
+          <button
+            key={d}
+            type="button"
+            className={`chip${types.has(d) ? " sel" : ""}`}
+            aria-pressed={types.has(d)}
+            onClick={() => toggleType(d)}
+          >
+            {d}
+          </button>
+        ))}
+      </div>
 
       {filtersOpen && (
         <div
@@ -205,6 +247,28 @@ export function DiscoverList({
               </>
             )}
 
+            {/* The same chips as the rail, in a grid instead of a scroll: the
+                sheet is the one place holding every filter, so the rail's
+                picks show here too and either place can change them. */}
+            {disciplines.length > 0 && (
+              <>
+                <label className="flabel">{tab === "people" ? "What they teach" : "What it offers"}</label>
+                <div className="typepick">
+                  {disciplines.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`chip${types.has(d) ? " sel" : ""}`}
+                      aria-pressed={types.has(d)}
+                      onClick={() => toggleType(d)}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             {tab === "people" && (
               <div className="settingslist disfilterlist">
                 <button
@@ -224,24 +288,43 @@ export function DiscoverList({
                     <span className="switch-knob" />
                   </span>
                 </button>
-                {coaches.some((c) => c.kind !== "coach") && (
-                  <button
-                    className="setrow"
-                    role="switch"
-                    aria-checked={coachesOnly}
-                    onClick={() => setCoachesOnly((v) => !v)}
-                  >
-                    <span className="setrow-ic">
-                      <Icon name="person_add" size={22} />
-                    </span>
-                    <span className="setrow-txt">
-                      <span className="t">Coaches only</span>
-                      <span className="s">Hide members from the list</span>
-                    </span>
-                    <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
-                      <span className="switch-knob" />
-                    </span>
-                  </button>
+                {mixedKinds && (
+                  <>
+                    <button
+                      className="setrow"
+                      role="switch"
+                      aria-checked={kinds.has("coach")}
+                      onClick={() => toggleKind("coach")}
+                    >
+                      <span className="setrow-ic">
+                        <Icon name="person_add" size={22} />
+                      </span>
+                      <span className="setrow-txt">
+                        <span className="t">Coaches</span>
+                        <span className="s">People who publish a schedule</span>
+                      </span>
+                      <span className={`switch${kinds.has("coach") ? " on" : ""}`} aria-hidden="true">
+                        <span className="switch-knob" />
+                      </span>
+                    </button>
+                    <button
+                      className="setrow"
+                      role="switch"
+                      aria-checked={kinds.has("fan")}
+                      onClick={() => toggleKind("fan")}
+                    >
+                      <span className="setrow-ic">
+                        <Icon name="groups" size={22} />
+                      </span>
+                      <span className="setrow-txt">
+                        <span className="t">Members</span>
+                        <span className="s">People who train</span>
+                      </span>
+                      <span className={`switch${kinds.has("fan") ? " on" : ""}`} aria-hidden="true">
+                        <span className="switch-knob" />
+                      </span>
+                    </button>
+                  </>
                 )}
               </div>
             )}
