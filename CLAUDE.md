@@ -329,6 +329,16 @@ whether they signed up, and the Schedule tag says which have a week to see.
 `.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
 row has to take it back or long gym names truncate into empty space.
 
+**Nobody is listed against their wishes.** The studio dots carry "Take this
+page down" (`StudioFeedback`'s `optout` mode, open to everyone signed in or
+not, because the owner probably has no account): a coach adding the place
+they teach is not the studio agreeing to be here, and the ask rides the same
+`suggestStudioEdit` pipe as a correction with "Take this page down." as its
+first line, so it lands in front of the admin unmistakably. It requires an
+email and an owner/manager claim, because an ask that can't be answered or
+verified can't be honoured. This is the ethos said as a button: never
+addicting also means never held.
+
 **A studio's photo is a rectangle, and that is how you tell it from a
 person.** The banner (`.profbanner`, 16:9 across the head, same lift as the
 circle it replaces) is the treatment the studio page led with before the one
@@ -346,7 +356,9 @@ gets one of the same sixty colours, derived from its id and therefore identical
 in the directory row and on its own page. A grey placeholder pin on every row
 was unreadable for exactly the reason a page of identical orange circles was.
 There is no `studios.avatarColor`: a studio has no picker, so the derived
-colour is the only one it can have.
+colour is the only one it can have. In the directory the shape rule holds at
+row size too: `.disrow-studio .disrow-av` is a rounded rectangle where a
+person's stays a circle.
 
 **Locations are one string per place.** Discover groups by the exact value, so
 `normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
@@ -477,11 +489,14 @@ would drop somebody silently. The word is "Sign in", everywhere, including the
 errors: it covers coming back and arriving for the first time, and two words
 for one door is two doors.
 
-**A bottom sheet is a surface, not a tray for cards.** `.sheet` wears the same
-glass a class overlay does, opaque enough to read against with a hint of the
-page it came up over, and a `.settingslist` inside one drops its own white
-block: rows sit straight on the sheet and the dividers do the separating. A
-white card inside a white card is a box drawn for its own sake.
+**A bottom sheet is a surface, not a tray for cards, and it is solid.**
+`.sheet` is plain white (`--card`, flipping with dark mode): it tried the
+class overlay's glass and the rows and their dividers went muddy against the
+tint, and a sheet is a thing you read and act on, so legibility beat the hint
+of the page beneath. The scrim already says where you came from. A
+`.settingslist` inside one drops its own white block: rows sit straight on
+the sheet and the dividers do the separating, because a white card inside a
+white card is a box drawn for its own sake.
 
 **Handing a profile on lives behind the face, not in a row of circles.**
 A person's share/copy/QR actions sit under the blown-up photo in `AvatarZoom`;
@@ -532,8 +547,10 @@ the two images (the schedule story and the profile card, each opening its
 builder); then the QR code pill; then Edit profile last, because it's the
 thing you do twice a year and the rail scrolls to it. Two pills per share
 were four pills for two pictures, which is how the rail earned its sheets.
-The calendar draws the member lists' paper cards, minus the coach chip,
-because every class here is theirs.
+The calendar draws the member lists' paper cards, minus the coach chip and
+minus the min-height that clears corner controls it doesn't have
+(`.evcards-tight`), because every class here is theirs and a card with dead
+air above the name is a card holding room for a button that never comes.
 
 **A coach's settings are the header's gear; the profile carries no door to
 somewhere else.** `AppHeader`'s `settings` prop (coach only: a member's rows

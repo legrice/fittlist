@@ -21,6 +21,10 @@ const REASONS = [
 
 const RELATIONS = ["I own it", "I manage it", "I coach here", "I train here", "Other"];
 
+// Taking a page down is an ask only the people who run the place can make,
+// so the chips narrow to the two claims that mean that.
+const OPTOUT_RELATIONS = ["I own it", "I manage it"];
+
 export function StudioFeedback({
   studioId,
   mode,
@@ -28,7 +32,7 @@ export function StudioFeedback({
   onDone,
 }: {
   studioId: string;
-  mode: null | "report" | "suggest";
+  mode: null | "report" | "suggest" | "optout";
   onClose: () => void;
   onDone: (msg: string) => void;
 }) {
@@ -61,6 +65,25 @@ export function StudioFeedback({
       }
       onClose();
       onDone("Thanks. We'll take a look.");
+    });
+
+  // The same pipe a suggestion rides, with the ask as its first line so it
+  // cannot be mistaken for a correction on the other end.
+  const sendOptout = () =>
+    start(async () => {
+      const res = await suggestStudioEdit(
+        studioId,
+        sgName,
+        sgEmail,
+        sgRelation,
+        `Take this page down.${sgMessage.trim() ? ` ${sgMessage.trim()}` : ""}`,
+      );
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that.");
+        return;
+      }
+      onClose();
+      onDone("Thanks. We'll be in touch and take it down.");
     });
 
   return (
@@ -179,6 +202,81 @@ export function StudioFeedback({
                 onClick={sendSuggestion}
               >
                 {pending ? "Sending…" : "Send suggestion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {mode === "optout" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Take this page down</h2>
+            <p className="lead">
+              This page exists because a coach who teaches here added it. That is not the
+              same as you wanting it here. If you run this studio and would rather not be
+              listed, tell us and we&rsquo;ll take it down; nobody is kept on fittlist.
+            </p>
+            <label className="flabel" htmlFor="ooName">Your name</label>
+            <input
+              id="ooName"
+              className="editinput"
+              type="text"
+              autoComplete="name"
+              placeholder="e.g. Jenny Ramos"
+              value={sgName}
+              onChange={(e) => setSgName(e.target.value)}
+            />
+            <label className="flabel" htmlFor="ooEmail">Your email</label>
+            <input
+              id="ooEmail"
+              className="editinput"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={sgEmail}
+              onChange={(e) => setSgEmail(e.target.value)}
+            />
+            <label className="flabel">Your connection to it</label>
+            <div className="relpick">
+              {OPTOUT_RELATIONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`relchip${sgRelation === r ? " sel" : ""}`}
+                  onClick={() => setSgRelation(sgRelation === r ? "" : r)}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <label className="flabel" htmlFor="ooMsg">
+              Anything we should know <span>· optional</span>
+            </label>
+            <textarea
+              id="ooMsg"
+              className="editinput"
+              rows={2}
+              maxLength={1000}
+              placeholder="e.g. We'd rather keep our schedule on our own site."
+              value={sgMessage}
+              onChange={(e) => setSgMessage(e.target.value)}
+            />
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={pending || !sgEmail.trim() || !sgRelation}
+                onClick={sendOptout}
+              >
+                {pending ? "Sending…" : "Ask us to take it down"}
               </button>
             </div>
           </div>

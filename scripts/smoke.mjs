@@ -1234,6 +1234,15 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   await fan.goBack();
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.locator(".disrow-studio").first().waitFor();
+  // A place is a rectangle, a person a circle: the same shape rule the
+  // profile heads follow, at row size.
+  {
+    const r = await fan
+      .locator(".disrow-studio .disrow-av")
+      .first()
+      .evaluate((e) => parseFloat(getComputedStyle(e).borderRadius));
+    if (r > 20) fail("a studio row's picture should be a rounded rectangle, radius " + r);
+  }
   await fan.locator(".disrow-studio").first().click();
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
@@ -1996,12 +2005,25 @@ await page.locator(".schedtools").waitFor();
   if (pills.length !== 4) fail("the rail should hold four pills, got " + pills.join("|"));
   if (!pills[3].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
 }
+// No corner controls here, so no min-height holding air above the name: the
+// card is as tall as what it says.
+{
+  const h = await page
+    .locator(".evcards .ps-event")
+    .first()
+    .evaluate((e) => e.getBoundingClientRect().height);
+  if (h > 105) fail("the You-tab card should hug its content, got " + h + "px tall");
+}
 // Share is one pill and a sheet with both images behind it.
 await page.locator(".schedtool", { hasText: "Share" }).nth(0).click();
 {
   const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
   if (rows.join("|") !== "Share your schedule|Share your profile")
     fail("the Share sheet should offer the schedule and the profile: " + rows.join("|"));
+  // Solid, not glass: the tint went muddy under rows and dividers, and a
+  // sheet is a surface you read.
+  const bg = await page.locator(".sheet").evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (bg !== "rgb(255, 255, 255)") fail("a bottom sheet should be solid white, got " + bg);
 }
 await page.locator(".sheetclose").first().click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
@@ -2150,6 +2172,23 @@ await page.getByText("Platforms, a turf strip").waitFor();
   if (await page.locator(".pubhead .profav").count())
     fail("the circle should make way for the banner once there is a photo");
   console.log("studio photo is a banner ok (a rectangle for a place, a circle for a face)");
+}
+// The way out. A coach adding a studio put it here, and that is not the
+// studio agreeing to be here: the dots offer the people who run the place a
+// door to ask for the page to come down, signed in or not.
+{
+  await page.locator(".ownermore").click();
+  await page.locator(".ownermenu .setrow", { hasText: "Take this page down" }).click();
+  await page.getByRole("heading", { name: "Take this page down" }).waitFor();
+  // The ask needs a claim and a way to reply, or it can't be honoured.
+  if (!(await page.getByRole("button", { name: "Ask us to take it down" }).isDisabled()))
+    fail("the ask should wait for an email and a claim");
+  await page.locator("#ooName").fill("Jenny Ramos");
+  await page.locator("#ooEmail").fill("jenny@ironbound.example");
+  await page.locator(".relpick .relchip", { hasText: "I own it" }).click();
+  await page.getByRole("button", { name: "Ask us to take it down" }).click();
+  await page.getByText("Thanks. We'll be in touch and take it down.").waitFor();
+  console.log("studio opt-out ok (the ask rides the suggestion pipe to the admin)");
 }
 // a class points at the studio's page, not straight at a map — in the sheet
 // as well as on the page behind it. The owner's own rows open the editor now,

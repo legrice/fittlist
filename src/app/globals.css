@@ -377,16 +377,16 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
      against this so it sits flush on the sheet's edge instead of floating
      above the padding box (which was leaving a gap under the save button). */
   --pad-b: calc(22px + env(safe-area-inset-bottom));
-  /* The same glass a class overlay wears: opaque enough to read against, with
-     a hint of the page it came up over. A flat panel severs the sheet from the
-     thing it is about. */
-  background: rgba(247, 244, 236, .86); color: var(--ink);
-  backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  /* Solid, not glass. The sheet tried the class overlay's tint and the rows
+     and their dividers went muddy against it; a sheet is a surface you read
+     and act on, so legibility wins over the hint of the page beneath. The
+     scrim behind it already says where you came from. */
+  background: var(--card); color: var(--ink);
   width: 100%; border-radius: 16px 16px 0 0;
   padding: 14px 20px var(--pad-b); animation: up .22s ease; max-height: 94%; overflow-y: auto;
   overscroll-behavior: contain; /* don't chain scroll to the page behind */
 }
-[data-mode="dark"] .sheet { background: rgba(20, 19, 16, .88); }
+[data-mode="dark"] .sheet { background: var(--card); }
 
 /* Inside a sheet, a list of rows is not a card: the sheet is already the
    surface, and a white block inside a white block is a box drawn for its own
@@ -3495,6 +3495,10 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; width: 48px; height: 48px; border-radius: 999px; object-fit: cover;
   background: #eae3d2; display: block;
 }
+/* A place is a rectangle and a person is a circle: the same shape rule the
+   profile heads follow, at row size, so the two halves of the directory read
+   apart before a word does. */
+.disrow-studio .disrow-av { border-radius: 10px; }
 .disrow-av-empty {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px;
@@ -4032,6 +4036,11 @@ button.ps-card { cursor: pointer; }
 /* Not on a profile: the name and tabs already pin there, and a date pinning
    under a bar of unknown height is a date behind it. */
 .pub .evcards .ps-daycol { position: static; }
+/* The coach's own calendar: no coach chip and no corner controls, so the
+   min-height that clears them elsewhere just left air above the name. The
+   card is as tall as what it says. Doubled class on purpose: the base
+   min-height rule sits later in the file and would win a tie. */
+.evcards.evcards-tight .ps-event { min-height: 0; }
 .evcards .ps-erow { position: relative; gap: 0; }
 .evcards .ps-event {
   /* align-items back to stretch: the base row rule centres its grid cells,

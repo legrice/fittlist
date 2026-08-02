@@ -27,7 +27,7 @@ export function StudioMenu({
   const [menuOpen, setMenuOpen] = useState(false);
   const [mindfulOpen, setMindfulOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [feedback, setFeedback] = useState<null | "report" | "suggest">(null);
+  const [feedback, setFeedback] = useState<null | "report" | "suggest" | "optout">(null);
   const [toastMsg, toastOn, toast] = useToast();
 
   const share = async () => {
@@ -122,6 +122,23 @@ export function StudioMenu({
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </button>
               )}
+              {/* The way out, for the people who run the place. A coach adding
+                  a studio put it here; that is not the studio agreeing to be
+                  here, and nobody is kept on the app against their wishes. */}
+              <button
+                className="setrow"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setFeedback("optout");
+                }}
+              >
+                <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Take this page down</span>
+                  <span className="s">Run this studio and don&rsquo;t want it listed?</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
             </div>
           </div>
         </div>
