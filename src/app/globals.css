@@ -653,31 +653,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .kindcheck-coaching.on .kindcheck-box { background: var(--si); }
 .kindcheck-added.on .kindcheck-box { background: var(--go); }
 .kindcheck-private.on .kindcheck-box { background: #5b6b8c; }
-/* The kind is the card's colour: the corner badge said it in a word, and the
-   word is the swatch on the filter row now. Ink goes light, the sub-lines
-   translucent, and the accent bar disappears into the wash. */
-.evcards .ps-event.ev-coaching { background: var(--si); border-color: var(--si); }
-.evcards .ps-event.ev-added { background: var(--go); border-color: var(--go); }
-.evcards .ps-event.ev-private { background: #5b6b8c; border-color: #5b6b8c; }
-.evcards .ps-event.ev-coaching, .evcards .ps-event.ev-added, .evcards .ps-event.ev-private,
-.evcards .ps-event.ev-coaching .ps-enm, .evcards .ps-event.ev-added .ps-enm,
-.evcards .ps-event.ev-private .ps-enm {
-  color: #fff;
-}
-.evcards .ps-event[class*="ev-"] .ps-estudio,
-.evcards .ps-event[class*="ev-"] .ps-edur,
-.evcards .ps-event[class*="ev-"] .ps-ap,
-.evcards .ps-event[class*="ev-"] .ps-ecoach-txt {
-  color: rgba(255, 255, 255, .82);
-}
-.evcards .ps-event[class*="ev-"] .ps-etime { color: #fff; }
-.evcards .ps-event[class*="ev-"] .ps-accent { display: none; }
-.evcards .ps-event[class*="ev-"] .ps-private,
-.evcards .ps-event[class*="ev-"] .ps-dupe {
-  background: rgba(255, 255, 255, .22); color: #fff;
-}
-/* The month, whole. Cells are buttons so a full day is a tap into the list;
-   past and out-of-month days are furniture, not doors. */
+/* The kind's colour is the accent bar, not a card wash: the calendars are
+   flat rows now, one look with Following, and the bar down the left says
+   Teaching, Going or Personal in the same colours the filter chips wear.
+   The chips stay the legend. (A full colour fill shipped for a night and
+   read as a poster wall, which is the same lesson the photo cards taught.) */
+.callist .ps-event.ev-coaching .ps-accent { background: var(--si); }
+.callist .ps-event.ev-added .ps-accent { background: var(--go); }
+.callist .ps-event.ev-private .ps-accent { background: #5b6b8c; }
+/* The month, whole and airy: no cell boxes, a hairline between week rows,
+   the day number big and centred with today filled in the brand orange, and
+   tinted pills (the kind's colour as a wash with the colour's own ink) so
+   the grid reads as a calendar rather than a wall of chips. Cells are
+   buttons so a full day is a tap into the list; past and out-of-month days
+   are furniture, not doors. */
 .monthwrap { margin-top: 4px; }
 .monthnav { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 6px; }
 .monthnav-b {
@@ -686,33 +675,39 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .monthhead {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
-  margin-bottom: 4px; text-align: center; font-size: 11px; font-weight: 700;
-  color: var(--ol);
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px; padding-bottom: 5px; text-align: center;
+  font-size: 11px; font-weight: 700; color: var(--ol);
 }
-.monthgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.monthgrid { display: grid; grid-template-columns: repeat(7, 1fr); }
 .monthday {
-  min-height: 84px; padding: 3px 2px; border-radius: 8px; border: 1px solid var(--line);
-  background: var(--card); display: flex; flex-direction: column; gap: 2px;
+  min-height: 96px; padding: 6px 2px 4px; border: none; border-radius: 0;
+  background: transparent; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 3px;
   align-items: stretch; text-align: left; overflow: hidden; cursor: pointer;
 }
+.monthday:nth-child(-n+7) { border-top: none; }
 .monthday:disabled { cursor: default; }
-.monthday.out { background: transparent; border-color: transparent; }
 .monthday.past { opacity: .45; }
-.monthday.today { border-color: var(--ink); border-width: 1.5px; }
-.monthday-n { font-size: 11px; font-weight: 700; color: var(--ink); padding: 1px 3px 0; }
-.monthday.today .monthday-n { color: var(--si); }
+.monthday-n {
+  width: 30px; height: 30px; margin: 0 auto 2px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--ink); padding: 0;
+}
+.monthday.today .monthday-n { background: var(--si); color: #fff; }
 .monthpill {
-  display: block; border-radius: 4px; padding: 1px 4px; font-size: 9.5px;
-  font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden;
+  display: block; border-radius: 5px; padding: 2px 4px; font-size: 10px;
+  font-weight: 700; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
 }
-.monthpill.ev-coaching { background: var(--si); }
-.monthpill.ev-added { background: var(--go); }
-.monthpill.ev-private { background: #5b6b8c; }
-.monthmore { font-size: 9.5px; font-weight: 700; color: var(--ol); padding: 0 4px; }
-[data-mode="dark"] .monthday { background: var(--card); }
-[data-mode="dark"] .monthday.out { background: transparent; }
+.monthpill.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.monthpill.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
+.monthpill.ev-private { background: rgba(91, 107, 140, .16); color: #47546e; }
+.monthmore { font-size: 10px; font-weight: 700; color: var(--ol); text-align: center; }
+[data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
+[data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
+[data-mode="dark"] .monthpill.ev-private { color: #9fb0d1; }
 /* The list's date rail: weekday over day number down the left, cards to the
    right. Today's number fills with the brand orange, the same "you are
    here" the month grid rings. The rail overrides the heading treatment the
@@ -3309,9 +3304,12 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 26px;
   color: #fff; background: var(--si);
 }
-/* The ring says picked, and it says it in the brand's orange: an ink ring on
-   a row of photographs read as a border, not a choice. */
-.feedav.on .feedav-img { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--si); }
+/* The ring says picked, in the coach's own accent: the same colour their
+   rows wear down the left, so picking a face lights everything theirs. The
+   All circle rings in ink (its button sets the variable). */
+.feedav.on .feedav-img {
+  box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--avring, var(--si));
+}
 .feedav-all {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
@@ -4287,6 +4285,47 @@ button.ps-card { cursor: pointer; }
    wears, because both mean the same commitment. */
 .evcard-add.on { background: var(--si); color: #fff; border-color: var(--si); }
 .evcard-add:active, .evcard-share:active { transform: scale(.93); }
+/* Following is flat rows again, not cards: the accent bar down the left is
+   the coach's own colour (the ring their picked avatar wears), and a wall
+   of white boxes hid it. The share and Add pair sits above the time in the
+   right column, smaller; the time column starts lower to make the room. */
+.feedagenda .ps-event {
+  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-start;
+  background: transparent; border-radius: 0; box-shadow: none;
+  padding: 16px 10px 16px 2px; border-bottom: 1px solid var(--line);
+}
+.feedagenda .ps-event:hover { box-shadow: none; }
+.feedagenda .ps-event:active { background: #f3ecdf; }
+.feedagenda .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
+.feedagenda .ps-event.goingon .ps-accent { width: 6px; }
+/* On the flat lists the mark is the filled ribbon and the thicker bar; the
+   card's green ring belongs to the card skin it came from. */
+.feedagenda .ps-event.goingon, .callist .ps-event.goingon { box-shadow: none; }
+.feedagenda .ps-erow { position: relative; gap: 0; }
+.feedagenda .evcard-add, .feedagenda .evcard-share {
+  top: 12px; bottom: auto; width: 30px; height: 30px;
+}
+.feedagenda .evcard-add { right: 6px; }
+.feedagenda .evcard-share { right: 44px; }
+.feedagenda .ps-etimecol { margin-top: 36px; }
+/* The calendars wear the same flat rows (.callist), with the kind's colour
+   on the bar. The share circle rides top-right above the time; the member's
+   remove X takes the same corner on their week. */
+.callist .ps-event {
+  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-start;
+  background: transparent; border-radius: 0; box-shadow: none;
+  padding: 14px 10px 14px 2px; border-bottom: 1px solid var(--line);
+}
+.callist .ps-event:hover { box-shadow: none; }
+.callist .ps-event:active { background: #f3ecdf; }
+.callist .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
+.callist .ps-erow { position: relative; gap: 0; }
+.callist .evcard-share { top: 10px; bottom: auto; width: 30px; height: 30px; right: 6px; }
+.callist .weekrow-x { position: absolute; top: 10px; right: 6px; z-index: 2; }
+.callist .ps-etimecol { margin-top: 34px; }
+/* Private stays a fact on the name line, not a dashed box: the flat row has
+   no box to dash. */
+.callist .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
 /* Share sits to the ribbon's left: hand the class on, then keep it. Alone
    (the owner's own class has nothing to add), it takes the corner itself. */
 .evcard-share { right: 62px; }

@@ -1639,30 +1639,33 @@ await fan.goto(BASE + "/feed");
 await fan.locator(".feedagenda .ps-erow").filter({ has: fan.locator(".ps-event.goingon") }).locator(".evcard-add.on").first().waitFor();
 if (await fan.locator(".feedagenda .ps-goingtag").count())
   fail("Following should carry no Added tag; the ribbon says it");
-// The card wears a whisper of a shadow, the added ribbon fills brand orange
-// rather than ink, and Share sits on the card to the ribbon's left.
+// Flat rows, not cards: no shadow, the coach's accent bar down the left,
+// the added ribbon filling brand orange with Share to its left, both
+// sitting above the time in the right column.
 {
   const card = await fan.evaluate(() => {
-    const ev = document.querySelector(".evcards .ps-event");
+    const ev = document.querySelector(".feedagenda .ps-event");
+    const bar = document.querySelector(".feedagenda .ps-accent");
     const add = document.querySelector(".evcard-add.on");
     const share = document.querySelector(".evcard-share");
     return {
       shadow: getComputedStyle(ev).boxShadow,
+      barW: bar ? bar.getBoundingClientRect().width : 0,
       addBg: add ? getComputedStyle(add).backgroundColor : null,
       addX: add?.getBoundingClientRect().x ?? null,
       shareX: share?.getBoundingClientRect().x ?? null,
+      shareY: share?.getBoundingClientRect().y ?? null,
+      timeY: document.querySelector(".feedagenda .ps-etimecol")?.getBoundingClientRect().y ?? null,
     };
   });
-  if (card.shadow === "none") fail("a class card should carry a small shadow");
+  if (card.shadow !== "none") fail("a Following row is flat, not a card: " + card.shadow);
+  if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
   if (card.addBg !== "rgb(221, 106, 53)")
     fail("the added ribbon should fill brand orange, got " + card.addBg);
   if (card.shareX === null || card.shareX >= card.addX)
     fail("the share button should sit left of the ribbon");
-}
-// The day heading pins under the header while its cards scroll.
-{
-  const pos = await fan.evaluate(() => getComputedStyle(document.querySelector(".evcards .ps-daycol")).position);
-  if (pos !== "sticky") fail("day headings on the card lists should be sticky, got " + pos);
+  if (card.shareY === null || card.timeY === null || card.shareY >= card.timeY)
+    fail("the actions should sit above the time");
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
@@ -2160,10 +2163,10 @@ if (await page.locator(".schedtools").count())
 // because the date rail took a slice of the card's width.
 {
   const h = await page
-    .locator(".evcards .ps-event")
+    .locator(".callist .ps-event")
     .first()
     .evaluate((e) => e.getBoundingClientRect().height);
-  if (h > 130) fail("the Schedule-tab card should hug its content, got " + h + "px tall");
+  if (h > 130) fail("the Schedule-tab row should hug its content, got " + h + "px tall");
 }
 // You is the person: the account screen as a page, cards for the shares.
 await page.locator(".navtab", { hasText: "You" }).click();

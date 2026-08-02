@@ -79,7 +79,13 @@ export function ClassRow({
 }) {
   const inner = (
     <>
-      <span className="ps-accent" style={{ background: item.coachColor }} aria-hidden="true" />
+      {/* The coach's colour on merged lists; on your own calendar the kind
+          colours the bar through CSS, and an inline value would override it. */}
+      <span
+        className="ps-accent"
+        style={item.kind ? undefined : { background: item.coachColor }}
+        aria-hidden="true"
+      />
       {/* Who first, then what, then where: on a list drawn from more than one
           coach, the coach is how you place the class. */}
       <span className="ps-ebody">

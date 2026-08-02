@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
@@ -153,6 +153,7 @@ export function FeedAgenda({
           type="button"
           className={`feedav${sel.size === 0 ? " on" : ""}`}
           aria-pressed={sel.size === 0}
+          style={{ "--avring": "var(--ink)" } as CSSProperties}
           onClick={() => setSel(new Set())}
         >
           <span className="feedav-img feedav-all" aria-hidden="true">
@@ -166,6 +167,9 @@ export function FeedAgenda({
             type="button"
             className={`feedav${sel.has(c.id) ? " on" : ""}`}
             aria-pressed={sel.has(c.id)}
+            // The ring is the coach's own accent, the same colour their rows
+            // wear down the left: picking a face lights everything theirs.
+            style={{ "--avring": c.color } as CSSProperties}
             onClick={() => toggle(c.id)}
           >
             <AgendaAvatar photo={c.photo} name={c.name} cls="feedav-img" color={c.color} />
@@ -207,8 +211,11 @@ export function FeedAgenda({
         // The row is the shared one; what wraps it here is the swipe. No pin on
         // the studio line: a merged row already carries the coach's face above
         // the class name, and a second glyph under it is one mark too many.
+        // Flat rows, not cards: the accent bar down the left is the coach's
+        // own colour, the same one their avatar's ring wears when picked, and
+        // a wall of white cards hid it.
         <Agenda
-          className="feedagenda evcards"
+          className="feedagenda"
           days={shown.map((d) => ({
             iso: d.iso,
             label: d.label,

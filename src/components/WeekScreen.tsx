@@ -266,7 +266,7 @@ export function WeekScreen({
                 personal one has no page, so it opens its own sheet. */}
             <ClassOpener handle="">
               <Agenda
-                className="evcards"
+                className="callist"
                 todayIso={todayIso}
                 days={shown.map((d) => ({
                   iso: d.iso,

@@ -408,7 +408,7 @@ export function ScheduleScreen({
           <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
         ) : (
           <>
-            <div className="ps-week ps-agenda evcards evcards-tight">
+            <div className="ps-week ps-agenda callist">
               {days.map((d) => (
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup dayrail-group">
                   <DayRail iso={d.iso} todayIso={todayIso} />
@@ -434,6 +434,9 @@ export function ScheduleScreen({
                                 : setGoingOpen({ base: p.handle, classId: p.classId, iso: p.iso })
                             }
                           >
+                            {/* The bar the kind colours; without it the grid's
+                                first column swallowed the body. */}
+                            <span className="ps-accent" aria-hidden="true" />
                             <span className="ps-ebody">
                               {!p.personal && p.coachName.trim() && (
                                 <span className="ps-ecoach">
@@ -505,11 +508,9 @@ export function ScheduleScreen({
                                 : edit(c, d.iso)
                           }
                         >
-                          <span
-                            className="ps-accent"
-                            style={c.isPublic ? { background: myAccent } : undefined}
-                            aria-hidden="true"
-                          />
+                          {/* The kind colours the bar (CSS by ev-class); an
+                              inline colour here would override it. */}
+                          <span className="ps-accent" aria-hidden="true" />
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}

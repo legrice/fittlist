@@ -1120,30 +1120,26 @@ would mean knowing what colour it sits on. The tick is a hole in one
 `fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
 the dark pill, the card and the tab bar alike.
 
-**A member's lists draw the class as paper with a hairline and a whisper of
-a shadow, and nothing else.** `.evcards` on its `Agenda` callers (Plans,
-Following, and the coach's own calendar) turns the shared `.ps-event` row
-into a compact white card, as tall as what it says: ink text, a `--line`
-stroke, a very small shadow (the same on every class listing, so the lists
-agree), no colour, no photograph. The card tried a photo per row, then the
-class type's colour, and both read as a poster wall rather than a week (the
-same class twice in a row was the same picture twice); the overlay and the
-share card keep the photo, where one class has the whole screen. The actions
-sit on the card but are siblings of it, never children (a button inside a
-link is not a thing): the remove X top right on Plans, and on Following the
-share circle and the Add ribbon bottom right, the ribbon filling brand
-orange (`--si`) when it's in, because the one mark of colour a card earns
-should be the same orange every Add wears. The Going badge sits in the
-ribbon's corner on a member's week, which is why the card carries a
-min-height on the shortest rows. The day headings on these lists are sticky (`.evcards .ps-daycol`,
-pinned under the brandbar with paper behind them, and switched off under
-`.pub`, where the name and tabs already pin), because a wall of same-shaped
-cards loses its dates as it scrolls. A coach's public profile draws the same
-cards (`ClassCardActions` in the corner: share for everyone including the
-owner, the Add ribbon only for a member it could belong to, with the
-viewer's marks loaded server-side so the ribbon starts right). The studio
-page and the rota keep the flat rows on purpose: those are working surfaces
-where density is the point.
+**The lists are flat rows with an accent bar; only a public profile still
+draws cards.** Following (`.feedagenda`) and both calendars (`.callist`)
+strip the card skin from the shared `.ps-event` row: transparent ground, a
+hairline under each row, and the bar down the left carrying the colour
+that matters there (the coach's own on Following, the same one their
+avatar's ring wears when picked on the strip via `--avring`, with the All
+circle ringing in ink; the kind's on the calendars). The share circle and
+Add ribbon sit above the time in the right column, smaller, and the
+member's remove X takes that corner on their week; all of them are
+siblings of the row, never children, because a button inside a link is not
+a thing. The ribbon fills brand orange (`--si`) when a class is in,
+because the one mark the actions earn should be the same orange every Add
+wears. The card look survives on a coach's public profile (`.evcards`,
+paper with a whisper of a shadow, `ClassCardActions` in the corner: share
+for everyone including the owner, the Add ribbon only for a member it
+could belong to, with the viewer's marks loaded server-side so the ribbon
+starts right); a photo per row was tried and read as a poster wall, so the
+overlay and the share card keep the photo, where one class has the whole
+screen. The studio page and the rota keep dense rows on purpose: those are
+working surfaces where density is the point.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
@@ -1225,23 +1221,26 @@ appointment is not a plan you train by. Editing an existing personal row
 keeps the full class form: the row doesn't record which flavor typed it,
 and hiding filled-in fields would eat data.
 
-**The colour is the badge: a card's background says your relationship to
-the row, and the checkmarks are the legend.** Teaching wears the brand
-orange (`--si`), Going the same green a yes always is (`--go`), Personal a
-slate blue, on both calendars and the Month grid's pills alike (`ev-*` on
-`.ps-event` and `.monthpill`). The corner badges (`.ps-corner`,
-`.ps-goingtag`) said the same thing in words and came off with the colours'
-arrival. The filters are colour-coded checkmarks (`KindChecks`,
-`.kindcheck`) in place of the old All-led tabs: each chip's swatch is the
-colour its rows wear, so the row is the legend and the filter at once. They
-multi-select, everything is on on arrival (the off-set resets; a filter is
-a way of looking, not a fact worth storing), unchecking all empties the
-list honestly, and the row only renders when the calendar holds at least
-two kinds. Colour by relationship is not the per-class colour that shipped
-once and read as a poster wall: three meanings, three colours, stable
-everywhere. Shift rides the name line now (a fact about which kind of
-yours it is), with Private and Duplicate: facts about the class, not about
-why it's yours. Saved is still not a word a class wears.
+**The colour is the badge: the accent bar says your relationship to the
+row, and the checkmarks are the legend.** Teaching wears the brand orange
+(`--si`), Going the same green a yes always is (`--go`), Personal a slate
+blue, on the calendars' flat rows (`.callist`, the same flat treatment
+Following wears, with the bar coloured by `ev-*` on `.ps-event`) and as
+tinted washes on the Month grid's pills (`.monthpill`, the colour at 16%
+with its own darker ink). A full card fill shipped for a night and read as
+a poster wall, which is the lesson the photo cards taught first; the bar
+says the same thing at a glance without shouting. The corner badges
+(`.ps-corner`, `.ps-goingtag`) said it in words and are gone. The filters
+are colour-coded checkmarks (`KindChecks`, `.kindcheck`) in place of the
+old All-led tabs: each chip's swatch is the colour its rows wear, so the
+row is the legend and the filter at once. They multi-select, everything is
+on on arrival (the off-set resets; a filter is a way of looking, not a
+fact worth storing), unchecking all empties the list honestly, and the row
+only renders when the calendar holds at least two kinds. Colour by
+relationship is three meanings, three colours, stable everywhere. Shift
+rides the name line (a fact about which kind of yours it is), with Private
+and Duplicate: facts about the class, not about why it's yours. Saved is
+still not a word a class wears.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the
