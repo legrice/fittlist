@@ -1180,18 +1180,37 @@ classes they added, and their own private entries, one day list in time
 order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
 (weekly personal entries expand across a nine-week horizon now, because a
 recurring entry that only showed its next date read as a class that
-stopped); `mySchedule()` is the coaching half. On a coach's calendar every
-non-personal row wears a corner badge (Teaching, Shift, Going; see the
-badge doctrine above), and tapping does what the row is (a teaching row
-opens the editor, a shift or a Going row opens the class sheet, a personal
-row opens `PlanSheet`). Still no month grid, no empty days, no time gutter: it holds
-only what is real. Following is everyone you follow; Schedule is you. Those
-stay legibly different.
+stopped); `mySchedule()` is the coaching half. Every row wears its
+relationship as its colour (see the colour doctrine below), and tapping
+does what the row is (a teaching row opens the editor, a shift or a Going
+row opens the class sheet, a personal row opens `PlanSheet`). The List view
+holds only what is real: no empty days, no time gutter. Following is
+everyone you follow; Schedule is you. Those stay legibly different.
 
-**The plus sits across from the calendar's name, and it asks which kind
-first.** `.calhead-add` is the orange pill on the Your schedule line of
-both calendars; it floated over the list for a while (`.fab-plus`), and the
-corner it held is being kept clear for a full-size calendar someday. Both
+**The calendar has views, and the month is its name.** `CalendarBits.tsx`
+is the chrome both calendars share: the month as the title where "Your
+schedule" was, a circled menu beside it opening the view sheet (List and
+Month for now; Day and Week are the next phase), and the Month grid itself.
+The view is a preference (`fl-cal-view`, localStorage) and survives
+arrival, unlike the filters. Month draws the anchor month whole with a
+colour pill per class, chevrons to move months, today ringed; past days
+dim rather than drop, which is the one place the ended-filter deliberately
+does not apply, because a grid you can look back across is a record. A tap
+on a future day lands on that day in the List (`day-{iso}` ids on the day
+groups are the landing spots). The grid's plans data comes from `myWeek`'s
+nine-week horizon, so months beyond it show teaching rows only. The List's
+dates sit in a left rail (`DayRail`: weekday over day number, today's
+number filled with the brand orange), not as heading rows; Following keeps
+the headings, because a merged list of many coaches reads by day name.
+
+**The calendar keeps two doors on screen: Today and the plus.**
+`CalBottomBar` floats them over every view on both calendars, Today bottom
+left (back to now, in the List) and the orange plus bottom right
+(`.calfab-add`), because the two things a calendar is for should never be
+a scroll away. The plus has now been a floating button, a header pill and
+a floating button again; this time it came back with a companion, which is
+what the corner was being kept clear for. The plus asks which kind
+first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class
 you're coaching, a class you're going to, anything else), a member's the
@@ -1206,31 +1225,23 @@ appointment is not a plan you train by. Editing an existing personal row
 keeps the full class form: the row doesn't record which flavor typed it,
 and hiding filled-in fields would eat data.
 
-**The calendar's slices are tabs under the rail, and they say your
-relationship to the event, not who owns the row.** `.caltabs` is the same
-underline row every other screen wears: All, then Teaching (every class you
-work, whether you made it or a gym assigned it), Going (classes you attend
-but don't teach), Personal (your own private entries). A member's row skips
-Teaching. It replaced a floating glass circle of switches (`fl-cal-hide`),
-for the same reason Discover's rail replaced its pill: a control you can
-see is a control you use, and switches that hide things leave a list you
-can't explain. The row only renders when the calendar holds at least two
-kinds (a tab that can't narrow is furniture), the pick resets to All on
-arrival rather than persisting, and a tab whose kind leaves the calendar
-falls back to All rather than to nothing. Saved is still not a word a class
-wears.
-
-**The badge holds the card's corner and says why the event is on your
-calendar.** `.ps-corner`, fixed top-right on the coach's calendar, so it
-neither rides the class name nor moves with its length: Teaching (you made
-it), Shift (a gym assigned it), Going (you're attending someone else's).
-The two teaching badges split what the tab folds together, because "why is
-this here" and "which kind of mine is it" are different questions. A
-personal row carries no badge at all: the tab already answers, and a chip
-that repeats the obvious is noise. On a member's week the Going badge keeps
-the bottom corner (`.ps-goingtag`, same green), because the remove X owns
-the top one there. Private and Duplicate stay on the name line: they're
-facts about the class, not about why it's yours.
+**The colour is the badge: a card's background says your relationship to
+the row, and the checkmarks are the legend.** Teaching wears the brand
+orange (`--si`), Going the same green a yes always is (`--go`), Personal a
+slate blue, on both calendars and the Month grid's pills alike (`ev-*` on
+`.ps-event` and `.monthpill`). The corner badges (`.ps-corner`,
+`.ps-goingtag`) said the same thing in words and came off with the colours'
+arrival. The filters are colour-coded checkmarks (`KindChecks`,
+`.kindcheck`) in place of the old All-led tabs: each chip's swatch is the
+colour its rows wear, so the row is the legend and the filter at once. They
+multi-select, everything is on on arrival (the off-set resets; a filter is
+a way of looking, not a fact worth storing), unchecking all empties the
+list honestly, and the row only renders when the calendar holds at least
+two kinds. Colour by relationship is not the per-class colour that shipped
+once and read as a poster wall: three meanings, three colours, stable
+everywhere. Shift rides the name line now (a fact about which kind of
+yours it is), with Private and Duplicate: facts about the class, not about
+why it's yours. Saved is still not a word a class wears.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the

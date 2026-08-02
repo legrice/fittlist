@@ -307,6 +307,10 @@ export async function StudioView({
             />
           }
           actions={
+            /* Nothing to offer, no row: an empty pills row still spends its
+               margin, which read as stray space between the address and the
+               tabs on a studio with no contact ways. */
+            !hasContact ? null : (
             <div className="profacts">
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
@@ -329,6 +333,7 @@ export async function StudioView({
               {/* No share circle up here any more: the dots carry Share
                   this studio, and one door beats two. */}
             </div>
+            )
           }
         >
 

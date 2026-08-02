@@ -201,6 +201,12 @@ export function fmtDays(days: number[]): string {
 // these three functions.
 const APP_TZ = process.env.NEXT_PUBLIC_APP_TZ || "America/New_York";
 
+/** The app's timezone, for anything that writes a wall-clock time somewhere
+ *  else (the Google Calendar sync): a class's "6:00" means 6:00 here. */
+export function appTz(): string {
+  return APP_TZ;
+}
+
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
 export function todayIso(now = new Date()): string {

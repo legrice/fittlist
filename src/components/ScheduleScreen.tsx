@@ -16,6 +16,20 @@ import { setGoing } from "@/app/actions/going";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
+import {
+  CalBottomBar,
+  CalHead,
+  DayRail,
+  KindChecks,
+  MonthGrid,
+  ViewSheet,
+  loadCalView,
+  monthLabel,
+  saveCalView,
+  type CalKind,
+  type CalView,
+  type MonthCellItem,
+} from "@/components/CalendarBits";
 import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { Toast, useToast } from "@/components/Toast";
@@ -89,10 +103,35 @@ export function ScheduleScreen({
   // the moment is warm.
   const [live, setLive] = useState<{ id: string; name: string } | null>(null);
   const [pBusy, setPBusy] = useState(false);
-  // Which slice of the calendar you're looking at: one tab under the rail,
-  // not a stack of switches behind a circle. All on arrival, every time; a
-  // tab is a way of looking, not a fact worth storing.
-  const [calTab, setCalTab] = useState<"all" | "coaching" | "added" | "private">("all");
+  // Which kinds are showing. The set stores what's switched OFF, so the
+  // default is everything without waiting to learn what the calendar holds.
+  // Off on arrival resets: a filter is a way of looking, not a fact worth
+  // storing. The view is different: a preference, so it survives arrival.
+  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
+  const kindOn = (k: CalKind) => !offKinds.has(k);
+  const toggleKind = (k: CalKind) =>
+    setOffKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  const [view, setView] = useState<CalView>("list");
+  useEffect(() => setView(loadCalView()), []);
+  const [viewSheet, setViewSheet] = useState(false);
+  // The month the grid is looking at; entering Month starts at today's.
+  const [ym, setYm] = useState(todayIso.slice(0, 7));
+  const pickView = (v: CalView) => {
+    if (v === "month") setYm(todayIso.slice(0, 7));
+    setView(v);
+    saveCalView(v);
+  };
+  const moveMonth = (delta: number) =>
+    setYm((cur) => {
+      const [y, m] = cur.split("-").map(Number);
+      const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    });
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   // The coach's own colour marks the classes they teach.
   const myAccent = avatarColor({ id: userId, avatarColor: myColor });
@@ -209,18 +248,15 @@ export function ScheduleScreen({
     const [h, m] = p.hm.split(":").map(Number);
     return ((h % 12) + (p.ap === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
-  // A tab is only offered where it can narrow something: which kinds this
+  // A filter is only offered where it can narrow something: which kinds this
   // calendar actually holds. Coaching covers shifts too; a shift is you
   // working, whoever owns the row.
   const presentKinds = useMemo(() => {
-    const seen = new Set<"coaching" | "added" | "private">();
+    const seen = new Set<CalKind>();
     if (classes.length) seen.add("coaching");
     for (const d of plans) for (const p of d.items) seen.add(p.personal ? "private" : "added");
     return seen;
   }, [classes, plans]);
-  // The kind a stale tab named can leave the calendar (the last added class
-  // passes, say); the list falls back to everything rather than to nothing.
-  const tab = calTab === "all" || presentKinds.has(calTab) ? calTab : "all";
 
   const days = useMemo(() => {
     const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
@@ -231,29 +267,69 @@ export function ScheduleScreen({
       d.setUTCDate(start.getUTCDate() + i);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7; // 0 = Monday
-      const items =
-        tab === "all" || tab === "coaching"
-          ? classes
-              .filter((c) => runsOn(c, iso, dow))
-              // Been and gone: once the hour has passed the row comes off,
-              // here and on every other schedule, the same as a member's week.
-              .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
-              .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-          : [];
+      const items = kindOn("coaching")
+        ? classes
+            .filter((c) => runsOn(c, iso, dow))
+            // Been and gone: once the hour has passed the row comes off,
+            // here and on every other schedule, the same as a member's week.
+            .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+            .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+        : [];
       // The other half of your calendar: the classes you added and your own
       // entries, from the same loader the member calendar reads.
-      const extras =
-        tab === "coaching"
-          ? []
-          : (plansByIso.get(iso) ?? []).filter(
-              (p) => tab === "all" || (tab === "private") === !!p.personal,
-            );
+      const extras = (plansByIso.get(iso) ?? []).filter((p) =>
+        kindOn(p.personal ? "private" : "added"),
+      );
       if (items.length || extras.length) {
         out.push({ iso, label: fmtDayHeader(iso), items, extras }); // "Monday — Jul 20"
       }
     }
     return out;
-  }, [classes, plans, todayIso, weeks, tab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes, plans, todayIso, weeks, offKinds]);
+
+  // The month, whole: every date the anchor month holds, kinds filtered the
+  // same way. No ended-filter here: the grid can look back, and a day that
+  // has been dims rather than disappears.
+  const monthItems = useMemo(() => {
+    const map = new Map<string, MonthCellItem[]>();
+    const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
+    const [y, m] = ym.split("-").map(Number);
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    for (let day = 1; day <= last; day++) {
+      const iso = `${ym}-${String(day).padStart(2, "0")}`;
+      const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+      const rows: MonthCellItem[] = [];
+      if (kindOn("coaching"))
+        for (const c of classes)
+          if (runsOn(c, iso, dow))
+            rows.push({ kind: "coaching", name: c.name, at: timeToMinutes(c.startTime) });
+      for (const p of plansByIso.get(iso) ?? []) {
+        const k: CalKind = p.personal ? "private" : "added";
+        if (kindOn(k)) rows.push({ kind: k, name: p.name, at: planMinutes(p) });
+      }
+      rows.sort((a, b) => a.at - b.at);
+      if (rows.length) map.set(iso, rows);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes, plans, ym, offKinds]);
+
+  // A day tapped on the grid lands on that day in the list: make sure the
+  // list reaches it, switch, and scroll once it's painted.
+  const openDay = (iso: string) => {
+    const diff = Math.ceil(
+      (new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${todayIso}T00:00:00Z`).getTime()) /
+        86400000,
+    );
+    setWeeks((w) => Math.min(MAX_WEEKS, Math.max(w, Math.ceil((diff + 1) / 7) + 1)));
+    pickView("list");
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      ),
+    );
+  };
 
   // Hand a row on: the class page's link through the system share sheet,
   // clipboard where there isn't one. A shift shares the gym's page for it,
@@ -289,49 +365,35 @@ export function ScheduleScreen({
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The calendar leads: the tools rail that rode across its top lives
-            on the You tab now, and the Schedule tab is the week and nothing
-            else. */}
-        <div className="calhead-row">
-          <h2 className="calhead">Your schedule</h2>
-          {/* The plus, across from the calendar's name: it floated for a
-              while, and the corner it held is being kept clear for a full
-              size calendar someday. It still asks which hat first. */}
-          <button
-            className="calhead-add"
-            onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
-          >
-            <Icon name="add" size={15} /> Add
-          </button>
-        </div>
-        {/* The slices of the calendar, as the same underline tabs a profile's
-            sections wear. All leads, then only the kinds this calendar
-            actually holds; one kind would make All a tab with no job, so the
-            row waits for a second. */}
-        {presentKinds.size > 1 && (
-          <div className="pubtabs distabs caltabs" aria-label="Calendar filter">
-            {(
-              [
-                { k: "all" as const, t: "All" },
-                { k: "coaching" as const, t: "Teaching" },
-                { k: "added" as const, t: "Going" },
-                { k: "private" as const, t: "Personal" },
-              ]
-            )
-              .filter((x) => x.k === "all" || presentKinds.has(x.k))
-              .map((x) => (
-                <button
-                  key={x.k}
-                  className={`pubtab${tab === x.k ? " sel" : ""}`}
-                  aria-current={tab === x.k ? "page" : undefined}
-                  onClick={() => setCalTab(x.k)}
-                >
-                  {x.t}
-                </button>
-              ))}
-          </div>
-        )}
-        {!hasAnyClass && plans.length === 0 ? (
+        {/* The month is the calendar's name now, with the view menu beside
+            it. Adding lives on the floating plus below, with Today across
+            from it: the two things a calendar is for stay on screen. */}
+        <CalHead
+          label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+          onMenu={() => setViewSheet(true)}
+        >
+          {null}
+        </CalHead>
+        {/* The kind filters: colour-coded checkmarks, which are also the
+            legend for the colours the cards wear. Only when there is more
+            than one kind to tell apart. */}
+        <KindChecks
+          present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
+            presentKinds.has(k),
+          )}
+          on={new Set((["coaching", "added", "private"] as CalKind[]).filter(kindOn))}
+          onToggle={toggleKind}
+        />
+        {view === "month" ? (
+          <MonthGrid
+            ym={ym}
+            todayIso={todayIso}
+            items={monthItems}
+            onPrev={() => moveMonth(-1)}
+            onNext={() => moveMonth(1)}
+            onDay={openDay}
+          />
+        ) : !hasAnyClass && plans.length === 0 ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>
             <p>
@@ -348,8 +410,8 @@ export function ScheduleScreen({
           <>
             <div className="ps-week ps-agenda evcards evcards-tight">
               {days.map((d) => (
-                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
-                  <div className="ps-daycol">{d.label}</div>
+                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup dayrail-group">
+                  <DayRail iso={d.iso} todayIso={todayIso} />
                   <div className="ps-daycards">
                     {/* One day, both hats, in time order: the classes you
                         teach and the ones you're going to are one calendar. */}
@@ -364,7 +426,7 @@ export function ScheduleScreen({
                         return (
                           <div key={`plan-${d.iso}-${p.id}`} className="ps-erow">
                           <button
-                            className="ps-event"
+                            className={`ps-event ev-${p.personal ? "private" : "added"}`}
                             data-plan={p.personal ? "yours" : "going"}
                             onClick={() =>
                               p.personal
@@ -398,13 +460,6 @@ export function ScheduleScreen({
                               </span>
                               <span className="ps-edur">{p.durationMin} min</span>
                             </span>
-                            {/* The badge holds the card's corner, fixed, so it
-                                neither rides the name nor moves with its
-                                length. A personal row carries nothing: the
-                                tab already says why it's here. */}
-                            {!p.personal && (
-                              <span className="ps-corner ps-corner-going">Going</span>
-                            )}
                           </button>
                           {/* A sibling, never a child: a button inside a
                               button is not a thing. Yours-alone entries have
@@ -439,7 +494,7 @@ export function ScheduleScreen({
                       return (
                         <div key={`${d.iso}-${c.id}`} className="ps-erow">
                         <button
-                          className={`ps-event${c.isPublic ? "" : " ps-event-private"}`}
+                          className={`ps-event ev-coaching${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
                           onClick={() =>
                             c.shift
@@ -458,8 +513,11 @@ export function ScheduleScreen({
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}
-                              {/* Visibility and cleanup ride the name line;
-                                  the relationship badge holds the corner. */}
+                              {/* The colour says Teaching; the name line keeps
+                                  the facts about the class itself. Shift rides
+                                  here now: which kind of yours it is matters,
+                                  and the corner badge that said it is gone. */}
+                              {c.shift && <span className="ps-private">Shift</span>}
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
@@ -477,14 +535,6 @@ export function ScheduleScreen({
                             </span>
                             <span className="ps-edur">{c.durationMin} min</span>
                           </span>
-                          {/* Shift means the gym put you on it; Teaching means
-                              you made it. Both are you working, and the tab
-                              folds them together. */}
-                          {c.shift ? (
-                            <span className="ps-corner ps-corner-shift">Shift</span>
-                          ) : (
-                            <span className="ps-corner">Teaching</span>
-                          )}
                         </button>
                         {sharePath && (
                           <button
@@ -777,6 +827,19 @@ export function ScheduleScreen({
             </div>
           </div>
         </div>
+      )}
+
+      <CalBottomBar
+        raised={showFanView}
+        onToday={() => {
+          pickView("list");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+      />
+
+      {viewSheet && (
+        <ViewSheet view={view} onPick={pickView} onClose={() => setViewSheet(false)} />
       )}
 
       {showFanView && (

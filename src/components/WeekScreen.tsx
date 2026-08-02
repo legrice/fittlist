@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
 import {
   removePersonalClass,
@@ -11,6 +11,19 @@ import {
 } from "@/app/actions/personal";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Agenda, ClassRow } from "@/components/Agenda";
+import {
+  CalBottomBar,
+  CalHead,
+  KindChecks,
+  MonthGrid,
+  ViewSheet,
+  loadCalView,
+  monthLabel,
+  saveCalView,
+  type CalKind,
+  type CalView,
+  type MonthCellItem,
+} from "@/components/CalendarBits";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -28,12 +41,15 @@ import { Toast, useToast } from "@/components/Toast";
 // with the hats this viewer actually wears.
 export function WeekScreen({
   days,
+  todayIso,
   studios,
   templates,
   customTypes,
   lastUsed,
 }: {
   days: WeekDay[];
+  /** The app's today, from the app's clock, for the month header and grid. */
+  todayIso: string;
   /** The adder's ingredients. Adding a class you go to is the same form as
    *  adding one you teach, so it needs the same directory and the same memory
    *  of what you filled in last time. A coach never lands here (their
@@ -73,10 +89,41 @@ export function WeekScreen({
   const [inviteOpen, setInviteOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  // Which slice of the calendar: the same underline tabs the coach's /app
-  // wears, minus Coaching, which a member hasn't got. All on arrival, every
-  // time; a tab is a way of looking, not a fact worth storing.
-  const [calTab, setCalTab] = useState<"all" | "added" | "private">("all");
+  // Which kinds are showing: the same colour-coded checkmarks the coach's
+  // /app wears, minus Teaching, which a member hasn't got. Off on arrival
+  // resets; the view is a preference and survives it.
+  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
+  const kindOn = (k: CalKind) => !offKinds.has(k);
+  const toggleKind = (k: CalKind) =>
+    setOffKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  const [view, setView] = useState<CalView>("list");
+  useEffect(() => setView(loadCalView()), []);
+  const [viewSheet, setViewSheet] = useState(false);
+  const [ym, setYm] = useState(todayIso.slice(0, 7));
+  const pickView = (v: CalView) => {
+    if (v === "month") setYm(todayIso.slice(0, 7));
+    setView(v);
+    saveCalView(v);
+  };
+  const moveMonth = (delta: number) =>
+    setYm((cur) => {
+      const [y, m] = cur.split("-").map(Number);
+      const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    });
+  const openDay = (iso: string) => {
+    pickView("list");
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      ),
+    );
+  };
 
   const remove = (classId: string, iso: string, key: string, personalId?: string) => {
     setConfirm(null);
@@ -95,20 +142,37 @@ export function WeekScreen({
     });
   };
 
-  // A tab is only offered where it can narrow something: both kinds have to
-  // be on the calendar before the row appears at all.
-  const presentKinds = new Set(
+  // A filter is only offered where it can narrow something: both kinds have
+  // to be on the calendar before the row appears at all.
+  const presentKinds = new Set<CalKind>(
     days.flatMap((d) => d.items.map((i) => (i.personal ? "private" : "added"))),
   );
-  const tab = calTab === "all" || presentKinds.has(calTab) ? calTab : "all";
   const shown = days
     .map((d) => ({
       ...d,
       items: d.items
         .filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`])
-        .filter((i) => tab === "all" || (tab === "private") === !!i.personal),
+        .filter((i) => kindOn(i.personal ? "private" : "added")),
     }))
     .filter((d) => d.items.length > 0);
+  // The month, whole, from the same rows: past days dim rather than drop.
+  const monthItems = (() => {
+    const map = new Map<string, MonthCellItem[]>();
+    for (const d of shown) {
+      if (!d.iso.startsWith(ym)) continue;
+      const rows = d.items.map((i) => {
+        const [h, m] = i.hm.split(":").map(Number);
+        return {
+          kind: (i.personal ? "private" : "added") as CalKind,
+          name: i.name,
+          at: ((h % 12) + (i.ap === "pm" ? 12 : 0)) * 60 + (m || 0),
+        };
+      });
+      rows.sort((a, b) => a.at - b.at);
+      if (rows.length) map.set(d.iso, rows);
+    }
+    return map;
+  })();
   // The first named person on a personal entry, for the invite line.
   const namedCoach = days
     .flatMap((d) => d.items)
@@ -147,39 +211,32 @@ export function WeekScreen({
     // Share pill, which sits above it.
     <>
       <div className="weekwrap">
-        {/* The calendar leads: the rail that rode across its top lives on the
-            You tab now, and the Schedule tab is the week and nothing else. */}
-        <div className="calhead-row">
-          <h2 className="calhead">Your schedule</h2>
-          <button className="calhead-add" onClick={() => setAddMenu(true)}>
-            <Icon name="add" size={15} /> Add
-          </button>
-        </div>
-        {/* The slices of the calendar, under the rail: All, the classes you
-            added, your own private entries. Only when both kinds are here;
-            one kind would make All a tab with no job. */}
-        {presentKinds.size > 1 && (
-          <div className="pubtabs distabs caltabs" aria-label="Calendar filter">
-            {(
-              [
-                { k: "all" as const, t: "All" },
-                { k: "added" as const, t: "Going" },
-                { k: "private" as const, t: "Personal" },
-              ]
-            ).map((x) => (
-              <button
-                key={x.k}
-                className={`pubtab${tab === x.k ? " sel" : ""}`}
-                aria-current={tab === x.k ? "page" : undefined}
-                onClick={() => setCalTab(x.k)}
-              >
-                {x.t}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* The month is the calendar's name now, with the view menu beside
+            it; the rail lives on the You tab, so the week leads. */}
+        <CalHead
+          label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+          onMenu={() => setViewSheet(true)}
+        >
+          {null}
+        </CalHead>
+        {/* The kind filters: colour-coded checkmarks, also the legend for the
+            colours the cards wear. */}
+        <KindChecks
+          present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
+          on={new Set((["added", "private"] as CalKind[]).filter(kindOn))}
+          onToggle={toggleKind}
+        />
 
-        {shown.length === 0 ? (
+        {view === "month" ? (
+          <MonthGrid
+            ym={ym}
+            todayIso={todayIso}
+            items={monthItems}
+            onPrev={() => moveMonth(-1)}
+            onNext={() => moveMonth(1)}
+            onDay={openDay}
+          />
+        ) : shown.length === 0 ? (
           <div className="empty-block">
             <h2>Nothing added yet</h2>
             <p>
@@ -210,6 +267,7 @@ export function WeekScreen({
             <ClassOpener handle="">
               <Agenda
                 className="evcards"
+                todayIso={todayIso}
                 days={shown.map((d) => ({
                   iso: d.iso,
                   label: d.label,
@@ -223,10 +281,10 @@ export function WeekScreen({
                     coachName: i.coachName,
                     coachPhoto: i.coachPhoto,
                     coachColor: i.coachColor,
-                    // Going marks the classes you added; a personal row
-                    // carries nothing, because the tab already says why it
-                    // is here.
-                    tag: i.personal ? null : "Going",
+                    // The colour is the badge now: green for a class you
+                    // added, slate for your own entries. The chips above are
+                    // the legend.
+                    kind: i.personal ? ("private" as const) : ("added" as const),
                     // No green ring here: on this screen every row is one they
                     // added, and a mark on all of them says nothing.
                     on: false,
@@ -304,6 +362,18 @@ export function WeekScreen({
           </>
         )}
       </div>
+      <CalBottomBar
+        onToday={() => {
+          pickView("list");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onAdd={() => setAddMenu(true)}
+      />
+
+      {viewSheet && (
+        <ViewSheet view={view} onPick={pickView} onClose={() => setViewSheet(false)} />
+      )}
+
       {/* Which kind this one is. A class gets the full form; anything else
           gets the same form with the class-shaped parts put away. */}
       {addMenu && (

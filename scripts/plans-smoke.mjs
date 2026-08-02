@@ -72,8 +72,8 @@ await m.waitForTimeout(400);
 
 // one of their own
 await m.goto(BASE + "/week");
-await m.locator(".calhead-add").waitFor();
-await m.locator(".calhead-add").click();
+await m.locator(".calfab-add").waitFor();
+await m.locator(".calfab-add").click();
 await m.getByRole("heading", { name: "Add to your calendar" }).waitFor();
 await m.locator(".sheet .setrow", { hasText: "going to" }).click();
 await m.getByPlaceholder("e.g. Barbell Strength").fill("Swag by LWL");
@@ -105,10 +105,13 @@ await m.locator(".ps-agenda .ps-event").first().waitFor();
 const rows = await m.locator(".ps-erow").count();
 if (rows < 2) fail("expected the coach's class and the personal one, got " + rows);
 if (!(await m.locator(".ps-ecoachav").count())) fail("the coach's row should carry their face");
-if (!(await m.locator(".ps-goingtag", { hasText: "Going" }).count()))
-  fail("an added row should say Going in its corner");
-if (await m.locator(".ps-erow", { hasText: "Swag by LWL" }).locator(".ps-goingtag").count())
-  fail("a personal row carries no badge: the tab already says why it is here");
+// The colour is the badge now: green for added, slate for your own.
+if (!(await m.locator(".ps-event.ev-added").count()))
+  fail("an added row should wear the Going colour");
+if (!(await m.locator(".ps-erow", { hasText: "Swag by LWL" }).locator(".ps-event.ev-private").count()))
+  fail("a personal row should wear the Personal colour");
+if (await m.locator(".ps-goingtag").count())
+  fail("the corner badge should have become the card colour");
 if (await m.locator(".weekrow-nm").count()) fail("the old bespoke row markup should be gone");
 // Share lives on the You tab now; the calendar carries no rail and no pill.
 if (await m.locator(".weekshare").count()) fail("the floating share pill should be gone");

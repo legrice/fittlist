@@ -47,12 +47,12 @@ const openProfile = async (pg) => {
 // A tab is not a thing you close: leaving the account is going somewhere.
 const closeProfile = async (pg) => {
   await pg.goto(BASE + "/app");
-  await pg.locator(".calhead-add").waitFor();
+  await pg.locator(".calfab-add").waitFor();
 };
 
 // The plus asks which hat now, so opening the coach's form is two taps.
 const openCoachAdder = async (pg) => {
-  await pg.locator(".calhead-add").click();
+  await pg.locator(".calfab-add").click();
   await pg.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   await pg.locator(".sheet .setrow", { hasText: "coaching" }).click();
 };
@@ -204,7 +204,7 @@ await waitSchedule(page, 3);
 console.log("saved-class flow ok");
 
 // ---- edit in place: tap the Monday class, prefilled with its day, no new class
-await page.locator(".ps-daygroup", { hasText: "Monday" }).first().locator(".ps-event").first().click();
+await page.locator(".ps-daygroup", { hasText: "MON" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 const editLabel = (await page.locator(".publishwrap .btn").textContent()).trim();
 if (editLabel !== "Save changes") fail("edit save button should say Save changes: " + editLabel);
@@ -226,7 +226,7 @@ await page.waitForTimeout(700);
 console.log("edit ok (end-time length)");
 
 // ---- delete lives inside the edit sheet, behind a confirmation (delete Friday)
-await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
+await page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 await page.getByRole("button", { name: "Delete this class" }).click();
 // Barbell Strength runs Mon, Wed & Fri, so the confirm has to ask which is
@@ -249,7 +249,7 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 // class recurring across the calendar, so the count of rendered Fridays drops
 // by exactly one while the class itself stays.
 {
-  const fridayRow = page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first();
+  const fridayRow = page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first();
   const cid = await fridayRow.getAttribute("data-cid");
   const rowsFor = () => page.locator(`.ps-event[data-cid="${cid}"]`).count();
   const before = await rowsFor();
@@ -265,7 +265,7 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
   const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
-  await page.locator(".calhead-add").waitFor();
+  await page.locator(".calfab-add").waitFor();
   if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
@@ -277,10 +277,10 @@ console.log("cancel one occurrence ok (weeks either side survive, EXDATE in the 
 // One week renders at a time now, and this week's Friday was just cancelled,
 // so the next Friday lives behind View more.
 await page.locator(".viewmore").click();
-await page.locator(".ps-daygroup", { hasText: "Friday" }).first().waitFor();
+await page.locator(".ps-daygroup", { hasText: "FRI" }).first().waitFor();
 // The edit step just before this can recreate rows with fresh ids mid-flight,
 // so a delete can occasionally hit a stale row id. Retry the whole flow once.
-await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
+await page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first().click();
 await page.getByRole("heading", { name: "Edit class" }).waitFor();
 for (let attempt = 0; ; attempt++) {
   await page.getByRole("button", { name: "Delete this class" }).click();
@@ -290,14 +290,14 @@ for (let attempt = 0; ; attempt++) {
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
   if (!done) {
     await page.reload();
-    await page.locator(".calhead-add").waitFor();
+    await page.locator(".calfab-add").waitFor();
     done = (await scheduleClasses(page)) === 2;
   }
   if (done) break;
   if (attempt >= 1) fail("delete did not persist after retry");
   // the reload above reset the view to one week; bring Friday back
   await page.locator(".viewmore").click().catch(() => {});
-  await page.locator(".ps-daygroup", { hasText: "Friday" }).first().locator(".ps-event").first().click();
+  await page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first().click();
   await page.getByRole("heading", { name: "Edit class" }).waitFor();
 }
 console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
@@ -466,7 +466,7 @@ console.log("account + profile edit ok (back -> account)");
 // ---- the schedule has no pill strip: the owner's tools live behind the
 // three-dot button beside their name on the profile.
 await page.goto(BASE + "/app");
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 if (await page.locator(".dashlinks").count()) fail("the pill strip should be gone from the schedule");
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
@@ -769,7 +769,7 @@ console.log("stats ok");
 // ---- that follow dropped a notification; the single Updates bell carries the
 // combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
@@ -794,7 +794,7 @@ await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 if (await page.locator('a[href="/updates"] .inboxdot').count())
   fail("updates badge should clear after opening the feed");
 console.log("updates (notifications + messages) ok");
@@ -1145,7 +1145,7 @@ const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
 if (![301, 302, 303, 307, 308].includes(magicRes.status()))
   fail("magic link should redirect after setting the session, got " + magicRes.status());
 await page.goto(BASE + "/app");
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
@@ -1677,7 +1677,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
   await fan.waitForURL(/\/week/);
-  await fan.locator(".calhead-add").waitFor();
+  await fan.locator(".calfab-add").waitFor();
   if (!(await fan.locator(".navtab.on", { hasText: "Schedule" }).count()))
     fail("the Schedule tab should light on the member calendar");
   // It's in the tabs group, so the shell above it never unmounts.
@@ -1687,7 +1687,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if (await fan.locator(".schedtools").count())
     fail("the tools rail should have left the calendar for the You tab");
   // The big plus, same as every calendar.
-  await fan.locator(".calhead-add").waitFor();
+  await fan.locator(".calfab-add").waitFor();
   // The rows are the shared class rows now, the same ones Following draws.
   const rows = fan.locator(".ps-erow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
@@ -1748,7 +1748,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.goto(BASE + "/week");
   // The plus asks which kind: a class, or anything else. Never which hat;
   // a member has no coaching row to offer.
-  await fan.locator(".calhead-add").click();
+  await fan.locator(".calfab-add").click();
   await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   if (await fan.locator(".sheet .setrow", { hasText: "coaching" }).count())
     fail("a member should not be offered a coaching row");
@@ -1791,7 +1791,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
       if (!txt.includes(bit)) fail(`the plan row is missing "${bit}": ${txt}`);
   }
   // The details stayed at the studio: opening the form there again offers it.
-  await fan.locator(".calhead-add").click();
+  await fan.locator(".calfab-add").click();
   await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   await fan.locator(".sheet .setrow", { hasText: "going to" }).click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
@@ -1806,7 +1806,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 
   // Anything else: the same form with the class-shaped parts put away. No
   // studio, no type, no photo; a where, notes, and a when.
-  await fan.locator(".calhead-add").click();
+  await fan.locator(".calfab-add").click();
   await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   await fan.locator(".sheet .setrow", { hasText: "Anything else" }).click();
   await fan.getByRole("heading", { name: "New event" }).waitFor();
@@ -1825,17 +1825,21 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   // class path above already proves the in-place refresh.
   await fan.goto(BASE + "/week");
   await fan.locator(".ps-erow", { hasText: "Physio" }).first().waitFor();
-  // ...and it slots under the Personal slice, wearing no badge.
-  await fan.locator(".caltabs .pubtab", { hasText: "Personal" }).click();
+  // ...and it wears the Personal colour; unchecking Going leaves it standing.
   {
     const row = fan.locator(".ps-erow", { hasText: "Physio" }).first();
-    await row.waitFor();
     const txt = await row.innerText();
     if (!txt.includes("Downtown clinic")) fail(`the event row is missing its where: ${txt}`);
     if (/Going/.test(txt)) fail("a personal event wears no badge");
+    if (!(await row.locator(".ps-event.ev-private").count()))
+      fail("a personal event should wear the Personal colour");
   }
-  await fan.locator(".caltabs .pubtab", { hasText: "All" }).click();
-  console.log("an event ok (no class furniture, lands under Personal)");
+  await fan.locator('.kindcheck[data-kind="added"]').click();
+  await fan.locator(".ps-erow", { hasText: "Physio" }).first().waitFor();
+  if (await fan.locator(".ps-event.ev-added").count())
+    fail("unchecking Going should drop the added rows");
+  await fan.locator('.kindcheck[data-kind="added"]').click();
+  console.log("an event ok (no class furniture, wears the Personal colour)");
 
   // Nothing about it is public. Not on their profile, not in the feed.
   {
@@ -1904,7 +1908,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 {
   await page.goto(BASE + "/week");
   await page.waitForURL(/\/app/);
-  await page.locator(".calhead-add").click();
+  await page.locator(".calfab-add").click();
   await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   {
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
@@ -2083,45 +2087,61 @@ await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
 console.log("own classes on Home ok (visible, not attendable)");
 
 // and the coach's calendar holds both hats now: the class they added rides
-// along with what they teach, wearing the Going chip and the coach's face,
+// along with what they teach, wearing the Going green and the coach's face,
 // and tapping it opens the class sheet rather than the editor.
 await page.goto(BASE + "/app");
 await page.locator(".ps-event").first().waitFor();
 {
-  const going = page.locator(".ps-event", { hasText: "Conditioning" }).first();
+  const going = page.locator(".ps-event.ev-added", { hasText: "Conditioning" }).first();
   await going.waitFor();
-  if (!(await going.locator(".ps-corner", { hasText: "Going" }).count()))
-    fail("a class the coach attends should wear the Going badge in its corner");
   if (!(await going.locator(".ps-ecoach").count()))
     fail("a Going row should carry the coach's face");
   await going.click();
   await page.locator(".classoverlay-nm", { hasText: "Conditioning" }).waitFor();
   await page.locator(".ovcircle-back").click();
   await page.waitForFunction(() => !document.querySelector(".classoverlay"));
-  // And their teaching rows say Teaching, so the two hats read apart.
-  if (!(await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().count()))
-    fail("a teaching row should wear the Teaching badge");
+  // And their teaching rows wear the Teaching orange, so the hats read apart.
+  if (!(await page.locator(".ps-event.ev-coaching").first().count()))
+    fail("a teaching row should wear the Teaching colour");
+  // The corner badges are gone: the colour is the badge.
+  if (await page.locator(".ps-corner").count())
+    fail("the corner badges should have become the card colours");
 }
-// The slices ride under the rail as tabs: All leads, Teaching narrows to the
-// rows you work (made or assigned), Going to the ribbon's list, and All puts
-// everything back.
+// The filters are colour-coded checkmarks now, the legend and the narrowing
+// in one row: uncheck a kind and its rows leave, check it and they return.
 {
-  const tabs = (await page.locator(".caltabs .pubtab").allInnerTexts()).map((t) => t.trim());
-  if (tabs[0] !== "All" || !tabs.includes("Teaching") || !tabs.includes("Going"))
-    fail("the calendar tabs should offer All, Teaching and Going: " + tabs.join("|"));
-  await page.locator(".caltabs .pubtab", { hasText: "Teaching" }).click();
+  const chips = (await page.locator(".kindchecks .kindcheck").allInnerTexts()).map((t) => t.trim());
+  if (!chips.includes("Teaching") || !chips.includes("Going"))
+    fail("the checkmarks should offer Teaching and Going: " + chips.join("|"));
+  await page.locator('.kindcheck[data-kind="added"]').click();
   await page.waitForTimeout(300);
   if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
-    fail("Teaching should drop the class they only attend");
-  if (!(await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().count()))
-    fail("Teaching should keep the taught rows");
-  await page.locator(".caltabs .pubtab", { hasText: "Going" }).click();
-  await page.locator(".ps-event", { hasText: "Conditioning" }).first().waitFor();
-  if (await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).count())
-    fail("Going should hold only the ribbon's list");
-  await page.locator(".caltabs .pubtab", { hasText: "All" }).click();
-  await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().waitFor();
-  console.log("calendar tabs ok (All, Teaching, Going, one list narrowed in place)");
+    fail("unchecking Going should drop the class they only attend");
+  if (!(await page.locator(".ps-event.ev-coaching").first().count()))
+    fail("unchecking Going should keep the taught rows");
+  // Going back on, Teaching off: the other half narrows the same way.
+  await page.locator('.kindcheck[data-kind="added"]').click();
+  await page.locator('.kindcheck[data-kind="coaching"]').click();
+  await page.locator(".ps-event.ev-added", { hasText: "Conditioning" }).first().waitFor();
+  if (await page.locator(".ps-event.ev-coaching").count())
+    fail("unchecking Teaching should drop the taught rows");
+  await page.locator('.kindcheck[data-kind="coaching"]').click();
+  await page.locator(".ps-event.ev-coaching").first().waitFor();
+  console.log("kind checkmarks ok (colour is the badge, the chips narrow in place)");
+}
+// The month view: the menu beside the month opens the view sheet, Month
+// draws the grid with the same colours, and List is the way back.
+{
+  await page.locator(".calmenu").click();
+  await page.getByRole("heading", { name: "View" }).waitFor();
+  await page.locator(".sheet .setrow", { hasText: "Month" }).click();
+  await page.locator(".monthgrid").waitFor();
+  if (!(await page.locator(".monthpill.ev-coaching").first().count()))
+    fail("the month grid should draw teaching pills in the teaching colour");
+  await page.locator(".calmenu").click();
+  await page.locator(".sheet .setrow", { hasText: "List" }).click();
+  await page.locator(".ps-daycol").first().waitFor();
+  console.log("month view ok (the sheet switches, the grid wears the colours)");
 }
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();
@@ -2132,17 +2152,18 @@ await page.locator(".distabs").waitFor();
 // Schedule is the coaching calendar, whole screen: the rail left it for You.
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.waitForURL(/\/app/);
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 if (await page.locator(".schedtools").count())
   fail("the tools rail should have left the calendar for the You tab");
 // No corner controls here, so no min-height holding air above the name: the
-// card is as tall as what it says.
+// card is as tall as what it says. The budget allows one wrapped name line,
+// because the date rail took a slice of the card's width.
 {
   const h = await page
     .locator(".evcards .ps-event")
     .first()
     .evaluate((e) => e.getBoundingClientRect().height);
-  if (h > 105) fail("the Schedule-tab card should hug its content, got " + h + "px tall");
+  if (h > 130) fail("the Schedule-tab card should hug its content, got " + h + "px tall");
 }
 // You is the person: the account screen as a page, cards for the shares.
 await page.locator(".navtab", { hasText: "You" }).click();
@@ -2452,7 +2473,7 @@ console.log("profile tabs are links ok (three URLs, one section each)");
 // stays, and Schedule is the way back.
 {
   await page.goto(BASE + "/app");
-  await page.locator(".calhead-add").waitFor();
+  await page.locator(".calfab-add").waitFor();
   if (await page.locator(".settingsbtn").count())
     fail("the gear should have left the corner: the You tab is the door");
   await page.locator(".navtab", { hasText: "You" }).click();
@@ -2461,7 +2482,7 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
   await page.locator(".navtab", { hasText: "Schedule" }).click();
   await page.waitForURL(/\/app/);
-  await page.locator(".calhead-add").waitFor();
+  await page.locator(".calfab-add").waitFor();
   console.log("you tab ok (the account is a tab, the bar stays, Schedule is the way back)");
 }
 
@@ -2565,7 +2586,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 // four tabs, and the account is the fourth — back in the app, since a
 // profile carries neither
 await page.goto(BASE + "/app");
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
 await openProfile(page);
 await closeProfile(page);
@@ -2692,7 +2713,7 @@ await closeProfile(page);
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
 await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.locator(".calhead-add").waitFor();
+await page.locator(".calfab-add").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting

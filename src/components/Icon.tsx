@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Circle,
   Info,
+  List,
+  Menu,
   SlidersHorizontal,
   Clock,
   CircleUserRound,
@@ -126,6 +128,8 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   dark_mode: Moon,
   event: Calendar,
   info: Info,
+  list: List,
+  menu: Menu,
   event_available: CalendarCheck,
   // The pair on a class: an empty calendar, and one with the tick in it.
   event_added: CalendarAdded,

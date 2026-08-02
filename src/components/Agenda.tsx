@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { DayRail } from "@/components/CalendarBits";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -28,6 +29,9 @@ export type AgendaItem = {
   you?: boolean;
   /** A word in the time column: Added, Shift, Mine. */
   tag?: string | null;
+  /** The viewer's relationship to the row, worn as the card's colour on
+   *  their own calendar. Following passes none and keeps the paper. */
+  kind?: "coaching" | "added" | "private" | null;
   /** Marked as going: the accent thickens. */
   on?: boolean;
   /** The real page behind it, when there is one. A row with a link is still a
@@ -104,7 +108,7 @@ export function ClassRow({
       </span>
     </>
   );
-  const cls = `ps-event${item.on ? " goingon" : ""}`;
+  const cls = `ps-event${item.kind ? ` ev-${item.kind}` : ""}${item.on ? " goingon" : ""}`;
   // A plain anchor rather than next/link: these lists sit inside ClassOpener,
   // which catches the tap, and the href is there for the modified click and the
   // crawler. Prefetching a page nobody navigates to is work for nothing.
@@ -132,16 +136,31 @@ export function Agenda({
   days,
   className = "",
   row,
+  todayIso,
 }: {
   days: AgendaDay[];
   className?: string;
   row: (item: AgendaItem, day: AgendaDay) => ReactNode;
+  /** Draw the dates as the calendar's left rail rather than heading rows.
+   *  The calendars pass it; Following keeps the headings, because a merged
+   *  list of many coaches reads by day name, not by grid. */
+  todayIso?: string;
 }) {
   return (
     <div className={`ps-week ps-agenda${className ? ` ${className}` : ""}`}>
       {days.map((d) => (
-        <div key={d.iso} className="ps-daygroup">
-          <div className="ps-daycol">{d.label}</div>
+        // The id is the month grid's landing spot: a tapped day scrolls the
+        // list here.
+        <div
+          key={d.iso}
+          id={`day-${d.iso}`}
+          className={`ps-daygroup${todayIso ? " dayrail-group" : ""}`}
+        >
+          {todayIso ? (
+            <DayRail iso={d.iso} todayIso={todayIso} />
+          ) : (
+            <div className="ps-daycol">{d.label}</div>
+          )}
           <div className="ps-daycards">
             {d.items.map((i) => (
               <div key={i.key} className="ps-erow">

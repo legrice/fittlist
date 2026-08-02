@@ -621,6 +621,141 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 700; font-size: 14px;
 }
 .calhead-add:active { transform: scale(.95); }
+/* The month is the title now, and the circled menu beside it opens the view
+   sheet: List today, the rest of the ways of looking as they land. The
+   spacer keeps Add pinned to the far edge. */
+.calmenu {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  cursor: pointer;
+}
+.calmenu:active { transform: scale(.95); }
+.calhead-spacer { flex: 1; }
+.viewsheet-on { color: var(--go); }
+/* The kind filters: a checkmark per kind wearing the kind's colour, which
+   makes the row the legend and the filter at once. */
+.kindchecks { display: flex; gap: 8px; margin: 10px 0 12px; overflow-x: auto; scrollbar-width: none; }
+.kindchecks::-webkit-scrollbar { display: none; }
+.kindcheck {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 12px 0 8px; border-radius: 999px; cursor: pointer;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 13px;
+}
+.kindcheck-box {
+  width: 18px; height: 18px; border-radius: 5px; display: inline-flex;
+  align-items: center; justify-content: center; color: #fff;
+  border: 1.5px solid var(--ol); background: transparent;
+}
+.kindcheck.on .kindcheck-box { border-color: transparent; }
+.kindcheck-coaching.on .kindcheck-box { background: var(--si); }
+.kindcheck-added.on .kindcheck-box { background: var(--go); }
+.kindcheck-private.on .kindcheck-box { background: #5b6b8c; }
+/* The kind is the card's colour: the corner badge said it in a word, and the
+   word is the swatch on the filter row now. Ink goes light, the sub-lines
+   translucent, and the accent bar disappears into the wash. */
+.evcards .ps-event.ev-coaching { background: var(--si); border-color: var(--si); }
+.evcards .ps-event.ev-added { background: var(--go); border-color: var(--go); }
+.evcards .ps-event.ev-private { background: #5b6b8c; border-color: #5b6b8c; }
+.evcards .ps-event.ev-coaching, .evcards .ps-event.ev-added, .evcards .ps-event.ev-private,
+.evcards .ps-event.ev-coaching .ps-enm, .evcards .ps-event.ev-added .ps-enm,
+.evcards .ps-event.ev-private .ps-enm {
+  color: #fff;
+}
+.evcards .ps-event[class*="ev-"] .ps-estudio,
+.evcards .ps-event[class*="ev-"] .ps-edur,
+.evcards .ps-event[class*="ev-"] .ps-ap,
+.evcards .ps-event[class*="ev-"] .ps-ecoach-txt {
+  color: rgba(255, 255, 255, .82);
+}
+.evcards .ps-event[class*="ev-"] .ps-etime { color: #fff; }
+.evcards .ps-event[class*="ev-"] .ps-accent { display: none; }
+.evcards .ps-event[class*="ev-"] .ps-private,
+.evcards .ps-event[class*="ev-"] .ps-dupe {
+  background: rgba(255, 255, 255, .22); color: #fff;
+}
+/* The month, whole. Cells are buttons so a full day is a tap into the list;
+   past and out-of-month days are furniture, not doors. */
+.monthwrap { margin-top: 4px; }
+.monthnav { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 6px; }
+.monthnav-b {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--card);
+  border: 1.5px solid var(--line); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.monthhead {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+  margin-bottom: 4px; text-align: center; font-size: 11px; font-weight: 700;
+  color: var(--ol);
+}
+.monthgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.monthday {
+  min-height: 84px; padding: 3px 2px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); display: flex; flex-direction: column; gap: 2px;
+  align-items: stretch; text-align: left; overflow: hidden; cursor: pointer;
+}
+.monthday:disabled { cursor: default; }
+.monthday.out { background: transparent; border-color: transparent; }
+.monthday.past { opacity: .45; }
+.monthday.today { border-color: var(--ink); border-width: 1.5px; }
+.monthday-n { font-size: 11px; font-weight: 700; color: var(--ink); padding: 1px 3px 0; }
+.monthday.today .monthday-n { color: var(--si); }
+.monthpill {
+  display: block; border-radius: 4px; padding: 1px 4px; font-size: 9.5px;
+  font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.monthpill.ev-coaching { background: var(--si); }
+.monthpill.ev-added { background: var(--go); }
+.monthpill.ev-private { background: #5b6b8c; }
+.monthmore { font-size: 9.5px; font-weight: 700; color: var(--ol); padding: 0 4px; }
+[data-mode="dark"] .monthday { background: var(--card); }
+[data-mode="dark"] .monthday.out { background: transparent; }
+/* The list's date rail: weekday over day number down the left, cards to the
+   right. Today's number fills with the brand orange, the same "you are
+   here" the month grid rings. The rail overrides the heading treatment the
+   class otherwise gets (sticky bar, full-width paper). */
+.ps-daygroup.dayrail-group, .ps-agenda .ps-daygroup.dayrail-group {
+  display: flex; flex-direction: row; gap: 8px; align-items: flex-start;
+}
+.evcards .ps-daycol.dayrail-col, .ps-daycol.dayrail-col {
+  position: static; width: 46px; flex-shrink: 0; margin: 0; padding: 8px 0 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; font-size: 10px;
+}
+.dayrail-wd { font-size: 10px; font-weight: 700; letter-spacing: .05em; color: var(--ol); }
+.dayrail-num {
+  width: 32px; height: 32px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 16px; color: var(--ink);
+}
+.dayrail-today .dayrail-num { background: var(--si); color: #fff; }
+.dayrail-group .ps-daycards { flex: 1; min-width: 0; }
+/* The persistent doors: Today bottom-left, the plus bottom-right, floating
+   over the list above the tab bar. `.calfabs-low` drops them to the screen
+   edge where no bar renders (the coaches-only mode). */
+.todayfab {
+  position: fixed; left: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; height: 46px; padding: 0 20px; border-radius: 999px;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
+}
+.calfab-add {
+  position: fixed; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; width: 54px; height: 54px; border-radius: 17px;
+  background: var(--si); color: #fff; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 22px rgba(221, 106, 53, .38);
+}
+.todayfab:active, .calfab-add:active { transform: scale(.95); }
+.todayfab.calfabs-low, .calfab-add.calfabs-low {
+  bottom: calc(20px + env(safe-area-inset-bottom));
+}
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its
@@ -1572,7 +1707,10 @@ button.ps-card { cursor: pointer; }
    The words wait in the overlay a tap away. The paper ring keeps it legible
    over any photo. */
 .avphotodot {
-  position: absolute; top: 2%; right: 2%;
+  /* On the circle's rim, not the bounding box's corner: the box's 2%/2% is
+     off the photo entirely, so the dot floated beside the face. 6.5% is the
+     45-degree point of the circle for a dot this size. */
+  position: absolute; top: 6.5%; right: 6.5%;
   width: 15px; height: 15px; border-radius: 50%;
   border: 2.5px solid var(--paper); box-sizing: content-box;
 }

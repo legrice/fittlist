@@ -43,7 +43,7 @@ await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
 async function addClass({ name, days, time, studio, first = false }) {
   if (first) await p.getByRole("button", { name: "Add your first class" }).click();
   else {
-    await p.locator(".calhead-add").click();
+    await p.locator(".calfab-add").click();
     await p.getByRole("heading", { name: "Add to your calendar" }).waitFor();
     await p.locator(".sheet .setrow", { hasText: "coaching" }).click();
   }

@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { myWeek } from "@/lib/week";
@@ -67,6 +68,7 @@ export default async function WeekPage() {
   return (
     <WeekScreen
       days={days}
+      todayIso={todayIso()}
       studios={studios}
       templates={templates}
       customTypes={customTypeRows.map((r) => r.name)}
