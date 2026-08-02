@@ -10,6 +10,7 @@ import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
+import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { ClassCardActions } from "@/components/ClassCardActions";
 import { Icon } from "@/components/Icon";
@@ -337,6 +338,18 @@ export async function PublicProfileView({
                           aria-hidden="true"
                         />
                         <span className="ps-ebody">
+                          {/* Redundant on purpose, by Matt's call: the page
+                              already names the coach, and the row says it
+                              again so it reads exactly like the same row on
+                              Following. */}
+                          <span className="ps-ecoach">
+                            <AgendaAvatar
+                              photo={user.photo}
+                              name={user.name}
+                              color={avatarColor(user)}
+                            />
+                            <span className="ps-ecoach-txt">{user.name}</span>
+                          </span>
                           <span className="ps-enm">{c.name}</span>
                           {where && <span className="ps-estudio">{where}</span>}
                         </span>

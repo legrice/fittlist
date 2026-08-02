@@ -27,7 +27,7 @@ import {
   type CalView,
   type MonthCellItem,
 } from "@/components/CalendarBits";
-import { CAL_PAST_DAYS } from "@/lib/format";
+import { CAL_PAST_DAYS, fmtDayHeaderRel } from "@/lib/format";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
@@ -298,7 +298,9 @@ export function WeekScreen({
                 dimBefore={todayIso}
                 days={[...pastShown, ...shown].map((d) => ({
                   iso: d.iso,
-                  label: d.label,
+                  // "Today", "Tomorrow", then the dated header the loader
+                  // wrote.
+                  label: fmtDayHeaderRel(d.iso, todayIso),
                   items: d.items.map((i) => ({
                     key: rowKey(i),
                     name: i.name,

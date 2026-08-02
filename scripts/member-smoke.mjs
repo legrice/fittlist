@@ -179,7 +179,16 @@ console.log("member profile edit ok (location normalized to City, ST)");
 
 // Now that Jersey City, NJ exists, a bare "Jersey City" joins it instead of
 // making a second one. It's offered as a suggestion too.
-await p.goto(BASE + "/you");
+// One retry: this arrival rides right behind a profile save's refresh, and
+// under suite load the load event has been seen to straggle past the
+// timeout while the page itself is fine. A second try that also hangs is a
+// real failure.
+try {
+  await p.goto(BASE + "/you");
+} catch {
+  console.log("goto /you straggled; retrying once");
+  await p.goto(BASE + "/you");
+}
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
 await p.getByRole("heading", { name: "Your profile" }).waitFor();
 {

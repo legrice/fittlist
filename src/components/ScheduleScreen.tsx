@@ -6,6 +6,7 @@ import {
   CAL_PAST_DAYS,
   clockParts,
   fmtDayHeader,
+  fmtDayHeaderRel,
   occurrenceEnded,
   runsOn,
   timeToMinutes,
@@ -307,7 +308,8 @@ export function ScheduleScreen({
         kindOn(p.personal ? "private" : "added"),
       );
       if (items.length || extras.length) {
-        out.push({ iso, label: fmtDayHeader(iso), items, extras }); // "Monday — Jul 20"
+        // "Today", "Tomorrow", then "Monday — Jul 20".
+        out.push({ iso, label: fmtDayHeaderRel(iso, todayIso), items, extras });
       }
     }
     return out;
@@ -509,6 +511,13 @@ export function ScheduleScreen({
                                 first column swallowed the body. */}
                             <span className="ps-accent" aria-hidden="true" />
                             <span className="ps-ebody">
+                              {/* Your own entry says so, the way a shift
+                                  does: whose it is, above what it is. */}
+                              {p.personal && (
+                                <span className="ps-private ps-shifttop ps-tag-added">
+                                  Added by you
+                                </span>
+                              )}
                               {!p.personal && p.coachName.trim() && (
                                 <span className="ps-ecoach">
                                   <AgendaAvatar
@@ -581,7 +590,9 @@ export function ScheduleScreen({
                             {/* Shift rides its own line above the name, the
                                 spot the coach chip takes on a Going row: it
                                 says whose hat this is before what it is. */}
-                            {c.shift && <span className="ps-private ps-shifttop">Shift</span>}
+                            {c.shift && (
+                              <span className="ps-private ps-shifttop ps-tag-shift">Shift</span>
+                            )}
                             <span className="ps-enm">
                               {c.name}
                               {/* The name line keeps the facts about the class

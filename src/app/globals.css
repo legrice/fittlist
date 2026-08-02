@@ -613,25 +613,21 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   gap: 12px; margin: 14px 0 0;
 }
 .calhead-row .calhead { margin: 0; }
-/* The split capsule top right: the view menu and Add as one instrument,
-   the way Apple's calendar keeps its actions in one pill. Add keeps the one
-   loud colour as the capsule's right half. */
-.calsplit {
-  flex-shrink: 0; display: inline-flex; align-items: stretch;
-  border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden;
-  background: var(--card);
+/* The view menu leads the month as a bare glyph (it wore a circle, then a
+   capsule shared with Add, and both were more chrome than it earns), and
+   Add is the one orange circle across from them. */
+.calmenu {
+  flex-shrink: 0; width: 34px; height: 34px; margin-left: -7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--ink); cursor: pointer;
 }
-.calsplit .calmenu {
-  width: 44px; height: 36px; display: inline-flex; align-items: center;
-  justify-content: center; background: transparent; border: none;
-  border-right: 1px solid var(--line); color: var(--ink); cursor: pointer;
+.calhead-add {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--si); color: #fff; border: none; cursor: pointer;
+  padding: 0;
 }
-.calsplit .calhead-add {
-  width: 44px; height: 36px; display: inline-flex; align-items: center;
-  justify-content: center; background: var(--si); color: #fff; border: none;
-  cursor: pointer; padding: 0;
-}
-.calsplit .calmenu:active, .calsplit .calhead-add:active { opacity: .8; }
+.calmenu:active, .calhead-add:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
 .viewsheet-on { color: var(--go); }
 /* The kind filters: a checkmark per kind wearing the kind's colour, which
@@ -655,7 +651,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .kindcheck.on .kindcheck-box { border-color: transparent; }
 .kindcheck-coaching.on .kindcheck-box { background: var(--si); }
 .kindcheck-added.on .kindcheck-box { background: var(--go); }
-.kindcheck-private.on .kindcheck-box { background: #5b6b8c; }
+.kindcheck-private.on .kindcheck-box { background: #3b82cc; }
 /* The kind's colour is the accent bar, not a card wash: the calendars are
    flat rows now, one look with Following, and the bar down the left says
    Teaching, Going or Personal in the same colours the filter chips wear.
@@ -663,10 +659,18 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    read as a poster wall, which is the same lesson the photo cards taught.) */
 .callist .ps-event.ev-coaching .ps-accent { background: var(--si); }
 .callist .ps-event.ev-added .ps-accent { background: var(--go); }
-.callist .ps-event.ev-private .ps-accent { background: #5b6b8c; }
+.callist .ps-event.ev-private .ps-accent { background: #3b82cc; }
 /* A rule under each date heading, so a day reads as a section wherever the
-   list has grown long. Calendars only; Following keeps its plain headings. */
-.callist .ps-daycol { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+   list has grown long: the calendars, the profiles, and Following alike.
+   The heading carries real weight now: it is the section's name, and at the
+   base rule's 500 it read as a caption. */
+/* Doubled class on purpose: the base .ps-agenda heading rule sits later in
+   the file and would win a tie. */
+.ps-agenda.callist .ps-daycol, .ps-agenda.feedagenda .ps-daycol {
+  border-bottom: 1px solid var(--line); padding-bottom: 8px; font-weight: 700;
+}
+/* The coach line breathes before the class name: who, a beat, then what. */
+.callist .ps-ecoach, .feedagenda .ps-ecoach { margin-bottom: 6px; }
 /* Scrolled-back days are a record, not the plan: dimmed the way the month
    grid dims them. */
 .callist .ps-pastday { opacity: .55; }
@@ -712,11 +716,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .monthpill.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
 .monthpill.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
-.monthpill.ev-private { background: rgba(91, 107, 140, .16); color: #47546e; }
+.monthpill.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 .monthmore { font-size: 10px; font-weight: 700; color: var(--ol); text-align: center; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
 [data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
-[data-mode="dark"] .monthpill.ev-private { color: #9fb0d1; }
+[data-mode="dark"] .monthpill.ev-private { color: #85b8e8; }
 /* The two persistent doors: Today bottom left (back to now, which matters
    more now that the list scrolls into the past), Share bottom right. Both
    strokeless: the shadow is the pill's edge, and the orange sparkle is
@@ -4341,8 +4345,13 @@ button.ps-card { cursor: pointer; }
 .callist .weekrow-x { position: absolute; top: 10px; right: 6px; z-index: 2; }
 .callist .ps-etimecol { margin-top: 34px; }
 /* A shift says so above the name, the spot the coach chip takes on a Going
-   row: whose hat first, then what. */
-.callist .ps-shifttop { align-self: flex-start; margin: 0 0 3px; }
+   row, and your own entries say Added by you in the same spot: whose it
+   is first, then what. Each tag wears its kind's wash: the brand orange
+   for a shift (a Teaching row), the personal slate for your own, both
+   quiet enough that the name stays the loudest thing on the row. */
+.ps-shifttop { align-self: flex-start; margin: 0 0 4px; }
+.ps-tag-shift { background: var(--si-tint); border-color: transparent; color: var(--si-ink); }
+.ps-tag-added { background: rgba(59, 130, 204, .16); border-color: transparent; color: var(--ink); }
 /* Private stays a fact on the name line, not a dashed box: the flat row has
    no box to dash. */
 .callist .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }

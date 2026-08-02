@@ -1139,9 +1139,12 @@ Following and their public page, the same one their avatar's ring wears
 when picked on the strip via `--avring`, with the All circle ringing in
 ink; the kind's on the calendars; the studio's derived colour on its own
 page). The row is bottom-aligned: the name and location sit on the
-duration's shelf, however many lines each side carries, and a shift's tag
+duration's shelf, however many lines each side carries. Whose a row is
 rides its own line above the name (`.ps-shifttop`), the spot the coach
-chip takes on a Going row. The share circle and
+chip takes on a Going row: Shift in the brand wash (`.ps-tag-shift`,
+`--si-tint` under `--si-ink`), Added by you on personal rows in the
+personal slate's wash with ink text (`.ps-tag-added`), each tag wearing
+its kind's colour quietly enough that the name stays loudest. The share circle and
 Add ribbon sit above the time in the right column, smaller, and the
 member's remove X takes that corner on their week; all of them are
 siblings of the row, never children, because a button inside a link is not
@@ -1150,7 +1153,9 @@ because the one mark the actions earn should be the same orange every Add
 wears. On the public page the pair loads the viewer's marks server-side so
 the ribbon starts right; a photo per row was tried and read as a poster
 wall, so the overlay and the share card keep the photo, where one class
-has the whole screen. The `.evcards` card skin has no schedule left to
+has the whole screen. The public page's rows name the coach above the
+class, redundant on purpose (the header already says who), so the row is
+Following's row exactly. The `.evcards` card skin has no schedule left to
 dress (the rota keeps its own dense rows: a working surface where density
 is the point).
 
@@ -1213,9 +1218,13 @@ A tap on a future day lands on that day in the List (`day-{iso}` ids on
 the day groups are the landing spots). The grid's plans data comes from
 `myWeek`'s nine-week horizon, so months beyond it show teaching rows only.
 The List's dates are heading rows, everywhere, each with a hairline rule
-under it on the calendars (`.callist .ps-daycol`): a left date rail was
-tried for a night and came back out, because one list grammar across
-Following and the calendars beat the grid-flavoured margin.
+under it and real weight (`.callist`/`.feedagenda .ps-daycol`, 700 where
+the base rule reads 500): a left
+date rail was tried for a night and came back out, because one list
+grammar across Following and the calendars beat the grid-flavoured margin.
+The two nearest days head their sections as words, Today and Tomorrow
+(`fmtDayHeaderRel`), the same words Following already used; the dates
+resume from there.
 
 **The calendar's header sticks, and the List scrolls back in time.**
 `CalSticky` pins the month row, the Add pill and the kind checkmarks under
@@ -1241,10 +1250,11 @@ the list scrolls into the past: it lands on the first not-past day
 the tabs layout scrolls the body). Share wears the sparkle in the brand
 orange and opens the handing-on: a coach's small sheet (the story image,
 the week as text, the link), or a member's `ShareMyWeekSheet` straight,
-because that sheet already is the options. The floating plus went up into
-the header's split capsule (`.calsplit`, top right): the view menu and Add
-as one instrument, the way Apple's calendar keeps its actions in one pill,
-with Add as the capsule's orange half.
+because that sheet already is the options. The floating plus went up to
+the header's top right as the one orange circle (`.calhead-add`), and the
+view menu leads the month as a bare glyph (`.calmenu`): it wore a circle,
+then a capsule shared with Add, and both were more chrome than two small
+controls earn.
 The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class
@@ -1262,8 +1272,9 @@ and hiding filled-in fields would eat data.
 
 **The colour is the badge: the accent bar says your relationship to the
 row, and the checkmarks are the legend.** Teaching wears the brand orange
-(`--si`), Going the same green a yes always is (`--go`), Personal a slate
-blue, on the calendars' flat rows (`.callist`, the same flat treatment
+(`--si`), Going the same green a yes always is (`--go`), Personal a bright
+blue (#3b82cc; it was a purplish slate and read as mud beside the other
+two), on the calendars' flat rows (`.callist`, the same flat treatment
 Following wears, with the bar coloured by `ev-*` on `.ps-event`) and as
 tinted washes on the Month grid's pills (`.monthpill`, the colour at 16%
 with its own darker ink). A full card fill shipped for a night and read as

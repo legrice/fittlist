@@ -212,6 +212,17 @@ export function appTz(): string {
  *  that reveal it, so the scroll can't outrun the data. */
 export const CAL_PAST_DAYS = 56;
 
+/** "Today", "Tomorrow", then the ordinary day header: the two days you
+ *  stand closest to read better as words than dates. One helper so
+ *  Following and the calendars can't disagree on where words end. */
+export function fmtDayHeaderRel(iso: string, today = todayIso()): string {
+  if (iso === today) return "Today";
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  if (iso === d.toISOString().slice(0, 10)) return "Tomorrow";
+  return fmtDayHeader(iso);
+}
+
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
 export function todayIso(now = new Date()): string {

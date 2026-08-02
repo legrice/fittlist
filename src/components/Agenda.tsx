@@ -86,8 +86,12 @@ export function ClassRow({
         aria-hidden="true"
       />
       {/* Who first, then what, then where: on a list drawn from more than one
-          coach, the coach is how you place the class. */}
+          coach, the coach is how you place the class. A personal entry has
+          no coach to show, so its line above the name says whose it is. */}
       <span className="ps-ebody">
+        {item.kind === "private" && (
+          <span className="ps-private ps-shifttop ps-tag-added">Added by you</span>
+        )}
         {item.coachName?.trim() && (
           <span className="ps-ecoach">
             <AgendaAvatar photo={item.coachPhoto} name={item.coachName} color={item.coachColor} />

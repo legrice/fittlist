@@ -109,11 +109,11 @@ export function CalSticky({ children }: { children: ReactNode }) {
   );
 }
 
-/** The title row: the month on the left, and one split capsule top right
- *  holding the view menu and Add (the caller passes the Add button as
- *  children, so each screen keeps its own handler). Apple's calendar keeps
- *  its actions in one capsule there for the same reason: two controls that
- *  are both about the calendar read as one instrument. */
+/** The title row: the view menu as a bare glyph leading the month, and Add
+ *  as the one orange circle across from them (the caller passes the Add
+ *  button as children, so each screen keeps its own handler). The menu wore
+ *  a circle, then a shared capsule with Add; both read as more chrome than
+ *  two small controls earn. */
 export function CalHead({
   label,
   onMenu,
@@ -125,14 +125,12 @@ export function CalHead({
 }) {
   return (
     <div className="calhead-row">
+      <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
+        <Icon name="menu" size={20} />
+      </button>
       <h2 className="calhead">{label}</h2>
       <span className="calhead-spacer" />
-      <div className="calsplit">
-        <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
-          <Icon name="menu" size={17} />
-        </button>
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
