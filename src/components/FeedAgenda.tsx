@@ -31,8 +31,6 @@ export type FeedItem = {
   ap: string;
   durationMin: number;
   where: string | null;
-  /** Colours the card; see AgendaItem for why there is no photo here. */
-  classType: string | null;
   going: boolean;
 };
 
@@ -189,7 +187,6 @@ export function FeedAgenda({
               ap: i.ap,
               durationMin: i.durationMin,
               where: i.where,
-              classType: i.classType,
               coachName: i.coachName,
               coachPhoto: i.coachPhoto,
               coachColor: i.coachColor,

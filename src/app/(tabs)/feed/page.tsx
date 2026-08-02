@@ -119,7 +119,6 @@ export default async function FeedPage({
             ap: t.ap,
             durationMin: c.durationMin,
             where: s ? s.name : c.location,
-            classType: c.classType,
             going: going.has(`${c.id}|${iso}`),
           },
         ];

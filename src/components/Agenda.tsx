@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { classColor } from "@/lib/avatar";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -22,12 +21,6 @@ export type AgendaItem = {
   ap: string;
   durationMin: number;
   where?: string | null;
-  /** Colours the card: Yoga is the same colour on every card it appears on.
-   *  Deliberately no photo here, even when the class has one. A list wearing a
-   *  photograph per row read as a poster wall, and the same class twice in a
-   *  row was the same photograph twice; the overlay and the share card keep
-   *  theirs, where one class has the whole screen. */
-  classType?: string | null;
   coachName?: string | null;
   coachPhoto?: string | null;
   coachColor: string;
@@ -69,50 +62,6 @@ export function AgendaAvatar({
   );
 }
 
-/** A hex colour pulled toward black, as rgba. The card's fade is tinted with
- *  the class's own colour rather than plain black, which is what makes each
- *  one read as cut from its poster instead of stamped from a template. */
-function shade(hex: string, keep: number, alpha: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  const r = Math.round(((n >> 16) & 255) * keep);
-  const g = Math.round(((n >> 8) & 255) * keep);
-  const b = Math.round((n & 255) * keep);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/** The same colour pulled toward white instead, for the glow's bright edge. */
-function tint(hex: string, amt: number, alpha: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  const r = Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * amt);
-  const g = Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * amt);
-  const b = Math.round((n & 255) + (255 - (n & 255)) * amt);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/**
- * The background a class wears when it has no photo.
- *
- * A flat slab of the type's colour made the list a wall of paint chips, each
- * card shouting over the one before it. This is the same colour worn quietly:
- * a near-ink base so every card sits at the same darkness, with two soft
- * glows in the class's own hue. The seed moves the glows around, so two
- * photo-less cards in a row don't read as the same template twice; the hue
- * still does the identifying, which is the whole point of the type colour.
- */
-function quietBackground(accent: string, seed: string): string {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  h = Math.abs(h);
-  const x1 = 62 + (h % 30); // top glow drifts across the right half
-  const y2 = 78 + ((h >> 5) % 30); // bottom glow sits low, left
-  const x2 = 2 + ((h >> 10) % 22);
-  return [
-    `radial-gradient(120% 110% at ${x1}% -12%, ${tint(accent, 0.18, 0.55)} 0%, rgba(0, 0, 0, 0) 58%)`,
-    `radial-gradient(95% 95% at ${x2}% ${y2}%, ${shade(accent, 0.85, 0.5)} 0%, rgba(0, 0, 0, 0) 62%)`,
-    shade(accent, 0.22, 1),
-  ].join(", ");
-}
-
 /** The row itself: a link when something is behind it, a button otherwise. */
 export function ClassRow({
   item,
@@ -124,25 +73,9 @@ export function ClassRow({
   /** Anything the row says under the class name, like who else is going. */
   children?: ReactNode;
 }) {
-  const accent = classColor(item.classType, item.coachColor);
   const inner = (
     <>
       <span className="ps-accent" style={{ background: item.coachColor }} aria-hidden="true" />
-      {/* The type's colour, worn quietly; the fade under the words is the
-          same colour pulled toward black, so they always sit on something
-          dark enough to read against. */}
-      <span
-        className="evcard-media"
-        style={{ background: quietBackground(accent, item.name) }}
-        aria-hidden="true"
-      />
-      <span
-        className="evcard-scrim"
-        style={{
-          background: `linear-gradient(to top, ${shade(accent, 0.34, 0.94)} 0%, ${shade(accent, 0.34, 0.55)} 34%, rgba(0, 0, 0, 0) 66%)`,
-        }}
-        aria-hidden="true"
-      />
       {/* Who first, then what, then where: on a list drawn from more than one
           coach, the coach is how you place the class. */}
       <span className="ps-ebody">

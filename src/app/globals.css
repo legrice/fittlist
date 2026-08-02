@@ -4086,84 +4086,59 @@ button.ps-card { cursor: pointer; }
 /* The way through from the rota to what it adds up to. */
 .rotacounts { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; }
 
-/* ---- The class card: Plans and Following draw the shared row as a poster ----
+/* ---- The class card: Plans and Following draw the shared row as a quiet
+   calendar block ----
    Scoped to .evcards (the two Agenda callers) and nowhere else: the coach's
    own schedule, the public page and the rota keep the compact rows, because
-   those are working surfaces where density is the point. The photo fills a
-   4:3 card; without one the class type's colour does, so Yoga is the same
-   colour on every card it appears on. The fade at the bottom is that colour
-   pulled toward black (inline, in ClassRow), which is what makes each card
-   read as cut from its own poster rather than stamped from a template. */
-.evcards .ps-daycards { gap: 14px; }
+   those are working surfaces where density is the point. The card tried a
+   photograph, then the class type's colour, and both were more poster than
+   week; it is paper with a hairline now, and the ink does the talking. The
+   photo lives on the overlay and the share card, where one class has the
+   whole screen. */
+.evcards .ps-daycards { gap: 12px; }
 .evcards .ps-erow { position: relative; gap: 0; }
 .evcards .ps-event {
   /* align-items back to stretch: the base row rule centres its grid cells,
      and in a column flex card that centred every line of text. */
   position: relative; display: flex; flex-direction: column; justify-content: flex-end;
   align-items: stretch;
-  /* No forced height: the card is as tall as what it says. It carried a 16:9
-     photograph for a while, and a list of those read as a poster wall rather
-     than a week; the photo lives on the overlay now, and the block went back
-     to calendar proportions. */
   border-radius: 18px; overflow: hidden;
-  /* Enough height that the corner controls clear the words even on the
-     shortest card (a personal one with no coach chip and no studio line):
-     the X up top and the Yours chip below it were touching. */
-  min-height: 118px;
-  padding: 14px 16px; color: #fff; background: #191502; border-bottom: none;
-  box-shadow: 0 8px 26px rgba(23, 26, 31, .14), 0 1px 3px rgba(23, 26, 31, .06);
+  /* Enough height that the X up top clears the Yours chip below it on the
+     shortest card (a personal one with no coach line and no studio). */
+  min-height: 112px;
+  padding: 14px 16px; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  box-shadow: none;
 }
-.evcards .ps-event:active { background: #191502; }
-.evcard-media { position: absolute; inset: 0; display: block; }
-.evcard-scrim { position: absolute; inset: 0; }
-/* The words sit on the fade. Everything readable is white now, so the row's
-   grey palette is overridden wholesale here rather than piecemeal there. */
+.evcards .ps-event:hover { box-shadow: none; }
+.evcards .ps-event:active { background: var(--cl); }
 .evcards .ps-ebody { position: relative; gap: 3px; padding-right: 54px; }
-.evcards .ps-ecoach {
-  align-self: flex-start; padding: 3px 10px 3px 4px; margin-bottom: 7px;
-  border-radius: 999px; background: rgba(12, 12, 10, .42); color: #fff;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  font-size: 12.5px;
-}
-.evcards .ps-ecoach-txt { color: #fff; }
-.evcards .ps-enm { color: #fff; font-weight: 800; font-size: 20px; letter-spacing: -.008em; }
-.evcards .ps-estudio { color: rgba(255, 255, 255, .82); }
-/* The clock reads across under the name rather than down the right edge, and
-   the Added / Yours tag leads it. Its DOM home stays the time column. */
+.evcards .ps-ecoach { align-self: flex-start; margin-bottom: 6px; font-size: 12.5px; }
+.evcards .ps-enm { font-weight: 700; font-size: 19px; letter-spacing: -.008em; }
+/* The clock reads across under the name rather than down the right edge. */
 .evcards .ps-etimecol {
   position: relative; flex-direction: row; align-items: center; gap: 8px;
   align-self: flex-start; margin-top: 3px;
 }
-.evcards .ps-etime { color: #fff; font-size: 14px; }
-.evcards .ps-edur { color: rgba(255, 255, 255, .72); }
-.evcards .weekrow-alsotxt { color: rgba(255, 255, 255, .88); }
-/* The green ring reads as mud on a photograph; the tag and the filled
-   calendar say it instead. */
-.evcards .ps-event.goingon { box-shadow: 0 8px 26px rgba(23, 26, 31, .14), 0 1px 3px rgba(23, 26, 31, .06); }
-/* What you can do with it, on the card itself. Siblings of the card, never
-   children: a button inside a link is not a thing. Add sits bottom right
-   where the thumb is; the remove X keeps its corner up top. */
-/* Yours, in the Add button's corner. White rather than green: a colour chip
-   over these dark cards read as a status light, and the only thing it has to
-   say is whose the class is. */
+.evcards .ps-etime { font-size: 14px; }
+/* Marked: the filled ribbon in the corner says it, so the card stays paper. */
+.evcards .ps-event.goingon { box-shadow: none; }
+/* Yours, in the Add button's corner: a quiet chip, not a status light. */
 .evcards .ps-goingtag {
   position: absolute; right: 14px; bottom: 14px; z-index: 1;
-  background: rgba(255, 255, 255, .92); color: #111;
+  background: var(--cl); color: var(--ink);
 }
+/* What you can do with it, on the card itself. Siblings of the card, never
+   children: a button inside a link is not a thing. Add sits bottom right
+   where the thumb is; the remove X keeps its corner up top, in the same
+   neutral it wears on every other list. */
 .evcard-add {
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
   width: 42px; height: 42px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(12, 12, 10, .5); color: #fff;
-  border: 1px solid rgba(255, 255, 255, .3);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  background: var(--card); color: var(--ink); border: 1.5px solid var(--line);
   transition: transform .08s;
 }
-.evcard-add.on { background: rgba(255, 255, 255, .92); color: #111; border-color: transparent; }
+.evcard-add.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .evcard-add:active { transform: scale(.93); }
-.evcards .weekrow-x {
-  position: absolute; top: 10px; right: 10px; z-index: 2;
-  background: rgba(12, 12, 10, .45); color: #fff;
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.evcards .weekrow-x:active { background: rgba(12, 12, 10, .6); }
+.evcards .weekrow-x { position: absolute; top: 10px; right: 10px; z-index: 2; }

@@ -48,13 +48,3 @@ export function avatarColor(user: { id: string; avatarColor?: string | null }): 
   if (picked && AVATAR_COLORS.includes(picked)) return picked;
   return AVATAR_COLORS[hash(user.id) % AVATAR_COLORS.length];
 }
-
-/** The colour a class wears when it has no photo, and the tint its card's
- *  fade takes when it does. Keyed on the class type, so Yoga is the same
- *  colour on every card and the palette means something; the fallback is the
- *  coach's own colour, because a class with no type is still somebody's. */
-export function classColor(type: string | null | undefined, fallback: string): string {
-  const t = type?.trim().toLowerCase();
-  if (!t) return fallback;
-  return AVATAR_COLORS[hash(t) % AVATAR_COLORS.length];
-}

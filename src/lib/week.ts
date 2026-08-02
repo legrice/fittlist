@@ -20,8 +20,6 @@ export type WeekItem = {
   ap: string;
   durationMin: number;
   where: string | null;
-  /** Colours the card the lists draw; the photo stays off them on purpose. */
-  classType?: string | null;
   handle: string;
   coachName: string;
   coachPhoto: string | null;
@@ -361,7 +359,6 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ap: t.ap,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
-      classType: c.classType,
       handle: base,
       coachName: coach.name,
       coachPhoto: coach.photo,
@@ -389,7 +386,6 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       ap: t.ap,
       durationMin: p.durationMin,
       where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
-      classType: p.classType,
       handle: "",
       coachName: p.withWho,
       coachPhoto: null,
