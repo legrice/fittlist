@@ -28,7 +28,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /** One section per URL, the same shape a person's profile uses. Contact left
  *  the tabs and became the pill on the header, exactly as it did for a coach;
  *  /s/{slug}/contact still resolves and lands on the page with the pill. */
-export type StudioTab = "schedule" | "about" | "contact";
+export type StudioTab = "schedule" | "about" | "coaches" | "contact";
 
 // Slug is the address; the id still resolves, so links made before slugs (and
 // anything holding a raw id) keep working.
@@ -181,11 +181,12 @@ export async function StudioView({
   }
 
   const hasSchedule = !!s.accountUserId || community;
-  const tab: StudioTab = wanted === "auto" ? (hasSchedule ? "schedule" : "about") : wanted;
-  // Without a schedule there are no tabs, so there is nothing to divide the
-  // page into: it stays the single sectioned page it has always been, which is
-  // what almost every row in the directory is and should remain.
-  const show = (section: StudioTab) => !hasSchedule || tab === section;
+  // Every studio page wears the same three tabs now, whatever it holds:
+  // Schedule leads (it is what the link is for, and an empty one is the
+  // pitch), Info is the categories and the words, Coaches is who teaches
+  // here. One layout to learn, however small the studio.
+  const tab: StudioTab = wanted === "auto" ? "schedule" : wanted;
+  const show = (section: StudioTab) => tab === section;
 
   const backTo = backToFor(from, signedIn);
 
@@ -235,14 +236,11 @@ export async function StudioView({
         <ProfileTabs
           base={base}
           tab={tab}
-          tabs={
-            hasSchedule
-              ? [
-                  { key: "schedule", label: "Schedule" },
-                  { key: "about", label: "Info" },
-                ]
-              : []
-          }
+          tabs={[
+            { key: "schedule", label: "Schedule" },
+            { key: "about", label: "Info" },
+            { key: "coaches", label: "Coaches" },
+          ]}
           name={s.name}
           title=""
           location={s.address}
@@ -339,9 +337,18 @@ export async function StudioView({
           }
         >
 
-        {hasSchedule && tab === "schedule" && (
-          <StudioSchedule slug={s.slug ?? s.id} days={days} community={community} />
-        )}
+        {tab === "schedule" &&
+          (hasSchedule ? (
+            <StudioSchedule slug={s.slug ?? s.id} days={days} community={community} />
+          ) : (
+            <div className="empty-block">
+              <h2>No classes listed yet</h2>
+              <p>
+                The schedule fills in as coaches who teach here add their classes, or when
+                the studio takes the page and runs its own.
+              </p>
+            </div>
+          ))}
 
         {/* What kind of place this is, first thing under the tabs: it is the
             answer to "is this for me", and it used to sit above the photo
@@ -383,9 +390,17 @@ export async function StudioView({
         </div>
         )}
 
-        {show("about") && coaches.length > 0 && (
-          <div className="profstudios studsec">
-            <h2 className="prof-sec-h">Coaches here</h2>
+        {show("coaches") &&
+          (coaches.length === 0 ? (
+            <div className="empty-block">
+              <h2>Nobody listed yet</h2>
+              <p>
+                Coaches appear here when they add {s.name} as a place they teach, or put a
+                class on at it.
+              </p>
+            </div>
+          ) : (
+          <div className="profstudios studsec studsec-first">
             {coaches.map((c) => (
               <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
                 {c.photo ? (
@@ -410,7 +425,7 @@ export async function StudioView({
               </Link>
             ))}
           </div>
-        )}
+          ))}
 
         </ProfileTabs>
 

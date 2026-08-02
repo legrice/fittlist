@@ -21,8 +21,9 @@ const REASONS = [
 
 const RELATIONS = ["I own it", "I manage it", "I coach here", "I train here", "Other"];
 
-// Taking a page down is an ask only the people who run the place can make,
-// so the chips narrow to the two claims that mean that.
+// Taking a page down, or taking its keys: both are asks only the people who
+// run the place can make, so the chips narrow to the two claims that mean
+// that.
 const OPTOUT_RELATIONS = ["I own it", "I manage it"];
 
 export function StudioFeedback({
@@ -32,7 +33,7 @@ export function StudioFeedback({
   onDone,
 }: {
   studioId: string;
-  mode: null | "report" | "suggest" | "optout";
+  mode: null | "report" | "suggest" | "optout" | "claim";
   onClose: () => void;
   onDone: (msg: string) => void;
 }) {
@@ -69,6 +70,25 @@ export function StudioFeedback({
 
   // The same pipe a suggestion rides, with the ask as its first line so it
   // cannot be mistaken for a correction on the other end.
+  // Asking for the keys rides the same pipe too, marked the same way: the
+  // first line says exactly what is being asked.
+  const sendClaim = () =>
+    start(async () => {
+      const res = await suggestStudioEdit(
+        studioId,
+        sgName,
+        sgEmail,
+        sgRelation,
+        `I want to own this page.${sgMessage.trim() ? ` ${sgMessage.trim()}` : ""}`,
+      );
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that.");
+        return;
+      }
+      onClose();
+      onDone("Thanks. We'll be in touch and set you up.");
+    });
+
   const sendOptout = () =>
     start(async () => {
       const res = await suggestStudioEdit(
@@ -202,6 +222,81 @@ export function StudioFeedback({
                 onClick={sendSuggestion}
               >
                 {pending ? "Sending…" : "Send suggestion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {mode === "claim" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Own this page</h2>
+            <p className="lead">
+              If you run this studio, this page can be yours: your own schedule, your own
+              details, and the Verified badge so everyone knows who speaks for it. Tell us
+              who you are and we&rsquo;ll set you up.
+            </p>
+            <label className="flabel" htmlFor="clName">Your name</label>
+            <input
+              id="clName"
+              className="editinput"
+              type="text"
+              autoComplete="name"
+              placeholder="e.g. Jenny Ramos"
+              value={sgName}
+              onChange={(e) => setSgName(e.target.value)}
+            />
+            <label className="flabel" htmlFor="clEmail">Your email</label>
+            <input
+              id="clEmail"
+              className="editinput"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={sgEmail}
+              onChange={(e) => setSgEmail(e.target.value)}
+            />
+            <label className="flabel">Your connection to it</label>
+            <div className="relpick">
+              {OPTOUT_RELATIONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`relchip${sgRelation === r ? " sel" : ""}`}
+                  onClick={() => setSgRelation(sgRelation === r ? "" : r)}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <label className="flabel" htmlFor="clMsg">
+              Anything we should know <span>&middot; optional</span>
+            </label>
+            <textarea
+              id="clMsg"
+              className="editinput"
+              rows={2}
+              maxLength={1000}
+              placeholder="e.g. I'm the owner. Our front desk email is on our site."
+              value={sgMessage}
+              onChange={(e) => setSgMessage(e.target.value)}
+            />
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={pending || !sgEmail.trim() || !sgRelation}
+                onClick={sendClaim}
+              >
+                {pending ? "Sending…" : "Ask to own this page"}
               </button>
             </div>
           </div>

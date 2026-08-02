@@ -2262,7 +2262,12 @@ await page.getByText("Platforms, a turf strip").waitFor();
   await page.locator(".profbadges-onbanner .studiokept", { hasText: "Unverified" }).waitFor();
   await page.locator(".studiokept", { hasText: "Unverified" }).click();
   await page.getByRole("heading", { name: "Unverified" }).waitFor();
-  await page.getByRole("button", { name: "Get in touch" }).waitFor();
+  // Get in touch is an ask to own the page, not the corrections form: its
+  // own sheet, needing an email and an owner or manager claim.
+  await page.getByRole("button", { name: "Get in touch" }).click();
+  await page.getByRole("heading", { name: "Own this page" }).waitFor();
+  if (!(await page.getByRole("button", { name: "Ask to own this page" }).isDisabled()))
+    fail("the claim should wait for an email and a connection");
   await page.locator(".sheetclose").last().click();
   await page.waitForFunction(() => !document.querySelector(".sheet"));
   console.log("studio photo is a banner ok (full bleed, Unverified riding it)");

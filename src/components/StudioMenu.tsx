@@ -63,7 +63,10 @@ export function StudioMenu({
               <Icon name="close" size={16} />
             </button>
             <h2 style={{ marginTop: 10 }}>{studio.name}</h2>
-            <div className="ownermenu">
+            {/* settingslist, not a bare list: it is what carries the dividers
+                between rows and the flush left edge, so the icons line up
+                under the studio's name like every other button sheet. */}
+            <div className="settingslist ownermenu">
               <button className="setrow" onClick={share}>
                 <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
                 <span className="setrow-txt">

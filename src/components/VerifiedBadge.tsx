@@ -14,9 +14,9 @@ import { Toast, useToast } from "@/components/Toast";
 // say how a gym gets the keys, because the person most likely to tap either
 // is somebody who runs a place and wants theirs.
 //
-// The way in is the Suggest an edit sheet that already exists, whose relation
-// field starts with "I own it". That is how a studio actually gets claimed
-// today, so this points at it rather than inventing a second door.
+// The way in is the Own this page sheet: an ask to take the keys, not a
+// correction form, because wanting to run your page is not a suggestion. It
+// rides the same pipe a suggestion does, marked by its first line.
 export function VerifiedBadge({
   studioId,
   name,
@@ -111,7 +111,7 @@ export function VerifiedBadge({
 
       <StudioFeedback
         studioId={studioId}
-        mode={claim ? "suggest" : null}
+        mode={claim ? "claim" : null}
         onClose={() => setClaim(false)}
         onDone={(msg) => {
           setClaim(false);

@@ -545,10 +545,12 @@ either opens a sheet saying what it means: Verified, that the people who run
 the place keep the page, which is why nobody else can edit it; Unverified,
 that the page is a shared entry the community keeps, and what verifying
 would hand the owner. Both offer the same way in for somebody who runs a
-studio: the Suggest an edit sheet that already exists, whose relation field
-starts with "I own it", because that is how a studio actually gets claimed
-today and a second door would drift. A badge nobody can ask about is a claim
-taken on faith, and an absence nobody can ask about is worse.
+studio: the Own this page sheet (`StudioFeedback`'s `claim` mode), an ask to
+take the keys rather than the corrections form, requiring an email and an
+owner or manager claim and riding the same `suggestStudioEdit` pipe with "I
+want to own this page." as its first line, the way the opt-out marks itself.
+A badge nobody can ask about is a claim taken on faith, and an absence
+nobody can ask about is worse.
 
 **On a profile the header sits above the page again, and only the name and
 tabs pin.** `.pubstick` sticks under the app header, measuring the brandbar's
@@ -924,21 +926,23 @@ nobody does: the private feed adds the covered dates to the regular coach's
 EXDATE list and emits a one-off event for whoever took it. The rota screen is a
 real dated week (`?w=` offsets from this Monday) because a swap is about a date.
 
-**A studio running a schedule wears the same tabs a person does.** `/s/{slug}`
-is the schedule and `/s/{slug}/about` the rest; `/s/{slug}/schedule` resolves
-too, and `/s/{slug}/contact` permanently redirects onto the page, because
-contact became the header pill and a sheet here exactly as it did for a coach.
-The sheet carries no fittlist row: a studio has no account to be written to, so
+**Every studio page wears the same three tabs: Schedule, Info, Coaches.**
+`/s/{slug}` is the schedule, `/s/{slug}/about` the categories and the words,
+`/s/{slug}/coaches` whoever teaches there (the same union "Where I coach"
+uses, from the other end); `/s/{slug}/schedule` resolves too, and
+`/s/{slug}/contact` permanently redirects onto the page, because contact
+became the header pill and a sheet here exactly as it did for a coach. The
+sheet carries no fittlist row: a studio has no account to be written to, so
 `ContactSheet` takes an optional handle and `canMessage` false. What kind of
-place it is (`studios.types`) is the first thing in About, where it answers "is
-this for me"; above the photo it read as a caption on the name. The schedule leads for the same reason it
-does on a coach's page: it's what the link is for. A directory entry with no
-schedule has nothing to divide, so it keeps the single sectioned page it always
-had (`show()` in `StudioView`), which is almost every row in the table and
-should stay that way. `samePage()` already collapses the suffixes, so back
-pops. A gym's class lives at `/s/{slug}/{classId}`, because its account has no
-handle; `classDetail()` takes a handle **or** a studio slug and scopes the
-lookup either way.
+place it is (`studios.types`) is the first thing in Info, where it answers
+"is this for me". The schedule leads for the same reason it does on a
+coach's page: it's what the link is for, and on a studio with nothing
+listed its empty state is the pitch. The tabs are there whatever the studio
+holds (the single sectioned page for directory-only rows is gone): one
+layout to learn, however small the place. `samePage()` collapses all the
+suffixes, so back pops. A gym's class lives at `/s/{slug}/{classId}`,
+because its account has no handle; `classDetail()` takes a handle **or** a
+studio slug and scopes the lookup either way.
 
 **A handle is not "has a page you can link to".** `week.ts` dropped any saved
 class whose owner had no handle, which silently emptied a member's plans of
