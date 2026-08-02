@@ -493,7 +493,8 @@ if (!(await page.locator(".calsticky .calhead").count()))
   fail("the month title should sit inside the sticky calendar header");
 if (!(await page.locator(".calsticky .calhead-add").count()))
   fail("Add should sit in the calendar header, across from the month");
-if (await page.locator(".todayfab").count()) fail("the Today button should be gone");
+if (!(await page.locator(".todayfab").count()))
+  fail("Today should float bottom left, across from Share");
 // Scrolling up reveals what has been: the daily class has past occurrences,
 // and the first slice reveals itself from the top of the list.
 await page.locator(".ps-pastday .ps-event").first().waitFor();
@@ -1234,10 +1235,15 @@ if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
 if (await fan.locator(".disfol").count())
   fail("the corner Follow pill should be gone from directory rows");
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
-// No Coach badge here: the tab already says everyone listed is one. Search
-// keeps the badge, because that list mixes kinds.
-if (await fan.locator(".disrow .kindtag", { hasText: "Coach" }).count())
-  fail("a coaches-only list should not badge every row Coach");
+// People mixes kinds now, so the Coach badge is the distinction that
+// matters, same as search, and the rail's chips are the kinds.
+if (!(await fan.locator(".disrow .kindtag", { hasText: "Coach" }).count()))
+  fail("a mixed People list should badge the coaches");
+{
+  const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((t) => t.trim());
+  if (chips.join("|") !== "All|Coaches|Members")
+    fail("the People rail should read All, Coaches, Members: " + chips.join("|"));
+}
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
 await fan.locator(".profacts .followpill").waitFor();
@@ -1335,60 +1341,49 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).waitFor();
   if (await fan.locator(".chip-filters").count())
     fail("the Filters chip should be gone from the rail");
-  // A pick takes All off and narrows the list.
-  await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
+  // A pick takes All off and narrows the list to the kind.
+  await fan.locator(".dischips .chip", { hasText: /^Coaches$/ }).click();
   await fan.waitForTimeout(300);
   if (await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count())
     fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
-  if (await fan.locator(".disrow", { hasText: "Sam" }).count())
-    fail("filtering by what someone teaches should drop the ones who don't");
-  // Multiselect: a second pick joins the first rather than replacing it.
-  await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
+  // Multiselect: Members joins Coaches rather than replacing it.
+  await fan.locator(".dischips .chip", { hasText: /^Members$/ }).click();
   await fan.waitForTimeout(300);
   if ((await fan.locator(".dischips .chip.sel").count()) !== 2)
     fail("two picks should both stay selected");
-  await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
+  await fan.locator(".dischips .chip", { hasText: /^Members$/ }).click();
   await fan.waitForTimeout(200);
-  // Switching lens drops the type pick with it: the other half offers its own
-  // vocabulary, and carrying a coach's word over would filter to nobody.
+  // Switching lens drops the pick with it: the other half can't honour it.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
   if (!(await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count()))
     fail("the other lens should open back on All");
   // All is the way back: tap it and the whole list returns.
-  await fan.getByRole("button", { name: "Coaches", exact: true }).click();
+  await fan.getByRole("button", { name: "People", exact: true }).click();
   await fan.waitForTimeout(200);
-  await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
+  await fan.locator(".dischips .chip", { hasText: /^Coaches$/ }).click();
   await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
   await fan.waitForTimeout(300);
   await fan.locator(".disrow", { hasText: "Sam" }).waitFor();
   console.log("discover filters ok (All leads filled in, picks are multiselect)");
 }
 
-// A filter is only offered where it can narrow something. The chips come from
-// what the lens in front of you actually has, so People stays quiet until
-// coaches start saying what they teach.
+// A filter is only offered where it can narrow something. People's rail is
+// the kinds and nothing else; the type vocabulary is the Studios half's own.
 {
-  // The chips sit on the page now, under the tabs, so reading them is just
-  // looking. All leads the rail everywhere; the type chips after it are the
-  // lens's own vocabulary.
   await fan.goto(BASE + "/discover");
-  const FIXED = ["All", "Available for clients"];
-  const typeChips = async () =>
-    (await fan.locator(".dischips .chip").allInnerTexts())
-      .map((c) => c.trim())
-      .filter((c) => !FIXED.includes(c));
-  const peopleChips = await typeChips();
+  const chips = async () =>
+    (await fan.locator(".dischips .chip").allInnerTexts()).map((c) => c.trim());
+  const peopleChips = await chips();
+  if (peopleChips.join("|") !== "All|Coaches|Members")
+    fail("People's rail is the kinds and nothing else: " + peopleChips.join("|"));
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(200);
-  const studioChips = await typeChips();
-  // Matt is the only one who has said anything, and he said Yoga.
-  if (peopleChips.join(",") !== "Yoga")
-    fail("People should only offer what a coach here actually teaches: " + peopleChips.join(","));
-  if (studioChips.length && studioChips.every((c) => peopleChips.includes(c)))
-    fail("the two lenses should not be offering the same list by accident");
-  console.log("discover chips ok (only what the lens can narrow)");
+  const studioChips = await chips();
+  if (studioChips.includes("Coaches") || studioChips.includes("Members"))
+    fail("Studios should not offer the People kinds");
+  console.log("discover chips ok (kinds on People, types on Studios)");
 }
 
 // A profile carries no tab bar, so the arrow on the picture is the way off it
@@ -1595,23 +1590,24 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 }
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
-// The profile's schedule wears the same cards the feed does, actions and all:
-// share on every card, and the ribbon only for somebody the class could
-// belong to. The member gets both; the owner shares their own class rather
-// than adding it, so their page carries the lone share and no ribbon.
+// The profile's schedule wears the same flat rows every schedule does now,
+// actions and all: share on every row, and the ribbon only for somebody the
+// class could belong to. The member gets both; the owner shares their own
+// class rather than adding it, so their page carries the lone share and no
+// ribbon.
 {
   await fan.goto(BASE + "/matt");
-  await fan.locator(".pub .evcards .ps-erow").first().waitFor();
-  const row = fan.locator(".pub .evcards .ps-erow").first();
+  await fan.locator(".pub .callist .ps-erow").first().waitFor();
+  const row = fan.locator(".pub .callist .ps-erow").first();
   await row.locator(".evcard-share").waitFor();
   await row.locator(".evcard-add").waitFor();
   await page.goto(BASE + "/matt");
-  await page.locator(".pub .evcards .ps-erow").first().waitFor();
+  await page.locator(".pub .callist .ps-erow").first().waitFor();
   if (!(await page.locator(".evcard-share.lone").count()))
-    fail("the owner's cards should carry the share button in the corner");
+    fail("the owner's rows should carry the share button in the corner");
   if (await page.locator(".evcard-add").count())
     fail("the owner has nothing to add: it is already their class");
-  console.log("profile cards ok (share for everyone, the ribbon for a member)");
+  console.log("profile rows ok (share for everyone, the ribbon for a member)");
 }
 
 // Now someone with an account has followed, so the coach sees a face rather

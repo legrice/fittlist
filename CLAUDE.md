@@ -338,12 +338,17 @@ and none at 1280px is a dead end. The single opt-out is a profile
 (`headerNav={false}`), whose header floats over a photograph in white, where a
 row of ink links is a row nobody can read.
 
-**Discover has two halves: the coaches and the places.** Members are
-deliberately not listed, for now: following a member buys nothing visible
-yet, so a directory row for one offered a door with no room behind it. They
-come back the day a member-follow means something someone can see. Universal
-search still finds a member by name, because asking for a person is a
-different act from browsing a directory. Studios are not followable and
+**Discover has two halves: the people and the places.** Members list
+alongside coaches now, by Matt's call: a directory with everyone in it is
+what says the room is lived-in, and a directory of six coaches said the
+opposite. (They were held out while a member-follow bought nothing
+visible; mutual follows surface shared rows now, and the scale argument
+won.) The Coach badge on a row is the distinction, same as search, and
+the People rail's chips are the kinds: All leading filled-in, then
+Coaches and Members, multiselect. The quality bar (a schedule, or enough
+profile) stays a coach's alone; a member's row claims nothing but the
+person, so a name is enough. `discoverable = false` and blocks in either
+direction still mean not listed. Studios are not followable and
 never will be by this control, because you follow a person and a gym is a
 place; the row is the whole link to `/s/{slug}` and carries no pill. They also
 carry no city filter: a studio has a free-text `address` and nothing normalised
@@ -401,22 +406,23 @@ tabs, and the chip rail under them, led by All.** The People/Studios
 segment is the same underline tabs a profile's sections wear (`.pubtabs
 .distabs`), and the rail (`.dischips`, scrolling off the edge) is the whole
 filter now. All leads it, filled in by default: the one selected chip is
-what says the others can be selected, and tapping it clears every pick. The
-chips after it are multiselect (Available for clients on Coaches, then the
-lens's type chips); picking two types means either, not both, and any pick
-takes All off. There is no Filters chip and no sheet for now; both return
+what says the others can be selected, and tapping it clears every pick. On
+People the chips after it are the kinds, Coaches and Members, multiselect
+(both picked means the same as neither); on Studios they are the place's
+types, where picking two means either, not both. Any pick takes All off.
+The Available-for-clients chip and the discipline chips left the People
+half when members joined the list; they come back the day the filters
+earn a sheet. There is no Filters chip and no sheet for now; both return
 the day there are enough filters (the city among them) to need one, which
 is also why `cities` stays a prop the component ignores. Nothing is on by
 default: a filter you didn't set is a list you can't explain.
 
-**A filter is only offered where it can narrow something.** Discover's What
-chips are built from what the lens in front of you actually holds: coaches'
-`disciplines` on the Coaches half, `studios.types` on Studios. Pooling both
+**A filter is only offered where it can narrow something.** Discover's type
+chips are built from what the lens in front of you actually holds:
+`studios.types`, on the Studios half only. Pooling both halves once
 offered the coaches the studios' vocabulary, and every chip there filtered
-to nobody, because coaches haven't started saying what they teach yet. The
-section shows up on its own the day they do, and switching lens drops the
-pick, since the other half can't honour a word it doesn't use. Same rule as
-the city picker, which only appears on Coaches.
+to nobody. Switching lens drops the
+pick, since the other half can't honour a word it doesn't use.
 
 **A profile carries no tab bar, and the arrow is the way off it.** Three layers
 of chrome stacked at the bottom of a schedule (the bar, the floating Add class,
@@ -1124,26 +1130,29 @@ would mean knowing what colour it sits on. The tick is a hole in one
 `fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
 the dark pill, the card and the tab bar alike.
 
-**The lists are flat rows with an accent bar; only a public profile still
-draws cards.** Following (`.feedagenda`) and both calendars (`.callist`)
+**Every schedule is the same flat row now.** Following (`.feedagenda`),
+both calendars, a coach's public page and a studio's page (`.callist`)
 strip the card skin from the shared `.ps-event` row: transparent ground, a
-hairline under each row, and the bar down the left carrying the colour
-that matters there (the coach's own on Following, the same one their
-avatar's ring wears when picked on the strip via `--avring`, with the All
-circle ringing in ink; the kind's on the calendars). The share circle and
+hairline under each row, a rule under each date heading, and the bar down
+the left carrying the colour that matters there (the coach's own on
+Following and their public page, the same one their avatar's ring wears
+when picked on the strip via `--avring`, with the All circle ringing in
+ink; the kind's on the calendars; the studio's derived colour on its own
+page). The row is bottom-aligned: the name and location sit on the
+duration's shelf, however many lines each side carries, and a shift's tag
+rides its own line above the name (`.ps-shifttop`), the spot the coach
+chip takes on a Going row. The share circle and
 Add ribbon sit above the time in the right column, smaller, and the
 member's remove X takes that corner on their week; all of them are
 siblings of the row, never children, because a button inside a link is not
 a thing. The ribbon fills brand orange (`--si`) when a class is in,
 because the one mark the actions earn should be the same orange every Add
-wears. The card look survives on a coach's public profile (`.evcards`,
-paper with a whisper of a shadow, `ClassCardActions` in the corner: share
-for everyone including the owner, the Add ribbon only for a member it
-could belong to, with the viewer's marks loaded server-side so the ribbon
-starts right); a photo per row was tried and read as a poster wall, so the
-overlay and the share card keep the photo, where one class has the whole
-screen. The studio page and the rota keep dense rows on purpose: those are
-working surfaces where density is the point.
+wears. On the public page the pair loads the viewer's marks server-side so
+the ribbon starts right; a photo per row was tried and read as a poster
+wall, so the overlay and the share card keep the photo, where one class
+has the whole screen. The `.evcards` card skin has no schedule left to
+dress (the rota keeps its own dense rows: a working surface where density
+is the point).
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
@@ -1224,15 +1233,19 @@ it without a start bound: eight weeks of "your Tuesday class ran on
 Tuesdays" is almost always true, and the honest alternative (bounding on
 `createdAt`) breaks the moment an edit reinserts the rows.
 
-**The calendar keeps one door on screen: Share, centred.** `CalBottomBar`
-floats it over every view on both calendars (`.sharefab`), because handing
-your week on is the habit the whole app leans on. It replaced the Today
-button (the list starts at today, and the month has its chevrons) and the
-floating plus, which went back up beside the month as the header's Add
-pill (`.calhead-add`). On a coach's calendar Share opens a small sheet
-(the story image, the week as text, the link); on a member's it opens
-`ShareMyWeekSheet` straight, because that sheet already is the options.
-The Add pill asks which kind first: both
+**The calendar keeps two doors on screen: Today left, Share right.**
+`CalBottomBar` floats them over every view on both calendars, both
+strokeless pills whose edge is their shadow. Today matters more now that
+the list scrolls into the past: it lands on the first not-past day
+(`scrollToToday`, which knows the coach shell scrolls its `.stage` where
+the tabs layout scrolls the body). Share wears the sparkle in the brand
+orange and opens the handing-on: a coach's small sheet (the story image,
+the week as text, the link), or a member's `ShareMyWeekSheet` straight,
+because that sheet already is the options. The floating plus went up into
+the header's split capsule (`.calsplit`, top right): the view menu and Add
+as one instrument, the way Apple's calendar keeps its actions in one pill,
+with Add as the capsule's orange half.
+The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class
 you're coaching, a class you're going to, anything else), a member's the
@@ -1265,9 +1278,10 @@ on on arrival (the off-set resets; a filter is a way of looking, not a
 fact worth storing), unchecking all empties the list honestly, and the row
 only renders when the calendar holds at least two kinds. Colour by
 relationship is three meanings, three colours, stable everywhere. Shift
-rides the name line (a fact about which kind of yours it is), with Private
-and Duplicate: facts about the class, not about why it's yours. Saved is
-still not a word a class wears.
+rides its own line above the name (which kind of yours it is comes before
+what it is); Private and Duplicate stay on the name line, facts about the
+class rather than about why it's yours. Saved is still not a word a class
+wears.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the

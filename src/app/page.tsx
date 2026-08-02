@@ -20,7 +20,12 @@ export default async function Home({
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
-  const providers = { google: googleConfigured(), apple: appleConfigured() };
+  // Google login is off the door for the beta, by Matt's call: the credentials
+  // are live in production for the Calendar sync, which is why "configured"
+  // stopped being the right gate. Flip this back to googleConfigured() when
+  // the beta opens up.
+  const providers = { google: false, apple: appleConfigured() };
+  void googleConfigured;
   // Or on somebody's share link, which /j/{code} left in a cookie on the way
   // through. Same gate, and this is who opened it for them. A link from the
   // admin lands as a plain "you're invited" with no name on it: a coach

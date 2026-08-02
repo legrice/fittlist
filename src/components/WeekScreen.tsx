@@ -21,6 +21,7 @@ import {
   loadCalView,
   monthLabel,
   saveCalView,
+  scrollToToday,
   usePastReveal,
   type CalKind,
   type CalView,
@@ -238,8 +239,8 @@ export function WeekScreen({
             label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
             onMenu={() => setViewSheet(true)}
           >
-            <button className="calhead-add" onClick={() => setAddMenu(true)}>
-              <Icon name="add" size={18} /> Add
+            <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>
+              <Icon name="add" size={20} />
             </button>
           </CalHead>
           {/* The kind filters: colour-coded checkmarks, also the legend for the
@@ -389,8 +390,14 @@ export function WeekScreen({
           </>
         )}
       </div>
-      {/* The one floating door: the week as a poster, to hand on. */}
-      <CalBottomBar onShare={() => setShareWeek(true)} />
+      {/* The two floating doors: back to now, and the week as a poster. */}
+      <CalBottomBar
+        onToday={() => {
+          pickView("list");
+          requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
+        }}
+        onShare={() => setShareWeek(true)}
+      />
 
       {shareWeek && (
         <ShareMyWeekSheet onClose={() => setShareWeek(false)} firstIso={shown[0]?.iso} />

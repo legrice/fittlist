@@ -5,24 +5,25 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 
-// The directory, which has two halves: the coaches and the places. Members
-// aren't listed here for now, because following a member doesn't buy anything
-// visible yet; universal search still finds them by name, since asking for a
-// person is different from browsing. The box is a door to the universal
+// The directory, which has two halves: the people and the places. Members
+// list alongside coaches now (a directory with everyone in it is what says
+// the room is lived-in), and the Coach badge on a row is what tells them
+// apart. The box is a door to the universal
 // search; the tabs pick a half; and the chip rail under them is the whole
 // filter: All leads, filled in by default (the one selected chip is what
-// says the others can be selected), and the chips after it are multiselect.
-// The Filters sheet is gone for now; it returns when there are enough
+// says the others can be selected). On People the chips are the kinds
+// (Coaches, Members); on Studios they are the place's types. The
+// Filters sheet is gone for now; it returns when there are enough
 // filters to need one.
 export function DiscoverList({
-  coaches,
+  people,
   studios = [],
   cities,
   myCity = null,
   backHref,
   hideBack = false,
 }: {
-  coaches: DirPerson[];
+  people: DirPerson[];
   studios?: DirStudio[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
@@ -40,7 +41,10 @@ export function DiscoverList({
   // sheet again.
   void cities;
   const [types, setTypes] = useState<Set<string>>(new Set());
-  const [acceptingOnly, setAcceptingOnly] = useState(false);
+  // Which kinds of people: multiselect, so both picked means the same as
+  // neither. The discipline chips left this half for now; the kinds are the
+  // filter, and the type vocabulary stays the studios'.
+  const [kinds, setKinds] = useState<Set<"coach" | "member">>(new Set());
 
   const toggleType = (t: string) =>
     setTypes((prev) => {
@@ -49,18 +53,17 @@ export function DiscoverList({
       else next.add(t);
       return next;
     });
+  const toggleKind = (k: "coach" | "member") =>
+    setKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
   const shown = useMemo(() => {
-    return coaches.filter((c) => {
-      // Multiselect means any-of: two picks widen to either, they don't
-      // demand both.
-      if (types.size > 0 && !c.disciplines.some((d) => types.has(d))) return false;
-      // Someone looking for a personal trainer is looking for a yes, not a
-      // waitlist. The coach already told us which they are.
-      if (acceptingOnly && c.availability !== "accepting") return false;
-      return true;
-    });
-  }, [coaches, types, acceptingOnly]);
+    return people.filter((c) => kinds.size === 0 || kinds.has(c.kind));
+  }, [people, kinds]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
@@ -76,21 +79,18 @@ export function DiscoverList({
 
   // All is the absence of picks, and it leads the rail already filled in:
   // the one selected chip is what says the others can be selected.
-  const allOn = types.size === 0 && !(tab === "people" && acceptingOnly);
+  const allOn = tab === "people" ? kinds.size === 0 : types.size === 0;
   const clearAll = () => {
     setTypes(new Set());
-    setAcceptingOnly(false);
+    setKinds(new Set());
   };
   // What the lens in front of you can actually be narrowed by, and nothing
-  // else. Pooling both halves offered People the studios' vocabulary, so every
-  // chip there filtered to nobody: coaches haven't started saying what they
-  // teach yet. The section appears on its own the day they do.
+  // else: the studios' own type vocabulary, on the Studios half only.
   const disciplines = useMemo(() => {
     const seen = new Set<string>();
-    if (tab === "people") for (const c of coaches) for (const d of c.disciplines) seen.add(d);
-    else for (const st of studios) for (const t of st.types) seen.add(t);
+    if (tab === "studios") for (const st of studios) for (const t of st.types) seen.add(t);
     return [...seen].sort((a, b) => a.localeCompare(b));
-  }, [coaches, studios, tab]);
+  }, [studios, tab]);
 
   return (
     <>
@@ -121,7 +121,7 @@ export function DiscoverList({
             setTypes(new Set());
           }}
         >
-          Coaches
+          People
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -129,6 +129,7 @@ export function DiscoverList({
           onClick={() => {
             setTab("studios");
             setTypes(new Set());
+            setKinds(new Set());
           }}
         >
           Studios
@@ -150,14 +151,24 @@ export function DiscoverList({
           All
         </button>
         {tab === "people" && (
-          <button
-            type="button"
-            className={`chip${acceptingOnly ? " sel" : ""}`}
-            aria-pressed={acceptingOnly}
-            onClick={() => setAcceptingOnly((v) => !v)}
-          >
-            Available for clients
-          </button>
+          <>
+            <button
+              type="button"
+              className={`chip${kinds.has("coach") ? " sel" : ""}`}
+              aria-pressed={kinds.has("coach")}
+              onClick={() => toggleKind("coach")}
+            >
+              Coaches
+            </button>
+            <button
+              type="button"
+              className={`chip${kinds.has("member") ? " sel" : ""}`}
+              aria-pressed={kinds.has("member")}
+              onClick={() => toggleKind("member")}
+            >
+              Members
+            </button>
+          </>
         )}
         {disciplines.map((d) => (
           <button
@@ -192,12 +203,14 @@ export function DiscoverList({
       {shown.length === 0 ? (
         <div className="empty-block">
           <h2>Nobody here yet</h2>
-          <p>The list fills up as coaches join and publish their schedules.</p>
+          <p>The list fills up as people join.</p>
         </div>
       ) : (
         <div className="dislist dislist-bare">
+          {/* Mixed kinds now, so the Coach badge is the distinction that
+              matters, same as search. */}
           {shown.map((c) => (
-            <PersonRow key={c.id} person={c} from="discover" kindTag={false} />
+            <PersonRow key={c.id} person={c} from="discover" />
           ))}
         </div>
       )}

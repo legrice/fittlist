@@ -613,24 +613,25 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   gap: 12px; margin: 14px 0 0;
 }
 .calhead-row .calhead { margin: 0; }
-.calhead-add {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
-  height: 34px; padding: 0 13px; border-radius: 999px;
-  background: var(--si); color: #fff; border: none; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 14px;
+/* The split capsule top right: the view menu and Add as one instrument,
+   the way Apple's calendar keeps its actions in one pill. Add keeps the one
+   loud colour as the capsule's right half. */
+.calsplit {
+  flex-shrink: 0; display: inline-flex; align-items: stretch;
+  border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden;
+  background: var(--card);
 }
-.calhead-add:active { transform: scale(.95); }
-/* The month is the title now, and the circled menu beside it opens the view
-   sheet: List today, the rest of the ways of looking as they land. The
-   spacer keeps Add pinned to the far edge. */
-.calmenu {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
-  cursor: pointer;
+.calsplit .calmenu {
+  width: 44px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; background: transparent; border: none;
+  border-right: 1px solid var(--line); color: var(--ink); cursor: pointer;
 }
-.calmenu:active { transform: scale(.95); }
+.calsplit .calhead-add {
+  width: 44px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; background: var(--si); color: #fff; border: none;
+  cursor: pointer; padding: 0;
+}
+.calsplit .calmenu:active, .calsplit .calhead-add:active { opacity: .8; }
 .calhead-spacer { flex: 1; }
 .viewsheet-on { color: var(--go); }
 /* The kind filters: a checkmark per kind wearing the kind's colour, which
@@ -716,22 +717,36 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
 [data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
 [data-mode="dark"] .monthpill.ev-private { color: #9fb0d1; }
-/* The one persistent door: Share, centred, floating over the list above
-   the tab bar. It replaced the Today button and the floating plus, which
-   went back up beside the month. `.calfabs-low` drops it to the screen
+/* The two persistent doors: Today bottom left (back to now, which matters
+   more now that the list scrolls into the past), Share bottom right. Both
+   strokeless: the shadow is the pill's edge, and the orange sparkle is
+   Share's one moment of colour. `.calfabs-low` drops them to the screen
    edge where no bar renders (the coaches-only mode). */
-.sharefab {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(88px + env(safe-area-inset-bottom));
-  z-index: 44; height: 46px; padding: 0 22px; border-radius: 999px;
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+.todayfab {
+  position: fixed; left: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; height: 46px; padding: 0 20px; border-radius: 999px;
+  background: var(--card); border: none; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.sharefab:active { transform: translateX(-50%) scale(.95); }
-.sharefab.calfabs-low { bottom: calc(20px + env(safe-area-inset-bottom)); }
+.sharefab {
+  position: fixed; right: 16px;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; height: 46px; padding: 0 22px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--card); border: none; color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
+}
+.sharefab-ic { display: inline-flex; color: var(--si); }
+.todayfab:active, .sharefab:active { transform: scale(.95); }
+.todayfab.calfabs-low, .sharefab.calfabs-low {
+  bottom: calc(20px + env(safe-area-inset-bottom));
+}
+/* Today lands the first not-past day under the sticky chrome, not behind it. */
+.callist .ps-daygroup { scroll-margin-top: 165px; }
 /* The calendar's own header, stuck under the app's: the month row and the
    checkmarks pin (top is set to the brandbar's measured height), the
    divider under them is the wrapper's own edge, and the list slides
@@ -4281,7 +4296,9 @@ button.ps-card { cursor: pointer; }
    of white boxes hid it. The share and Add pair sits above the time in the
    right column, smaller; the time column starts lower to make the room. */
 .feedagenda .ps-event {
-  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-start;
+  /* Bottom-aligned: the location's last line sits on the duration's, so the
+     row reads as one shelf however many lines each side carries. */
+  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-end;
   background: transparent; border-radius: 0; box-shadow: none;
   padding: 16px 10px 16px 2px; border-bottom: 1px solid var(--line);
 }
@@ -4303,7 +4320,9 @@ button.ps-card { cursor: pointer; }
    on the bar. The share circle rides top-right above the time; the member's
    remove X takes the same corner on their week. */
 .callist .ps-event {
-  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-start;
+  /* Bottom-aligned, same as Following: name and location sit on the
+     duration's shelf. */
+  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-end;
   background: transparent; border-radius: 0; box-shadow: none;
   padding: 14px 10px 14px 2px; border-bottom: 1px solid var(--line);
 }
@@ -4311,9 +4330,19 @@ button.ps-card { cursor: pointer; }
 .callist .ps-event:active { background: #f3ecdf; }
 .callist .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
 .callist .ps-erow { position: relative; gap: 0; }
-.callist .evcard-share { top: 10px; bottom: auto; width: 30px; height: 30px; right: 6px; }
+/* The corner pair, same as Following's: share beside Add when both render
+   (a visitor on a coach's page), share alone in the corner otherwise. */
+.callist .evcard-add, .callist .evcard-share {
+  top: 10px; bottom: auto; width: 30px; height: 30px;
+}
+.callist .evcard-add { right: 6px; }
+.callist .evcard-share { right: 44px; }
+.callist .evcard-share.lone { right: 6px; }
 .callist .weekrow-x { position: absolute; top: 10px; right: 6px; z-index: 2; }
 .callist .ps-etimecol { margin-top: 34px; }
+/* A shift says so above the name, the spot the coach chip takes on a Going
+   row: whose hat first, then what. */
+.callist .ps-shifttop { align-self: flex-start; margin: 0 0 3px; }
 /* Private stays a fact on the name line, not a dashed box: the flat row has
    no box to dash. */
 .callist .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }

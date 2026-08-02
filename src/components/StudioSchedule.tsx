@@ -29,7 +29,17 @@ export type StudioDay = {
 // Rows are real links wrapped in ClassOpener, the same as a coach's schedule:
 // an ordinary tap opens the class over the list, a modified click or a crawler
 // gets the page underneath.
-export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[] }) {
+export function StudioSchedule({
+  slug,
+  days,
+  accent,
+}: {
+  slug: string;
+  days: StudioDay[];
+  /** The studio's own derived colour, worn on every row's bar: the same one
+   *  its directory tile and empty banner wear. */
+  accent: string;
+}) {
   if (days.length === 0) {
     return (
       <div className="empty-block">
@@ -42,7 +52,7 @@ export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[]
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
-      <div className="ps-week ps-agenda">
+      <div className="ps-week ps-agenda callist">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
             <div className="ps-daycol">{d.label}</div>
@@ -51,6 +61,7 @@ export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[]
                 const start = clockParts(c.startTime);
                 const inner = (
                   <>
+                    <span className="ps-accent" style={{ background: accent }} aria-hidden="true" />
                     <span className="ps-ebody">
                       <span className="ps-enm">{c.name}</span>
                     </span>

@@ -33,6 +33,7 @@ import {
   loadCalView,
   monthLabel,
   saveCalView,
+  scrollToToday,
   usePastReveal,
   type CalKind,
   type CalView,
@@ -429,9 +430,10 @@ export function ScheduleScreen({
           >
             <button
               className="calhead-add"
+              aria-label="Add"
               onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
             >
-              <Icon name="add" size={18} /> Add
+              <Icon name="add" size={20} />
             </button>
           </CalHead>
           {/* The kind filters: colour-coded checkmarks, which are also the
@@ -576,13 +578,14 @@ export function ScheduleScreen({
                               inline colour here would override it. */}
                           <span className="ps-accent" aria-hidden="true" />
                           <span className="ps-ebody">
+                            {/* Shift rides its own line above the name, the
+                                spot the coach chip takes on a Going row: it
+                                says whose hat this is before what it is. */}
+                            {c.shift && <span className="ps-private ps-shifttop">Shift</span>}
                             <span className="ps-enm">
                               {c.name}
-                              {/* The colour says Teaching; the name line keeps
-                                  the facts about the class itself. Shift rides
-                                  here now: which kind of yours it is matters,
-                                  and the corner badge that said it is gone. */}
-                              {c.shift && <span className="ps-private">Shift</span>}
+                              {/* The name line keeps the facts about the class
+                                  itself. */}
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
@@ -890,8 +893,16 @@ export function ScheduleScreen({
         </div>
       )}
 
-      {/* The one floating door: every way of handing the calendar on. */}
-      <CalBottomBar raised={showFanView} onShare={() => setShareMenu(true)} />
+      {/* The two floating doors: back to now, and every way of handing the
+          calendar on. */}
+      <CalBottomBar
+        raised={showFanView}
+        onToday={() => {
+          pickView("list");
+          requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
+        }}
+        onShare={() => setShareMenu(true)}
+      />
 
       {shareMenu && (
         <div

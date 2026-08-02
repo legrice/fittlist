@@ -48,25 +48,47 @@ export function monthLabel(ym: string, todayIso: string) {
   return y === thisYear ? MONTHS[m - 1] : `${MONTHS[m - 1]} ${y}`;
 }
 
-/** The one persistent door under every calendar view: Share, centred. It
- *  replaced the Today button (the list starts at today, and the month has
- *  its chevrons) and the floating plus, which went back up beside the
- *  month. Sharing your week is the habit the whole app leans on, so it is
- *  the thing that never scrolls away. */
+/** The two persistent doors under every calendar view: Today bottom left
+ *  (back to now, in the list, which matters more now that the list scrolls
+ *  into the past), Share bottom right (handing your week on is the habit
+ *  the whole app leans on). The plus lives up in the header's capsule. */
 export function CalBottomBar({
   raised = true,
+  onToday,
   onShare,
 }: {
   /** Sitting above a tab bar, or on a screen without one. */
   raised?: boolean;
+  onToday: () => void;
   onShare: () => void;
 }) {
   const lift = raised ? "" : " calfabs-low";
   return (
-    <button className={`sharefab${lift}`} onClick={onShare}>
-      <Icon name="ios_share" size={16} /> Share
-    </button>
+    <>
+      <button className={`todayfab${lift}`} onClick={onToday}>
+        Today
+      </button>
+      <button className={`sharefab${lift}`} onClick={onShare}>
+        {/* The sparkle, in the brand orange: the pill's one moment of colour. */}
+        <span className="sharefab-ic" aria-hidden="true">
+          <Icon name="auto_awesome" size={17} />
+        </span>
+        Share
+      </button>
+    </>
   );
+}
+
+/** Back to now: the first day that isn't scrolled-back past. Scrolling the
+ *  window alone missed on the coach shell, which scrolls its .stage. */
+export function scrollToToday() {
+  const el = document.querySelector<HTMLElement>(".ps-daygroup:not(.ps-pastday)");
+  if (el) {
+    el.scrollIntoView({ block: "start", behavior: "smooth" });
+    return;
+  }
+  document.querySelector(".stage")?.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /** The calendar's header as one sticky block: the month row and the kind
@@ -87,9 +109,11 @@ export function CalSticky({ children }: { children: ReactNode }) {
   );
 }
 
-/** The title row: the month where "Your schedule" was, the circled menu that
- *  opens the view sheet, and whatever the caller puts across from them (the
- *  Add pill). */
+/** The title row: the month on the left, and one split capsule top right
+ *  holding the view menu and Add (the caller passes the Add button as
+ *  children, so each screen keeps its own handler). Apple's calendar keeps
+ *  its actions in one capsule there for the same reason: two controls that
+ *  are both about the calendar read as one instrument. */
 export function CalHead({
   label,
   onMenu,
@@ -101,14 +125,14 @@ export function CalHead({
 }) {
   return (
     <div className="calhead-row">
-      {/* The menu leads, the month follows: the same order the reference
-          calendars keep, and the circle reads as the row's handle. */}
-      <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
-        <Icon name="menu" size={17} />
-      </button>
       <h2 className="calhead">{label}</h2>
       <span className="calhead-spacer" />
-      {children}
+      <div className="calsplit">
+        <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
+          <Icon name="menu" size={17} />
+        </button>
+        {children}
+      </div>
     </div>
   );
 }

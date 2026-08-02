@@ -339,7 +339,11 @@ export async function StudioView({
 
         {tab === "schedule" &&
           (hasSchedule ? (
-            <StudioSchedule slug={s.slug ?? s.id} days={days} />
+            <StudioSchedule
+              slug={s.slug ?? s.id}
+              days={days}
+              accent={avatarColor({ id: s.id })}
+            />
           ) : (
             <div className="empty-block">
               <h2>No classes listed yet</h2>

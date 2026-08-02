@@ -72,14 +72,17 @@ export default async function DiscoverPage() {
   const requested = new Set(askRows.map((r) => r.trainerUserId));
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
-  const coaches: DirPerson[] = rows
-    // Coaches only, for now: following a member doesn't buy anything visible
-    // yet, so listing them here offered a button with no meaning. Universal
-    // search still finds a member by name, because asking for a person is
-    // different from browsing a directory.
-    .filter((r) => r.kind !== "fan")
-    // A coach's page has to be worth opening: a schedule, or enough profile.
-    .filter((r) => r.name.trim() && (weekCount.get(r.id) || r.title?.trim() || r.about?.trim()))
+  const people: DirPerson[] = rows
+    // Members list too now: a directory with everyone in it is what says the
+    // room is lived-in, and the People tab's chips (All, Coaches, Members)
+    // are how you narrow it. The quality bar stays a coach's alone: their
+    // page has to be worth opening (a schedule, or enough profile), while a
+    // member's row is just the person, which is all it claims to be.
+    .filter((r) =>
+      r.kind === "fan"
+        ? !!r.name.trim()
+        : !!r.name.trim() && !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
+    )
     .filter((r) => r.id !== userId)
     .map((r) => ({
       id: r.id,
@@ -100,7 +103,7 @@ export default async function DiscoverPage() {
     // face at the top is the reason to keep opening it.
     .sort((a, b) => (joinedAt.get(b.id) ?? 0) - (joinedAt.get(a.id) ?? 0));
 
-  const cities = [...new Set(coaches.map((c) => c.location).filter(Boolean))].sort((a, b) =>
+  const cities = [...new Set(people.map((c) => c.location).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
   );
 
@@ -124,7 +127,7 @@ export default async function DiscoverPage() {
       {/* The title lives inside the list now, so the coaches-only switch can
           sit directly across from it. */}
       <DiscoverList
-        coaches={coaches}
+        people={people}
         studios={studios}
         cities={cities}
         myCity={me.location?.trim() || null}
