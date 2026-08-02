@@ -38,9 +38,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // Everyone's You is their calendar now: a coach's at /app, a member's at
-  // /week. A member's account rows stay at /you, behind the header's gear.
-  const youHref = isCoach ? "/app" : "/week";
+  // The Schedule tab is the working calendar: a coach's at /app, a member's
+  // at /week. You is the person, at /you for everyone.
+  const scheduleHref = isCoach ? "/app" : "/week";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -53,15 +53,15 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           // Every screen in this group is the member side, so the magnifier
-          // is always right here.
+          // is always right here. No gear: the You tab is the door to the
+          // account now, and a second door in the corner said it twice.
           search
-          settings={isCoach ? "/app?acct=1" : "/you"}
-          nav={{ coach: isCoach, youHref }}
+          nav={{ coach: isCoach, scheduleHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} face={face} youHref={youHref} />
+      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

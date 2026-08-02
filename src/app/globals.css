@@ -3293,6 +3293,13 @@ button.ps-card { cursor: pointer; }
 /* The nav is fixed over everything below it, so the account needs enough room
    that its last row can always scroll clear of the bar. */
 .hasnav .acctwrap { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+/* The You tab: the same account, in the flow of the tabs layout rather than a
+   fixed layer over it. The layout's .pad already owns the padding and the room
+   above the bar, and a page is not a thing that slides in. */
+.acctwrap.acct-page, .hasnav .acctwrap.acct-page {
+  position: static; inset: auto; z-index: auto; overflow: visible;
+  padding: 0; animation: none; background: none;
+}
 /* Somebody else's profile carries no tab bar: its way out is the arrow on the
    picture. So it stops reserving a bar's worth of room at the bottom, and the
    floating Add class button drops to where it sits on a screen with nothing

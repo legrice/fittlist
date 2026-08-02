@@ -16,9 +16,10 @@ export function AppHeader({
   nav,
 }: {
   unread?: number;
-  /** Settings, as a gear. A coach's account view lives behind a URL
-   *  (/app?acct=1); a member's rows live at /you, now that their You tab is
-   *  the calendar. Omit only for a shell with nowhere to send it. */
+  /** Settings, as a gear. Only for a shell with no You tab to hold them:
+   *  the coaches-only mode has no tab bar, so the gear is the one door to
+   *  the account. Everywhere the tabs render, You is the door and the
+   *  corner stays clear. */
   settings?: string;
   /** The magnifier, back in the corner now that the plans ribbon left it
    *  room. Only where the member side is on: search is a signed-in door. */
@@ -36,14 +37,14 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; youHref?: string; onYou?: () => void };
+  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string };
 }) {
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" beta />
       </Link>
-      {nav && <HeaderNav coach={nav.coach} active={nav.active} youHref={nav.youHref} onYou={nav.onYou} />}
+      {nav && <HeaderNav coach={nav.coach} active={nav.active} scheduleHref={nav.scheduleHref} />}
       <div className="brandbar-actions">
         {/* The magnifier, the bell, the gear: the corner is for the things
             you reach for from wherever you happen to be. The shield left
@@ -71,10 +72,7 @@ export function AppHeader({
             label="Settings"
             icon="settings"
             href={settings}
-            // A coach's settings are an overlay named in the query string; a
-            // member's are the /you page, so the fill keys off whichever door
-            // this gear opens.
-            match={settings.startsWith("/you") ? "/you" : "?acct"}
+            match="/you"
           />
         )}
         {avatar &&

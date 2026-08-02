@@ -18,7 +18,9 @@ function secret() {
   return sessionSecret();
 }
 
-const back = (q: string) => Response.redirect(`${siteOrigin()}/app?gcal=${q}`, 302);
+// The Google Calendar rows live on the You tab, so the connect flow lands
+// back there with its verdict in the query.
+const back = (q: string) => Response.redirect(`${siteOrigin()}/you?gcal=${q}`, 302);
 const toLogin = (q: string) => Response.redirect(`${siteOrigin()}/?${q}`, 302);
 
 // Persist (or refresh) the calendar connection when a refresh token comes back,

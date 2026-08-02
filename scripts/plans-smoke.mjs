@@ -72,7 +72,7 @@ await m.waitForTimeout(400);
 
 // one of their own
 await m.goto(BASE + "/week");
-await m.locator(".schedtools").waitFor();
+await m.locator(".calhead-add").waitFor();
 await m.locator(".calhead-add").click();
 await m.getByRole("heading", { name: "Add to your calendar" }).waitFor();
 await m.locator(".sheet .setrow", { hasText: "going to" }).click();
@@ -110,9 +110,10 @@ if (!(await m.locator(".ps-goingtag", { hasText: "Going" }).count()))
 if (await m.locator(".ps-erow", { hasText: "Swag by LWL" }).locator(".ps-goingtag").count())
   fail("a personal row carries no badge: the tab already says why it is here");
 if (await m.locator(".weekrow-nm").count()) fail("the old bespoke row markup should be gone");
-// Share moved onto the rail; the floating pill is gone.
+// Share lives on the You tab now; the calendar carries no rail and no pill.
 if (await m.locator(".weekshare").count()) fail("the floating share pill should be gone");
-await m.locator(".schedtool", { hasText: "Share" }).first().waitFor();
+if (await m.locator(".schedtools").count())
+  fail("the tools rail should have left the calendar for the You tab");
 await m.waitForTimeout(300);
 await m.screenshot({ path: OUT + "/shot-plans-list.png" });
 

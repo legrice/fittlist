@@ -4,15 +4,12 @@ import { getDb, schema } from "@/db";
 import { mySchedule } from "@/lib/coachweek";
 import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
-import { adminEmails } from "@/lib/admin";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
-import { coachAnalytics } from "@/lib/visits";
 import { unreadNotifications } from "@/lib/notify";
 import { myWeek } from "@/lib/week";
-import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
@@ -23,9 +20,13 @@ export const dynamic = "force-dynamic";
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string; setpw?: string }>;
+  searchParams: Promise<{ add?: string; setpw?: string; acct?: string }>;
 }) {
   const userId = (await getSessionUserId())!;
+  // The account left this screen for the You tab; old ?acct=1 links (the
+  // gear's href for months) land there.
+  const { add, setpw, acct } = await searchParams;
+  if (acct) redirect("/you");
   const db = await getDb();
 
   const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([
@@ -77,54 +78,27 @@ export default async function SchedulePage({
   if (user && !user.onboardedAt) redirect("/welcome");
   // All independent, so they load together: awaited one by one they stacked
   // nine round trips onto every open of the schedule.
-  const [
-    gconn,
-    fbHost,
-    askFeedback,
-    invitesLeft,
-    passkeyRows,
-    customTypeRows,
-    inboxRows,
-    analytics,
-    notifUnread,
-    plans,
-    shiftRows,
-  ] = await Promise.all([
-    isGoogleConnected(userId),
-    feedbackHost(),
-    feedbackPromptDue(userId),
-    invitesBannerCount(),
-    db
-      .select({ id: schema.credentials.id })
-      .from(schema.credentials)
-      .where(eq(schema.credentials.userId, userId)),
-    db
-      .select({ name: schema.customClassTypes.name })
-      .from(schema.customClassTypes)
-      .orderBy(schema.customClassTypes.name),
-    db
-      .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
-      .from(schema.inquiryThreads)
-      .where(eq(schema.inquiryThreads.coachUserId, userId)),
-    coachAnalytics(userId),
-    unreadNotifications(userId),
-    // A coach goes to classes too: the same loader the member calendar
-    // reads, so You is one calendar of everything.
-    myWeek(userId),
-    // On a gym's rota? Then the calendar row says shifts, because that is what
-    // they came looking for.
-    db
-      .select({ id: schema.classes.id })
-      .from(schema.classes)
-      .where(eq(schema.classes.coachUserId, userId)),
-  ]);
+  const [fbHost, askFeedback, invitesLeft, customTypeRows, inboxRows, notifUnread, plans] =
+    await Promise.all([
+      feedbackHost(),
+      feedbackPromptDue(userId),
+      invitesBannerCount(),
+      db
+        .select({ name: schema.customClassTypes.name })
+        .from(schema.customClassTypes)
+        .orderBy(schema.customClassTypes.name),
+      db
+        .select({ n: schema.inquiryThreads.coachUnread })
+        .from(schema.inquiryThreads)
+        .where(eq(schema.inquiryThreads.coachUserId, userId)),
+      unreadNotifications(userId),
+      // A coach goes to classes too: the same loader the member calendar
+      // reads, so the schedule is one calendar of everything.
+      myWeek(userId),
+    ]);
 
   const customTypes = customTypeRows.map((r) => r.name);
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
-  // Requests are inquiries only. The admin is a coach too, so their feedback
-  // threads live on this table and were being counted as people who had asked
-  // them about private sessions.
-  const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
 
   const studioById = new Map(studioRows.map((st) => [st.id, st]));
   // The schedule is an infinite forward calendar; hand the client every class
@@ -180,8 +154,6 @@ export default async function SchedulePage({
       }
     : { startTime: "06:00", durationMin: 50, studioId: studios[0]?.id ?? null };
 
-  const { add, setpw } = await searchParams;
-
   return (
     <>
     {setpw === "1" && !user?.passwordHash && <SetPasswordPrompt email={user?.email ?? ""} />}
@@ -197,38 +169,14 @@ export default async function SchedulePage({
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
       plans={plans}
-      profileViews={analytics.profileViews}
-      requestCount={requestCount}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}
-      title={user?.title ?? ""}
       photo={user?.photo ?? null}
-      email={user?.email ?? ""}
-      instagram={user?.instagram ?? ""}
-      website={user?.website ?? ""}
-      contactEmail={user?.contactEmail ?? ""}
-      phone={user?.phone ?? ""}
-      whatsapp={user?.whatsapp ?? ""}
-      about={user?.about ?? ""}
-      availability={user?.availability ?? null}
-      googleConfigured={googleConfigured()}
-      googleConnected={gconn.connected}
-      googleEmail={gconn.email}
-      hasPassword={!!user?.passwordHash}
-      passkeyCount={passkeyRows.length}
-      isAdmin={!!user?.email && adminEmails().includes(user.email.toLowerCase())}
-      canSendFeedback={!!fbHost && fbHost.email.toLowerCase() !== (user?.email ?? "").toLowerCase()}
-      shiftCount={shiftRows.length}
-      shiftsPublic={user?.shiftsPublic ?? false}
       showFanView={await fansVisible()}
-      discoverable={user?.discoverable ?? true}
-      approveFollowers={user?.approveFollowers ?? false}
-      messagesOpen={user?.messagesOpen ?? true}
       userId={userId}
       myColor={user?.avatarColor ?? null}
       invitesLeft={invitesLeft}
-      look={user?.look ?? null}
     />
     {askFeedback && fbHost && <FeedbackPrompt hostName={fbHost.name.trim() || "We"} />}
     </>

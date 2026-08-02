@@ -40,9 +40,14 @@ const waitSchedule = (pg, n, timeout = 10000) =>
 // own gear links to. A navigation rather than a local open, so the rows need a
 // beat to hydrate before a click lands on one.
 const openProfile = async (pg) => {
-  await pg.goto(BASE + "/app?acct=1");
+  await pg.goto(BASE + "/you");
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450);
+};
+// A tab is not a thing you close: leaving the account is going somewhere.
+const closeProfile = async (pg) => {
+  await pg.goto(BASE + "/app");
+  await pg.locator(".calhead-add").waitFor();
 };
 
 // The plus asks which hat now, so opening the coach's form is two taps.
@@ -397,15 +402,16 @@ console.log("end date ok (stops the week and the feed, round-trips)");
 }
 console.log("saved-class links carry over ok");
 
-// ---- account page: full-screen view reached from the header settings icon.
-// A coach's face is the You tab now, so the corner is settings.
+// ---- the account: the You tab, a page of its own. An old ?acct=1 link (the
+// gear's href for months) still lands on it.
 await expect(
-  page.locator(".navtab.on .navav-empty").filter({ hasText: "M" }).isVisible(),
+  page.locator('.navtab[data-tab="you"] .navav-empty').filter({ hasText: "M" }).isVisible(),
   "the You tab carries their face (initial fallback)",
 );
 await page.goto(BASE + "/app?acct=1");
+await page.waitForURL("**/you");
 await page.locator(".acctwrap").waitFor();
-await expect(page.getByRole("heading", { name: "Settings" }).isVisible(), "settings opens");
+await expect(page.locator(".calbar-title", { hasText: "You" }).isVisible(), "the You tab opens");
 await expect(page.locator(".acctwho .acctwho-nm", { hasText: "Matt" }).isVisible(), "the who row shows their name");
 if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three analytics stats");
 if (await page.getByText("Schedule opens").count()) fail("Schedule opens should be gone");
@@ -454,8 +460,7 @@ await page.screenshot({ path: SCRATCH + "/shot-poster-mypage.png", fullPage: tru
 // no back control on the profile any more; settings is a route away
 await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await closeProfile(page);
 console.log("account + profile edit ok (back -> account)");
 
 // ---- the schedule has no pill strip: the owner's tools live behind the
@@ -514,8 +519,7 @@ await page.locator(".acctcard", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await closeProfile(page);
 console.log("schedule tools ok (three pills, no title)");
 
 // ---- page look: dark mode persists on the account and themes the app AND
@@ -1026,8 +1030,7 @@ await page.screenshot({ path: SCRATCH + "/shot-share-sheet.png" });
 // close the story sheet, then the account page beneath it
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await closeProfile(page);
 console.log("share sheet ok (save + share + colours + X close)");
 
 // ================= dated classes: one-time option =================
@@ -1663,30 +1666,26 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
-// ---- The member's You tab: their calendar. The plans ribbon is gone from
-// the header, because a second door to your own calendar said one thing
-// twice; the You tab is the door, and the rail rides across the top.
+// ---- The member's Schedule tab: their calendar, whole screen. The tools
+// rail left it for the You tab, and the four tabs are the same for everyone.
 {
   await fan.goto(BASE + "/feed");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+  if ((await fan.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
-  await fan.locator(".navtab", { hasText: "You" }).click();
+  await fan.locator(".navtab", { hasText: "Schedule" }).click();
   await fan.waitForURL(/\/week/);
-  await fan.locator(".schedtools").waitFor();
-  if (!(await fan.locator(".navtab.on", { hasText: "You" }).count()))
-    fail("the You tab should light on the member calendar");
+  await fan.locator(".calhead-add").waitFor();
+  if (!(await fan.locator(".navtab.on", { hasText: "Schedule" }).count()))
+    fail("the Schedule tab should light on the member calendar");
   // It's in the tabs group, so the shell above it never unmounts.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
-  // The rail: your page, sharing your week, and the editor last.
-  {
-    const pills = (await fan.locator(".schedtool").allInnerTexts()).map((t) => t.trim());
-    if (pills.length !== 3) fail("a member's rail should hold three pills, got " + pills.join("|"));
-    if (!pills[2].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
-  }
+  // The calendar is the whole screen: the rail lives on You now.
+  if (await fan.locator(".schedtools").count())
+    fail("the tools rail should have left the calendar for the You tab");
   // The big plus, same as every calendar.
   await fan.locator(".calhead-add").waitFor();
   // The rows are the shared class rows now, the same ones Following draws.
@@ -1847,16 +1846,15 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 
   // The poster covers the range you ask for, and it starts where your plans
   // do: a class nine days out used to share as a blank image with no way to
-  // tell why. The rail's Share is the door now; the floating pill is gone.
+  // tell why. The door is the You tab's share row now.
   if (await fan.locator(".weekshare").count())
-    fail("the floating share pill should have made way for the rail's Share");
-  await fan.locator(".schedtool", { hasText: "Share" }).nth(0).click();
+    fail("the floating share pill should have made way for the You tab's row");
+  await fan.goto(BASE + "/you");
+  await fan.locator(".setrow", { hasText: "Share classes you" }).click();
   await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
   {
     const from = await fan.locator("#myFrom").inputValue();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) fail("the share range needs a real start date: " + from);
-    const first = await fan.locator(".ps-agenda .ps-daycol").first().innerText();
-    void first;
     const src = await fan.locator(".storyimg").getAttribute("src");
     if (!src?.includes(`from=${from}`) || !src.includes("days=7"))
       fail("the image should be asked for over the chosen range: " + src);
@@ -1970,10 +1968,11 @@ if (myBuf.readUInt32BE(16) !== 1080 || myBuf.readUInt32BE(20) !== 1920)
 // sharing them lives in the member's account, not on top of their week
 if (await fan.locator(".goingshare").count())
   fail("Share my week should have moved off the feed");
-// The You tab is the calendar; the account rows live behind the gear.
+// The You tab is the person; the calendar is the Schedule tab next door,
+// and the gear is gone from the corner because You is the door now.
+if (await fan.locator(".settingsbtn").count())
+  fail("the gear should have left the corner: the You tab is the door");
 await fan.locator(".navtab", { hasText: "You" }).click();
-await fan.waitForURL("**/week");
-await fan.locator(".settingsbtn").click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
@@ -2122,17 +2121,12 @@ await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".distabs").waitFor();
-await page.locator(".navtab", { hasText: "You" }).click();
-// You is the coaching calendar again, tools across the top; the public page
-// is the first pill and wears the coach's face.
+// Schedule is the coaching calendar, whole screen: the rail left it for You.
+await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.waitForURL(/\/app/);
-await page.locator(".schedtools").waitFor();
-// Four pills: the face, one Share, the QR code, and Edit profile last.
-{
-  const pills = (await page.locator(".schedtool").allInnerTexts()).map((t) => t.trim());
-  if (pills.length !== 4) fail("the rail should hold four pills, got " + pills.join("|"));
-  if (!pills[3].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
-}
+await page.locator(".calhead-add").waitFor();
+if (await page.locator(".schedtools").count())
+  fail("the tools rail should have left the calendar for the You tab");
 // No corner controls here, so no min-height holding air above the name: the
 // card is as tall as what it says.
 {
@@ -2140,43 +2134,29 @@ await page.locator(".schedtools").waitFor();
     .locator(".evcards .ps-event")
     .first()
     .evaluate((e) => e.getBoundingClientRect().height);
-  if (h > 105) fail("the You-tab card should hug its content, got " + h + "px tall");
+  if (h > 105) fail("the Schedule-tab card should hug its content, got " + h + "px tall");
 }
-// Share is one pill and a sheet with both images behind it.
-await page.locator(".schedtool", { hasText: "Share" }).nth(0).click();
+// You is the person: the account screen as a page, cards for the shares.
+await page.locator(".navtab", { hasText: "You" }).click();
+await page.waitForURL(/\/you/);
+await page.locator(".acctwrap").waitFor();
+if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
 {
-  const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  if (rows.join("|") !== "Share your schedule|Share your profile")
-    fail("the Share sheet should offer the schedule and the profile: " + rows.join("|"));
-  // Solid, not glass: the tint went muddy under rows and dividers, and a
-  // sheet is a surface you read.
-  const bg = await page.locator(".sheet").evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (bg !== "rgb(255, 255, 255)") fail("a bottom sheet should be solid white, got " + bg);
+  const cards = (await page.locator(".acctcard").allInnerTexts()).map((t) => t.trim());
+  for (const want of ["Preview profile", "Share your schedule", "Share your profile", "Your QR code"])
+    if (!cards.some((c) => c.includes(want)))
+      fail(`the You tab should offer "${want}", got ` + cards.join("|"));
 }
-await page.locator(".sheetclose").first().click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
-// The QR pill is back on the rail.
-await page.locator(".schedtool", { hasText: "QR code" }).click();
+// The QR card opens the code.
+await page.locator(".acctcard", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet"));
-// Your profile is a sheet of everything about your page; the first row is
-// the page itself.
-await page.getByRole("button", { name: "Your profile" }).click();
-{
-  const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = [
-    "View public profile",
-    "Edit profile",
-    "Share profile",
-    "Copy profile link",
-    "QR code",
-    "Copy schedule as text",
-  ];
-  if (rows.join("|") !== want.join("|"))
-    fail("the profile sheet should be " + want.join(", ") + ", got " + rows.join(", "));
-}
-await page.locator(".sheet .setrow", { hasText: "View public profile" }).click();
+await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
+// The week-as-text copy kept its door too.
+if (!(await page.locator(".calcopy", { hasText: "week as text" }).count()))
+  fail("Copy your week as text should live on the You tab");
+// The who row is the way to the page itself.
+await page.locator(".acctwho-id").click();
 await page.waitForURL(/\/matt/);
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".navbar").count()))
@@ -2448,32 +2428,33 @@ await page.locator(".pubtab.sel").waitFor();
 }
 console.log("profile tabs are links ok (three URLs, one section each)");
 
-// Settings live behind the app header's gear now; the profile carries no
-// door to somewhere else.
+// Settings are the You tab now; the profile carries no door to somewhere
+// else, and the corner carries no gear.
 {
   await page.goto(BASE + "/matt");
   await page.locator(".pubhead").waitFor();
   if (await page.locator(".ownergear").count())
-    fail("the profile should carry no gear; the header does");
+    fail("the profile should carry no gear; the You tab is the door");
   if (await page.locator(".ownermore").count())
     fail("the three-dot menu belongs to a studio, not a person");
-  await page.locator(".settingsbtn").click();
-  await page.locator(".acctwrap").waitFor();
-  await page.locator(".acctclose").click();
-  console.log("profile settings ok (the header's gear opens the account)");
+  console.log("profile settings ok (no gear anywhere; the You tab is the door)");
 }
 
-// The same gear, tapped while already on /app: a same-route navigation, so
-// the screen never remounts, and a mount-only check lit the icon and opened
-// nothing. The account has to open anyway.
+// The account is a tab: tapping You from the calendar opens it, the bar
+// stays, and Schedule is the way back.
 {
   await page.goto(BASE + "/app");
   await page.locator(".calhead-add").waitFor();
-  await page.locator(".settingsbtn").click();
+  if (await page.locator(".settingsbtn").count())
+    fail("the gear should have left the corner: the You tab is the door");
+  await page.locator(".navtab", { hasText: "You" }).click();
+  await page.waitForURL("**/you");
   await page.locator(".acctwrap").waitFor();
-  await page.locator(".acctclose").click();
-  await page.waitForFunction(() => !document.querySelector(".acctwrap"));
-  console.log("gear on the You tab ok (same-route tap still opens settings)");
+  if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
+  await page.locator(".navtab", { hasText: "Schedule" }).click();
+  await page.waitForURL(/\/app/);
+  await page.locator(".calhead-add").waitFor();
+  console.log("you tab ok (the account is a tab, the bar stays, Schedule is the way back)");
 }
 
 // The owner gets two pills where a visitor gets Message and Follow: Share
@@ -2573,14 +2554,13 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// four tabs only, and the account opens from the header avatar — back in the
-// app, since a profile carries neither
+// four tabs, and the account is the fourth — back in the app, since a
+// profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".calhead-add").waitFor();
-if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
-await page.goto(BASE + "/app?acct=1");
-await page.locator(".acctwrap").waitFor();
-await page.locator(".acctclose").click();
+if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
+await openProfile(page);
+await closeProfile(page);
 // what a coach attends is private: it must not leak onto their public page
 const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
 if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
@@ -2641,11 +2621,11 @@ await page.getByRole("heading", { name: "Followers" }).waitFor();
   await page.locator(".disrow", { hasText: "Sam" }).locator(".disfollow.on").waitFor();
 }
 await page.screenshot({ path: SCRATCH + "/shot-followers.png", fullPage: true });
-// back returns to the profile it was opened from
+// back returns to the account it was opened from, which is the You tab now
 await page.locator(".folback .evback").click();
-await page.waitForURL((u) => u.pathname === "/app");
+await page.waitForURL((u) => u.pathname === "/you");
 await page.locator(".acctwrap").waitFor();
-await page.locator(".acctclose").click();
+await closeProfile(page);
 console.log("followers list ok (email subscriber listed, coach can be followed back)");
 
 // the three stats read as a column: number centred over its label
@@ -2663,7 +2643,7 @@ console.log("followers list ok (email subscriber listed, coach can be followed b
     };
   });
   if (off.n > 1.5 || off.l > 1.5) fail(`stats are not centred: ${JSON.stringify(off)}`);
-  await page.locator(".acctclose").click();
+  await closeProfile(page);
 }
 console.log("stats centred ok");
 
@@ -2700,12 +2680,11 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
   }
 }
 // the member side is still one tab away, and still theirs
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await closeProfile(page);
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip, .empty-block").first().waitFor();
-await page.locator(".navtab", { hasText: "You" }).click();
-await page.locator(".schedtools").waitFor();
+await page.locator(".navtab", { hasText: "Schedule" }).click();
+await page.locator(".calhead-add").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");
 
 // the coach's own avatar fills with their palette colour rather than tinting
@@ -2719,8 +2698,7 @@ await openProfile(page);
   if (av.empty && (av.bg === "rgb(234, 227, 210)" || av.bg === "rgba(0, 0, 0, 0)"))
     fail("a photo-less account avatar should carry the coach's colour, got " + av.bg);
 }
-await page.locator(".acctclose").click();
-await page.waitForFunction(() => !document.querySelector(".acctwrap"));
+await closeProfile(page);
 console.log("avatar colour ok (fills the circle)");
 
 // ---- a visitor asks about private sessions. The unique index on the thread
@@ -2806,7 +2784,7 @@ await page.waitForTimeout(450);
   if (!(await row.innerText()).includes("Accepting new clients"))
     fail("saving contact info cleared availability: " + (await row.innerText()));
 }
-await page.locator(".acctclose").click();
+await closeProfile(page);
 console.log("saving contact info leaves the rest alone ok");
 {
   const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -2874,7 +2852,7 @@ await page.waitForTimeout(450);
         ?.getAttribute("aria-pressed") === "false",
   );
 }
-await page.locator(".acctclose").click();
+await closeProfile(page);
 {
   const visitor = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const vp = await visitor.newPage();
@@ -2903,7 +2881,7 @@ await page.waitForFunction(
       .find((r) => r.textContent?.includes("Messages"))
       ?.getAttribute("aria-pressed") === "true",
 );
-await page.locator(".acctclose").click();
+await closeProfile(page);
 console.log("messages switch ok (takes both doors off, leaves Follow alone)");
 
 // ---- Requests is its own room: a list of people, what they asked, and how to

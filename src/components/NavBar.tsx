@@ -18,30 +18,24 @@ export function NavBar({
   active,
   coach = true,
   face,
-  youHref,
-  onYou,
+  scheduleHref,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
-   *  The schedule passes it, because there the account is an overlay on the
-   *  same route and the tab has to stay lit. */
+   *  A screen off the tabs that belongs to one passes it. */
   active?: NavTab;
-  /** false drops the You tab: a member has nothing behind it. */
+  /** Which calendar the Schedule tab points at. */
   coach?: boolean;
   /** Photo or initial for the You tab. Without it the tab falls back to its
    *  icon, which is what a screen that doesn't know who you are should do. */
   face?: NavFace;
-  /** Where You goes. A coach's public page; defaults by role. */
-  youHref?: string;
-  // On the schedule screen settings is an overlay on the same route, so You
-  // closes it locally rather than routing.
-  onYou?: () => void;
+  /** Where Schedule goes; defaults by role. */
+  scheduleHref?: string;
 }) {
   const here = activeTab(usePathname(), active);
 
   return (
     <nav className="navbar" aria-label="Main">
-      {navTabs(coach, youHref).map((t) => {
-        const local = t.id === "you" ? onYou : undefined;
+      {navTabs(coach, scheduleHref).map((t) => {
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;
         const glyph =
@@ -63,18 +57,7 @@ export function NavBar({
             <span>{t.label}</span>
           </>
         );
-        return local ? (
-          <button
-            key={t.id}
-            type="button"
-            className={cls}
-            data-tab={t.id}
-            aria-current={on ? "page" : undefined}
-            onClick={local}
-          >
-            {inner}
-          </button>
-        ) : (
+        return (
           <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-current={on ? "page" : undefined}>
             {inner}
             <LinkPending className="tapspin-tab" />

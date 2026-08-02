@@ -25,16 +25,21 @@ import { MyCalendar } from "@/components/MyCalendar";
 import { InviteFriends, InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
+import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
 
 type View = "home" | "security" | "contact" | "gcal" | "availability";
 
-// The trainer's account page. Home shows the profile tile, the two feature
-// cards, and a settings list. Each settings row opens a sub-view that slides in
-// from the right; its back arrow slides it out to reveal the home view again.
+// The trainer's account. Home shows the profile tile, the share cards, and
+// the settings lists; each settings row opens a bottom sheet. As `page` it is
+// the You tab itself, rendered in the flow of the tabs layout; without it, it
+// is the same thing as an overlay, for the coaches-only mode where there is
+// no tab bar to hold it.
 export function ProfileSheet({
   handle,
   anim = "up",
+  page = false,
   name,
   title,
   photo,
@@ -68,6 +73,8 @@ export function ProfileSheet({
 }: {
   handle: string;
   anim?: "up" | "left" | "none";
+  /** Render in the page flow (the You tab): no fixed layer, no close button. */
+  page?: boolean;
   name: string;
   title: string;
   photo: string | null;
@@ -103,13 +110,15 @@ export function ProfileSheet({
   approveFollowers?: boolean;
   messagesOpen?: boolean;
   look: string | null;
-  onClose: () => void;
+  /** Unused as a page: a tab is not a thing you close. */
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
   const [view, setView] = useState<View>("home");
 
   const [shareOpen, setShareOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [webcalUrl, setWebcalUrl] = useState("");
@@ -149,6 +158,23 @@ export function ProfileSheet({
   useEffect(() => {
     setWebcalUrl(`webcal://${window.location.host}/api/cal/${handle}`);
   }, [handle]);
+
+  // Returning from the Google OAuth flow: say how it went. The callback lands
+  // on this screen because this is where the Google Calendar row lives.
+  useEffect(() => {
+    const g = new URLSearchParams(window.location.search).get("gcal");
+    if (!g) return;
+    const msg: Record<string, string> = {
+      connected: "Google Calendar connected. Your classes are syncing",
+      denied: "Google connection cancelled",
+      noretoken: "Couldn't connect. Try again and allow calendar access",
+      unconfigured: "Google Calendar isn't set up yet",
+      error: "Something went wrong connecting Google",
+    };
+    toast(msg[g] ?? "");
+    if (g === "connected") setConnected(true);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [toast]);
 
   const openView = (v: View) => setView(v);
   const goBack = () => setView("home");
@@ -288,6 +314,23 @@ export function ProfileSheet({
     }
   };
 
+  // The next seven days as pasteable text, built on the server: this screen
+  // holds no class rows, and threading the week through it for one button is
+  // exactly what the action exists to avoid.
+  const copyWeekText = async () => {
+    const res = await myWeekText();
+    if (!res.ok || !res.text) {
+      toast(res.error ?? "Couldn't copy that");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(res.text);
+      toast("Week copied, ready to paste");
+    } catch {
+      toast("Couldn't copy that");
+    }
+  };
+
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
   const firstName = name.trim().split(/\s+/)[0] || name;
   const AVAIL_LABEL: Record<string, string> = {
@@ -308,16 +351,20 @@ export function ProfileSheet({
   return (
     <>
       <div
-        className={`acctwrap${anim === "left" ? " acct-from-left" : ""}${anim === "none" ? " acct-noanim" : ""}`}
-        role="dialog"
-        aria-label="Your account"
+        className={`acctwrap${page ? " acct-page" : ""}${anim === "left" ? " acct-from-left" : ""}${anim === "none" ? " acct-noanim" : ""}`}
+        role={page ? undefined : "dialog"}
+        aria-label={page ? undefined : "Your account"}
       >
-        <div className="accttop">
-          <h1 className="acct-h">Settings</h1>
-          <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
-          </button>
-        </div>
+        {page ? (
+          <div className="calbar-title">You</div>
+        ) : (
+          <div className="accttop">
+            <h1 className="acct-h">Settings</h1>
+            <button className="iconbtn acctclose" aria-label="Close" onClick={onClose}>
+              <Icon name="close" size={18} />
+            </button>
+          </div>
+        )}
 
         {/* Who this is, on the paper rather than in a card. It isn't a setting,
             it's the label on the drawer, so boxing it made it read as the first
@@ -377,12 +424,18 @@ export function ProfileSheet({
             <span className="acctcard-t">Share your schedule</span>
             <span className="acctcard-s">A story image with your link</span>
           </button>
-          <button className="acctcard acctcard-wide" onClick={() => setQrOpen(true)}>
+          {/* The two doors the calendar's rail used to hold: the profile as a
+              picture, and the page as a scannable code. Halves, so the grid
+              stays two by two. */}
+          <button className="acctcard" onClick={() => setCardOpen(true)}>
+            <span className="acctcard-ic"><Icon name="auto_awesome" size={26} /></span>
+            <span className="acctcard-t">Share your profile</span>
+            <span className="acctcard-s">A square card for a post</span>
+          </button>
+          <button className="acctcard" onClick={() => setQrOpen(true)}>
             <span className="acctcard-ic"><Icon name="qr_code_2" size={26} /></span>
-            <span className="acctcard-txt">
-              <span className="acctcard-t">Your QR code</span>
-              <span className="acctcard-s">A scannable code that opens your page</span>
-            </span>
+            <span className="acctcard-t">Your QR code</span>
+            <span className="acctcard-s">Scans straight to your page</span>
           </button>
           {/* The Requests row that lived below moved into the stat tile above
               (a number of people is a list, and the tile opens it); the spot
@@ -522,6 +575,9 @@ export function ProfileSheet({
           </>
         )}
 
+        <button className="calcopy" onClick={copyWeekText}>
+          Copy your week as text, ready to paste
+        </button>
         <button className="calcopy" onClick={copyCal}>
           Apple or Outlook? Copy your calendar feed link
         </button>
@@ -734,6 +790,17 @@ export function ProfileSheet({
       />
 
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+      {cardOpen && (
+        <ShareCardSheet
+          path={`/api/card/${handle}`}
+          fileName={`fittlist-${handle}-card.png`}
+          title="Share your profile"
+          lead="A square card for a post or a story. The link on it goes to your page."
+          alt="Your profile card"
+          onClose={() => setCardOpen(false)}
+          onToast={toast}
+        />
+      )}
       {inviteOpen && (
         <InviteSheet
           onClose={() => setInviteOpen(false)}

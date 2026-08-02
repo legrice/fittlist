@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
-import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -18,13 +16,8 @@ import { setGoing } from "@/app/actions/going";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
-import { pageBeneath } from "@/components/NavTrack";
 import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
-import { ProfileSheet } from "@/components/ProfileSheet";
-import { QrSheet } from "@/components/QrSheet";
-import { ShareCardSheet } from "@/components/ShareCardSheet";
-import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // One week at a time: the button at the bottom asks for the next one.
@@ -43,38 +36,14 @@ export function ScheduleScreen({
   inboxUnread,
   notifUnread,
   plans,
-  profileViews,
-  requestCount,
   autoOpenAdder,
   handle,
   name,
-  title,
   photo,
-  email,
-  instagram,
-  website,
-  contactEmail,
-  phone,
-  whatsapp,
-  about,
-  availability,
-  googleConfigured,
-  googleConnected,
-  googleEmail,
-  hasPassword,
-  passkeyCount,
-  isAdmin,
-  canSendFeedback,
-  shiftCount,
-  shiftsPublic,
   invitesLeft,
   showFanView,
-  discoverable,
-  approveFollowers,
-  messagesOpen,
   userId,
   myColor,
-  look,
 }: {
   classes: ClassDto[];
   hasAnyClass: boolean;
@@ -90,51 +59,18 @@ export function ScheduleScreen({
    *  the member calendar uses: You is one calendar of everything now, and the
    *  rows wear Coaching, Going, Shift or Yours to say which hat. */
   plans: WeekDay[];
-  profileViews: number;
-  requestCount: number;
   autoOpenAdder: boolean;
   handle: string;
+  /** For the You tab's face on the bottom bar, nothing else. */
   name: string;
-  title: string;
   photo: string | null;
-  email: string;
-  instagram: string;
-  website: string;
-  contactEmail: string;
-  phone: string;
-  whatsapp: string;
-  about: string;
-  availability: string | null;
-  googleConfigured: boolean;
-  googleConnected: boolean;
-  googleEmail: string | null;
-  hasPassword: boolean;
-  passkeyCount: number;
-  isAdmin: boolean;
-  canSendFeedback: boolean;
-  /** On a gym's rota, so the calendar row names shifts. */
-  shiftCount: number;
-  shiftsPublic: boolean;
   invitesLeft: number;
   showFanView: boolean;
-  discoverable: boolean;
-  approveFollowers: boolean;
-  messagesOpen: boolean;
   userId: string;
   myColor: string | null;
-  look: string | null;
 }) {
   const router = useRouter();
   const [adder, setAdder] = useState<{ open: boolean; prefill?: AdderPrefill }>({ open: false });
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [qrOpen, setQrOpen] = useState(false);
-  // The card image sheet, reached through the Share sheet and the profile menu.
-  const [cardOpen, setCardOpen] = useState(false);
-  // The two rail menus: everything about your page behind Your profile, both
-  // images behind one Share.
-  const [profMenu, setProfMenu] = useState(false);
-  const [shareMenu, setShareMenu] = useState(false);
   // The plus asks which hat: a class you're coaching goes to your page, a
   // class you're going to stays yours. Pre-answered here, so the form itself
   // doesn't have to ask again.
@@ -157,8 +93,6 @@ export function ScheduleScreen({
   // not a stack of switches behind a circle. All on arrival, every time; a
   // tab is a way of looking, not a fact worth storing.
   const [calTab, setCalTab] = useState<"all" | "coaching" | "added" | "private">("all");
-  // "up" when opened from the header avatar, "left" when reached via a back tap.
-  const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   // The coach's own colour marks the classes they teach.
   const myAccent = avatarColor({ id: userId, avatarColor: myColor });
@@ -186,64 +120,11 @@ export function ScheduleScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Coming back from the profile preview reopens the account page. Clear any
-  // leftover slide-direction flag now that we're back on the schedule.
-  //
-  // ?acct=1 is now the only door into settings: the gear lives on the coach's
-  // own profile and links here. So it doubles as the signal for what closing
-  // should do, sending whoever came for settings back where they were rather
-  // than leaving them on a schedule they never asked for.
-  const settingsWasDoor = useRef(false);
+  // Clear any leftover slide-direction flag now that we're back on the
+  // schedule. The account itself is the You tab now; nothing here opens it.
   useEffect(() => {
     sessionStorage.removeItem("fl-nav");
   }, []);
-  // Reactive to the query, not just mount: tapping the gear while already on
-  // /app is a client-side navigation to the same route, so the screen never
-  // remounts. A mount-only check lit the gear and opened nothing.
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    if (searchParams.get("acct")) {
-      // Returning from the public preview: the public page already slid out to
-      // the right, so the account view should just be here, not animate in.
-      settingsWasDoor.current = true;
-      setAcctAnim("none");
-      setProfileOpen(true);
-    }
-  }, [searchParams]);
-
-  const closeSettings = () => {
-    // A cold landing (an emailed link, the Google redirect) has nothing to go
-    // back to, so it falls through to the schedule.
-    const beneath = pageBeneath();
-    if (settingsWasDoor.current && beneath && beneath !== "/app") {
-      // Close before going back: when the gear was tapped on /app itself,
-      // back lands on this same screen without remounting it, and a close
-      // that only navigates would leave the account sitting open.
-      setProfileOpen(false);
-      router.back();
-      return;
-    }
-    // Through the router rather than bare replaceState, so the header's gear
-    // (which reads the query string for its filled state) hears about it.
-    router.replace("/app", { scroll: false });
-    setProfileOpen(false);
-  };
-
-  // Returning from the Google OAuth flow -> confirm and open the profile.
-  useEffect(() => {
-    const g = new URLSearchParams(window.location.search).get("gcal");
-    if (!g) return;
-    const msg: Record<string, string> = {
-      connected: "Google Calendar connected. Your classes are syncing",
-      denied: "Google connection cancelled",
-      noretoken: "Couldn't connect. Try again and allow calendar access",
-      unconfigured: "Google Calendar isn't set up yet",
-      error: "Something went wrong connecting Google",
-    };
-    toast(msg[g] ?? "");
-    if (g === "connected") setProfileOpen(true);
-    window.history.replaceState(null, "", "/app");
-  }, [toast]);
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
 
@@ -374,32 +255,6 @@ export function ScheduleScreen({
     return out;
   }, [classes, plans, todayIso, weeks, tab]);
 
-  // The next seven days as pasteable text. Public classes only: a private
-  // client session is not for the group chat.
-  const copyWeek = async () => {
-    const week = days.slice(0, 7).map((d) => ({
-      iso: d.iso,
-      items: d.items
-        .filter((c) => c.isPublic)
-        .map((c) => ({
-          name: c.name,
-          startTime: c.startTime,
-          where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
-        })),
-    }));
-    const text = weekAsText(week, `${name.trim() || "My"} week on fittlist`);
-    if (!text.trim()) {
-      toast("Nothing on the calendar to copy");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(`${text}\n\nfittlist.co/${handle}`);
-      toast("Week copied, ready to paste");
-    } catch {
-      toast("Couldn't copy that");
-    }
-  };
-
   // Hand a row on: the class page's link through the system share sheet,
   // clipboard where there isn't one. A shift shares the gym's page for it,
   // which is the page a member can actually open.
@@ -417,66 +272,26 @@ export function ScheduleScreen({
     }
   };
 
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
-      toast("Link copied, ready to paste");
-    } catch {
-      toast(`fittlist.co/${handle}`);
-    }
-  };
-
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
           search={showFanView}
-          settings="/app?acct=1"
+          // The gear only where there is no You tab to hold the account: the
+          // coaches-only mode has no tab bar, so the corner is the one door.
+          settings={showFanView ? undefined : "/you"}
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "you", youHref: "/app" } : undefined}
-          // The face is the You tab now, so the corner holds settings. Two
-          // taps on the same picture, one of which quietly meant "account",
-          // was the confusing part.
+          nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The tools, back across the top of the calendar where they began:
-            they moved onto the profile for a while, and a coach looking at
-            their own week (which is where the thought strikes) had nothing to
-            act with. Your profile leads and wears your face, and opens the
-            menu of everything about your page; Share holds both images behind
-            one word. Edit profile sits last: it's the thing you do twice a
-            year, and the rail scrolls to it. */}
-        <div className="schedtools">
-          <button className="schedtool" onClick={() => setProfMenu(true)}>
-            {photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="schedtool-av" src={photo} alt="" />
-            ) : (
-              <span
-                className="schedtool-av schedtool-av-empty"
-                style={{ background: myAccent }}
-                aria-hidden="true"
-              >
-                {(name.trim().charAt(0) || "?").toUpperCase()}
-              </span>
-            )}
-            Your profile
-          </button>
-          <button className="schedtool" onClick={() => setShareMenu(true)}>
-            <Icon name="auto_awesome" size={16} /> Share
-          </button>
-          <button className="schedtool" onClick={() => setQrOpen(true)}>
-            <Icon name="qr_code_2" size={16} /> QR code
-          </button>
-          <Link className="schedtool" href={`/${handle}?edit=1`}>
-            <Icon name="edit" size={16} /> Edit profile
-          </Link>
-        </div>
+        {/* The calendar leads: the tools rail that rode across its top lives
+            on the You tab now, and the Schedule tab is the week and nothing
+            else. */}
         <div className="calhead-row">
           <h2 className="calhead">Your schedule</h2>
           {/* The plus, across from the calendar's name: it floated for a
@@ -966,50 +781,13 @@ export function ScheduleScreen({
 
       {showFanView && (
         <NavBar
-          active="you"
-          youHref="/app"
+          active="schedule"
+          scheduleHref="/app"
           face={{
             photo,
             color: myAccent,
             initial: (name.trim().charAt(0) || "?").toUpperCase(),
           }}
-        />
-      )}
-
-      {profileOpen && (
-        <ProfileSheet
-          handle={handle}
-          anim={acctAnim}
-          name={name}
-          title={title}
-          photo={photo}
-          subsCount={subsCount}
-          profileViews={profileViews}
-          requestCount={requestCount}
-          email={email}
-          instagram={instagram}
-          website={website}
-          contactEmail={contactEmail}
-          phone={phone}
-          whatsapp={whatsapp}
-          about={about}
-          availability={availability}
-          googleConfigured={googleConfigured}
-          googleConnected={googleConnected}
-          googleEmail={googleEmail}
-          hasPassword={hasPassword}
-          passkeyCount={passkeyCount}
-          isAdmin={isAdmin}
-          canSendFeedback={canSendFeedback}
-          shiftCount={shiftCount}
-          shiftsPublic={shiftsPublic}
-          avatarColor={myAccent}
-          showFanView={showFanView}
-          discoverable={discoverable}
-          approveFollowers={approveFollowers}
-          messagesOpen={messagesOpen}
-          look={look}
-          onClose={closeSettings}
         />
       )}
 
@@ -1054,171 +832,6 @@ export function ScheduleScreen({
       {/* Everything about your page, behind the pill that wears your face.
           The rows a visitor can't have: the way in to look at it, the way in
           to change it, and every way of handing it on. */}
-      {profMenu && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setProfMenu(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setProfMenu(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Your profile</h2>
-            <div className="settingslist ownermenu">
-              <Link className="setrow" href={`/${handle}`}>
-                <span className="setrow-ic"><Icon name="visibility" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">View public profile</span>
-                  <span className="s">Your page, as everyone else sees it</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </Link>
-              <Link className="setrow" href={`/${handle}?edit=1`}>
-                <span className="setrow-ic"><Icon name="edit" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Edit profile</span>
-                  <span className="s">Photo, name, bio and the rest</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </Link>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setProfMenu(false);
-                  setCardOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share profile</span>
-                  <span className="s">A square card for a post or a story</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setProfMenu(false);
-                  copyLink();
-                }}
-              >
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Copy profile link</span>
-                  <span className="s">Straight to your page</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setProfMenu(false);
-                  setQrOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">QR code</span>
-                  <span className="s">A scannable code that opens your page</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setProfMenu(false);
-                  copyWeek();
-                }}
-              >
-                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Copy schedule as text</span>
-                  <span className="s">Your week, ready to paste</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* One Share, two images: the story of your week and the card of your
-          page. Each row opens its builder. */}
-      {shareMenu && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShareMenu(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setShareMenu(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Share</h2>
-            <div className="settingslist ownermenu">
-              <button
-                className="setrow"
-                onClick={() => {
-                  setShareMenu(false);
-                  setShareOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share your schedule</span>
-                  <span className="s">A story image of your week</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setShareMenu(false);
-                  setCardOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share your profile</span>
-                  <span className="s">A square card for a post or a story</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ShareWeekSheet
-        handle={handle}
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        onToast={toast}
-      />
-      <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
-      {cardOpen && (
-        <ShareCardSheet
-          path={`/api/card/${handle}`}
-          fileName={`fittlist-${handle}-card.png`}
-          title="Share your profile"
-          lead="A square card for a post or a story. The link on it goes to your page."
-          alt="Your profile card"
-          onClose={() => setCardOpen(false)}
-          onToast={toast}
-        />
-      )}
-
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

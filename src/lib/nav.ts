@@ -2,8 +2,8 @@
 // phone, the header links on a desktop. They have to name the same places and
 // light up on the same routes, so neither owns the list.
 
-/** "none" is a screen off the tabs: updates, settings, a class page. */
-export type NavTab = "plans" | "following" | "discover" | "you" | "none";
+/** "none" is a screen off the tabs: updates, a class page. */
+export type NavTab = "following" | "discover" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -22,38 +22,38 @@ export type NavItem = {
  * which shell it was in. Both sides have a page of their own now, so both get
  * the tab; only where it points differs.
  */
-export function navTabs(coach: boolean, youHref?: string): NavItem[] {
+export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
   return [
     // No Plans anywhere: the ribbon tried the tab bar, then the header
-    // corner, and then the list it pointed at merged into You, which is
-    // everybody's calendar now. Following leads because the merged week is
-    // the thing the app is for.
+    // corner, and then the list it pointed at merged into the calendar.
+    // Following leads because the merged week is the thing the app is for.
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // The compass again: the header got its magnifier back once the plans
     // ribbon left, and a magnifier on the tab beside a magnifier in the
     // corner was the same glyph twice on one screen. Discover is browsing;
     // searching is the header's corner and the box at the top of this tab.
     { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
-    // Your own page, as everyone else sees it. It carries your face rather
-    // than an icon: it's the one tab that is a person rather than a place. A
-    // coach's is their public profile (the caller passes the handle URL in),
-    // so the tab answers "what does my page look like" in one tap; the
-    // editable week stays behind the settings gear and the three-dot menu.
-    { id: "you", href: youHref ?? (coach ? "/app" : "/you"), icon: "account_circle", label: "You", face: true },
+    // The working calendar, one tap from anywhere and behind nothing: the
+    // one time it sat behind another screen it got buried, and that was bad
+    // enough to reverse. A coach's is /app, a member's /week.
+    { id: "schedule", href: scheduleHref ?? (coach ? "/app" : "/week"), icon: "calendar_today", label: "Schedule" },
+    // The person: profile, sharing, and the account rows, one screen for
+    // both kinds. It carries your face rather than an icon, because it's the
+    // one tab that is a person rather than a place.
+    { id: "you", href: "/you", icon: "account_circle", label: "You", face: true },
   ];
 }
 
-/** Where you are. The pathname usually says it; the schedule passes `active`
- *  explicitly, because there the account is an overlay on the same route and
- *  the tab has to stay lit. */
+/** Where you are. The pathname usually says it; a screen off the tabs that
+ *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   if (pathname.startsWith("/discover")) return "discover";
   if (pathname.startsWith("/feed")) return "following";
-  // /week is a member's You now: the one calendar of everything they're
-  // going to. A coach's lives at /app, and /week sends them there.
-  if (pathname.startsWith("/week")) return "you";
-  if (pathname.startsWith("/app") || pathname.startsWith("/you")) return "you";
+  // Both calendars are the Schedule tab: a coach's at /app, a member's at
+  // /week. The person is /you.
+  if (pathname.startsWith("/week") || pathname.startsWith("/app")) return "schedule";
+  if (pathname.startsWith("/you")) return "you";
   return "none";
 }
 

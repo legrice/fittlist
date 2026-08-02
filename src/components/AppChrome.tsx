@@ -51,9 +51,9 @@ export async function AppChrome({
   const isCoach = me.kind !== "fan" && !!me.handle;
   const fans = await fansVisible();
   const unread = await unreadNotifications(userId);
-  // Everyone's You is their calendar: a coach's at /app, a member's at /week.
-  // A member's account rows stay at /you, behind the header's gear.
-  const youHref = isCoach ? "/app" : "/week";
+  // The Schedule tab is the working calendar: a coach's at /app, a member's
+  // at /week. You is the person, at /you for everyone.
+  const scheduleHref = isCoach ? "/app" : "/week";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -69,15 +69,17 @@ export async function AppChrome({
       // random.
       home={fans ? "/feed" : "/app"}
       search={fans}
-      settings={isCoach ? "/app?acct=1" : "/you"}
-      nav={(headerNav ?? bar) ? { coach: isCoach, youHref, active } : undefined}
+      // The gear only where there is no You tab to hold the account: the
+      // coaches-only mode has no tab bar, so the corner is the one door.
+      settings={fans ? undefined : "/you"}
+      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, active } : undefined}
     />
   );
   if (!bar) return header;
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} />
+      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} active={active} />
     </>
   );
 }

@@ -66,35 +66,35 @@ await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 console.log("member setup ok (two steps, no studios, lands on their week)");
 
-// The same three tabs a coach gets, and the ribbon in the corner. Only where
-// You points differs.
+// The same four tabs a coach gets. Only where Schedule points differs.
 {
   const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (onFeed.length !== 3) fail(`a member should get three tabs, got ${onFeed.join(",")}`);
+  if (onFeed.length !== 4) fail(`a member should get four tabs, got ${onFeed.join(",")}`);
   if (
     !onFeed[0].includes("Following") ||
     !onFeed[1].includes("Discover") ||
-    !onFeed[2].includes("You")
+    !onFeed[2].includes("Schedule") ||
+    !onFeed[3].includes("You")
   )
-    fail(`a member's tabs should be Following, Discover, You, got ${onFeed.join(",")}`);
+    fail(`a member's tabs should be Following, Discover, Schedule, You, got ${onFeed.join(",")}`);
   await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL("**/discover");
-  if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
-  await p.locator(".navtab", { hasText: "You" }).click();
+  if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Discover");
+  await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own calendar");
-  if ((await p.locator(".navtab.on").innerText()).includes("You") === false)
-    fail("their calendar should light the You tab");
-  // No plans ribbon: the You tab is the one door to your own calendar, and
-  // the account rows live behind the header's gear.
+  if ((await p.locator(".navtab").count()) !== 4) fail("and to their own calendar");
+  if ((await p.locator(".navtab.on").innerText()).includes("Schedule") === false)
+    fail("their calendar should light the Schedule tab");
+  // No plans ribbon, and no gear: the You tab is the door to the account.
   if (await p.locator(".plansbtn").count()) fail("the plans ribbon should be gone");
-  await p.locator(".settingsbtn").click();
+  if (await p.locator(".settingsbtn").count()) fail("the gear should be gone: You is the door");
+  await p.locator(".navtab", { hasText: "You" }).click();
   await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their account rows");
+  if ((await p.locator(".navtab").count()) !== 4) fail("and to their account rows");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }
-console.log("member tabs ok (Following, Discover, You the calendar, gear to the rows)");
+console.log("member tabs ok (Following, Discover, Schedule the calendar, You the person)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.
@@ -115,7 +115,7 @@ console.log("member tabs ok (Following, Discover, You the calendar, gear to the 
     avatar: !!document.querySelector(".navav"),
     lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
   }));
-  if (mid.tabs !== 3) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.tabs !== 4) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL("**/discover");

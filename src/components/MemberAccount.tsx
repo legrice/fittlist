@@ -28,6 +28,7 @@ export function MemberAccount({
   color,
   look,
   goingCount,
+  firstIso,
   openEditor = false,
   canSendFeedback = false,
   discoverable = true,
@@ -44,6 +45,9 @@ export function MemberAccount({
   color: string;
   look: string | null;
   goingCount: number;
+  /** The first day their week holds something, so the share poster starts
+   *  where the plans do rather than on an empty today. */
+  firstIso?: string;
   openEditor?: boolean;
   /** False when nobody's behind the door: no admin account to write to, or
    *  you are the admin. */
@@ -158,7 +162,7 @@ export function MemberAccount({
         </button>
       </form>
 
-      {share && <ShareMyWeekSheet onClose={() => setShare(false)} />}
+      {share && <ShareMyWeekSheet onClose={() => setShare(false)} firstIso={firstIso} />}
     </>
   );
 }

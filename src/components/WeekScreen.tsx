@@ -17,8 +17,6 @@ import { PlanSheet } from "@/components/PlanSheet";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
-import { QrSheet } from "@/components/QrSheet";
-import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
 // A member's You tab: their calendar. The classes they added, their own
@@ -34,24 +32,19 @@ export function WeekScreen({
   templates,
   customTypes,
   lastUsed,
-  me,
 }: {
   days: WeekDay[];
   /** The adder's ingredients. Adding a class you go to is the same form as
    *  adding one you teach, so it needs the same directory and the same memory
-   *  of what you filled in last time. */
+   *  of what you filled in last time. A coach never lands here (their
+   *  calendar is /app), so the form below never needs the chair question. */
   studios: StudioDto[];
   templates: TemplateDto[];
   customTypes: string[];
   lastUsed: LastUsed;
-  /** The viewer, for the rail across the top: their face on the Your profile
-   *  pill, and the doors to their page. A coach never lands here (their
-   *  calendar is /app), so the form below never needs the chair question. */
-  me: { handle: string | null; name: string; photo: string | null; color: string };
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
-  const [share, setShare] = useState(false);
   // Removing is one tap next to a list of things you meant to do, so it asks.
   const [confirm, setConfirm] = useState<{ classId: string; iso: string; key: string; name: string; personalId?: string } | null>(null);
   // A class you go to. It used to be five fields in a sheet of its own, which
@@ -78,9 +71,6 @@ export function WeekScreen({
   const [pBusy, setPBusy] = useState(false);
   // "Is Jenny on fittlist?" — the invite sheet, opened from a personal row.
   const [inviteOpen, setInviteOpen] = useState(false);
-  // The rail menus: everything about your page behind Your profile.
-  const [profMenu, setProfMenu] = useState(false);
-  const [qrOpen, setQrOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   // Which slice of the calendar: the same underline tabs the coach's /app
@@ -157,34 +147,8 @@ export function WeekScreen({
     // Share pill, which sits above it.
     <>
       <div className="weekwrap">
-        {/* The same rail a coach's calendar wears, with the member's doors on
-            it: their page, sharing their week, and the editor last. */}
-        <div className="schedtools">
-          {me.handle && (
-            <button className="schedtool" onClick={() => setProfMenu(true)}>
-              {me.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="schedtool-av" src={me.photo} alt="" />
-              ) : (
-                <span
-                  className="schedtool-av schedtool-av-empty"
-                  style={{ background: me.color }}
-                  aria-hidden="true"
-                >
-                  {(me.name.trim().charAt(0) || "?").toUpperCase()}
-                </span>
-              )}
-              Your profile
-            </button>
-          )}
-          <button className="schedtool" onClick={() => setShare(true)}>
-            <Icon name="auto_awesome" size={16} /> Share
-          </button>
-          <Link className="schedtool" href="/you?edit=1">
-            <Icon name="edit" size={16} /> Edit profile
-          </Link>
-        </div>
-
+        {/* The calendar leads: the rail that rode across its top lives on the
+            You tab now, and the Schedule tab is the week and nothing else. */}
         <div className="calhead-row">
           <h2 className="calhead">Your schedule</h2>
           <button className="calhead-add" onClick={() => setAddMenu(true)}>
@@ -569,81 +533,6 @@ export function WeekScreen({
             </div>
           </div>
         </div>
-      )}
-      {/* Everything about your page, behind the pill that wears your face. */}
-      {profMenu && me.handle && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setProfMenu(false);
-          }}
-        >
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setProfMenu(false)}>
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Your profile</h2>
-            <div className="settingslist ownermenu">
-              <Link className="setrow" href={`/${me.handle}`}>
-                <span className="setrow-ic"><Icon name="visibility" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">View public profile</span>
-                  <span className="s">Your page, as everyone else sees it</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </Link>
-              <Link className="setrow" href="/you?edit=1">
-                <span className="setrow-ic"><Icon name="edit" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Edit profile</span>
-                  <span className="s">Photo, name, bio and the rest</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </Link>
-              <button
-                className="setrow"
-                onClick={async () => {
-                  setProfMenu(false);
-                  try {
-                    await navigator.clipboard.writeText(`${window.location.origin}/${me.handle}`);
-                    toast("Link copied, ready to paste");
-                  } catch {
-                    toast(`fittlist.co/${me.handle}`);
-                  }
-                }}
-              >
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Copy profile link</span>
-                  <span className="s">Straight to your page</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setProfMenu(false);
-                  setQrOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">QR code</span>
-                  <span className="s">A scannable code that opens your page</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {me.handle && (
-        <QrSheet handle={me.handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
-      )}
-      {/* The range starts where their plans do, so the first poster they see
-          has their week on it rather than nothing. */}
-      {share && (
-        <ShareMyWeekSheet onClose={() => setShare(false)} firstIso={shown[0]?.iso} />
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>

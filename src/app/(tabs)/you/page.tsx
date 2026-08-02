@@ -1,43 +1,55 @@
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { adminEmails } from "@/lib/admin";
 import { feedbackHost } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
+import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import { getSessionUserId } from "@/lib/session";
+import { coachAnalytics } from "@/lib/visits";
+import { myWeek } from "@/lib/week";
 import { MemberAccount } from "@/components/MemberAccount";
+import { ProfileSheet } from "@/components/ProfileSheet";
 
 export const dynamic = "force-dynamic";
 
-// The member's account. Coaches have a bigger one inside the app shell, so
-// they get sent there instead of keeping two of the same thing in sync.
+// The You tab: the person, for both kinds. A member gets their account rows;
+// a coach gets the same account screen that used to be an overlay on the
+// schedule, rendered as the page it always wanted to be. The calendar is the
+// Schedule tab next door, and the two no longer share a screen.
 export default async function YouPage({
   searchParams,
 }: {
   searchParams: Promise<{ edit?: string }>;
 }) {
   const { edit } = await searchParams;
-  if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
-  // Members have handles now too, so "has a handle" no longer means "coach".
-  if (me.kind !== "fan") redirect("/app?acct=1");
   // Claimed a link but never finished setup: the wizard is the better landing.
   if (me.handle && !me.onboardedAt) redirect("/welcome");
 
-  const going = await db
-    .select({ id: schema.attendances.id })
-    .from(schema.attendances)
-    .where(eq(schema.attendances.userId, userId));
-
   const host = await feedbackHost();
+  const canSendFeedback = !!host && host.email.toLowerCase() !== me.email.toLowerCase();
 
-  return (
-    <>
-      <div className="calbar-title">You</div>
+  if (me.kind === "fan") {
+    if (!(await fansVisible())) redirect("/");
+    const [going, week] = await Promise.all([
+      db
+        .select({ id: schema.attendances.id })
+        .from(schema.attendances)
+        .where(eq(schema.attendances.userId, userId)),
+      // For the share poster's starting day: the first day their week holds
+      // something, not an empty today.
+      myWeek(userId),
+    ]);
+
+    return (
+      <>
+        <div className="calbar-title">You</div>
         <MemberAccount
           name={me.name}
           email={me.email}
@@ -49,12 +61,81 @@ export default async function YouPage({
           color={avatarColor(me)}
           look={me.look}
           goingCount={going.length}
+          firstIso={week[0]?.iso}
           openEditor={edit === "1"}
-          canSendFeedback={!!host && host.email.toLowerCase() !== me.email.toLowerCase()}
+          canSendFeedback={canSendFeedback}
           discoverable={me.discoverable}
           approveFollowers={me.approveFollowers}
           messagesOpen={me.messagesOpen}
         />
-    </>
+      </>
+    );
+  }
+
+  // A coach mid-signup has no handle yet; the account screen assumes one.
+  if (!me.handle) redirect("/welcome");
+
+  // All independent, so they load together rather than stacking round trips.
+  const [gconn, passkeyRows, inboxRows, analytics, subRows, shiftRows] = await Promise.all([
+    isGoogleConnected(userId),
+    db
+      .select({ id: schema.credentials.id })
+      .from(schema.credentials)
+      .where(eq(schema.credentials.userId, userId)),
+    db
+      .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
+      .from(schema.inquiryThreads)
+      .where(eq(schema.inquiryThreads.coachUserId, userId)),
+    coachAnalytics(userId),
+    db
+      .select({ id: schema.subscribers.id })
+      .from(schema.subscribers)
+      .where(
+        and(eq(schema.subscribers.trainerUserId, userId), isNull(schema.subscribers.optedOutAt)),
+      ),
+    db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(eq(schema.classes.coachUserId, userId)),
+  ]);
+  // Requests are inquiries only: the admin is a coach too, and their feedback
+  // threads live on the same table.
+  const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
+
+  return (
+    <ProfileSheet
+      page
+      anim="none"
+      handle={me.handle}
+      name={me.name}
+      title={me.title ?? ""}
+      photo={me.photo}
+      subsCount={subRows.length}
+      profileViews={analytics.profileViews}
+      requestCount={requestCount}
+      email={me.email}
+      instagram={me.instagram ?? ""}
+      website={me.website ?? ""}
+      contactEmail={me.contactEmail ?? ""}
+      phone={me.phone ?? ""}
+      whatsapp={me.whatsapp ?? ""}
+      about={me.about ?? ""}
+      availability={me.availability ?? null}
+      googleConfigured={googleConfigured()}
+      googleConnected={gconn.connected}
+      googleEmail={gconn.email}
+      hasPassword={!!me.passwordHash}
+      passkeyCount={passkeyRows.length}
+      isAdmin={adminEmails().includes(me.email.toLowerCase())}
+      canSendFeedback={canSendFeedback}
+      shiftCount={shiftRows.length}
+      shiftsPublic={me.shiftsPublic}
+      avatarColor={avatarColor(me)}
+      showFanView={await fansVisible()}
+      discoverable={me.discoverable}
+      approveFollowers={me.approveFollowers}
+      messagesOpen={me.messagesOpen}
+      look={me.look}
+    />
   );
 }

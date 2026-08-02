@@ -30,7 +30,7 @@ export default async function FeedbackPage() {
   if (!host || host.email.toLowerCase() === me.email.toLowerCase()) redirect("/updates?tab=messages");
 
   const thread = await myFeedback();
-  const back = me.kind === "fan" ? "/you" : "/app?acct=1";
+  const back = "/you";
 
   return (
     <section className="screen chatscreen" data-mode={me.look === "dark" ? "dark" : undefined}>

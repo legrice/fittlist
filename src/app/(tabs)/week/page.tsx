@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
-import { avatarColor } from "@/lib/avatar";
 import { myWeek } from "@/lib/week";
 import { WeekScreen } from "@/components/WeekScreen";
 
@@ -61,8 +60,8 @@ export default async function WeekPage() {
     : { startTime: "18:00", durationMin: 60, studioId: null };
 
   // A coach's calendar is /app, and everything here is merged into it now:
-  // /week is the member's You tab, and a coach landing on an old link is sent
-  // to their own.
+  // /week is the member's Schedule tab, and a coach landing on an old link is
+  // sent to their own.
   if (me && me.kind !== "fan") redirect("/app");
 
   return (
@@ -72,12 +71,6 @@ export default async function WeekPage() {
       templates={templates}
       customTypes={customTypeRows.map((r) => r.name)}
       lastUsed={lastUsed}
-      me={{
-        handle: me?.handle ?? null,
-        name: me?.name ?? "",
-        photo: me?.photo ?? null,
-        color: avatarColor({ id: userId, avatarColor: me?.avatarColor ?? null }),
-      }}
     />
   );
 }

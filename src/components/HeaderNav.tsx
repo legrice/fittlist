@@ -14,30 +14,22 @@ import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 export function HeaderNav({
   coach = true,
   active,
-  youHref,
-  onYou,
+  scheduleHref,
 }: {
   coach?: boolean;
-  /** Passed on the schedule, where the account is an overlay on the same route
-   *  and the link has to stay lit while it's open. */
+  /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
-  /** Where You goes. A coach's public page; defaults by role. */
-  youHref?: string;
-  /** There, You closes the overlay rather than routing. */
-  onYou?: () => void;
+  /** Where Schedule goes; defaults by role. */
+  scheduleHref?: string;
 }) {
   const here = activeTab(usePathname(), active);
 
   return (
     <nav className="headnav" aria-label="Main">
-      {navTabs(coach, youHref).map((t) => {
+      {navTabs(coach, scheduleHref).map((t) => {
         const cls = `headnav-l${here === t.id ? " on" : ""}`;
         const current = here === t.id ? "page" : undefined;
-        return t.id === "you" && onYou ? (
-          <button key={t.id} type="button" className={cls} aria-current={current} onClick={onYou}>
-            {t.label}
-          </button>
-        ) : (
+        return (
           <Link key={t.id} className={cls} href={t.href} aria-current={current}>
             {t.label}
             <LinkPending className="tapspin-head" />
