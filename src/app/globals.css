@@ -4089,8 +4089,11 @@ button.ps-card { cursor: pointer; }
 .evcards .ps-daycards { gap: 14px; }
 .evcards .ps-erow { position: relative; gap: 0; }
 .evcards .ps-event {
+  /* align-items back to stretch: the base row rule centres its grid cells,
+     and in a column flex card that centred every line of text. */
   position: relative; display: flex; flex-direction: column; justify-content: flex-end;
-  aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden;
+  align-items: stretch;
+  aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden;
   padding: 14px 16px; color: #fff; background: #191502; border-bottom: none;
   box-shadow: 0 8px 26px rgba(23, 26, 31, .14), 0 1px 3px rgba(23, 26, 31, .06);
 }
