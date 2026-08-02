@@ -76,9 +76,12 @@ console.log("service worker registered at", reg);
 
 // Registering and installing are two things: addAll runs inside the install
 // event, so the cache is empty for a moment after the registration resolves.
-// Reading it straight away is a race, and a slow machine loses it.
+// Reading it straight away is a race, and a slow machine loses it. `ready`
+// resolves once the worker is active, which is after install finishes, and
+// the extra wait on top is for a box running a whole test batch at once.
+await p.evaluate(() => navigator.serviceWorker.ready.then(() => null)).catch(() => {});
 await p
-  .waitForFunction(async () => (await caches.keys()).length > 0, null, { timeout: 10000 })
+  .waitForFunction(async () => (await caches.keys()).length > 0, null, { timeout: 30000 })
   .catch(() => {});
 const cached = await p.evaluate(async () => {
   const keys = await caches.keys();

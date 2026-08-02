@@ -11,6 +11,7 @@ import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { AvatarZoom } from "@/components/AvatarZoom";
+import { ClassCardActions } from "@/components/ClassCardActions";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
@@ -143,6 +144,30 @@ export async function PublicProfileView({
   // group into chunks of seven POPULATED days, not seven calendar days, so a
   // Mon/Wed/Fri coach still shows a full week's worth of schedule before the
   // View more button, and each tap reveals seven more real days.
+  // The viewer's own marks on these classes, so the card's ribbon can say
+  // what is already in their plans. Visitors with the member side only; the
+  // server-side setGoing still holds the real rules.
+  const canAddAny = !isOwner && !!viewerId && (await fansVisible());
+  const myMarks = new Set<string>();
+  if (canAddAny && classRows.length) {
+    const marks = await db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, viewerId!),
+          inArray(
+            schema.attendances.classId,
+            classRows.map((c) => c.id),
+          ),
+        ),
+      );
+    for (const m of marks) myMarks.add(`${m.classId}|${m.occurrenceDate}`);
+  }
+
   const start = new Date(`${todayIso()}T00:00:00Z`);
   const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
@@ -279,7 +304,7 @@ export async function PublicProfileView({
         // owner a tap opens the editor instead: this is your class, and the
         // one thing you'd do with it from here is change it.
         <MaybeOpener isOwner={isOwner} handle={handle}>
-        <div className="ps-week ps-agenda">
+        <div className="ps-week ps-agenda evcards">
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
               <div key={d.iso} className="ps-daygroup">
@@ -293,14 +318,15 @@ export async function PublicProfileView({
                     // studio. Pointing it at this handle would 404: the class
                     // is not this coach's to serve.
                     const at = classAddress(c, handle, s?.slug);
+                    const href = `/${at?.base ?? handle}/${c.id}?d=${d.iso}`;
                     return (
+                      <div key={`${d.iso}-${c.id}`} className="ps-erow">
                       <Link
-                        key={`${d.iso}-${c.id}`}
                         className="ps-event"
                         data-cid={c.id}
                         data-d={d.iso}
                         data-base={at?.key}
-                        href={`/${at?.base ?? handle}/${c.id}?d=${d.iso}`}
+                        href={href}
                       >
                         <span
                           className="ps-accent"
@@ -324,6 +350,19 @@ export async function PublicProfileView({
                           <span className="ps-edur">{c.durationMin} min</span>
                         </span>
                       </Link>
+                      {/* Share on every card; the ribbon only for somebody it
+                          could belong to. The owner shares their own class,
+                          they don't add it: it is already theirs. A coach on
+                          the slot doesn't either, for the same reason. */}
+                      <ClassCardActions
+                        classId={c.id}
+                        iso={d.iso}
+                        url={href}
+                        name={c.name}
+                        canAdd={canAddAny && c.coachUserId !== viewerId}
+                        initialOn={myMarks.has(`${c.id}|${d.iso}`)}
+                      />
+                      </div>
                     );
                   })}
                 </div>

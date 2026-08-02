@@ -1513,6 +1513,25 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 }
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
+// The profile's schedule wears the same cards the feed does, actions and all:
+// share on every card, and the ribbon only for somebody the class could
+// belong to. The member gets both; the owner shares their own class rather
+// than adding it, so their page carries the lone share and no ribbon.
+{
+  await fan.goto(BASE + "/matt");
+  await fan.locator(".pub .evcards .ps-erow").first().waitFor();
+  const row = fan.locator(".pub .evcards .ps-erow").first();
+  await row.locator(".evcard-share").waitFor();
+  await row.locator(".evcard-add").waitFor();
+  await page.goto(BASE + "/matt");
+  await page.locator(".pub .evcards .ps-erow").first().waitFor();
+  if (!(await page.locator(".evcard-share.lone").count()))
+    fail("the owner's cards should carry the share button in the corner");
+  if (await page.locator(".evcard-add").count())
+    fail("the owner has nothing to add: it is already their class");
+  console.log("profile cards ok (share for everyone, the ribbon for a member)");
+}
+
 // Now someone with an account has followed, so the coach sees a face rather
 // than a badge: "New follower" is more use when you can tell who.
 {
@@ -2163,12 +2182,19 @@ await page.waitForURL("**/discover");
 await page.goto(BASE + "/matt");
 await page.locator(".pubtab.sel").waitFor();
 {
+  // Underlines, not pills: under the two action pills and over the card list,
+  // a third row of pills was pills on pills. Selected is ink with a rule.
   const t = await page.locator(".pubtab.sel").evaluate((e) => {
     const cs = getComputedStyle(e);
-    return { bg: cs.backgroundColor, radius: parseFloat(cs.borderRadius) };
+    return {
+      bg: cs.backgroundColor,
+      radius: parseFloat(cs.borderRadius),
+      under: cs.borderBottomWidth,
+    };
   });
-  if (t.bg === "rgba(0, 0, 0, 0)") fail("the selected tab should be a filled pill");
-  if (!(t.radius > 20)) fail("the tabs should be pill shapes, radius " + t.radius);
+  if (t.bg !== "rgba(0, 0, 0, 0)") fail("the selected tab should not be a filled pill: " + t.bg);
+  if (t.radius > 0) fail("the tabs should not be pill shapes, radius " + t.radius);
+  if (parseFloat(t.under) < 2) fail("the selected tab should carry an underline, got " + t.under);
 }
 // ---- each tab is a link with its own URL, so a coach can send someone to one
 {

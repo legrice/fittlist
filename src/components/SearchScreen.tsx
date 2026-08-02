@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { searchAll } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
@@ -73,10 +72,16 @@ export function SearchScreen() {
   // results go backwards while you type.
   const run = useRef(0);
 
+  // The caret is already in the box on arrival: the door on Discover is drawn
+  // as this field, so landing here should feel like tapping into it, not like
+  // a page with a second tap owed. Once on mount and once a beat later,
+  // because the tab transition can steal the first focus back.
   useEffect(() => {
     box.current?.focus();
+    const t = setTimeout(() => box.current?.focus(), 300);
     setRecent(readList(RECENT_KEY));
     setRecentLoc(readList(RECENT_LOC_KEY));
+    return () => clearTimeout(t);
   }, []);
 
   const remember = () => {
@@ -124,6 +129,8 @@ export function SearchScreen() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Coaches, members, studios"
             aria-label="Search fittlist"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
           />
           {q && (
             <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
@@ -191,15 +198,11 @@ export function SearchScreen() {
             ))}
           </div>
         ) : (
+          // No door back to Discover: the way in is Discover's own box now,
+          // so offering to open it from here is a circle.
           <div className="empty-block">
             <h2>Search fittlist</h2>
-            <p>
-              Find a coach, a member or a studio by name. A city or a handle works
-              too. To browse instead, Discover has the whole list.
-            </p>
-            <Link className="btn ghost" href="/discover">
-              Open Discover
-            </Link>
+            <p>Find a coach, a member or a studio by name. A city or a handle works too.</p>
           </div>
         )
       ) : nothing ? (

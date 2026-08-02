@@ -284,8 +284,10 @@ nobody was looking.
 
 `searchAll` runs on the server rather than filtering a list the page already
 shipped. Discover no longer filters by text at all: its box is a door
-(`.dissearch-door`), drawn like the field it opens, and tapping it lands on
-`/search`. The header carries no magnifier; the Discover tab wears it, so the
+(`.dissearch-door`), drawn like the field it opens (the placeholder span
+carries the input's vertical padding, or the box collapses to one line), and
+tapping it lands on `/search`, where the box already holds the caret and the
+empty state offers no door back to Discover, because that would be a circle. The header carries no magnifier; the Discover tab wears it, so the
 one search has one door and the tab names where searching lives. A directory has to arrive whole; a
 search is a question, and sending every account to every device so the answer
 can be computed there stops being reasonable well before it stops working. It
@@ -441,7 +443,10 @@ of a coach's.
 point.** The full-bleed photo hero shipped and came back out: a screen of
 photograph before any schedule said editorial when the product says calendar.
 `.pubhead` is centred (face, name, one `.profmeta` line of what and where, the
-two big pills), then a rule, then the tabs as pills, selected filled with ink.
+two big pills), then the tabs as underlines: the selected one is ink over an
+ink rule, the row carries the one divider, and nothing fills. They were pills
+for a moment, and stacked under the action pills over the card list it was
+pills on pills.
 The big picture still exists one tap away: the avatar is `AvatarZoom`, which
 blows the photo up over the blurred page with Follow, Share, Copy link and QR
 under it (the owner gets their card there too). There is no Coach/Member/
@@ -1003,11 +1008,14 @@ orange (`--si`) when it's in, because the one mark of colour a card earns
 should be the same orange every Add wears. The Yours chip sits in the
 ribbon's corner, which is why the card carries a min-height on the shortest
 rows. The day headings on these lists are sticky (`.evcards .ps-daycol`,
-pinned under the brandbar with paper behind them), because a wall of
-same-shaped cards loses its dates as it scrolls. The public page, the studio
+pinned under the brandbar with paper behind them, and switched off under
+`.pub`, where the name and tabs already pin), because a wall of same-shaped
+cards loses its dates as it scrolls. A coach's public profile draws the same
+cards (`ClassCardActions` in the corner: share for everyone including the
+owner, the Add ribbon only for a member it could belong to, with the
+viewer's marks loaded server-side so the ribbon starts right). The studio
 page and the rota keep the flat rows on purpose: those are working surfaces
-where density is the point, and the card CSS is scoped so it cannot reach
-them.
+where density is the point.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
