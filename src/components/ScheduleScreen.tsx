@@ -140,6 +140,8 @@ export function ScheduleScreen({
   // doesn't have to ask again.
   const [addMenu, setAddMenu] = useState(false);
   const [personalOpen, setPersonalOpen] = useState(false);
+  // The add sheet's third answer: not a class at all, just yours.
+  const [personalEvent, setPersonalEvent] = useState(false);
   // One of your own entries, opened; then the same form on that row.
   const [plan, setPlan] = useState<string | null>(null);
   const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
@@ -783,6 +785,7 @@ export function ScheduleScreen({
                 className="setrow"
                 onClick={() => {
                   setAddMenu(false);
+                  setPersonalEvent(false);
                   setPersonalOpen(true);
                 }}
               >
@@ -790,6 +793,21 @@ export function ScheduleScreen({
                 <span className="setrow-txt">
                   <span className="t">A class you&rsquo;re going to</span>
                   <span className="s">Yours alone; nothing public</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setPersonalEvent(true);
+                  setPersonalOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="calendar_today" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Anything else</span>
+                  <span className="s">An appointment, a session, time you&rsquo;re keeping</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
@@ -848,7 +866,7 @@ export function ScheduleScreen({
           subsCount={0}
           firstPublish={false}
           // The plus already asked which hat, so the form doesn't ask again.
-          personal={{ canCoach: false }}
+          personal={{ canCoach: false, event: personalEvent }}
           onClose={() => setPersonalOpen(false)}
           onToast={toast}
           onPublished={(msg) => {

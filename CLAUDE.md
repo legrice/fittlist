@@ -1168,14 +1168,23 @@ row opens `PlanSheet`). Still no month grid, no empty days, no time gutter: it h
 only what is real. Following is everyone you follow; You is you. Those stay
 legibly different.
 
-**The plus sits across from the calendar's name, and it asks which hat
-first.** `.calhead-add` is the orange circle on the Your schedule line of
+**The plus sits across from the calendar's name, and it asks which kind
+first.** `.calhead-add` is the orange pill on the Your schedule line of
 both calendars; it floated over the list for a while (`.fab-plus`), and the
-corner it held is being kept clear for a full-size calendar someday. A
-coach's opens a sheet (coaching it, or going to it) and pre-answers the
-form, so the Adder's own chair question never shows from here; a member's
-opens the personal form straight away, because one answer is not a
-question.
+corner it held is being kept clear for a full-size calendar someday. Both
+calendars open the same sheet and pre-answer the form, so the Adder's own
+chair question never shows from here: a coach's offers three rows (a class
+you're coaching, a class you're going to, anything else), a member's the
+last two. "Anything else" is not a new form: `personal.event` on `Adder`
+is the same personal row with the class-shaped parts put away. No studio
+picker (a free-text Where instead, riding the existing `location` column),
+no type, no photo, and Description reads Notes; because no studio can be
+picked, nothing an event says ever reaches a studio's catalog. It lands
+under the Personal slice wearing no badge, like every personal row, and
+its CTA and toast say calendar rather than plans, because a physio
+appointment is not a plan you train by. Editing an existing personal row
+keeps the full class form: the row doesn't record which flavor typed it,
+and hiding filled-in fields would eat data.
 
 **The calendar's slices are tabs under the rail, and they say your
 relationship to the event, not who owns the row.** `.caltabs` is the same

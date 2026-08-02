@@ -1747,12 +1747,16 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 // person. The delineation is the one question a coach gets asked.
 {
   await fan.goto(BASE + "/week");
-  // The plus opens the form straight away: a member has one answer to which
-  // hat, and a question with one answer is furniture.
+  // The plus asks which kind: a class, or anything else. Never which hat;
+  // a member has no coaching row to offer.
   await fan.locator(".calhead-add").click();
+  await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+  if (await fan.locator(".sheet .setrow", { hasText: "coaching" }).count())
+    fail("a member should not be offered a coaching row");
+  if (!(await fan.locator(".sheet .setrow", { hasText: "Anything else" }).count()))
+    fail("the add sheet should offer anything else");
+  await fan.locator(".sheet .setrow", { hasText: "going to" }).click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
-  if (await fan.getByRole("heading", { name: "Add to your calendar" }).count())
-    fail("a member should not be asked which hat");
   if (await fan.locator(".modetoggle", { hasText: "coaching" }).count())
     fail("a member should not be asked whether they coach it");
   if (await fan.locator(".modetoggle", { hasText: "Public" }).count())
@@ -1789,6 +1793,8 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   }
   // The details stayed at the studio: opening the form there again offers it.
   await fan.locator(".calhead-add").click();
+  await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+  await fan.locator(".sheet .setrow", { hasText: "going to" }).click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
   await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
   // Scoped to the picker: a class row is a button too now, and the one behind
@@ -1798,6 +1804,39 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.locator(".sheetclose").first().click();
   await fan.waitForTimeout(400);
   console.log("your own class ok (the whole form, into your plans and the studio's list)");
+
+  // Anything else: the same form with the class-shaped parts put away. No
+  // studio, no type, no photo; a where, notes, and a when.
+  await fan.locator(".calhead-add").click();
+  await fan.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+  await fan.locator(".sheet .setrow", { hasText: "Anything else" }).click();
+  await fan.getByRole("heading", { name: "New event" }).waitFor();
+  if (await fan.getByRole("button", { name: "Select or start typing a studio" }).count())
+    fail("an event should not ask for a studio");
+  if (await fan.locator("#fType").count()) fail("an event has no class type");
+  if (await fan.locator(".classpho").count()) fail("an event has no photo");
+  await fan.getByPlaceholder("e.g. PT session, physio, flight home").fill("Physio");
+  await fan.locator("#fLoc").fill("Downtown clinic");
+  await fan.getByRole("button", { name: "Th", exact: true }).click();
+  await fan.locator("#fStart").fill("09:00");
+  await fan.locator(".publishwrap .btn").click({ force: true });
+  await fan.getByText("Added to your calendar").waitFor();
+  await fan.waitForTimeout(800);
+  // A fresh load rather than racing router.refresh under suite load; the
+  // class path above already proves the in-place refresh.
+  await fan.goto(BASE + "/week");
+  await fan.locator(".ps-erow", { hasText: "Physio" }).first().waitFor();
+  // ...and it slots under the Personal slice, wearing no badge.
+  await fan.locator(".caltabs .pubtab", { hasText: "Personal" }).click();
+  {
+    const row = fan.locator(".ps-erow", { hasText: "Physio" }).first();
+    await row.waitFor();
+    const txt = await row.innerText();
+    if (!txt.includes("Downtown clinic")) fail(`the event row is missing its where: ${txt}`);
+    if (/Going/.test(txt)) fail("a personal event wears no badge");
+  }
+  await fan.locator(".caltabs .pubtab", { hasText: "All" }).click();
+  console.log("an event ok (no class furniture, lands under Personal)");
 
   // Nothing about it is public. Not on their profile, not in the feed.
   {
@@ -1863,8 +1902,13 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   {
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-    if (rows.length !== 2 || !/coaching/.test(rows[0]) || !/going to/.test(rows[1]))
-      fail("the plus should offer coaching and going: " + rows.join("|"));
+    if (
+      rows.length !== 3 ||
+      !/coaching/.test(rows[0]) ||
+      !/going to/.test(rows[1]) ||
+      !/Anything else/.test(rows[2])
+    )
+      fail("the plus should offer coaching, going and anything else: " + rows.join("|"));
   }
   await page.locator(".sheet .setrow", { hasText: "going to" }).click();
   await page.getByRole("heading", { name: "Add a class" }).waitFor();

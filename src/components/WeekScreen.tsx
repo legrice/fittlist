@@ -58,6 +58,10 @@ export function WeekScreen({
   // meant the thing you booked through ClassPass arrived with no studio, no
   // description and no picture. It is the coach's own form now.
   const [addOpen, setAddOpen] = useState(false);
+  // The plus asks which kind first: a class, or anything else. A member has
+  // two answers now, so they get the same sheet a coach does, minus the hat.
+  const [addMenu, setAddMenu] = useState(false);
+  const [personalEvent, setPersonalEvent] = useState(false);
   // One of your own, opened: it had no page behind it and so no way in at all.
   const [plan, setPlan] = useState<string | null>(null);
   // The same form again, this time on a row that already exists.
@@ -183,7 +187,7 @@ export function WeekScreen({
 
         <div className="calhead-row">
           <h2 className="calhead">Your schedule</h2>
-          <button className="calhead-add" onClick={() => setAddOpen(true)}>
+          <button className="calhead-add" onClick={() => setAddMenu(true)}>
             <Icon name="add" size={15} /> Add
           </button>
         </div>
@@ -223,7 +227,13 @@ export function WeekScreen({
             </Link>
             {/* The other way in: a class you go to whose coach isn't here
                 yet. Yours alone; nothing public. */}
-            <button className="btn ghost" onClick={() => setAddOpen(true)}>
+            <button
+              className="btn ghost"
+              onClick={() => {
+                setPersonalEvent(false);
+                setAddOpen(true);
+              }}
+            >
               Add a class
             </button>
           </div>
@@ -330,6 +340,55 @@ export function WeekScreen({
           </>
         )}
       </div>
+      {/* Which kind this one is. A class gets the full form; anything else
+          gets the same form with the class-shaped parts put away. */}
+      {addMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAddMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddMenu(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Add to your calendar</h2>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setPersonalEvent(false);
+                  setAddOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="bookmark" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">A class you&rsquo;re going to</span>
+                  <span className="s">Yours alone; nothing public</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setPersonalEvent(true);
+                  setAddOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="calendar_today" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Anything else</span>
+                  <span className="s">An appointment, a session, time you&rsquo;re keeping</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {addOpen && (
         <Adder
           studios={studios}
@@ -338,7 +397,7 @@ export function WeekScreen({
           lastUsed={lastUsed}
           subsCount={0}
           firstPublish={false}
-          personal={{ canCoach: false }}
+          personal={{ canCoach: false, event: personalEvent }}
           onClose={() => setAddOpen(false)}
           onToast={toast}
           onPublished={(msg, planId) => {
@@ -417,7 +476,9 @@ export function WeekScreen({
           it, and a way to say no. */}
       {justAdded && (
         <div className="folhint weekadded" role="status" aria-live="polite">
-          <p className="folhint-t">Added to your plans.</p>
+          <p className="folhint-t">
+            {personalEvent ? "Added to your calendar." : "Added to your plans."}
+          </p>
           <div className="folhint-row">
             <button
               className="folhint-go"

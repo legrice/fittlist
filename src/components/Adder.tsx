@@ -93,6 +93,11 @@ export type AdderPersonal = {
   /** Set = editing this personal_classes row rather than adding one. One row
    *  is one entry, so the day pills move it instead of fanning it out. */
   editId?: string;
+  /** Not a class at all: an appointment, a session, your own time. The same
+   *  personal row underneath, with the class-shaped fields (studio, type,
+   *  photo, the catalog write) put away, because a dentist appointment has
+   *  no studio and should touch nothing shared. */
+  event?: boolean;
 };
 
 type Stage = "start" | "form" | "pick" | "new";
@@ -146,6 +151,7 @@ export function Adder({
   const isPersonalEdit = Boolean(personal?.editId);
   const isGym = Boolean(gym);
   const isPersonal = Boolean(personal);
+  const isEvent = Boolean(personal?.event);
   // Which chair you're in. A member is only ever going; a coach is asked, and
   // "going" is the answer that brought them to this form.
   const [role, setRole] = useState<"going" | "coaching">("going");
@@ -164,7 +170,12 @@ export function Adder({
             title: "Edit class",
             lead: "Yours alone. Change anything; none of it is published.",
           }
-        : {
+        : personal.event
+          ? {
+              title: "New event",
+              lead: "Anything on your calendar: an appointment, a session, time you're keeping. Yours alone; nothing public.",
+            }
+          : {
             title: "Add a class",
             lead: "A class you go to. It lands in your plans and nowhere else, and the studio gets the details so the next person doesn't type them again.",
           }
@@ -330,7 +341,9 @@ export function Adder({
           : gym
             ? "Add to the schedule"
             : mineOnly
-              ? "Add to your plans"
+              ? isEvent
+                ? "Add to your calendar"
+                : "Add to your plans"
               : isPublic
                 ? "Publish event"
                 : "Save event";
@@ -374,7 +387,14 @@ export function Adder({
       onToast(res.error ?? "Couldn't add that");
       return;
     }
-    onPublished(n > 1 ? `Added ${n} classes to your plans` : "Added to your plans", res.id);
+    onPublished(
+      isEvent
+        ? "Added to your calendar"
+        : n > 1
+          ? `Added ${n} classes to your plans`
+          : "Added to your plans",
+      res.id,
+    );
   };
 
   const publish = () => {
@@ -622,9 +642,27 @@ export function Adder({
             </div>
             )}
 
+            {/* An event has no studio: the field would invite the catalog
+                write the event flavor exists to avoid. A plain Where does
+                the job. */}
+            {isEvent && (
+              <div className="adder-card">
+                <label className="flabel" htmlFor="fLoc">
+                  Where <span>&middot; optional</span>
+                </label>
+                <input
+                  id="fLoc"
+                  className="editinput"
+                  placeholder="e.g. Home, the park, Newark Airport"
+                  value={location}
+                  maxLength={120}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </div>
+            )}
             {/* Studio: required for public, optional for private. A gym's
                 classes are at the gym, so it is never asked. */}
-            {!gym && (
+            {!gym && !isEvent && (
             <div className="adder-card">
             <label className="flabel">
               Studio{(!isPublic || mineOnly) && <span> · optional</span>}
@@ -683,7 +721,7 @@ export function Adder({
 
             <div className="adder-card">
             <label className="flabel" htmlFor="fName">
-              Class name
+              {isEvent ? "What is it" : "Class name"}
               {(gym || selectedStudio) && catalog.length > 0 && !isEdit && (
                 <span> · type new or pick one from this studio</span>
               )}
@@ -692,7 +730,7 @@ export function Adder({
               <input
                 type="text"
                 id="fName"
-                placeholder="e.g. Barbell Strength"
+                placeholder={isEvent ? "e.g. PT session, physio, flight home" : "e.g. Barbell Strength"}
                 autoComplete="off"
                 value={name}
                 onFocus={() => setSugOpen(true)}
@@ -721,12 +759,14 @@ export function Adder({
                 </div>
               )}
             </div>
-            {!gym && isPublic && !selectedStudio && (
+            {!gym && !isEvent && isPublic && !selectedStudio && (
               <p className="durnote" style={{ marginTop: 8 }}>
                 Pick a studio to see its classes.
               </p>
             )}
 
+            {!isEvent && (
+            <>
             <label className="flabel" htmlFor="fType">
               Type <span>· optional</span>
             </label>
@@ -744,8 +784,19 @@ export function Adder({
               ))}
             </select>
 
+            </>
+            )}
+
             <label className="flabel" htmlFor="fDesc">
-              Description <span>· optional, shown on the class page</span>
+              {isEvent ? (
+                <>
+                  Notes <span>· optional, only you see them</span>
+                </>
+              ) : (
+                <>
+                  Description <span>· optional, shown on the class page</span>
+                </>
+              )}
             </label>
             <textarea
               id="fDesc"
@@ -753,13 +804,20 @@ export function Adder({
               value={description}
               maxLength={500}
               rows={3}
-              placeholder="What to expect, what to bring, who it's for…"
+              placeholder={
+                isEvent
+                  ? "Anything worth remembering: an address, a booking number…"
+                  : "What to expect, what to bring, who it's for…"
+              }
               onChange={(e) => setDescription(e.target.value)}
             />
 
             {/* A picture of the room, or the class. Optional forever: a
                 schedule with no photos has to stay a good schedule, so this
-                never becomes a field somebody has to answer. */}
+                never becomes a field somebody has to answer. An event skips
+                it; nothing renders a picture for one. */}
+            {!isEvent && (
+            <>
             <label className="flabel">
               Photo{" "}
               <span>
@@ -799,6 +857,8 @@ export function Adder({
                 }}
               />
             </div>
+            </>
+            )}
             </div>
 
             <div className="adder-card">

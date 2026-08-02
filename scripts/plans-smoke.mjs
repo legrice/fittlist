@@ -74,6 +74,8 @@ await m.waitForTimeout(400);
 await m.goto(BASE + "/week");
 await m.locator(".schedtools").waitFor();
 await m.locator(".calhead-add").click();
+await m.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+await m.locator(".sheet .setrow", { hasText: "going to" }).click();
 await m.getByPlaceholder("e.g. Barbell Strength").fill("Swag by LWL");
 await m.getByRole("button", { name: "Sa", exact: true }).click();
 await m.locator("#fDesc").fill("Choreo class, low lights, no mirrors.");
