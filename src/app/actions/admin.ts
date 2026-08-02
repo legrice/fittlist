@@ -24,6 +24,42 @@ export async function adminMarkActivitySeen(): Promise<{ ok: boolean }> {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Put a picture on any class, from the class sheet. A beta-era power, held by
+// the admin alone: most classes were typed in before pictures existed, and a
+// coach who never opens the editor is not going to add one. The picture lands
+// on the whole series (all its weekday rows share the seriesId, and an edit
+// rewrites rows, so a single row would lose it), and on the class's studio
+// catalog entry when it has one, so the next person to pull the class in gets
+// it too. It changes a picture and nothing else: no words, no times, nothing
+// a coach would need to be asked about first.
+export async function adminSetClassImage(
+  classId: string,
+  image: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not allowed." };
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return { ok: false, error: "That class isn't there any more." };
+  const img = image?.trim() || null;
+  await db
+    .update(schema.classes)
+    .set({ image: img })
+    .where(eq(schema.classes.seriesId, c.seriesId));
+  if (img && c.studioId) {
+    await db
+      .update(schema.studioClasses)
+      .set({ image: img, updatedAt: new Date() })
+      .where(
+        and(
+          eq(schema.studioClasses.studioId, c.studioId),
+          eq(schema.studioClasses.nameKey, c.name.toLowerCase()),
+        ),
+      );
+  }
+  return { ok: true };
+}
+
 // Rewrite every stored location into the canonical "City, ST".
 //
 // Rows written before normalization existed still show up as separate chips in

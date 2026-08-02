@@ -1,4 +1,5 @@
 import {
+  Bookmark,
   ArrowLeft,
   ArrowUpRight,
   AtSign,
@@ -72,6 +73,25 @@ function CalendarAdded({ size = 24 }: { size?: number }) {
   );
 }
 
+/**
+ * The ribbon, filled, with the tick cut out of it: the added state of "this is
+ * in my plans". Same construction as CalendarAdded and for the same reason:
+ * the tick is a hole in one evenodd path, so the whole glyph is currentColor
+ * and reads on the dark pill, the card and the tab bar alike.
+ */
+function BookmarkAdded({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.5 2h11A2.5 2.5 0 0 1 20 4.5V22l-8-4.6L4 22V4.5A2.5 2.5 0 0 1 6.5 2Zm1.06 8.13 3.35 3.35 6.03-6.03-1.55-1.55-4.48 4.48-1.8-1.8-1.55 1.55Z"
+      />
+    </svg>
+  );
+}
+
 // Lucide, drawn inline as SVG. Call sites keep the old Material names — this
 // map is the only place that knows the difference — so changing sets again is
 // a one-file job. No icon font also means no blocking request to Google and no
@@ -107,6 +127,8 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   event_available: CalendarCheck,
   // The pair on a class: an empty calendar, and one with the tick in it.
   event_added: CalendarAdded,
+  bookmark: Bookmark,
+  bookmark_added: BookmarkAdded,
   expand_more: ChevronDown,
   favorite: Heart,
   fingerprint: Fingerprint,

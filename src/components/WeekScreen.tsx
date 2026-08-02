@@ -154,8 +154,8 @@ export function WeekScreen({
           <div className="empty-block">
             <h2>Nothing added yet</h2>
             <p>
-              Heart a class and it lands here. What you pick
-              lands here, and drops off once it&rsquo;s been and gone.
+              Add a class from Following or a coach&rsquo;s page and it lands here,
+              and drops off once it&rsquo;s been and gone.
             </p>
             <Link className="btn si" href="/feed">
               Find something to add

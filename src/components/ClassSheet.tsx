@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { adminSetClassImage } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { claimShift, giveUpShift } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
+import { readPhoto } from "@/lib/photo";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
 import { Wordmark } from "@/components/Wordmark";
@@ -61,6 +63,8 @@ export function ClassSheet({
   const [reported, setReported] = useState(false);
   const [favOn, setFavOn] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  // The admin's photo door, behind the overflow. See adminSetClassImage.
+  const photoRef = useRef<HTMLInputElement>(null);
   const favTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The overflow menu closes on any tap outside it, like a menu should.
@@ -72,6 +76,22 @@ export function ClassSheet({
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
   }, [moreOpen]);
+
+  const pickAdminPhoto = (f: File) => {
+    if (!c || pending) return;
+    readPhoto(f, (img) => {
+      start(async () => {
+        const res = await adminSetClassImage(c.id, img);
+        if (!res.ok) {
+          toast(res.error ?? "Couldn't save that");
+          return;
+        }
+        setC({ ...c, image: img });
+        toast("Photo saved");
+        onChanged?.(added);
+      });
+    });
+  };
 
   const sendReport = (reason: string) => {
     if (!c || pending) return;
@@ -248,11 +268,60 @@ export function ClassSheet({
                   <Icon name="flag" size={17} /> Report this class
                 </button>
               )}
+              {/* Admin only, and only the picture: most classes were typed in
+                  before pictures existed, and this fills the catalog without
+                  touching a word of anybody's class. */}
+              {c.adminPhoto && (
+                <button
+                  className="ovmenu-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    photoRef.current?.click();
+                  }}
+                >
+                  <Icon name="palette" size={17} /> {c.image ? "Change the photo" : "Add a photo"}
+                </button>
+              )}
+              {c.adminPhoto && c.image && (
+                <button
+                  className="ovmenu-item ovmenu-quiet"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    start(async () => {
+                      const res = await adminSetClassImage(c.id, null);
+                      if (!res.ok) {
+                        toast(res.error ?? "Couldn't remove that");
+                        return;
+                      }
+                      setC({ ...c, image: null });
+                      toast("Photo removed");
+                      onChanged?.(added);
+                    });
+                  }}
+                >
+                  <Icon name="close" size={17} /> Remove the photo
+                </button>
+              )}
             </div>
           )}
         </div>
       )}
 
+      {c?.adminPhoto && (
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) pickAdminPhoto(f);
+            e.target.value = "";
+          }}
+        />
+      )}
       {missing ? (
         <div className="classoverlay-body">
           <p className="lead" style={{ textAlign: "center", marginTop: "30vh" }}>
@@ -428,11 +497,12 @@ export function ClassSheet({
                     aria-label={added ? "In your plans" : "Add to your plans"}
                     onClick={toggle}
                   >
-                    {/* An empty calendar, then the same calendar with the tick
-                        cut into it. It was a heart, which said "favourite" and
-                        meant "I'm going": the list it joins is Plans, and the
-                        control should look like the place it puts things. */}
-                    <Icon name={added ? "event_added" : "calendar_today"} size={19} />
+                    {/* An empty ribbon, then the same ribbon with the tick
+                        cut into it: the glyph the Plans tab wears. It was a
+                        heart, which said "favourite" and meant "I'm going";
+                        the control should look like the place it puts
+                        things. */}
+                    <Icon name={added ? "bookmark_added" : "bookmark"} size={19} />
                     {!added && "Add"}
                   </button>
                 )}
@@ -529,7 +599,7 @@ export function ClassSheet({
           It names that list, because the list has a name and it is the tab
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
-        <Icon name="event_added" size={16} />
+        <Icon name="bookmark_added" size={16} />
         Added to your plans
         <Link className="favtoast-link" href="/week" onClick={() => setFavOn(false)}>
           See them

@@ -7,6 +7,7 @@ import { avatarColor } from "@/lib/avatar";
 import { isBlocked } from "@/lib/blocks";
 import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { fansVisible } from "@/lib/flags";
+import { currentAdmin } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
 
@@ -46,6 +47,9 @@ export type ClassDetail = {
   added: boolean;
   /** It's been and gone: say so rather than showing a button that fails. */
   past: boolean;
+  /** The viewer is the admin: the sheet offers to change the picture. A beta
+   *  power for filling in the catalog; it touches the photo and nothing else. */
+  adminPhoto: boolean;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
@@ -104,6 +108,7 @@ export async function classDetail(
 
   const viewerId = await getSessionUserId();
   const isOwner = viewerId === user.id;
+  const adminPhoto = !isOwner && !!(await currentAdmin());
   if (!c.isPublic && !isOwner) return null;
   // Blocked: as far as they're concerned this class doesn't exist.
   if (await isBlocked(user.id, viewerId)) return null;
@@ -304,6 +309,7 @@ export async function classDetail(
     past,
     roster,
     ownerIsGym: user.kind === "gym",
+    adminPhoto,
     shift,
   };
 }

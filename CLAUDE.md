@@ -700,6 +700,17 @@ back to the one that publishes, public/private toggle and all, and the toast
 says it went to their schedule, because it will not appear on the screen they
 added it from. A member is never asked: one answer is not a question.
 
+**The admin can put a picture on any class, and only a picture.**
+`adminSetClassImage` (behind `currentAdmin()`) writes `classes.image` for the
+whole series, because an edit deletes and reinserts rows and a picture on one
+row would be lost to the next save; it also lands on the class's
+`studio_classes` row when there is one, so the next person to pull the class
+in gets it. The door is the class sheet's overflow menu, admin only
+(`classDetail().adminPhoto`), offering add, change and remove. It is a
+beta-era power for filling in a catalog typed before pictures existed, and it
+deliberately cannot reach a word of anybody's class: times, names and
+descriptions stay the coach's own.
+
 **A class report points at the `seriesId`, not a class row.** `class_reports`
 is how someone flags a class that isn't right, and a report keyed on a class
 row would hit the same wall as a Going mark: edits delete and reinsert rows.
@@ -961,22 +972,21 @@ says Add, the note says Added, and the row that offers the calendar feed says
 image, and using it for a class made the list sound like a folder rather than
 a plan.
 
-**The control that puts a class in your plans is a calendar, not a heart.**
-A heart says favourite and means "I like this"; what the tap actually does is
-put the class on a list called Plans, which is a tab with a calendar on it. So
-the pill is an empty calendar and the word Add, and the tap swaps it for the
-same calendar with a tick cut into it, exactly the glyph the Plans tab wears.
-The toast names the list (`Added to your plans`) and links to it. The swipe on
-a feed row is the same pair of words and the same glyph, because a swipe and a
-tap are the same thing done two ways.
+**The control that puts a class in your plans is a ribbon, not a heart.**
+A heart says favourite and means "I like this"; the tap puts the class on a
+list called Plans, and the glyph is the bookmark ribbon, because the ribbon is
+the one mark everybody already reads as "keep this". It was a calendar for a
+week, which said the right thing to nobody at a glance. The word stays Add
+(never save; see below), the pill is an empty ribbon that swaps for the same
+ribbon with a tick cut into it, and the Plans tab, the sheet's pill, the card's
+corner button and the swipe all wear the same pair, because one idea gets one
+glyph.
 
-`event_added` in `Icon.tsx` is hand-drawn rather than Lucide's `CalendarCheck`,
-and the reason is the fill: filling an outline calendar swallows the tick, and
-drawing the tick on top would mean knowing what colour the glyph is sitting on.
-The tick is a hole in one `fill-rule: evenodd` path instead, so the whole thing
-is `currentColor` and works on the dark pill, the dark toast, and whatever comes
-next. Nothing in CSS forces a fill on it any more; if that rule comes back it
-will paint over the tick.
+`bookmark_added` in `Icon.tsx` is hand-drawn for the same reason `event_added`
+was: filling an outline glyph swallows the tick, and drawing the tick on top
+would mean knowing what colour it sits on. The tick is a hole in one
+`fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
+the dark pill, the card and the tab bar alike.
 
 **A member's lists draw the class as a poster, and only a member's lists.**
 `.evcards` on the two `Agenda` callers (Plans and Following) turns the shared

@@ -227,7 +227,7 @@ export function FeedAgenda({
                 aria-pressed={!!item.on}
                 onClick={() => toggleGoing(item.classId!, d.iso, !item.on)}
               >
-                <Icon name={item.on ? "event_added" : "calendar_today"} size={18} />
+                <Icon name={item.on ? "bookmark_added" : "bookmark"} size={18} />
               </button>
             </>
           )}

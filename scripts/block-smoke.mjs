@@ -179,7 +179,15 @@ const classId = shareUrl.match(
 )?.[0];
 if (!classId) fail(`couldn't get a class id out of the share link: ${shareUrl}`);
 
-const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+// Seven days back from the date the share itself named, not from Date.now():
+// the shared row is one weekday's row, and from 8pm Eastern the UTC clock is
+// already tomorrow, so now-minus-seven lands on the wrong weekday and the
+// sheet falls forward to the next occurrence instead of a past one.
+const sharedD = shareUrl.match(/d=(\d{4}-\d{2}-\d{2})/)?.[1];
+if (!sharedD) fail(`the share link carries no date: ${shareUrl}`);
+const weekAgo = new Date(new Date(`${sharedD}T00:00:00Z`).getTime() - 7 * 864e5)
+  .toISOString()
+  .slice(0, 10);
 await m.goto(`${BASE}/carina/${classId}?d=${weekAgo}`);
 await m.getByText("This one has already run.").waitFor();
 if (await m.locator(".ovcta-save").count())
