@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DayRail } from "@/components/CalendarBits";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -142,31 +141,18 @@ export function Agenda({
   days,
   className = "",
   row,
-  todayIso,
 }: {
   days: AgendaDay[];
   className?: string;
   row: (item: AgendaItem, day: AgendaDay) => ReactNode;
-  /** Draw the dates as the calendar's left rail rather than heading rows.
-   *  The calendars pass it; Following keeps the headings, because a merged
-   *  list of many coaches reads by day name, not by grid. */
-  todayIso?: string;
 }) {
   return (
     <div className={`ps-week ps-agenda${className ? ` ${className}` : ""}`}>
       {days.map((d) => (
         // The id is the month grid's landing spot: a tapped day scrolls the
         // list here.
-        <div
-          key={d.iso}
-          id={`day-${d.iso}`}
-          className={`ps-daygroup${todayIso ? " dayrail-group" : ""}`}
-        >
-          {todayIso ? (
-            <DayRail iso={d.iso} todayIso={todayIso} />
-          ) : (
-            <div className="ps-daycol">{d.label}</div>
-          )}
+        <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
+          <div className="ps-daycol">{d.label}</div>
           <div className="ps-daycards">
             {d.items.map((i) => (
               <div key={i.key} className="ps-erow">

@@ -1195,9 +1195,9 @@ does not apply, because a grid you can look back across is a record. A tap
 on a future day lands on that day in the List (`day-{iso}` ids on the day
 groups are the landing spots). The grid's plans data comes from `myWeek`'s
 nine-week horizon, so months beyond it show teaching rows only. The List's
-dates sit in a left rail (`DayRail`: weekday over day number, today's
-number filled with the brand orange), not as heading rows; Following keeps
-the headings, because a merged list of many coaches reads by day name.
+dates are heading rows, everywhere: a left date rail was tried for a night
+and came back out, because one list grammar across Following and the
+calendars beat the grid-flavoured margin.
 
 **The calendar keeps two doors on screen: Today and the plus.**
 `CalBottomBar` floats them over every view on both calendars, Today bottom

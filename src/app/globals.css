@@ -708,27 +708,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
 [data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
 [data-mode="dark"] .monthpill.ev-private { color: #9fb0d1; }
-/* The list's date rail: weekday over day number down the left, cards to the
-   right. Today's number fills with the brand orange, the same "you are
-   here" the month grid rings. The rail overrides the heading treatment the
-   class otherwise gets (sticky bar, full-width paper). */
-.ps-daygroup.dayrail-group, .ps-agenda .ps-daygroup.dayrail-group {
-  display: flex; flex-direction: row; gap: 8px; align-items: flex-start;
-}
-.evcards .ps-daycol.dayrail-col, .ps-daycol.dayrail-col {
-  position: static; width: 46px; flex-shrink: 0; margin: 0; padding: 8px 0 0;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  background: none; font-size: 10px;
-}
-.dayrail-wd { font-size: 10px; font-weight: 700; letter-spacing: .05em; color: var(--ol); }
-.dayrail-num {
-  width: 32px; height: 32px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 16px; color: var(--ink);
-}
-.dayrail-today .dayrail-num { background: var(--si); color: #fff; }
-.dayrail-group .ps-daycards { flex: 1; min-width: 0; }
 /* The persistent doors: Today bottom-left, the plus bottom-right, floating
    over the list above the tab bar. `.calfabs-low` drops them to the screen
    edge where no bar renders (the coaches-only mode). */
@@ -3263,13 +3242,12 @@ button.ps-card { cursor: pointer; }
 }
 .feedstrip::-webkit-scrollbar { display: none; }
 /* The rail bleeds to the screen edge, so the arrows that page it have to
-   anchor to a box that doesn't scroll with it. The hairline underneath is
-   the seam between who you follow and what they're teaching. It bleeds
-   edge to edge with the rail rather than stopping at the gutter. */
+   anchor to a box that doesn't scroll with it. No hairline underneath: the
+   flat rows carry their own dividers now, and a seam over the first day
+   heading was two lines doing one job. */
 .feedrail {
   position: relative;
   margin: 0 -18px 12px;
-  border-bottom: 1px solid var(--line);
 }
 /* The strip spans the bled rail edge to edge; its own padding keeps the
    faces breathing at the gutters while scrolled ones slide under the screen

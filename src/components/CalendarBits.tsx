@@ -48,21 +48,6 @@ export function monthLabel(ym: string, todayIso: string) {
   return y === thisYear ? MONTHS[m - 1] : `${MONTHS[m - 1]} ${y}`;
 }
 
-const WD = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-
-/** The list's left rail: the weekday over the day number, today's number on
- *  the brand orange. The dates moved off the section-heading row and into
- *  the margin, which is where a calendar keeps them. */
-export function DayRail({ iso, todayIso }: { iso: string; todayIso: string }) {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return (
-    <div className={`ps-daycol dayrail-col${iso === todayIso ? " dayrail-today" : ""}`}>
-      <span className="dayrail-wd">{WD[(d.getUTCDay() + 6) % 7]}</span>
-      <span className="dayrail-num">{d.getUTCDate()}</span>
-    </div>
-  );
-}
-
 /** The two persistent doors under every calendar view: Today on the left
  *  (back to now, in the list), the plus on the right (add, wherever you
  *  are). Google keeps them on screen for the same reason: the two things a

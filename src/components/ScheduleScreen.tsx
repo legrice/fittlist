@@ -19,7 +19,6 @@ import { avatarColor } from "@/lib/avatar";
 import {
   CalBottomBar,
   CalHead,
-  DayRail,
   KindChecks,
   MonthGrid,
   ViewSheet,
@@ -410,8 +409,8 @@ export function ScheduleScreen({
           <>
             <div className="ps-week ps-agenda callist">
               {days.map((d) => (
-                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup dayrail-group">
-                  <DayRail iso={d.iso} todayIso={todayIso} />
+                <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
+                  <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
                     {/* One day, both hats, in time order: the classes you
                         teach and the ones you're going to are one calendar. */}
