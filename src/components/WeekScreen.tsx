@@ -184,7 +184,7 @@ export function WeekScreen({
         <div className="calhead-row">
           <h2 className="calhead">Your schedule</h2>
           <button className="calhead-add" onClick={() => setAddOpen(true)}>
-            <Icon name="add" size={17} /> Add
+            <Icon name="add" size={15} /> Add
           </button>
         </div>
         {/* The slices of the calendar, under the rail: All, the classes you

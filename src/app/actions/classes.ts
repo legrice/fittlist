@@ -85,7 +85,9 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
     .map((l) => ({ label: detectProvider(l.url), url: l.url.trim() }));
 }
 
-type SaveResult = { ok: boolean; count?: number; error?: string };
+// `id` is the first inserted row, so the moment after publishing can offer
+// the class itself (its link, its card) without a second lookup.
+type SaveResult = { ok: boolean; count?: number; id?: string; error?: string };
 
 // Shared by publish (new rows) and edit (replaceClassId set: the original
 // row is swapped for rows on the selected days).
@@ -411,7 +413,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true, count: days.length };
+  return { ok: true, count: days.length, id: inserted[0]?.id };
 }
 
 export async function publishClasses(input: PublishInput): Promise<SaveResult> {

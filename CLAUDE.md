@@ -367,20 +367,21 @@ to both edges and up under the header (`.profbanner-wrap` swallows the
 page's top padding with a negative margin), with no radius and no shadow: a
 photograph running edge to edge is its own frame. Verified overlays the
 picture's bottom-left, above the name, on a white pill so it reads over a
-photograph; a photoless claimed studio keeps the badge beside its name. The
-corner controls sit on the picture (`:has(.profbanner)` steps them in from
-the edge). Only a photo earns the rectangle; an empty one would be a wall,
-so the fallback is the circle below.
+photograph. The corner controls sit on the picture (`:has(.profbanner)`
+steps them in from the edge). A studio with no photo keeps the same
+rectangle, filled with its own derived colour (`.profbanner-empty`): both
+layouts are one layout, the badge overlays either, and the space is the
+photo's invitation.
 
-**A studio with no photo wears a face, not a pin.** `avatarColor({ id })` and
-`initialOf(name)` are the same pair a coach without a photo uses, so a studio
-gets one of the same sixty colours, derived from its id and therefore identical
-in the directory row and on its own page. A grey placeholder pin on every row
-was unreadable for exactly the reason a page of identical orange circles was.
-There is no `studios.avatarColor`: a studio has no picker, so the derived
-colour is the only one it can have. In the directory the shape rule holds at
-row size too: `.disrow-studio .disrow-av` is a rounded rectangle where a
-person's stays a circle.
+**A studio with no photo wears its colour, not a pin.** `avatarColor({ id })`
+derives one of the same sixty colours a coach draws from, identical in the
+directory row (with `initialOf(name)`) and on its own page (the colour-filled
+banner). A grey placeholder pin on every row was unreadable for exactly the
+reason a page of identical orange circles was. There is no
+`studios.avatarColor`: a studio has no picker, so the derived colour is the
+only one it can have. In the directory the shape rule holds at row size too:
+`.disrow-studio .disrow-av` is a rounded rectangle where a person's stays a
+circle.
 
 **Locations are one string per place.** Discover groups by the exact value, so
 `normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
@@ -389,26 +390,17 @@ matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
 **Discover's top is one stack: the search door, the halves as underline
-tabs, and the chip rail under them, led by Filters.** The People/Studios
+tabs, and the chip rail under them, led by All.** The People/Studios
 segment is the same underline tabs a profile's sections wear (`.pubtabs
-.distabs`), and every filter lives in the rail (`.dischips`, scrolling off
-the edge) or behind its first chip: a chip you can see is a chip you use.
-There is no floating filter pill any more; it floated over the list for a
-while and the rail replaced it, which is also why `.dislist` no longer
-carries a big bottom margin. The Filters chip (`.chip-filters`) leads the
-rail on both halves, opens the sheet, and wears the count of every live pick
-(`.chip-n`), so the studios' half keeps the door even while types are its
-only filter: more studio filters will come, and the door is already there.
-The chips after it are multiselect, every one: on Coaches, Available for
-clients, then the lens's type chips; picking two types means either, not
-both, and two picks count as two on the Filters chip. The sheet holds the
-same filters again (the city, which needs a form; the switches; the type
-grid), reading and writing the same state as the rail, so either place can
-change a pick. Nothing is on by default: a filter you didn't set is a list
-you can't explain. Inside the sheet, Clear filters is always in the layout
-and merely invisible until something is on: appearing and disappearing
-changed the sheet's height, which made the whole sheet jump the moment a
-switch was toggled.
+.distabs`), and the rail (`.dischips`, scrolling off the edge) is the whole
+filter now. All leads it, filled in by default: the one selected chip is
+what says the others can be selected, and tapping it clears every pick. The
+chips after it are multiselect (Available for clients on Coaches, then the
+lens's type chips); picking two types means either, not both, and any pick
+takes All off. There is no Filters chip and no sheet for now; both return
+the day there are enough filters (the city among them) to need one, which
+is also why `cities` stays a prop the component ignores. Nothing is on by
+default: a filter you didn't set is a list you can't explain.
 
 **A filter is only offered where it can narrow something.** Discover's What
 chips are built from what the lens in front of you actually holds: coaches'
@@ -479,12 +471,13 @@ stat on the account. A lid over two buttons is where things go to be forgotten.
 the panel under it, and a coach, a member and a studio all render through it:
 same photograph, same badge above the name, same two pills on the picture, same
 tabs. It takes a `base` (`/matt`, or `/s/ironbound`) and a list of tabs rather
-than a handle, because a studio's URL has a prefix and a member has no tab row
-at all. An empty `tabs` means no row, which is right for a page with one
-section; the studio already worked that way and the member now does too. The
-badge says which: Coach, Member, Studio. What used to be three headers is one,
-and three headers is how a member's page ended up looking like a lesser version
-of a coach's.
+than a handle, because a studio's URL has a prefix. A member wears two tabs
+now (Schedule and Info, `/{handle}` and `/{handle}/about`): the Schedule is
+the classes they're going to, still gated on the mutual follow, and a
+stranger's empty state says the same words whatever the week holds so it
+can't be used to guess it; Info is the about, empty state and all. What used
+to be three headers is one, and three headers is how a member's page ended up
+looking like a lesser version of a coach's.
 
 **A profile reads left, top to bottom, like everything under it.** The
 full-bleed photo hero shipped and came back out: a screen of photograph
@@ -709,6 +702,18 @@ coach is not putting them on the platform. The admin Reports tab lists
 same-studio-same-time classes under two accounts, which is what the old leak
 looks like from above.
 
+**Publishing a class ends on the share moment.** A brand new public class
+closes the Adder onto `ClassLiveSheet`: the class is live, and the two ways
+to hand it on sit right there instead of a hunt through menus later. They
+are both "share" and they are different acts, so the rows say the
+difference: Share the link (the class URL, to a person, anywhere you
+message) and Share a picture (the class card, `ShareCardSheet`, for a story
+or a post). Only a brand new public coach class earns it: an edit is not
+news, a private class has no page to hand anyone, and gym and personal rows
+have their own flows. `save()` returns the first inserted row's `id` so the
+sheet can point at the class without a second lookup, and the suites close
+the sheet through their `closeLive` helpers after every publish it rides.
+
 **A class you go to is filled in with the same form as a class you teach.**
 It was five fields in a sheet of its own, so the thing you booked through
 ClassPass arrived with no studio, no description and no picture, and the next
@@ -748,7 +753,12 @@ or the old picture comes straight back on the next catalog pull. The door is the
 (`classDetail().adminPhoto`), offering add, change and remove. It is a
 beta-era power for filling in a catalog typed before pictures existed, and it
 deliberately cannot reach a word of anybody's class: times, names and
-descriptions stay the coach's own.
+descriptions stay the coach's own. `adminSetClassLink` is the same power for
+the booking door, with one harder rule: fill-the-blanks only. It writes a
+link (labelled by `detectProvider`) onto the same-title classes and the
+owner's template, and only where the links array is empty, because a link
+the coach set is their word. The door (`classDetail().adminLink`, in the
+sheet's overflow) only exists where the blank does.
 
 **A class report points at the `seriesId`, not a class row.** `class_reports`
 is how someone flags a class that isn't right, and a report keyed on a class

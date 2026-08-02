@@ -14,9 +14,9 @@ import { AppChrome } from "@/components/AppChrome";
 import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
+import { InviteCoach } from "@/components/InviteCoach";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
-import { ProfileShare } from "@/components/ProfileShare";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import { StudioMenu } from "@/components/StudioMenu";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -250,42 +250,31 @@ export async function StudioView({
           // from a person at a glance. No photo keeps the coloured circle
           // face; a full-width empty rectangle is a wall.
           avatar={
-            s.photo ? (
-              <span className="profbanner-wrap">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            /* One layout whether or not there is a photo: the banner space
+               is always there, filled by the picture or by the studio's own
+               colour (the same one its directory row derives), so a page
+               without a photo is not a different page. */
+            <span className="profbanner-wrap">
+              {s.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img className="profbanner" src={s.photo} alt={s.name} />
-                {/* The badge rides the picture's bottom-left, above the name:
-                    the claim (or its absence) sits on the thing it speaks
-                    for. */}
-                <span className="profbadges profbadges-onbanner">
-                  <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
-                </span>
+              ) : (
+                <span
+                  className="profbanner profbanner-empty"
+                  style={{ background: avatarColor({ id: s.id }) }}
+                  aria-hidden="true"
+                />
+              )}
+              {/* The badge rides the banner's bottom-left, above the name:
+                  the claim (or its absence) sits on the thing it speaks
+                  for. */}
+              <span className="profbadges profbadges-onbanner">
+                <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
               </span>
-            ) : (
-              <span
-                className="profav profav-empty"
-                style={{ background: avatarColor({ id: s.id }) }}
-                aria-hidden="true"
-              >
-                {(s.name.trim().charAt(0) || "?").toUpperCase()}
-              </span>
-            )
+            </span>
           }
           backTo={backTo}
-          badges={
-            /* The Studio tag came off with the other two, but this stays: it
-               is not a label saying what kind of page this is. Verified is
-               the reason the pencil is missing for everyone else, Unverified
-               is the reason it isn't, and tapping either says so and offers
-               the way to the keys. With a banner the badge overlays the
-               picture instead; only a photoless page keeps it here by the
-               name. */
-            !s.photo ? (
-              <div className="profbadges">
-                <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
-              </div>
-            ) : null
-          }
+          badges={null}
           ownerTop={
             /* Everything you can do with a studio, behind one set of dots:
                share, suggest, report, and for coaches the edit. */
@@ -328,11 +317,8 @@ export async function StudioView({
                   }}
                 />
               )}
-              {/* Handing the page on. A person's lives behind their photo;
-                  a studio's face is plain, so the circle sits with the pills.
-                  The manager's own tools moved to the floating Studio admin
-                  pill: the rota pill up here was one door of several. */}
-              <ProfileShare path={base} name={s.name} />
+              {/* No share circle up here any more: the dots carry Share
+                  this studio, and one door beats two. */}
             </div>
           }
         >
@@ -392,15 +378,18 @@ export async function StudioView({
 
         {show("coaches") &&
           (coaches.length === 0 ? (
-            <div className="empty-block">
-              <h2>Nobody listed yet</h2>
-              <p>
-                Coaches appear here when they add {s.name} as a place they teach, or put a
-                class on at it.
-              </p>
-            </div>
+            <>
+              <div className="empty-block">
+                <h2>Nobody listed yet</h2>
+                <p>
+                  Coaches appear here when they add {s.name} as a place they teach, or put a
+                  class on at it.
+                </p>
+              </div>
+              {signedIn && <InviteCoach studioName={s.name} />}
+            </>
           ) : (
-          <div className="profstudios studsec studsec-first">
+          <div className="profstudios coachlist">
             {coaches.map((c) => (
               <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
                 {c.photo ? (
@@ -424,6 +413,10 @@ export async function StudioView({
                 </span>
               </Link>
             ))}
+            {/* The list fills in by word of mouth, and the person most
+                likely to bring a coach in is somebody standing in their
+                class. */}
+            {signedIn && <InviteCoach studioName={s.name} />}
           </div>
           ))}
 

@@ -12,6 +12,15 @@ const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
 const cardCount = (pg) => pg.locator(".ps-card").count();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 const eventCount = (pg) => pg.locator(".ps-event").count();
 // The schedule is an infinite calendar: a class recurs across many weeks, so
 // count DISTINCT classes by their data-cid rather than rendered rows.
@@ -166,6 +175,16 @@ console.log("publish label:", label);
 if (label !== "Publish event") fail("publish CTA wrong: " + label);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
+// The share moment: a brand new public class offers its two hand-ons, the
+// link to a person and the picture to a story, before the sheet is closed.
+{
+  const sheet = page.locator(".sheet", { hasText: "Your class is live" });
+  await sheet.waitFor();
+  await sheet.locator(".setrow", { hasText: "Share the link" }).waitFor();
+  await sheet.locator(".setrow", { hasText: "Share a picture" }).waitFor();
+}
+await closeLive(page);
+console.log("class live sheet ok (two shares, told apart)");
 await waitSchedule(page, 2);
 await page.screenshot({ path: SCRATCH + "/shot-poster-schedule.png" });
 console.log("first publish ok");
@@ -175,6 +194,7 @@ await addSaved(page);
 await page.getByRole("button", { name: "Fr", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
+await closeLive(page);
 await waitSchedule(page, 3);
 console.log("saved-class flow ok");
 
@@ -289,6 +309,7 @@ console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
   await page.getByRole("button", { name: "Th", exact: true }).click();
   await page.locator(".publishwrap .btn").click();
   await page.getByText("Published", { exact: false }).waitFor();
+  await closeLive(page);
   await waitSchedule(page, before + 2, 20000);
   await page.waitForTimeout(700);
 
@@ -330,6 +351,7 @@ console.log("delete-all ok (whole repeating set goes)");
   await page.locator("#fEndsOn").fill(endIso);
   await page.locator(".publishwrap .btn").click();
   await page.getByText("Published", { exact: false }).waitFor();
+  await closeLive(page);
   await waitSchedule(page, before + 1, 20000);
   await page.waitForTimeout(700);
 
@@ -788,6 +810,7 @@ await addSaved(page);
 await page.getByRole("button", { name: "Sa", exact: true }).click();
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
+await closeLive(page);
 await new Promise((r) => setTimeout(r, 300));
 if (readLog().includes("[mail:schedule_change]")) fail("publish should not send a per-change email");
 console.log("publish sends no per-change email ok");
@@ -895,6 +918,7 @@ await anonPage.locator("#fName").fill("Sam's Conditioning");
 await anonPage.getByRole("button", { name: "Mo", exact: true }).click();
 await anonPage.locator(".publishwrap .btn").click();
 await anonPage.getByText("Your page is live").waitFor();
+await closeLive(anonPage);
 console.log("second coach has a class ok");
 
 await openProfile(page);
@@ -1030,6 +1054,7 @@ const oneLabel = (await page.locator(".publishwrap .btn").textContent()).trim();
 if (oneLabel !== "Publish event") fail("one-off publish label wrong: " + oneLabel);
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
+await closeLive(page);
 await waitSchedule(page, schedBefore + 1);
 console.log("one-off in-week ok");
 
@@ -1039,6 +1064,7 @@ await page.getByRole("button", { name: "One-time", exact: true }).click();
 await page.locator('input[type="date"]').fill(iso(nextWeekD));
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Published", { exact: false }).waitFor();
+await closeLive(page);
 await waitSchedule(page, schedBefore + 2);
 console.log("one-off future ok");
 
@@ -1172,7 +1198,10 @@ if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
 if (await fan.locator(".disfol").count())
   fail("the corner Follow pill should be gone from directory rows");
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".kindtag", { hasText: "Coach" }).waitFor();
+// No Coach badge here: the tab already says everyone listed is one. Search
+// keeps the badge, because that list mixes kinds.
+if (await fan.locator(".disrow .kindtag", { hasText: "Coach" }).count())
+  fail("a coaches-only list should not badge every row Coach");
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
 await fan.locator(".profacts .followpill").waitFor();
@@ -1247,10 +1276,10 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.waitForURL(/\/s\//);
   console.log("discover tabs ok (people and places, one row of controls)");
 
-// Filtering lives in the chip rail now: Filters leads it and opens the sheet,
-// the chips after it are the same filters in the open, and every one is
-// multiselect, so the count on Filters adds up as picks accumulate. One
-// vocabulary: the same word a studio picks for what it offers.
+// Filtering is the chip rail alone now: All leads it, filled in by default
+// (the one selected chip is the hint the rest can be selected), and every
+// chip after it is multiselect. One vocabulary: the same word a studio picks
+// for what it offers.
 {
   await page.goto(BASE + "/matt");
   await page.locator(".profacts .actpill", { hasText: "Edit profile" }).click();
@@ -1266,57 +1295,39 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await page.locator(".studiotype", { hasText: "Yoga" }).waitFor();
 
   await fan.goto(BASE + "/discover");
-  await fan.locator(".chip-filters").click();
-  await fan.getByRole("heading", { name: "Filters" }).waitFor();
-  // Toggling a switch must not change the sheet's height: the Clear button is
-  // always in the layout, invisible until it has work, so nothing jumps.
-  {
-    const h1 = await fan.evaluate(() => document.querySelector(".sheet").getBoundingClientRect().height);
-    await fan.getByRole("switch", { name: /Taking new clients/ }).click();
-    await fan.waitForTimeout(200);
-    const h2 = await fan.evaluate(() => document.querySelector(".sheet").getBoundingClientRect().height);
-    if (Math.abs(h1 - h2) > 1)
-      fail("the filter sheet should not jump when a switch flips: " + h1 + " vs " + h2);
-    await fan.getByRole("switch", { name: /Taking new clients/ }).click();
-    await fan.waitForTimeout(200);
-  }
-  await fan.locator(".sheetclose").first().click();
-  await fan.waitForFunction(() => !document.querySelector(".sheet"));
-  // The type chips sit on the page now: one tap, no sheet in the middle.
+  // All leads the rail, already selected: no Filters sheet any more.
+  await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).waitFor();
+  if (await fan.locator(".chip-filters").count())
+    fail("the Filters chip should be gone from the rail");
+  // A pick takes All off and narrows the list.
   await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
   await fan.waitForTimeout(300);
-  if (!(await fan.locator(".chip-n").count()))
-    fail("a live filter should show its count on the Filters chip");
+  if (await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count())
+    fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
   if (await fan.locator(".disrow", { hasText: "Sam" }).count())
     fail("filtering by what someone teaches should drop the ones who don't");
-  // Multiselect: a second pick adds to the count rather than replacing the
-  // first.
+  // Multiselect: a second pick joins the first rather than replacing it.
   await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
   await fan.waitForTimeout(300);
-  if ((await fan.locator(".chip-n").innerText()).trim() !== "2")
-    fail("two live picks should count as two on the Filters chip");
+  if ((await fan.locator(".dischips .chip.sel").count()) !== 2)
+    fail("two picks should both stay selected");
   await fan.locator(".dischips .chip", { hasText: "Available for clients" }).click();
   await fan.waitForTimeout(200);
   // Switching lens drops the type pick with it: the other half offers its own
   // vocabulary, and carrying a coach's word over would filter to nobody.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
-  if (await fan.locator(".dischips .chip.sel").count())
-    fail("a pick the other lens can't honour should not survive the switch");
-  // Clearing puts everything back. Picking again first: the lens switch above
-  // already dropped the filter, so there'd be nothing to clear otherwise, and
-  // Clear filters only shows when something is on.
+  if (!(await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count()))
+    fail("the other lens should open back on All");
+  // All is the way back: tap it and the whole list returns.
   await fan.getByRole("button", { name: "Coaches", exact: true }).click();
   await fan.waitForTimeout(200);
   await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
-  await fan.locator(".chip-filters").click();
-  await fan.getByRole("button", { name: "Clear filters" }).click();
-  await fan.locator(".sheet .publishwrap .btn").click();
+  await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
   await fan.waitForTimeout(300);
-  if (await fan.locator(".chip-n").count())
-    fail("cleared filters should leave the Filters chip without a count");
-  console.log("discover filters ok (Filters leads the rail, multiselect picks)");
+  await fan.locator(".disrow", { hasText: "Sam" }).waitFor();
+  console.log("discover filters ok (All leads filled in, picks are multiselect)");
 }
 
 // A filter is only offered where it can narrow something. The chips come from
@@ -1324,12 +1335,12 @@ console.log("discover ok (chevron rows, Following said on the line)");
 // coaches start saying what they teach.
 {
   // The chips sit on the page now, under the tabs, so reading them is just
-  // looking. Filters and the kind chips lead the rail everywhere; the type
-  // chips after them are the lens's own vocabulary.
+  // looking. All leads the rail everywhere; the type chips after it are the
+  // lens's own vocabulary.
   await fan.goto(BASE + "/discover");
-  const FIXED = ["Available for clients"];
+  const FIXED = ["All", "Available for clients"];
   const typeChips = async () =>
-    (await fan.locator(".dischips .chip:not(.chip-filters)").allInnerTexts())
+    (await fan.locator(".dischips .chip").allInnerTexts())
       .map((c) => c.trim())
       .filter((c) => !FIXED.includes(c));
   const peopleChips = await typeChips();
@@ -2166,9 +2177,10 @@ console.log("viewer look wins on another coach's page ok");
 // ---- studios have their own page, and any coach can correct one
 // The editor sits behind the three dots and a word about care: menu, then
 // "Before you edit", then the form.
+// The commons editor opens from the Edit pill beside the dots now; the
+// dots only carry the pencil on a claimed page, for its managers.
 const openStudioEditor = async (p) => {
-  await p.locator(".ownermore").click();
-  await p.locator(".ownermenu .setrow", { hasText: "Edit studio" }).click();
+  await p.locator(".owneredit").click();
   await p.getByRole("heading", { name: "Before you edit" }).waitFor();
   await p.getByRole("button", { name: "Continue to edit" }).click();
   await p.getByRole("heading", { name: "Edit studio" }).waitFor();
@@ -2238,10 +2250,11 @@ await page.getByText("Platforms, a turf strip").waitFor();
 // what tells a place from a person at a glance. Without one, the coloured
 // circle face stays, because a full-width empty rectangle is a wall.
 {
-  if (await page.locator(".profbanner").count())
-    fail("no photo yet, so the head should carry no banner");
-  if (!(await page.locator(".pubhead .profav").count()))
-    fail("a photo-less studio keeps the coloured circle face");
+  // No photo yet: the banner space is already there, in the studio's own
+  // colour, so both layouts are one layout.
+  await page.locator(".profbanner-empty").waitFor();
+  if (await page.locator(".pubhead .profav").count())
+    fail("the colour block replaced the circle face");
   await openStudioEditor(page);
   const png = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -2254,9 +2267,9 @@ await page.getByText("Platforms, a turf strip").waitFor();
   });
   await page.waitForTimeout(600);
   await page.getByRole("button", { name: "Save studio" }).click();
-  await page.locator(".profbanner").waitFor();
-  if (await page.locator(".pubhead .profav").count())
-    fail("the circle should make way for the banner once there is a photo");
+  await page.locator("img.profbanner").waitFor();
+  if (await page.locator(".profbanner-empty").count())
+    fail("the colour block should make way for the photo");
   // Nobody has claimed this one, and the page says so on the picture: the
   // Unverified badge rides the banner's bottom-left and explains itself.
   await page.locator(".profbadges-onbanner .studiokept", { hasText: "Unverified" }).waitFor();

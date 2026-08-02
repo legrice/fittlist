@@ -129,7 +129,9 @@ export function Adder({
   /** The second argument is the personal_classes row, set only when adding
    *  one of your own and only when it was a single row: the plans screen
    *  offers to share it, and a picture needs to know which one. */
-  onPublished: (msg: string, planId?: string) => void;
+  /** `live` arrives for a brand new public class: the just-published thing,
+   *  so the host can offer sharing it while the moment is warm. */
+  onPublished: (msg: string, planId?: string, live?: { id: string; name: string }) => void;
   onDeleted: (msg: string) => void;
   /** Personal mode only: the class they're describing is already on fittlist,
    *  under somebody who keeps it up to date. The caller offers the real one,
@@ -430,6 +432,17 @@ export function Adder({
             : firstPublish
               ? "Your page is live"
               : `Published${n > 1 ? ` ${n} classes` : ""}`,
+        undefined,
+        // Only a brand new public class earns the share moment: an edit is
+        // not news, and a private one has no page to hand anyone. The cast is
+        // for the gym branch of the union, whose result carries no id.
+        (() => {
+          const id =
+            !gym && !isEdit && !isPersonal && isPublic
+              ? (res as { id?: string }).id
+              : undefined;
+          return id ? { id, name } : undefined;
+        })(),
       );
     });
   };

@@ -29,6 +29,7 @@ export async function MemberProfileView({
   user,
   isOwner,
   viewerId = null,
+  tab = "schedule",
   from,
 }: {
   user: typeof schema.users.$inferSelect;
@@ -36,6 +37,9 @@ export async function MemberProfileView({
   /** Signed in, a member profile is an app screen like any other, so it gets
    *  the header and the tabs. This was the one page that didn't. */
   viewerId?: string | null;
+  /** Schedule leads (what they're going to, for the people allowed to see
+   *  it), Info is the about. Same two-tab shape as everyone else's page. */
+  tab?: "schedule" | "about";
   from?: string;
 }) {
   const name = user.name.trim() || user.email.split("@")[0];
@@ -125,8 +129,11 @@ export async function MemberProfileView({
             that makes the other two read as the same app. */}
         <ProfileTabs
           base={`/${user.handle ?? ""}`}
-          tab="about"
-          tabs={[]}
+          tab={tab}
+          tabs={[
+            { key: "schedule", label: "Schedule" },
+            { key: "about", label: "Info" },
+          ]}
           name={name}
           title={user.title ?? ""}
           location={user.location ?? ""}
@@ -169,9 +176,43 @@ export async function MemberProfileView({
             )
           }
         >
-        {user.about?.trim() && <p className="mempro-about">{user.about}</p>}
+        {/* Info: who they are, and honestly nothing more. Most members
+            haven't written it yet, and the empty state says so without
+            making the page feel unfinished. */}
+        {tab === "about" &&
+          (user.about?.trim() ? (
+            <p className="mempro-about">{user.about}</p>
+          ) : (
+            <div className="empty-block">
+              <h2>Nothing here yet</h2>
+              <p>{firstName} hasn&rsquo;t written about themselves.</p>
+            </div>
+          ))}
 
-        {(mutual || isOwner) && week.length > 0 && (
+        {/* Schedule: the classes they're going to, still gated on the one
+            consent the app trusts. A stranger or a one-way follower gets the
+            same words whatever the week holds, so the empty state can't be
+            used to guess it. */}
+        {tab === "schedule" && !mutual && !isOwner && (
+          <div className="empty-block">
+            <h2>Their week is shared both ways</h2>
+            <p>
+              Follow each other and you&rsquo;ll see the classes {firstName} is going to.
+            </p>
+          </div>
+        )}
+        {tab === "schedule" && (mutual || isOwner) && week.length === 0 && (
+          <div className="empty-block">
+            <h2>Nothing coming up</h2>
+            <p>
+              {isOwner
+                ? "Add a class and the people you follow back will see it here."
+                : `${firstName} hasn't added anything this week.`}
+            </p>
+          </div>
+        )}
+
+        {tab === "schedule" && (mutual || isOwner) && week.length > 0 && (
           <div className="memweek">
             <h2 className="prof-sec-h">{isOwner ? "Your week" : `${firstName}'s week`}</h2>
             <p className="memweek-note">

@@ -50,6 +50,8 @@ export type ClassDetail = {
   /** The viewer is the admin: the sheet offers to change the picture. A beta
    *  power for filling in the catalog; it touches the photo and nothing else. */
   adminPhoto: boolean;
+  /** The admin may hand this class a booking link, because it has none. */
+  adminLink: boolean;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
@@ -111,7 +113,11 @@ export async function classDetail(
 
   const viewerId = await getSessionUserId();
   const isOwner = viewerId === user.id;
-  const adminPhoto = !isOwner && !!(await currentAdmin());
+  const isAdminViewer = !isOwner && !!(await currentAdmin());
+  const adminPhoto = isAdminViewer;
+  // The link power is fill-the-blanks only, so the door only exists where
+  // the blank does.
+  const adminLink = isAdminViewer && c.links.length === 0;
   if (!c.isPublic && !isOwner) return null;
   // Blocked: as far as they're concerned this class doesn't exist.
   if (await isBlocked(user.id, viewerId)) return null;
@@ -331,6 +337,7 @@ export async function classDetail(
     roster,
     ownerIsGym: user.kind === "gym",
     adminPhoto,
+    adminLink,
     shift,
   };
 }

@@ -133,20 +133,29 @@ await p.waitForTimeout(400);
 await p.locator(".profacts .followpill").click();
 await p.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 
-// the public profile
+// the public profile: two tabs now, Schedule leading and Info holding the
+// bio. This is the member on their own page, so the schedule shows their
+// own state: the week they've built, or the note that adding fills it.
 await p.goto(BASE + "/member");
 await p.getByRole("heading", { name: "Mem Ber" }).waitFor();
 if (!(await p.getByText("Lifts heavy, runs slow").count())) fail("tagline missing");
-if (!(await p.getByText("Six mornings a week").count())) fail("bio missing");
+{
+  const tabs = (await p.locator(".pubtab").allInnerTexts()).map((t) => t.trim());
+  if (tabs.join("|") !== "Schedule|Info")
+    fail("a member's page should wear Schedule and Info: " + tabs.join("|"));
+}
+await p.getByText(/Nothing coming up|Your week/).first().waitFor();
+await p.locator(".pubtab", { hasText: "Info" }).click();
+await p.waitForURL("**/member/about");
+if (!(await p.getByText("Six mornings a week").count())) fail("bio missing from Info");
 // Who they follow is nobody else's business. Two profiles side by side, one
 // with six coaches and one with none, is a scoreboard nobody asked for.
 if (await p.locator(".disrow", { hasText: "Carina" }).count())
   fail("a member's profile is listing the coaches they follow");
 if (await p.getByText(/Trains with/i).count())
   fail("a member's profile still has the trains-with section");
-if (await p.locator(".pubtab").count()) fail("a member has no schedule tabs");
 await p.screenshot({ path: OUT + "/shot-member-profile.png", fullPage: true });
-console.log("member profile ok (name, tagline, bio, and nothing about who they follow)");
+console.log("member profile ok (Schedule and Info tabs, nothing about who they follow)");
 
 
 // and it's editable from the account

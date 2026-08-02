@@ -38,8 +38,18 @@ await p.getByRole("button", { name: "+ New studio" }).click();
 await p.getByPlaceholder("e.g. Palisade Barbell").fill("Verona Stretch");
 await p.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("1 Bloomfield Ave, Verona NJ");
 await p.getByRole("button", { name: "Add studio" }).click();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 await p.locator(".publishwrap .btn").click();
 await p.waitForTimeout(900);
+await closeLive(p);
 console.log("coach fixture ok");
 
 // A visitor, arriving at the schedule the way anyone does: from a link. Each

@@ -9,6 +9,7 @@ import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AgendaAvatar } from "@/components/Agenda";
+import { ClassLiveSheet } from "@/components/ClassLiveSheet";
 import { ClassSheet } from "@/components/ClassSheet";
 import { PlanSheet } from "@/components/PlanSheet";
 import { mergeIntoGym } from "@/app/actions/gym";
@@ -146,6 +147,9 @@ export function ScheduleScreen({
   const [going, setGoingOpen] = useState<{ base: string; classId: string; iso: string } | null>(null);
   // "That class is on fittlist": the real one, offered over a typed copy.
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
+  // Just published: the sheet that offers handing the new class on, while
+  // the moment is warm.
+  const [live, setLive] = useState<{ id: string; name: string } | null>(null);
   const [pBusy, setPBusy] = useState(false);
   // Which slice of the calendar you're looking at: one tab under the rail,
   // not a stack of switches behind a circle. All on arrival, every time; a
@@ -470,7 +474,7 @@ export function ScheduleScreen({
             className="calhead-add"
             onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
           >
-            <Icon name="add" size={17} /> Add
+            <Icon name="add" size={15} /> Add
           </button>
         </div>
         {/* The slices of the calendar, as the same underline tabs a profile's
@@ -992,9 +996,10 @@ export function ScheduleScreen({
           firstPublish={!hasAnyClass}
           onClose={() => setAdder({ open: false })}
           onToast={toast}
-          onPublished={(msg) => {
+          onPublished={(msg, _planId, published) => {
             setAdder({ open: false });
             toast(msg);
+            if (published) setLive(published);
             router.refresh();
           }}
           onDeleted={(msg) => {
@@ -1002,6 +1007,19 @@ export function ScheduleScreen({
             toast(msg);
             router.refresh();
           }}
+        />
+      )}
+
+      {/* The just-published class, offered for sharing: the link to a
+          person, the card to a story. The toast above still says what
+          happened; this says what to do with it. */}
+      {live && (
+        <ClassLiveSheet
+          handle={handle}
+          classId={live.id}
+          name={live.name}
+          onClose={() => setLive(null)}
+          onToast={toast}
         />
       )}
 

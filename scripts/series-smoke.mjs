@@ -13,6 +13,16 @@ import { skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("SERIES FAIL: " + m); };
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
+
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const c = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await c.newPage();
@@ -54,6 +64,7 @@ async function addClass({ name, days, time, studio, first = false }) {
   await p.locator(".studio-sel .nm", { hasText: studio }).waitFor();
   await p.locator(".publishwrap .btn").click();
   await p.waitForTimeout(900);
+  await closeLive(p);
 }
 
 /** Every distinct "name @ studio @ time" currently on the schedule. */
@@ -99,6 +110,7 @@ await p.getByRole("heading", { name: /Edit class|New class/ }).waitFor();
 await p.locator("#fDesc").fill("Bring a mat.");
 await p.locator(".publishwrap .btn").click();
 await p.waitForTimeout(1200);
+await closeLive(p);
 
 const after = await shapes();
 console.log("after: ", JSON.stringify(after));

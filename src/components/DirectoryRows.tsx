@@ -55,8 +55,19 @@ export type DirStudio = {
   color: string;
 };
 
-/** A person: the whole row links to their page, chevron in the corner. */
-export function PersonRow({ person: c, from }: { person: DirPerson; from: string }) {
+/** A person: the whole row links to their page, chevron in the corner.
+ *  `kindTag` is off where the list holds one kind: Discover lists coaches
+ *  only, so a Coach badge on every row would be saying nothing; search
+ *  mixes kinds, and there the badge is the distinction that matters. */
+export function PersonRow({
+  person: c,
+  from,
+  kindTag = true,
+}: {
+  person: DirPerson;
+  from: string;
+  kindTag?: boolean;
+}) {
   return (
     <div className="disrow">
       <Link className="disrow-main" href={`/${c.handle}?from=${from}`}>
@@ -80,7 +91,7 @@ export function PersonRow({ person: c, from }: { person: DirPerson; from: string
         <span className="disrow-txt">
           <span className="disrow-nmline">
             <span className="nm">{c.name}</span>
-            {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
+            {kindTag && c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
           </span>
           {/* The tagline, then the relationship, quietly: a fact on the line,
               not a control in the corner. */}

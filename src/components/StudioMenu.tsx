@@ -27,7 +27,7 @@ export function StudioMenu({
   const [menuOpen, setMenuOpen] = useState(false);
   const [mindfulOpen, setMindfulOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [feedback, setFeedback] = useState<null | "report" | "suggest" | "optout">(null);
+  const [feedback, setFeedback] = useState<null | "report" | "suggest" | "optout" | "claim">(null);
   const [toastMsg, toastOn, toast] = useToast();
 
   const share = async () => {
@@ -47,6 +47,14 @@ export function StudioMenu({
 
   return (
     <>
+      {/* On the commons the pencil is out in the open: any coach may fix an
+          unclaimed page, and a door you can see is a door that gets used.
+          A claimed studio keeps editing behind its managers' own doors. */}
+      {canEdit && !claimed && (
+        <button className="owneredit" onClick={() => setMindfulOpen(true)}>
+          <Icon name="edit" size={15} /> Edit
+        </button>
+      )}
       <button className="ownermore" aria-label="More" onClick={() => setMenuOpen(true)}>
         <Icon name="more_horiz" size={20} />
       </button>
@@ -75,7 +83,11 @@ export function StudioMenu({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
-              {canEdit && (
+              {/* Only a claimed studio keeps the pencil in here (its
+                  managers' row); on the commons the Edit button beside the
+                  dots is the one door, because two doors to one editor is
+                  how one gets forgotten. */}
+              {canEdit && claimed && (
                 <button
                   className="setrow"
                   onClick={() => {
@@ -87,6 +99,22 @@ export function StudioMenu({
                   <span className="setrow-txt">
                     <span className="t">Edit studio</span>
                     <span className="s">Fix or fill in its details</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              )}
+              {!claimed && (
+                <button
+                  className="setrow"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setFeedback("claim");
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="verified" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Claim this studio</span>
+                    <span className="s">Run it? Take the keys to this page</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </button>

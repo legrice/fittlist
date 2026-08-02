@@ -39,8 +39,18 @@ await co.getByRole("button", { name: "+ New studio" }).click();
 await co.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound");
 await co.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("1 Way, Newark NJ");
 await co.getByRole("button", { name: "Add studio" }).click();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 await co.locator(".publishwrap .btn").click();
 await co.waitForTimeout(900);
+await closeLive(co);
 
 // a member follows and marks Going
 const c2 = await b.newContext({ viewport: { width: 390, height: 844 } });

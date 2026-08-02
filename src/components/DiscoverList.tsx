@@ -9,11 +9,11 @@ import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/componen
 // aren't listed here for now, because following a member doesn't buy anything
 // visible yet; universal search still finds them by name, since asking for a
 // person is different from browsing. The box is a door to the universal
-// search; the tabs pick a half; and the chip rail under them is where
-// filtering lives. The first chip is Filters, which opens the sheet holding
-// everything (the city, and whatever studios grow later); the chips after it
-// are the reach-for narrowings in the open. Every chip is multiselect, and
-// the count on the Filters chip adds up as picks accumulate.
+// search; the tabs pick a half; and the chip rail under them is the whole
+// filter: All leads, filled in by default (the one selected chip is what
+// says the others can be selected), and the chips after it are multiselect.
+// The Filters sheet is gone for now; it returns when there are enough
+// filters to need one.
 export function DiscoverList({
   coaches,
   studios = [],
@@ -35,10 +35,12 @@ export function DiscoverList({
   // a filter you didn't set is a list you can't explain, and the count on the
   // Filters chip would be reporting a choice nobody made.
   void myCity;
-  const [city, setCity] = useState<string | null>(null);
+  // The city filter left with the Filters sheet for now; `cities` stays a
+  // prop so it can come back the day there are enough filters to need a
+  // sheet again.
+  void cities;
   const [types, setTypes] = useState<Set<string>>(new Set());
   const [acceptingOnly, setAcceptingOnly] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const toggleType = (t: string) =>
     setTypes((prev) => {
@@ -50,7 +52,6 @@ export function DiscoverList({
 
   const shown = useMemo(() => {
     return coaches.filter((c) => {
-      if (city && c.location !== city) return false;
       // Multiselect means any-of: two picks widen to either, they don't
       // demand both.
       if (types.size > 0 && !c.disciplines.some((d) => types.has(d))) return false;
@@ -59,7 +60,7 @@ export function DiscoverList({
       if (acceptingOnly && c.availability !== "accepting") return false;
       return true;
     });
-  }, [coaches, city, types, acceptingOnly]);
+  }, [coaches, types, acceptingOnly]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
@@ -73,12 +74,10 @@ export function DiscoverList({
     });
   }, [studios, types]);
 
-  // Every live pick counts once, so the badge on Filters is the number of
-  // things you'd have to switch off to get the whole list back.
-  const activeCount =
-    types.size + (tab === "people" ? (city ? 1 : 0) + (acceptingOnly ? 1 : 0) : 0);
+  // All is the absence of picks, and it leads the rail already filled in:
+  // the one selected chip is what says the others can be selected.
+  const allOn = types.size === 0 && !(tab === "people" && acceptingOnly);
   const clearAll = () => {
-    setCity(null);
     setTypes(new Set());
     setAcceptingOnly(false);
   };
@@ -136,18 +135,19 @@ export function DiscoverList({
         </button>
       </div>
 
-      {/* Filters leads the rail on both halves: it opens the sheet holding
-          everything, and wears the count of every live pick. The chips after
-          it are the same filters in the open, one tap each. */}
+      {/* All leads the rail on both halves, filled in by default: the one
+          selected chip is the hint that the rest can be selected. The chips
+          after it are multiselect, and All is the way back. There is no
+          Filters sheet for now; it returns when there are enough filters to
+          need one. */}
       <div className="dischips" aria-label="Filters">
         <button
           type="button"
-          className="chip chip-filters"
-          onClick={() => setFiltersOpen(true)}
+          className={`chip${allOn ? " sel" : ""}`}
+          aria-pressed={allOn}
+          onClick={clearAll}
         >
-          <Icon name="tune" size={14} />
-          Filters
-          {activeCount > 0 && <span className="chip-n">{activeCount}</span>}
+          All
         </button>
         {tab === "people" && (
           <button
@@ -172,110 +172,6 @@ export function DiscoverList({
         ))}
       </div>
 
-      {filtersOpen && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setFiltersOpen(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setFiltersOpen(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Filters</h2>
-
-            {/* A studio has a free-text address and nothing normalised to
-                group by, so the city only narrows people. */}
-            {tab === "people" && cities.length > 1 && (
-              <>
-                <label className="flabel" htmlFor="disCity">
-                  Where
-                </label>
-                <select
-                  id="disCity"
-                  className="editinput"
-                  value={city ?? ""}
-                  onChange={(e) => setCity(e.target.value || null)}
-                >
-                  <option value="">Anywhere</option>
-                  {cities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </>
-            )}
-
-            {/* The same chips as the rail, in a grid instead of a scroll: the
-                sheet is the one place holding every filter, so the rail's
-                picks show here too and either place can change them. */}
-            {disciplines.length > 0 && (
-              <>
-                <label className="flabel">{tab === "people" ? "What they teach" : "What it offers"}</label>
-                <div className="typepick">
-                  {disciplines.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      className={`chip${types.has(d) ? " sel" : ""}`}
-                      aria-pressed={types.has(d)}
-                      onClick={() => toggleType(d)}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {tab === "people" && (
-              <div className="settingslist disfilterlist">
-                <button
-                  className="setrow"
-                  role="switch"
-                  aria-checked={acceptingOnly}
-                  onClick={() => setAcceptingOnly((v) => !v)}
-                >
-                  <span className="setrow-ic">
-                    <Icon name="event_available" size={22} />
-                  </span>
-                  <span className="setrow-txt">
-                    <span className="t">Taking new clients</span>
-                    <span className="s">Coaches with room for private sessions</span>
-                  </span>
-                  <span className={`switch${acceptingOnly ? " on" : ""}`} aria-hidden="true">
-                    <span className="switch-knob" />
-                  </span>
-                </button>
-              </div>
-            )}
-
-            <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => setFiltersOpen(false)}>
-                Show {tab === "people" ? shown.length : shownStudios.length}
-              </button>
-            </div>
-            {/* Always in the layout, invisible until it has work: appearing
-                and disappearing changed the sheet's height, which made the
-                whole sheet jump the moment a switch was toggled. */}
-            <button
-              className="tertiary tellsheet-done"
-              onClick={clearAll}
-              disabled={activeCount === 0}
-              style={activeCount === 0 ? { visibility: "hidden" } : undefined}
-            >
-              Clear filters
-            </button>
-          </div>
-        </div>
-      )}
-
       {tab === "studios" ? (
         shownStudios.length === 0 ? (
           <div className="empty-block">
@@ -295,22 +191,13 @@ export function DiscoverList({
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>{city ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
-          <p>
-            {city
-              ? "Nobody is listed there. Switch to All cities to see everyone."
-              : "The list fills up as coaches join and publish their schedules."}
-          </p>
-          {city && (
-            <button className="btn ghost" onClick={() => setCity(null)}>
-              Show all cities
-            </button>
-          )}
+          <h2>Nobody here yet</h2>
+          <p>The list fills up as coaches join and publish their schedules.</p>
         </div>
       ) : (
         <div className="dislist dislist-bare">
           {shown.map((c) => (
-            <PersonRow key={c.id} person={c} from="discover" />
+            <PersonRow key={c.id} person={c} from="discover" kindTag={false} />
           ))}
         </div>
       )}

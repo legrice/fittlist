@@ -4,6 +4,7 @@ import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
+import { detectProvider } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
@@ -82,6 +83,48 @@ export async function adminSetClassImage(
         ),
       );
   }
+  return { ok: true };
+}
+
+// The same beta-era catalog power as the picture, for the booking door: the
+// admin can hand a class a link only where it has none, because a link the
+// coach set is their word and stays theirs. Same spread as the photo: every
+// same-title class under the owner, and the owner's template, so re-adding
+// the class keeps the door. Fill-the-blanks is the whole contract: a row
+// that already has links is never touched.
+export async function adminSetClassLink(
+  classId: string,
+  rawUrl: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not allowed." };
+  const url = rawUrl.trim();
+  if (!/^https?:\/\/[^\s]+\.[^\s]+/.test(url))
+    return { ok: false, error: "That doesn't look like a link." };
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return { ok: false, error: "That class isn't there any more." };
+  const links = [{ label: detectProvider(url), url }];
+  await db
+    .update(schema.classes)
+    .set({ links })
+    .where(
+      and(
+        eq(schema.classes.userId, c.userId),
+        sql`lower(${schema.classes.name}) = ${c.name.toLowerCase()}`,
+        sql`jsonb_array_length(${schema.classes.links}) = 0`,
+      ),
+    );
+  await db
+    .update(schema.classTemplates)
+    .set({ links })
+    .where(
+      and(
+        eq(schema.classTemplates.userId, c.userId),
+        sql`lower(${schema.classTemplates.name}) = ${c.name.toLowerCase()}`,
+        sql`jsonb_array_length(${schema.classTemplates.links}) = 0`,
+      ),
+    );
   return { ok: true };
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { adminSetClassImage } from "@/app/actions/admin";
+import { adminSetClassImage, adminSetClassLink } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
@@ -63,6 +63,26 @@ export function ClassSheet({
   const [reported, setReported] = useState(false);
   const [favOn, setFavOn] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  // The admin's link door, same shape as the photo one: paste, save, done.
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const saveAdminLink = () => {
+    if (!c || shifting) return;
+    startShift(async () => {
+      const res = await adminSetClassLink(c.id, linkUrl);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't save that");
+        return;
+      }
+      setLinkOpen(false);
+      setLinkUrl("");
+      toast("Booking link added");
+      const fresh = await classDetail(handle, classId, c.whenIso);
+      if (fresh) setC(fresh);
+      onChanged?.(added);
+    });
+  };
+
   // The admin's photo door, behind the overflow. See adminSetClassImage.
   const photoRef = useRef<HTMLInputElement>(null);
   const favTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -306,6 +326,21 @@ export function ClassSheet({
                   <Icon name="palette" size={17} /> {c.image ? "Change the photo" : "Add a photo"}
                 </button>
               )}
+              {/* Same beta power as the photo, for the booking door: only
+                  offered where the class has no link at all, because a link
+                  the coach set is their word. */}
+              {c.adminLink && (
+                <button
+                  className="ovmenu-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    setLinkOpen(true);
+                  }}
+                >
+                  <Icon name="link" size={17} /> Add a booking link
+                </button>
+              )}
               {c.adminPhoto && c.image && (
                 <button
                   className="ovmenu-item ovmenu-quiet"
@@ -329,6 +364,41 @@ export function ClassSheet({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {linkOpen && c && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLinkOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setLinkOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Add a booking link</h2>
+            <p className="lead">
+              It lands on every {c.name} under this coach, and on their saved class, so it
+              stays when the class is re-added. Only classes with no link are touched.
+            </p>
+            <label className="flabel" htmlFor="alUrl">The booking page</label>
+            <input
+              id="alUrl"
+              className="editinput"
+              type="url"
+              autoCapitalize="none"
+              placeholder="Paste a link"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+            />
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={shifting || !linkUrl.trim()} onClick={saveAdminLink}>
+                Save the link
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
