@@ -367,8 +367,11 @@ to both edges and up under the header (`.profbanner-wrap` swallows the
 page's top padding with a negative margin), with no radius and no shadow: a
 photograph running edge to edge is its own frame. Verified overlays the
 picture's bottom-left, above the name, on a white pill so it reads over a
-photograph. The corner controls sit on the picture (`:has(.profbanner)`
-steps them in from the edge). A studio with no photo keeps the same
+photograph. The corner controls and the badge sit on the picture at the
+content gutter (`:has(.profbanner)` drops them to the photo's top, left and
+right 0 against the content box): the photo bleeds past the gutter, so an
+inset of their own put them deeper than every row below, which read as
+stray padding. A studio with no photo keeps the same
 rectangle, filled with its own derived colour (`.profbanner-empty`): both
 layouts are one layout, the badge overlays either, and the space is the
 photo's invitation.

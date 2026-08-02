@@ -1980,13 +1980,15 @@ button.ps-card { cursor: pointer; }
 /* Verified, on the picture's bottom-left above the name: the claim sits on
    the thing it vouches for. White rather than the paper tan, so it reads
    over a photograph. */
-.profbadges-onbanner { position: absolute; left: 16px; bottom: 12px; z-index: 1; }
+.profbadges-onbanner { position: absolute; left: 18px; bottom: 12px; z-index: 1; }
 .profbadges-onbanner .kindtag { background: rgba(255, 255, 255, .92); }
-/* The corner controls sit on the picture when there is one, so they step in
-   from the edge rather than riding its very corner. Both are white circles,
-   which is what keeps them readable over a photograph. */
-.pubhead:has(.profbanner) .profback { top: 12px; left: 12px; }
-.pubhead:has(.profbanner) .ownertop { top: 12px; right: 12px; }
+/* The corner controls sit on the picture when there is one. They ride the
+   content gutter, not their own inset: stepping in from the photo's edge put
+   them 12px deeper than every other row, because the photo bleeds past the
+   gutter the content keeps. Both are white circles, which is what keeps them
+   readable over a photograph. */
+.pubhead:has(.profbanner) .profback { top: 12px; left: 0; }
+.pubhead:has(.profbanner) .ownertop { top: 12px; right: 0; }
 
 
 /* The actions, as pills: the one that starts something is filled, the one that
