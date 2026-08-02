@@ -478,6 +478,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   -webkit-appearance: none; appearance: none; min-width: 0;
 }
 .timegrid input[type=time]::-webkit-date-and-time-value { margin: 0; text-align: left; min-width: 0; }
+/* The same iOS trap, one input type over: a native date input keeps its
+   intrinsic width, ignores the grid track, and slides under the column
+   beside it (From under How long on the share sheet). Flatten it the same
+   way; only the two-column grid forces full width, because the end-date row
+   is a flex line sharing space with a button. */
+.timegrid input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; }
+.timegrid input[type=date]::-webkit-date-and-time-value { margin: 0; text-align: left; min-width: 0; }
+.timegrid.two input[type=date] { width: 100%; }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 16px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
 [data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }

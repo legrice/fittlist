@@ -1716,7 +1716,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   // do: a class nine days out used to share as a blank image with no way to
   // tell why.
   await fan.locator(".weekshare .ovcta-btn").click();
-  await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
+  await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
   {
     const from = await fan.locator("#myFrom").inputValue();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) fail("the share range needs a real start date: " + from);
@@ -1818,7 +1818,7 @@ await fan.locator(".navtab", { hasText: "You" }).click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
-await fan.getByRole("heading", { name: "Share your schedule" }).waitFor();
+await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
 // the wordmark is the way back to the week from anywhere
