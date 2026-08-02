@@ -11,7 +11,7 @@ export function AppHeader({
   adminNew = null,
   unread = 0,
   settings,
-  plans,
+  search = false,
   avatar,
   home = "/feed",
   nav,
@@ -19,14 +19,13 @@ export function AppHeader({
   /** null = not an admin; a number shows the door, >0 lights the badge. */
   adminNew?: number | null;
   unread?: number;
-  /** Settings, as a gear. The href because the account view lives behind a
-   *  URL (/app?acct=1); omit for anyone whose settings live on a tab. */
+  /** Settings, as a gear. A coach's account view lives behind a URL
+   *  (/app?acct=1); a member's rows live at /you, now that their You tab is
+   *  the calendar. Omit only for a shell with nowhere to send it. */
   settings?: string;
-  /** Your plans, as the ribbon with how many are still ahead. A number shows
-   *  the door; omit it for a shell with no member side. It tried being the
-   *  first tab, and a fourth tab crowded the bar for a list you visit rather
-   *  than live on; the corner is where it started and where it belongs. */
-  plans?: number;
+  /** The magnifier, back in the corner now that the plans ribbon left it
+   *  room. Only where the member side is on: search is a signed-in door. */
+  search?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -63,22 +62,17 @@ export function AppHeader({
             }
           />
         )}
-        {/* The ribbon, the bell, the gear: the corner is for the things you
-            reach for from wherever you happen to be. The magnifier moved onto
-            the Discover tab, where searching starts; two doors to one search
-            said one thing twice. */}
-        {plans !== undefined && (
+        {/* The magnifier, the bell, the gear: the corner is for the things
+            you reach for from wherever you happen to be. The plans ribbon
+            lived here with its count until the list it pointed at merged
+            into the You tab; the magnifier took the room it left. */}
+        {search && (
           <HeaderIconLink
-            className="plansbtn"
-            label={`Your plans${plans ? `, ${plans} coming up` : ""}`}
-            icon="bookmark"
-            href="/week"
-            match="/week"
-            badge={
-              plans > 0 ? (
-                <span className="inboxdot plansdot">{plans > 9 ? "9+" : plans}</span>
-              ) : undefined
-            }
+            className="searchbtn"
+            label="Search"
+            icon="search"
+            href="/search"
+            match="/search"
           />
         )}
         <HeaderIconLink
@@ -94,7 +88,10 @@ export function AppHeader({
             label="Settings"
             icon="settings"
             href={settings}
-            match="?acct"
+            // A coach's settings are an overlay named in the query string; a
+            // member's are the /you page, so the fill keys off whichever door
+            // this gear opens.
+            match={settings.startsWith("/you") ? "/you" : "?acct"}
           />
         )}
         {avatar &&

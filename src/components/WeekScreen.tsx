@@ -17,22 +17,24 @@ import { PlanSheet } from "@/components/PlanSheet";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
+import { QrSheet } from "@/components/QrSheet";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-// The classes you added, and nothing else.
+// A member's You tab: their calendar. The classes they added, their own
+// entries, the tools across the top, and the plus to put more on it.
 //
-// Deliberately not a calendar: no month grid, no empty days, no time gutter.
-// It's a shortlist that empties itself as the week passes, and every row can
-// leave. That, and the fact that it only ever holds what you picked, is what
-// stops it reading as "fittlist wants to be your calendar now".
+// Still no month grid, no empty days, no time gutter: it holds only what they
+// picked, in time order, and it empties itself as the week passes. What
+// changed is its place in the app: it is the same screen a coach's /app is,
+// with the hats this viewer actually wears.
 export function WeekScreen({
   days,
   studios,
   templates,
   customTypes,
   lastUsed,
-  canCoach,
+  me,
 }: {
   days: WeekDay[];
   /** The adder's ingredients. Adding a class you go to is the same form as
@@ -42,8 +44,10 @@ export function WeekScreen({
   templates: TemplateDto[];
   customTypes: string[];
   lastUsed: LastUsed;
-  /** They coach too, so the form asks whether this one is theirs to teach. */
-  canCoach: boolean;
+  /** The viewer, for the rail across the top: their face on the Your profile
+   *  pill, and the doors to their page. A coach never lands here (their
+   *  calendar is /app), so the form below never needs the chair question. */
+  me: { handle: string | null; name: string; photo: string | null; color: string };
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -70,6 +74,9 @@ export function WeekScreen({
   const [pBusy, setPBusy] = useState(false);
   // "Is Jenny on fittlist?" — the invite sheet, opened from a personal row.
   const [inviteOpen, setInviteOpen] = useState(false);
+  // The rail menus: everything about your page behind Your profile.
+  const [profMenu, setProfMenu] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
 
@@ -131,23 +138,32 @@ export function WeekScreen({
     // Share pill, which sits above it.
     <>
       <div className="weekwrap">
-        <div className="admintop pagetop">
-          <div>
-            <h1>Your plans</h1>
-            <p className="adminsub">
-              {left === 0
-                ? "Classes you add land here"
-                : `${left} class${left === 1 ? "" : "es"} coming up`}
-            </p>
-          </div>
-          {/* The other way in, across from the title: a class you go to whose
-              coach isn't here yet, or one you booked somewhere else. The empty
-              state carries its own copy of this door. */}
-          {shown.length > 0 && (
-            <button className="weekinvite weekaddown weekaddtop" onClick={() => setAddOpen(true)}>
-              <Icon name="add" size={15} /> Add a class
+        {/* The same rail a coach's calendar wears, with the member's doors on
+            it: their page, sharing their week, and the editor last. */}
+        <div className="schedtools">
+          {me.handle && (
+            <button className="schedtool" onClick={() => setProfMenu(true)}>
+              {me.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="schedtool-av" src={me.photo} alt="" />
+              ) : (
+                <span
+                  className="schedtool-av schedtool-av-empty"
+                  style={{ background: me.color }}
+                  aria-hidden="true"
+                >
+                  {(me.name.trim().charAt(0) || "?").toUpperCase()}
+                </span>
+              )}
+              Your profile
             </button>
           )}
+          <button className="schedtool" onClick={() => setShare(true)}>
+            <Icon name="auto_awesome" size={16} /> Share
+          </button>
+          <Link className="schedtool" href="/you?edit=1">
+            <Icon name="edit" size={16} /> Edit profile
+          </Link>
         </div>
 
         {shown.length === 0 ? (
@@ -268,17 +284,12 @@ export function WeekScreen({
           </>
         )}
       </div>
-      {/* The same floating pill the class overlay wears: the one thing to do
-          with a full list, riding above the tab bar. Pinned rather than
-          parked at the end, because a week with enough classes in it pushed
-          the button off the bottom, and that's the week you'd most want to
-          share. */}
-      {shown.length > 0 && (
-        <div className="classoverlay-cta weekshare">
-          <button className="ovcta-btn" onClick={() => setShare(true)}>
-            <Icon name="campaign" size={17} /> Share your plans
-          </button>
-        </div>
+      {/* The big plus, same as every calendar: a member has one answer to
+          which hat, so it opens the form without a question. */}
+      {!addOpen && !edit && (
+        <button className="fab fab-plus" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+          <Icon name="add" size={28} />
+        </button>
       )}
       {addOpen && (
         <Adder
@@ -288,7 +299,7 @@ export function WeekScreen({
           lastUsed={lastUsed}
           subsCount={0}
           firstPublish={false}
-          personal={{ canCoach }}
+          personal={{ canCoach: false }}
           onClose={() => setAddOpen(false)}
           onToast={toast}
           onPublished={(msg, planId) => {
@@ -347,7 +358,7 @@ export function WeekScreen({
           lastUsed={lastUsed}
           subsCount={0}
           firstPublish={false}
-          personal={{ canCoach, editId: edit.id }}
+          personal={{ canCoach: false, editId: edit.id }}
           prefill={edit.prefill}
           onClose={() => setEdit(null)}
           onToast={toast}
@@ -458,6 +469,76 @@ export function WeekScreen({
             </div>
           </div>
         </div>
+      )}
+      {/* Everything about your page, behind the pill that wears your face. */}
+      {profMenu && me.handle && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setProfMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setProfMenu(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Your profile</h2>
+            <div className="settingslist ownermenu">
+              <Link className="setrow" href={`/${me.handle}`}>
+                <span className="setrow-ic"><Icon name="visibility" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">View public profile</span>
+                  <span className="s">Your page, as everyone else sees it</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </Link>
+              <Link className="setrow" href="/you?edit=1">
+                <span className="setrow-ic"><Icon name="edit" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Edit profile</span>
+                  <span className="s">Photo, name, bio and the rest</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </Link>
+              <button
+                className="setrow"
+                onClick={async () => {
+                  setProfMenu(false);
+                  try {
+                    await navigator.clipboard.writeText(`${window.location.origin}/${me.handle}`);
+                    toast("Link copied, ready to paste");
+                  } catch {
+                    toast(`fittlist.co/${me.handle}`);
+                  }
+                }}
+              >
+                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy profile link</span>
+                  <span className="s">Straight to your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setProfMenu(false);
+                  setQrOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">QR code</span>
+                  <span className="s">A scannable code that opens your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {me.handle && (
+        <QrSheet handle={me.handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
       )}
       {/* The range starts where their plans do, so the first poster they see
           has their week on it rather than nothing. */}

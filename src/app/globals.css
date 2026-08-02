@@ -602,6 +602,41 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   text-decoration: none; border: none; cursor: pointer;
 }
 .fab:active { transform: scale(.97); }
+/* Icon only, and bigger: the plus stopped saying "Add class" the day the
+   calendar stopped being only classes you teach. The sheet behind it says
+   the rest. */
+.fab.fab-plus {
+  width: 62px; height: 62px; padding: 0; gap: 0;
+  align-items: center; justify-content: center;
+}
+/* The filter across from the plus: which hats the calendar is showing. Glass
+   rather than brand, because it is a way of looking, not the point of the
+   screen. Same bottom as the fab, whichever offset the screen gives it. */
+.calfilter {
+  position: fixed; left: 18px; z-index: 20;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  width: 50px; height: 50px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  box-shadow: 0 6px 20px rgba(17, 17, 17, .14); cursor: pointer;
+}
+.calfilter:active { transform: scale(.95); }
+.calfilter-n {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--si); color: #fff; font-size: 11px; font-weight: 700;
+}
+.hasnav .calfilter { bottom: calc(80px + env(safe-area-inset-bottom)); }
+/* Which hat a row wears, beside the name: Coaching quiet, Going in the same
+   green a yes always is. Shift keeps its own chip above. */
+.ps-role {
+  display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--ol);
+  background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
+}
+.ps-role-going { color: #2c6b40; background: #e2efe6; border-color: #e2efe6; }
 
 /* Dark glass rather than light: the blur is the point either way, and a pale
    pill on a near-black page is a hole rather than a control. */
@@ -3370,7 +3405,18 @@ button.ps-card { cursor: pointer; }
 /* ---- discover (the directory) ---- */
 /* People or places. The tab decides what the box below is searching, which is
    why the box says so. */
-.disseg { margin: 2px 0 12px; }
+/* Discover's top stack: the search door, the halves as underline tabs (the
+   same drawing a profile's sections wear), and the quick chips riding under
+   them, scrolling off the edge. */
+.distabs { padding-top: 0; margin-bottom: 2px; }
+.distabs .pubtab { font-size: 16px; }
+.dischips {
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  margin: 12px calc(50% - 50vw) 4px; padding: 2px 18px;
+}
+.dischips::-webkit-scrollbar { display: none; }
+.dischips .chip { flex-shrink: 0; background: var(--card); }
+.dischips .chip.sel { background: var(--ink); }
 /* The box and its filter on one row. Two rows of chrome above a list is most
    of a phone screen spent on controls. */
 .dissearchrow { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; }

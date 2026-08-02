@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import { avatarColor } from "@/lib/avatar";
 import { myWeek } from "@/lib/week";
 import { WeekScreen } from "@/components/WeekScreen";
 
@@ -31,10 +32,7 @@ export default async function WeekPage() {
       .where(eq(schema.classTemplates.userId, userId))
       .orderBy(desc(schema.classTemplates.updatedAt)),
     db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
-    db
-      .select({ kind: schema.users.kind, handle: schema.users.handle })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId)),
+    db.select().from(schema.users).where(eq(schema.users.id, userId)),
   ]);
 
   const studios: StudioDto[] = studioRows.map((s) => ({
@@ -62,6 +60,11 @@ export default async function WeekPage() {
       }
     : { startTime: "18:00", durationMin: 60, studioId: null };
 
+  // A coach's calendar is /app, and everything here is merged into it now:
+  // /week is the member's You tab, and a coach landing on an old link is sent
+  // to their own.
+  if (me && me.kind !== "fan") redirect("/app");
+
   return (
     <WeekScreen
       days={days}
@@ -69,9 +72,12 @@ export default async function WeekPage() {
       templates={templates}
       customTypes={customTypeRows.map((r) => r.name)}
       lastUsed={lastUsed}
-      // Only a coach is asked whether they're teaching it; a member has one
-      // answer, and a question with one answer is furniture.
-      canCoach={me?.kind !== "fan" && !!me?.handle}
+      me={{
+        handle: me?.handle ?? null,
+        name: me?.name ?? "",
+        photo: me?.photo ?? null,
+        color: avatarColor({ id: userId, avatarColor: me?.avatarColor ?? null }),
+      }}
     />
   );
 }

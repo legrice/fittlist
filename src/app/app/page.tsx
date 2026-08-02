@@ -11,7 +11,7 @@ import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { coachAnalytics } from "@/lib/visits";
 import { unreadNotifications } from "@/lib/notify";
-import { weekCount } from "@/lib/week";
+import { myWeek } from "@/lib/week";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
@@ -88,7 +88,7 @@ export default async function SchedulePage({
     inboxRows,
     analytics,
     notifUnread,
-    week,
+    plans,
     shiftRows,
   ] = await Promise.all([
     isGoogleConnected(userId),
@@ -109,8 +109,9 @@ export default async function SchedulePage({
       .where(eq(schema.inquiryThreads.coachUserId, userId)),
     coachAnalytics(userId),
     unreadNotifications(userId),
-    // A coach follows people too, so they get the same shortlist.
-    weekCount(userId),
+    // A coach goes to classes too: the same loader the member calendar
+    // reads, so You is one calendar of everything.
+    myWeek(userId),
     // On a gym's rota? Then the calendar row says shifts, because that is what
     // they came looking for.
     db
@@ -200,7 +201,7 @@ export default async function SchedulePage({
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
       adminNew={adminNew}
-      weekCount={week}
+      plans={plans}
       profileViews={analytics.profileViews}
       requestCount={requestCount}
       autoOpenAdder={add === "1"}

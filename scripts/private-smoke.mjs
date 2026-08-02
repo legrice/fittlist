@@ -39,7 +39,9 @@ await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
 
 // private class: no studio, free location
-await page.getByRole("button", { name: "Add class" }).click();
+await page.locator(".fab-plus").click();
+await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+await page.locator(".sheet .setrow", { hasText: "coaching" }).click();
 await page.getByRole("heading", { name: "New class" }).waitFor();
 await page.getByRole("button", { name: "Private", exact: true }).click();
 await page.getByPlaceholder("e.g. Barbell Strength").fill("PT with Sarah");

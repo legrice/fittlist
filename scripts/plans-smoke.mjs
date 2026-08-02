@@ -72,8 +72,8 @@ await m.waitForTimeout(400);
 
 // one of their own
 await m.goto(BASE + "/week");
-await m.getByRole("heading", { name: "Your plans" }).waitFor();
-await m.locator(".weekaddtop, .empty-block .btn.ghost").first().click();
+await m.locator(".schedtools").waitFor();
+await m.locator(".fab-plus").click();
 await m.getByPlaceholder("e.g. Barbell Strength").fill("Swag by LWL");
 await m.getByRole("button", { name: "Sa", exact: true }).click();
 await m.locator("#fDesc").fill("Choreo class, low lights, no mirrors.");
@@ -106,7 +106,9 @@ if (!(await m.locator(".ps-ecoachav").count())) fail("the coach's row should car
 if (!(await m.locator(".ps-goingtag", { hasText: "Yours" }).count()))
   fail("a personal row should say it is yours");
 if (await m.locator(".weekrow-nm").count()) fail("the old bespoke row markup should be gone");
-await m.getByText("Share your plans").waitFor();
+// Share moved onto the rail; the floating pill is gone.
+if (await m.locator(".weekshare").count()) fail("the floating share pill should be gone");
+await m.locator(".schedtool", { hasText: "Share" }).first().waitFor();
 await m.waitForTimeout(300);
 await m.screenshot({ path: OUT + "/shot-plans-list.png" });
 
@@ -134,9 +136,14 @@ await m.screenshot({ path: OUT + "/shot-plans-edit.png" });
 await m.locator(".publishwrap .btn", { hasText: "Save changes" }).click();
 await m.waitForTimeout(1200);
 await m.locator(".ps-erow", { hasText: "Swag by LWL II" }).first().waitFor();
-const dupes = await m.locator(".ps-erow", { hasText: "Swag by LWL" }).count();
-if (dupes !== 1) fail("an edit should move the one row, got " + dupes);
-console.log("edit ok (one row, moved to the day picked)");
+// A weekly entry recurs across the horizon now, so the check is that every
+// occurrence carries the new name: an edit moved the entry, it didn't fork
+// it, and the old name survives nowhere on its own.
+const allSwag = await m.locator(".ps-erow", { hasText: "Swag by LWL" }).count();
+const renamed = await m.locator(".ps-erow", { hasText: "Swag by LWL II" }).count();
+if (allSwag !== renamed)
+  fail(`an edit should move the entry, not fork it: ${allSwag} rows, ${renamed} renamed`);
+console.log("edit ok (one entry, every occurrence moved with it)");
 
 await b.close();
 console.log("ALL PLANS CHECKS PASSED");

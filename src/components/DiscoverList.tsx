@@ -104,11 +104,15 @@ export function DiscoverList({
         </Link>
       </div>
 
-      {/* No page title: the tab bar already says Discover, and the segment
-          says which half you're in. */}
-      <div className="seg disseg">
+      {/* No page title: the tab bar already says Discover. The halves are
+          underline tabs now, the same drawing a profile's sections wear, and
+          the quick chips ride under them: search, tabs, chips, one stack
+          across the top, so the reach-for filters are in sight rather than
+          behind the sheet. */}
+      <div className="pubtabs distabs" aria-label="Discover sections">
         <button
-          className={tab === "people" ? "sel" : ""}
+          className={`pubtab${tab === "people" ? " sel" : ""}`}
+          aria-current={tab === "people" ? "page" : undefined}
           onClick={() => {
             setTab("people");
             setDiscipline(null);
@@ -117,7 +121,8 @@ export function DiscoverList({
           People
         </button>
         <button
-          className={tab === "studios" ? "sel" : ""}
+          className={`pubtab${tab === "studios" ? " sel" : ""}`}
+          aria-current={tab === "studios" ? "page" : undefined}
           onClick={() => {
             setTab("studios");
             setDiscipline(null);
@@ -126,6 +131,25 @@ export function DiscoverList({
           Studios
         </button>
       </div>
+
+      {/* The one-tap narrowing, in the open: what this lens can be narrowed
+          by, scrolling off the edge. The sheet keeps the rest (the city, the
+          switches); a chip you can see is a chip you use. */}
+      {disciplines.length > 0 && (
+        <div className="dischips" aria-label="Filter by type">
+          {disciplines.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={`chip${discipline === d ? " sel" : ""}`}
+              aria-pressed={discipline === d}
+              onClick={() => setDiscipline(discipline === d ? null : d)}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* The same floating pill a class uses for Book and Add: the one thing
           you reach for over a long list, in the place your thumb already is. */}
@@ -178,27 +202,6 @@ export function DiscoverList({
                     </option>
                   ))}
                 </select>
-              </>
-            )}
-
-            {disciplines.length > 0 && (
-              <>
-                <label className="flabel">
-                  What <span>· one thing, so the list still says something</span>
-                </label>
-                <div className="typepick">
-                  {disciplines.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      className={`chip${discipline === d ? " sel" : ""}`}
-                      aria-pressed={discipline === d}
-                      onClick={() => setDiscipline(discipline === d ? null : d)}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
               </>
             )}
 

@@ -5,7 +5,18 @@ import { ClassOpener } from "@/components/ClassOpener";
 export type StudioDay = {
   iso: string;
   label: string;
-  items: { id: string; name: string; startTime: string; durationMin: number }[];
+  items: {
+    id: string;
+    name: string;
+    startTime: string;
+    durationMin: number;
+    /** A community row from a coach's own listing: its page lives under
+     *  their handle, not the studio. */
+    base?: string | null;
+    /** A community row distilled from members' entries: it has no page at
+     *  all, so it renders as a plain row rather than a link. */
+    plain?: boolean;
+  }[];
 };
 
 // The gym's own week, on its own page.
@@ -18,7 +29,17 @@ export type StudioDay = {
 // Rows are real links wrapped in ClassOpener, the same as a coach's schedule:
 // an ordinary tap opens the class over the list, a modified click or a crawler
 // gets the page underneath.
-export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[] }) {
+export function StudioSchedule({
+  slug,
+  days,
+  community = false,
+}: {
+  slug: string;
+  days: StudioDay[];
+  /** Nobody runs this page: the week is drawn from what the people who train
+   *  and teach here have added, and the page says so out loud. */
+  community?: boolean;
+}) {
   if (days.length === 0) {
     return (
       <div className="empty-block">
@@ -31,6 +52,13 @@ export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[]
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
+      {community && (
+        <p className="durnote commnote">
+          Drawn from what the coaches and members here have added, so anyone can see the
+          week and the studio can see what its page could be. Nobody runs this page yet;
+          the dots above are the way to say it&rsquo;s yours.
+        </p>
+      )}
       <div className="ps-week ps-agenda">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
@@ -38,14 +66,8 @@ export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[]
             <div className="ps-daycards">
               {d.items.map((c) => {
                 const start = clockParts(c.startTime);
-                return (
-                  <Link
-                    key={`${d.iso}-${c.id}`}
-                    className="ps-event"
-                    data-cid={c.id}
-                    data-d={d.iso}
-                    href={`/s/${slug}/${c.id}?d=${d.iso}`}
-                  >
+                const inner = (
+                  <>
                     <span className="ps-ebody">
                       <span className="ps-enm">{c.name}</span>
                     </span>
@@ -56,6 +78,26 @@ export function StudioSchedule({ slug, days }: { slug: string; days: StudioDay[]
                       </span>
                       <span className="ps-edur">{c.durationMin} min</span>
                     </span>
+                  </>
+                );
+                // Distilled from members' entries: a fact about the studio
+                // with no page behind it and nobody's name on it.
+                if (c.plain)
+                  return (
+                    <div key={`${d.iso}-${c.id}`} className="ps-event ps-event-plain">
+                      {inner}
+                    </div>
+                  );
+                return (
+                  <Link
+                    key={`${d.iso}-${c.id}`}
+                    className="ps-event"
+                    data-cid={c.id}
+                    data-d={d.iso}
+                    data-base={c.base ?? undefined}
+                    href={c.base ? `/${c.base}/${c.id}?d=${d.iso}` : `/s/${slug}/${c.id}?d=${d.iso}`}
+                  >
+                    {inner}
                   </Link>
                 );
               })}

@@ -5,7 +5,6 @@ import { avatarColor } from "@/lib/avatar";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
-import { weekCount } from "@/lib/week";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
 import { adminEmails } from "@/lib/admin";
@@ -35,18 +34,17 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // switch, so awaiting them one by one stacked four round trips onto every
   // tap of the bar.
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, week, promptDue, invitesLeft, adminNew] = await Promise.all([
+  const [unread, promptDue, invitesLeft, adminNew] = await Promise.all([
     unreadNotifications(userId),
-    weekCount(userId),
     feedbackPromptDue(userId),
     invitesBannerCount(),
     isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // A coach's You is their coaching calendar; a member's is their page. The
-  // coach's public profile is one pill away from the calendar.
-  const youHref = isCoach ? "/app" : "/you";
+  // Everyone's You is their calendar now: a coach's at /app, a member's at
+  // /week. A member's account rows stay at /you, behind the header's gear.
+  const youHref = isCoach ? "/app" : "/week";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -59,8 +57,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           adminNew={adminNew}
-          plans={week}
-          settings={isCoach ? "/app?acct=1" : undefined}
+          // Every screen in this group is the member side, so the magnifier
+          // is always right here.
+          search
+          settings={isCoach ? "/app?acct=1" : "/you"}
           nav={{ coach: isCoach, youHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

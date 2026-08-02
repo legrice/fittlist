@@ -24,15 +24,16 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, youHref?: string): NavItem[] {
   return [
-    // Plans lives in the header corner as the ribbon with its count, not
-    // here: it tried leading the tabs, and a fourth tab crowded the bar for
-    // a list you visit rather than live on. Following leads because the
-    // merged week is the thing the app is for.
+    // No Plans anywhere: the ribbon tried the tab bar, then the header
+    // corner, and then the list it pointed at merged into You, which is
+    // everybody's calendar now. Following leads because the merged week is
+    // the thing the app is for.
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // The magnifier lives here now: the header lost its search icon, the
-    // Discover box is the door to the universal search, and two doors to one
-    // search said one thing twice.
-    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
+    // The compass again: the header got its magnifier back once the plans
+    // ribbon left, and a magnifier on the tab beside a magnifier in the
+    // corner was the same glyph twice on one screen. Discover is browsing;
+    // searching is the header's corner and the box at the top of this tab.
+    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
     // Your own page, as everyone else sees it. It carries your face rather
     // than an icon: it's the one tab that is a person rather than a place. A
     // coach's is their public profile (the caller passes the handle URL in),
@@ -49,7 +50,9 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   if (pathname.startsWith("/discover")) return "discover";
   if (pathname.startsWith("/feed")) return "following";
-  if (pathname.startsWith("/week")) return "plans";
+  // /week is a member's You now: the one calendar of everything they're
+  // going to. A coach's lives at /app, and /week sends them there.
+  if (pathname.startsWith("/week")) return "you";
   if (pathname.startsWith("/app") || pathname.startsWith("/you")) return "you";
   return "none";
 }

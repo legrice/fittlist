@@ -81,18 +81,20 @@ console.log("member setup ok (two steps, no studios, lands on their week)");
   await p.waitForURL("**/discover");
   if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "You" }).click();
-  await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own page");
-  if ((await p.locator(".navtab.on").innerText()).includes("You") === false)
-    fail("their own page should light the You tab");
-  // Plans is the ribbon in the corner, on every one of these screens.
-  await p.locator(".plansbtn").click();
   await p.waitForURL("**/week");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their plans");
+  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own calendar");
+  if ((await p.locator(".navtab.on").innerText()).includes("You") === false)
+    fail("their calendar should light the You tab");
+  // No plans ribbon: the You tab is the one door to your own calendar, and
+  // the account rows live behind the header's gear.
+  if (await p.locator(".plansbtn").count()) fail("the plans ribbon should be gone");
+  await p.locator(".settingsbtn").click();
+  await p.waitForURL("**/you");
+  if ((await p.locator(".navtab").count()) !== 3) fail("and to their account rows");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }
-console.log("member tabs ok (Following, Discover, You, and the ribbon, everywhere)");
+console.log("member tabs ok (Following, Discover, You the calendar, gear to the rows)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.

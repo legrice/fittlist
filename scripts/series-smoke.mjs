@@ -31,7 +31,12 @@ await skipSetup(p);
 await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
 
 async function addClass({ name, days, time, studio, first = false }) {
-  await p.getByRole("button", { name: first ? "Add your first class" : "Add class" }).click();
+  if (first) await p.getByRole("button", { name: "Add your first class" }).click();
+  else {
+    await p.locator(".fab-plus").click();
+    await p.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+    await p.locator(".sheet .setrow", { hasText: "coaching" }).click();
+  }
   await p.getByRole("heading", { name: "New class" }).waitFor();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(name);
   for (const d of days) await p.getByRole("button", { name: d, exact: true }).click();
@@ -57,7 +62,20 @@ async function shapes() {
   await p.locator(".ps-event").first().waitFor();
   await p.waitForTimeout(400);
   const rows = await p.locator(".ps-event").allInnerTexts();
-  return [...new Set(rows.map((r) => r.split("\n").slice(0, 3).join(" @ ")))].sort();
+  // The rows wear hat chips now (Coaching, Shift); they are furniture here,
+  // not part of the class's shape.
+  return [
+    ...new Set(
+      rows.map((r) =>
+        r
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => !/^(COACHING|SHIFT|GOING|YOURS|PRIVATE)$/i.test(line))
+          .slice(0, 3)
+          .join(" @ "),
+      ),
+    ),
+  ].sort();
 }
 
 await addClass({ name: "Stretch+", days: ["Mo", "We"], time: "06:00", studio: "Verona Stretch", first: true });

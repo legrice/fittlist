@@ -9,6 +9,7 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
+import { coachAnalytics } from "@/lib/visits";
 import { AppChrome } from "@/components/AppChrome";
 import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
@@ -16,6 +17,7 @@ import { Icon } from "@/components/Icon";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
+import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import { StudioMenu } from "@/components/StudioMenu";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
@@ -121,7 +123,60 @@ export async function StudioView({
       if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
     }
   }
-  const hasSchedule = !!s.accountUserId;
+  // The commons builds the week before the studio arrives: an unclaimed
+  // studio's schedule is drawn from the public classes coaches list here and
+  // the entries members have added with this studio picked. Deduped on name
+  // and time, never attributed (a member's entry surfaces the class's facts
+  // and nothing about the member; the personal adder says so under its studio
+  // field, which is the consent), and gone the moment somebody claims the
+  // page: from then on what it says is theirs to say.
+  let community = false;
+  if (!s.accountUserId && !access.claimed) {
+    const [pubAll, own] = await Promise.all([
+      db.select().from(schema.classes).where(eq(schema.classes.studioId, s.id)),
+      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.studioId, s.id)),
+    ]);
+    const pub = pubAll.filter((c) => c.isPublic);
+    const owners = pub.length
+      ? await db
+          .select({ id: schema.users.id, handle: schema.users.handle })
+          .from(schema.users)
+          .where(inArray(schema.users.id, [...new Set(pub.map((c) => c.userId))]))
+      : [];
+    const handleOf = new Map(owners.map((o) => [o.id, o.handle]));
+    const start = new Date(`${todayIso()}T00:00:00Z`);
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(start);
+      dt.setUTCDate(start.getUTCDate() + i);
+      const iso = dt.toISOString().slice(0, 10);
+      const dow = (dt.getUTCDay() + 6) % 7;
+      const seen = new Set<string>();
+      const items: StudioDay["items"] = [];
+      // Coaches' own listings first: they have real pages, so on a collision
+      // the row that can be opened wins.
+      for (const c of pub) {
+        if (!runsOn(c, iso, dow)) continue;
+        const base = handleOf.get(c.userId);
+        if (!base) continue;
+        const key = `${c.name.trim().toLowerCase()}|${c.startTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push({ id: c.id, name: c.name, startTime: c.startTime, durationMin: c.durationMin, base });
+      }
+      for (const p of own) {
+        if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
+        const key = `${p.name.trim().toLowerCase()}|${p.startTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push({ id: p.id, name: p.name, startTime: p.startTime, durationMin: p.durationMin, plain: true });
+      }
+      items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
+    }
+    community = days.length > 0;
+  }
+
+  const hasSchedule = !!s.accountUserId || community;
   const tab: StudioTab = wanted === "auto" ? (hasSchedule ? "schedule" : "about") : wanted;
   // Without a schedule there are no tabs, so there is nothing to divide the
   // page into: it stays the single sectioned page it has always been, which is
@@ -260,20 +315,18 @@ export async function StudioView({
                   }}
                 />
               )}
-              {/* The way into the rota, for the people who run the place. */}
-              {access.isManager && s.accountUserId && (
-                <Link className="actpill" href={`${base}/manage`}>
-                  <Icon name="calendar_month" size={16} /> The schedule
-                </Link>
-              )}
               {/* Handing the page on. A person's lives behind their photo;
-                  a studio's face is plain, so the circle sits with the pills. */}
+                  a studio's face is plain, so the circle sits with the pills.
+                  The manager's own tools moved to the floating Studio admin
+                  pill: the rota pill up here was one door of several. */}
               <ProfileShare path={base} name={s.name} />
             </div>
           }
         >
 
-        {hasSchedule && tab === "schedule" && <StudioSchedule slug={s.slug ?? s.id} days={days} />}
+        {hasSchedule && tab === "schedule" && (
+          <StudioSchedule slug={s.slug ?? s.id} days={days} community={community} />
+        )}
 
         {/* What kind of place this is, first thing under the tabs: it is the
             answer to "is this for me", and it used to sit above the photo
@@ -345,6 +398,28 @@ export async function StudioView({
         )}
 
         </ProfileTabs>
+
+        {/* The manager's own door, floating where the one action of a screen
+            lives: on your own gym's page, that action is running the place. */}
+        {access.isManager && (
+          <StudioAdminSheet
+            slug={s.slug ?? s.id}
+            canSchedule={!!s.accountUserId}
+            pageViews={s.accountUserId ? (await coachAnalytics(s.accountUserId)).profileViews : null}
+            studio={{
+              id: s.id,
+              name: s.name,
+              address: s.address,
+              types: s.types,
+              about: s.about ?? "",
+              photo: s.photo,
+              contactEmail: s.contactEmail ?? "",
+              phone: s.phone ?? "",
+              website: s.website ?? "",
+              instagram: s.instagram ?? "",
+            }}
+          />
+        )}
 
         {!signedIn && (
           <div className="madewith">

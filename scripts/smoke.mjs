@@ -36,10 +36,17 @@ const openProfile = async (pg) => {
   await pg.waitForTimeout(450);
 };
 
+// The plus asks which hat now, so opening the coach's form is two taps.
+const openCoachAdder = async (pg) => {
+  await pg.locator(".fab-plus").click();
+  await pg.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+  await pg.locator(".sheet .setrow", { hasText: "coaching" }).click();
+};
+
 // Studio-first: pick the studio, then reuse a class from that studio's shared
 // catalog via the class-name field.
 const addSaved = async (pg) => {
-  await pg.getByRole("button", { name: "Add class" }).click();
+  await openCoachAdder(pg);
   await pg.getByRole("heading", { name: "New class" }).waitFor();
   await pg.getByRole("button", { name: "Select or start typing a studio" }).click();
   await pg.getByRole("heading", { name: "Choose a studio" }).waitFor();
@@ -273,7 +280,7 @@ console.log("delete-in-sheet ok (repeat choice, one day, confirm + cancel)");
 // ---- deleting the whole repeating set, on a class made for the purpose
 {
   const before = await scheduleClasses(page);
-  await page.getByRole("button", { name: "Add class" }).click();
+  await openCoachAdder(page);
   await page.getByRole("heading", { name: "New class" }).waitFor();
   await page.getByRole("button", { name: "Select or start typing a studio" }).click();
   await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
@@ -309,7 +316,7 @@ console.log("delete-all ok (whole repeating set goes)");
   const past = new Date(`${appToday}T00:00:00Z`);
   past.setUTCDate(past.getUTCDate() - 1);
 
-  await page.getByRole("button", { name: "Add class" }).click();
+  await openCoachAdder(page);
   await page.getByRole("heading", { name: "New class" }).waitFor();
   await page.getByRole("button", { name: "Select or start typing a studio" }).click();
   await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
@@ -353,7 +360,7 @@ console.log("end date ok (stops the week and the feed, round-trips)");
 
 // ---- picking a saved class brings that coach's booking links with it
 {
-  await page.getByRole("button", { name: "Add class" }).click();
+  await openCoachAdder(page);
   await page.getByRole("heading", { name: "New class" }).waitFor();
   await page.getByRole("button", { name: "Select or start typing a studio" }).click();
   await page.locator(".studio-row", { hasText: "Ironbound Strength" }).first().click();
@@ -1150,7 +1157,7 @@ await fan.getByText("Nobody yet").waitFor();
 await fan.getByRole("link", { name: "Find coaches" }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
 // which half of it you're in.
-await fan.locator(".disseg").waitFor();
+await fan.locator(".distabs").waitFor();
 if (await fan.locator(".calbar-title", { hasText: "Discover" }).count())
   fail("the page still spends a headline on what the tab bar already says");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
@@ -1279,8 +1286,10 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
     await fan.getByRole("switch", { name: /Taking new clients/ }).click();
     await fan.waitForTimeout(200);
   }
-  await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
-  await fan.locator(".sheet .publishwrap .btn").click();
+  await fan.locator(".sheetclose").first().click();
+  await fan.waitForFunction(() => !document.querySelector(".sheet"));
+  // The type chips sit on the page now: one tap, no sheet in the middle.
+  await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
   await fan.waitForTimeout(300);
   if (!(await fan.locator(".disfilterpill-n").count()))
     fail("a live filter should show its count on the pill");
@@ -1291,40 +1300,34 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // vocabulary, and carrying a coach's word over would filter to nobody.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
-  await fan.locator(".disfilterpill").click();
-  await fan.getByRole("heading", { name: "Filters" }).waitFor();
-  if (await fan.locator(".sheet .typepick .chip.sel").count())
+  if (await fan.locator(".dischips .chip.sel").count())
     fail("a pick the other lens can't honour should not survive the switch");
-  await fan.locator(".sheetclose").click();
   // Clearing puts everything back. Picking again first: the lens switch above
   // already dropped the filter, so there'd be nothing to clear otherwise, and
   // Clear filters only shows when something is on.
   await fan.getByRole("button", { name: "People", exact: true }).click();
   await fan.waitForTimeout(200);
+  await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
   await fan.locator(".disfilterpill").click();
-  await fan.locator(".sheet .typepick .chip", { hasText: "Yoga" }).first().click();
   await fan.getByRole("button", { name: "Clear filters" }).click();
   await fan.locator(".sheet .publishwrap .btn").click();
   await fan.waitForTimeout(300);
   if (await fan.locator(".disfilterpill-n").count())
     fail("cleared filters should leave the pill without a count");
-  console.log("discover filters ok (one pill, one vocabulary, both halves)");
+  console.log("discover filters ok (one pill, chips in the open, both halves)");
 }
 
 // A filter is only offered where it can narrow something. The chips come from
 // what the lens in front of you actually has, so People stays quiet until
 // coaches start saying what they teach.
 {
+  // The chips sit on the page now, under the tabs, so reading them is just
+  // looking.
   await fan.goto(BASE + "/discover");
-  await fan.locator(".disfilterpill").click();
-  await fan.getByRole("heading", { name: "Filters" }).waitFor();
-  const peopleChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
-  await fan.locator(".sheetclose").click();
+  const peopleChips = await fan.locator(".dischips .chip").allInnerTexts();
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
-  await fan.locator(".disfilterpill").click();
-  await fan.getByRole("heading", { name: "Filters" }).waitFor();
-  const studioChips = await fan.locator(".sheet .typepick .chip").allInnerTexts();
-  await fan.locator(".sheetclose").click();
+  await fan.waitForTimeout(200);
+  const studioChips = await fan.locator(".dischips .chip").allInnerTexts();
   // Matt is the only one who has said anything, and he said Yoga.
   if (peopleChips.join(",") !== "Yoga")
     fail("People should only offer what a coach here actually teaches: " + peopleChips.join(","));
@@ -1373,11 +1376,13 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
 // heading. The point is that you don't have to know which half a thing is in
 // before you look for it.
 {
-  // The header lost its magnifier; the Discover tab and its box are the way
-  // in, and the box is a door rather than a filter now.
+  // The magnifier is back in the header corner (the plans ribbon left it
+  // room), and the Discover box is the other door; the tab wears the compass
+  // again so the same glyph isn't on the screen twice.
   await fan.goto(BASE + "/feed");
-  if (await fan.locator(".searchbtn").count())
-    fail("the header should carry no magnifier any more");
+  await fan.locator(".searchbtn").waitFor();
+  await fan.locator(".searchbtn").click();
+  await fan.waitForURL(/\/search/);
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
@@ -1626,37 +1631,32 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
-// ---- Your plans: the ribbon in the header corner. Not a calendar — only
-// what they added, every row can leave, and the count is what's still ahead.
+// ---- The member's You tab: their calendar. The plans ribbon is gone from
+// the header, because a second door to your own calendar said one thing
+// twice; the You tab is the door, and the rail rides across the top.
 {
   await fan.goto(BASE + "/feed");
-  // Plans tried being the first tab; the bar is three again and the ribbon
-  // carries the count in the corner where the heart began.
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
   if ((await fan.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
-  const plansBtn = fan.locator(".plansbtn");
-  const dot = plansBtn.locator(".inboxdot");
-  await dot.waitFor();
-  if ((await dot.innerText()).trim() !== "1") fail("the week count should be 1, got " + (await dot.innerText()));
-  await plansBtn.click();
+  if (await fan.locator(".plansbtn").count())
+    fail("the plans ribbon should have left the header");
+  await fan.locator(".navtab", { hasText: "You" }).click();
   await fan.waitForURL(/\/week/);
-  await fan.getByRole("heading", { name: "Your plans" }).waitFor();
-  // It's in the tabs group now, so the shell above it never unmounts.
+  await fan.locator(".schedtools").waitFor();
+  if (!(await fan.locator(".navtab.on", { hasText: "You" }).count()))
+    fail("the You tab should light on the member calendar");
+  // It's in the tabs group, so the shell above it never unmounts.
   if (!(await fan.locator(".navbar").count()))
     fail("your week should keep the bottom tabs");
-  // Share my week is pinned, so a long week can't push it off the bottom. The
-  // page also has to actually scroll: wrapped in .appshell without a .stage it
-  // was clipped at the viewport and nothing moved.
+  // The rail: your page, sharing your week, and the editor last.
   {
-    const bar = await fan.locator(".weekshare").evaluate((e) => getComputedStyle(e).position);
-    if (bar !== "fixed") fail("Share your plans should float, got " + bar);
-    const clipped = await fan.evaluate(
-      () => getComputedStyle(document.querySelector(".weekshare").closest("div[data-mode], body"))
-        .overflow === "hidden",
-    );
-    if (clipped) fail("your week is inside a clipped shell, so it can never scroll");
+    const pills = (await fan.locator(".schedtool").allInnerTexts()).map((t) => t.trim());
+    if (pills.length !== 3) fail("a member's rail should hold three pills, got " + pills.join("|"));
+    if (!pills[2].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
   }
+  // The big plus, same as every calendar.
+  await fan.locator(".fab-plus").waitFor();
   // The rows are the shared class rows now, the same ones Following draws.
   const rows = fan.locator(".ps-erow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
@@ -1664,9 +1664,6 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   const txt = await rows.first().innerText();
   for (const bit of ["Barbell Strength", "min", "Matt"])
     if (!txt.includes(bit)) fail(`the week row is missing "${bit}": ${txt}`);
-  // A coach shares their week as an image; this is the same move from the
-  // other side, and it's the only thing on the screen that isn't a class.
-  await fan.locator(".weekshare .ovcta-btn", { hasText: "Share your plans" }).waitFor();
   // Every row can leave, and it asks first: this is a list of things you meant
   // to do, and the x is one tap away from all of them.
   await rows.first().locator(".weekrow-x").click();
@@ -1678,11 +1675,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.getByRole("button", { name: "Remove it" }).click();
   await fan.getByText("Removed from your plans").waitFor();
   await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
-  // The badge goes with it: the count is state, not a running total.
   await fan.goto(BASE + "/feed");
-  await fan.locator(".plansbtn").waitFor();
-  if (await fan.locator(".plansbtn .inboxdot").count())
-    fail("an empty week should carry no count");
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();
   // Before the tap: an empty calendar and the word.
@@ -1722,10 +1715,12 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 // person. The delineation is the one question a coach gets asked.
 {
   await fan.goto(BASE + "/week");
-  await fan.getByRole("button", { name: "Add a class" }).first().click();
+  // The plus opens the form straight away: a member has one answer to which
+  // hat, and a question with one answer is furniture.
+  await fan.locator(".fab-plus").click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
-  // A member has one answer, so the question isn't asked; and there is no page
-  // for it to be public on, so that choice is gone too.
+  if (await fan.getByRole("heading", { name: "Add to your calendar" }).count())
+    fail("a member should not be asked which hat");
   if (await fan.locator(".modetoggle", { hasText: "coaching" }).count())
     fail("a member should not be asked whether they coach it");
   if (await fan.locator(".modetoggle", { hasText: "Public" }).count())
@@ -1752,7 +1747,8 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.getByText("Added to your plans").waitFor();
   await fan.waitForTimeout(800);
   {
-    const row = fan.locator(".ps-erow", { hasText: "Wellness Off the Mat" });
+    // A weekly entry recurs across the horizon now, so take the first.
+    const row = fan.locator(".ps-erow", { hasText: "Wellness Off the Mat" }).first();
     await row.waitFor();
     const txt = await row.innerText();
     // The studio owns the "where", exactly as on a coach's class.
@@ -1760,7 +1756,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
       if (!txt.includes(bit)) fail(`the plan row is missing "${bit}": ${txt}`);
   }
   // The details stayed at the studio: opening the form there again offers it.
-  await fan.getByRole("button", { name: "Add a class" }).first().click();
+  await fan.locator(".fab-plus").click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
   await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
   // Scoped to the picker: a class row is a button too now, and the one behind
@@ -1780,8 +1776,10 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 
   // The poster covers the range you ask for, and it starts where your plans
   // do: a class nine days out used to share as a blank image with no way to
-  // tell why.
-  await fan.locator(".weekshare .ovcta-btn").click();
+  // tell why. The rail's Share is the door now; the floating pill is gone.
+  if (await fan.locator(".weekshare").count())
+    fail("the floating share pill should have made way for the rail's Share");
+  await fan.locator(".schedtool", { hasText: "Share" }).nth(0).click();
   await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
   {
     const from = await fan.locator("#myFrom").inputValue();
@@ -1805,32 +1803,48 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
     await fan.locator(".sheetclose").first().click();
   }
   console.log("share range ok (starts where the plans do, one day to seven)");
+
+  // The entry they just added put Bright Room Yoga on the map: an unclaimed
+  // studio's page draws its week from what people added, as a plain row
+  // (there is no page behind it), and nothing anywhere says who.
+  await fan.goto(BASE + "/s/bright-room-yoga");
+  await fan.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
+  await fan.locator(".commnote").waitFor();
+  await fan.locator(".ps-event-plain", { hasText: "Wellness Off the Mat" }).waitFor();
+  {
+    const body = (await fan.locator("body").innerText()).toLowerCase();
+    if (body.includes("lindley")) fail("a community schedule must never say who added a class");
+  }
+  console.log("community schedule ok (built from what people added, never attributed)");
   // Back where the next block expects to find them.
   await fan.goto(BASE + "/feed");
   await fan.locator(".feedagenda .ps-event").first().waitFor();
 }
 
-// A coach adding to their plans is asked which chair they're in, because both
-// are true for them: the class at their own gym might be theirs to teach.
+// A coach adding to their calendar is asked which hat first, by the plus
+// itself: both are true for them, and the sheet pre-answers the form's own
+// question. An old /week link sends them to their calendar.
 {
   await page.goto(BASE + "/week");
-  await page.getByRole("button", { name: "Add a class" }).first().click();
+  await page.waitForURL(/\/app/);
+  await page.locator(".fab-plus").click();
+  await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+  {
+    const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (rows.length !== 2 || !/coaching/.test(rows[0]) || !/going to/.test(rows[1]))
+      fail("the plus should offer coaching and going: " + rows.join("|"));
+  }
+  await page.locator(".sheet .setrow", { hasText: "going to" }).click();
   await page.getByRole("heading", { name: "Add a class" }).waitFor();
-  const ask = page.locator(".adder-card", { hasText: "Is this yours to teach?" });
-  await ask.waitFor();
-  // Going is the answer that brought them here, so it leads.
-  if (!(await ask.locator("button.sel", { hasText: "going" }).count()))
-    fail("going should be the answer already selected");
+  // Pre-answered: the form doesn't ask again, and there is nothing public
+  // about a class you only go to.
+  if (await page.locator(".adder-card", { hasText: "Is this yours to teach?" }).count())
+    fail("the plus already asked; the form should not ask again");
   if (await page.locator(".modetoggle", { hasText: "Public" }).count())
     fail("going to a class has no public/private choice");
-  await ask.getByRole("button", { name: /coaching it/ }).click();
-  // Coaching it hands the rest of the form back to the one that publishes.
-  await page.locator(".modetoggle", { hasText: "Public" }).waitFor();
-  const label = (await page.locator(".publishwrap .btn").innerText()).trim();
-  if (label === "Add to your plans") fail("coaching it should publish, not add to plans");
-  await page.locator(".sheetclose").first().click();
+  await page.locator(".sheetclose, .adderclose").first().click();
   await page.waitForTimeout(300);
-  console.log("coaching or going ok (a coach is asked, and the form follows the answer)");
+  console.log("coaching or going ok (the plus asks, and the form follows the answer)");
 }
 
 // swiping a row right-to-left flips the same mark, without opening the class
@@ -1880,7 +1894,10 @@ if (myBuf.readUInt32BE(16) !== 1080 || myBuf.readUInt32BE(20) !== 1920)
 // sharing them lives in the member's account, not on top of their week
 if (await fan.locator(".goingshare").count())
   fail("Share my week should have moved off the feed");
+// The You tab is the calendar; the account rows live behind the gear.
 await fan.locator(".navtab", { hasText: "You" }).click();
+await fan.waitForURL("**/week");
+await fan.locator(".settingsbtn").click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
@@ -1928,7 +1945,7 @@ await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await fan.goto(BASE + "/discover");
-await fan.locator(".disseg").waitFor();
+await fan.locator(".distabs").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -1982,18 +1999,32 @@ await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
 }
 console.log("own classes on Home ok (visible, not attendable)");
 
-// but the coach's own schedule is only what they teach
+// and the coach's calendar holds both hats now: the class they added rides
+// along with what they teach, wearing the Going chip and the coach's face,
+// and tapping it opens the class sheet rather than the editor.
 await page.goto(BASE + "/app");
 await page.locator(".ps-event").first().waitFor();
-const ownWeek = await page.locator(".ps-week").innerText();
-if (/Conditioning/.test(ownWeek))
-  fail("a class the coach attends showed up on their own schedule");
+{
+  const going = page.locator(".ps-event", { hasText: "Conditioning" }).first();
+  await going.waitFor();
+  if (!(await going.locator(".ps-role", { hasText: "Going" }).count()))
+    fail("a class the coach attends should wear the Going chip on their calendar");
+  if (!(await going.locator(".ps-ecoach").count()))
+    fail("a Going row should carry the coach's face");
+  await going.click();
+  await page.locator(".classoverlay-nm", { hasText: "Conditioning" }).waitFor();
+  await page.locator(".ovcircle-back").click();
+  await page.waitForFunction(() => !document.querySelector(".classoverlay"));
+  // And their teaching rows say Coaching, so the two hats read apart.
+  if (!(await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().count()))
+    fail("a coaching row should wear the Coaching chip");
+}
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".disseg").waitFor();
+await page.locator(".distabs").waitFor();
 await page.locator(".navtab", { hasText: "You" }).click();
 // You is the coaching calendar again, tools across the top; the public page
 // is the first pill and wears the coach's face.
@@ -2112,7 +2143,20 @@ await page.locator("#stEmail").fill("hello@ironbound.example");
 await page.locator("#stInsta").fill("@ironboundstrength");
 await page.getByRole("button", { name: "Save studio" }).click();
 await page.getByText("Studio updated").waitFor();
-await page.reload();
+// The commons built this page a week: matt's public class here gives the
+// unclaimed studio a community schedule, so the page wears tabs and the
+// About content lives behind Info.
+await page.goto(BASE + "/s/ironbound-strength");
+await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
+await page.locator(".commnote").waitFor();
+{
+  const row = page.locator(".ps-event", { hasText: "Barbell Strength" }).first();
+  await row.waitFor();
+  const href = await row.getAttribute("href");
+  if (!href?.startsWith("/matt/"))
+    fail("a coach's community row should open their own class: " + href);
+}
+await page.goto(BASE + "/s/ironbound-strength/about");
 {
   const types = await page.locator(".studiotype").allInnerTexts();
   if (types.join("|") !== "Strength|HYROX") fail("studio types didn't stick: " + types.join(","));
@@ -2879,6 +2923,21 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
   await handTo("matt@example.com");
   await studioCard().getByText("matt@example.com").waitFor();
   console.log("studio claimed ok");
+
+  // The manager's own page grows the floating Studio admin pill: everything
+  // about running the place behind one door. No gym account yet, so it holds
+  // the editor and the share and none of the rota rows.
+  await page.goto(BASE + "/s/ironbound-strength");
+  await page.locator(".studioadmin").click();
+  {
+    const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    if (!rows.includes("Edit studio info"))
+      fail("the admin sheet should hold the editor: " + rows.join("|"));
+    if (rows.includes("The rota"))
+      fail("no gym account means no rota row yet: " + rows.join("|"));
+  }
+  await page.locator(".sheetclose").first().click();
+  await page.waitForFunction(() => !document.querySelector(".sheet"));
 
   // anonPage signed up as Sam. Claimed by somebody else, his menu loses the
   // pencil and the page says why.

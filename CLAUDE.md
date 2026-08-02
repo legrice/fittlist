@@ -287,8 +287,11 @@ shipped. Discover no longer filters by text at all: its box is a door
 (`.dissearch-door`), drawn like the field it opens (the placeholder span
 carries the input's vertical padding, or the box collapses to one line), and
 tapping it lands on `/search`, where the box already holds the caret and the
-empty state offers no door back to Discover, because that would be a circle. The header carries no magnifier; the Discover tab wears it, so the
-one search has one door and the tab names where searching lives. A directory has to arrive whole; a
+empty state offers no door back to Discover, because that would be a circle.
+The header's corner carries the magnifier again (the plans ribbon's leaving
+made the room), and the Discover tab went back to the compass so the same
+glyph isn't drawn twice on one screen: browsing is the tab, searching is the
+corner and the box. A directory has to arrive whole; a
 search is a question, and sending every account to every device so the answer
 can be computed there stops being reasonable well before it stops working. It
 keeps two rules and they are why it can't be a plain LIKE: blocked in either
@@ -365,6 +368,14 @@ person's stays a circle.
 the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
+
+**Discover's top is one stack: the search door, the halves as underline
+tabs, and the quick chips riding under them.** The People/Studios segment
+became the same underline tabs a profile's sections wear (`.pubtabs
+.distabs`), and the discipline chips left the filter sheet for a rail in the
+open (`.dischips`, scrolling off the edge): a chip you can see is a chip you
+use, and the sheet keeps what needs a form (the city, the switches). The
+pill's count still includes a chip pick, and switching lens still drops it.
 
 **Discover's controls read top down: the search door, then which half, then
 filter.** The box is first because searching is what people came to do, and it
@@ -547,17 +558,17 @@ the two images (the schedule story and the profile card, each opening its
 builder); then the QR code pill; then Edit profile last, because it's the
 thing you do twice a year and the rail scrolls to it. Two pills per share
 were four pills for two pictures, which is how the rail earned its sheets.
-The calendar draws the member lists' paper cards, minus the coach chip and
-minus the min-height that clears corner controls it doesn't have
-(`.evcards-tight`), because every class here is theirs and a card with dead
-air above the name is a card holding room for a button that never comes.
+The calendar draws the member lists' paper cards, minus the min-height that
+clears corner controls it doesn't have (`.evcards-tight`); the coach chip
+only rides the Going rows, where the face answers whose class it is.
 
 **A coach's settings are the header's gear; the profile carries no door to
-somewhere else.** `AppHeader`'s `settings` prop (coach only: a member's rows
-live on `/you`) links to `/app?acct=1`, the only door into the account view,
-which is why a suite opening settings navigates there rather than clicking a
-gear. `.ownermore` means the studio page's dots; nothing on a person's
-profile opens settings any more.
+somewhere else.** `AppHeader`'s `settings` prop links a coach to
+`/app?acct=1` (the only door into the account view, which is why a suite
+opening settings navigates there rather than clicking a gear) and a member to
+`/you`, where their account rows have always lived: their You tab is the
+calendar now, so the gear is how the rows are reached. `.ownermore` means the
+studio page's dots; nothing on a person's profile opens settings any more.
 
 **Contact is a thing you do, not a section you read.** It was a tab; it is now
 the pill beside Follow and one sheet (`ContactSheet`). Message on fittlist
@@ -688,12 +699,13 @@ not. Nothing rendered anywhere says who wrote a catalog row. The form says so
 out loud under the studio field, which is the consent. The coach path keeps
 its own version of this rule by refusing to log a private session at all.
 
-**A coach adding to their plans is asked which chair they're in.** Both are
-true for them: the class at their own gym might be theirs to teach. "I'm
-going" writes a personal row; "I'm coaching it" hands the rest of the form
-back to the one that publishes, public/private toggle and all, and the toast
-says it went to their schedule, because it will not appear on the screen they
-added it from. A member is never asked: one answer is not a question.
+**A coach adding to their calendar is asked which hat, by the plus.** Both
+are true for them: the class at their own gym might be theirs to teach. The
+sheet behind `.fab-plus` asks first and passes `personal.canCoach: false` to
+the form, so the Adder's in-form chair question (which still exists for any
+caller that doesn't pre-answer) never shows twice. "Going to" writes a
+personal row; "coaching" opens the publishing form, toggle and all. A member
+is never asked: one answer is not a question.
 
 **The admin can put a picture on any class, and only a picture.**
 `adminSetClassImage` (behind `currentAdmin()`) writes `classes.image` for
@@ -904,6 +916,31 @@ class whose owner had no handle, which silently emptied a member's plans of
 every gym class the moment gyms existed. Anything building a class URL wants
 the base (`handle`, or `s/{slug}` for a gym), not the handle.
 
+**An unclaimed studio's schedule is built by the commons too.** The page
+draws a seven-day week from the public classes coaches list there and from
+members' personal entries that named the studio (`community` in
+`StudioView`), deduped on name and time, coach rows first because they have
+real pages to open. A member's entry surfaces as a plain row: name, time,
+length, no link, and never one word about the member; the consent is the
+line under the personal adder's studio field, which says exactly this. The
+page says out loud that it is drawn from what people added (`.commnote`)
+and points at the dots for whoever runs the place. The moment the studio is
+claimed the community week is gone: from then on what the page says is
+theirs to say, and a gym account replaces it with the real rota. This is
+the inventory building itself, and it is also the pitch: a studio arriving
+finds its page already worth keeping.
+
+**A manager's own studio page carries one floating door: Studio admin.**
+`StudioAdminSheet` sits where a member's Book and a coach's plus live,
+because on your own gym's page the thing you came to do is run the place.
+The sheet holds the rota, Shifts worked, the studio editor, the share, and
+the page's view count; the rows that need the gym account only appear once
+it exists. Views are tracked against `studios.accountUserId` through the
+same `page_visits` rollup a coach's page uses (main landing only, no
+managers, no bots, recorded in `/s/[slug]/page.tsx`), so the number means
+the same thing everywhere it appears. The old "The schedule" pill in the
+actions row is gone: it was one door of several.
+
 **A studio is the commons until somebody claims it.** The directory has always
 run on trust: any coach can correct any entry, because a row nobody owns is
 better kept right by the people who teach there than left wrong. One
@@ -1073,17 +1110,31 @@ takes the first day picked and the pills go single-select, the same way a gym's
 rota slot behaves and for the same reason. Nothing points at a personal row the
 way a Going mark points at a class, so there is no delete-and-reinsert here.
 
-**Your week is a shortlist, not a calendar.** `/week`, the first tab, lists
-only the classes someone added, from today forward, and empties itself as the
-week passes. Three things keep it from reading as "fittlist wants to be your
-calendar now": it is short and partial, every row can leave, and the bottom of
-it offers Share my week rather than a calendar export (the `.ics` feed lives on
-the account page until the Google Calendar work lands). Don't add a month grid,
-empty days, or a time gutter. The badge counts what's still ahead
-(`weekCount()`), not everything ever added: a number that only grows is a
-scoreboard rather than something you can act on. Following is everything from
-the coaches you follow; Your week is the ones you picked. Those have to stay
+**You is everybody's calendar, and the rows say which hat.** A coach's is
+`/app` and a member's is `/week`, and both hold everything the person is
+actually doing: the classes they teach, the shifts a gym has them on, the
+classes they added, and their own private entries, one day list in time
+order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
+(weekly personal entries expand across a nine-week horizon now, because a
+recurring entry that only showed its next date read as a class that
+stopped); `mySchedule()` is the coaching half. On a coach's calendar every
+row wears a chip: Coaching, Shift, Going, or Yours, and tapping does what
+the row is (a coaching row opens the editor, a shift or a Going row opens
+the class sheet, a Yours row opens `PlanSheet`). A member's rows need no
+Coaching chip, and their marks carry no chip at all: a chip on every row
+says nothing. Still no month grid, no empty days, no time gutter: it holds
+only what is real. Following is everyone you follow; You is you. Those stay
 legibly different.
+
+**The plus is one big button, and it asks which hat first.** `.fab-plus` is
+the icon-only orange circle on both calendars. A coach's opens a sheet
+(coaching it, or going to it) and pre-answers the form, so the Adder's own
+chair question never shows from here; a member's opens the personal form
+straight away, because one answer is not a question. Across from it sits
+`.calfilter`, a glass circle opening switches for the hats the calendar
+actually holds (`fl-cal-hide` in localStorage, per device); it only renders
+when there are at least two kinds, because a filter that can't narrow is
+furniture.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the
@@ -1097,20 +1148,23 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**Plans is the ribbon in the header, and the tabs are three.** It has been a
-heart in the corner, the first tab, and now the bookmark ribbon back in the
-corner with its count (`AppHeader`'s `plans`, omitted for a shell with no
-member side): a fourth tab crowded the bar for a list you visit rather than
-live on, and Following leads the tabs because the merged week is the thing the
-app is for. `/week` stays in the `(tabs)` route group so the shell survives
-navigation, even though no tab lights there. Every header icon fills in on
+**The tabs are three, and Plans is gone as a word in the chrome.** It was a
+heart, a tab, then the header's ribbon with a count; the list it pointed at
+is the You tab now, so the ribbon came off (a second door to your own
+calendar said one thing twice) and nothing counts a badge (a number that
+only grows is a scoreboard). Following leads the tabs because the merged
+week is the thing the app is for. `/week` stays in the `(tabs)` route group
+and lights You for a member; a coach landing on it is redirected to `/app`,
+so every old link (the toasts still say "See it") lands on the right
+calendar. Every header icon fills in on
 its own screen (`HeaderIconLink`, a client component over `usePathname`; the
 gear reads `?acct` instead, which is why closing settings goes through
 `router.replace` rather than bare `replaceState`): the fill is the same "you
 are here" the tab bar says, said once per door. The fill is CSS on the first
 SVG path only, because the shield's tick and the bell's clapper are open
-strokes and filling those paints shapes nobody drew. Discover wears the magnifier now that
-the header does not: one search, one door, and the tab names where it lives. A hamburger is deliberately not built: merch and
+strokes and filling those paints shapes nobody drew. The magnifier sits in the header's corner
+(Discover's tab is the compass again), and Discover's box is the other way
+into the same search. A hamburger is deliberately not built: merch and
 an about page are the things that would go in it, and a lid over an empty
 shelf is where things go to be forgotten.
 

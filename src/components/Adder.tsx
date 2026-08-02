@@ -660,8 +660,8 @@ export function Adder({
                     not, and nothing anywhere says who added it. */}
                 <p className="durnote" style={{ marginTop: 10 }}>
                   {selectedStudio
-                    ? `This class joins ${selectedStudio.name}'s list, so the next person to add it gets the details. Your plans stay yours.`
-                    : "Pick a studio and the class joins that studio's list, so the next person to add it gets the details. Your plans stay yours."}
+                    ? `This class joins ${selectedStudio.name}'s list, and its name and time appear on that page's schedule while nobody runs it. Never who added it. Your plans stay yours.`
+                    : "Pick a studio and the class joins that studio's list, and its name and time appear on that page's schedule while nobody runs it. Never who added it. Your plans stay yours."}
                 </p>
               </>
             )}

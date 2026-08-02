@@ -6,9 +6,14 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { clockParts, fmtDayHeader, runsOn, timeToMinutes } from "@/lib/format";
 import { weekAsText } from "@/lib/weektext";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { AgendaAvatar } from "@/components/Agenda";
 import { ClassSheet } from "@/components/ClassSheet";
+import { PlanSheet } from "@/components/PlanSheet";
 import { mergeIntoGym } from "@/app/actions/gym";
+import type { PersonalMatch } from "@/app/actions/personal";
+import { setGoing } from "@/app/actions/going";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
@@ -37,7 +42,7 @@ export function ScheduleScreen({
   inboxUnread,
   notifUnread,
   adminNew = null,
-  weekCount,
+  plans,
   profileViews,
   requestCount,
   autoOpenAdder,
@@ -82,7 +87,10 @@ export function ScheduleScreen({
   inboxUnread: number;
   notifUnread: number;
   adminNew?: number | null;
-  weekCount: number;
+  /** The classes they're going to and their own entries, from the same loader
+   *  the member calendar uses: You is one calendar of everything now, and the
+   *  rows wear Coaching, Going, Shift or Yours to say which hat. */
+  plans: WeekDay[];
   profileViews: number;
   requestCount: number;
   autoOpenAdder: boolean;
@@ -128,6 +136,42 @@ export function ScheduleScreen({
   // images behind one Share.
   const [profMenu, setProfMenu] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
+  // The plus asks which hat: a class you're coaching goes to your page, a
+  // class you're going to stays yours. Pre-answered here, so the form itself
+  // doesn't have to ask again.
+  const [addMenu, setAddMenu] = useState(false);
+  const [personalOpen, setPersonalOpen] = useState(false);
+  // One of your own entries, opened; then the same form on that row.
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
+  // A going mark's class, opened as the sheet it opens as everywhere.
+  const [going, setGoingOpen] = useState<{ base: string; classId: string; iso: string } | null>(null);
+  // "That class is on fittlist": the real one, offered over a typed copy.
+  const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
+  const [pBusy, setPBusy] = useState(false);
+  // Which hats are hidden. Kept per device: a filter is a way of looking, not
+  // a fact about the account.
+  const [hidden, setHidden] = useState<Record<string, boolean>>({});
+  const [filterOpen, setFilterOpen] = useState(false);
+  useEffect(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("fl-cal-hide") ?? "{}");
+      if (v && typeof v === "object") setHidden(v);
+    } catch {
+      // an unreadable filter is just no filter
+    }
+  }, []);
+  const toggleHidden = (tag: string) => {
+    setHidden((h) => {
+      const next = { ...h, [tag]: !h[tag] };
+      try {
+        localStorage.setItem("fl-cal-hide", JSON.stringify(next));
+      } catch {
+        // per-device nicety only
+      }
+      return next;
+    });
+  };
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
@@ -283,9 +327,20 @@ export function ScheduleScreen({
     });
   };
 
+  // "6:15" + "pm" back to minutes, so a class you teach and a class you're
+  // going to can sort into one day by when they actually are.
+  const planMinutes = (p: WeekItem) => {
+    const [h, m] = p.hm.split(":").map(Number);
+    return ((h % 12) + (p.ap === "pm" ? 12 : 0)) * 60 + (m || 0);
+  };
+  // Which hat a row wears, which is also what the filter narrows by.
+  const tagOf = (c: ClassDto) => (c.shift ? "shift" : "coaching");
+  const planTag = (p: WeekItem) => (p.personal ? "yours" : "going");
+
   const days = useMemo(() => {
+    const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
     const start = new Date(`${todayIso}T00:00:00Z`);
-    const out: { iso: string; label: string; items: ClassDto[] }[] = [];
+    const out: { iso: string; label: string; items: ClassDto[]; extras: WeekItem[] }[] = [];
     for (let i = 0; i < MAX_WEEKS * 7 && out.length < weeks * 7; i++) {
       const d = new Date(start);
       d.setUTCDate(start.getUTCDate() + i);
@@ -293,13 +348,27 @@ export function ScheduleScreen({
       const dow = (d.getUTCDay() + 6) % 7; // 0 = Monday
       const items = classes
         .filter((c) => runsOn(c, iso, dow))
+        .filter((c) => !hidden[tagOf(c)])
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-      if (items.length) {
-        out.push({ iso, label: fmtDayHeader(iso), items }); // "Monday — Jul 20"
+      // The other half of your calendar: the classes you added and your own
+      // entries, from the same loader the member calendar reads.
+      const extras = (plansByIso.get(iso) ?? []).filter((p) => !hidden[planTag(p)]);
+      if (items.length || extras.length) {
+        out.push({ iso, label: fmtDayHeader(iso), items, extras }); // "Monday — Jul 20"
       }
     }
     return out;
-  }, [classes, todayIso, weeks]);
+  }, [classes, plans, todayIso, weeks, hidden]);
+
+  // A filter is only offered where it can narrow something: the switches are
+  // the hats this calendar actually holds.
+  const presentTags = useMemo(() => {
+    const seen = new Set<string>();
+    for (const c of classes) seen.add(tagOf(c));
+    for (const d of plans) for (const p of d.items) seen.add(planTag(p));
+    return seen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes, plans]);
 
   // The next seven days as pasteable text. Public classes only: a private
   // client session is not for the group chat.
@@ -342,7 +411,7 @@ export function ScheduleScreen({
         <AppHeader
           unread={updatesUnread}
           adminNew={adminNew}
-          plans={showFanView ? weekCount : undefined}
+          search={showFanView}
           settings="/app?acct=1"
           home={showFanView ? "/feed" : "/app"}
           // Only where the bottom bar is: without the member side there are no
@@ -388,7 +457,7 @@ export function ScheduleScreen({
             <Icon name="edit" size={16} /> Edit profile
           </Link>
         </div>
-        {!hasAnyClass ? (
+        {!hasAnyClass && plans.length === 0 ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>
             <p>
@@ -408,7 +477,62 @@ export function ScheduleScreen({
                 <div key={d.iso} id={`day-${d.iso}`} className="ps-daygroup">
                   <div className="ps-daycol">{d.label}</div>
                   <div className="ps-daycards">
-                    {d.items.map((c) => {
+                    {/* One day, both hats, in time order: the classes you
+                        teach and the ones you're going to are one calendar. */}
+                    {[
+                      ...d.items.map((c) => ({ at: timeToMinutes(c.startTime), c, p: null as WeekItem | null })),
+                      ...d.extras.map((p) => ({ at: planMinutes(p), c: null as ClassDto | null, p })),
+                    ]
+                      .sort((a, b) => a.at - b.at)
+                      .map((row) => {
+                      if (row.p) {
+                        const p = row.p;
+                        return (
+                          <button
+                            key={`plan-${d.iso}-${p.id}`}
+                            className="ps-event"
+                            data-plan={p.personal ? "yours" : "going"}
+                            onClick={() =>
+                              p.personal
+                                ? setPlan(p.id)
+                                : setGoingOpen({ base: p.handle, classId: p.classId, iso: p.iso })
+                            }
+                          >
+                            <span className="ps-ebody">
+                              {!p.personal && p.coachName.trim() && (
+                                <span className="ps-ecoach">
+                                  <AgendaAvatar
+                                    photo={p.coachPhoto}
+                                    name={p.coachName}
+                                    color={p.coachColor}
+                                  />
+                                  <span className="ps-ecoach-txt">{p.coachName}</span>
+                                </span>
+                              )}
+                              <span className="ps-enm">
+                                {p.name}
+                                <span className={`ps-role${p.personal ? "" : " ps-role-going"}`}>
+                                  {p.personal ? "Yours" : "Going"}
+                                </span>
+                              </span>
+                              {p.where && (
+                                <span className="ps-estudio">
+                                  <Icon name="place" size={13} className="ps-estudio-ic" />
+                                  {p.where}
+                                </span>
+                              )}
+                            </span>
+                            <span className="ps-etimecol">
+                              <span className="ps-etime">
+                                {p.hm}
+                                <span className="ps-ap">{p.ap}</span>
+                              </span>
+                              <span className="ps-edur">{p.durationMin} min</span>
+                            </span>
+                          </button>
+                        );
+                      }
+                      const c = row.c!;
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       const where = studio ? studio.name : c.location;
                       const start = clockParts(c.startTime);
@@ -434,6 +558,10 @@ export function ScheduleScreen({
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}
+                              {/* Which hat. A shift already says it; the rest
+                                  of your own rows say Coaching, because the
+                                  calendar holds Going rows now too. */}
+                              {!c.shift && <span className="ps-role">Coaching</span>}
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.shift && <span className="ps-shift">Shift</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
@@ -524,11 +652,275 @@ export function ScheduleScreen({
         />
       )}
 
-      {hasAnyClass && !adder.open && (
-        <button className="fab" onClick={() => setAdder({ open: true })}>
-          <Icon name="add" size={20} />
-          Add class
+      {/* One big plus. It stopped saying "Add class" the day the calendar
+          stopped being only classes you teach: the sheet behind it asks which
+          hat, and pre-answers the form's own question. */}
+      {(hasAnyClass || plans.length > 0) && !adder.open && !personalOpen && (
+        <button
+          className="fab fab-plus"
+          aria-label="Add"
+          // Without the member side there is only one hat, and one answer is
+          // not a question: straight into the form.
+          onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+        >
+          <Icon name="add" size={28} />
         </button>
+      )}
+      {/* The filter, across from the plus: which hats you're looking at.
+          Only when the calendar holds more than one kind. */}
+      {presentTags.size > 1 && (
+        <button
+          className="calfilter"
+          aria-label="Filter your calendar"
+          onClick={() => setFilterOpen(true)}
+        >
+          <Icon name="tune" size={20} />
+          {Object.entries(hidden).filter(([t, v]) => v && presentTags.has(t)).length > 0 && (
+            <span className="calfilter-n">
+              {Object.entries(hidden).filter(([t, v]) => v && presentTags.has(t)).length}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* Which hat this one goes on. The form used to ask mid-flight; the
+          plus asks first, and the form gets a straight answer. */}
+      {addMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAddMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddMenu(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Add to your calendar</h2>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setAdder({ open: true });
+                }}
+              >
+                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">A class you&rsquo;re coaching</span>
+                  <span className="s">Goes on your schedule and your public page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setPersonalOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="bookmark" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">A class you&rsquo;re going to</span>
+                  <span className="s">Yours alone; nothing public</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Which hats you're looking at. Nothing is filtered by default, and a
+          switch only exists for a hat this calendar actually holds. */}
+      {filterOpen && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFilterOpen(false);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setFilterOpen(false)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>What you&rsquo;re seeing</h2>
+            <div className="settingslist disfilterlist">
+              {[
+                { tag: "coaching", t: "Coaching", s: "The classes you teach" },
+                { tag: "shift", t: "Shifts", s: "Dates a gym has you on" },
+                { tag: "going", t: "Going", s: "Classes you added from a coach" },
+                { tag: "yours", t: "Your own", s: "Entries only you can see" },
+              ]
+                .filter((f) => presentTags.has(f.tag))
+                .map((f) => (
+                  <button
+                    key={f.tag}
+                    className="setrow"
+                    role="switch"
+                    aria-checked={!hidden[f.tag]}
+                    onClick={() => toggleHidden(f.tag)}
+                  >
+                    <span className="setrow-txt">
+                      <span className="t">{f.t}</span>
+                      <span className="s">{f.s}</span>
+                    </span>
+                    <span className={`switch${hidden[f.tag] ? "" : " on"}`} aria-hidden="true">
+                      <span className="switch-knob" />
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* A going mark's class, opened as the sheet it opens as everywhere. */}
+      {going && (
+        <ClassSheet
+          handle={going.base}
+          classId={going.classId}
+          iso={going.iso}
+          onClose={() => setGoingOpen(null)}
+          onChanged={() => router.refresh()}
+        />
+      )}
+
+      {/* One of your own entries, and the same form again on that row. */}
+      {plan && (
+        <PlanSheet
+          id={plan}
+          onClose={() => setPlan(null)}
+          onToast={toast}
+          onEdit={(p) => {
+            setPlan(null);
+            setPlanEdit({
+              id: p.id,
+              prefill: {
+                name: p.name,
+                classType: p.classType,
+                description: p.description,
+                image: p.image,
+                startTime: p.startTime,
+                durationMin: p.durationMin,
+                studioId: p.studioId,
+                location: p.location,
+                withWho: p.withWho,
+                links: p.links,
+                days: [p.dayOfWeek],
+                dayOfWeek: p.dayOfWeek,
+                endsOn: p.endsOn,
+                specificDate: p.specificDate,
+              },
+            });
+          }}
+        />
+      )}
+      {personalOpen && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          // The plus already asked which hat, so the form doesn't ask again.
+          personal={{ canCoach: false }}
+          onClose={() => setPersonalOpen(false)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setPersonalOpen(false);
+            toast(msg);
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
+            setPersonalOpen(false);
+            toast(msg);
+            router.refresh();
+          }}
+          onMatch={(m, again) => {
+            setPersonalOpen(false);
+            setMatch({ m, again });
+          }}
+        />
+      )}
+      {planEdit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach: false, editId: planEdit.id }}
+          prefill={planEdit.prefill}
+          onClose={() => setPlanEdit(null)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setPlanEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
+            setPlanEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+        />
+      )}
+      {/* A public class already sits at that day and time: offer the real
+          one, and keep the way back to "mine anyway". */}
+      {match && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMatch(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>That class is on fittlist</h2>
+            <p className="lead">
+              {match.m.name} with {match.m.coachName} runs then. Add the real one and it stays up
+              to date when the coach changes it.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={pBusy}
+                onClick={() => {
+                  if (!match || pBusy) return;
+                  const { m } = match;
+                  setPBusy(true);
+                  startMerge(async () => {
+                    const res = await setGoing(m.classId, m.iso, true);
+                    setPBusy(false);
+                    if (!res.ok) {
+                      toast(res.error ?? "Couldn't add that");
+                      return;
+                    }
+                    setMatch(null);
+                    toast(`Added ${m.name} with ${m.coachName.trim().split(/\s+/)[0]}`);
+                    router.refresh();
+                  });
+                }}
+              >
+                Add {match.m.name}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={pBusy}
+                onClick={() => {
+                  const { again } = match;
+                  setMatch(null);
+                  again();
+                }}
+              >
+                Add mine anyway
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showFanView && (

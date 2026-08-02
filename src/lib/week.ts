@@ -66,28 +66,6 @@ export function personalNext(p: {
   return p.endsOn && iso > p.endsOn ? null : iso;
 }
 
-/** How many added classes are still ahead of them, personal entries included. */
-export async function weekCount(userId: string): Promise<number> {
-  const db = await getDb();
-  const [rows, own] = await Promise.all([
-    db
-      .select({ id: schema.attendances.id })
-      .from(schema.attendances)
-      .where(
-        and(
-          eq(schema.attendances.userId, userId),
-          gte(schema.attendances.occurrenceDate, todayIso()),
-        ),
-      ),
-    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
-  ]);
-  // A weekly entry counts once, for its next occurrence; a one-off counts
-  // until its date has been and gone. Either way it drops out of the number
-  // once it has run, same as everything else.
-  const ownAhead = own.filter((p) => personalNext(p) !== null).length;
-  return rows.length + ownAhead;
-}
-
 /** Do these two people follow each other? Both directions, neither opted out.
  *  Account follows always carry the follower's email, so the pair of email
  *  matches is the whole check. */
@@ -368,33 +346,49 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     byDay.set(m.occurrenceDate, list);
   }
 
-  // Personal entries land on their next occurrence that hasn't already run,
-  // so a weekly one reappears each week and the list still empties itself. A
+  // Personal entries land on every occurrence still ahead, out to the same
+  // horizon the calendars draw: this list is a calendar now, and a weekly
+  // entry that only showed its next date read as a class that stopped. A
   // one-off whose date has passed, or a weekly one past its end, is gone.
+  const HORIZON_WEEKS = 9;
   for (const p of own) {
-    const iso = personalNext(p);
-    if (!iso) continue;
+    const first = personalNext(p);
+    if (!first) continue;
+    const dates: string[] = [];
+    if (p.specificDate) dates.push(first);
+    else {
+      let iso = first;
+      for (let k = 0; k < HORIZON_WEEKS; k++) {
+        if (p.endsOn && iso > p.endsOn) break;
+        dates.push(iso);
+        const d = new Date(`${iso}T00:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + 7);
+        iso = d.toISOString().slice(0, 10);
+      }
+    }
     const t = clockParts(p.startTime);
-    const list = byDay.get(iso) ?? [];
-    list.push({
-      id: p.id,
-      classId: "",
-      iso,
-      dayLabel: fmtDayHeader(iso),
-      name: p.name,
-      hm: t.hm,
-      ap: t.ap,
-      durationMin: p.durationMin,
-      where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
-      handle: "",
-      coachName: p.withWho,
-      coachPhoto: null,
-      // Deep enough for white words: the card draws the class in this colour
-      // when there is no photo, and sand under white text was unreadable.
-      coachColor: "#77705a",
-      personal: true,
-    });
-    byDay.set(iso, list);
+    for (const iso of dates) {
+      const list = byDay.get(iso) ?? [];
+      list.push({
+        id: p.id,
+        classId: "",
+        iso,
+        dayLabel: fmtDayHeader(iso),
+        name: p.name,
+        hm: t.hm,
+        ap: t.ap,
+        durationMin: p.durationMin,
+        where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
+        handle: "",
+        coachName: p.withWho,
+        coachPhoto: null,
+        // Deep enough for white words: the card draws the class in this colour
+        // when there is no photo, and sand under white text was unreadable.
+        coachColor: "#77705a",
+        personal: true,
+      });
+      byDay.set(iso, list);
+    }
   }
 
   return [...byDay.entries()]

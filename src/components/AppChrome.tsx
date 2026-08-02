@@ -5,7 +5,6 @@ import { adminEmails } from "@/lib/admin";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
-import { weekCount } from "@/lib/week";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -54,16 +53,13 @@ export async function AppChrome({
   const isCoach = me.kind !== "fan" && !!me.handle;
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
   const fans = await fansVisible();
-  const [unread, week, adminNew] = await Promise.all([
+  const [unread, adminNew] = await Promise.all([
     unreadNotifications(userId),
-    // The header's ribbon wears it, so every screen with a header pays for it.
-    fans ? weekCount(userId) : Promise.resolve(0),
     isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
-  // A coach's You is their coaching calendar: the working screen, with the
-  // tools across the top and their public page one pill away. It pointed at
-  // the public profile for a while, and the calendar ended up behind a gear.
-  const youHref = isCoach ? "/app" : "/you";
+  // Everyone's You is their calendar: a coach's at /app, a member's at /week.
+  // A member's account rows stay at /you, behind the header's gear.
+  const youHref = isCoach ? "/app" : "/week";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -79,8 +75,8 @@ export async function AppChrome({
       // editable schedule: a page with no identity that read as showing up at
       // random.
       home={fans ? "/feed" : "/app"}
-      plans={fans ? week : undefined}
-      settings={isCoach ? "/app?acct=1" : undefined}
+      search={fans}
+      settings={isCoach ? "/app?acct=1" : "/you"}
       nav={(headerNav ?? bar) ? { coach: isCoach, youHref, active } : undefined}
     />
   );

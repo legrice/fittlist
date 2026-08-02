@@ -95,7 +95,17 @@ console.log("studio at " + studioHref);
 
 // the rota, from the studio page
 await matt.goto(BASE + studioHref);
-await matt.getByRole("link", { name: "The schedule" }).click();
+// The manager's tools live behind the floating Studio admin pill now, and
+// with the account on it holds the rota, the counts, and the page views.
+await matt.locator(".studioadmin").click();
+{
+  const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+  for (const want of ["The rota", "Shifts worked", "Edit studio info"])
+    if (!rows.includes(want)) fail("the admin sheet is missing " + want + ": " + rows.join("|"));
+}
+await matt.locator(".sheet .stat .n").waitFor();
+// Anchored: the counts row's sub-line says "the rota" too.
+await matt.locator(".sheet .setrow", { hasText: /^The rota/ }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
 
