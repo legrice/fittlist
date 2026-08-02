@@ -22,9 +22,11 @@ export type AgendaItem = {
   ap: string;
   durationMin: number;
   where?: string | null;
-  /** The class photo, filling the card; without one the card wears the type's
-   *  colour, so Yoga is the same colour on every card it appears on. */
-  image?: string | null;
+  /** Colours the card: Yoga is the same colour on every card it appears on.
+   *  Deliberately no photo here, even when the class has one. A list wearing a
+   *  photograph per row read as a poster wall, and the same class twice in a
+   *  row was the same photograph twice; the overlay and the share card keep
+   *  theirs, where one class has the whole screen. */
   classType?: string | null;
   coachName?: string | null;
   coachPhoto?: string | null;
@@ -126,19 +128,14 @@ export function ClassRow({
   const inner = (
     <>
       <span className="ps-accent" style={{ background: item.coachColor }} aria-hidden="true" />
-      {/* The photo fills the card; without one the type's colour does. The
-          fade at the bottom is that same colour pulled toward black, so the
-          words always sit on something dark enough to read against. */}
+      {/* The type's colour, worn quietly; the fade under the words is the
+          same colour pulled toward black, so they always sit on something
+          dark enough to read against. */}
       <span
         className="evcard-media"
-        style={item.image ? undefined : { background: quietBackground(accent, item.name) }}
+        style={{ background: quietBackground(accent, item.name) }}
         aria-hidden="true"
-      >
-        {item.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="evcard-img" src={item.image} alt="" />
-        )}
-      </span>
+      />
       <span
         className="evcard-scrim"
         style={{

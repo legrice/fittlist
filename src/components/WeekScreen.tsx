@@ -185,7 +185,6 @@ export function WeekScreen({
                     ap: i.ap,
                     durationMin: i.durationMin,
                     where: i.where,
-                    image: i.image,
                     classType: i.classType,
                     coachName: i.coachName,
                     coachPhoto: i.coachPhoto,

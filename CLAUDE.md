@@ -992,22 +992,25 @@ would mean knowing what colour it sits on. The tick is a hole in one
 `fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
 the dark pill, the card and the tab bar alike.
 
-**A member's lists draw the class as a poster, and only a member's lists.**
+**A member's lists draw the class as a colour block, and never a photograph.**
 `.evcards` on the two `Agenda` callers (Plans and Following) turns the shared
-`.ps-event` row into a 4:3 card: the class photo fills it, and without one the
-class wears `classColor()` (`src/lib/avatar.ts`), keyed on the class type so
-Yoga is the same colour on every card and the palette means something, falling
-back to the coach's colour. The fade at the bottom is that same colour pulled
-toward black (`shade()` in `Agenda.tsx`, inline because CSS can't mix a colour
-it doesn't know), which is what makes each card read as cut from its own poster
-rather than stamped from a template. The actions sit on the card but are
-siblings of it, never children (a button inside a link is not a thing): the
-remove X top right on Plans, the Add calendar bottom right on Following. The
-coach's own schedule, the public page, the studio page and the rota keep the
-compact rows on purpose: those are working surfaces where density is the
-point, and the card CSS is scoped so it cannot reach them. The Added tag's DOM
-home stays `.ps-etimecol` even though it reads inline with the clock; the
-suites assert that parent.
+`.ps-event` row into a compact card, as tall as what it says: `classColor()`
+(`src/lib/avatar.ts`) keys the colour on the class type, so Yoga is the same
+colour on every card and the palette means something, falling back to the
+coach's colour; `quietBackground()` in `Agenda.tsx` wears it as a near-ink
+base with soft glows (inline, because CSS can't mix a colour it doesn't
+know). The class photo is deliberately not drawn here, even when there is
+one. The cards carried photos for a day, and a list wearing a photograph per
+row read as a poster wall rather than a week, with the same class twice in a
+row showing the same photograph twice; the overlay and the share card keep
+theirs, where one class has the whole screen. The actions sit on the card but
+are siblings of it, never children (a button inside a link is not a thing):
+the remove X top right on Plans, the Add ribbon bottom right on Following,
+and the Yours chip in the ribbon's corner, which is why the card carries a
+min-height on the shortest rows. The coach's own schedule, the public page,
+the studio page and the rota keep the flat rows on purpose: those are working
+surfaces where density is the point, and the card CSS is scoped so it cannot
+reach them.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both

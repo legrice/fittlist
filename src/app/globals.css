@@ -4101,13 +4101,20 @@ button.ps-card { cursor: pointer; }
      and in a column flex card that centred every line of text. */
   position: relative; display: flex; flex-direction: column; justify-content: flex-end;
   align-items: stretch;
-  aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden;
+  /* No forced height: the card is as tall as what it says. It carried a 16:9
+     photograph for a while, and a list of those read as a poster wall rather
+     than a week; the photo lives on the overlay now, and the block went back
+     to calendar proportions. */
+  border-radius: 18px; overflow: hidden;
+  /* Enough height that the corner controls clear the words even on the
+     shortest card (a personal one with no coach chip and no studio line):
+     the X up top and the Yours chip below it were touching. */
+  min-height: 118px;
   padding: 14px 16px; color: #fff; background: #191502; border-bottom: none;
   box-shadow: 0 8px 26px rgba(23, 26, 31, .14), 0 1px 3px rgba(23, 26, 31, .06);
 }
 .evcards .ps-event:active { background: #191502; }
 .evcard-media { position: absolute; inset: 0; display: block; }
-.evcard-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .evcard-scrim { position: absolute; inset: 0; }
 /* The words sit on the fade. Everything readable is white now, so the row's
    grey palette is overridden wholesale here rather than piecemeal there. */
