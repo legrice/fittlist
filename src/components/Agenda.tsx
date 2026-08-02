@@ -78,6 +78,39 @@ function shade(hex: string, keep: number, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/** The same colour pulled toward white instead, for the glow's bright edge. */
+function tint(hex: string, amt: number, alpha: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * amt);
+  const g = Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * amt);
+  const b = Math.round((n & 255) + (255 - (n & 255)) * amt);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * The background a class wears when it has no photo.
+ *
+ * A flat slab of the type's colour made the list a wall of paint chips, each
+ * card shouting over the one before it. This is the same colour worn quietly:
+ * a near-ink base so every card sits at the same darkness, with two soft
+ * glows in the class's own hue. The seed moves the glows around, so two
+ * photo-less cards in a row don't read as the same template twice; the hue
+ * still does the identifying, which is the whole point of the type colour.
+ */
+function quietBackground(accent: string, seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+  h = Math.abs(h);
+  const x1 = 62 + (h % 30); // top glow drifts across the right half
+  const y2 = 78 + ((h >> 5) % 30); // bottom glow sits low, left
+  const x2 = 2 + ((h >> 10) % 22);
+  return [
+    `radial-gradient(120% 110% at ${x1}% -12%, ${tint(accent, 0.18, 0.55)} 0%, rgba(0, 0, 0, 0) 58%)`,
+    `radial-gradient(95% 95% at ${x2}% ${y2}%, ${shade(accent, 0.85, 0.5)} 0%, rgba(0, 0, 0, 0) 62%)`,
+    shade(accent, 0.22, 1),
+  ].join(", ");
+}
+
 /** The row itself: a link when something is behind it, a button otherwise. */
 export function ClassRow({
   item,
@@ -98,7 +131,7 @@ export function ClassRow({
           words always sit on something dark enough to read against. */}
       <span
         className="evcard-media"
-        style={item.image ? undefined : { background: accent }}
+        style={item.image ? undefined : { background: quietBackground(accent, item.name) }}
         aria-hidden="true"
       >
         {item.image && (
