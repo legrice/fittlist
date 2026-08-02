@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -26,12 +26,18 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Put a picture on any class, from the class sheet. A beta-era power, held by
 // the admin alone: most classes were typed in before pictures existed, and a
-// coach who never opens the editor is not going to add one. The picture lands
-// on the whole series (all its weekday rows share the seriesId, and an edit
-// rewrites rows, so a single row would lose it), and on the class's studio
-// catalog entry when it has one, so the next person to pull the class in gets
-// it too. It changes a picture and nothing else: no words, no times, nothing
-// a coach would need to be asked about first.
+// coach who never opens the editor is not going to add one. It changes a
+// picture and nothing else: no words, no times, nothing a coach would need to
+// be asked about first.
+//
+// The picture lands on every class with this title under the same owner, not
+// just this series: a coach teaching Stretch+ at two studios has two series
+// that are the same class, and a photo on one of them left its twin bare. It
+// also lands on the owner's template (the autofill memory, so re-adding the
+// class brings it back) and on each touched studio's catalog row, so the next
+// person to pull the class in gets it too. It stops at the owner: two coaches
+// can both teach a "Yoga Flow" that are different classes, and one must not
+// inherit the other's photograph.
 export async function adminSetClassImage(
   classId: string,
   image: string | null,
@@ -42,17 +48,36 @@ export async function adminSetClassImage(
   const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!c) return { ok: false, error: "That class isn't there any more." };
   const img = image?.trim() || null;
-  await db
+  const sameTitle = and(
+    eq(schema.classes.userId, c.userId),
+    sql`lower(${schema.classes.name}) = ${c.name.toLowerCase()}`,
+  );
+  const touched = await db
     .update(schema.classes)
     .set({ image: img })
-    .where(eq(schema.classes.seriesId, c.seriesId));
-  if (img && c.studioId) {
+    .where(sameTitle)
+    .returning({ studioId: schema.classes.studioId });
+  await db
+    .update(schema.classTemplates)
+    .set({ image: img })
+    .where(
+      and(
+        eq(schema.classTemplates.userId, c.userId),
+        sql`lower(${schema.classTemplates.name}) = ${c.name.toLowerCase()}`,
+      ),
+    );
+  // Removal clears the catalog too: leaving the old picture there means it
+  // comes straight back on the next pull, which makes Remove a lie.
+  const studioIds = [...new Set(touched.map((t) => t.studioId))].filter(
+    (id): id is string => !!id,
+  );
+  if (studioIds.length) {
     await db
       .update(schema.studioClasses)
       .set({ image: img, updatedAt: new Date() })
       .where(
         and(
-          eq(schema.studioClasses.studioId, c.studioId),
+          inArray(schema.studioClasses.studioId, studioIds),
           eq(schema.studioClasses.nameKey, c.name.toLowerCase()),
         ),
       );

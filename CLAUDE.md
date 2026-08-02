@@ -701,11 +701,15 @@ says it went to their schedule, because it will not appear on the screen they
 added it from. A member is never asked: one answer is not a question.
 
 **The admin can put a picture on any class, and only a picture.**
-`adminSetClassImage` (behind `currentAdmin()`) writes `classes.image` for the
-whole series, because an edit deletes and reinserts rows and a picture on one
-row would be lost to the next save; it also lands on the class's
-`studio_classes` row when there is one, so the next person to pull the class
-in gets it. The door is the class sheet's overflow menu, admin only
+`adminSetClassImage` (behind `currentAdmin()`) writes `classes.image` for
+every class with that title under the same owner, not just the tapped series:
+a coach teaching the same class at two studios has two series that are one
+class, and a photo on one left its twin bare. It also lands on the owner's
+`class_templates` row (so re-adding the class brings the picture back) and on
+each touched studio's `studio_classes` row, so the next person to pull the
+class in gets it. It stops at the owner, because two coaches can both teach a
+"Yoga Flow" that are different classes. Remove clears all of the same rows,
+or the old picture comes straight back on the next catalog pull. The door is the class sheet's overflow menu, admin only
 (`classDetail().adminPhoto`), offering add, change and remove. It is a
 beta-era power for filling in a catalog typed before pictures existed, and it
 deliberately cannot reach a word of anybody's class: times, names and
