@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { initialOf } from "@/lib/avatar";
-import { FollowHint, followHintOff } from "@/components/FollowHint";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 
@@ -12,10 +9,16 @@ import { LinkPending } from "@/components/LinkPending";
 //
 // They were DiscoverList's, and search needed the same two. A second copy
 // always drifts, and the drift is invisible until somebody screenshots both:
-// the availability dot, the Coach badge, the classes-this-week line and the
-// corner Follow are the whole vocabulary of "here is someone", and they have
-// to mean the same thing on both screens. `from` is the only thing that
-// differs, and it is what lets the profile's back arrow name the list.
+// the availability dot, the Coach badge and the classes-this-week line are
+// the whole vocabulary of "here is someone", and they have to mean the same
+// thing on both screens. `from` is the only thing that differs, and it is
+// what lets the profile's back arrow name the list.
+//
+// Neither row carries a control any more. The corner Follow pill came off: a
+// row of pills fighting a row of names was most of the screen shouting, and
+// following is a choice about a person, which is what their page is for. A
+// row you already follow says so quietly on the sub-line ("· Following"),
+// the way a tagline carries a fact rather than a button.
 
 export type DirPerson = {
   id: string;
@@ -52,72 +55,7 @@ export type DirStudio = {
   color: string;
 };
 
-// The row's corner control: a small Follow that flips green when it's a yes,
-// so following someone doesn't require the round trip through their page.
-// Same tri-state as the profile pill (a gated coach's tap reads Requested,
-// tapping again withdraws it), scoped to its own row.
-export function FollowMini({
-  handle,
-  name,
-  isCoach,
-  following,
-  requested,
-}: {
-  handle: string;
-  name: string;
-  /** The hint promises a week on Following, which only a coach has. Following
-   *  a member buys something quieter and mutual, and what it means is still
-   *  being worked out, so the bar stays quiet until it can say something true. */
-  isCoach: boolean;
-  following: boolean;
-  requested: boolean;
-}) {
-  const [state, setState] = useState<"off" | "asked" | "on">(
-    following ? "on" : requested ? "asked" : "off",
-  );
-  // True only for a yes born of a tap, so the spring plays once at the moment
-  // it means something and a page of already-green pills loads still.
-  const [pop, setPop] = useState(false);
-  const [hint, setHint] = useState(false);
-  const [pending, start] = useTransition();
-  const tap = () =>
-    start(async () => {
-      if (state === "off") {
-        const res = await followTrainer(handle);
-        if (res.ok) {
-          setState(res.requested ? "asked" : "on");
-          setPop(!res.requested);
-          if (isCoach && !res.requested && !followHintOff()) setHint(true);
-        }
-      } else {
-        const res = await unfollowTrainer(handle);
-        if (res.ok) {
-          setState("off");
-          setPop(false);
-        }
-      }
-    });
-  return (
-    <>
-      <FollowHint
-        name={name.trim().split(/\s+/)[0] || name}
-        on={hint}
-        onClose={() => setHint(false)}
-      />
-      <button
-        className={`disfol${state === "on" ? " on" : ""}${pop ? " pop" : ""}`}
-        disabled={pending}
-        aria-pressed={state === "on"}
-        onClick={tap}
-      >
-        {state === "on" && <Icon name="check" size={13} />}
-        {state === "on" ? "Following" : state === "asked" ? "Requested" : "Follow"}
-      </button>
-    </>
-  );
-}
-
-/** A person: the whole row links to their page, with Follow in the corner. */
+/** A person: the whole row links to their page, chevron in the corner. */
 export function PersonRow({ person: c, from }: { person: DirPerson; from: string }) {
   return (
     <div className="disrow">
@@ -140,16 +78,16 @@ export function PersonRow({ person: c, from }: { person: DirPerson; from: string
           )}
         </span>
         <span className="disrow-txt">
-          {/* The tag rides right beside the name; the Follow pill is the row's
-              corner control, pinned top-right. */}
           <span className="disrow-nmline">
             <span className="nm">{c.name}</span>
             {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
           </span>
-          {/* The tagline only. The city came off the line: the filter above
-              already speaks location, and the repeated city name crowded out
-              the taglines it sat beside. */}
-          <span className="sub">{c.title || `fittlist.co/${c.handle}`}</span>
+          {/* The tagline, then the relationship, quietly: a fact on the line,
+              not a control in the corner. */}
+          <span className="sub">
+            {c.title || `fittlist.co/${c.handle}`}
+            {c.following ? " · Following" : c.requested ? " · Requested" : ""}
+          </span>
           {c.kind === "coach" && (
             <span className="wk">
               {c.classesThisWeek
@@ -158,15 +96,11 @@ export function PersonRow({ person: c, from }: { person: DirPerson; from: string
             </span>
           )}
         </span>
+        <span className="disrow-chev">
+          <Icon name="chevron_right" size={18} />
+        </span>
         <LinkPending />
       </Link>
-      <FollowMini
-        handle={c.handle}
-        name={c.name}
-        isCoach={c.kind === "coach"}
-        following={c.following}
-        requested={c.requested}
-      />
     </div>
   );
 }

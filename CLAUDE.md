@@ -288,9 +288,12 @@ screen. A heading only exists when its section has something in it, so a
 search that finds only places says "Studios" once and nothing about people.
 Both rows are the directory's own (`PersonRow`, `StudioRow` in
 `DirectoryRows.tsx`, shared with `DiscoverList`): the Coach badge, the
-availability dot, the classes-this-week line and the corner Follow have to
+availability dot, the classes-this-week line and the corner chevron have to
 mean the same thing on both screens, and a second copy would drift where
-nobody was looking.
+nobody was looking. Neither row carries a Follow control: the pill came off
+(a column of pills fighting a column of names was most of the screen
+shouting), following is the profile's decision, and a row you already follow
+says "· Following" quietly at the end of its sub-line instead.
 
 `searchAll` runs on the server rather than filtering a list the page already
 shipped. Discover no longer filters by text at all: its box is a door
@@ -331,17 +334,18 @@ and none at 1280px is a dead end. The single opt-out is a profile
 (`headerNav={false}`), whose header floats over a photograph in white, where a
 row of ink links is a row nobody can read.
 
-**Discover has two halves, and only one of them is people.** A People/Studios
-segment above one row of controls: the search box, and the city filter across
-from it. The box says which half it's searching. Studios are not followable and
+**Discover has two halves: the coaches and the places.** Members are
+deliberately not listed, for now: following a member buys nothing visible
+yet, so a directory row for one offered a door with no room behind it. They
+come back the day a member-follow means something someone can see. Universal
+search still finds a member by name, because asking for a person is a
+different act from browsing a directory. Studios are not followable and
 never will be by this control, because you follow a person and a gym is a
 place; the row is the whole link to `/s/{slug}` and carries no pill. They also
 carry no city filter: a studio has a free-text `address` and nothing normalised
 to group by, so searching the address is how you find a town. Studios list in
 name order, not schedule-first: a directory of places shouldn't rank them by
 whether they signed up, and the Schedule tag says which have a week to see.
-`.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
-row has to take it back or long gym names truncate into empty space.
 
 **Nobody is listed against their wishes.** The studio dots carry "Take this
 page down" (`StudioFeedback`'s `optout` mode, open to everyone signed in or
@@ -354,15 +358,19 @@ verified can't be honoured. This is the ethos said as a button: never
 addicting also means never held.
 
 **A studio's photo is a rectangle, and that is how you tell it from a
-person.** The banner (`.profbanner`, 16:9 across the head, same lift as the
-circle it replaces) is the treatment the studio page led with before the one
-header unified everybody, and it came back because a place reads as a room
-where a person reads as a face: a circle crops the room to a porthole, and
-two page kinds that looked identical above the name were worth telling
-apart. The corner controls step in from the edge when the banner is there
-(`:has(.profbanner)`), because they sit on the picture. Only a photo earns
-the rectangle; an empty one would be a wall, so the fallback is the circle
-below.
+person.** The banner (`.profbanner`, 16:9, capped at 280px tall) is the
+treatment the studio page led with before the one header unified everybody,
+and it came back because a place reads as a room where a person reads as a
+face: a circle crops the room to a porthole, and two page kinds that looked
+identical above the name were worth telling apart. It runs full bleed now,
+to both edges and up under the header (`.profbanner-wrap` swallows the
+page's top padding with a negative margin), with no radius and no shadow: a
+photograph running edge to edge is its own frame. Verified overlays the
+picture's bottom-left, above the name, on a white pill so it reads over a
+photograph; a photoless claimed studio keeps the badge beside its name. The
+corner controls sit on the picture (`:has(.profbanner)` steps them in from
+the edge). Only a photo earns the rectangle; an empty one would be a wall,
+so the fallback is the circle below.
 
 **A studio with no photo wears a face, not a pin.** `avatarColor({ id })` and
 `initialOf(name)` are the same pair a coach without a photo uses, so a studio
@@ -391,8 +399,7 @@ carries a big bottom margin. The Filters chip (`.chip-filters`) leads the
 rail on both halves, opens the sheet, and wears the count of every live pick
 (`.chip-n`), so the studios' half keeps the door even while types are its
 only filter: more studio filters will come, and the door is already there.
-The chips after it are multiselect, every one: on People the kind pair
-(Coaches, Members, only when the list mixes kinds) and Available for
+The chips after it are multiselect, every one: on Coaches, Available for
 clients, then the lens's type chips; picking two types means either, not
 both, and two picks count as two on the Filters chip. The sheet holds the
 same filters again (the city, which needs a form; the switches; the type
@@ -405,12 +412,12 @@ switch was toggled.
 
 **A filter is only offered where it can narrow something.** Discover's What
 chips are built from what the lens in front of you actually holds: coaches'
-`disciplines` on People, `studios.types` on Studios. Pooling both offered
-People the studios' vocabulary, and every chip there filtered to nobody,
-because coaches haven't started saying what they teach yet. The section shows
-up on its own the day they do, and switching lens drops the pick, since the
-other half can't honour a word it doesn't use. Same rule as the city picker,
-which only appears on People.
+`disciplines` on the Coaches half, `studios.types` on Studios. Pooling both
+offered the coaches the studios' vocabulary, and every chip there filtered
+to nobody, because coaches haven't started saying what they teach yet. The
+section shows up on its own the day they do, and switching lens drops the
+pick, since the other half can't honour a word it doesn't use. Same rule as
+the city picker, which only appears on Coaches.
 
 **A profile carries no tab bar, and the arrow is the way off it.** Three layers
 of chrome stacked at the bottom of a schedule (the bar, the floating Add class,
@@ -485,8 +492,8 @@ before any schedule said editorial when the product says calendar. Then the
 centred head went too: it was the one centred block on a left-reading
 screen. `.pubhead` starts everything at the gutter (face, name, one
 `.profmeta` line of what and where, the two big pills), with top padding
-clearing the corner circles; a studio's banner keeps the slim padding
-because the circles sit on the photo. Then the tabs as underlines: the selected one is ink over an
+clearing the corner circles; a studio's banner drops the padding entirely,
+because the photo runs up under the header and the circles sit on it. Then the tabs as underlines: the selected one is ink over an
 ink rule, the row carries the one divider, and nothing fills. They were pills
 for a moment, and stacked under the action pills over the card list it was
 pills on pills.
@@ -531,13 +538,17 @@ request, after a glass version read as furniture. The filter pill keeps the
 glass: it floats over a list somebody is reading and is not the point of the
 screen.
 
-**The Verified studio badge explains itself.** `VerifiedBadge` is a button, and
-tapping it says what the badge means (the people who run the place keep the
-page, which is why nobody else can edit it) and offers the way in for somebody
-who runs a studio of their own. That way in is the Suggest an edit sheet that
-already exists, whose relation field starts with "I own it": that is how a
-studio actually gets claimed today, so this points at it rather than inventing
-a second door. A badge nobody can ask about is a claim taken on faith.
+**Every studio page wears a badge, and both badges explain themselves.**
+`VerifiedBadge` renders Verified or Unverified (the word alone, no "studio":
+the page it sits on already says what kind of thing this is), and tapping
+either opens a sheet saying what it means: Verified, that the people who run
+the place keep the page, which is why nobody else can edit it; Unverified,
+that the page is a shared entry the community keeps, and what verifying
+would hand the owner. Both offer the same way in for somebody who runs a
+studio: the Suggest an edit sheet that already exists, whose relation field
+starts with "I own it", because that is how a studio actually gets claimed
+today and a second door would drift. A badge nobody can ask about is a claim
+taken on faith, and an absence nobody can ask about is worse.
 
 **On a profile the header sits above the page again, and only the name and
 tabs pin.** `.pubstick` sticks under the app header, measuring the brandbar's
@@ -651,9 +662,9 @@ link straight to it, and a Don't show again that means it. Following a *member*
 shows nothing, because the bar would be promising a week they don't have: what
 that follow buys is quiet and mutual, and until it can be said in a sentence it
 says nothing. It renders from the profile pill
-(`NotifyCta`) and from Discover's mini pill, because that's where most follows
-actually happen, and a button whose effect is invisible teaches nobody what the
-app is for. The dismissal is localStorage (`fl-follow-hint`), which is
+(`NotifyCta`), which is the only Follow control left now that the directory
+rows carry none, and a button whose effect is invisible teaches nobody what
+the app is for. The dismissal is localStorage (`fl-follow-hint`), which is
 per-device and unlike the invites banner's column on the account; a column is
 the fix if that starts to matter.
 
@@ -965,7 +976,7 @@ better kept right by the people who teach there than left wrong. One
 `studio_managers` row changes that. From the first manager on, the studio is
 claimed: only its managers (and `currentAdmin()`, who must be able to fix a gym
 that locks itself out) may edit, everyone else gets the Suggest an edit door
-they already had, and the page says "Verified studio" so the missing pencil
+they already had, and the page says "Verified" so the missing pencil
 has a reason. `studioAccess()` in `src/lib/studioaccess.ts` is the one answer
 both the page and `updateStudio` ask, so the button and the action can't
 disagree. It's a join table rather than a column because a gym is a place of
@@ -1088,9 +1099,9 @@ sit on the card but are siblings of it, never children (a button inside a
 link is not a thing): the remove X top right on Plans, and on Following the
 share circle and the Add ribbon bottom right, the ribbon filling brand
 orange (`--si`) when it's in, because the one mark of colour a card earns
-should be the same orange every Add wears. The Yours chip sits in the
-ribbon's corner, which is why the card carries a min-height on the shortest
-rows. The day headings on these lists are sticky (`.evcards .ps-daycol`,
+should be the same orange every Add wears. The Going badge sits in the
+ribbon's corner on a member's week, which is why the card carries a
+min-height on the shortest rows. The day headings on these lists are sticky (`.evcards .ps-daycol`,
 pinned under the brandbar with paper behind them, and switched off under
 `.pub`, where the name and tabs already pin), because a wall of same-shaped
 cards loses its dates as it scrolls. A coach's public profile draws the same
@@ -1136,33 +1147,47 @@ order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
 (weekly personal entries expand across a nine-week horizon now, because a
 recurring entry that only showed its next date read as a class that
 stopped); `mySchedule()` is the coaching half. On a coach's calendar every
-row wears a chip: Coaching, Shift, Going, or Yours, and tapping does what
-the row is (a coaching row opens the editor, a shift or a Going row opens
-the class sheet, a Yours row opens `PlanSheet`). A member's rows need no
-Coaching chip, and their marks carry no chip at all: a chip on every row
-says nothing. Still no month grid, no empty days, no time gutter: it holds
+non-personal row wears a corner badge (Teaching, Shift, Going; see the
+badge doctrine above), and tapping does what the row is (a teaching row
+opens the editor, a shift or a Going row opens the class sheet, a personal
+row opens `PlanSheet`). Still no month grid, no empty days, no time gutter: it holds
 only what is real. Following is everyone you follow; You is you. Those stay
 legibly different.
 
-**The plus is one big button, and it asks which hat first.** `.fab-plus` is
-the icon-only orange circle on both calendars. A coach's opens a sheet
-(coaching it, or going to it) and pre-answers the form, so the Adder's own
-chair question never shows from here; a member's opens the personal form
-straight away, because one answer is not a question.
+**The plus sits across from the calendar's name, and it asks which hat
+first.** `.calhead-add` is the orange circle on the Your schedule line of
+both calendars; it floated over the list for a while (`.fab-plus`), and the
+corner it held is being kept clear for a full-size calendar someday. A
+coach's opens a sheet (coaching it, or going to it) and pre-answers the
+form, so the Adder's own chair question never shows from here; a member's
+opens the personal form straight away, because one answer is not a
+question.
 
-**The calendar's slices are tabs under the rail, not switches behind a
-circle.** `.caltabs` is the same underline row every other screen wears: All
-leads, then Coaching (the classes you teach and the shifts a gym has you on,
-one word because both are you working), Attending (the ribbon's list),
-Private (your own entries). A member's row skips Coaching. It replaced a floating
-glass circle of switches (`fl-cal-hide`), for the same reason Discover's
-rail replaced its pill: a control you can see is a control you use, and
-switches that hide things leave a list you can't explain. The row only
-renders when the calendar holds at least two kinds (a tab that can't narrow
-is furniture), the pick resets to All on arrival rather than persisting, and
-a tab whose kind leaves the calendar falls back to All rather than to
-nothing. The tab reads Attending: it names what you're doing, where Added
-named what the button did, and Saved is still not a word a class wears.
+**The calendar's slices are tabs under the rail, and they say your
+relationship to the event, not who owns the row.** `.caltabs` is the same
+underline row every other screen wears: All, then Teaching (every class you
+work, whether you made it or a gym assigned it), Going (classes you attend
+but don't teach), Personal (your own private entries). A member's row skips
+Teaching. It replaced a floating glass circle of switches (`fl-cal-hide`),
+for the same reason Discover's rail replaced its pill: a control you can
+see is a control you use, and switches that hide things leave a list you
+can't explain. The row only renders when the calendar holds at least two
+kinds (a tab that can't narrow is furniture), the pick resets to All on
+arrival rather than persisting, and a tab whose kind leaves the calendar
+falls back to All rather than to nothing. Saved is still not a word a class
+wears.
+
+**The badge holds the card's corner and says why the event is on your
+calendar.** `.ps-corner`, fixed top-right on the coach's calendar, so it
+neither rides the class name nor moves with its length: Teaching (you made
+it), Shift (a gym assigned it), Going (you're attending someone else's).
+The two teaching badges split what the tab folds together, because "why is
+this here" and "which kind of mine is it" are different questions. A
+personal row carries no badge at all: the tab already answers, and a chip
+that repeats the obvious is noise. On a member's week the Going badge keeps
+the bottom corner (`.ps-goingtag`, same green), because the remove X owns
+the top one there. Private and Duplicate stay on the name line: they're
+facts about the class, not about why it's yours.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the

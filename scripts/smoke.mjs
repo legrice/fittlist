@@ -38,7 +38,7 @@ const openProfile = async (pg) => {
 
 // The plus asks which hat now, so opening the coach's form is two taps.
 const openCoachAdder = async (pg) => {
-  await pg.locator(".fab-plus").click();
+  await pg.locator(".calhead-add").click();
   await pg.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   await pg.locator(".sheet .setrow", { hasText: "coaching" }).click();
 };
@@ -240,7 +240,7 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
   const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
-  await page.locator(".fab").waitFor();
+  await page.locator(".calhead-add").waitFor();
   if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
@@ -265,7 +265,7 @@ for (let attempt = 0; ; attempt++) {
   try { await waitSchedule(page, 2, 8000); done = true; } catch {}
   if (!done) {
     await page.reload();
-    await page.locator(".fab").waitFor();
+    await page.locator(".calhead-add").waitFor();
     done = (await scheduleClasses(page)) === 2;
   }
   if (done) break;
@@ -439,7 +439,7 @@ console.log("account + profile edit ok (back -> account)");
 // ---- the schedule has no pill strip: the owner's tools live behind the
 // three-dot button beside their name on the profile.
 await page.goto(BASE + "/app");
-await page.locator(".fab").waitFor();
+await page.locator(".calhead-add").waitFor();
 if (await page.locator(".dashlinks").count()) fail("the pill strip should be gone from the schedule");
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
@@ -743,7 +743,7 @@ console.log("stats ok");
 // ---- that follow dropped a notification; the single Updates bell carries the
 // combined badge and opens a Notifications | Messages toggle.
 await page.goto(BASE + "/app");
-await page.locator(".fab").waitFor();
+await page.locator(".calhead-add").waitFor();
 await expect(page.locator('a[href="/updates"] .inboxdot').isVisible(), "updates bell shows a badge");
 await page.locator('a[href="/updates"]').click();
 await page.getByRole("heading", { name: "Updates" }).waitFor();
@@ -768,7 +768,7 @@ await page.locator(".updateseg button", { hasText: "Notifications" }).click();
 await page.locator(".notifrow").first().waitFor();
 // opening the feed clears the badge
 await page.goto(BASE + "/app");
-await page.locator(".fab").waitFor();
+await page.locator(".calhead-add").waitFor();
 if (await page.locator('a[href="/updates"] .inboxdot').count())
   fail("updates badge should clear after opening the feed");
 console.log("updates (notifications + messages) ok");
@@ -1116,7 +1116,7 @@ const magicRes = await ctx.request.get(BASE + magicUrl, { maxRedirects: 0 });
 if (![301, 302, 303, 307, 308].includes(magicRes.status()))
   fail("magic link should redirect after setting the session, got " + magicRes.status());
 await page.goto(BASE + "/app");
-await page.locator(".fab").waitFor();
+await page.locator(".calhead-add").waitFor();
 if (!(await ctx.cookies()).some((c) => c.name === "fl_session" && c.value))
   fail("magic link should establish a session");
 console.log("magic-link login ok");
@@ -1167,12 +1167,11 @@ await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
 // The box is a door to the universal search; the list itself is browsed.
-// every row carries the small corner pill: outline Follow before, green
-// Following after, so following doesn't require the trip through the page.
-await fan
-  .locator(".disrow", { hasText: "Matt" })
-  .locator(".disfol", { hasText: /^Follow$/ })
-  .waitFor();
+// The corner pill is gone: the row is a door with a chevron, following is
+// the page's decision, and a row you follow says so quietly on its sub-line.
+if (await fan.locator(".disfol").count())
+  fail("the corner Follow pill should be gone from directory rows");
+await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".kindtag", { hasText: "Coach" }).waitFor();
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
@@ -1180,22 +1179,13 @@ await fan.locator(".profacts .followpill").waitFor();
 await fan.waitForTimeout(400);
 await fan.locator(".profacts .followpill").click();
 await fan.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
-// and back on Discover, the pill on the row went green
+// and back on Discover, the row's line says so
 await fan.goto(BASE + "/discover");
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".disfol.on", { hasText: "Following" }).waitFor();
-// the pill follows on its own too: tap Sam's, it goes green, tap again and
-// it lets go, leaving the later coach-follows-coach checks their clean slate
-{
-  const samPill = fan.locator(".disrow", { hasText: "Sam" }).locator(".disfol");
-  await samPill.click();
-  await fan.locator(".disrow", { hasText: "Sam" }).locator(".disfol.on").waitFor();
-  await samPill.click();
-  await fan
-    .locator(".disrow", { hasText: "Sam" })
-    .locator(".disfol", { hasText: /^Follow$/ })
-    .waitFor();
-}
-console.log("discover ok (corner pill follows and unfollows on the row)");
+await fan
+  .locator(".disrow", { hasText: "Matt" })
+  .locator(".sub", { hasText: "Following" })
+  .waitFor();
+console.log("discover ok (chevron rows, Following said on the line)");
 
 // Two halves of the directory, one row of controls. A studio is a place, so
 // it isn't followable and carries no city filter: it has an address and
@@ -1317,7 +1307,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // Clearing puts everything back. Picking again first: the lens switch above
   // already dropped the filter, so there'd be nothing to clear otherwise, and
   // Clear filters only shows when something is on.
-  await fan.getByRole("button", { name: "People", exact: true }).click();
+  await fan.getByRole("button", { name: "Coaches", exact: true }).click();
   await fan.waitForTimeout(200);
   await fan.locator(".dischips .chip", { hasText: "Yoga" }).first().click();
   await fan.locator(".chip-filters").click();
@@ -1337,7 +1327,7 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   // looking. Filters and the kind chips lead the rail everywhere; the type
   // chips after them are the lens's own vocabulary.
   await fan.goto(BASE + "/discover");
-  const FIXED = ["Coaches", "Members", "Available for clients"];
+  const FIXED = ["Available for clients"];
   const typeChips = async () =>
     (await fan.locator(".dischips .chip:not(.chip-filters)").allInnerTexts())
       .map((c) => c.trim())
@@ -1428,14 +1418,14 @@ console.log("discover ok (corner pill follows and unfollows on the row)");
   }
 
   // A person by name, with the directory's own row: the Coach badge, the
-  // week count and the corner Follow, not a second thinner copy of them.
+  // week count and the corner chevron, not a second thinner copy of them.
   await fan.locator(".dissearch-in").first().fill("matt");
   await fan.locator(".srchsec", { hasText: "PEOPLE" }).waitFor();
   {
     const row = fan.locator(".disrow", { hasText: "Matt" }).first();
     await row.locator(".kindtag", { hasText: "Coach" }).waitFor();
     await row.locator(".disrow-txt .wk").waitFor();
-    await row.locator(".disfol").waitFor();
+    await row.locator(".disrow-chev").waitFor();
   }
 
   // A town finds the people who train there, and the places in it, in one go:
@@ -1687,7 +1677,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (!pills[2].includes("Edit profile")) fail("Edit profile should sit last: " + pills.join("|"));
   }
   // The big plus, same as every calendar.
-  await fan.locator(".fab-plus").waitFor();
+  await fan.locator(".calhead-add").waitFor();
   // The rows are the shared class rows now, the same ones Following draws.
   const rows = fan.locator(".ps-erow");
   if ((await rows.count()) !== 1) fail("expected one class in the week, got " + (await rows.count()));
@@ -1748,7 +1738,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.goto(BASE + "/week");
   // The plus opens the form straight away: a member has one answer to which
   // hat, and a question with one answer is furniture.
-  await fan.locator(".fab-plus").click();
+  await fan.locator(".calhead-add").click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
   if (await fan.getByRole("heading", { name: "Add to your calendar" }).count())
     fail("a member should not be asked which hat");
@@ -1787,7 +1777,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
       if (!txt.includes(bit)) fail(`the plan row is missing "${bit}": ${txt}`);
   }
   // The details stayed at the studio: opening the form there again offers it.
-  await fan.locator(".fab-plus").click();
+  await fan.locator(".calhead-add").click();
   await fan.getByRole("heading", { name: "Add a class" }).waitFor();
   await fan.getByRole("button", { name: "Select or start typing a studio" }).click();
   // Scoped to the picker: a class row is a button too now, and the one behind
@@ -1858,7 +1848,7 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
 {
   await page.goto(BASE + "/week");
   await page.waitForURL(/\/app/);
-  await page.locator(".fab-plus").click();
+  await page.locator(".calhead-add").click();
   await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
   {
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
@@ -2038,37 +2028,38 @@ await page.locator(".ps-event").first().waitFor();
 {
   const going = page.locator(".ps-event", { hasText: "Conditioning" }).first();
   await going.waitFor();
-  if (!(await going.locator(".ps-role", { hasText: "Going" }).count()))
-    fail("a class the coach attends should wear the Going chip on their calendar");
+  if (!(await going.locator(".ps-corner", { hasText: "Going" }).count()))
+    fail("a class the coach attends should wear the Going badge in its corner");
   if (!(await going.locator(".ps-ecoach").count()))
     fail("a Going row should carry the coach's face");
   await going.click();
   await page.locator(".classoverlay-nm", { hasText: "Conditioning" }).waitFor();
   await page.locator(".ovcircle-back").click();
   await page.waitForFunction(() => !document.querySelector(".classoverlay"));
-  // And their teaching rows say Coaching, so the two hats read apart.
-  if (!(await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().count()))
-    fail("a coaching row should wear the Coaching chip");
+  // And their teaching rows say Teaching, so the two hats read apart.
+  if (!(await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().count()))
+    fail("a teaching row should wear the Teaching badge");
 }
-// The slices ride under the rail as tabs: All leads, Coaching narrows to the
-// taught rows, Added to the ribbon's list, and All puts everything back.
+// The slices ride under the rail as tabs: All leads, Teaching narrows to the
+// rows you work (made or assigned), Going to the ribbon's list, and All puts
+// everything back.
 {
   const tabs = (await page.locator(".caltabs .pubtab").allInnerTexts()).map((t) => t.trim());
-  if (tabs[0] !== "All" || !tabs.includes("Coaching") || !tabs.includes("Attending"))
-    fail("the calendar tabs should offer All, Coaching and Attending: " + tabs.join("|"));
-  await page.locator(".caltabs .pubtab", { hasText: "Coaching" }).click();
+  if (tabs[0] !== "All" || !tabs.includes("Teaching") || !tabs.includes("Going"))
+    fail("the calendar tabs should offer All, Teaching and Going: " + tabs.join("|"));
+  await page.locator(".caltabs .pubtab", { hasText: "Teaching" }).click();
   await page.waitForTimeout(300);
   if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
-    fail("Coaching should drop the class they only attend");
-  if (!(await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().count()))
-    fail("Coaching should keep the taught rows");
-  await page.locator(".caltabs .pubtab", { hasText: "Attending" }).click();
+    fail("Teaching should drop the class they only attend");
+  if (!(await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().count()))
+    fail("Teaching should keep the taught rows");
+  await page.locator(".caltabs .pubtab", { hasText: "Going" }).click();
   await page.locator(".ps-event", { hasText: "Conditioning" }).first().waitFor();
-  if (await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).count())
-    fail("Attending should hold only the ribbon's list");
+  if (await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).count())
+    fail("Going should hold only the ribbon's list");
   await page.locator(".caltabs .pubtab", { hasText: "All" }).click();
-  await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().waitFor();
-  console.log("calendar tabs ok (All, Coaching, Attending, one list narrowed in place)");
+  await page.locator(".ps-event .ps-corner", { hasText: "Teaching" }).first().waitFor();
+  console.log("calendar tabs ok (All, Teaching, Going, one list narrowed in place)");
 }
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();
@@ -2266,7 +2257,15 @@ await page.getByText("Platforms, a turf strip").waitFor();
   await page.locator(".profbanner").waitFor();
   if (await page.locator(".pubhead .profav").count())
     fail("the circle should make way for the banner once there is a photo");
-  console.log("studio photo is a banner ok (a rectangle for a place, a circle for a face)");
+  // Nobody has claimed this one, and the page says so on the picture: the
+  // Unverified badge rides the banner's bottom-left and explains itself.
+  await page.locator(".profbadges-onbanner .studiokept", { hasText: "Unverified" }).waitFor();
+  await page.locator(".studiokept", { hasText: "Unverified" }).click();
+  await page.getByRole("heading", { name: "Unverified" }).waitFor();
+  await page.getByRole("button", { name: "Get in touch" }).waitFor();
+  await page.locator(".sheetclose").last().click();
+  await page.waitForFunction(() => !document.querySelector(".sheet"));
+  console.log("studio photo is a banner ok (full bleed, Unverified riding it)");
 }
 // The way out. A coach adding a studio put it here, and that is not the
 // studio agreeing to be here: the dots offer the people who run the place a
@@ -2502,7 +2501,7 @@ console.log("profile chrome ok (pinned row, no header or tabs, green Following)"
 // four tabs only, and the account opens from the header avatar — back in the
 // app, since a profile carries neither
 await page.goto(BASE + "/app");
-await page.locator(".fab").waitFor();
+await page.locator(".calhead-add").waitFor();
 if ((await page.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
 await page.goto(BASE + "/app?acct=1");
 await page.locator(".acctwrap").waitFor();
@@ -2993,7 +2992,9 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
   // anonPage signed up as Sam. Claimed by somebody else, his menu loses the
   // pencil and the page says why.
   await anonPage.goto(BASE + "/s/ironbound-strength");
-  await anonPage.getByText("Verified studio").waitFor();
+  // Capital V: "Unverified" carries a lowercase v, so this matches only the
+  // claimed badge.
+  await anonPage.locator(".studiokept", { hasText: /Verified/ }).waitFor();
   if (await hasEditRow(anonPage))
     fail("a claimed studio should not offer the editor to a coach who doesn't run it");
   console.log("claimed studio is closed to other coaches ok (suggest, not edit)");

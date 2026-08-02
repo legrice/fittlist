@@ -73,7 +73,7 @@ await m.waitForTimeout(400);
 // one of their own
 await m.goto(BASE + "/week");
 await m.locator(".schedtools").waitFor();
-await m.locator(".fab-plus").click();
+await m.locator(".calhead-add").click();
 await m.getByPlaceholder("e.g. Barbell Strength").fill("Swag by LWL");
 await m.getByRole("button", { name: "Sa", exact: true }).click();
 await m.locator("#fDesc").fill("Choreo class, low lights, no mirrors.");
@@ -103,8 +103,10 @@ await m.locator(".ps-agenda .ps-event").first().waitFor();
 const rows = await m.locator(".ps-erow").count();
 if (rows < 2) fail("expected the coach's class and the personal one, got " + rows);
 if (!(await m.locator(".ps-ecoachav").count())) fail("the coach's row should carry their face");
-if (!(await m.locator(".ps-goingtag", { hasText: "Yours" }).count()))
-  fail("a personal row should say it is yours");
+if (!(await m.locator(".ps-goingtag", { hasText: "Going" }).count()))
+  fail("an added row should say Going in its corner");
+if (await m.locator(".ps-erow", { hasText: "Swag by LWL" }).locator(".ps-goingtag").count())
+  fail("a personal row carries no badge: the tab already says why it is here");
 if (await m.locator(".weekrow-nm").count()) fail("the old bespoke row markup should be gone");
 // Share moved onto the rail; the floating pill is gone.
 if (await m.locator(".weekshare").count()) fail("the floating share pill should be gone");

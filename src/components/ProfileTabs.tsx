@@ -133,6 +133,10 @@ export function ProfileTabs({
           then the two things you can do about it. A profile is the one screen
           about a person rather than a list, so it gets the symmetry. */}
       <div className="pubhead">
+        {avatar}
+        {/* The corner slots come after the picture on purpose: neither owns a
+            z-index (see the stacking note in the CSS), so DOM order is what
+            paints them on top, and a studio's banner is positioned now. */}
         {backTo && (
           <div className="profback">
             <BackLink
@@ -147,7 +151,6 @@ export function ProfileTabs({
           </div>
         )}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
-        {avatar}
         {/* The badge rides with the name and wraps under it when the name is
             long, rather than being pushed down the page by the lines between. */}
         <div className="profname-row">

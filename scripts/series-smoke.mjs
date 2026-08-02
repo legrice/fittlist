@@ -33,7 +33,7 @@ await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
 async function addClass({ name, days, time, studio, first = false }) {
   if (first) await p.getByRole("button", { name: "Add your first class" }).click();
   else {
-    await p.locator(".fab-plus").click();
+    await p.locator(".calhead-add").click();
     await p.getByRole("heading", { name: "Add to your calendar" }).waitFor();
     await p.locator(".sheet .setrow", { hasText: "coaching" }).click();
   }
@@ -70,7 +70,7 @@ async function shapes() {
         r
           .split("\n")
           .map((line) => line.trim())
-          .filter((line) => !/^(COACHING|SHIFT|GOING|YOURS|PRIVATE)$/i.test(line))
+          .filter((line) => !/^(COACHING|TEACHING|SHIFT|GOING|YOURS|PRIVATE)$/i.test(line))
           .slice(0, 3)
           .join(" @ "),
       ),

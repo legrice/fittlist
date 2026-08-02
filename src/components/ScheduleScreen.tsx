@@ -461,7 +461,18 @@ export function ScheduleScreen({
             <Icon name="edit" size={16} /> Edit profile
           </Link>
         </div>
-        <h2 className="calhead">Your schedule</h2>
+        <div className="calhead-row">
+          <h2 className="calhead">Your schedule</h2>
+          {/* The plus, across from the calendar's name: it floated for a
+              while, and the corner it held is being kept clear for a full
+              size calendar someday. It still asks which hat first. */}
+          <button
+            className="calhead-add"
+            onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+          >
+            <Icon name="add" size={17} /> Add
+          </button>
+        </div>
         {/* The slices of the calendar, as the same underline tabs a profile's
             sections wear. All leads, then only the kinds this calendar
             actually holds; one kind would make All a tab with no job, so the
@@ -471,9 +482,9 @@ export function ScheduleScreen({
             {(
               [
                 { k: "all" as const, t: "All" },
-                { k: "coaching" as const, t: "Coaching" },
-                { k: "added" as const, t: "Attending" },
-                { k: "private" as const, t: "Private" },
+                { k: "coaching" as const, t: "Teaching" },
+                { k: "added" as const, t: "Going" },
+                { k: "private" as const, t: "Personal" },
               ]
             )
               .filter((x) => x.k === "all" || presentKinds.has(x.k))
@@ -541,12 +552,7 @@ export function ScheduleScreen({
                                   <span className="ps-ecoach-txt">{p.coachName}</span>
                                 </span>
                               )}
-                              <span className="ps-enm">
-                                {p.name}
-                                <span className={`ps-role${p.personal ? "" : " ps-role-going"}`}>
-                                  {p.personal ? "Yours" : "Going"}
-                                </span>
-                              </span>
+                              <span className="ps-enm">{p.name}</span>
                               {p.where && (
                                 <span className="ps-estudio">
                                   <Icon name="place" size={13} className="ps-estudio-ic" />
@@ -561,6 +567,13 @@ export function ScheduleScreen({
                               </span>
                               <span className="ps-edur">{p.durationMin} min</span>
                             </span>
+                            {/* The badge holds the card's corner, fixed, so it
+                                neither rides the name nor moves with its
+                                length. A personal row carries nothing: the
+                                tab already says why it's here. */}
+                            {!p.personal && (
+                              <span className="ps-corner ps-corner-going">Going</span>
+                            )}
                           </button>
                           {/* A sibling, never a child: a button inside a
                               button is not a thing. Yours-alone entries have
@@ -614,12 +627,9 @@ export function ScheduleScreen({
                           <span className="ps-ebody">
                             <span className="ps-enm">
                               {c.name}
-                              {/* Which hat. A shift already says it; the rest
-                                  of your own rows say Coaching, because the
-                                  calendar holds Going rows now too. */}
-                              {!c.shift && <span className="ps-role">Coaching</span>}
+                              {/* Visibility and cleanup ride the name line;
+                                  the relationship badge holds the corner. */}
                               {!c.isPublic && <span className="ps-private">Private</span>}
-                              {c.shift && <span className="ps-shift">Shift</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
                             {where && (
@@ -636,6 +646,14 @@ export function ScheduleScreen({
                             </span>
                             <span className="ps-edur">{c.durationMin} min</span>
                           </span>
+                          {/* Shift means the gym put you on it; Teaching means
+                              you made it. Both are you working, and the tab
+                              folds them together. */}
+                          {c.shift ? (
+                            <span className="ps-corner ps-corner-shift">Shift</span>
+                          ) : (
+                            <span className="ps-corner">Teaching</span>
+                          )}
                         </button>
                         {sharePath && (
                           <button
@@ -718,20 +736,6 @@ export function ScheduleScreen({
         />
       )}
 
-      {/* One big plus. It stopped saying "Add class" the day the calendar
-          stopped being only classes you teach: the sheet behind it asks which
-          hat, and pre-answers the form's own question. */}
-      {(hasAnyClass || plans.length > 0) && !adder.open && !personalOpen && (
-        <button
-          className="fab fab-plus"
-          aria-label="Add"
-          // Without the member side there is only one hat, and one answer is
-          // not a question: straight into the form.
-          onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
-        >
-          <Icon name="add" size={28} />
-        </button>
-      )}
       {/* Which hat this one goes on. The form used to ask mid-flight; the
           plus asks first, and the form gets a straight answer. */}
       {addMenu && (

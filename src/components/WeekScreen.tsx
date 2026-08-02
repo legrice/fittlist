@@ -181,7 +181,12 @@ export function WeekScreen({
           </Link>
         </div>
 
-        <h2 className="calhead">Your schedule</h2>
+        <div className="calhead-row">
+          <h2 className="calhead">Your schedule</h2>
+          <button className="calhead-add" onClick={() => setAddOpen(true)}>
+            <Icon name="add" size={17} /> Add
+          </button>
+        </div>
         {/* The slices of the calendar, under the rail: All, the classes you
             added, your own private entries. Only when both kinds are here;
             one kind would make All a tab with no job. */}
@@ -190,8 +195,8 @@ export function WeekScreen({
             {(
               [
                 { k: "all" as const, t: "All" },
-                { k: "added" as const, t: "Attending" },
-                { k: "private" as const, t: "Private" },
+                { k: "added" as const, t: "Going" },
+                { k: "private" as const, t: "Personal" },
               ]
             ).map((x) => (
               <button
@@ -244,9 +249,10 @@ export function WeekScreen({
                     coachName: i.coachName,
                     coachPhoto: i.coachPhoto,
                     coachColor: i.coachColor,
-                    // Yours alone, so the row says so rather than pretending to
-                    // a coach's page it hasn't got.
-                    tag: i.personal ? "Yours" : null,
+                    // Going marks the classes you added; a personal row
+                    // carries nothing, because the tab already says why it
+                    // is here.
+                    tag: i.personal ? null : "Going",
                     // No green ring here: on this screen every row is one they
                     // added, and a mark on all of them says nothing.
                     on: false,
@@ -324,13 +330,6 @@ export function WeekScreen({
           </>
         )}
       </div>
-      {/* The big plus, same as every calendar: a member has one answer to
-          which hat, so it opens the form without a question. */}
-      {!addOpen && !edit && (
-        <button className="fab fab-plus" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-          <Icon name="add" size={28} />
-        </button>
-      )}
       {addOpen && (
         <Adder
           studios={studios}

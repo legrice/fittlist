@@ -5,14 +5,15 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 
-// Search over the directory, which has two halves: the people and the places.
-// The box is a door to the universal search; the tabs pick a half; and the
-// chip rail under them is where filtering lives now. The first chip is
-// Filters, which opens the sheet holding everything (the city, and whatever
-// studios grow later); the chips after it are the reach-for narrowings in the
-// open. Every chip is multiselect: picking Yoga and Pilates means either, and
-// the count on the Filters chip adds up as picks accumulate, so you can see
-// filters are on without opening anything.
+// The directory, which has two halves: the coaches and the places. Members
+// aren't listed here for now, because following a member doesn't buy anything
+// visible yet; universal search still finds them by name, since asking for a
+// person is different from browsing. The box is a door to the universal
+// search; the tabs pick a half; and the chip rail under them is where
+// filtering lives. The first chip is Filters, which opens the sheet holding
+// everything (the city, and whatever studios grow later); the chips after it
+// are the reach-for narrowings in the open. Every chip is multiselect, and
+// the count on the Filters chip adds up as picks accumulate.
 export function DiscoverList({
   coaches,
   studios = [],
@@ -35,20 +36,10 @@ export function DiscoverList({
   // Filters chip would be reporting a choice nobody made.
   void myCity;
   const [city, setCity] = useState<string | null>(null);
-  // Which kind of person: coach, member, either. Multiselect, so both on is
-  // the same list as both off, which keeps the toggle harmless.
-  const [kinds, setKinds] = useState<Set<"coach" | "fan">>(new Set());
   const [types, setTypes] = useState<Set<string>>(new Set());
   const [acceptingOnly, setAcceptingOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const toggleKind = (k: "coach" | "fan") =>
-    setKinds((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
-    });
   const toggleType = (t: string) =>
     setTypes((prev) => {
       const next = new Set(prev);
@@ -59,7 +50,6 @@ export function DiscoverList({
 
   const shown = useMemo(() => {
     return coaches.filter((c) => {
-      if (kinds.size > 0 && !kinds.has(c.kind === "coach" ? "coach" : "fan")) return false;
       if (city && c.location !== city) return false;
       // Multiselect means any-of: two picks widen to either, they don't
       // demand both.
@@ -69,7 +59,7 @@ export function DiscoverList({
       if (acceptingOnly && c.availability !== "accepting") return false;
       return true;
     });
-  }, [coaches, city, kinds, types, acceptingOnly]);
+  }, [coaches, city, types, acceptingOnly]);
 
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
@@ -86,11 +76,9 @@ export function DiscoverList({
   // Every live pick counts once, so the badge on Filters is the number of
   // things you'd have to switch off to get the whole list back.
   const activeCount =
-    types.size +
-    (tab === "people" ? (city ? 1 : 0) + kinds.size + (acceptingOnly ? 1 : 0) : 0);
+    types.size + (tab === "people" ? (city ? 1 : 0) + (acceptingOnly ? 1 : 0) : 0);
   const clearAll = () => {
     setCity(null);
-    setKinds(new Set());
     setTypes(new Set());
     setAcceptingOnly(false);
   };
@@ -104,9 +92,6 @@ export function DiscoverList({
     else for (const st of studios) for (const t of st.types) seen.add(t);
     return [...seen].sort((a, b) => a.localeCompare(b));
   }, [coaches, studios, tab]);
-  // The kind chips only exist when the list mixes kinds: all coaches leaves
-  // them nothing to do.
-  const mixedKinds = coaches.some((c) => c.kind !== "coach");
 
   return (
     <>
@@ -137,7 +122,7 @@ export function DiscoverList({
             setTypes(new Set());
           }}
         >
-          People
+          Coaches
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -164,26 +149,6 @@ export function DiscoverList({
           Filters
           {activeCount > 0 && <span className="chip-n">{activeCount}</span>}
         </button>
-        {tab === "people" && mixedKinds && (
-          <>
-            <button
-              type="button"
-              className={`chip${kinds.has("coach") ? " sel" : ""}`}
-              aria-pressed={kinds.has("coach")}
-              onClick={() => toggleKind("coach")}
-            >
-              Coaches
-            </button>
-            <button
-              type="button"
-              className={`chip${kinds.has("fan") ? " sel" : ""}`}
-              aria-pressed={kinds.has("fan")}
-              onClick={() => toggleKind("fan")}
-            >
-              Members
-            </button>
-          </>
-        )}
         {tab === "people" && (
           <button
             type="button"
@@ -288,44 +253,6 @@ export function DiscoverList({
                     <span className="switch-knob" />
                   </span>
                 </button>
-                {mixedKinds && (
-                  <>
-                    <button
-                      className="setrow"
-                      role="switch"
-                      aria-checked={kinds.has("coach")}
-                      onClick={() => toggleKind("coach")}
-                    >
-                      <span className="setrow-ic">
-                        <Icon name="person_add" size={22} />
-                      </span>
-                      <span className="setrow-txt">
-                        <span className="t">Coaches</span>
-                        <span className="s">People who publish a schedule</span>
-                      </span>
-                      <span className={`switch${kinds.has("coach") ? " on" : ""}`} aria-hidden="true">
-                        <span className="switch-knob" />
-                      </span>
-                    </button>
-                    <button
-                      className="setrow"
-                      role="switch"
-                      aria-checked={kinds.has("fan")}
-                      onClick={() => toggleKind("fan")}
-                    >
-                      <span className="setrow-ic">
-                        <Icon name="groups" size={22} />
-                      </span>
-                      <span className="setrow-txt">
-                        <span className="t">Members</span>
-                        <span className="s">People who train</span>
-                      </span>
-                      <span className={`switch${kinds.has("fan") ? " on" : ""}`} aria-hidden="true">
-                        <span className="switch-knob" />
-                      </span>
-                    </button>
-                  </>
-                )}
               </div>
             )}
 
@@ -372,7 +299,7 @@ export function DiscoverList({
           <p>
             {city
               ? "Nobody is listed there. Switch to All cities to see everyone."
-              : "The list fills up as people join and coaches publish their schedules."}
+              : "The list fills up as coaches join and publish their schedules."}
           </p>
           {city && (
             <button className="btn ghost" onClick={() => setCity(null)}>

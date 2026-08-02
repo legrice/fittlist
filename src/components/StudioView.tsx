@@ -253,8 +253,16 @@ export async function StudioView({
           // face; a full-width empty rectangle is a wall.
           avatar={
             s.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="profbanner" src={s.photo} alt={s.name} />
+              <span className="profbanner-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="profbanner" src={s.photo} alt={s.name} />
+                {/* The badge rides the picture's bottom-left, above the name:
+                    the claim (or its absence) sits on the thing it speaks
+                    for. */}
+                <span className="profbadges profbadges-onbanner">
+                  <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
+                </span>
+              </span>
             ) : (
               <span
                 className="profav profav-empty"
@@ -267,13 +275,16 @@ export async function StudioView({
           }
           backTo={backTo}
           badges={
-            /* The Studio tag came off with the other two, but Verified stays:
-               it is not a label saying what kind of page this is, it is the
-               reason the pencil is missing for everyone else, and tapping it
-               says so. A page that can be trusted has to say why. */
-            access.claimed ? (
+            /* The Studio tag came off with the other two, but this stays: it
+               is not a label saying what kind of page this is. Verified is
+               the reason the pencil is missing for everyone else, Unverified
+               is the reason it isn't, and tapping either says so and offers
+               the way to the keys. With a banner the badge overlays the
+               picture instead; only a photoless page keeps it here by the
+               name. */
+            !s.photo ? (
               <div className="profbadges">
-                <VerifiedBadge studioId={s.id} name={s.name} />
+                <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
               </div>
             ) : null
           }

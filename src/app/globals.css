@@ -602,13 +602,23 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   text-decoration: none; border: none; cursor: pointer;
 }
 .fab:active { transform: scale(.97); }
-/* Icon only, and bigger: the plus stopped saying "Add class" the day the
-   calendar stopped being only classes you teach. The sheet behind it says
-   the rest. */
-.fab.fab-plus {
-  width: 62px; height: 62px; padding: 0; gap: 0;
-  align-items: center; justify-content: center;
+/* The add button, across from the calendar's name: the floating plus came
+   off both calendars, and the corner it held is being kept clear for a full
+   size calendar someday. */
+.calhead-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 14px 0 0;
 }
+.calhead-row .calhead { margin: 0; }
+.calhead-add {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+  height: 42px; padding: 0 18px; border-radius: 999px;
+  background: var(--si); color: #fff; border: none; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 15px;
+  box-shadow: 0 4px 12px rgba(17, 17, 17, .18);
+}
+.calhead-add:active { transform: scale(.95); }
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its
@@ -622,15 +632,21 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 700; font-size: 22px; letter-spacing: -.02em;
   margin: 18px 0 0;
 }
-/* Which hat a row wears, beside the name: Coaching quiet, Going in the same
-   green a yes always is. Shift keeps its own chip above. */
-.ps-role {
-  display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
+/* Why the event is on your calendar, said once in the card's top-right
+   corner: fixed there so it neither rides the name nor moves with its
+   length. Teaching quiet, Shift in the rota's peach, Going in the same green
+   a yes always is. Personal rows carry nothing: the tab already says it. */
+.ps-corner {
+  position: absolute; top: 10px; right: 12px; z-index: 1;
+  display: inline-flex; align-items: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
   letter-spacing: .05em; text-transform: uppercase; color: var(--ol);
   background: var(--cl); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
 }
-.ps-role-going { color: #2c6b40; background: #e2efe6; border-color: #e2efe6; }
+.ps-corner-going { color: #2c6b40; background: #e2efe6; border-color: #e2efe6; }
+.ps-corner-shift { color: #191502; background: #f8ddca; border-color: #f8ddca; }
+/* The badge's corner stays clear of the name however long it runs. */
+.evcards.evcards-tight .ps-enm { padding-right: 84px; }
 
 /* Dark glass rather than light: the blur is the point either way, and a pale
    pill on a near-black page is a hole rather than a control. */
@@ -966,15 +982,6 @@ button.bl-band { cursor: pointer; }
 .dupebox { margin-top: 4px; }
 .dupebox-s { margin: 0 0 16px; font-size: 15px; line-height: 1.5; color: var(--ol); }
 
-/* A shift at a gym: the same tag shape as Private, saying the opposite thing.
-   It's on your week and it isn't yours to edit, so the row has to say so
-   before you tap it expecting the adder. */
-.ps-shift {
-  display: inline-flex; align-items: center; vertical-align: middle; margin-left: 8px;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 10px;
-  letter-spacing: .05em; text-transform: uppercase; color: #191502;
-  background: #f8ddca; border: 1px solid #f8ddca; border-radius: 999px; padding: 2px 8px;
-}
 .ps-echev { color: rgba(17, 17, 17, .32); display: flex; align-items: center; justify-content: center; }
 
 /* Agenda list layout (coach's own schedule) - Apple/Fantastical style: hairline
@@ -1890,7 +1897,7 @@ button.ps-card { cursor: pointer; }
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
   padding-top: 78px; padding-bottom: 10px; position: relative;
 }
-.pubhead:has(.profbanner) { padding-top: 26px; }
+.pubhead:has(.profbanner) { padding-top: 0; }
 .pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
 .pubhead .profname-row { justify-content: flex-start; }
 .profname-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
@@ -1949,17 +1956,31 @@ button.ps-card { cursor: pointer; }
 }
 /* A studio's photo, as the wide rectangle its old page led with: a place
    reads as a room, not a face, and the shape is what tells a studio apart
-   from a person before a word is read. Same lift as the circle it replaces. */
+   from a person before a word is read. Full bleed now: to both edges and up
+   under the header (the negative top margin swallows the page's own top
+   padding), no radius and no shadow, because a photograph running edge to
+   edge is its own frame. */
+.profbanner-wrap {
+  position: relative; display: block;
+  /* The head is a left-aligned flex column, so the wrap must stretch or it
+     shrinks to the picture's intrinsic width. */
+  align-self: stretch;
+  margin: -20px calc(50% - 50vw) 16px;
+}
 .profbanner {
   width: 100%; aspect-ratio: 16 / 9; max-height: 280px; object-fit: cover;
-  display: block; border-radius: 18px; margin-bottom: 16px; background: var(--cl);
-  box-shadow: 0 14px 30px rgba(17, 17, 17, .18), 0 3px 8px rgba(17, 17, 17, .10);
+  display: block; background: var(--cl);
 }
+/* Verified, on the picture's bottom-left above the name: the claim sits on
+   the thing it vouches for. White rather than the paper tan, so it reads
+   over a photograph. */
+.profbadges-onbanner { position: absolute; left: 16px; bottom: 12px; z-index: 1; }
+.profbadges-onbanner .kindtag { background: rgba(255, 255, 255, .92); }
 /* The corner controls sit on the picture when there is one, so they step in
    from the edge rather than riding its very corner. Both are white circles,
    which is what keeps them readable over a photograph. */
-.pubhead:has(.profbanner) .profback { top: 38px; left: 12px; }
-.pubhead:has(.profbanner) .ownertop { top: 38px; right: 12px; }
+.pubhead:has(.profbanner) .profback { top: 12px; left: 12px; }
+.pubhead:has(.profbanner) .ownertop { top: 12px; right: 12px; }
 
 
 /* The actions, as pills: the one that starts something is filled, the one that
@@ -1991,9 +2012,9 @@ button.ps-card { cursor: pointer; }
   70% { transform: scale(.96); }
   100% { transform: scale(1); }
 }
-.followpill.pop, .disfol.pop { animation: folpop .42s cubic-bezier(.34, 1.56, .64, 1); }
+.followpill.pop { animation: folpop .42s cubic-bezier(.34, 1.56, .64, 1); }
 @media (prefers-reduced-motion: reduce) {
-  .followpill.pop, .disfol.pop { animation: none; }
+  .followpill.pop { animation: none; }
 }
 
 /* What a follow actually did, said once. Above the tab bar, like a toast, but
@@ -3504,12 +3525,7 @@ button.ps-card { cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .disrow:last-child { border-bottom: none; }
-/* A studio row is the whole link: there's no corner control, because a place
-   is not somebody you follow. Which also means the 96px a person's row keeps
-   clear for the Follow pill is dead space here, and long gym names were
-   truncating into it. */
 .disrow-studio { text-decoration: none; color: var(--ink); gap: 12px; }
-.disrow.disrow-studio .disrow-nmline { padding-right: 0; }
 
 .disrow-sub {
   display: block; font-size: 13px; color: var(--ol); margin-top: 2px;
@@ -3541,52 +3557,18 @@ button.ps-card { cursor: pointer; }
 .disrow-txt .sub {
   font-size: 12px; color: var(--ol);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  /* A long tagline truncates before it runs under the corner pill. */
-  padding-right: 96px;
 }
 .disrow-txt .wk { font-size: 12px; font-weight: 600; color: var(--si); }
-/* The Coach badge across from the name; following moved onto the profile.
+/* The Coach badge across from the name; following lives on the profile now.
+   The row says a quiet "· Following" on the sub-line instead of wearing a
+   pill, and the corner is the same chevron a studio row carries: one row
+   shape for the whole directory, and the page is where the choice is made.
    .disfollow stays for the followers and blocked lists, which still act
    inline (Follow back, Undo). */
 /* The tag sits right beside the name, small. The name can still truncate. */
 .disrow-nmline { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .disrow-nmline .nm { min-width: 0; }
-/* The row's corner control: a small Follow pill, white with an outline, that
-   fills the Going green with a check once it's a yes. Requested (a gated
-   coach) keeps the outline and just says so. */
 .disrow { position: relative; }
-.disfol {
-  display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0;
-  position: absolute; top: 13px; right: 14px;
-  /* A fixed height, not vertical padding: the check is taller than the text,
-     and letting it pad the box made Following a fatter pill than Follow. */
-  height: 29px; padding: 0 12px; border-radius: 999px; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 12px; font-weight: 600;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
-}
-.disfol:active { transform: scale(.96); }
-.disfol[disabled] { opacity: .6; }
-.disfol.on { background: var(--go); border-color: var(--go); color: #fff; }
-/* The yes gets a little spring, but only on the tap that made it: .pop is
-   set by the click handler, so a page of already-green pills loads still. */
-.disfol.pop { animation: folpop .4s cubic-bezier(.34, 1.56, .64, 1); }
-.disfol.pop .icon { animation: folcheck .32s cubic-bezier(.34, 1.56, .64, 1) both .06s; }
-@keyframes folpop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.14); }
-  70% { transform: scale(.96); }
-  100% { transform: scale(1); }
-}
-@keyframes folcheck {
-  from { transform: scale(0) rotate(-90deg); }
-  to { transform: scale(1) rotate(0deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .disfol.pop, .disfol.pop .icon { animation: none; }
-}
 /* The Discover title line carries the coaches-only switch, right-aligned. */
 .distitle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .disonly {
@@ -3597,9 +3579,6 @@ button.ps-card { cursor: pointer; }
 /* Discover sits its rows straight on the page, no white container. */
 .dislist-bare { background: none; border-radius: 0; box-shadow: none; overflow: visible; }
 .dislist-bare .disrow { padding-left: 2px; padding-right: 2px; }
-.dislist-bare .disfol { right: 2px; }
-/* Every row carries the corner pill now, so the name always stays clear. */
-.disrow .disrow-nmline { padding-right: 96px; }
 
 /* Universal search (/search): the directory's two halves under one box, told
    apart by a heading rather than by a segment you have to pick first. The
@@ -4112,10 +4091,12 @@ button.ps-card { cursor: pointer; }
 /* Private items keep reading as drafts on the coach's own calendar. */
 .evcards .ps-event-private { background: var(--cl); border: 1.5px dashed #c7bf9f; }
 .evcards .ps-event-private:active { background: var(--cl); }
-/* Yours, in the Add button's corner: a quiet chip, not a status light. */
+/* Going, in the Add button's corner (the remove X owns the top one here):
+   the same green the badge wears on the coach's calendar, fixed in place so
+   it never rides the name. */
 .evcards .ps-goingtag {
   position: absolute; right: 14px; bottom: 14px; z-index: 1;
-  background: var(--cl); color: var(--ink);
+  background: #e2efe6; color: #2c6b40;
 }
 /* What you can do with it, on the card itself. Siblings of the card, never
    children: a button inside a link is not a thing. Add sits bottom right

@@ -73,14 +73,13 @@ export default async function DiscoverPage() {
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
   const coaches: DirPerson[] = rows
+    // Coaches only, for now: following a member doesn't buy anything visible
+    // yet, so listing them here offered a button with no meaning. Universal
+    // search still finds a member by name, because asking for a person is
+    // different from browsing a directory.
+    .filter((r) => r.kind !== "fan")
     // A coach's page has to be worth opening: a schedule, or enough profile.
-    // A member only needs a name; their profile is who they are, and the whole
-    // point of listing them is being findable by the people they train with.
-    .filter((r) =>
-      r.kind === "fan"
-        ? !!r.name.trim()
-        : r.name.trim() && (weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
-    )
+    .filter((r) => r.name.trim() && (weekCount.get(r.id) || r.title?.trim() || r.about?.trim()))
     .filter((r) => r.id !== userId)
     .map((r) => ({
       id: r.id,
@@ -97,9 +96,8 @@ export default async function DiscoverPage() {
       disciplines: r.disciplines,
       color: avatarColor(r),
     }))
-    // Newest people first, coaches and members interleaved: the list doubles
-    // as "who just joined", and the fresh face at the top is the reason to
-    // keep opening it. The coaches-only switch is the coach view now.
+    // Newest first: the list doubles as "who just joined", and the fresh
+    // face at the top is the reason to keep opening it.
     .sort((a, b) => (joinedAt.get(b.id) ?? 0) - (joinedAt.get(a.id) ?? 0));
 
   const cities = [...new Set(coaches.map((c) => c.location).filter(Boolean))].sort((a, b) =>
