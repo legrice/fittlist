@@ -329,6 +329,17 @@ whether they signed up, and the Schedule tag says which have a week to see.
 `.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
 row has to take it back or long gym names truncate into empty space.
 
+**A studio's photo is a rectangle, and that is how you tell it from a
+person.** The banner (`.profbanner`, 16:9 across the head, same lift as the
+circle it replaces) is the treatment the studio page led with before the one
+header unified everybody, and it came back because a place reads as a room
+where a person reads as a face: a circle crops the room to a porthole, and
+two page kinds that looked identical above the name were worth telling
+apart. The corner controls step in from the edge when the banner is there
+(`:has(.profbanner)`), because they sit on the picture. Only a photo earns
+the rectangle; an empty one would be a wall, so the fallback is the circle
+below.
+
 **A studio with no photo wears a face, not a pin.** `avatarColor({ id })` and
 `initialOf(name)` are the same pair a coach without a photo uses, so a studio
 gets one of the same sixty colours, derived from its id and therefore identical

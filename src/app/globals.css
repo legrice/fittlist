@@ -1907,6 +1907,19 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 50px;
 }
+/* A studio's photo, as the wide rectangle its old page led with: a place
+   reads as a room, not a face, and the shape is what tells a studio apart
+   from a person before a word is read. Same lift as the circle it replaces. */
+.profbanner {
+  width: 100%; aspect-ratio: 16 / 9; max-height: 280px; object-fit: cover;
+  display: block; border-radius: 18px; margin-bottom: 16px; background: var(--cl);
+  box-shadow: 0 14px 30px rgba(17, 17, 17, .18), 0 3px 8px rgba(17, 17, 17, .10);
+}
+/* The corner controls sit on the picture when there is one, so they step in
+   from the edge rather than riding its very corner. Both are white circles,
+   which is what keeps them readable over a photograph. */
+.pubhead:has(.profbanner) .profback { top: 38px; left: 12px; }
+.pubhead:has(.profbanner) .ownertop { top: 38px; right: 12px; }
 
 
 /* The actions, as pills: the one that starts something is filled, the one that

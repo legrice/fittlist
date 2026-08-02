@@ -187,12 +187,15 @@ export async function StudioView({
           name={s.name}
           title=""
           location={s.address}
-          // A studio's face is a plain circle: there is no person behind it
-          // to blow up, and its share lives on the pills below.
+          // A studio's photo is a place, not a face, so it comes as the wide
+          // rectangle its old page led with: a circle crops a room down to a
+          // porthole, and the rectangle is also what tells a studio apart
+          // from a person at a glance. No photo keeps the coloured circle
+          // face; a full-width empty rectangle is a wall.
           avatar={
             s.photo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="profav" src={s.photo} alt={s.name} />
+              <img className="profbanner" src={s.photo} alt={s.name} />
             ) : (
               <span
                 className="profav profav-empty"

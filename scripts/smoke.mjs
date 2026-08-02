@@ -2126,6 +2126,31 @@ await page.getByText("Platforms, a turf strip").waitFor();
   await page.getByRole("button", { name: "Save studio" }).click();
   await page.waitForURL("**/s/ironbound-strength");
 }
+// A studio's photo is a rectangle across the top, not a circle: the shape is
+// what tells a place from a person at a glance. Without one, the coloured
+// circle face stays, because a full-width empty rectangle is a wall.
+{
+  if (await page.locator(".profbanner").count())
+    fail("no photo yet, so the head should carry no banner");
+  if (!(await page.locator(".pubhead .profav").count()))
+    fail("a photo-less studio keeps the coloured circle face");
+  await openStudioEditor(page);
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  await page.locator('.sheet input[type="file"]').setInputFiles({
+    name: "room.png",
+    mimeType: "image/png",
+    buffer: png,
+  });
+  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: "Save studio" }).click();
+  await page.locator(".profbanner").waitFor();
+  if (await page.locator(".pubhead .profav").count())
+    fail("the circle should make way for the banner once there is a photo");
+  console.log("studio photo is a banner ok (a rectangle for a place, a circle for a face)");
+}
 // a class points at the studio's page, not straight at a map — in the sheet
 // as well as on the page behind it. The owner's own rows open the editor now,
 // so the sheet is asserted from a fresh visitor context.
