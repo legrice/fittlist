@@ -7,8 +7,6 @@ import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
-import { adminEmails } from "@/lib/admin";
-import { adminNewActivityCount } from "@/lib/adminactivity";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
@@ -33,12 +31,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // In parallel: these are independent, and this layout runs on every tab
   // switch, so awaiting them one by one stacked four round trips onto every
   // tap of the bar.
-  const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, promptDue, invitesLeft, adminNew] = await Promise.all([
+  const [unread, promptDue, invitesLeft] = await Promise.all([
     unreadNotifications(userId),
     feedbackPromptDue(userId),
     invitesBannerCount(),
-    isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
@@ -56,7 +52,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
       <div className="pad">
         <AppHeader
           unread={unread}
-          adminNew={adminNew}
           // Every screen in this group is the member side, so the magnifier
           // is always right here.
           search

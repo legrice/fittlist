@@ -473,11 +473,14 @@ badge says which: Coach, Member, Studio. What used to be three headers is one,
 and three headers is how a member's page ended up looking like a lesser version
 of a coach's.
 
-**A profile is a circle of a face over a centred name, and that is the
-point.** The full-bleed photo hero shipped and came back out: a screen of
-photograph before any schedule said editorial when the product says calendar.
-`.pubhead` is centred (face, name, one `.profmeta` line of what and where, the
-two big pills), then the tabs as underlines: the selected one is ink over an
+**A profile reads left, top to bottom, like everything under it.** The
+full-bleed photo hero shipped and came back out: a screen of photograph
+before any schedule said editorial when the product says calendar. Then the
+centred head went too: it was the one centred block on a left-reading
+screen. `.pubhead` starts everything at the gutter (face, name, one
+`.profmeta` line of what and where, the two big pills), with top padding
+clearing the corner circles; a studio's banner keeps the slim padding
+because the circles sit on the photo. Then the tabs as underlines: the selected one is ink over an
 ink rule, the row carries the one divider, and nothing fills. They were pills
 for a moment, and stacked under the action pills over the card list it was
 pills on pills.
@@ -560,7 +563,11 @@ thing you do twice a year and the rail scrolls to it. Two pills per share
 were four pills for two pictures, which is how the rail earned its sheets.
 The calendar draws the member lists' paper cards, minus the min-height that
 clears corner controls it doesn't have (`.evcards-tight`); the coach chip
-only rides the Going rows, where the face answers whose class it is.
+only rides the Going rows, where the face answers whose class it is. Every
+row with a page behind it carries the corner share circle (a shift hands on
+the gym's page for it, which is the page a member can open; private and
+yours-alone rows have nothing to hand), so "can you cover my Tuesday" is one
+tap into the share sheet.
 
 **A coach's settings are the header's gear; the profile carries no door to
 somewhere else.** `AppHeader`'s `settings` prop links a coach to
@@ -1162,7 +1169,9 @@ gear reads `?acct` instead, which is why closing settings goes through
 `router.replace` rather than bare `replaceState`): the fill is the same "you
 are here" the tab bar says, said once per door. The fill is CSS on the first
 SVG path only, because the shield's tick and the bell's clapper are open
-strokes and filling those paints shapes nobody drew. The magnifier sits in the header's corner
+strokes and filling those paints shapes nobody drew. The admin shield left
+the corner once the gear returned: the admin's door is the Admin row in
+their account view, because a corner of one-off icons was filling up. The magnifier sits in the header's corner
 (Discover's tab is the compass again), and Discover's box is the other way
 into the same search. A hamburger is deliberately not built: merch and
 an about page are the things that would go in it, and a lid over an empty

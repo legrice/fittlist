@@ -236,26 +236,29 @@ export function AdminPanel({
   return (
     <section className="screen admin" data-mode={dark ? "dark" : undefined}>
       <div className="pad">
+        {/* The actions on their own row above the title, the way back first
+            on the left: three pills beside "Admin" scrunched both, and the
+            signed-in line wrapped letter by letter. */}
+        <div className="admintop-links adminacts-row">
+          <Link className="adminback" href="/feed">
+            <Icon name="arrow_back" size={18} /> App
+          </Link>
+          <button className="adminback adminact" onClick={openActivity}>
+            <Icon name="bolt" size={18} /> Activity
+            {activityNew > 0 && !actSeen && (
+              <span className="inboxdot">{activityNew > 99 ? "99+" : activityNew}</span>
+            )}
+          </button>
+          {/* The mission, one tap from the numbers, so the numbers never
+              get to argue with it unsupervised. */}
+          <Link className="adminback" href="/ethos">
+            <Icon name="favorite" size={18} /> Ethos
+          </Link>
+        </div>
         <div className="admintop">
           <div>
             <h1>Admin</h1>
             <p className="adminsub">Signed in as {adminEmail}</p>
-          </div>
-          <div className="admintop-links">
-            <button className="adminback adminact" onClick={openActivity}>
-              <Icon name="bolt" size={18} /> Activity
-              {activityNew > 0 && !actSeen && (
-                <span className="inboxdot">{activityNew > 99 ? "99+" : activityNew}</span>
-              )}
-            </button>
-            {/* The mission, one tap from the numbers, so the numbers never
-                get to argue with it unsupervised. */}
-            <Link className="adminback" href="/ethos">
-              <Icon name="favorite" size={18} /> Ethos
-            </Link>
-            <Link className="adminback" href="/feed">
-              <Icon name="arrow_back" size={18} /> App
-            </Link>
           </div>
         </div>
 

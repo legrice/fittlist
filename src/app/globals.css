@@ -1504,6 +1504,10 @@ button.ps-card { cursor: pointer; }
 .memweek-chev { color: var(--ol); flex-shrink: 0; }
 
 .admintop-links { display: flex; gap: 8px; flex-shrink: 0; }
+/* Their own row above the title: beside "Admin" the three pills scrunched
+   everything, and the signed-in line wrapped letter by letter. */
+.adminacts-row { margin: 2px 0 16px; overflow-x: auto; scrollbar-width: none; }
+.adminacts-row::-webkit-scrollbar { display: none; }
 /* The invite QR sits above the link, a step smaller than the profile one. */
 .joinqr { max-width: 240px; margin: 0 auto 14px; }
 
@@ -1882,15 +1886,22 @@ button.ps-card { cursor: pointer; }
    picture still exists one tap behind the avatar. */
 /* No bottom border: the tab row under it carries the one rule now, and a
    line above the tabs plus a line below them boxed the row in. */
+/* Left-aligned, top to bottom: face, name, meta, pills all start at the
+   gutter, reading down the page the way everything under them does. It was
+   centred for a while, and the head was the one centred block on a
+   left-reading screen. The top padding clears the corner circles, which
+   used to float beside the centred face; with a banner they sit on the
+   photo instead, so the padding steps back down. */
 .pubhead {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  padding-top: 26px; padding-bottom: 10px; position: relative;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+  padding-top: 78px; padding-bottom: 10px; position: relative;
 }
+.pubhead:has(.profbanner) { padding-top: 26px; }
 .pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
-.pubhead .profname-row { justify-content: center; }
+.pubhead .profname-row { justify-content: flex-start; }
 .profname-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .profbadges { display: inline-flex; align-items: center; gap: 6px; }
-.pubhead .profmeta { justify-content: center; font-size: 14.5px; margin: 8px 0 0; }
+.pubhead .profmeta { justify-content: flex-start; font-size: 14.5px; margin: 8px 0 0; }
 /* The owner's controls, one row top-right across from the photo: the Add
    class pill and the three-dot, both on the same tan so they read as one
    set of page controls. */
@@ -1960,7 +1971,7 @@ button.ps-card { cursor: pointer; }
 /* The actions, as pills: the one that starts something is filled, the one that
    reports a state is outlined. */
 .profacts {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px;
+  display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-top: 18px;
 }
 /* Big pills again: on the paper page they are the two things to do, and the
    photo no longer competes with them for the thumb. */

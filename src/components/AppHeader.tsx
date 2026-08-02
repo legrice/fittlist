@@ -8,7 +8,6 @@ import type { NavTab } from "@/lib/nav";
 // and your avatar right. The avatar takes a handler inside the app shell
 // (where the account is an overlay) and a link everywhere else.
 export function AppHeader({
-  adminNew = null,
   unread = 0,
   settings,
   search = false,
@@ -16,8 +15,6 @@ export function AppHeader({
   home = "/feed",
   nav,
 }: {
-  /** null = not an admin; a number shows the door, >0 lights the badge. */
-  adminNew?: number | null;
   unread?: number;
   /** Settings, as a gear. A coach's account view lives behind a URL
    *  (/app?acct=1); a member's rows live at /you, now that their You tab is
@@ -48,24 +45,10 @@ export function AppHeader({
       </Link>
       {nav && <HeaderNav coach={nav.coach} active={nav.active} youHref={nav.youHref} onYou={nav.onYou} />}
       <div className="brandbar-actions">
-        {adminNew !== null && (
-          <HeaderIconLink
-            className="adminbtn"
-            label="Admin"
-            icon="shield"
-            href="/admin?activity=1"
-            match="/admin"
-            badge={
-              adminNew > 0 ? (
-                <span className="inboxdot">{adminNew > 9 ? "9+" : adminNew}</span>
-              ) : undefined
-            }
-          />
-        )}
         {/* The magnifier, the bell, the gear: the corner is for the things
-            you reach for from wherever you happen to be. The plans ribbon
-            lived here with its count until the list it pointed at merged
-            into the You tab; the magnifier took the room it left. */}
+            you reach for from wherever you happen to be. The shield left
+            too, once the gear came back: the admin door is a row in the
+            account now, and a corner of one-off icons was filling up. */}
         {search && (
           <HeaderIconLink
             className="searchbtn"

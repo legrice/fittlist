@@ -41,7 +41,6 @@ export function ScheduleScreen({
   subsCount,
   inboxUnread,
   notifUnread,
-  adminNew = null,
   plans,
   profileViews,
   requestCount,
@@ -86,7 +85,6 @@ export function ScheduleScreen({
   subsCount: number;
   inboxUnread: number;
   notifUnread: number;
-  adminNew?: number | null;
   /** The classes they're going to and their own entries, from the same loader
    *  the member calendar uses: You is one calendar of everything now, and the
    *  rows wear Coaching, Going, Shift or Yours to say which hat. */
@@ -396,6 +394,23 @@ export function ScheduleScreen({
     }
   };
 
+  // Hand a row on: the class page's link through the system share sheet,
+  // clipboard where there isn't one. A shift shares the gym's page for it,
+  // which is the page a member can actually open.
+  const shareRow = async (path: string, rowName: string) => {
+    const url = `${window.location.origin}${path}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: rowName, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast("Link copied, ready to paste");
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") toast(url);
+    }
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
@@ -410,7 +425,6 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
-          adminNew={adminNew}
           search={showFanView}
           settings="/app?acct=1"
           home={showFanView ? "/feed" : "/app"}
@@ -488,8 +502,8 @@ export function ScheduleScreen({
                       if (row.p) {
                         const p = row.p;
                         return (
+                          <div key={`plan-${d.iso}-${p.id}`} className="ps-erow">
                           <button
-                            key={`plan-${d.iso}-${p.id}`}
                             className="ps-event"
                             data-plan={p.personal ? "yours" : "going"}
                             onClick={() =>
@@ -530,15 +544,39 @@ export function ScheduleScreen({
                               <span className="ps-edur">{p.durationMin} min</span>
                             </span>
                           </button>
+                          {/* A sibling, never a child: a button inside a
+                              button is not a thing. Yours-alone entries have
+                              no page to hand on; their picture lives in the
+                              sheet. */}
+                          {!p.personal && (
+                            <button
+                              className="evcard-share lone"
+                              aria-label={`Share ${p.name}`}
+                              onClick={() => shareRow(`/${p.handle}/${p.classId}?d=${p.iso}`, p.name)}
+                            >
+                              <Icon name="ios_share" size={17} />
+                            </button>
+                          )}
+                          </div>
                         );
                       }
                       const c = row.c!;
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       const where = studio ? studio.name : c.location;
                       const start = clockParts(c.startTime);
+                      // What a row can hand on: a shift shares the gym's
+                      // page for it, a public class shares your own; a
+                      // private one has no page to give.
+                      const sharePath = c.shift
+                        ? c.shiftBase
+                          ? `/s/${c.shiftBase}/${c.id}?d=${d.iso}`
+                          : null
+                        : c.isPublic && !c.duplicateOf
+                          ? `/${handle}/${c.id}?d=${d.iso}`
+                          : null;
                       return (
+                        <div key={`${d.iso}-${c.id}`} className="ps-erow">
                         <button
-                          key={`${d.iso}-${c.id}`}
                           className={`ps-event${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
                           onClick={() =>
@@ -581,6 +619,16 @@ export function ScheduleScreen({
                             <span className="ps-edur">{c.durationMin} min</span>
                           </span>
                         </button>
+                        {sharePath && (
+                          <button
+                            className="evcard-share lone"
+                            aria-label={`Share ${c.name}`}
+                            onClick={() => shareRow(sharePath, c.name)}
+                          >
+                            <Icon name="ios_share" size={17} />
+                          </button>
+                        )}
+                        </div>
                       );
                     })}
                   </div>

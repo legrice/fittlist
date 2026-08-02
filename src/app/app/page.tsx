@@ -15,7 +15,6 @@ import { myWeek } from "@/lib/week";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
-import { adminNewActivityCount } from "@/lib/adminactivity";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
 
@@ -119,9 +118,6 @@ export default async function SchedulePage({
       .from(schema.classes)
       .where(eq(schema.classes.coachUserId, userId)),
   ]);
-  const adminNew = user && adminEmails().includes(user.email.toLowerCase())
-    ? await adminNewActivityCount(userId)
-    : null;
 
   const customTypes = customTypeRows.map((r) => r.name);
   const inboxUnread = inboxRows.reduce((sum, r) => sum + (r.n || 0), 0);
@@ -200,7 +196,6 @@ export default async function SchedulePage({
       subsCount={subRows.length}
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
-      adminNew={adminNew}
       plans={plans}
       profileViews={analytics.profileViews}
       requestCount={requestCount}

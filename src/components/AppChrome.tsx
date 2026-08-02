@@ -1,7 +1,5 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { adminNewActivityCount } from "@/lib/adminactivity";
-import { adminEmails } from "@/lib/admin";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
@@ -51,12 +49,8 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
-  const isAdmin = adminEmails().includes(me.email.toLowerCase());
   const fans = await fansVisible();
-  const [unread, adminNew] = await Promise.all([
-    unreadNotifications(userId),
-    isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
-  ]);
+  const unread = await unreadNotifications(userId);
   // Everyone's You is their calendar: a coach's at /app, a member's at /week.
   // A member's account rows stay at /you, behind the header's gear.
   const youHref = isCoach ? "/app" : "/week";
@@ -69,7 +63,6 @@ export async function AppChrome({
   const header = (
     <AppHeader
       unread={unread}
-      adminNew={adminNew}
       // The logo goes to Following for everyone with the member side. It used
       // to send a coach to /app, which since the one-shell change is the bare
       // editable schedule: a page with no identity that read as showing up at
