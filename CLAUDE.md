@@ -1135,11 +1135,20 @@ legibly different.
 the icon-only orange circle on both calendars. A coach's opens a sheet
 (coaching it, or going to it) and pre-answers the form, so the Adder's own
 chair question never shows from here; a member's opens the personal form
-straight away, because one answer is not a question. Across from it sits
-`.calfilter`, a glass circle opening switches for the hats the calendar
-actually holds (`fl-cal-hide` in localStorage, per device); it only renders
-when there are at least two kinds, because a filter that can't narrow is
-furniture.
+straight away, because one answer is not a question.
+
+**The calendar's slices are tabs under the rail, not switches behind a
+circle.** `.caltabs` is the same underline row every other screen wears: All
+leads, then Coaching (the classes you teach and the shifts a gym has you on,
+one word because both are you working), Added (the ribbon's list), Private
+(your own entries). A member's row skips Coaching. It replaced a floating
+glass circle of switches (`fl-cal-hide`), for the same reason Discover's
+rail replaced its pill: a control you can see is a control you use, and
+switches that hide things leave a list you can't explain. The row only
+renders when the calendar holds at least two kinds (a tab that can't narrow
+is furniture), the pick resets to All on arrival rather than persisting, and
+a tab whose kind leaves the calendar falls back to All rather than to
+nothing. The word is Added, never Saved, same as the ribbon it points at.
 
 **The poster covers a range you choose, one day to seven, and it starts where
 your plans do.** It used to be the seven days from today and to draw only the

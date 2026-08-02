@@ -2047,6 +2047,26 @@ await page.locator(".ps-event").first().waitFor();
   if (!(await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().count()))
     fail("a coaching row should wear the Coaching chip");
 }
+// The slices ride under the rail as tabs: All leads, Coaching narrows to the
+// taught rows, Added to the ribbon's list, and All puts everything back.
+{
+  const tabs = (await page.locator(".caltabs .pubtab").allInnerTexts()).map((t) => t.trim());
+  if (tabs[0] !== "All" || !tabs.includes("Coaching") || !tabs.includes("Added"))
+    fail("the calendar tabs should offer All, Coaching and Added: " + tabs.join("|"));
+  await page.locator(".caltabs .pubtab", { hasText: "Coaching" }).click();
+  await page.waitForTimeout(300);
+  if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
+    fail("Coaching should drop the class they only attend");
+  if (!(await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().count()))
+    fail("Coaching should keep the taught rows");
+  await page.locator(".caltabs .pubtab", { hasText: "Added" }).click();
+  await page.locator(".ps-event", { hasText: "Conditioning" }).first().waitFor();
+  if (await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).count())
+    fail("Added should hold only the ribbon's list");
+  await page.locator(".caltabs .pubtab", { hasText: "All" }).click();
+  await page.locator(".ps-event .ps-role", { hasText: "Coaching" }).first().waitFor();
+  console.log("calendar tabs ok (All, Coaching, Added, one list narrowed in place)");
+}
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();

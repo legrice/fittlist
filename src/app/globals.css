@@ -609,25 +609,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   width: 62px; height: 62px; padding: 0; gap: 0;
   align-items: center; justify-content: center;
 }
-/* The filter across from the plus: which hats the calendar is showing. Glass
-   rather than brand, because it is a way of looking, not the point of the
-   screen. Same bottom as the fab, whichever offset the screen gives it. */
-.calfilter {
-  position: fixed; left: 18px; z-index: 20;
-  bottom: calc(22px + env(safe-area-inset-bottom));
-  width: 50px; height: 50px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
-  box-shadow: 0 6px 20px rgba(17, 17, 17, .14); cursor: pointer;
-}
-.calfilter:active { transform: scale(.95); }
-.calfilter-n {
-  position: absolute; top: -4px; right: -4px;
-  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; font-size: 11px; font-weight: 700;
-}
-.hasnav .calfilter { bottom: calc(80px + env(safe-area-inset-bottom)); }
+/* The calendar's slices, as the same underline tabs everywhere else: under
+   the rail, above the list they narrow. They replaced a floating glass
+   circle of switches, for the same reason Discover's rail replaced its
+   pill: a control you can see is a control you use. */
+.pubtabs.caltabs { margin: 2px 0 8px; }
 /* Which hat a row wears, beside the name: Coaching quiet, Going in the same
    green a yes always is. Shift keeps its own chip above. */
 .ps-role {

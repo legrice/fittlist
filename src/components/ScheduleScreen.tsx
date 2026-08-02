@@ -147,29 +147,10 @@ export function ScheduleScreen({
   // "That class is on fittlist": the real one, offered over a typed copy.
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
   const [pBusy, setPBusy] = useState(false);
-  // Which hats are hidden. Kept per device: a filter is a way of looking, not
-  // a fact about the account.
-  const [hidden, setHidden] = useState<Record<string, boolean>>({});
-  const [filterOpen, setFilterOpen] = useState(false);
-  useEffect(() => {
-    try {
-      const v = JSON.parse(localStorage.getItem("fl-cal-hide") ?? "{}");
-      if (v && typeof v === "object") setHidden(v);
-    } catch {
-      // an unreadable filter is just no filter
-    }
-  }, []);
-  const toggleHidden = (tag: string) => {
-    setHidden((h) => {
-      const next = { ...h, [tag]: !h[tag] };
-      try {
-        localStorage.setItem("fl-cal-hide", JSON.stringify(next));
-      } catch {
-        // per-device nicety only
-      }
-      return next;
-    });
-  };
+  // Which slice of the calendar you're looking at: one tab under the rail,
+  // not a stack of switches behind a circle. All on arrival, every time; a
+  // tab is a way of looking, not a fact worth storing.
+  const [calTab, setCalTab] = useState<"all" | "coaching" | "added" | "private">("all");
   // "up" when opened from the header avatar, "left" when reached via a back tap.
   const [acctAnim, setAcctAnim] = useState<"up" | "left" | "none">("up");
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
@@ -331,9 +312,18 @@ export function ScheduleScreen({
     const [h, m] = p.hm.split(":").map(Number);
     return ((h % 12) + (p.ap === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
-  // Which hat a row wears, which is also what the filter narrows by.
-  const tagOf = (c: ClassDto) => (c.shift ? "shift" : "coaching");
-  const planTag = (p: WeekItem) => (p.personal ? "yours" : "going");
+  // A tab is only offered where it can narrow something: which kinds this
+  // calendar actually holds. Coaching covers shifts too; a shift is you
+  // working, whoever owns the row.
+  const presentKinds = useMemo(() => {
+    const seen = new Set<"coaching" | "added" | "private">();
+    if (classes.length) seen.add("coaching");
+    for (const d of plans) for (const p of d.items) seen.add(p.personal ? "private" : "added");
+    return seen;
+  }, [classes, plans]);
+  // The kind a stale tab named can leave the calendar (the last added class
+  // passes, say); the list falls back to everything rather than to nothing.
+  const tab = calTab === "all" || presentKinds.has(calTab) ? calTab : "all";
 
   const days = useMemo(() => {
     const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
@@ -344,29 +334,26 @@ export function ScheduleScreen({
       d.setUTCDate(start.getUTCDate() + i);
       const iso = d.toISOString().slice(0, 10);
       const dow = (d.getUTCDay() + 6) % 7; // 0 = Monday
-      const items = classes
-        .filter((c) => runsOn(c, iso, dow))
-        .filter((c) => !hidden[tagOf(c)])
-        .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      const items =
+        tab === "all" || tab === "coaching"
+          ? classes
+              .filter((c) => runsOn(c, iso, dow))
+              .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+          : [];
       // The other half of your calendar: the classes you added and your own
       // entries, from the same loader the member calendar reads.
-      const extras = (plansByIso.get(iso) ?? []).filter((p) => !hidden[planTag(p)]);
+      const extras =
+        tab === "coaching"
+          ? []
+          : (plansByIso.get(iso) ?? []).filter(
+              (p) => tab === "all" || (tab === "private") === !!p.personal,
+            );
       if (items.length || extras.length) {
         out.push({ iso, label: fmtDayHeader(iso), items, extras }); // "Monday — Jul 20"
       }
     }
     return out;
-  }, [classes, plans, todayIso, weeks, hidden]);
-
-  // A filter is only offered where it can narrow something: the switches are
-  // the hats this calendar actually holds.
-  const presentTags = useMemo(() => {
-    const seen = new Set<string>();
-    for (const c of classes) seen.add(tagOf(c));
-    for (const d of plans) for (const p of d.items) seen.add(planTag(p));
-    return seen;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans]);
+  }, [classes, plans, todayIso, weeks, tab]);
 
   // The next seven days as pasteable text. Public classes only: a private
   // client session is not for the group chat.
@@ -471,6 +458,33 @@ export function ScheduleScreen({
             <Icon name="edit" size={16} /> Edit profile
           </Link>
         </div>
+        {/* The slices of the calendar, as the same underline tabs a profile's
+            sections wear. All leads, then only the kinds this calendar
+            actually holds; one kind would make All a tab with no job, so the
+            row waits for a second. */}
+        {presentKinds.size > 1 && (
+          <div className="pubtabs distabs caltabs" aria-label="Calendar filter">
+            {(
+              [
+                { k: "all" as const, t: "All" },
+                { k: "coaching" as const, t: "Coaching" },
+                { k: "added" as const, t: "Added" },
+                { k: "private" as const, t: "Private" },
+              ]
+            )
+              .filter((x) => x.k === "all" || presentKinds.has(x.k))
+              .map((x) => (
+                <button
+                  key={x.k}
+                  className={`pubtab${tab === x.k ? " sel" : ""}`}
+                  aria-current={tab === x.k ? "page" : undefined}
+                  onClick={() => setCalTab(x.k)}
+                >
+                  {x.t}
+                </button>
+              ))}
+          </div>
+        )}
         {!hasAnyClass && plans.length === 0 ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>
@@ -714,23 +728,6 @@ export function ScheduleScreen({
           <Icon name="add" size={28} />
         </button>
       )}
-      {/* The filter, across from the plus: which hats you're looking at.
-          Only when the calendar holds more than one kind. */}
-      {presentTags.size > 1 && (
-        <button
-          className="calfilter"
-          aria-label="Filter your calendar"
-          onClick={() => setFilterOpen(true)}
-        >
-          <Icon name="tune" size={20} />
-          {Object.entries(hidden).filter(([t, v]) => v && presentTags.has(t)).length > 0 && (
-            <span className="calfilter-n">
-              {Object.entries(hidden).filter(([t, v]) => v && presentTags.has(t)).length}
-            </span>
-          )}
-        </button>
-      )}
-
       {/* Which hat this one goes on. The form used to ask mid-flight; the
           plus asks first, and the form gets a straight answer. */}
       {addMenu && (
@@ -774,50 +771,6 @@ export function ScheduleScreen({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Which hats you're looking at. Nothing is filtered by default, and a
-          switch only exists for a hat this calendar actually holds. */}
-      {filterOpen && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setFilterOpen(false);
-          }}
-        >
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setFilterOpen(false)}>
-              <Icon name="close" size={16} />
-            </button>
-            <h2>What you&rsquo;re seeing</h2>
-            <div className="settingslist disfilterlist">
-              {[
-                { tag: "coaching", t: "Coaching", s: "The classes you teach" },
-                { tag: "shift", t: "Shifts", s: "Dates a gym has you on" },
-                { tag: "going", t: "Going", s: "Classes you added from a coach" },
-                { tag: "yours", t: "Your own", s: "Entries only you can see" },
-              ]
-                .filter((f) => presentTags.has(f.tag))
-                .map((f) => (
-                  <button
-                    key={f.tag}
-                    className="setrow"
-                    role="switch"
-                    aria-checked={!hidden[f.tag]}
-                    onClick={() => toggleHidden(f.tag)}
-                  >
-                    <span className="setrow-txt">
-                      <span className="t">{f.t}</span>
-                      <span className="s">{f.s}</span>
-                    </span>
-                    <span className={`switch${hidden[f.tag] ? "" : " on"}`} aria-hidden="true">
-                      <span className="switch-knob" />
-                    </span>
-                  </button>
-                ))}
             </div>
           </div>
         </div>

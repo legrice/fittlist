@@ -79,6 +79,10 @@ export function WeekScreen({
   const [qrOpen, setQrOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
+  // Which slice of the calendar: the same underline tabs the coach's /app
+  // wears, minus Coaching, which a member hasn't got. All on arrival, every
+  // time; a tab is a way of looking, not a fact worth storing.
+  const [calTab, setCalTab] = useState<"all" | "added" | "private">("all");
 
   const remove = (classId: string, iso: string, key: string, personalId?: string) => {
     setConfirm(null);
@@ -97,8 +101,19 @@ export function WeekScreen({
     });
   };
 
+  // A tab is only offered where it can narrow something: both kinds have to
+  // be on the calendar before the row appears at all.
+  const presentKinds = new Set(
+    days.flatMap((d) => d.items.map((i) => (i.personal ? "private" : "added"))),
+  );
+  const tab = calTab === "all" || presentKinds.has(calTab) ? calTab : "all";
   const shown = days
-    .map((d) => ({ ...d, items: d.items.filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`]) }))
+    .map((d) => ({
+      ...d,
+      items: d.items
+        .filter((i) => !gone[`${i.personal ? i.id : i.classId}|${i.iso}`])
+        .filter((i) => tab === "all" || (tab === "private") === !!i.personal),
+    }))
     .filter((d) => d.items.length > 0);
   // The first named person on a personal entry, for the invite line.
   const namedCoach = days
@@ -165,6 +180,30 @@ export function WeekScreen({
             <Icon name="edit" size={16} /> Edit profile
           </Link>
         </div>
+
+        {/* The slices of the calendar, under the rail: All, the classes you
+            added, your own private entries. Only when both kinds are here;
+            one kind would make All a tab with no job. */}
+        {presentKinds.size > 1 && (
+          <div className="pubtabs distabs caltabs" aria-label="Calendar filter">
+            {(
+              [
+                { k: "all" as const, t: "All" },
+                { k: "added" as const, t: "Added" },
+                { k: "private" as const, t: "Private" },
+              ]
+            ).map((x) => (
+              <button
+                key={x.k}
+                className={`pubtab${tab === x.k ? " sel" : ""}`}
+                aria-current={tab === x.k ? "page" : undefined}
+                onClick={() => setCalTab(x.k)}
+              >
+                {x.t}
+              </button>
+            ))}
+          </div>
+        )}
 
         {shown.length === 0 ? (
           <div className="empty-block">
