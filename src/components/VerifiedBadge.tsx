@@ -81,16 +81,17 @@ export function VerifiedBadge({
                 <>
                   <h2 style={{ marginTop: 10 }}>Unverified</h2>
                   <p className="lead">
-                    This page is a shared entry. The coaches and members who train at {name} keep
-                    it, and any coach can correct it, because a page nobody owns is better kept
-                    right by the people who use it than left wrong.
+                    This page is community-managed. Coaches and members can update it so
+                    schedules and details stay accurate.
                   </p>
                   <p className="lead">
-                    Verifying hands the keys to the people who run the place: your own schedule,
-                    your own details, and only you can edit them. The page wears Verified so
-                    everyone knows who speaks for it.
+                    If you run or manage {name}, you can verify this page. Once verified, only
+                    you and admins on your team can edit it, and everyone will know the
+                    information comes directly from you.
                   </p>
-                  <p className="lead">Run {name}? Tell us and we&rsquo;ll set you up.</p>
+                  <p className="lead">
+                    <strong>Run {name}? We&rsquo;d love to verify your page.</strong>
+                  </p>
                 </>
               )}
               <div className="publishwrap">
