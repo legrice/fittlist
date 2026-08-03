@@ -5,6 +5,7 @@ import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { AppChrome } from "@/components/AppChrome";
 import { SearchScreen } from "@/components/SearchScreen";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function SearchPage() {
     .where(eq(schema.users.id, userId));
 
   return (
-    <section className="screen hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
         <SearchScreen />

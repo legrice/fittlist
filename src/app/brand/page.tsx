@@ -7,6 +7,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { BrandGuide } from "@/components/BrandGuide";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export default async function BrandPage() {
   return (
     <section
       className={`screen admin${userId ? " hasnav" : ""}`}
-      data-mode={look === "dark" ? "dark" : undefined}
+      data-mode={lookMode(look)}
     >
       <div className="pad">
         {userId && <AppChrome userId={userId} bar />}

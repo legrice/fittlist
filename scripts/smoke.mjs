@@ -80,30 +80,6 @@ const addSaved = async (pg) => {
   });
 };
 
-// Flip dark mode from the account view. The toggle sets <html data-mode>
-// immediately; the .appshell attribute only lands after the server re-renders,
-// so reload for that rather than waiting on router.refresh() (which stalls
-// under load and made this the flakiest step in the suite).
-const setDark = async (pg, want) => {
-  await pg.goto(BASE + "/app?acct=1");
-  await pg.locator(".acctwrap").waitFor();
-  await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
-  const row = pg.locator(".setrow", { hasText: "Dark mode" });
-  await row.scrollIntoViewIfNeeded();
-  if ((await row.getAttribute("aria-pressed")) === String(want)) return;
-  await row.click();
-  await pg.waitForFunction(
-    (w) => (document.documentElement.getAttribute("data-mode") === "dark") === w,
-    want,
-  );
-  await pg.goto(BASE + "/app"); // server truth
-  await pg.waitForFunction(
-    (w) => !!document.querySelector('.appshell[data-mode="dark"]') === w,
-    want,
-    { timeout: 20000 },
-  );
-};
-
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
@@ -565,28 +541,21 @@ await page.waitForFunction(() => !document.querySelector(".sheet"));
 await closeProfile(page);
 console.log("schedule tools ok (three pills, no title)");
 
-// ---- page look: dark mode persists on the account and themes the app AND
-// the public page (visitors see it too — it's a server-rendered attribute).
-await setDark(page, true);
+// ---- page look: dark mode is switched off at the source for now, so the
+// app has one look to design illustrations against. DARK_ENABLED in
+// src/lib/darkmode.ts is the whole switch; the column, the action and the
+// CSS all stay. What has to hold while it is off: nothing renders dark, and
+// the row that would set it is not sitting there doing nothing.
+await page.goto(BASE + "/app?acct=1");
+await page.locator(".acctwrap").waitFor();
+await page.waitForTimeout(450);
+if (await page.locator(".setrow", { hasText: "Dark mode" }).count())
+  fail("the dark mode row should be gone while the look is switched off");
 await page.goto(BASE + "/matt");
-await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'));
-// dark is the VIEWER's preference: a logged-out visitor to the same page gets
-// light, and a signed-in dark viewer gets dark on someone else's page
-// bot UA so this check doesn't register as a profile view and skew the stats
-const lightCtx = await browser.newContext({
-  viewport: { width: 390, height: 844 },
-  userAgent: "facebookexternalhit/1.1",
-});
-const lightPage = await lightCtx.newPage();
-await lightPage.goto(BASE + "/matt");
-await lightPage.locator(".pub").waitFor();
-if (await lightPage.locator('.pub[data-mode="dark"]').count())
-  fail("a logged-out visitor should see the page in light");
-await lightCtx.close();
-console.log("dark page look ok (viewer's preference, light when logged out)");
-// back to light for the rest of the run
-await setDark(page, false);
-console.log("light restored ok");
+await page.locator(".pub").waitFor();
+if (await page.locator('[data-mode="dark"]').count())
+  fail("nothing should render dark while the look is switched off");
+console.log("one look ok (dark switched off at the source, no dead switch)");
 
 // ---- public PROFILE page (mobile): About tab (photo/name/about) + tab switcher
 // The bare handle is the schedule now: it's what the link is for, and a
@@ -2381,12 +2350,14 @@ if (!(await page.getByRole("button", { name: /Back to .*schedule/ }).count()))
 // a class with no booking link says nothing rather than a line of filler
 if (await page.getByText("Just show up").count())
   fail("the no-booking line should be gone");
-// a dark viewer sees someone else's page in dark, whatever that coach chose
-await setDark(page, true);
+// Somebody else's page is light too, because there is one look now. When
+// DARK_ENABLED comes back this is where "the viewer's preference wins on
+// another coach's page" goes back in.
 await page.goto(BASE + "/sam");
-await page.waitForFunction(() => document.querySelector('.pub[data-mode="dark"]'));
-await setDark(page, false);
-console.log("viewer look wins on another coach's page ok");
+await page.locator(".pub").waitFor();
+if (await page.locator('[data-mode="dark"]').count())
+  fail("another coach's page should not render dark while the look is off");
+console.log("another coach's page keeps the one look ok");
 
 // ---- studios have their own page, and any coach can correct one
 // The editor sits behind the three dots and a word about care: menu, then

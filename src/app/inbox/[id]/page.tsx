@@ -8,6 +8,7 @@ import { ChatMessages } from "@/components/ChatMessages";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Icon } from "@/components/Icon";
 import { InquiryReply } from "@/components/InquiryReply";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function InboxThreadPage({
     .orderBy(asc(schema.inquiryMessages.createdAt));
 
   return (
-    <section className="screen chatscreen" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen chatscreen" data-mode={lookMode(me?.look)}>
       {isCoach && thread.coachUnread > 0 && <MarkSeen action={markThreadRead.bind(null, id)} />}
       {isRequester && thread.requesterUnread > 0 && (
         <MarkSeen action={markThreadReadAsRequester.bind(null, id)} />

@@ -45,6 +45,12 @@ export type ClassDetail = {
   /** Whether this viewer can add it: signed in, not theirs, and public. */
   canAdd: boolean;
   added: boolean;
+  /** Whether that mark is one the viewer's followers can see. Null when
+   *  there is no mark to have an opinion about. The moment of adding used to
+   *  be the only place this could be set, which meant it could not be changed
+   *  afterwards at all; the sheet the class already opens in is where it can
+   *  be both seen and changed. */
+  addedPublic: boolean | null;
   /** It's been and gone: say so rather than showing a button that fails. */
   past: boolean;
   /** The viewer is the admin: the sheet offers to change the picture. A beta
@@ -162,9 +168,10 @@ export async function classDetail(
   const canAdd =
     !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
   let added = false;
+  let addedPublic: boolean | null = null;
   if (canAdd) {
     const [row] = await db
-      .select({ id: schema.attendances.id })
+      .select({ id: schema.attendances.id, isPublic: schema.attendances.isPublic })
       .from(schema.attendances)
       .where(
         and(
@@ -174,6 +181,7 @@ export async function classDetail(
         ),
       );
     added = !!row;
+    if (row) addedPublic = row.isPublic !== false;
   }
 
   // The coach's roster for this occurrence. These people marked Going at this
@@ -333,6 +341,7 @@ export async function classDetail(
     myHandle,
     canAdd,
     added,
+    addedPublic,
     past,
     roster,
     ownerIsGym: user.kind === "gym",

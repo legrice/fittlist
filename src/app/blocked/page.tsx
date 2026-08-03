@@ -7,6 +7,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { BlockedList } from "@/components/BlockedList";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function BlockedPage() {
   const people = await myBlocks();
 
   return (
-    <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">

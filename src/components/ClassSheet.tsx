@@ -53,6 +53,10 @@ export function ClassSheet({
   const [c, setC] = useState<ClassDetail | null>(initial ?? null);
   const [missing, setMissing] = useState(false);
   const [added, setAdded] = useState(initial?.added ?? false);
+  // Whether the mark shows to the viewer's followers. The moment of adding
+  // used to be the only place this could be answered, which meant it could
+  // not be changed afterwards at all; it lives here now, beside the mark.
+  const [markPublic, setMarkPublic] = useState(initial?.addedPublic ?? true);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
@@ -138,6 +142,7 @@ export function ClassSheet({
       }
       setC(d);
       setAdded(d.added);
+      setMarkPublic(d.addedPublic ?? true);
     });
     return () => {
       live = false;
@@ -161,6 +166,10 @@ export function ClassSheet({
       }
       onChanged?.(next);
       if (next) {
+        // A fresh mark is public, which is what setGoing writes; the row
+        // below has to agree with the row that was just created rather than
+        // with whatever the last mark on this class said.
+        setMarkPublic(true);
         // The moment of the heart filling: a note, not a ceremony. It says
         // where the class went and offers the way there.
         setFavOn(true);
@@ -524,6 +533,45 @@ export function ClassSheet({
               <h3 className="ovsec-h">About</h3>
               <p className="evdesc classoverlay-desc">{c.description}</p>
             </>
+          )}
+
+          {/* The mark's own visibility, where the mark is. A Going mark shows
+              to your followers by default; this is the way off it, and unlike
+              the note that used to carry it, this one is still here tomorrow.
+              Only while the class is in your plans, because otherwise there
+              is nothing for it to be about. */}
+          {added && c.canAdd && (
+            <button
+              className="setrow classsheet-vis"
+              aria-pressed={!markPublic}
+              disabled={pending}
+              onClick={() => {
+                const next = !markPublic;
+                setMarkPublic(next);
+                start(async () => {
+                  const res = await setGoingVisibility(c.id, c.whenIso, next);
+                  if (!res.ok) {
+                    setMarkPublic(!next);
+                    toast(res.error ?? "Something went wrong");
+                    return;
+                  }
+                  toast(next ? "Your followers can see this one." : "Only you and the coach can see this one.");
+                });
+              }}
+            >
+              <span className="setrow-ic">
+                <Icon name={markPublic ? "visibility" : "lock"} size={22} />
+              </span>
+              <span className="setrow-txt">
+                <span className="t">Show on your activity</span>
+                <span className="s">
+                  {markPublic ? "Your followers can see this one" : "Only you and the coach"}
+                </span>
+              </span>
+              <span className={`switch${markPublic ? " on" : ""}`} aria-hidden="true">
+                <span className="switch-knob" />
+              </span>
+            </button>
           )}
 
           {/* Owner only: who added this occurrence. */}

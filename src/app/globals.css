@@ -1680,6 +1680,15 @@ button.ps-card { cursor: pointer; }
 /* Without a photo above it the band is the first thing in the sheet, so it
    keeps its own top edge instead of pulling up into one. */
 .classoverlay-body > .classsheet-gone:first-child { margin-top: 0; }
+/* Whether the mark shows to your followers, beside the mark itself. The
+   settings row's own shape, because that is what it is: a switch with a
+   line saying what it currently means. It sits on the sheet rather than in
+   a card, the way a settings row inside a bottom sheet does. */
+.classsheet-vis {
+  width: 100%; margin: 18px 0 4px;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: none;
+}
 /* The brand guide. Every swatch paints itself from the token it names, so the
    page can't drift from the product the way a PDF does. */
 .brandsec { margin-top: 34px; }

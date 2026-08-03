@@ -169,12 +169,10 @@ export default async function FeedPage({
             follows coaches with nothing on gets the agenda's own message. */}
         {railCoaches.length === 0 && followed.length === 0 ? (
           <div className="empty-block">
-            <h2>Nobody yet</h2>
-            <p>
-              Follow a coach and their schedule lands here and in your weekly email. Browse
-              who&rsquo;s teaching near you, or open a page you were sent and tap Follow.
-            </p>
-            <Link className="btn" href="/discover">
+            <h2>You&rsquo;re not following anyone</h2>
+            <p>Follow a coach to see their schedule here.</p>
+            {/* Onto the coaches, not the classes: the button says coaches. */}
+            <Link className="btn" href="/discover?half=coaches">
               Find coaches
             </Link>
           </div>

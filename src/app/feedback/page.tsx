@@ -7,6 +7,7 @@ import { feedbackHost } from "@/lib/feedback";
 import { getSessionUserId } from "@/lib/session";
 import { FeedbackThread } from "@/components/FeedbackThread";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function FeedbackPage() {
   const back = "/you";
 
   return (
-    <section className="screen chatscreen" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section className="screen chatscreen" data-mode={lookMode(me.look)}>
       <div className="chattop">
         <Link className="iconbtn chatback" aria-label="Back" href={back}>
           <Icon name="arrow_back" size={18} />

@@ -36,6 +36,9 @@ const RANGES: { id: RangeId; label: string }[] = [
  */
 const DEFAULT_RANGE: RangeId = "14";
 
+/** Which of the directory's three halves is in front of you. */
+export type DiscoverHalf = "classes" | "coaches" | "studios";
+
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
 // and the chip rail under two of them is the whole filter: All leads,
@@ -60,6 +63,7 @@ export function DiscoverList({
   myCity = null,
   backHref,
   hideBack = false,
+  startHalf = "classes",
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
@@ -72,8 +76,13 @@ export function DiscoverList({
   myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
+  /** Which half to open on, for a link that means one of them. */
+  startHalf?: DiscoverHalf;
 }) {
-  const [tab, setTab] = useState<"classes" | "coaches" | "studios">("classes");
+  // Classes lead, unless somebody was sent to a particular half. "Find
+  // coaches" has to land on the coaches, or the button's own word is the
+  // one thing the screen it opens isn't showing.
+  const [tab, setTab] = useState<DiscoverHalf>(startHalf);
   // The Classes half's own two filters, both dropdowns rather than chips: a
   // date is one answer out of a list, and the types are a long multiselect
   // that would have run off the edge of a rail.

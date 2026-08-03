@@ -7,6 +7,7 @@ import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios"
 import { adminActivity } from "@/lib/adminactivity";
 import { vapidPublicKey } from "@/lib/push";
 import { AdminPanel } from "@/components/AdminPanel";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -286,7 +287,7 @@ export default async function AdminPage({
       activity={activity}
       activityNew={activityNew}
       activityOpen={activityParam === "1"}
-      dark={admin.look === "dark"}
+      dark={lookMode(admin.look) === "dark"}
     />
   );
 }

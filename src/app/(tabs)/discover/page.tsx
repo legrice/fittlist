@@ -7,7 +7,7 @@ import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { buildDiscoverClasses } from "@/lib/discoverclasses";
 import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList } from "@/components/DiscoverList";
+import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 import { avatarColor } from "@/lib/avatar";
 
@@ -16,7 +16,17 @@ export const dynamic = "force-dynamic";
 // The directory: every coach with a live page, filterable by city. This is the
 // answer to "I just signed up and follow nobody" — and the only screen where a
 // fan meets a coach they weren't already handed a link to.
-export default async function DiscoverPage() {
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ half?: string }>;
+}) {
+  // A link can name the half it means. "Find coaches" does, because a button
+  // that says coaches and opens onto classes is the screen contradicting the
+  // word that got somebody there.
+  const { half } = await searchParams;
+  const startHalf: DiscoverHalf =
+    half === "coaches" || half === "studios" ? half : "classes";
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
@@ -167,6 +177,7 @@ export default async function DiscoverPage() {
         todayIso={todayIso()}
         cities={cities}
         myCity={me.location?.trim() || null}
+        startHalf={startHalf}
         backHref="/feed"
         hideBack
       />

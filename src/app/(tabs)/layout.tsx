@@ -11,6 +11,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <section className="screen hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section className="screen hasnav" data-mode={lookMode(me.look)}>
       <div className="pad">
         <AppHeader
           unread={unread}
