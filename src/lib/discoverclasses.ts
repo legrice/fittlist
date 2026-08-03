@@ -41,16 +41,31 @@ export type DirClass = {
   mine: boolean;
 };
 
-/** What a class search reads: the class's own words, and nothing borrowed
- *  from whoever teaches it. A coach and a studio have their own sections on
- *  that screen, so matching a class by its coach's name would be the same
- *  answer twice under two headings. */
-export function classHaystack(c: {
-  name: string;
-  classType: string | null;
-  description: string | null;
-}): string {
-  return [c.name, c.classType ?? "", c.description ?? ""].join(" ").toLowerCase();
+/**
+ * Whether a class answers a search.
+ *
+ * It reads the class's own words and nothing borrowed from whoever teaches
+ * it: a coach and a studio have their own sections on that screen, so
+ * matching a class by its coach's name would be the same answer twice under
+ * two headings.
+ *
+ * The name and the type match anywhere in them, the description only at the
+ * start of a word, and the split is the difference between the two kinds of
+ * text. A name is short and chosen, so a substring of one is very nearly
+ * always the thing you meant. A description is prose, and in prose a short
+ * needle lands inside words that have nothing to do with it: searching "om"
+ * for a yoga studio returned every class whose description said "room" or
+ * "welcome".
+ */
+export function classMatches(
+  c: { name: string; classType: string | null; description: string | null },
+  needle: string,
+): boolean {
+  const q = needle.trim().toLowerCase();
+  if (!q) return false;
+  if (`${c.name} ${c.classType ?? ""}`.toLowerCase().includes(q)) return true;
+  const words = ` ${(c.description ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ")}`;
+  return words.includes(` ${q.replace(/[^a-z0-9]+/g, " ")}`);
 }
 
 /**

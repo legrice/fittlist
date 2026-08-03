@@ -9,7 +9,7 @@ import { fansVisible } from "@/lib/flags";
 import { runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
-import { buildDiscoverClasses, classHaystack, type DirClass } from "@/lib/discoverclasses";
+import { buildDiscoverClasses, classMatches, type DirClass } from "@/lib/discoverclasses";
 
 // One search across both halves of the directory: the people and the places.
 //
@@ -140,7 +140,8 @@ export async function searchAll(
   // same answer twice. That is also what makes this the cheap answer to
   // subcategories: a coach writes "Vinyasa" or "Rocket" in the words they
   // already use, and it is findable, with no vocabulary for anybody to agree
-  // on and no taxonomy to file a class into.
+  // on and no taxonomy to file a class into. `classMatches` is where the name
+  // and the description part company, and why.
   //
   // Same two rules as the halves above: a delisted coach's classes are out
   // (they own the listing they opted out of), and blocked either way is out.
@@ -171,11 +172,11 @@ export async function searchAll(
         .from(schema.attendances)
         .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))),
     ]);
-    // The words to match against, per class row, gathered before the rows are
-    // expanded into occurrences: a weekly class is many occurrences and one
-    // description.
-    const words = new Map<string, string>();
-    for (const c of [...allClassRows, ...gymRows]) words.set(c.id, classHaystack(c));
+    // The verdict per class row, taken before the rows are expanded into
+    // occurrences: a weekly class is many occurrences and one description, and
+    // matching it fourteen times is the same answer fourteen times.
+    const hit = new Map<string, boolean>();
+    for (const c of [...allClassRows, ...gymRows]) hit.set(c.id, classMatches(c, needle));
     classes = buildDiscoverClasses({
       viewerId: userId,
       owners: [...listable, ...gyms],
@@ -185,7 +186,7 @@ export async function searchAll(
       studios: studioRows,
       marks,
     })
-      .filter((c) => (words.get(c.classId) ?? "").includes(needle))
+      .filter((c) => hit.get(c.classId))
       // A cap, said out loud: a common word over a fortnight is a lot of
       // occurrences, and a search is an answer rather than a schedule.
       .slice(0, CLASS_LIMIT);

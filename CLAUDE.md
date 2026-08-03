@@ -384,12 +384,17 @@ subcategories is the `certifications`/`disciplines` split falling the wrong
 way: a hundred spellings of one word and a filter nobody can use, which is
 exactly why `disciplines` is a pick from `STUDIO_TYPES` rather than a box.
 Coaches already write the style down, in the class's name or in their
-description, so search reads it there. `classHaystack()` in
+description, so search reads it there. `classMatches()` in
 `discoverclasses.ts` is the one definition of what a class matches on: its
 name, its `classType` and its description, and deliberately nothing borrowed
 from whoever teaches it. A class that matched its coach's name would be the
 same answer twice under two headings, and People is already the heading that
-answers it. The section is dated occurrences like Discover's, capped at
+answers it. The name and the type match anywhere in them and the description
+only at the start of a word, which is the difference between a label and
+prose: a name is short and chosen, so a substring of one is what you meant,
+while in a paragraph a two-letter needle lands inside words that have nothing
+to do with it. Searching "om" for a yoga studio returned every class whose
+description said "room" or "welcome". The section is dated occurrences like Discover's, capped at
 `CLASS_LIMIT` (40), and the fortnight it searches is the fortnight Discover
 loads, because it is the same `buildDiscoverClasses` call over the same rows.
 `searchAll` runs `publicSchedules` over every listable person rather than the
