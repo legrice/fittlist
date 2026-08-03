@@ -443,6 +443,18 @@ export function ClassSheet({
             // eslint-disable-next-line @next/next/no-img-element
             <img className="classoverlay-img" src={c.image} alt="" />
           )}
+          {/* A dated link that has been and gone has to say so before the
+              class reads as something you can still turn up to, so it says it
+              where the eye lands: between the photograph and the listing,
+              rather than in a grey line under the description where it was
+              read after everything it qualifies. A quiet brand wash, because
+              it is a fact about the date and not a warning. */}
+          {c.past && !added && (
+            <p className="classsheet-gone">
+              <Icon name="schedule" size={16} />
+              This one has already run.
+            </p>
+          )}
           {c.classType && <span className="evtype classoverlay-type">{c.classType}</span>}
           <h2 className="classoverlay-nm">{c.name}</h2>
           {/* Whose class it is, as a face and a name, and a way to them: from
@@ -540,8 +552,6 @@ export function ClassSheet({
               </button>
             </div>
           )}
-
-          {c.past && !added && <p className="classsheet-gone">This one has already run.</p>}
 
           {/* Visitors only, on the page: the growth loop rides the artifact
               that actually gets shared around. */}

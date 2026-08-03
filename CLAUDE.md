@@ -1267,6 +1267,13 @@ bounded by the day group, so the last band lets go at the end of its own day
 instead of riding the scroll to the bottom. A profile and a studio page
 (`.pub`) have their own pinned name row and set it back to `static`.
 
+The scroll landings key off the same measured number
+(`.callist .ps-daygroup` and `.monthblock` both take `--dayband-top` plus
+8px). They were hardcoded at 165 and 190, and the header has changed height
+twice since, each time leaving a gap over whatever Today landed on. A
+constant that has to track a measured thing is a constant that will be
+wrong again.
+
 The band bleeds by 18px, the same pull `.calsticky` uses directly above it,
 and deliberately not by the page gutter: the list's wrapper keeps its 18px
 at the desktop breakpoint while `.pad` widens to 38, so bleeding by the

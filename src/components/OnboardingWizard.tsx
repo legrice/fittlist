@@ -238,7 +238,11 @@ export function OnboardingWizard({
               value={pAbout}
               maxLength={600}
               rows={4}
-              placeholder="Coach at Ironbound Performance. Strength & conditioning, all levels."
+              placeholder={
+                fan
+                  ? "Train mostly at Ironbound. Strength three mornings a week, yoga when I can."
+                  : "Coach at Ironbound Performance. Strength & conditioning, all levels."
+              }
               onChange={(e) => setPAbout(e.target.value)}
             />
             {/* The one field here that isn't optional. Discover is organised by

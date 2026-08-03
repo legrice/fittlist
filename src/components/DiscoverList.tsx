@@ -17,12 +17,24 @@ import type { DirClass } from "@/lib/discoverclasses";
 // worse than a shorter dropdown.
 type RangeId = "7" | "today" | "tomorrow" | "weekend" | "14";
 const RANGES: { id: RangeId; label: string }[] = [
+  { id: "14", label: "Next 14 days" },
   { id: "7", label: "Next 7 days" },
   { id: "today", label: "Today" },
   { id: "tomorrow", label: "Tomorrow" },
   { id: "weekend", label: "This weekend" },
-  { id: "14", label: "Next 14 days" },
 ];
+
+/**
+ * The fortnight leads, for now.
+ *
+ * A week is the right default for a directory that is full, and this one
+ * isn't yet: at today's density a seven-day window can show a handful of
+ * classes and read as a room with nobody in it, which is the wrong first
+ * impression to give somebody who just arrived. The fortnight is the whole
+ * window the page already loads, so it costs nothing to show. This goes back
+ * to "7" once a day reliably holds a hundred of them.
+ */
+const DEFAULT_RANGE: RangeId = "14";
 
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
@@ -65,7 +77,7 @@ export function DiscoverList({
   // The Classes half's own two filters, both dropdowns rather than chips: a
   // date is one answer out of a list, and the types are a long multiselect
   // that would have run off the edge of a rail.
-  const [range, setRange] = useState<RangeId>("7");
+  const [range, setRange] = useState<RangeId>(DEFAULT_RANGE);
   const [rangeOpen, setRangeOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [classTypes, setClassTypes] = useState<Set<string>>(new Set());
