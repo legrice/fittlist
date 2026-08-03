@@ -54,6 +54,14 @@ const openProfile = async (pg) => {
 // The settings reorg put every leaf behind one of four rows, so opening one
 // is two taps: the group, then the row inside its sheet.
 const openSetting = async (pg, group) => {
+  // A sheet from the previous step may still be up, and a sheet holds a
+  // .settingslist of its own, so the group row has to be reached with
+  // nothing over it or the selector matches the wrong list.
+  for (let i = 0; i < 3; i++) {
+    if (!(await pg.locator(".sheet").count())) break;
+    await pg.locator(".sheet .sheetclose, .sheet .sheetback").first().click().catch(() => {});
+    await pg.waitForTimeout(350);
+  }
   await pg.locator(".settingslist .setrow", { hasText: group }).first().click();
   await pg.waitForTimeout(450);
 };
@@ -3090,7 +3098,7 @@ await page.waitForTimeout(450);
   await row.click();
   await page.waitForFunction(
     () =>
-      [...document.querySelectorAll(".setrow")]
+      [...document.querySelectorAll(".sheet .setrow")]
         .find((r) => r.textContent?.includes("Messages"))
         ?.getAttribute("aria-pressed") === "false",
   );
