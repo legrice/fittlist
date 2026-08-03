@@ -33,10 +33,13 @@ export type TemplateDto = {
   name: string;
   classType: string | null;
   description: string | null;
+  image: string | null;
   startTime: string;
   durationMin: number;
   studioId: string | null;
   location: string | null;
+  /** Who one of your own is with. Only ever set on a personal entry. */
+  withWho: string | null;
   isPublic: boolean;
   links: BookingLink[];
 };

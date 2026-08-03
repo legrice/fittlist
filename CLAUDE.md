@@ -781,6 +781,23 @@ description, image, links, a one-off `specificDate` or a weekly slot with
 `endsOn`), field for field, so `runsOn` reads one without translation. What it
 still has no column for is being published.
 
+**One of your own writes your own catalog, so the second one is a tap.**
+The people this is for have schedules that are all over the place and
+still repeat: ten clients, ten places, every week. `addPersonalClass` and
+`updatePersonalClass` upsert a `class_templates` row the same way
+publishing does (one per `(userId, name)`, latest wins), with
+`isPublic: false`, which is what that column on that table has always
+meant: yours, on your own schedule, on nobody's public page. Typing
+"Training with Kia" a second time offers it back under Yours, ahead of
+the studio's shared rows and winning the name outright, and filling it
+brings the place, the description, the length, the time and who it's with
+(`class_templates.withWho`, the one column this needed: the entry has it
+and the memory would be a worse memory without it). The studio catalog
+cannot serve this case at all, because a 1:1 at a client's home has no
+studio to have a catalog. This is the seam the private-training side will
+be built on when it is asked for: a client following one calendar,
+booking and cancelling against it. Not yet, and nothing here assumes it.
+
 Two things travel out of that table and nothing else does. The class joins the
 studio's shared catalog, so the next person gets the details and a studio
 that isn't here yet arrives in the directory with a real class on it; and that

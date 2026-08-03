@@ -484,6 +484,13 @@
       "when": 1785750845546,
       "tag": "0068_oval_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1785760786388,
+      "tag": "0069_condemned_umar",
+      "breakpoints": true
     }
   ]
 }

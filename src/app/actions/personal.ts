@@ -214,6 +214,50 @@ export async function addPersonalClass(input: {
     }
   }
 
+  // And into your own catalog, so the next "Training with Kia" comes back
+  // filled in. This is the same autofill memory a coach's published class
+  // writes (one row per name, latest wins), and a personal entry is exactly
+  // what `isPublic: false` on that table has always meant: yours, on your
+  // own schedule, on nobody's public page. A schedule that is all over the
+  // place but repeats is the thing this product is for, and retyping the
+  // address of a client's home every week is how somebody stops bothering.
+  try {
+    await db
+      .insert(schema.classTemplates)
+      .values({
+        userId,
+        name,
+        classType,
+        description,
+        image,
+        startTime: input.startTime,
+        durationMin,
+        studioId: studio?.id ?? null,
+        location: studio ? null : (input.location?.trim().slice(0, 120) || null),
+        withWho: input.withWho?.trim().slice(0, 80) || null,
+        isPublic: false,
+        links,
+      })
+      .onConflictDoUpdate({
+        target: [schema.classTemplates.userId, schema.classTemplates.name],
+        set: {
+          classType,
+          description,
+          image,
+          startTime: input.startTime,
+          durationMin,
+          studioId: studio?.id ?? null,
+          location: studio ? null : (input.location?.trim().slice(0, 120) || null),
+          withWho: input.withWho?.trim().slice(0, 80) || null,
+          isPublic: false,
+          links,
+          updatedAt: new Date(),
+        },
+      });
+  } catch (err) {
+    console.error("personal template upsert failed", err);
+  }
+
   revalidatePath("/week");
   return { ok: true, id: written.length === 1 ? written[0].id : undefined };
 }
@@ -358,6 +402,55 @@ export async function updatePersonalClass(
     .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)))
     .returning({ id: schema.personalClasses.id });
   if (!res.length) return { ok: false, error: "That class isn't there any more." };
+
+  // Keep the memory current: an edit is the newest version of this entry, and
+  // the catalog tracks latest the same way a coach's template does.
+  try {
+    const tName = name;
+    const tType = input.classType?.trim().slice(0, 40) || null;
+    const tDesc = input.description?.trim().slice(0, 600) || null;
+    const tImage = input.image?.trim() || null;
+    const tLoc = studio ? null : (input.location?.trim().slice(0, 120) || null);
+    const tWith = input.withWho?.trim().slice(0, 80) || null;
+    const tLinks = (input.links ?? [])
+      .filter((l) => l?.url?.trim())
+      .slice(0, 6)
+      .map((l) => ({ label: String(l.label ?? "").slice(0, 40), url: String(l.url).slice(0, 500) }));
+    await db
+      .insert(schema.classTemplates)
+      .values({
+        userId,
+        name: tName,
+        classType: tType,
+        description: tDesc,
+        image: tImage,
+        startTime: input.startTime,
+        durationMin,
+        studioId: studio?.id ?? null,
+        location: tLoc,
+        withWho: tWith,
+        isPublic: false,
+        links: tLinks,
+      })
+      .onConflictDoUpdate({
+        target: [schema.classTemplates.userId, schema.classTemplates.name],
+        set: {
+          classType: tType,
+          description: tDesc,
+          image: tImage,
+          startTime: input.startTime,
+          durationMin,
+          studioId: studio?.id ?? null,
+          location: tLoc,
+          withWho: tWith,
+          isPublic: false,
+          links: tLinks,
+          updatedAt: new Date(),
+        },
+      });
+  } catch (err) {
+    console.error("personal template upsert failed", err);
+  }
 
   revalidatePath("/week");
   return { ok: true };

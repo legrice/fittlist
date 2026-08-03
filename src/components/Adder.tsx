@@ -292,6 +292,39 @@ export function Adder({
     setTime(v);
   };
 
+  // Filling one of your own from your own catalog: the thing you did last
+  // week, back with its place, its length and who it was with. This is the
+  // case the studio catalog cannot serve, because a 1:1 at a client's home
+  // has no studio to have a catalog.
+  const fillFromMine = (m: TemplateDto) => {
+    setName(m.name);
+    setClassType(m.classType ?? null);
+    setDescription(m.description ?? "");
+    if (m.image) setImage(m.image);
+    // The time comes back too: a thing you do again is usually a thing you
+    // do again at the same time. The end follows the length, the way it does
+    // everywhere else in this form.
+    setTime(m.startTime);
+    setEnd(minutesToTime(timeToMinutes(m.startTime) + m.durationMin));
+    setStudioId(m.studioId);
+    setLocation(m.studioId ? "" : (m.location ?? ""));
+    setWithWho(m.withWho ?? "");
+    if (m.links.length) setLinks(m.links.map((l) => ({ ...l })));
+  };
+
+  // Your own past entries, for the personal form. A schedule that is all
+  // over the place but repeats is what this product is for, so the second
+  // "Training with Kia" should not be retyped. Only your private ones: a
+  // class you teach is not something you go to.
+  const myPast = useMemo(() => {
+    if (!personal) return [];
+    const q = name.trim().toLowerCase();
+    return templates
+      .filter((m) => !m.isPublic)
+      .filter((m) => (q ? m.name.toLowerCase().includes(q) && m.name.toLowerCase() !== q : true))
+      .slice(0, 6);
+  }, [personal, templates, name]);
+
   // Classes already run at the chosen studio, offered in the name field: all of
   // them when the field is empty, filtered as you type.
   const suggestions = useMemo(() => {
@@ -299,8 +332,11 @@ export function Adder({
     const pool = q
       ? catalog.filter((c) => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q)
       : catalog;
-    return pool.slice(0, 8);
-  }, [name, catalog]);
+    // Your own come first and win a name outright: yours knows the time, the
+    // length and who it was with, which the studio's shared row never does.
+    const mine = new Set(myPast.map((m) => m.name.toLowerCase()));
+    return pool.filter((c) => !mine.has(c.name.toLowerCase())).slice(0, 8);
+  }, [name, catalog, myPast]);
 
   const toggleDay = (i: number) => {
     // One row is one slot on a rota, so editing a gym's class moves the day it
@@ -740,8 +776,23 @@ export function Adder({
                 }}
                 onBlur={() => setTimeout(() => setSugOpen(false), 150)}
               />
-              {sugOpen && suggestions.length > 0 && (
+              {sugOpen && (myPast.length > 0 || suggestions.length > 0) && (
                 <div className="namesug">
+                  {/* Yours first: it is the more specific answer. */}
+                  {myPast.map((m) => (
+                    <button
+                      key={`mine-${m.name}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        fillFromMine(m);
+                        setSugOpen(false);
+                        onToast("Filled from your last one");
+                      }}
+                    >
+                      <span className="namesug-nm">{m.name}</span>
+                      <span className="sub">Yours</span>
+                    </button>
+                  ))}
                   {suggestions.map((c) => (
                     <button
                       key={c.name}

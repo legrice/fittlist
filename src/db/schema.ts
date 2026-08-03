@@ -399,6 +399,11 @@ export const classTemplates = pgTable(
     // place ("Client's home", "Online") in that case.
     studioId: uuid("studio_id").references(() => studios.id),
     location: text("location"),
+    // Who it's with, for one of your own: "Kia". A name, not an account, the
+    // same as on the entry itself. It lives here so the second "Training with
+    // Kia" comes back filled in rather than retyped, which is the whole point
+    // of a template.
+    withWho: text("with_who"),
     // false = a private client/session: on the coach's own schedule only, never
     // on their public page, and no subscriber emails.
     isPublic: boolean("is_public").notNull().default(true),

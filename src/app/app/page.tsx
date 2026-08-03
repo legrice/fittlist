@@ -138,10 +138,12 @@ export default async function SchedulePage({
     name: t.name,
     classType: t.classType,
     description: t.description,
+    image: t.image,
     startTime: t.startTime,
     durationMin: t.durationMin,
     studioId: t.studioId,
     location: t.location,
+    withWho: t.withWho,
     isPublic: t.isPublic,
     links: t.links,
   }));
