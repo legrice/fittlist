@@ -14,6 +14,7 @@ import { Agenda, ClassRow } from "@/components/Agenda";
 import {
   CalBottomBar,
   CalHead,
+  CalShare,
   CalSticky,
   DayGrid,
   DayStrip,
@@ -279,9 +280,9 @@ export function WeekScreen({
             onTitle={() => setPickerOpen((o) => !o)}
             pickerOpen={pickerOpen}
           >
-            <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>
-              <Icon name="add" size={20} strokeWidth={2.6} />
-            </button>
+            {/* Share took the corner Add used to hold: a thumb can't
+                reach up here, and adding is what this screen is for. */}
+            <CalShare onShare={() => setShareWeek(true)} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -486,7 +487,7 @@ export function WeekScreen({
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
-        onShare={() => setShareWeek(true)}
+        onAdd={() => setAddMenu(true)}
       />
 
       {shareWeek && (

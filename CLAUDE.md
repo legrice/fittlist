@@ -1337,20 +1337,23 @@ it without a start bound: eight weeks of "your Tuesday class ran on
 Tuesdays" is almost always true, and the honest alternative (bounding on
 `createdAt`) breaks the moment an edit reinserts the rows.
 
-**The calendar keeps two doors on screen: Today left, Share right.**
+**The calendar keeps two doors on screen: Today left, Add right.**
 `CalBottomBar` floats them over every view on both calendars, both
-strokeless pills whose edge is their shadow. Today matters more now that
+strokeless pills whose edge is their shadow; Add is the orange one. Today matters more now that
 the list scrolls into the past: it lands on the first not-past day
 (`scrollToToday`, which knows the coach shell scrolls its `.stage` where
 the tabs layout scrolls the body). Share wears the sparkle in the brand
 orange and opens the handing-on: a coach's small sheet (the story image,
 the week as text, the link), or a member's `ShareMyWeekSheet` straight,
-because that sheet already is the options. The floating plus went up to
-the header's top right as the one orange circle (`.calhead-add`); the view
-and filter buttons beside it wear card-white circles of the same size
-(`.calmenu`, `.calfilter`), so the row is three round controls with the
-plus as the loud one. They were bare glyphs for a moment and read as
-floating punctuation beside the solid circle.
+because that sheet already is the options. Add and Share have traded
+places, by Matt's call, and the rule is the reason: the top right corner
+is the one part of a phone a thumb cannot reach, and adding is the thing
+somebody opens this screen to do. So Add floats bottom right in the brand
+orange (`.caladd`, beside Today's white pill), and Share went up to the
+header as the third circle in its cluster (`.calshare`, keeping the orange
+sparkle) beside the view and filter buttons (`.calmenu`, `.calfilter`).
+The loud colour follows the primary action rather than staying where it
+was drawn.
 The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class

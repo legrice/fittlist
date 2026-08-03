@@ -626,13 +626,18 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .calmenu, [data-mode="dark"] .calfilter {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
-.calhead-add {
+/* Share, as the third circle in the header's cluster: the same drawing as
+   the view and filter buttons, keeping its orange sparkle. */
+.calshare {
   flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; border: none; cursor: pointer;
+  background: var(--card); color: var(--ink); border: none; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(25, 21, 2, .10);
   padding: 0;
 }
-.calmenu:active, .calfilter:active, .calhead-add:active { transform: scale(.93); }
+[data-mode="dark"] .calshare { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10); }
+.calshare-ic { display: inline-flex; color: var(--si); }
+.calmenu:active, .calfilter:active, .calshare:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
 /* The month is the door to the mini calendar: the title alone, no chevron
    beside it. The glyph said what the tap already says. */
@@ -832,19 +837,22 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.sharefab {
+/* Add is the loud one, and it floats where a thumb already is. It traded
+   places with Share, which went up to the header's corner: the corner is
+   the one part of a phone a thumb cannot reach, and adding is the thing
+   somebody opens this screen to do. */
+.caladd {
   position: fixed; right: 16px;
   bottom: calc(88px + env(safe-area-inset-bottom));
-  z-index: 44; height: 46px; padding: 0 22px; border-radius: 999px;
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--card); border: none; color: var(--ink);
+  z-index: 44; height: 46px; padding: 0 22px 0 18px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--si); border: none; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.sharefab-ic { display: inline-flex; color: var(--si); }
-.todayfab:active, .sharefab:active { transform: scale(.95); }
-.todayfab.calfabs-low, .sharefab.calfabs-low {
+.todayfab:active, .caladd:active { transform: scale(.95); }
+.todayfab.calfabs-low, .caladd.calfabs-low {
   bottom: calc(20px + env(safe-area-inset-bottom));
 }
 /* Today lands the first not-past day under the sticky chrome, with real

@@ -49,7 +49,7 @@ await page.getByText("Your page is live").waitFor();
 await closeLive(page);
 
 // private class: no studio, free location
-await page.locator(".calhead-add").click();
+await page.locator(".caladd").click();
 await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
 await page.locator(".sheet .setrow", { hasText: "coaching" }).click();
 await page.getByRole("heading", { name: "New class" }).waitFor();

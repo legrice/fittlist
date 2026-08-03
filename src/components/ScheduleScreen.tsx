@@ -27,6 +27,7 @@ import { avatarColor } from "@/lib/avatar";
 import {
   CalBottomBar,
   CalHead,
+  CalShare,
   CalSticky,
   DayGrid,
   DayStrip,
@@ -546,13 +547,9 @@ export function ScheduleScreen({
             onTitle={() => setPickerOpen((o) => !o)}
             pickerOpen={pickerOpen}
           >
-            <button
-              className="calhead-add"
-              aria-label="Add"
-              onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
-            >
-              <Icon name="add" size={20} strokeWidth={2.6} />
-            </button>
+            {/* Share took the corner Add used to hold: a thumb can't
+                reach up here, and adding is what this screen is for. */}
+            <CalShare onShare={() => setShareMenu(true)} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -1032,7 +1029,7 @@ export function ScheduleScreen({
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
-        onShare={() => setShareMenu(true)}
+        onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
       />
 
       {shareMenu && (

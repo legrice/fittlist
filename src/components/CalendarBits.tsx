@@ -51,17 +51,22 @@ export function monthLabel(ym: string, todayIso: string) {
 
 /** The two persistent doors under every calendar view: Today bottom left
  *  (back to now, in the list, which matters more now that the list scrolls
- *  into the past), Share bottom right (handing your week on is the habit
- *  the whole app leans on). The plus lives up in the header's capsule. */
+ *  into the past), and Add bottom right, in the brand orange.
+ *
+ *  Add and Share traded places. Adding is the thing somebody opens this
+ *  screen to do, and it was in the top right corner, which is the one part
+ *  of a phone a thumb cannot reach; sharing is a thing you do occasionally
+ *  and deliberately, so it took the corner instead. The loud colour follows
+ *  the primary action rather than staying where it was drawn. */
 export function CalBottomBar({
   raised = true,
   onToday,
-  onShare,
+  onAdd,
 }: {
   /** Sitting above a tab bar, or on a screen without one. */
   raised?: boolean;
   onToday: () => void;
-  onShare: () => void;
+  onAdd: () => void;
 }) {
   const lift = raised ? "" : " calfabs-low";
   return (
@@ -69,14 +74,23 @@ export function CalBottomBar({
       <button className={`todayfab${lift}`} onClick={onToday}>
         Today
       </button>
-      <button className={`sharefab${lift}`} onClick={onShare}>
-        {/* The sparkle, in the brand orange: the pill's one moment of colour. */}
-        <span className="sharefab-ic" aria-hidden="true">
-          <Icon name="auto_awesome" size={17} />
-        </span>
-        Share
+      <button className={`caladd${lift}`} onClick={onAdd}>
+        <Icon name="add" size={19} strokeWidth={2.6} />
+        Add
       </button>
     </>
+  );
+}
+
+/** Share, as the header's third circle: the same size and drawing as the
+ *  view and filter buttons beside it, keeping its orange sparkle. */
+export function CalShare({ onShare }: { onShare: () => void }) {
+  return (
+    <button className="calshare" aria-label="Share" onClick={onShare}>
+      <span className="calshare-ic" aria-hidden="true">
+        <Icon name="auto_awesome" size={19} />
+      </span>
+    </button>
   );
 }
 
@@ -129,8 +143,8 @@ const VIEW_ICON: Record<CalView, string> = {
 
 /** The title row: the month leading at the gutter, and the right cluster of
  *  three: the current view's own glyph (tap for the view sheet), the
- *  filters glyph (tap for the kind sheet), and the orange plus the caller
- *  passes as children so each screen keeps its own handler. The hamburger
+ *  filters glyph (tap for the kind sheet), and whatever the caller passes
+ *  as children (the share circle), so each screen keeps its own handler. The hamburger
  *  is gone: the view button says what you're looking at, not that a menu
  *  exists. */
 export function CalHead({
