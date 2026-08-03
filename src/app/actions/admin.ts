@@ -3,6 +3,7 @@
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { PLACEHOLDER_KIND } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { detectProvider } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
@@ -463,6 +464,12 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // with it. Deleting the studio is the way to do that, deliberately.
   if (u.kind === "gym") {
     return { ok: false, error: "That's a studio's account. Remove the studio instead." };
+  }
+  // A roster placeholder is a position a studio is holding open, not a
+  // person. Taking it off the roster is what removes it, and that has to go
+  // through the rota so the shifts it holds are reopened rather than orphaned.
+  if (u.kind === PLACEHOLDER_KIND) {
+    return { ok: false, error: "That's a roster placeholder. Remove it from the studio's roster." };
   }
 
   // Rows the account owns — delete outright, children before parents.
