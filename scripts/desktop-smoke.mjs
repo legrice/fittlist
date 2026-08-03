@@ -76,6 +76,8 @@ for (const n of names) {
   // Following moved off the list and onto the profile: the row gets you to a
   // person, and the pill by their name is where the follow happens.
   await m.goto(`${BASE}/discover`);
+  // Classes lead the directory now; People is one tap over.
+  await m.getByRole("button", { name: "People", exact: true }).click();
   // Exact name: the list orders newest-first now, so a substring match on
   // "Matt" lands on MattsWife, who joined after him and sits above him.
   const row = m.locator(".disrow", {
@@ -100,15 +102,15 @@ await m.waitForTimeout(500);
   const labels = await m.locator(".headnav-l").allInnerTexts();
   // The same four everyone gets while Home is dark-launched behind an
   // admin; only where Schedule points differs.
-  if (labels.join("|") !== "Following|Search|Schedule|You")
-    fail(`the header links should be Following, Search, Schedule and You, got ${labels}`);
+  if (labels.join("|") !== "Following|Discover|Schedule|You")
+    fail(`the header links should be Following, Discover, Schedule and You, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();
   if (on !== "Following") fail(`the lit link is "${on}", expected Following`);
-  await m.locator(".headnav-l", { hasText: "Search" }).click();
+  await m.locator(".headnav-l", { hasText: "Discover" }).click();
   await m.waitForURL(/\/discover/);
-  await m.locator(".headnav-l.on", { hasText: "Search" }).waitFor();
+  await m.locator(".headnav-l.on", { hasText: "Discover" }).waitFor();
   await m.locator(".headnav-l", { hasText: "Following" }).click();
   await m.waitForURL(/\/feed/);
   await m.locator(".headnav-l.on", { hasText: "Following" }).waitFor();

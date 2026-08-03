@@ -73,16 +73,16 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   if (onFeed.length !== 4) fail(`a member should get four tabs, got ${onFeed.join(",")}`);
   if (
     !onFeed[0].includes("Following") ||
-    !onFeed[1].includes("Search") ||
+    !onFeed[1].includes("Discover") ||
     !onFeed[2].includes("Schedule") ||
     !onFeed[3].includes("You")
   )
-    fail(`a member's tabs should be Following, Search, Schedule, You, got ${onFeed.join(",")}`);
+    fail(`a member's tabs should be Following, Discover, Schedule, You, got ${onFeed.join(",")}`);
   if (await p.locator('.navtab[data-tab="home"]').count())
     fail("Home should be hidden from a member while it is admin-only");
-  await p.locator(".navtab", { hasText: "Search" }).click();
+  await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL("**/discover");
-  if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Search");
+  if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
   if ((await p.locator(".navtab").count()) !== 4) fail("and to their own calendar");
@@ -98,7 +98,7 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }
-console.log("member tabs ok (Following, Search, Schedule the calendar, You the person)");
+console.log("member tabs ok (Following, Discover, Schedule the calendar, You the person)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.
@@ -112,7 +112,7 @@ console.log("member tabs ok (Following, Search, Schedule the calendar, You the p
     },
     { times: 1 },
   );
-  await p.locator(".navtab", { hasText: "Search" }).click();
+  await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForTimeout(350);
   const mid = await p.evaluate(() => ({
     tabs: document.querySelectorAll(".navtab").length,
@@ -121,7 +121,7 @@ console.log("member tabs ok (Following, Search, Schedule the calendar, You the p
   }));
   if (mid.tabs !== 4) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
-  if (mid.lit !== "Search") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
+  if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL("**/discover");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");

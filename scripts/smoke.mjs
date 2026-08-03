@@ -9,6 +9,12 @@ const SCRATCH = process.env.SMOKE_OUT ?? ".";
 const BASE = "http://localhost:3000";
 
 const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
+// The directory opens on Classes now, so anything asserting on the People or
+// Studios rows picks its half first.
+const discHalf = async (p, half = "People") => {
+  await p.goto(BASE + "/discover");
+  await p.getByRole("button", { name: half, exact: true }).click();
+};
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
 const cardCount = (pg) => pg.locator(".ps-card").count();
@@ -1229,6 +1235,19 @@ await fan.waitForURL("**/feed");
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
+// Classes lead the directory now: what can I do on Thursday is the question
+// people arrive with. The People half is one tap over.
+await fan.locator(".clsfilters").waitFor();
+{
+  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
+  if (heads.join("|") !== "Classes|People|Studios")
+    fail("the directory's halves should be Classes, People, Studios: " + heads.join("|"));
+  // The count says what the filters left, and never a city.
+  const line = await fan.locator(".clscount-line").innerText();
+  if (!/\d+ class/.test(line)) fail("the classes half should count what it lists: " + line);
+  if (/Jersey City/.test(line)) fail("the count line should carry no city");
+}
+await fan.getByRole("button", { name: "People", exact: true }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
 // which half of it you're in.
 await fan.locator(".distabs").waitFor();
@@ -1259,7 +1278,7 @@ await fan.waitForTimeout(400);
 await fan.locator(".profacts .followpill").click();
 await fan.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 // and back on Discover, the row's line says so
-await fan.goto(BASE + "/discover");
+await discHalf(fan);
 await fan
   .locator(".disrow", { hasText: "Matt" })
   .locator(".sub", { hasText: "Following" })
@@ -1344,7 +1363,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await page.goto(BASE + "/matt/about");
   await page.locator(".studiotype", { hasText: "Yoga" }).waitFor();
 
-  await fan.goto(BASE + "/discover");
+  await discHalf(fan);
   // All leads the rail, already selected: no Filters sheet any more.
   await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).waitFor();
   if (await fan.locator(".chip-filters").count())
@@ -1380,7 +1399,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
 // A filter is only offered where it can narrow something. People's rail is
 // the kinds and nothing else; the type vocabulary is the Studios half's own.
 {
-  await fan.goto(BASE + "/discover");
+  await discHalf(fan);
   const chips = async () =>
     (await fan.locator(".dischips .chip").allInnerTexts()).map((c) => c.trim());
   const peopleChips = await chips();
@@ -1400,7 +1419,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
 // it and a control that does nothing is worse than one that does something
 // plain.
 {
-  await fan.goto(BASE + "/discover");
+  await discHalf(fan);
   await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-main").click();
   await fan.locator(".pubhead").waitFor();
   if (await fan.locator(".navbar").count())
@@ -1434,11 +1453,12 @@ console.log("discover ok (chevron rows, Following said on the line)");
 // heading. The point is that you don't have to know which half a thing is in
 // before you look for it.
 {
-  // The corner magnifier left when Search became a tab: the tab bar's
-  // Search is the directory, and its box is the door to this screen.
+  // The magnifier is back in the header's corner now that the tab says
+  // Discover again, and the Discover box is the other door to this screen:
+  // browsing is the tab, searching every half at once is the corner.
   await fan.goto(BASE + "/feed");
-  if (await fan.locator(".searchbtn").count())
-    fail("the header magnifier should be gone now that Search is a tab");
+  await fan.locator(".searchbtn").click();
+  await fan.waitForURL(/\/search/);
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
@@ -1629,7 +1649,7 @@ console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
 // photo-less coaches must be visually distinct — that's the whole point of the
 // palette, so no two listed coaches may share a colour
-await fan.goto(BASE + "/discover");
+await discHalf(fan);
 await fan.locator(".disrow-av-empty").first().waitFor();
 const avColors = await fan.locator(".disrow-av-empty").evaluateAll((els) =>
   els.map((e) => getComputedStyle(e).backgroundColor),
@@ -2049,7 +2069,7 @@ await fan.waitForURL("**/feed");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
 // ---- The member's tabs, while Home is dark: the four they always were,
-// with the directory renamed Search.
+// with the directory called Discover again.
 {
   // The You tab carries the viewer's initial inside it, so match by
   // inclusion rather than the joined string.
@@ -2057,11 +2077,11 @@ console.log("going + share my week ok (1080x1920 png, from the account)");
   if (
     tabs.length !== 4 ||
     !tabs[0].includes("Following") ||
-    !tabs[1].includes("Search") ||
+    !tabs[1].includes("Discover") ||
     !tabs[2].includes("Schedule") ||
     !tabs[3].includes("You")
   )
-    fail("a member's tabs should read Following, Search, Schedule, You: " + tabs.join("|"));
+    fail("a member's tabs should read Following, Discover, Schedule, You: " + tabs.join("|"));
   console.log("member tabs ok (four, no Home while it is dark)");
 }
 
@@ -2100,7 +2120,7 @@ console.log("digest opt-out ok (email stops, follows survive)");
 await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
-await fan.goto(BASE + "/discover");
+await discHalf(fan);
 await fan.locator(".distabs").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
@@ -2109,7 +2129,7 @@ if (!pub.ok()) fail("opting out of the directory broke the public page");
 await openProfile(page);
 await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "People can find you" }).waitFor();
-await fan.goto(BASE + "/discover");
+await discHalf(fan);
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();
 console.log("directory opt-out ok (delisted, page still public)");
@@ -2289,7 +2309,7 @@ await page.locator(".ps-event").first().waitFor();
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
-await page.locator(".navtab", { hasText: "Search" }).click();
+await page.locator(".navtab", { hasText: "Discover" }).click();
 await page.locator(".distabs").waitFor();
 // Schedule is the coaching calendar, whole screen: the rail left it for You.
 await page.locator(".navtab", { hasText: "Schedule" }).click();
@@ -2518,7 +2538,7 @@ console.log("studio pages ok (edit, types, slug follows the name)");
 
 // a profile is a screen of the app: the header floating over the picture, no
 // tab bar, and the arrow on the picture as the way off it
-await page.goto(BASE + "/discover");
+await discHalf(page);
 await page.locator(".disrow-main", { hasText: "Sam" }).click();
 await page.locator(".profname").waitFor();
 if (!(await page.locator(".profacts .followpill").count()))
