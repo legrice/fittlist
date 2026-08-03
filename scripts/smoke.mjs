@@ -2176,7 +2176,11 @@ await page.locator(".ps-event").first().waitFor();
   await page.locator(".calmenu").click();
   await page.getByRole("heading", { name: "View" }).waitFor();
   await page.locator(".sheet .setrow", { hasText: "Month" }).click();
-  await page.locator(".monthgrid").waitFor();
+  // The months stack now, so there are many grids; the first will do.
+  await page.locator(".monthgrid").first().waitFor();
+  if ((await page.locator(".monthblock").count()) < 10)
+    fail("the month view should stack a scroll of months");
+  if (await page.locator(".monthnav").count()) fail("the month chevrons should be gone");
   if (!(await page.locator(".monthpill.ev-coaching").first().count()))
     fail("the month grid should draw teaching pills in the teaching colour");
   await page.locator(".calmenu").click();

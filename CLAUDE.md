@@ -1210,11 +1210,17 @@ schedule" was, a circled menu beside it opening the view sheet (List and
 Month for now; Day and Week are deliberately not built yet), and the Month
 grid itself.
 The view is a preference (`fl-cal-view`, localStorage) and survives
-arrival, unlike the filters. Month draws the anchor month whole with a
-colour pill per class, chevrons to move months, today ringed; past days
-dim rather than drop, because a grid you can look back across is a record.
+arrival, unlike the filters. Month is one continuous scroll of months
+(`MonthScroll`, this month first in view, `MONTHS_BACK` behind it and
+`MONTHS_AHEAD` ahead, no chevrons), each block naming itself while the
+sticky title follows whichever month is under the header and the weekday
+initials pin with the chrome (`MonthHeadRow`); a colour pill per class,
+today filled, past days dimmed rather than dropped, because a grid you
+can look back across is a record.
 A tap on a future day lands on that day in the List (`day-{iso}` ids on
-the day groups are the landing spots). The grid's plans data comes from
+the day groups are the landing spots), and picking List from the view
+sheet lands at today, because the month scroll can be months deep. The
+grid's plans data comes from
 `myWeek`'s nine-week horizon, so months beyond it show teaching rows only.
 The List's dates are heading rows, everywhere, each with a hairline rule
 under it and real weight (`.callist`/`.feedagenda .ps-daycol`, 700 where

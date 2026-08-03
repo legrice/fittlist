@@ -29,7 +29,10 @@ import {
   CalHead,
   CalSticky,
   KindChecks,
-  MonthGrid,
+  MONTHS_AHEAD,
+  MONTHS_BACK,
+  MonthHeadRow,
+  MonthScroll,
   ViewSheet,
   loadCalView,
   monthLabel,
@@ -148,12 +151,6 @@ export function ScheduleScreen({
     setView(v);
     saveCalView(v);
   };
-  const moveMonth = (delta: number) =>
-    setYm((cur) => {
-      const [y, m] = cur.split("-").map(Number);
-      const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-    });
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   // Scrolling up reveals the past, a couple of weeks at a time.
   const { pastWeeks, sentinel } = usePastReveal(MAX_PAST_WEEKS);
@@ -345,17 +342,19 @@ export function ScheduleScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes, plans, todayIso, pastWeeks, pickedKinds]);
 
-  // The month, whole: every date the anchor month holds, kinds filtered the
-  // same way. No ended-filter here: the grid can look back, and a day that
-  // has been dims rather than disappears.
+  // The months, whole: every date the scroll's range holds, kinds filtered
+  // the same way. No ended-filter here: the grid can look back, and a day
+  // that has been dims rather than disappears.
   const monthItems = useMemo(() => {
     const map = new Map<string, MonthCellItem[]>();
     const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
-    const [y, m] = ym.split("-").map(Number);
-    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
-    for (let day = 1; day <= last; day++) {
-      const iso = `${ym}-${String(day).padStart(2, "0")}`;
-      const dow = (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    const start = new Date(`${todayIso.slice(0, 7)}-01T00:00:00Z`);
+    start.setUTCMonth(start.getUTCMonth() - MONTHS_BACK);
+    const end = new Date(`${todayIso.slice(0, 7)}-01T00:00:00Z`);
+    end.setUTCMonth(end.getUTCMonth() + MONTHS_AHEAD + 1);
+    for (const d = new Date(start); d < end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const iso = d.toISOString().slice(0, 10);
+      const dow = (d.getUTCDay() + 6) % 7;
       const rows: MonthCellItem[] = [];
       if (kindOn("coaching"))
         for (const c of classes)
@@ -370,7 +369,7 @@ export function ScheduleScreen({
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, ym, pickedKinds]);
+  }, [classes, plans, todayIso, pickedKinds]);
 
   // A day tapped on the grid lands on that day in the list: make sure the
   // list reaches it, switch, and scroll once it's painted.
@@ -418,7 +417,7 @@ export function ScheduleScreen({
               aria-label="Add"
               onClick={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
             >
-              <Icon name="add" size={20} />
+              <Icon name="add" size={20} strokeWidth={2.6} />
             </button>
           </CalHead>
           {/* The kind filters: the All-led rail, each pill filling with the
@@ -432,15 +431,16 @@ export function ScheduleScreen({
             onToggle={toggleKind}
             onAll={() => setPickedKinds(new Set())}
           />
+          {/* The weekday initials pin with the chrome while the months
+              scroll beneath. */}
+          {view === "month" && <MonthHeadRow />}
         </CalSticky>
         {view === "month" ? (
-          <MonthGrid
-            ym={ym}
+          <MonthScroll
             todayIso={todayIso}
             items={monthItems}
-            onPrev={() => moveMonth(-1)}
-            onNext={() => moveMonth(1)}
             onDay={openDay}
+            onMonthInView={setYm}
           />
         ) : !hasAnyClass && plans.length === 0 ? (
           <div className="empty-block">
@@ -954,7 +954,17 @@ export function ScheduleScreen({
       />
 
       {viewSheet && (
-        <ViewSheet view={view} onPick={pickView} onClose={() => setViewSheet(false)} />
+        <ViewSheet
+          view={view}
+          // Coming back to the List lands at today: the month scroll can be
+          // months deep, and the list picking up wherever that left the
+          // scroller was nowhere in particular.
+          onPick={(v) => {
+            pickView(v);
+            if (v === "list") requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
+          }}
+          onClose={() => setViewSheet(false)}
+        />
       )}
 
       {showFanView && (

@@ -16,7 +16,8 @@ import {
   CalHead,
   CalSticky,
   KindChecks,
-  MonthGrid,
+  MonthHeadRow,
+  MonthScroll,
   ViewSheet,
   loadCalView,
   monthLabel,
@@ -119,12 +120,6 @@ export function WeekScreen({
     setView(v);
     saveCalView(v);
   };
-  const moveMonth = (delta: number) =>
-    setYm((cur) => {
-      const [y, m] = cur.split("-").map(Number);
-      const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-    });
   const openDay = (iso: string) => {
     pickView("list");
     requestAnimationFrame(() =>
@@ -175,11 +170,11 @@ export function WeekScreen({
   })();
   const shown = allShown.filter((d) => d.iso >= todayIso);
   const pastShown = allShown.filter((d) => d.iso < todayIso && d.iso >= pastFloor);
-  // The month, whole, from the same rows: past days dim rather than drop.
+  // The months, whole, from the same rows: past days dim rather than drop.
+  // Every day the data holds goes in; each month block reads its own.
   const monthItems = (() => {
     const map = new Map<string, MonthCellItem[]>();
     for (const d of allShown) {
-      if (!d.iso.startsWith(ym)) continue;
       const rows = d.items.map((i) => {
         const [h, m] = i.hm.split(":").map(Number);
         return {
@@ -240,7 +235,7 @@ export function WeekScreen({
             onMenu={() => setViewSheet(true)}
           >
             <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>
-              <Icon name="add" size={20} />
+              <Icon name="add" size={20} strokeWidth={2.6} />
             </button>
           </CalHead>
           {/* The kind filters: the All-led rail, each pill filling with the
@@ -251,16 +246,17 @@ export function WeekScreen({
             onToggle={toggleKind}
             onAll={() => setPickedKinds(new Set())}
           />
+          {/* The weekday initials pin with the chrome while the months
+              scroll beneath. */}
+          {view === "month" && <MonthHeadRow />}
         </CalSticky>
 
         {view === "month" ? (
-          <MonthGrid
-            ym={ym}
+          <MonthScroll
             todayIso={todayIso}
             items={monthItems}
-            onPrev={() => moveMonth(-1)}
-            onNext={() => moveMonth(1)}
             onDay={openDay}
+            onMonthInView={setYm}
           />
         ) : shown.length === 0 && allShown.length === 0 ? (
           <div className="empty-block">
@@ -407,7 +403,17 @@ export function WeekScreen({
       )}
 
       {viewSheet && (
-        <ViewSheet view={view} onPick={pickView} onClose={() => setViewSheet(false)} />
+        <ViewSheet
+          view={view}
+          // Coming back to the List lands at today: the month scroll can be
+          // months deep, and the list picking up wherever that left the
+          // scroller was nowhere in particular.
+          onPick={(v) => {
+            pickView(v);
+            if (v === "list") requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
+          }}
+          onClose={() => setViewSheet(false)}
+        />
       )}
 
       {/* Which kind this one is. A class gets the full form; anything else

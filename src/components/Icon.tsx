@@ -167,15 +167,19 @@ export function Icon({
   name,
   size = 18,
   className = "",
+  strokeWidth = 1.75,
 }: {
   name: string;
   size?: number;
   className?: string;
+  /** The house weight is 1.75; a control that is nothing but its glyph
+   *  (the header's plus) can ask for more. */
+  strokeWidth?: number;
 }) {
   const Glyph = ICONS[name] ?? Circle;
   return (
     <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true">
-      <Glyph size={size} strokeWidth={1.75} />
+      <Glyph size={size} strokeWidth={strokeWidth} />
     </span>
   );
 }

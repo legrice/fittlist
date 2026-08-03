@@ -293,25 +293,36 @@ export function usePastReveal(maxWeeks: number, step = 2) {
 /** One row of the month: what to draw in a day's cell. */
 export type MonthCellItem = { kind: CalKind; name: string; at: number };
 
-/** The month, whole: Monday-led weeks covering the anchor month, a pill per
- *  class in its kind's colour, past days dimmed, today ringed. Days outside
- *  the month render empty rather than borrowing the neighbours' rows. */
-export function MonthGrid({
+/** How far the month scroll reaches: back to where the list's past window
+ *  ends, forward a year. */
+export const MONTHS_BACK = 2;
+export const MONTHS_AHEAD = 12;
+
+/** The weekday initials, pinned in the sticky chrome while the months
+ *  scroll beneath, the way Apple pins them. */
+export function MonthHeadRow() {
+  return (
+    <div className="monthhead" aria-hidden="true">
+      {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+        <span key={i}>{d}</span>
+      ))}
+    </div>
+  );
+}
+
+/** One month's grid: Monday-led weeks, a pill per class in its kind's
+ *  colour, past days dimmed, today filled. Days outside the month render
+ *  empty rather than borrowing the neighbours' rows. */
+function MonthBlock({
   ym,
   todayIso,
   items,
-  onPrev,
-  onNext,
   onDay,
 }: {
-  /** "2026-08" */
   ym: string;
   todayIso: string;
-  /** iso -> that day's rows, already filtered and sorted. */
+  /** iso -> that day's rows. May span every month; only this one is read. */
   items: Map<string, MonthCellItem[]>;
-  onPrev: () => void;
-  onNext: () => void;
-  /** A tap on a future (or today's) day with something on it. */
   onDay: (iso: string) => void;
 }) {
   const [y, m] = ym.split("-").map(Number);
@@ -330,20 +341,8 @@ export function MonthGrid({
   }
   const MAX = 3;
   return (
-    <div className="monthwrap">
-      <div className="monthnav">
-        <button className="iconbtn monthnav-b" aria-label="Previous month" onClick={onPrev}>
-          <Icon name="chevron_left" size={18} />
-        </button>
-        <button className="iconbtn monthnav-b" aria-label="Next month" onClick={onNext}>
-          <Icon name="chevron_right" size={18} />
-        </button>
-      </div>
-      <div className="monthhead" aria-hidden="true">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-          <span key={i}>{d}</span>
-        ))}
-      </div>
+    <div id={`month-${ym}`} data-ym={ym} className="monthblock">
+      <h3 className="monthblock-h">{monthLabel(ym, todayIso)}</h3>
       <div className="monthgrid">
         {cells.map((c) => {
           const rows = c.inMonth ? (items.get(c.iso) ?? []) : [];
@@ -368,6 +367,60 @@ export function MonthGrid({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** The months as one continuous scroll, the way Apple draws them: this
+ *  month first in view, the recent past above it, a year ahead below, no
+ *  chevrons. The sticky header's title follows whichever month is under
+ *  it, reported through onMonthInView. */
+export function MonthScroll({
+  todayIso,
+  items,
+  onDay,
+  onMonthInView,
+}: {
+  todayIso: string;
+  /** iso -> that day's rows, spanning the whole range, filtered and sorted. */
+  items: Map<string, MonthCellItem[]>;
+  onDay: (iso: string) => void;
+  onMonthInView: (ym: string) => void;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const thisYm = todayIso.slice(0, 7);
+  const [y0, m0] = thisYm.split("-").map(Number);
+  const yms: string[] = [];
+  for (let i = -MONTHS_BACK; i <= MONTHS_AHEAD; i++) {
+    const d = new Date(Date.UTC(y0, m0 - 1 + i, 1));
+    yms.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+  // Land on the current month, instantly, once: the past sits above the
+  // fold the way the list's past does.
+  useLayoutEffect(() => {
+    document.getElementById(`month-${thisYm}`)?.scrollIntoView({ block: "start" });
+  }, [thisYm]);
+  // The title follows the month crossing the band under the header.
+  useEffect(() => {
+    const blocks = wrapRef.current?.querySelectorAll<HTMLElement>("[data-ym]");
+    if (!blocks?.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && e.target instanceof HTMLElement && e.target.dataset.ym)
+            onMonthInView(e.target.dataset.ym);
+        }
+      },
+      { rootMargin: "-30% 0px -65% 0px" },
+    );
+    blocks.forEach((b) => io.observe(b));
+    return () => io.disconnect();
+  }, [onMonthInView]);
+  return (
+    <div ref={wrapRef} className="monthscroll">
+      {yms.map((ym) => (
+        <MonthBlock key={ym} ym={ym} todayIso={todayIso} items={items} onDay={onDay} />
+      ))}
     </div>
   );
 }

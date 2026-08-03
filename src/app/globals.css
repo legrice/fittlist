@@ -682,12 +682,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    the grid reads as a calendar rather than a wall of chips. Cells are
    buttons so a full day is a tap into the list; past and out-of-month days
    are furniture, not doors. */
-.monthwrap { margin-top: 4px; }
-.monthnav { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 6px; }
-.monthnav-b {
-  width: 32px; height: 32px; border-radius: 999px; background: var(--card);
-  border: 1.5px solid var(--line); color: var(--ink);
-  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+.monthscroll { margin-top: 4px; }
+/* One month after another, no chevrons: the scroll is the navigation, and
+   each block names itself while the sticky title follows along. */
+.monthblock { scroll-margin-top: 215px; margin-bottom: 30px; }
+.monthblock-h {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 17px; margin: 0 0 8px;
 }
 .monthhead {
   display: grid; grid-template-columns: repeat(7, 1fr);
@@ -751,8 +752,9 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .todayfab.calfabs-low, .sharefab.calfabs-low {
   bottom: calc(20px + env(safe-area-inset-bottom));
 }
-/* Today lands the first not-past day under the sticky chrome, not behind it. */
-.callist .ps-daygroup { scroll-margin-top: 165px; }
+/* Today lands the first not-past day under the sticky chrome, with real
+   air above the heading rather than grazing the divider. */
+.callist .ps-daygroup { scroll-margin-top: 192px; }
 /* The calendar's own header, stuck under the app's: the month row and the
    checkmarks pin (top is set to the brandbar's measured height), the
    divider under them is the wrapper's own edge, and the list slides
