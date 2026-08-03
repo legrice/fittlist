@@ -4738,8 +4738,10 @@ button.ps-card { cursor: pointer; }
 /* Two dropdowns and a count. A date is one answer out of a list; the types
    are a long multiselect that would have run off the edge of a chip rail,
    so it checks many and wears the number it picked. */
-/* The filters and the count they left, on one line. */
-.clsfilters { display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; }
+/* The filters and the count they left, on one line, with room under them:
+   the first day band was starting straight off the filter row, which read as
+   the list beginning mid-control rather than under it. */
+.clsfilters { display: flex; align-items: center; gap: 10px; margin: 12px 0 18px; }
 .clspill {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink);

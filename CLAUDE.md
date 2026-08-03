@@ -1258,14 +1258,24 @@ brand orange, the green and the blue already mean teaching, going and
 personal, and a band tinted any of them would be a fourth claim on a taken
 meaning. Today's name in `--si` is the list's one spot of brand.
 
-It pins on the calendars only (`.callist`, `top: var(--dayband-top)`).
-`CalSticky` publishes that number because it is the brandbar plus its own
-height, it moves with the view (the Day strip, the Month grid's weekday
-row), and a band that stuck to the top of the window would slide behind
-both; it is watched with a `ResizeObserver` rather than read once. Sticky is
-bounded by the day group, so the last band lets go at the end of its own day
-instead of riding the scroll to the bottom. A profile and a studio page
-(`.pub`) have their own pinned name row and set it back to `static`.
+It pins wherever the list scrolls under chrome: both calendars, Following and
+Discover's Classes half (`.callist` and `.feedagenda`, `top:
+var(--dayband-top)`). `publishBandTop` is the single writer of that number
+and `useBandTop` the only way to keep it current, watched with a
+`ResizeObserver` because both the header and the chrome change height with
+the view. A calendar passes its own pinned block (`CalSticky`); Following and
+Discover pass nothing, because everything above their lists scrolls away and
+only the app header is left. Sticky is bounded by the day group, so the last
+band lets go at the end of its own day instead of riding the scroll to the
+bottom. A profile and a studio page (`.pub`) have their own pinned name row
+and set it back to `static`.
+
+**Every screen that renders sticky bands has to call `useBandTop()`**, and
+this is the trap: the variable lives on `documentElement`, so a screen that
+doesn't set it inherits whatever the last screen did, and the CSS fallback
+is a guess. Discover shipped without the call and its bands pinned halfway
+down the phone, through the middle of a class row. A new list that wears
+`.callist` and forgets this looks broken in exactly that way.
 
 The scroll landings key off the same measured number
 (`.callist .ps-daygroup` and `.monthblock` both take `--dayband-top` plus

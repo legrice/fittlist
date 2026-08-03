@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Agenda, ClassRow } from "@/components/Agenda";
+import { useBandTop } from "@/components/CalendarBits";
 import { ClassCardActions } from "@/components/ClassCardActions";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
@@ -79,6 +80,12 @@ export function DiscoverList({
   /** Which half to open on, for a link that means one of them. */
   startHalf?: DiscoverHalf;
 }) {
+  // The Classes half draws the app's day bands, and they pin. Nothing above
+  // this list is sticky except the app header (the search door, the halves
+  // and the filters all scroll away), so it publishes the header's height
+  // and nothing else. Without this the bands fell back to a guessed offset
+  // and pinned halfway down the screen, through the middle of a class row.
+  useBandTop();
   // Classes lead, unless somebody was sent to a particular half. "Find
   // coaches" has to land on the coaches, or the button's own word is the
   // one thing the screen it opens isn't showing.
