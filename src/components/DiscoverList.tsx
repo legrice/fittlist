@@ -92,6 +92,23 @@ export function DiscoverList({
   // coaches" has to land on the coaches, or the button's own word is the
   // one thing the screen it opens isn't showing.
   const [tab, setTab] = useState<DiscoverHalf>(startHalf);
+  // The half goes in the URL as you switch, because leaving it in state alone
+  // meant a profile's back arrow returned you to Classes however you got
+  // there: the arrow pops history, and the entry it popped to had forgotten
+  // which half you were reading. replaceState rather than a router call, so
+  // the switch stays a client-side toggle and doesn't refetch the page; the
+  // server only reads `half` when somebody arrives cold, which is exactly
+  // what a pop back is.
+  const pick = (next: DiscoverHalf) => {
+    setTab(next);
+    // Switching lens drops the pick, same as before: the other half can't
+    // honour a word it doesn't use.
+    if (next === "coaches" || next === "studios") setTypes(new Set());
+    if (typeof window !== "undefined") {
+      const url = next === "classes" ? "/discover" : `/discover?half=${next}`;
+      window.history.replaceState(null, "", url);
+    }
+  };
   // The Classes half's types. A rail like the other two halves wear now,
   // rather than a bottom sheet: the sheet existed because the type list was
   // long enough to run off a rail's edge, and a rail that scrolls sideways
@@ -203,27 +220,21 @@ export function DiscoverList({
         <button
           className={`pubtab${tab === "classes" ? " sel" : ""}`}
           aria-current={tab === "classes" ? "page" : undefined}
-          onClick={() => setTab("classes")}
+          onClick={() => pick("classes")}
         >
           Classes
         </button>
         <button
           className={`pubtab${tab === "coaches" ? " sel" : ""}`}
           aria-current={tab === "coaches" ? "page" : undefined}
-          onClick={() => {
-            setTab("coaches");
-            setTypes(new Set());
-          }}
+          onClick={() => pick("coaches")}
         >
           Coaches
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
           aria-current={tab === "studios" ? "page" : undefined}
-          onClick={() => {
-            setTab("studios");
-            setTypes(new Set());
-          }}
+          onClick={() => pick("studios")}
         >
           Studios
         </button>
@@ -298,7 +309,10 @@ export function DiscoverList({
       ) : (
         <div className="dislist dislist-bare">
           {shown.map((c) => (
-            <PersonRow key={c.id} person={c} from="discover" />
+            // Coaches only on this half, so a Coach badge on every row is a
+            // word that never distinguishes anything. Search mixes kinds and
+            // keeps it.
+            <PersonRow key={c.id} person={c} from="discover" kindTag={false} follow />
           ))}
         </div>
       )}

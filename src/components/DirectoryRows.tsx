@@ -4,6 +4,7 @@ import Link from "next/link";
 import { initialOf } from "@/lib/avatar";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
+import { RowFollow } from "@/components/RowFollow";
 
 // One row for a person and one for a place, wherever the directory is listed.
 //
@@ -14,11 +15,14 @@ import { LinkPending } from "@/components/LinkPending";
 // thing on both screens. `from` is the only thing that differs, and it is
 // what lets the profile's back arrow name the list.
 //
-// Neither row carries a control any more. The corner Follow pill came off: a
-// row of pills fighting a row of names was most of the screen shouting, and
-// following is a choice about a person, which is what their page is for. A
-// row you already follow says so quietly on the sub-line ("· Following"),
-// the way a tagline carries a fact rather than a button.
+// A person's row carries the Follow pill again where the list asks for it
+// (`follow`), which is Discover: following is most of what somebody is doing
+// while they read that list, and making them open a page to do it put a
+// navigation between the want and the act. Search doesn't ask for it, so it
+// keeps the quieter row. Where the pill shows, the sub-line drops its
+// "· Following": the pill is already saying it, and twice is once too many.
+// A studio's row still carries nothing, because you follow a person and a gym
+// is a place.
 
 export type DirPerson = {
   id: string;
@@ -63,10 +67,13 @@ export function PersonRow({
   person: c,
   from,
   kindTag = true,
+  follow = false,
 }: {
   person: DirPerson;
   from: string;
   kindTag?: boolean;
+  /** Offer the pill in the corner. Discover does; search doesn't. */
+  follow?: boolean;
 }) {
   return (
     <div className="disrow">
@@ -93,11 +100,11 @@ export function PersonRow({
             <span className="nm">{c.name}</span>
             {kindTag && c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
           </span>
-          {/* The tagline, then the relationship, quietly: a fact on the line,
-              not a control in the corner. */}
+          {/* The tagline, and the relationship after it only where there is
+              no pill to say the same thing. */}
           <span className="sub">
             {c.title || `fittlist.co/${c.handle}`}
-            {c.following ? " · Following" : c.requested ? " · Requested" : ""}
+            {follow ? "" : c.following ? " · Following" : c.requested ? " · Requested" : ""}
           </span>
           {c.kind === "coach" && (
             <span className="wk">
@@ -107,11 +114,26 @@ export function PersonRow({
             </span>
           )}
         </span>
-        <span className="disrow-chev">
-          <Icon name="chevron_right" size={18} />
-        </span>
+        {/* The chevron steps aside for the pill: two things in one corner is
+            the row shouting, and the whole row is still the link. */}
+        {!follow && (
+          <span className="disrow-chev">
+            <Icon name="chevron_right" size={18} />
+          </span>
+        )}
         <LinkPending />
       </Link>
+      {/* Outside the Link, because a button inside an anchor is invalid and
+          the tap would belong to the wrong one. */}
+      {follow && (
+        <RowFollow
+          handle={c.handle}
+          name={c.name}
+          isCoach={c.kind === "coach"}
+          following={c.following}
+          requested={c.requested}
+        />
+      )}
     </div>
   );
 }
