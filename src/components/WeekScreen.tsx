@@ -94,13 +94,13 @@ export function WeekScreen({
   const [inviteOpen, setInviteOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  // Which kinds are showing: the same colour-coded checkmarks the coach's
-  // /app wears, minus Teaching, which a member hasn't got. Off on arrival
-  // resets; the view is a preference and survives it.
-  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
-  const kindOn = (k: CalKind) => !offKinds.has(k);
+  // Which kinds are narrowed to: the same All-led rail the coach's /app
+  // wears, minus Teaching, which a member hasn't got. Empty means All, and
+  // it resets on arrival; the view is a preference and survives it.
+  const [pickedKinds, setPickedKinds] = useState<Set<CalKind>>(new Set());
+  const kindOn = (k: CalKind) => pickedKinds.size === 0 || pickedKinds.has(k);
   const toggleKind = (k: CalKind) =>
-    setOffKinds((prev) => {
+    setPickedKinds((prev) => {
       const next = new Set(prev);
       if (next.has(k)) next.delete(k);
       else next.add(k);
@@ -243,12 +243,13 @@ export function WeekScreen({
               <Icon name="add" size={20} />
             </button>
           </CalHead>
-          {/* The kind filters: colour-coded checkmarks, also the legend for the
-              colours the cards wear. */}
+          {/* The kind filters: the All-led rail, each pill filling with the
+              colour its rows wear. */}
           <KindChecks
             present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
-            on={new Set((["added", "private"] as CalKind[]).filter(kindOn))}
+            picked={pickedKinds}
             onToggle={toggleKind}
+            onAll={() => setPickedKinds(new Set())}
           />
         </CalSticky>
 

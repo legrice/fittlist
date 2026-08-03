@@ -125,14 +125,14 @@ export function ScheduleScreen({
   // the moment is warm.
   const [live, setLive] = useState<{ id: string; name: string } | null>(null);
   const [pBusy, setPBusy] = useState(false);
-  // Which kinds are showing. The set stores what's switched OFF, so the
-  // default is everything without waiting to learn what the calendar holds.
-  // Off on arrival resets: a filter is a way of looking, not a fact worth
-  // storing. The view is different: a preference, so it survives arrival.
-  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
-  const kindOn = (k: CalKind) => !offKinds.has(k);
+  // Which kinds are narrowed to. Empty means All: everything shows, which
+  // is the default on arrival because a filter is a way of looking, not a
+  // fact worth storing. The view is different: a preference, so it
+  // survives arrival.
+  const [pickedKinds, setPickedKinds] = useState<Set<CalKind>>(new Set());
+  const kindOn = (k: CalKind) => pickedKinds.size === 0 || pickedKinds.has(k);
   const toggleKind = (k: CalKind) =>
-    setOffKinds((prev) => {
+    setPickedKinds((prev) => {
       const next = new Set(prev);
       if (next.has(k)) next.delete(k);
       else next.add(k);
@@ -314,7 +314,7 @@ export function ScheduleScreen({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, weeks, offKinds]);
+  }, [classes, plans, todayIso, weeks, pickedKinds]);
 
   // The days already run, revealed by scrolling up: calendar days this time
   // (the past has a fixed shape), no ended-filter (been-and-gone is the
@@ -343,7 +343,7 @@ export function ScheduleScreen({
     }
     return out.reverse();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, pastWeeks, offKinds]);
+  }, [classes, plans, todayIso, pastWeeks, pickedKinds]);
 
   // The month, whole: every date the anchor month holds, kinds filtered the
   // same way. No ended-filter here: the grid can look back, and a day that
@@ -370,7 +370,7 @@ export function ScheduleScreen({
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, ym, offKinds]);
+  }, [classes, plans, ym, pickedKinds]);
 
   // A day tapped on the grid lands on that day in the list: make sure the
   // list reaches it, switch, and scroll once it's painted.
@@ -386,23 +386,6 @@ export function ScheduleScreen({
         document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start", behavior: "smooth" }),
       ),
     );
-  };
-
-  // Hand a row on: the class page's link through the system share sheet,
-  // clipboard where there isn't one. A shift shares the gym's page for it,
-  // which is the page a member can actually open.
-  const shareRow = async (path: string, rowName: string) => {
-    const url = `${window.location.origin}${path}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: rowName, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      toast("Link copied, ready to paste");
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast(url);
-    }
   };
 
   return (
@@ -438,15 +421,16 @@ export function ScheduleScreen({
               <Icon name="add" size={20} />
             </button>
           </CalHead>
-          {/* The kind filters: colour-coded checkmarks, which are also the
-              legend for the colours the cards wear. Only when there is more
-              than one kind to tell apart. */}
+          {/* The kind filters: the All-led rail, each pill filling with the
+              colour its rows wear. Only when there is more than one kind to
+              tell apart. */}
           <KindChecks
             present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
               presentKinds.has(k),
             )}
-            on={new Set((["coaching", "added", "private"] as CalKind[]).filter(kindOn))}
+            picked={pickedKinds}
             onToggle={toggleKind}
+            onAll={() => setPickedKinds(new Set())}
           />
         </CalSticky>
         {view === "month" ? (
@@ -539,19 +523,6 @@ export function ScheduleScreen({
                               <span className="ps-edur">{p.durationMin} min</span>
                             </span>
                           </button>
-                          {/* A sibling, never a child: a button inside a
-                              button is not a thing. Yours-alone entries have
-                              no page to hand on; their picture lives in the
-                              sheet. */}
-                          {!p.personal && (
-                            <button
-                              className="evcard-share lone"
-                              aria-label={`Share ${p.name}`}
-                              onClick={() => shareRow(`/${p.handle}/${p.classId}?d=${p.iso}`, p.name)}
-                            >
-                              <Icon name="ios_share" size={17} />
-                            </button>
-                          )}
                           </div>
                         );
                       }
@@ -559,16 +530,6 @@ export function ScheduleScreen({
                       const studio = c.studioId ? studioById.get(c.studioId) : undefined;
                       const where = studio ? studio.name : c.location;
                       const start = clockParts(c.startTime);
-                      // What a row can hand on: a shift shares the gym's
-                      // page for it, a public class shares your own; a
-                      // private one has no page to give.
-                      const sharePath = c.shift
-                        ? c.shiftBase
-                          ? `/s/${c.shiftBase}/${c.id}?d=${d.iso}`
-                          : null
-                        : c.isPublic && !c.duplicateOf
-                          ? `/${handle}/${c.id}?d=${d.iso}`
-                          : null;
                       return (
                         <div key={`${d.iso}-${c.id}`} className="ps-erow">
                         <button
@@ -610,15 +571,6 @@ export function ScheduleScreen({
                             <span className="ps-edur">{c.durationMin} min</span>
                           </span>
                         </button>
-                        {sharePath && (
-                          <button
-                            className="evcard-share lone"
-                            aria-label={`Share ${c.name}`}
-                            onClick={() => shareRow(sharePath, c.name)}
-                          >
-                            <Icon name="ios_share" size={17} />
-                          </button>
-                        )}
                         </div>
                       );
                     })}

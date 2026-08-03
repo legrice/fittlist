@@ -585,13 +585,10 @@ tab pointed at the public profile and the working screen ended up behind a
 gear, which was bad enough to reverse. The rule that holds both lessons: the
 calendar is a top-level tab, one tap from anywhere and behind nothing, and
 it carries nothing that isn't the week. The room this makes is for the
-full-size calendar that is coming. The calendar draws the member lists'
-paper cards, minus the min-height that clears corner controls it doesn't
-have (`.evcards-tight`); the coach chip only rides the Going rows, where the
-face answers whose class it is. Every row with a page behind it carries the
-corner share circle (a shift hands on the gym's page for it, which is the
-page a member can open; private and yours-alone rows have nothing to hand),
-so "can you cover my Tuesday" is one tap into the share sheet.
+full-size calendar that is coming. The coach chip only rides the Going
+rows, where the face answers whose class it is. The rows carry no corner
+share circle any more; handing a class on goes through the class sheet, or
+the floating Share pill for the whole week.
 
 **You is the person, and it is the settings.** `/you` renders for both
 kinds: a member's `MemberAccount` rows, a coach's `ProfileSheet` with
@@ -1144,11 +1141,13 @@ rides its own line above the name (`.ps-shifttop`), the spot the coach
 chip takes on a Going row: Shift in the brand wash (`.ps-tag-shift`,
 `--si-tint` under `--si-ink`), Added by you on personal rows in the
 personal slate's wash with ink text (`.ps-tag-added`), each tag wearing
-its kind's colour quietly enough that the name stays loudest. The share circle and
-Add ribbon sit above the time in the right column, smaller, and the
-member's remove X takes that corner on their week; all of them are
+its kind's colour quietly enough that the name stays loudest. The Add
+ribbon sits above the time in the right column, smaller, and the
+member's remove X takes that corner on their week; both are
 siblings of the row, never children, because a button inside a link is not
-a thing. The ribbon fills brand orange (`--si`) when a class is in,
+a thing. The share circle came off every row (sharing lives on the class
+sheet, where one class has the whole screen), so the ribbon is a row's one
+action. The ribbon fills brand orange (`--si`) when a class is in,
 because the one mark the actions earn should be the same orange every Add
 wears. On the public page the pair loads the viewer's marks server-side so
 the ribbon starts right; a photo per row was tried and read as a poster
@@ -1281,12 +1280,13 @@ with its own darker ink). A full card fill shipped for a night and read as
 a poster wall, which is the lesson the photo cards taught first; the bar
 says the same thing at a glance without shouting. The corner badges
 (`.ps-corner`, `.ps-goingtag`) said it in words and are gone. The filters
-are colour-coded checkmarks (`KindChecks`, `.kindcheck`) in place of the
-old All-led tabs: each chip's swatch is a filled circle (round, so it
-nestles into the pill's own round ends) in the colour its rows wear, so
-the row is the legend and the filter at once. They multi-select, everything is
-on on arrival (the off-set resets; a filter is a way of looking, not a
-fact worth storing), unchecking all empties the list honestly, and the row
+are an All-led pill rail (`KindChecks`, `.kindcheck`), the same shape
+Discover's chips wear: All leads filled in ink, each kind pill carries its
+colour as a dot beside the word, and a picked kind inverts (the pill fills
+with the colour its rows wear, the dot goes white), so the rail is the
+legend and the filter at once, picked or not. Picks multi-select and narrow to what's picked; All is the absence
+of picks and the way back, on by default on arrival (a filter is a way of
+looking, not a fact worth storing). The row
 only renders when the calendar holds at least two kinds. Colour by
 relationship is three meanings, three colours, stable everywhere. Shift
 rides its own line above the name (which kind of yours it is comes before

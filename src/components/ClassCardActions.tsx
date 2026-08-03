@@ -6,22 +6,19 @@ import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The corner of a class card on a profile: share it on, and (for a member
-// looking at somebody else's class) the Add ribbon. Siblings of the row, never
-// children, because a button inside a link is not a thing; ClassOpener only
-// catches taps inside the row, so these keep their own.
+// The corner of a class row on a profile: the Add ribbon, for a member
+// looking at somebody else's class. A sibling of the row, never a child,
+// because a button inside a link is not a thing; ClassOpener only catches
+// taps inside the row, so this keeps its own.
 export function ClassCardActions({
   classId,
   iso,
-  url,
   name,
   canAdd,
   initialOn,
 }: {
   classId: string;
   iso: string;
-  /** The class page's path, shared as an absolute link. */
-  url: string;
   name: string;
   /** The viewer could put this in their plans: signed in, not the owner, not
    *  the coach on the slot. The server still has the final say. */
@@ -34,20 +31,6 @@ export function ClassCardActions({
   const [toastMsg, toastOn, toast] = useToast();
   const [, start] = useTransition();
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  const share = async () => {
-    const abs = `${window.location.origin}${url}`;
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: name, url: abs });
-        return;
-      }
-      await navigator.clipboard.writeText(abs);
-      toast("Link copied, ready to paste");
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") toast(abs);
-    }
-  };
 
   const toggle = () => {
     const next = !on;
@@ -71,15 +54,9 @@ export function ClassCardActions({
 
   return (
     <>
-      {/* Share takes the ribbon's spot when there is no ribbon: one lone
-          button hovering a slot in from the corner read as a mistake. */}
-      <button
-        className={`evcard-share${canAdd ? "" : " lone"}`}
-        aria-label={`Share ${name}`}
-        onClick={share}
-      >
-        <Icon name="ios_share" size={17} />
-      </button>
+      {/* The ribbon alone: the share circle came off every row, because
+          sharing lives on the class sheet, where one class has the whole
+          screen. */}
       {canAdd && (
         <button
           className={`evcard-add${on ? " on" : ""}`}

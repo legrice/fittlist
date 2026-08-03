@@ -189,36 +189,47 @@ export function ViewSheet({
   );
 }
 
-/** The kind filters: a colour-coded checkmark per kind, all on by default.
- *  They replaced the underline tabs the day the colour moved onto the cards:
- *  the chip's swatch is the same colour the class wears, so the row is the
- *  legend and the filter in one. Multi-select; unchecking everything empties
- *  the list honestly rather than snapping back. */
+/** The kind filters: All leading, then a pill per kind, the same All-led
+ *  rail Discover wears. All is on by default; picking a kind fills the pill
+ *  with the colour its rows wear, so the rail is the legend and the filter
+ *  in one. Multi-select; any pick takes All off, and clearing the last pick
+ *  hands it back. */
 export function KindChecks({
   present,
-  on,
+  picked,
   onToggle,
+  onAll,
 }: {
   present: CalKind[];
-  on: Set<CalKind>;
+  /** The kinds narrowed to. Empty means All: everything shows. */
+  picked: Set<CalKind>;
   onToggle: (k: CalKind) => void;
+  onAll: () => void;
 }) {
   if (present.length < 2) return null;
   return (
     <div className="kindchecks" aria-label="Calendar filter">
+      <button
+        className={`kindcheck kindcheck-all${picked.size === 0 ? " on" : ""}`}
+        data-kind="all"
+        aria-pressed={picked.size === 0}
+        onClick={onAll}
+      >
+        All
+      </button>
       {present.map((k) => {
-        const checked = on.has(k);
+        const on = picked.has(k);
         return (
           <button
             key={k}
-            className={`kindcheck kindcheck-${k}${checked ? " on" : ""}`}
+            className={`kindcheck kindcheck-${k}${on ? " on" : ""}`}
             data-kind={k}
-            aria-pressed={checked}
+            aria-pressed={on}
             onClick={() => onToggle(k)}
           >
-            <span className="kindcheck-box" aria-hidden="true">
-              {checked && <Icon name="check" size={13} />}
-            </span>
+            {/* The legend: the kind's colour as a dot at rest, inverting to
+                white when the pill fills with that colour. */}
+            <span className="kindcheck-dot" aria-hidden="true" />
             {KIND_LABEL[k]}
           </button>
         );

@@ -361,14 +361,13 @@ export async function PublicProfileView({
                           <span className="ps-edur">{c.durationMin} min</span>
                         </span>
                       </Link>
-                      {/* Share on every card; the ribbon only for somebody it
-                          could belong to. The owner shares their own class,
-                          they don't add it: it is already theirs. A coach on
-                          the slot doesn't either, for the same reason. */}
+                      {/* The ribbon, only for somebody the class could
+                          belong to. The owner adds nothing: it is already
+                          their class. A coach on the slot doesn't either,
+                          for the same reason. */}
                       <ClassCardActions
                         classId={c.id}
                         iso={d.iso}
-                        url={href}
                         name={c.name}
                         canAdd={canAddAny && c.coachUserId !== viewerId}
                         initialOn={myMarks.has(`${c.id}|${d.iso}`)}

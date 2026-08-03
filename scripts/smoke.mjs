@@ -1590,24 +1590,24 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 }
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
-// The profile's schedule wears the same flat rows every schedule does now,
-// actions and all: share on every row, and the ribbon only for somebody the
-// class could belong to. The member gets both; the owner shares their own
-// class rather than adding it, so their page carries the lone share and no
-// ribbon.
+// The profile's schedule wears the same flat rows every schedule does now.
+// The ribbon is the row's one action, and only for somebody the class could
+// belong to; the share circle came off every row, because sharing lives on
+// the class sheet. The owner's rows carry nothing in the corner.
 {
   await fan.goto(BASE + "/matt");
   await fan.locator(".pub .callist .ps-erow").first().waitFor();
   const row = fan.locator(".pub .callist .ps-erow").first();
-  await row.locator(".evcard-share").waitFor();
   await row.locator(".evcard-add").waitFor();
+  if (await row.locator(".evcard-share").count())
+    fail("the share circle should be gone from class rows");
   await page.goto(BASE + "/matt");
   await page.locator(".pub .callist .ps-erow").first().waitFor();
-  if (!(await page.locator(".evcard-share.lone").count()))
-    fail("the owner's rows should carry the share button in the corner");
+  if (await page.locator(".evcard-share").count())
+    fail("the owner's rows should carry no share circle either");
   if (await page.locator(".evcard-add").count())
     fail("the owner has nothing to add: it is already their class");
-  console.log("profile rows ok (share for everyone, the ribbon for a member)");
+  console.log("profile rows ok (the ribbon for a member, nothing else)");
 }
 
 // Now someone with an account has followed, so the coach sees a face rather
@@ -1669,21 +1669,19 @@ await fan.locator(".feedagenda .ps-erow").filter({ has: fan.locator(".ps-event.g
 if (await fan.locator(".feedagenda .ps-goingtag").count())
   fail("Following should carry no Added tag; the ribbon says it");
 // Flat rows, not cards: no shadow, the coach's accent bar down the left,
-// the added ribbon filling brand orange with Share to its left, both
-// sitting above the time in the right column.
+// the added ribbon filling brand orange above the time in the right
+// column, and no share circle beside it.
 {
   const card = await fan.evaluate(() => {
     const ev = document.querySelector(".feedagenda .ps-event");
     const bar = document.querySelector(".feedagenda .ps-accent");
     const add = document.querySelector(".evcard-add.on");
-    const share = document.querySelector(".evcard-share");
     return {
       shadow: getComputedStyle(ev).boxShadow,
       barW: bar ? bar.getBoundingClientRect().width : 0,
       addBg: add ? getComputedStyle(add).backgroundColor : null,
-      addX: add?.getBoundingClientRect().x ?? null,
-      shareX: share?.getBoundingClientRect().x ?? null,
-      shareY: share?.getBoundingClientRect().y ?? null,
+      addY: add?.getBoundingClientRect().y ?? null,
+      shares: document.querySelectorAll(".evcard-share").length,
       timeY: document.querySelector(".feedagenda .ps-etimecol")?.getBoundingClientRect().y ?? null,
     };
   });
@@ -1691,10 +1689,9 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
   if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
   if (card.addBg !== "rgb(221, 106, 53)")
     fail("the added ribbon should fill brand orange, got " + card.addBg);
-  if (card.shareX === null || card.shareX >= card.addX)
-    fail("the share button should sit left of the ribbon");
-  if (card.shareY === null || card.timeY === null || card.shareY >= card.timeY)
-    fail("the actions should sit above the time");
+  if (card.shares > 0) fail("the share circle should be gone from Following rows");
+  if (card.addY === null || card.timeY === null || card.addY >= card.timeY)
+    fail("the ribbon should sit above the time");
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
@@ -1866,11 +1863,12 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
     if (!(await row.locator(".ps-event.ev-private").count()))
       fail("a personal event should wear the Personal colour");
   }
-  await fan.locator('.kindcheck[data-kind="added"]').click();
+  // Picking Personal narrows to it: the added rows leave, the event stays.
+  await fan.locator('.kindcheck[data-kind="private"]').click();
   await fan.locator(".ps-erow", { hasText: "Physio" }).first().waitFor();
   if (await fan.locator(".ps-event.ev-added").count())
-    fail("unchecking Going should drop the added rows");
-  await fan.locator('.kindcheck[data-kind="added"]').click();
+    fail("picking Personal should drop the added rows");
+  await fan.locator('.kindcheck[data-kind="all"]').click();
   console.log("an event ok (no class furniture, wears the Personal colour)");
 
   // Nothing about it is public. Not on their profile, not in the feed.
@@ -2139,27 +2137,38 @@ await page.locator(".ps-event").first().waitFor();
   if (await page.locator(".ps-corner").count())
     fail("the corner badges should have become the card colours");
 }
-// The filters are colour-coded checkmarks now, the legend and the narrowing
-// in one row: uncheck a kind and its rows leave, check it and they return.
+// The filters are the All-led rail now: All on by default, a picked pill
+// fills with the colour its rows wear and narrows the list to that kind.
 {
   const chips = (await page.locator(".kindchecks .kindcheck").allInnerTexts()).map((t) => t.trim());
-  if (!chips.includes("Teaching") || !chips.includes("Going"))
-    fail("the checkmarks should offer Teaching and Going: " + chips.join("|"));
-  await page.locator('.kindcheck[data-kind="added"]').click();
-  await page.waitForTimeout(300);
-  if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
-    fail("unchecking Going should drop the class they only attend");
-  if (!(await page.locator(".ps-event.ev-coaching").first().count()))
-    fail("unchecking Going should keep the taught rows");
-  // Going back on, Teaching off: the other half narrows the same way.
-  await page.locator('.kindcheck[data-kind="added"]').click();
+  if (chips[0] !== "All" || !chips.includes("Teaching") || !chips.includes("Going"))
+    fail("the rail should lead with All then the kinds: " + chips.join("|"));
+  // All starts filled; picking Teaching fills it with the brand orange and
+  // takes All off.
+  const allBg = await page
+    .locator('.kindcheck[data-kind="all"]')
+    .evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (allBg === "rgb(255, 255, 255)") fail("All should start filled in: " + allBg);
   await page.locator('.kindcheck[data-kind="coaching"]').click();
+  await page.waitForTimeout(300);
+  const pickedBg = await page
+    .locator('.kindcheck[data-kind="coaching"]')
+    .evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (pickedBg !== "rgb(221, 106, 53)")
+    fail("a picked Teaching pill should fill brand orange: " + pickedBg);
+  if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
+    fail("picking Teaching should drop the class they only attend");
+  if (!(await page.locator(".ps-event.ev-coaching").first().count()))
+    fail("picking Teaching should keep the taught rows");
+  // The other kind narrows the same way; All brings everything back.
+  await page.locator('.kindcheck[data-kind="coaching"]').click();
+  await page.locator('.kindcheck[data-kind="added"]').click();
   await page.locator(".ps-event.ev-added", { hasText: "Conditioning" }).first().waitFor();
   if (await page.locator(".ps-event.ev-coaching").count())
-    fail("unchecking Teaching should drop the taught rows");
-  await page.locator('.kindcheck[data-kind="coaching"]').click();
+    fail("picking Going alone should drop the taught rows");
+  await page.locator('.kindcheck[data-kind="all"]').click();
   await page.locator(".ps-event.ev-coaching").first().waitFor();
-  console.log("kind checkmarks ok (colour is the badge, the chips narrow in place)");
+  console.log("kind pills ok (All leads, a pick fills with its colour and narrows)");
 }
 // The month view: the menu beside the month opens the view sheet, Month
 // draws the grid with the same colours, and List is the way back.
