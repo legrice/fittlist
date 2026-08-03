@@ -1197,7 +1197,7 @@ if ((await fan.locator(".wizdot").count()) !== 2)
   fail("a member's setup is two steps: photo, then who they are");
 await skipSetup(fan);
 await fan.waitForURL("**/feed");
-await fan.getByText("Nobody yet").waitFor();
+await fan.getByText("You\u2019re not following anyone").waitFor();
 // Home is dark-launched: a member has no Home tab, and the URL answers
 // with Following rather than a page they were never shown.
 if (await fan.locator('.navtab[data-tab="home"]').count())
@@ -1206,9 +1206,13 @@ await fan.goto(BASE + "/home");
 await fan.waitForURL("**/feed");
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
+// Find coaches names the half it means, so it lands on the coaches rather
+// than on the classes: a button that says one and opens the other is the
+// screen contradicting the word that got somebody there.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-// Classes lead the directory now: what can I do on Thursday is the question
-// people arrive with. The People half is one tap over.
+await fan.locator(".distabs .pubtab.sel", { hasText: "Coaches" }).waitFor();
+// and the Classes half is one tap over, with its own two filters
+await fan.getByRole("button", { name: "Classes", exact: true }).click();
 await fan.locator(".clsfilters").waitFor();
 {
   const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());

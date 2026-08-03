@@ -280,12 +280,49 @@ export const shiftCovers = pgTable(
 // on picks from these people and nobody else. Its own table rather than a
 // flag on coach_studios because that row is the coach's own claim about
 // themselves, and this is the gym's claim about the coach.
+//
+// A roster entry is a position, not an account. This is the rule the rest of
+// the staff side follows from: a studio building next week cannot wait for
+// every coach to sign up, so an entry has to be able to exist, and hold
+// shifts, before any real person is attached to it.
+//
+// The row still points at a `users` id, and deliberately so. A placeholder
+// gets a real users row with `kind = "placeholder"`, the same trick the gym
+// account already uses (`studios.accountUserId`): a synthetic .invalid email
+// nobody can receive or sign up with, no handle, not discoverable. The value
+// of that is everything downstream keeps working untouched, because
+// `classes.coachUserId`, `shift_covers.coachUserId`, the counts, the private
+// feed and the notifications all just see a user. The alternative, a nullable
+// userId plus a name on this row, would mean every one of those learning that
+// a shift might be held by something that isn't a user.
+//
+// `state` is what the roster screen groups by:
+//   active       on fittlist, accepted, linked            holds shifts
+//   invited      on fittlist, asked, hasn't answered      holds shifts
+//   placeholder  not on fittlist; a name and an invite    holds shifts
+//   unconfirmed  turned up by claiming or asked to join   holds none
+//
+// Only `unconfirmed` cannot hold a shift, and that is the whole difference:
+// it names somebody the studio has not agreed to yet.
 export const studioRotaCoaches = pgTable(
   "studio_rota_coaches",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     studioId: uuid("studio_id").notNull().references(() => studios.id),
     userId: uuid("user_id").notNull().references(() => users.id),
+    /** active | invited | placeholder | unconfirmed. */
+    state: text("state").notNull().default("active"),
+    /** Where the invite went, for a resend. Null once they are on. */
+    invitedEmail: text("invited_email"),
+    invitedPhone: text("invited_phone"),
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    /** Why they are in the unconfirmed pile: "claimed" (they had classes here
+     *  when the studio took the page) or "asked" (they requested it). It
+     *  changes the wording of the decline, which is not the same act in the
+     *  two cases: declining a coach who added classes only unpicks the
+     *  studio, it never touches their classes. */
+    source: text("source"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("studio_rota_coaches_once").on(t.studioId, t.userId)],
