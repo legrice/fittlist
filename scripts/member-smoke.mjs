@@ -178,7 +178,15 @@ await p.locator("#meLoc").fill("jersey city new jersey");
 await p.screenshot({ path: OUT + "/shot-member-editor.png" });
 await p.getByRole("button", { name: "Save profile" }).click();
 await p.getByText("Profile saved").waitFor();
-await p.goto(BASE + "/member");
+// Same straggler as the /you arrival below: this goto rides right behind the
+// save's refresh, and under suite load the load event has been seen to arrive
+// after the timeout while the page itself is fine.
+try {
+  await p.goto(BASE + "/member");
+} catch {
+  console.log("goto /member straggled; retrying once");
+  await p.goto(BASE + "/member");
+}
 // Scoped to the hero's own line: the coaches they train with carry cities too.
 await p.locator(".pubhead .profwhere", { hasText: "Jersey City, NJ" }).waitFor();
 console.log("member profile edit ok (location normalized to City, ST)");
