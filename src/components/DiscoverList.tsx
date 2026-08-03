@@ -211,7 +211,9 @@ export function DiscoverList({
       <div className="dissearchrow">
         <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
           <Icon name="search" size={19} className="dissearch-ic" />
-          <span className="dissearch-ph">Search</span>
+          {/* The door says what the field behind it says: it is drawn as that
+              field, and a door whose words change on opening is two doors. */}
+          <span className="dissearch-ph">Search classes, studios, or coaches</span>
         </Link>
       </div>
 

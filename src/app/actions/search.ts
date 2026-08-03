@@ -74,9 +74,18 @@ export async function searchAll(
     db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
 
-  // A handle, a name, or the city they train in. The handle is in there
-  // because it's what people are handed on a card, and typing it should find
-  // the person rather than nothing.
+  // A handle, a name, the city they train in, or what they teach. The handle
+  // is in there because it's what people are handed on a card, and typing it
+  // should find the person rather than nothing.
+  //
+  // `disciplines` is the one that makes a word like "kettlebell" work the
+  // whole way across this screen. It is picked from `STUDIO_TYPES`, the same
+  // vocabulary a studio's types come from and a class's type is offered from,
+  // so one word already found the kettlebell classes and the kettlebell gyms
+  // and stopped short of the kettlebell coaches, which is the half somebody
+  // typing it most wants. `certifications` stays out on purpose: a credential
+  // is not a category, and searching free chips for a category word only works
+  // by coincidence.
   const matched = allRows
     .filter((r) => !hidden.has(r.id) && r.id !== userId && r.name.trim())
     .filter(
@@ -85,7 +94,8 @@ export async function searchAll(
         r.name.toLowerCase().includes(needle) ||
         (r.handle ?? "").toLowerCase().includes(needle) ||
         (r.title ?? "").toLowerCase().includes(needle) ||
-        (r.location ?? "").toLowerCase().includes(needle),
+        (r.location ?? "").toLowerCase().includes(needle) ||
+        (r.disciplines ?? []).some((d) => d.toLowerCase().includes(needle)),
     )
     .filter((r) => !locNeedle || (r.location ?? "").toLowerCase().includes(locNeedle));
 

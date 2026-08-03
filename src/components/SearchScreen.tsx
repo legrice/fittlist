@@ -146,8 +146,12 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             className="dissearch-in"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            // The three headings this screen can answer with, in their order.
-            placeholder="People, studios, classes"
+            // The three things this screen can answer with. "Coaches" rather
+            // than "people" because it is the word somebody is looking for
+            // when they open this; the People heading still holds members,
+            // and a placeholder is a hint about what to type rather than a
+            // table of contents.
+            placeholder="Search classes, studios, or coaches"
             aria-label="Search fittlist"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus

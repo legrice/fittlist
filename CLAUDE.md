@@ -366,7 +366,20 @@ applied here: that is a quality bar for a list somebody is browsing, and you
 asked for this person by name. There is no separate place field for now (it
 shipped and came back out; the one box already matches towns through
 `users.location` and a studio's address), so a city is typed where a name
-is. Recent (`fl-recent-searches`, localStorage, this device only) holds the
+is. A tag word has to answer in every half or it answers in none:
+`users.disciplines` is searched alongside the name, the handle and the title,
+because it is picked from `STUDIO_TYPES`, the same vocabulary a studio's
+types come from, and "kettlebell" was already finding the kettlebell gyms
+and stopping short of the kettlebell coaches, which is the half somebody
+typing it most wants. `certifications` stays out on purpose: a credential is
+not a category, and searching free chips for a category word only works by
+coincidence. The known gap is one vocabulary short of the doctrine above it:
+`CLASS_TYPES` (what the adder's Type dropdown offers) is a different, shorter
+list than `STUDIO_TYPES`, so a class cannot be tagged Kettlebell at all and
+is only found by that word through its name or description. Merging them is
+the fix and it is its own commit, because it changes a shipped picker and
+Discover's two type filters read from the two lists separately.
+Recent (`fl-recent-searches`, localStorage, this device only) holds the
 rows that were tapped, not the strings that were typed: "iron" was only ever
 a way of reaching Ironbound, and offering the half-typed guess back is
 offering the work instead of the answer. Each entry is the person or place
