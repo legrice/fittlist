@@ -473,6 +473,8 @@ export async function PublicProfileView({
               follow={!isOwner && account ? account : null}
               isOwner={isOwner}
               availability={user.availability}
+              canMessage={canMessage}
+              signedIn={signedIn}
             />
           }
           // The same two slots for everybody. A visitor gets Message and

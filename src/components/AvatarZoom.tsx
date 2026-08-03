@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { Icon } from "@/components/Icon";
+import { MessageComposer } from "@/components/MessageComposer";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
@@ -23,6 +24,8 @@ export function AvatarZoom({
   follow = null,
   isOwner = false,
   availability = null,
+  canMessage = false,
+  signedIn = false,
 }: {
   handle: string;
   name: string;
@@ -37,6 +40,10 @@ export function AvatarZoom({
   /** Worn as a dot on the photo itself: green accepting, yellow waitlist.
    *  The words live in the overlay, under the photo. */
   availability?: string | null;
+  /** Their messages are open and this isn't your own page; the status
+   *  badge's explainer offers the composer when it's true. */
+  canMessage?: boolean;
+  signedIn?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -44,13 +51,23 @@ export function AvatarZoom({
   const [cardOpen, setCardOpen] = useState(false);
   const [following, setFollowing] = useState(follow?.following ?? false);
   const [requested, setRequested] = useState(follow?.requested ?? false);
+  const [availOpen, setAvailOpen] = useState(false);
+  const [availWriting, setAvailWriting] = useState(false);
+  const [availSent, setAvailSent] = useState(false);
   const [pending, start] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   useEffect(() => setMounted(true), []);
 
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
+  const first = name.trim().split(/\s+/)[0] || name;
   const url = () => `${window.location.origin}/${handle}`;
+
+  const closeAvail = () => {
+    setAvailOpen(false);
+    setAvailWriting(false);
+    setAvailSent(false);
+  };
 
   const toggleFollow = () => {
     if (pending) return;
@@ -147,12 +164,23 @@ export function AvatarZoom({
                   {initial}
                 </span>
               )}
-              {/* The dot's words. The photo wears the colour; this says it. */}
+              {/* The dot's words. The photo wears the colour; this says it.
+                  A tap explains what the status means, because a badge nobody
+                  can ask about is a claim taken on faith, and offers the
+                  composer when their messages are open. */}
               {availability && (
-                <span className={`availbadge availbadge-${availability}`}>
+                <button
+                  className={`availbadge availbadge-${availability}`}
+                  onClick={() => setAvailOpen(true)}
+                  aria-label={
+                    availability === "accepting"
+                      ? "What Open for clients means"
+                      : "What Waitlist means"
+                  }
+                >
                   <span className="availdot" aria-hidden="true" />
                   {availability === "accepting" ? "Open for clients" : "Waitlist"}
-                </span>
+                </button>
               )}
             </div>
             <div className="avoverlay-bottom">
@@ -198,6 +226,72 @@ export function AvatarZoom({
             {/* No Message door here any more: Contact is the big pill on
                 the page itself, with the sheet behind it. */}
             </div>
+            {/* The badge's explainer. It reads like the Verified badge's
+                sheet, and the Message door is the same composer the Contact
+                pill opens: availability is the status, messaging is the act
+                it invites. */}
+            {availOpen && (
+              <div
+                className="sheet-scrim"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) closeAvail();
+                }}
+              >
+                <div className={availWriting ? "sheet" : "sheet infosheet"}>
+                  <button className="iconbtn sheetclose" aria-label="Close" onClick={closeAvail}>
+                    <Icon name="close" size={16} />
+                  </button>
+                  {availWriting ? (
+                    <>
+                      {!availSent && <h2 style={{ marginTop: 10 }}>Message {first}</h2>}
+                      <MessageComposer
+                        handle={handle}
+                        coachName={name}
+                        signedIn={signedIn}
+                        onDone={() => setAvailSent(true)}
+                      />
+                      {availSent && (
+                        <div className="publishwrap">
+                          <button className="btn si" onClick={closeAvail}>
+                            Done
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <h2 style={{ marginTop: 10 }}>
+                        {availability === "accepting" ? "Open for clients" : "Waitlist"}
+                      </h2>
+                      {availability === "accepting" ? (
+                        <p className="lead">
+                          The green dot means {first} is taking on new clients right now.
+                        </p>
+                      ) : (
+                        <p className="lead">
+                          The yellow dot means {first}&rsquo;s books are full right now, and
+                          there is a waitlist for a spot.
+                        </p>
+                      )}
+                      {canMessage && handle && (
+                        <>
+                          <p className="lead">
+                            {availability === "accepting"
+                              ? "Interested in training together? Say what you're looking for and it lands in their inbox."
+                              : "You can still write and ask about the waitlist."}
+                          </p>
+                          <div className="publishwrap">
+                            <button className="btn si" onClick={() => setAvailWriting(true)}>
+                              Message {first}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
             <QrSheet
               handle={handle}
               open={qrOpen}
