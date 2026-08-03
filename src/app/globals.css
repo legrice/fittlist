@@ -829,7 +829,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    Under the chrome's z-7 and over the rows. Sticky is bounded by the day
    group, so the last band lets go at the end of its own day rather than
    riding the scroll to the bottom. */
-.ps-agenda.callist .ps-daycol {
+.ps-agenda.callist .ps-daycol,
+.ps-agenda.feedagenda .ps-daycol {
   position: sticky; top: var(--dayband-top, 150px); z-index: 5;
 }
 /* A profile and a studio page (both `.pub`) have no calendar chrome to
@@ -885,9 +886,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 17px; margin: 0 0 8px;
 }
+/* The weekday initials want air on both sides: the month title above them
+   and the grid below were both grazing them, which read as one crowded
+   block rather than a title, a legend and a calendar. */
 .monthhead {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 2px; padding-bottom: 5px; text-align: center;
+  margin-bottom: 2px; padding-bottom: 10px; text-align: center;
   font-size: 11px; font-weight: 700; color: var(--ol);
 }
 .monthgrid { display: grid; grid-template-columns: repeat(7, 1fr); }
@@ -970,7 +974,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
-.calsticky .calhead-row { margin-top: 0; padding-bottom: 10px; }
+.calsticky .calhead-row { margin-top: 0; padding-bottom: 14px; }
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Agenda, AgendaAvatar, ClassRow } from "@/components/Agenda";
+import { useBandTop } from "@/components/CalendarBits";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
 import { ClassSheet } from "@/components/ClassSheet";
@@ -54,6 +55,10 @@ export function FeedAgenda({
   todayIso: string;
 }) {
   const router = useRouter();
+  // The day bands pin here too. There is no calendar chrome on this screen,
+  // and the coach rail scrolls away with the list, so the only thing above
+  // them is the app header: no element to pass, just its height.
+  useBandTop();
   // A set, not one id: people train with more than one coach and want to see
   // two of them side by side without flipping back and forth. Empty is All.
   const [sel, setSel] = useState<Set<string>>(new Set());

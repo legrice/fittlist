@@ -125,27 +125,47 @@ export function scrollCalTop() {
  *  so the list scrolls beneath the chrome. The offset is the brandbar's
  *  measured height, because the brandbar is itself sticky and the two must
  *  not overlap. */
-export function CalSticky({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
+/**
+ * Where a sticky day band pins: the app header, plus whatever chrome is
+ * pinned under it on this screen.
+ *
+ * One writer on purpose. Every list that bands its days needs this number and
+ * none of them can work it out alone, and two screens computing it their own
+ * way is how they end up disagreeing by a few pixels that nobody can explain.
+ * Following passes nothing (the coach rail scrolls away, so only the header is
+ * above the list); a calendar passes its own chrome block.
+ */
+export function publishBandTop(extra?: HTMLElement | null): number {
+  const bb = document.querySelector<HTMLElement>(".brandbar");
+  const head = bb?.offsetHeight ?? 0;
+  document.documentElement.style.setProperty(
+    "--dayband-top",
+    `${head + (extra?.offsetHeight ?? 0)}px`,
+  );
+  return head;
+}
+
+/** Keep it current: the header and the chrome both change height with the
+ *  view, so this is watched rather than read once. */
+export function useBandTop(ref?: { current: HTMLElement | null }) {
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const el = ref?.current ?? null;
     const bb = document.querySelector<HTMLElement>(".brandbar");
-    // Two numbers out of one measurement: where this block pins, and where
-    // the day bands pin under it. The bands can't know the second on their
-    // own, and it moves with the view (the Day strip and the Month grid's
-    // weekday row both live in here), so it is watched rather than read once.
     const apply = () => {
-      const top = bb?.offsetHeight ?? 0;
-      el.style.top = `${top}px`;
-      document.documentElement.style.setProperty("--dayband-top", `${top + el.offsetHeight}px`);
+      const head = publishBandTop(el);
+      if (el) el.style.top = `${head}px`;
     };
     apply();
     const ro = new ResizeObserver(apply);
-    ro.observe(el);
+    if (el) ro.observe(el);
     if (bb) ro.observe(bb);
     return () => ro.disconnect();
-  }, []);
+  }, [ref]);
+}
+
+export function CalSticky({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useBandTop(ref);
   return (
     <div ref={ref} className="calsticky">
       {children}
