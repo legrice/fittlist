@@ -1122,12 +1122,20 @@ the base (`handle`, or `s/{slug}` for a gym), not the handle.
 draws a seven-day week from the public classes coaches list there and from
 members' personal entries that named the studio (`community` in
 `StudioView`), deduped on name and time, coach rows first because they have
-real pages to open. A member's entry surfaces as a plain row: name, time,
+real pages to open. A coach's row names the coach: the page is built by the
+people who train at the place, whoever runs it had no way to ask anybody
+about a listing they did not recognise, and the name is already public on
+the class it names. A member's entry surfaces as a plain row: name, time,
 length, no link, and never one word about the member; the consent is the
-line under the personal adder's studio field, which says exactly this. The
+line under the personal adder's studio field, which says the class joins
+this page, not that they do. Both carry the class's own `location` when it
+has one, which is a room or a floor rather than the studio, because the
+studio is the page. The
 week explains itself from an info dot beside the Schedule tab
 (`CommunityNote`, rendered through `TabDef.info` as a sibling of the tab
-link, never inside it): the sheet says the page is built by the people who
+link, never inside it; it rides the tab's own 3px rule and inks in with it,
+sits tight to the word so it stops reading as a fourth tab, and is drawn in
+brand orange as the one thing on that row with something behind it): the sheet says the page is built by the people who
 train here and carries the same Own this page ask the badge's sheet does.
 It was a paragraph over the list (`.commnote`), read once and scrolled past
 forever after. The moment the studio is

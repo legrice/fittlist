@@ -17,6 +17,17 @@ export type StudioDay = {
     /** A community row distilled from members' entries: it has no page at
      *  all, so it renders as a plain row rather than a link. */
     plain?: boolean;
+    /** Who teaches it, on a coach's own listing only. An unclaimed page is
+     *  built by the people who train here, and whoever runs the place has no
+     *  way to ask about a class without knowing who put it up. A coach's name
+     *  is already public on the class it names, so this shows nothing that
+     *  was not already showing. A member's entry stays anonymous: the consent
+     *  under the personal adder's studio field is that the class joins this
+     *  page, not that they do. */
+    coachName?: string | null;
+    /** What the class says about where it is, when it says anything: a room
+     *  or a floor. Never the studio's own name, which is the page title. */
+    where?: string | null;
   }[];
 };
 
@@ -65,7 +76,13 @@ export function StudioSchedule({
                   <>
                     <span className="ps-accent" style={{ background: accent }} aria-hidden="true" />
                     <span className="ps-ebody">
+                      {c.coachName?.trim() && (
+                        <span className="ps-shifttop ps-tag-added">{c.coachName}</span>
+                      )}
                       <span className="ps-enm">{c.name}</span>
+                      {c.where?.trim() && (
+                        <span className="ps-estudio ps-ewhere">{c.where}</span>
+                      )}
                     </span>
                     <span className="ps-etimecol">
                       <span className="ps-etime">

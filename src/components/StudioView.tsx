@@ -142,11 +142,16 @@ export async function StudioView({
     const pub = pubAll.filter((c) => c.isPublic);
     const owners = pub.length
       ? await db
-          .select({ id: schema.users.id, handle: schema.users.handle })
+          .select({ id: schema.users.id, handle: schema.users.handle, name: schema.users.name })
           .from(schema.users)
           .where(inArray(schema.users.id, [...new Set(pub.map((c) => c.userId))]))
       : [];
     const handleOf = new Map(owners.map((o) => [o.id, o.handle]));
+    // Who put this class here. An unclaimed page is built by the people who
+    // train at the place, and whoever runs it had no way to ask anybody about
+    // a listing they did not recognise. A coach's name is already public on
+    // the class it names, so this shows nothing that was not already showing.
+    const nameOf = new Map(owners.map((o) => [o.id, o.name]));
     const start = new Date(`${todayIso()}T00:00:00Z`);
     for (let i = 0; i < 7; i++) {
       const dt = new Date(start);
@@ -165,7 +170,15 @@ export async function StudioView({
         const key = `${c.name.trim().toLowerCase()}|${c.startTime}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        items.push({ id: c.id, name: c.name, startTime: c.startTime, durationMin: c.durationMin, base });
+        items.push({
+          id: c.id,
+          name: c.name,
+          startTime: c.startTime,
+          durationMin: c.durationMin,
+          base,
+          coachName: nameOf.get(c.userId) ?? null,
+          where: c.location,
+        });
       }
       for (const p of own) {
         if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
@@ -173,7 +186,16 @@ export async function StudioView({
         const key = `${p.name.trim().toLowerCase()}|${p.startTime}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        items.push({ id: p.id, name: p.name, startTime: p.startTime, durationMin: p.durationMin, plain: true });
+        // Still nobody's name on it: the consent under the personal adder's
+        // studio field is that the class joins this page, not that they do.
+        items.push({
+          id: p.id,
+          name: p.name,
+          startTime: p.startTime,
+          durationMin: p.durationMin,
+          plain: true,
+          where: p.location,
+        });
       }
       items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
