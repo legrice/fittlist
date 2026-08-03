@@ -1390,6 +1390,22 @@ label's own, the same exemption `fmtDayHeader` carries, and it needs the
 nowhere. Removing it touches eight files and is its own commit; until then,
 editing it changes nothing on screen.
 
+**A member's add ends on the share moment, one tap later.** Publishing a
+class ends a coach on `ClassLiveSheet` because that is when the thing became
+worth handing on; a member's add ended on nothing, and the poster of their
+week sat behind a small pill between two controls that only change how you
+are looking. Landing on `/week` from an add (the `?hl=` "See it" carries)
+offers it: the same `.folhint` note the personal add already uses, Share my
+week and Not now. It is deliberately not a second link in the note the add
+itself puts up, which is transient, already carries two things, and pops on
+somebody else's profile where a poster of your own week is a jump; here the
+picture is about what is on the screen. It is gated on `bare` (offering a
+picture of an empty week is the app talking to itself) and on
+`fl-week-share` in localStorage, which either button sets: taken once,
+answered forever, per device the way the follow hint's is. The coach's
+`/app` is deliberately untouched, because their Share is a different sheet
+and their share moment already exists.
+
 **"See it" points at the class it means.** The note that answers an add
 offers a way to the week it joined, and a week is a long list: arriving at
 the top of it and hunting for the row you just added is the work the note was

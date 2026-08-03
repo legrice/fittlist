@@ -46,6 +46,8 @@ import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
+const WEEK_SHARE_KEY = "fl-week-share";
+
 // A member's You tab: their calendar. The classes they added, their own
 // entries, the tools across the top, and the plus to put more on it.
 //
@@ -124,6 +126,36 @@ export function WeekScreen({
   const { pastWeeks, sentinel } = usePastReveal(CAL_PAST_DAYS / 7);
   // The floating Share pill: the week as a poster.
   const [shareWeek, setShareWeek] = useState(false);
+  // Arriving here from an add, which is the moment the week became worth
+  // showing somebody. A coach's publish ends on the share moment for exactly
+  // this reason; a member's add ended on nothing, and the poster sat behind a
+  // small pill between two controls that only change how you look.
+  //
+  // It is offered one tap later rather than in the note the add itself puts
+  // up: that note is transient and already carries two things, and it pops on
+  // somebody else's profile, where "share your week" is a jump. Here the
+  // picture is about what is on the screen.
+  const [weekShare, setWeekShare] = useState(false);
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).get("hl")) return;
+    // Once it has been closed it stays closed. Per device, like the follow
+    // hint's; a column is the fix if that starts to matter.
+    try {
+      if (localStorage.getItem(WEEK_SHARE_KEY) === "off") return;
+    } catch {
+      /* private mode */
+    }
+    setWeekShare(true);
+  }, []);
+  const closeWeekShare = (forever: boolean) => {
+    setWeekShare(false);
+    if (!forever) return;
+    try {
+      localStorage.setItem(WEEK_SHARE_KEY, "off");
+    } catch {
+      /* private mode */
+    }
+  };
   // The Day view's day. Entering it starts at today.
   const [dayIso, setDayIso] = useState(todayIso);
   const pickView = (v: CalView) => {
@@ -491,6 +523,31 @@ export function WeekScreen({
         }}
         onAdd={() => setAddMenu(true)}
       />
+      )}
+
+      {/* The share moment, on the week rather than on the row that made it.
+          Only where there is a week to draw: landing on an empty one and
+          being offered a picture of it is the app talking to itself. */}
+      {weekShare && !bare && (
+        <div className="folhint weekadded" role="status" aria-live="polite">
+          <p className="folhint-t">
+            Your week can go out as a picture, the classes you&rsquo;re going to and where.
+          </p>
+          <div className="folhint-row">
+            <button
+              className="folhint-go"
+              onClick={() => {
+                closeWeekShare(true);
+                setShareWeek(true);
+              }}
+            >
+              Share my week
+            </button>
+            <button className="folhint-off" onClick={() => closeWeekShare(true)}>
+              Not now
+            </button>
+          </div>
+        </div>
       )}
 
       {shareWeek && (
