@@ -22,13 +22,15 @@ export type NavItem = {
  * which shell it was in. Both sides have a page of their own now, so both get
  * the tab; only where it points differs.
  */
-export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
+export function navTabs(coach: boolean, scheduleHref?: string, home = false): NavItem[] {
   return [
-    // Home leads and is the landing tab: a mixed scroll with something new
-    // on it whether or not your follow graph changed. Following only moves
-    // when the people you follow do, which made the app feel dead on the
-    // second visit.
-    { id: "home", href: "/home", icon: "home", label: "Home" },
+    // Home leads where it's visible at all: a mixed scroll with something
+    // new on it whether or not your follow graph changed. Following only
+    // moves when the people you follow do, which made the app feel dead on
+    // the second visit. It is dark-launched for now (`homeVisible()`, an
+    // admin or HOME_ENABLED=true), so for everyone else this list is the
+    // four it always was and Following leads.
+    ...(home ? [{ id: "home" as const, href: "/home", icon: "home", label: "Home" }] : []),
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // The directory wears the magnifier and the word Search now: Home and
     // "Discover" both read as "find stuff", and two tabs that promise the
@@ -75,9 +77,13 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
   if (from === "discover") return { href: "/discover", label: "Back to Search" };
   if (from === "search") return { href: "/search", label: "Back to search" };
-  // "home" means the Home tab now; the Following feed names itself.
+  // "home" means the Home tab now; the Following feed names itself. Only
+  // somebody who can see Home ever leaves with that token, so it is safe
+  // to honour while the tab is dark.
   if (from === "home") return { href: "/home", label: "Back home" };
   if (from === "following") return { href: "/feed", label: "Back to Following" };
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
-  return signedIn ? { href: "/home", label: "Back home" } : { href: "/", label: "Back" };
+  // The cold-open fallback stays Following: it has to land somewhere every
+  // viewer can actually open.
+  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
 }

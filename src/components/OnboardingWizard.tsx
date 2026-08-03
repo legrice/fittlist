@@ -15,6 +15,7 @@ import { readPhoto } from "@/lib/photo";
 
 export function OnboardingWizard({
   kind = "coach",
+  landing = "/feed",
   name,
   photo,
   title,
@@ -31,6 +32,9 @@ export function OnboardingWizard({
   /** A member sets up a photo and a bio and stops there. The rest of this
    *  wizard is about being findable and bookable as a coach. */
   kind?: "coach" | "fan";
+  /** Where finishing setup lands. The server computes it: Home is
+   *  dark-launched, so it is Following for everyone but an admin. */
+  landing?: string;
   name: string;
   photo: string | null;
   title: string;
@@ -135,7 +139,7 @@ export function OnboardingWizard({
       await completeOnboarding();
       // Back to whatever they were part way through, if signing in was in the
       // middle of something. Set on the way in by AuthFlow.
-      router.push(takeAfterAuth() ?? (fan ? "/home" : "/app"));
+      router.push(takeAfterAuth() ?? (fan ? landing : "/app"));
       router.refresh();
     });
   };

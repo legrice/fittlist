@@ -93,7 +93,7 @@ export function UpdatesScreen({
           <h1>Updates</h1>
           <p className="adminsub">Follows, requests, and messages</p>
         </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/home">
+        <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
           <Icon name="close" size={18} />
         </Link>
       </div>

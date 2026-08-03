@@ -5,7 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { googleConfigured } from "@/lib/gcal";
 import { appleConfigured } from "@/lib/apple";
 import { inviteOnly } from "@/lib/invites";
-import { fansEnabled } from "@/lib/flags";
+import { fansEnabled, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
@@ -47,7 +47,7 @@ export default async function Home({
     // land on /app, which since the one-shell change is the bare editable
     // schedule: every login and every visit to the root surfaced a page with
     // no identity, in what read as random places.
-    if (user?.handle) redirect(fansEnabled() ? "/home" : "/app");
+    if (user?.handle) redirect(fansEnabled() ? await landingHref() : "/app");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered
@@ -64,6 +64,7 @@ export default async function Home({
           invitedByLink={viaAdmin && !wasInvited}
           inviter={inviter}
           fans={fansEnabled()}
+          landing={await landingHref()}
         />
       );
   }
@@ -77,6 +78,7 @@ export default async function Home({
       invitedByLink={viaAdmin && !wasInvited}
       inviter={inviter}
       fans={fansEnabled()}
+      landing={await landingHref()}
     />
   );
 }

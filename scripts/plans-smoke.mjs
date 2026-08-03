@@ -56,7 +56,7 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/home");
+await m.waitForURL("**/feed");
 
 // follow and add one of the coach's classes, so Plans has a real row
 await m.goto(BASE + "/carinaclores");

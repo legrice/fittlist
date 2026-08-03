@@ -1191,8 +1191,9 @@ await page.waitForURL(BASE + "/");
 await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
 await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
-// Every login lands on Home now; /app stopped being anyone's front door.
-await page.waitForURL(BASE + "/home");
+// Every login lands on Following; /app stopped being anyone's front door.
+// (Home is dark-launched, so nothing lands there while it is admin-only.)
+await page.waitForURL(BASE + "/feed");
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1217,13 +1218,14 @@ await fan.getByRole("heading", { name: "Add a photo." }).waitFor();
 if ((await fan.locator(".wizdot").count()) !== 2)
   fail("a member's setup is two steps: photo, then who they are");
 await skipSetup(fan);
-// Setup lands on Home now: the landing tab has something on it whether or
-// not the follow graph exists yet, and its empty Upcoming card says what
-// to do. Following still says Nobody yet until a follow exists.
-await fan.waitForURL("**/home");
-await fan.locator(".hm-empty", { hasText: "Nothing planned yet" }).waitFor();
-await fan.locator(".navtab", { hasText: "Following" }).click();
+await fan.waitForURL("**/feed");
 await fan.getByText("Nobody yet").waitFor();
+// Home is dark-launched: a member has no Home tab, and the URL answers
+// with Following rather than a page they were never shown.
+if (await fan.locator('.navtab[data-tab="home"]').count())
+  fail("Home should be hidden while it is admin-only");
+await fan.goto(BASE + "/home");
+await fan.waitForURL("**/feed");
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 await fan.getByRole("link", { name: "Find coaches" }).click();
@@ -1713,7 +1715,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.goto(BASE + "/feed");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
+  if ((await fan.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
@@ -2041,37 +2043,26 @@ await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).cl
 await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
-// the wordmark is the way home from anywhere
+// the wordmark is the way back to the feed from anywhere
 await fan.locator(".brandbar-home").click();
-await fan.waitForURL("**/home");
+await fan.waitForURL("**/feed");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
-// ---- Home: the landing tab. Upcoming holds the marked class, the rails
-// hold the room, and the tabs are five with the directory renamed Search.
+// ---- The member's tabs, while Home is dark: the four they always were,
+// with the directory renamed Search.
 {
-  await fan.locator(".hm-title", { hasText: "Upcoming" }).waitFor();
-  await fan.locator(".hm-card").first().waitFor();
   // The You tab carries the viewer's initial inside it, so match by
   // inclusion rather than the joined string.
   const tabs = (await fan.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
   if (
-    tabs.length !== 5 ||
-    !tabs[0].includes("Home") ||
-    !tabs[1].includes("Following") ||
-    !tabs[2].includes("Search") ||
-    !tabs[3].includes("Schedule") ||
-    !tabs[4].includes("You")
+    tabs.length !== 4 ||
+    !tabs[0].includes("Following") ||
+    !tabs[1].includes("Search") ||
+    !tabs[2].includes("Schedule") ||
+    !tabs[3].includes("You")
   )
-    fail("the tabs should read Home, Following, Search, Schedule, You: " + tabs.join("|"));
-  // The card opens the class sheet, the same as any list row.
-  await fan.locator(".hm-card").first().click();
-  await fan.locator(".classoverlay-nm").waitFor();
-  await fan.locator(".ovcircle-back").click();
-  await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
-  // The studios list is here, and the privacy line closes the page when
-  // Activity has anything to say.
-  await fan.locator(".hm-title", { hasText: "Studios" }).waitFor();
-  console.log("home ok (five tabs, upcoming card opens the class)");
+    fail("a member's tabs should read Following, Search, Schedule, You: " + tabs.join("|"));
+  console.log("member tabs ok (four, no Home while it is dark)");
 }
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -2277,6 +2268,23 @@ await page.locator(".ps-event").first().waitFor();
   await page.locator(".ps-daycol").first().waitFor();
   console.log("day view ok (the strip walks the week, the grid holds the class)");
 }
+// ---- Home, for the one person who can see it. It is dark-launched behind
+// an admin (ADMIN_EMAILS holds this account), so the tab is in this bar and
+// nobody else's, and the page it opens is the real one.
+{
+  await page.goto(BASE + "/app");
+  await page.locator('.navtab[data-tab="home"]').click();
+  await page.waitForURL("**/home");
+  await page.locator(".hm-title", { hasText: "Upcoming" }).waitFor();
+  // The sections that need no follow graph: your own next seven days, with
+  // its designed empty state, and the studios.
+  await page.locator(".hm-title", { hasText: "Studios" }).waitFor();
+  const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+  if (tabs.length !== 5 || !tabs[0].includes("Home"))
+    fail("an admin should get Home at the head of five tabs: " + tabs.join("|"));
+  console.log("home ok (admin only, and it renders)");
+}
+
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
@@ -2717,8 +2725,8 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// five tabs, and the account is the last — back in the app, since a
-// profile carries neither
+// five tabs for this account (it is the admin, so Home is in its bar), and
+// the account is the last — back in the app, since a profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".calhead-add").waitFor();
 if ((await page.locator(".navtab").count()) !== 5) fail("expected 5 tabs");

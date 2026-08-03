@@ -71,7 +71,7 @@ await m.getByRole("button", { name: "Continue" }).click();
 await m.getByRole("heading", { name: "Tell people who you are." }).waitFor();
 await fillLocation(m);
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/home");
+await m.waitForURL("**/feed");
 for (const n of names) {
   // Following moved off the list and onto the profile: the row gets you to a
   // person, and the pill by their name is where the follow happens.
@@ -98,9 +98,10 @@ await m.waitForTimeout(500);
 {
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
-  // The same five everyone gets; only where Schedule points differs.
-  if (labels.join("|") !== "Home|Following|Search|Schedule|You")
-    fail(`the header links should be Home, Following, Search, Schedule and You, got ${labels}`);
+  // The same four everyone gets while Home is dark-launched behind an
+  // admin; only where Schedule points differs.
+  if (labels.join("|") !== "Following|Search|Schedule|You")
+    fail(`the header links should be Following, Search, Schedule and You, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();

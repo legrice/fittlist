@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { fansVisible } from "@/lib/flags";
+import { fansVisible, homeVisible } from "@/lib/flags";
 import { homeData } from "@/lib/home";
 import { getSessionUserId } from "@/lib/session";
 import { HomeScreen } from "@/components/HomeScreen";
@@ -18,6 +18,9 @@ export default async function HomePage({
   searchParams: Promise<{ setpw?: string }>;
 }) {
   if (!(await fansVisible())) redirect("/");
+  // Dark-launched: the tab isn't in anyone else's bar, and the URL is a
+  // guessable door, so it gets the same answer the bar gives.
+  if (!(await homeVisible())) redirect("/feed");
   const { setpw } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");

@@ -70,7 +70,7 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/home");
+await m.waitForURL("**/feed");
 await m.goto(BASE + "/carina");
 await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);

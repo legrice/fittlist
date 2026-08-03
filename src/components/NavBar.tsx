@@ -19,6 +19,7 @@ export function NavBar({
   coach = true,
   face,
   scheduleHref,
+  home = false,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
    *  A screen off the tabs that belongs to one passes it. */
@@ -30,12 +31,15 @@ export function NavBar({
   face?: NavFace;
   /** Where Schedule goes; defaults by role. */
   scheduleHref?: string;
+  /** Whether the Home tab is in the bar at all. Dark-launched: an admin, or
+   *  HOME_ENABLED=true. The server decides and passes it down. */
+  home?: boolean;
 }) {
   const here = activeTab(usePathname(), active);
 
   return (
     <nav className="navbar" aria-label="Main">
-      {navTabs(coach, scheduleHref).map((t) => {
+      {navTabs(coach, scheduleHref, home).map((t) => {
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;
         const glyph =

@@ -11,7 +11,7 @@ export function AppHeader({
   unread = 0,
   settings,
   avatar,
-  home = "/home",
+  home = "/feed",
   nav,
 }: {
   unread?: number;
@@ -33,14 +33,21 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string };
+  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; home?: boolean };
 }) {
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
         <Wordmark variant="ink" beta />
       </Link>
-      {nav && <HeaderNav coach={nav.coach} active={nav.active} scheduleHref={nav.scheduleHref} />}
+      {nav && (
+        <HeaderNav
+          coach={nav.coach}
+          active={nav.active}
+          scheduleHref={nav.scheduleHref}
+          home={nav.home}
+        />
+      )}
       <div className="brandbar-actions">
         {/* The bell, and (coaches-only mode) the gear: the corner is for
             what you reach for from anywhere. The magnifier left when Search

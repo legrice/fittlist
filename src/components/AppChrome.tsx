@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { fansVisible } from "@/lib/flags";
+import { fansVisible, homeVisible, landingHref } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
@@ -50,6 +50,8 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const fans = await fansVisible();
+  // Home is dark-launched: an admin sees the tab, everyone else doesn't.
+  const showHome = await homeVisible();
   const unread = await unreadNotifications(userId);
   // The Schedule tab is the working calendar: a coach's at /app, a member's
   // at /week. You is the person, at /you for everyone.
@@ -63,22 +65,22 @@ export async function AppChrome({
   const header = (
     <AppHeader
       unread={unread}
-      // The logo goes to Following for everyone with the member side. It used
-      // to send a coach to /app, which since the one-shell change is the bare
-      // editable schedule: a page with no identity that read as showing up at
-      // random.
-      home={fans ? "/home" : "/app"}
+      // The logo goes to the landing tab for everyone with the member side.
+      // It used to send a coach to /app, which since the one-shell change is
+      // the bare editable schedule: a page with no identity that read as
+      // showing up at random.
+      home={fans ? await landingHref() : "/app"}
       // The gear only where there is no You tab to hold the account: the
       // coaches-only mode has no tab bar, so the corner is the one door.
       settings={fans ? undefined : "/you"}
-      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, active } : undefined}
+      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, active, home: showHome } : undefined}
     />
   );
   if (!bar) return header;
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} active={active} />
+      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} active={active} home={showHome} />
     </>
   );
 }

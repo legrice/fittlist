@@ -8,7 +8,7 @@ import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { pushSignupPing } from "@/lib/push";
 import { siteOrigin } from "@/lib/format";
-import { fansEnabled } from "@/lib/flags";
+import { fansEnabled, landingHref } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
 import { signupSource } from "@/lib/attribution";
 
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     if (tokens.refresh_token) await storeCalendar(user.id, tokens.refresh_token, email);
     await createSession(user.id);
     if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-    return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/home" : "/app"}`, 302);
+    return Response.redirect(`${siteOrigin()}${fansEnabled() ? await landingHref() : "/app"}`, 302);
   }
 
   // ---- calendar connect flow (started while logged in): sub is the user id.

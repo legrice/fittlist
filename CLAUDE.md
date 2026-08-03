@@ -1359,12 +1359,20 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**The tabs are five: Home, Following, Search, Schedule, You.** Home leads
-and is the landing tab (every sign-in, wizard ending and OAuth callback
-lands on `/home` when the member side is on; the wordmark points there
-too, and `backToFor`'s signed-in fallback follows): Following only moves
-when the people you follow do, which made the app feel dead on the second
-visit, and Home is the mixed scroll that has something on it either way.
+**The tabs are five where Home is visible, four everywhere else: Home,
+Following, Search, Schedule, You.** Home leads when it's there, and it is
+dark-launched (`homeVisible()`: an admin, or `HOME_ENABLED=true`), by
+Matt's call, until it's right. While it's dark the tab is in his bar and
+nobody else's, `/home` answers everyone else with Following (the URL is
+guessable, so it gets the same answer the bar gives), and nothing lands
+there: `landingHref()` is the one answer for signing in, finishing setup,
+the wordmark and the OAuth callbacks, and it says `/feed` for everyone
+the tab is hidden from. A client can't ask who is an admin, so `AuthFlow`
+and `OnboardingWizard` take the landing as a prop from their server
+parent rather than guessing. Following leads for everyone else, and only
+moves when the people you follow do, which made the app feel dead on the
+second visit; Home is the mixed scroll that has something on it either
+way, which is why it takes the lead the day the flag opens.
 "Search" is the Discover directory renamed, route unchanged at
 `/discover`, because Home and "Discover" both read as "find stuff" and two
 tabs promising the same thing is one tab nobody opens: Home is curated,
@@ -1375,7 +1383,8 @@ the directory's search door. Plans is gone as a word in the chrome, and
 nothing counts a badge, because a number that only grows is a scoreboard.
 Schedule is your own calendar; You is the person, the account screen
 included. `navTabs()` in `src/lib/nav.ts` is the one list both bars
-render. `/week` stays in the `(tabs)` route group and lights Schedule for
+render, and it takes the Home flag rather than reading it, because both
+bars are client components and the answer is the server's. `/week` stays in the `(tabs)` route group and lights Schedule for
 a member; a coach landing on it is redirected to `/app`. In `?from=`
 tokens and `backToFor`, "home" means the Home tab now and the Following
 feed says `from=following`; the class page honours both. The current tab

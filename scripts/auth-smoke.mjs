@@ -98,7 +98,7 @@ await p3.getByPlaceholder("you@example.com").fill("nopw@example.com");
 await p3.getByPlaceholder("Password").fill("brand-new-pass-9");
 await p3.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
 await p3.getByRole("button", { name: "Not now" }).click().catch(() => {});
-await p3.waitForURL("**/home");
+await p3.waitForURL("**/feed");
 console.log("recovered password works in a fresh browser ok");
 await c3.close();
 
@@ -137,12 +137,11 @@ await c3.close();
   await fp.getByRole("button", { name: "Claim it" }).click();
   await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
   await skipSetup(fp);
-  await fp.waitForURL("**/home");
-  await fp.goto(BASE + "/feed");
+  await fp.waitForURL("**/feed");
   await fp.getByText("Nobody yet").waitFor();
-  // and it stuck: going back to / sends them home, not to a claim step
+  // and it stuck: going back to / sends them to their feed, not a claim step
   await fp.goto(BASE + "/");
-  await fp.waitForURL("**/home");
+  await fp.waitForURL("**/feed");
   if (await fp.getByText("Pick your link.").count())
     fail("a follower should never be asked to claim a URL");
   console.log("follower path ok (asked, not assumed, and it sticks)");

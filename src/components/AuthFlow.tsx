@@ -47,6 +47,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
+  landing = "/feed",
 }: {
   startStage: "email" | "role" | "claim";
   via?: string | null;
@@ -66,6 +67,10 @@ export function AuthFlow({
    *  it from users.kind; the client can't, on a fresh load. */
   claimAs?: "coach" | "fan";
   fans?: boolean;
+  /** Where a finished sign-in lands. The server computes it (Home is
+   *  dark-launched, so it is Following for everyone but an admin), because a
+   *  client can't ask who is an admin. */
+  landing?: string;
 }) {
   const router = useRouter();
   const search = useSearchParams();
@@ -131,7 +136,7 @@ export function AuthFlow({
     // Somebody who tapped Follow on a coach's page came here to do that, not
     // to read their own feed. The wizard consumes it instead when there's one
     // still to come, so this only reads it when the flow ends here.
-    else router.push(takeAfterAuth() ?? (fans || fan ? "/home" : "/app"));
+    else router.push(takeAfterAuth() ?? (fans || fan ? landing : "/app"));
   };
 
   const submitPassword = () => {

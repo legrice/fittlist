@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { landingHref } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 
@@ -18,7 +19,7 @@ export default async function WelcomePage() {
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user?.handle) redirect("/");
   const fan = user.kind === "fan";
-  if (user.onboardedAt) redirect(fan ? "/home" : "/app");
+  if (user.onboardedAt) redirect(fan ? await landingHref() : "/app");
 
   // A member never sees the studio step, so don't pay for the query.
   const [studioRows, mine] = fan
@@ -34,6 +35,7 @@ export default async function WelcomePage() {
   return (
     <OnboardingWizard
       kind={fan ? "fan" : "coach"}
+      landing={await landingHref()}
       name={user.name}
       photo={user.photo}
       title={user.title ?? ""}
