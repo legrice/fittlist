@@ -91,7 +91,9 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   // No plans ribbon, no gear, and no corner magnifier: Search is a tab.
   if (await p.locator(".plansbtn").count()) fail("the plans ribbon should be gone");
   if (await p.locator(".settingsbtn").count()) fail("the gear should be gone: You is the door");
-  if (await p.locator(".searchbtn").count()) fail("the magnifier should be gone: Search is a tab");
+  // The magnifier is back in the corner now that the tab says Discover.
+  if (!(await p.locator(".searchbtn").count()))
+    fail("the header magnifier should be back beside the bell");
   await p.locator(".navtab", { hasText: "You" }).click();
   await p.waitForURL("**/you");
   if ((await p.locator(".navtab").count()) !== 4) fail("and to their account rows");

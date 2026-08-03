@@ -283,9 +283,10 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 }
 console.log("cancel one occurrence ok (weeks either side survive, EXDATE in the feed)");
 
-// One week renders at a time now, and this week's Friday was just cancelled,
-// so the next Friday lives behind View more.
-await page.locator(".viewmore").click();
+// The list runs its whole horizon now, no View more: this week's Friday was
+// just cancelled and the next one is simply further down.
+if (await page.locator(".viewmore").count())
+  fail("the schedule should not ask before showing the rest of the week");
 await page.locator(".ps-daygroup", { hasText: "FRI" }).first().waitFor();
 // The edit step just before this can recreate rows with fresh ids mid-flight,
 // so a delete can occasionally hit a stale row id. Retry the whole flow once.
@@ -304,8 +305,6 @@ for (let attempt = 0; ; attempt++) {
   }
   if (done) break;
   if (attempt >= 1) fail("delete did not persist after retry");
-  // the reload above reset the view to one week; bring Friday back
-  await page.locator(".viewmore").click().catch(() => {});
   await page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first().click();
   await page.getByRole("heading", { name: "Edit class" }).waitFor();
 }

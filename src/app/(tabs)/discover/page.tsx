@@ -1,11 +1,11 @@
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { discoverClasses } from "@/lib/discoverclasses";
+import { buildDiscoverClasses } from "@/lib/discoverclasses";
 import { runsOn, todayIso } from "@/lib/format";
 import { DiscoverList } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
@@ -31,11 +31,14 @@ export default async function DiscoverPage() {
   // profile is, and it drops the ones you removed too so you aren't handed
   // them back as a suggestion. The three loads only need the viewer, so they
   // run together.
-  const [allRows, hidden, followRows, askRows] = await Promise.all([
-    db
-      .select()
-      .from(schema.users)
-      .where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true))),
+  // One load for the whole screen. All three halves are the same rows read
+  // three ways, so the users, the schedules and the studios are fetched once
+  // and shared: the classes half fetching its own ran `publicSchedules`
+  // twice and scanned the users twice to draw one page.
+  const [everyone, hidden, followRows, askRows, marks, studioRows] = await Promise.all([
+    // Gyms come along: they own classes and have no handle, so a
+    // handle-filtered query would drop every rota in the directory.
+    db.select().from(schema.users),
     hiddenFrom(userId),
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
@@ -47,12 +50,35 @@ export default async function DiscoverPage() {
       .select({ trainerUserId: schema.followRequests.trainerUserId })
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
+    // The viewer's own marks, for the ribbon on a class row.
+    db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))),
+    db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
+  const allRows = everyone.filter((r) => !!r.handle && r.discoverable);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
   // Their own classes plus the shifts each has chosen to show, so the count
-  // below matches what opening their page actually shows.
-  const classRows = (await publicSchedules(rows)).filter((c) => c.isPublic);
+  // below matches what opening their page actually shows. Run once, read by
+  // the coach counts and the classes list alike. The gyms' own rotas come
+  // beside them: a gym owns its classes and has no handle to find them by,
+  // so the ids come from the users already in hand.
+  const gymIds = everyone.filter((u) => u.kind === "gym").map((u) => u.id);
+  const [schedRows, gymRows] = await Promise.all([
+    publicSchedules(rows),
+    gymIds.length
+      ? db
+          .select()
+          .from(schema.classes)
+          .where(and(inArray(schema.classes.userId, gymIds), eq(schema.classes.isPublic, true)))
+      : Promise.resolve([]),
+  ]);
+  const classRows = schedRows.filter((c) => c.isPublic);
 
   // "Classes this week" — the signal that a page is actually live, and the
   // thing a fan is deciding on.
@@ -111,7 +137,6 @@ export default async function DiscoverPage() {
   // The other half of the directory. Every studio, in name order: a row here
   // is a place, and a place doesn't get ranked by whether it signed up. The
   // tag says which of them you can see a week for, which is the useful part.
-  const studioRows = await db.select().from(schema.studios).orderBy(schema.studios.name);
   const studios: DirStudio[] = studioRows.map((st) => ({
     id: st.id,
     slug: st.slug ?? st.id,
@@ -130,7 +155,15 @@ export default async function DiscoverPage() {
       <DiscoverList
         people={people}
         studios={studios}
-        classes={await discoverClasses(userId)}
+        classes={buildDiscoverClasses({
+          viewerId: userId,
+          owners: everyone,
+          hidden,
+          personRows: schedRows,
+          gymRows,
+          studios: studioRows,
+          marks,
+        })}
         todayIso={todayIso()}
         cities={cities}
         myCity={me.location?.trim() || null}

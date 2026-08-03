@@ -123,14 +123,25 @@ export async function PublicProfileView({
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
-  // .ics can't answer this differently.
-  const classRows = (await publicSchedule(user)).filter((c) => c.isPublic);
-  // "Where I coach" is the union of studios the coach picked in setup and any
-  // studio they've published a class at.
-  const pickedRows = await db
-    .select({ studioId: schema.coachStudios.studioId })
-    .from(schema.coachStudios)
-    .where(eq(schema.coachStudios.userId, user.id));
+  // .ics can't answer this differently. "Where I coach" is the union of
+  // studios the coach picked in setup and any studio they've published a
+  // class at.
+  //
+  // These three have nothing to say to one another, so they go together
+  // rather than in a chain. This page is the link a coach hands out, which
+  // makes it the route worth being careful about. It is not visible in the
+  // local load check, and can't be: dev runs PGlite, a single-connection
+  // embedded Postgres that serializes what a pooled one overlaps. The win
+  // is three round trips becoming one on production's pool.
+  const [allClassRows, pickedRows, fansOn] = await Promise.all([
+    publicSchedule(user),
+    db
+      .select({ studioId: schema.coachStudios.studioId })
+      .from(schema.coachStudios)
+      .where(eq(schema.coachStudios.userId, user.id)),
+    fansVisible(),
+  ]);
+  const classRows = allClassRows.filter((c) => c.isPublic);
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
   ].filter((id): id is string => !!id);
@@ -148,7 +159,7 @@ export async function PublicProfileView({
   // The viewer's own marks on these classes, so the card's ribbon can say
   // what is already in their plans. Visitors with the member side only; the
   // server-side setGoing still holds the real rules.
-  const canAddAny = !isOwner && !!viewerId && (await fansVisible());
+  const canAddAny = !isOwner && !!viewerId && fansOn;
   const myMarks = new Set<string>();
   if (canAddAny && classRows.length) {
     const marks = await db

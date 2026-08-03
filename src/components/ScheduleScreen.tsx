@@ -56,8 +56,13 @@ import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { Toast, useToast } from "@/components/Toast";
 
-// One week at a time: the button at the bottom asks for the next one.
-const INITIAL_WEEKS = 1;
+// The list shows the whole horizon its data covers: nine weeks, which is
+// what `myWeek` expands personal entries across, so the two halves of the
+// calendar agree about how far forward "forward" goes. There is no View
+// more button; a calendar you have to ask for more of is a calendar you
+// fight. It can still stretch past this on demand, silently, when a day
+// tapped in the Month grid lies beyond it.
+const INITIAL_WEEKS = 9;
 const MAX_WEEKS = 52;
 // And backwards: scrolling up reveals what has been, to the loaded window.
 const MAX_PAST_WEEKS = CAL_PAST_DAYS / 7;
@@ -293,8 +298,8 @@ export function ScheduleScreen({
   // The calendar: every date from today forward that has classes - weekly
   // classes recur on their weekday, one-offs land on their date. "A week" is
   // seven POPULATED days, not seven calendar days, so a Mon/Wed/Fri schedule
-  // still fills the screen before View more; the calendar horizon caps the
-  // walk so an empty schedule doesn't scan a year.
+  // fills the screen rather than showing three rows; the calendar horizon
+  // caps the walk so an empty schedule doesn't scan a year.
   // A shift belongs to the gym, so tapping it opens the class rather than the
   // adder: it isn't this coach's to edit, and what they *can* do with it (give
   // the date up, take an open one) lives on the class itself.
@@ -736,16 +741,6 @@ export function ScheduleScreen({
                 </div>
               ))}
             </div>
-            )}
-            {/* A week at a time, on request. The old behavior loaded four and
-                kept loading on scroll, which made the schedule feel endless;
-                asking is one tap and the list stays the size you asked for.
-                Gone once the horizon runs dry: a short last page means there
-                is nothing further to show. */}
-            {weeks < MAX_WEEKS && days.length === weeks * 7 && (
-              <button className="viewmore" onClick={() => setWeeks((w) => Math.min(w + 1, MAX_WEEKS))}>
-                View more
-              </button>
             )}
           </>
         )}

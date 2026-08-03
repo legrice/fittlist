@@ -1259,7 +1259,13 @@ future one. Every row wears its
 relationship as its colour (see the colour doctrine below), and tapping
 does what the row is (a teaching row opens the editor, a shift or a Going
 row opens the class sheet, a personal row opens `PlanSheet`). The List view
-holds only what is real: no empty days, no time gutter. Following is
+holds only what is real: no empty days, no time gutter, and no View more:
+it runs the whole horizon its data covers (nine weeks, which is what
+`myWeek` expands personal entries across, so both halves of the calendar
+agree how far forward goes). A calendar you have to ask for more of is a
+calendar you fight. It still stretches past that silently when a day
+tapped in the Month grid lies beyond it. The public profile keeps its
+View more, because a stranger's page is a pitch rather than a tool. Following is
 everyone you follow; Schedule is you. Those stay legibly different.
 
 **The calendar has views, and the month is its name.** `CalendarBits.tsx`

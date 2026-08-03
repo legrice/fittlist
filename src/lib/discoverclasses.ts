@@ -1,9 +1,7 @@
-import { and, eq, gte, inArray } from "drizzle-orm";
-import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { hiddenFrom } from "@/lib/blocks";
-import { classAddress, publicSchedules } from "@/lib/coachweek";
+import { classAddress, type ScheduleRow } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import type { schema } from "@/db";
 
 // The classes half of the directory: every public class anyone can walk into,
 // as dated occurrences rather than as rows in a table. It is the one half
@@ -51,54 +49,43 @@ export type DirClass = {
  * blocked, and not already been and gone. A gym's own rota counts too, and
  * it has no handle, so the row carries the base its page lives under rather
  * than assuming a person.
+ *
+ * This queries nothing. The directory page already loads every row it needs
+ * for the coaches and the studios, and the classes are the same rows read a
+ * different way: when this fetched its own, `/discover` ran `publicSchedules`
+ * twice, scanned the users twice and loaded the studios twice to draw one
+ * screen. Anything calling this passes what it already has.
  */
-export async function discoverClasses(viewerId: string): Promise<DirClass[]> {
-  const db = await getDb();
+export function buildDiscoverClasses(input: {
+  viewerId: string;
+  /** Every user row, gyms included: a gym owns classes and has no handle. */
+  owners: (typeof schema.users.$inferSelect)[];
+  hidden: Set<string>;
+  /** `publicSchedules()` over the listable people, already run. */
+  personRows: ScheduleRow[];
+  /** The gyms' own public classes, straight off the table. */
+  gymRows: (typeof schema.classes.$inferSelect)[];
+  studios: (typeof schema.studios.$inferSelect)[];
+  /** The viewer's future marks, for the ribbon's starting state. */
+  marks: { classId: string; occurrenceDate: string }[];
+}): DirClass[] {
+  const { viewerId, owners, hidden, personRows, gymRows, studios, marks } = input;
   const today = todayIso();
-  const [owners, hidden, marks] = await Promise.all([
-    db.select().from(schema.users),
-    hiddenFrom(viewerId),
-    db
-      .select({
-        classId: schema.attendances.classId,
-        occurrenceDate: schema.attendances.occurrenceDate,
-      })
-      .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, viewerId), gte(schema.attendances.occurrenceDate, today))),
-  ]);
   // A coach who is delisted keeps their page and leaves the directory, so
   // their classes leave it too: a listing they opted out of is still a
   // listing. A gym account has no handle and no such switch; its schedule is
   // the thing it published.
-  const listable = owners.filter(
-    (u) => !hidden.has(u.id) && (u.kind === "gym" ? true : !!u.handle && u.discoverable),
+  const ownerById = new Map(
+    owners
+      .filter((u) => !hidden.has(u.id) && (u.kind === "gym" ? true : !!u.handle && u.discoverable))
+      .map((u) => [u.id, u]),
   );
-  const ownerById = new Map(listable.map((u) => [u.id, u]));
-
-  // The people's own classes plus the shifts each chose to show, from the one
-  // loader every public surface uses, and the gyms' rotas beside them.
-  const people = listable.filter((u) => u.kind !== "gym");
-  const gymIds = listable.filter((u) => u.kind === "gym").map((u) => u.id);
-  const [personRows, gymRows] = await Promise.all([
-    publicSchedules(people),
-    gymIds.length
-      ? db
-          .select()
-          .from(schema.classes)
-          .where(and(inArray(schema.classes.userId, gymIds), eq(schema.classes.isPublic, true)))
-      : Promise.resolve([]),
-  ]);
   const rows = [
     ...personRows.filter((c) => c.isPublic),
     // The gym rows come off the table raw, so they carry no shift shape; a
     // gym's class is owned by the gym and shown under the studio either way.
     ...gymRows.map((c) => ({ ...c, ownerUserId: c.userId, shift: false as const, duplicateOf: null })),
   ];
-
-  const studioIds = [...new Set(rows.map((c) => c.studioId))].filter((id): id is string => !!id);
-  const studios = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
-    : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
   const added = new Set(marks.map((m) => `${m.classId}|${m.occurrenceDate}`));
 
@@ -126,6 +113,7 @@ export async function discoverClasses(viewerId: string): Promise<DirClass[]> {
       const t = clockParts(c.startTime);
       out.push({
         classId: c.id,
+        base,
         iso,
         name: c.name,
         classType: c.classType,
@@ -138,7 +126,6 @@ export async function discoverClasses(viewerId: string): Promise<DirClass[]> {
         coachColor: avatarColor(owner),
         studioName: studio?.name ?? null,
         where: studio ? studio.name : c.location,
-        base,
         added: added.has(`${c.id}|${iso}`),
         mine: c.userId === viewerId || c.coachUserId === viewerId,
       });
