@@ -773,10 +773,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    margins are ours: the base row is full bleed, and overriding the shorthand
    put gutters back on a rule that should run edge to edge. */
 .pubtabs.caltabs { margin-top: 0; margin-bottom: 8px; padding-top: 6px; }
-/* The calendar's name, between the rail of doors and the tabs that slice it. */
+/* The calendar's name: the month, big enough to be the screen's title. */
 .calhead {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 22px; letter-spacing: -.02em;
+  font-weight: 700; font-size: 27px; letter-spacing: -.02em;
   margin: 18px 0 0;
 }
 /* Why the event is on your calendar, said once in the card's top-right
@@ -4290,18 +4290,20 @@ button.ps-card { cursor: pointer; }
 }
 /* What you can do with it, on the card itself: the Add ribbon, a sibling
    of the card, never a child: a button inside a link is not a thing. The
-   share circle came off every row; sharing lives on the class sheet. */
+   share circle came off every row; sharing lives on the class sheet. The
+   ribbon lost its circle too: at rest it is the bare outline glyph, and
+   the button's box is only the hit area. */
 .evcard-add {
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
   width: 42px; height: 42px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--card); color: var(--ink); border: 1.5px solid var(--line);
+  background: none; color: var(--ink); border: none;
   transition: transform .08s;
 }
-/* Added is the brand's orange, not ink: the filled ribbon is the one moment
-   of colour a card earns, and it is the same orange the Add class button
-   wears, because both mean the same commitment. */
-.evcard-add.on { background: var(--si); color: #fff; border-color: var(--si); }
+/* Added fills the glyph in the brand's orange, not ink: the filled ribbon
+   is the one moment of colour a row earns, and it is the same orange the
+   Add class button wears, because both mean the same commitment. */
+.evcard-add.on { color: var(--si); }
 .evcard-add:active { transform: scale(.93); }
 /* Following is flat rows again, not cards: the accent bar down the left is
    the coach's own colour (the ring their picked avatar wears), and a wall

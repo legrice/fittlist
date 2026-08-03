@@ -19,6 +19,7 @@ import {
   MonthHeadRow,
   MonthScroll,
   ViewSheet,
+  useListMonthSpy,
   loadCalView,
   monthLabel,
   saveCalView,
@@ -170,6 +171,9 @@ export function WeekScreen({
   })();
   const shown = allShown.filter((d) => d.iso >= todayIso);
   const pastShown = allShown.filter((d) => d.iso < todayIso && d.iso >= pastFloor);
+  // The title follows the List's scroll the same way it follows the
+  // months': whichever day is under the header names the month.
+  useListMonthSpy(view === "list", setYm, `${pastShown.length}|${shown.length}`);
   // The months, whole, from the same rows: past days dim rather than drop.
   // Every day the data holds goes in; each month block reads its own.
   const monthItems = (() => {
@@ -231,7 +235,7 @@ export function WeekScreen({
             the divider underneath the lot. */}
         <CalSticky>
           <CalHead
-            label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+            label={monthLabel(ym, todayIso)}
             onMenu={() => setViewSheet(true)}
           >
             <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>

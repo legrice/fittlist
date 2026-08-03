@@ -1679,6 +1679,7 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
     return {
       shadow: getComputedStyle(ev).boxShadow,
       barW: bar ? bar.getBoundingClientRect().width : 0,
+      addInk: add ? getComputedStyle(add).color : null,
       addBg: add ? getComputedStyle(add).backgroundColor : null,
       addY: add?.getBoundingClientRect().y ?? null,
       shares: document.querySelectorAll(".evcard-share").length,
@@ -1687,8 +1688,12 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
   });
   if (card.shadow !== "none") fail("a Following row is flat, not a card: " + card.shadow);
   if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
-  if (card.addBg !== "rgb(221, 106, 53)")
-    fail("the added ribbon should fill brand orange, got " + card.addBg);
+  // The circle came off the ribbon: the added state is the glyph itself
+  // filling brand orange, on no background.
+  if (card.addInk !== "rgb(221, 106, 53)")
+    fail("the added ribbon glyph should fill brand orange, got " + card.addInk);
+  if (card.addBg !== "rgba(0, 0, 0, 0)")
+    fail("the ribbon should carry no background, got " + card.addBg);
   if (card.shares > 0) fail("the share circle should be gone from Following rows");
   if (card.addY === null || card.timeY === null || card.addY >= card.timeY)
     fail("the ribbon should sit above the time");

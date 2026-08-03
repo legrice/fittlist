@@ -290,6 +290,34 @@ export function usePastReveal(maxWeeks: number, step = 2) {
   return { pastWeeks, sentinel };
 }
 
+/** The List's answer to the month scroll's title-following: watch the day
+ *  groups, and report the month of whichever crosses the band under the
+ *  header, so the title stays true while the list scrolls across a month
+ *  boundary in either direction. `dep` re-attaches the observer when the
+ *  rendered days change (more weeks, more past). */
+export function useListMonthSpy(
+  active: boolean,
+  onYm: (ym: string) => void,
+  dep: string,
+) {
+  useEffect(() => {
+    if (!active) return;
+    const els = document.querySelectorAll<HTMLElement>('.ps-daygroup[id^="day-"]');
+    if (!els.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && e.target instanceof HTMLElement)
+            onYm(e.target.id.slice(4, 11));
+        }
+      },
+      { rootMargin: "-25% 0px -70% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [active, onYm, dep]);
+}
+
 /** One row of the month: what to draw in a day's cell. */
 export type MonthCellItem = { kind: CalKind; name: string; at: number };
 

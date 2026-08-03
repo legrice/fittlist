@@ -34,6 +34,7 @@ import {
   MonthHeadRow,
   MonthScroll,
   ViewSheet,
+  useListMonthSpy,
   loadCalView,
   monthLabel,
   saveCalView,
@@ -342,6 +343,10 @@ export function ScheduleScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes, plans, todayIso, pastWeeks, pickedKinds]);
 
+  // The title follows the List's scroll the same way it follows the
+  // months': whichever day is under the header names the month.
+  useListMonthSpy(view === "list", setYm, `${pastDays.length}|${days.length}`);
+
   // The months, whole: every date the scroll's range holds, kinds filtered
   // the same way. No ended-filter here: the grid can look back, and a day
   // that has been dims rather than disappears.
@@ -409,7 +414,7 @@ export function ScheduleScreen({
             the divider underneath the lot. The list scrolls beneath it. */}
         <CalSticky>
           <CalHead
-            label={monthLabel(view === "month" ? ym : todayIso.slice(0, 7), todayIso)}
+            label={monthLabel(ym, todayIso)}
             onMenu={() => setViewSheet(true)}
           >
             <button
