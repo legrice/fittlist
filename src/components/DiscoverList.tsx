@@ -8,31 +8,36 @@ import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import type { DirClass } from "@/lib/discoverclasses";
 
-// The date ranges the Classes half offers, every one a slice of the
-// fortnight the server already sent, so picking one is instant. "Pick a
-// date" is deliberately not here yet: a date past the window would need a
-// round trip, and a dropdown that can't honour one of its own rows is
-// worse than a shorter dropdown.
-type RangeId = "7" | "today" | "tomorrow" | "weekend" | "14";
-const RANGES: { id: RangeId; label: string }[] = [
-  { id: "14", label: "Next 14 days" },
-  { id: "7", label: "Next 7 days" },
-  { id: "today", label: "Today" },
-  { id: "tomorrow", label: "Tomorrow" },
-  { id: "weekend", label: "This weekend" },
-];
+/**
+ * The date range filter is gone, and the whole fortnight is what you get.
+ *
+ * It was five answers in a bottom sheet (Today, Tomorrow, This weekend, Next
+ * 7, Next 14) sitting above a list that is already grouped by day and already
+ * says which day each group is. A range filter earns itself when a day holds
+ * more than a screen; at this density it was a control that mostly removed
+ * classes from a directory whose problem is having too few. The list scrolls,
+ * and the day bands are the range.
+ *
+ * When it comes back it comes back as a real date pick against a query, not a
+ * slice of a window the page happens to hold, which is the same note
+ * `buildDiscoverClasses` carries.
+ */
 
 /**
- * The fortnight leads, for now.
+ * The words a rail offers, busiest first.
  *
- * A week is the right default for a directory that is full, and this one
- * isn't yet: at today's density a seven-day window can show a handful of
- * classes and read as a room with nobody in it, which is the wrong first
- * impression to give somebody who just arrived. The fortnight is the whole
- * window the page already loads, so it costs nothing to show. This goes back
- * to "7" once a day reliably holds a hundred of them.
+ * All three halves rank their chips this way, so the rail means the same
+ * thing wherever it appears: the ones in front of you are the ones with the
+ * most behind them. It counts what is actually on the screen behind the rail
+ * (occurrences for classes, coaches for disciplines, studios for types), not
+ * the vocabulary, so a word nobody uses is never offered. Ties fall back to
+ * the alphabet, which keeps the order stable between renders.
  */
-const DEFAULT_RANGE: RangeId = "14";
+function rankByUse(values: (string | null | undefined)[]): string[] {
+  const n = new Map<string, number>();
+  for (const v of values) if (v) n.set(v, (n.get(v) ?? 0) + 1);
+  return [...n.keys()].sort((a, b) => (n.get(b)! - n.get(a)!) || a.localeCompare(b));
+}
 
 /** Which of the directory's three halves is in front of you. */
 export type DiscoverHalf = "classes" | "coaches" | "studios";
@@ -87,12 +92,12 @@ export function DiscoverList({
   // coaches" has to land on the coaches, or the button's own word is the
   // one thing the screen it opens isn't showing.
   const [tab, setTab] = useState<DiscoverHalf>(startHalf);
-  // The Classes half's own two filters, both dropdowns rather than chips: a
-  // date is one answer out of a list, and the types are a long multiselect
-  // that would have run off the edge of a rail.
-  const [range, setRange] = useState<RangeId>(DEFAULT_RANGE);
-  const [rangeOpen, setRangeOpen] = useState(false);
-  const [typeOpen, setTypeOpen] = useState(false);
+  // The Classes half's types. A rail like the other two halves wear now,
+  // rather than a bottom sheet: the sheet existed because the type list was
+  // long enough to run off a rail's edge, and a rail that scrolls sideways
+  // answers that without hiding the whole filter behind a tap. Its own state
+  // rather than the `types` the other halves share, because the vocabularies
+  // are still different lists and a pick can't survive the switch.
   const [classTypes, setClassTypes] = useState<Set<string>>(new Set());
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
@@ -105,12 +110,6 @@ export function DiscoverList({
   const [types, setTypes] = useState<Set<string>>(new Set());
 
 
-  // A tap anywhere else closes an open dropdown, the way the mini calendar's
-  // scrim does. Two of them open at once would be two answers to one row.
-  const closeMenus = () => {
-    setRangeOpen(false);
-    setTypeOpen(false);
-  };
   const toggleClassType = (v: string) =>
     setClassTypes((prev) => {
       const next = new Set(prev);
@@ -132,45 +131,24 @@ export function DiscoverList({
       .filter((c) => types.size === 0 || c.disciplines.some((d) => types.has(d)));
   }, [people, types]);
 
-  // Which dates the picked range covers. Everything is a slice of the
-  // fortnight already in hand, so this is a pair of bounds and nothing more.
-  const [fromIso, toIso] = useMemo(() => {
-    const day = (n: number) => {
-      const d = new Date(`${todayIso}T00:00:00Z`);
-      d.setUTCDate(d.getUTCDate() + n);
-      return d.toISOString().slice(0, 10);
-    };
-    if (range === "today") return [todayIso, todayIso];
-    if (range === "tomorrow") return [day(1), day(1)];
-    if (range === "weekend") {
-      // The Saturday and Sunday coming, and today when today is one of them:
-      // "this weekend" on a Saturday means today, not next week.
-      const dow = new Date(`${todayIso}T00:00:00Z`).getUTCDay(); // 0 Sun .. 6 Sat
-      if (dow === 6) return [todayIso, day(1)];
-      if (dow === 0) return [todayIso, todayIso];
-      return [day(6 - dow), day(7 - dow)];
-    }
-    return [todayIso, day(range === "14" ? 13 : 6)];
-  }, [range, todayIso]);
-
   const shownClasses = useMemo(
     () =>
       classes.filter(
-        (c) =>
-          c.iso >= fromIso &&
-          c.iso <= toIso &&
-          (classTypes.size === 0 || (c.classType ? classTypes.has(c.classType) : false)),
+        (c) => classTypes.size === 0 || (c.classType ? classTypes.has(c.classType) : false),
       ),
-    [classes, fromIso, toIso, classTypes],
+    [classes, classTypes],
   );
 
   // A filter is only offered where it can narrow something: the types the
-  // fortnight actually holds, not the whole vocabulary.
-  const classTypeOptions = useMemo(() => {
-    const seen = new Set<string>();
-    for (const c of classes) if (c.classType) seen.add(c.classType);
-    return [...seen].sort((a, b) => a.localeCompare(b));
-  }, [classes]);
+  // fortnight actually holds, not the whole vocabulary. Busiest first, and
+  // that ordering is the rail's whole argument for existing: a rail is read
+  // left to right and only the first few are seen without a swipe, so the
+  // ones worth seeing are the ones with the most behind them. Alphabetical
+  // would put Barre in front of Yoga for no reason anybody could name.
+  const classTypeOptions = useMemo(
+    () => rankByUse(classes.map((c) => c.classType)),
+    [classes],
+  );
 
   // The row the Agenda hands back is the shared shape, so the ribbon's
   // source (whose it is, whether it's already in) is looked up by key.
@@ -193,11 +171,10 @@ export function DiscoverList({
   // What the lens in front of you can actually be narrowed by, and nothing
   // else: the studios' own type vocabulary, on the Studios half only.
   const disciplines = useMemo(() => {
-    const seen = new Set<string>();
-    if (tab === "studios") for (const st of studios) for (const t of st.types) seen.add(t);
+    if (tab === "studios") return rankByUse(studios.flatMap((st) => st.types));
     if (tab === "coaches")
-      for (const c of people) if (c.kind === "coach") for (const d of c.disciplines) seen.add(d);
-    return [...seen].sort((a, b) => a.localeCompare(b));
+      return rankByUse(people.filter((c) => c.kind === "coach").flatMap((c) => c.disciplines));
+    return [];
   }, [studios, people, tab]);
 
   return (
@@ -226,10 +203,7 @@ export function DiscoverList({
         <button
           className={`pubtab${tab === "classes" ? " sel" : ""}`}
           aria-current={tab === "classes" ? "page" : undefined}
-          onClick={() => {
-            setTab("classes");
-            closeMenus();
-          }}
+          onClick={() => setTab("classes")}
         >
           Classes
         </button>
@@ -239,7 +213,6 @@ export function DiscoverList({
           onClick={() => {
             setTab("coaches");
             setTypes(new Set());
-            closeMenus();
           }}
         >
           Coaches
@@ -250,148 +223,51 @@ export function DiscoverList({
           onClick={() => {
             setTab("studios");
             setTypes(new Set());
-            closeMenus();
           }}
         >
           Studios
         </button>
       </div>
 
-      {/* All leads the rail on both halves, filled in by default: the one
-          selected chip is the hint that the rest can be selected. The chips
-          after it are multiselect, and All is the way back. There is no
-          Filters sheet for now; it returns when there are enough filters to
-          need one. */}
-      {tab !== "classes" && (
-      <div className="dischips" aria-label="Filters">
-        <button
-          type="button"
-          className={`chip${allOn ? " sel" : ""}`}
-          aria-pressed={allOn}
-          onClick={clearAll}
-        >
-          All
-        </button>
-        {disciplines.map((d) => (
+      {/* One rail, all three halves. All leads it, filled in by default: the
+          one selected chip is the hint that the rest can be selected. The
+          chips after it are multiselect and busiest first, and All is the way
+          back, which is why there is no Clear all anywhere. Classes had two
+          bottom sheets here instead; a sheet is a tap that hides the whole
+          filter, and the answer to a long type list is a rail that scrolls. */}
+      {(tab === "classes" ? classTypeOptions.length > 0 : disciplines.length > 0) && (
+        <div className="dischips" aria-label="Filters">
           <button
-            key={d}
             type="button"
-            className={`chip${types.has(d) ? " sel" : ""}`}
-            aria-pressed={types.has(d)}
-            onClick={() => toggleType(d)}
+            className={`chip${(tab === "classes" ? classTypes.size === 0 : allOn) ? " sel" : ""}`}
+            aria-pressed={tab === "classes" ? classTypes.size === 0 : allOn}
+            onClick={() => (tab === "classes" ? setClassTypes(new Set()) : clearAll())}
           >
-            {d}
+            All
           </button>
-        ))}
-      </div>
+          {(tab === "classes" ? classTypeOptions : disciplines).map((d) => {
+            const on = tab === "classes" ? classTypes.has(d) : types.has(d);
+            return (
+              <button
+                key={d}
+                type="button"
+                className={`chip${on ? " sel" : ""}`}
+                aria-pressed={on}
+                onClick={() => (tab === "classes" ? toggleClassType(d) : toggleType(d))}
+              >
+                {d}
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {tab === "classes" ? (
         <>
-          {/* Two filters and the count they left, on one line. Both open
-              bottom sheets rather than dropping a panel: a menu anchored to
-              a pill has to guess which edge it can grow off, and the type
-              list is long enough to run past the bottom of a phone. A sheet
-              has the room and one place to be. */}
-          <div className="clsfilters">
-            <button
-              type="button"
-              className={`clspill${rangeOpen ? " open" : ""}`}
-              aria-expanded={rangeOpen}
-              onClick={() => setRangeOpen(true)}
-            >
-              {RANGES.find((r) => r.id === range)?.label}
-              <Icon name="expand_more" size={16} />
-            </button>
-            {classTypeOptions.length > 0 && (
-              <button
-                type="button"
-                className={`clspill${classTypes.size ? " picked" : ""}${typeOpen ? " open" : ""}`}
-                aria-expanded={typeOpen}
-                onClick={() => setTypeOpen(true)}
-              >
-                Type
-                {classTypes.size > 0 && <span className="clscount">{classTypes.size}</span>}
-                <Icon name="expand_more" size={16} />
-              </button>
-            )}
-            {/* What the filters left, counted, across from them. No city: the
-                directory is one town for now, and a label that never changes
-                is furniture. */}
-            <span className="clscount-line">
-              {shownClasses.length} {shownClasses.length === 1 ? "class" : "classes"}
-            </span>
-          </div>
-          {rangeOpen && (
-            <div className="sheet-scrim" onClick={closeMenus}>
-              <div className="sheet" onClick={(e) => e.stopPropagation()}>
-                <button className="sheetclose" onClick={closeMenus} aria-label="Close">
-                  <Icon name="close" size={20} />
-                </button>
-                <h2>When</h2>
-                <div className="settingslist">
-                  {RANGES.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      className="clsopt"
-                      role="option"
-                      aria-selected={range === r.id}
-                      onClick={() => {
-                        setRange(r.id);
-                        setRangeOpen(false);
-                      }}
-                    >
-                      <span>{r.label}</span>
-                      {range === r.id && <Icon name="check" size={18} className="clsopt-on" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {typeOpen && (
-            <div className="sheet-scrim" onClick={closeMenus}>
-              <div className="sheet" onClick={(e) => e.stopPropagation()}>
-                <button className="sheetclose" onClick={closeMenus} aria-label="Close">
-                  <Icon name="close" size={20} />
-                </button>
-                <h2>Type</h2>
-                <div className="settingslist">
-                  {classTypeOptions.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className="clsopt"
-                      aria-pressed={classTypes.has(v)}
-                      onClick={() => toggleClassType(v)}
-                    >
-                      <span className={`clsbox${classTypes.has(v) ? " on" : ""}`} aria-hidden="true">
-                        {classTypes.has(v) && <Icon name="check" size={14} />}
-                      </span>
-                      <span>{v}</span>
-                    </button>
-                  ))}
-                </div>
-                {/* Multiselect needs a way back to none: unpicking six chips
-                    one at a time is the filter holding you hostage. Only
-                    offered when there is something to clear. */}
-                {classTypes.size > 0 && (
-                  <button
-                    type="button"
-                    className="btn ghost clsclear"
-                    onClick={() => setClassTypes(new Set())}
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
           {shownClasses.length === 0 ? (
             <div className="empty-block">
-              <h2>Nothing in that stretch</h2>
-              <p>Try a wider range, or take the type filter off.</p>
+              <h2>Nothing of that kind</h2>
+              <p>Tap All to see every class coming up.</p>
             </div>
           ) : (
             <ClassResults classes={shownClasses} todayIso={todayIso} from="discover" />

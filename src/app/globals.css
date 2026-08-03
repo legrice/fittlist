@@ -3881,10 +3881,22 @@ button.ps-card { cursor: pointer; }
 .distabs .pubtab { font-size: 16px; }
 .dischips {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: 12px calc(50% - 50vw) 4px; padding: 2px 18px;
+  margin: 12px calc(50% - 50vw) 14px; padding: 2px 18px;
 }
 .dischips::-webkit-scrollbar { display: none; }
-.dischips .chip { flex-shrink: 0; background: var(--card); }
+/* The rail wears the Classes filter's size on all three halves. The chips
+   were the base 12px `.chip` and the two class filters were 38px pills, and
+   the small ones read as decoration on a screen whose whole job is finding
+   somebody: people were scrolling past the coaches and the studios. One size,
+   the bigger one, so a filter looks like the control it is. The height is
+   fixed rather than padded for the reason the pill's was: a padded chip grows
+   the rail the moment anything inside it is taller than the line box. */
+.dischips .chip {
+  flex-shrink: 0; background: var(--card);
+  display: inline-flex; align-items: center;
+  height: 38px; padding: 0 14px;
+  font-size: 14px; font-weight: 700;
+}
 .dischips .chip.sel { background: var(--ink); }
 /* The box and its filter on one row. Two rows of chrome above a list is most
    of a phone screen spent on controls. */
