@@ -41,6 +41,18 @@ export type DirClass = {
   mine: boolean;
 };
 
+/** What a class search reads: the class's own words, and nothing borrowed
+ *  from whoever teaches it. A coach and a studio have their own sections on
+ *  that screen, so matching a class by its coach's name would be the same
+ *  answer twice under two headings. */
+export function classHaystack(c: {
+  name: string;
+  classType: string | null;
+  description: string | null;
+}): string {
+  return [c.name, c.classType ?? "", c.description ?? ""].join(" ").toLowerCase();
+}
+
 /**
  * Every listable class occurrence in the next fortnight, in time order.
  *

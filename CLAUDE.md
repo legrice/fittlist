@@ -329,12 +329,13 @@ the magnifier went back to the header's corner: browsing is the tab,
 searching every half at once is the corner, and the same glyph is never
 in both places.
 
-**Search is one box over both halves; Discover is a segment you pick first.**
-`/search` sits behind the header's magnifier and shows People and Studios as
-two headed sections at once, because you don't know which half the thing you
-want is in: type "Stacey" and you want Stacey, and Stacey's gym, on the same
-screen. A heading only exists when its section has something in it, so a
-search that finds only places says "Studios" once and nothing about people.
+**Search is one box over all three halves; Discover is a segment you pick
+first.** `/search` sits behind the header's magnifier and shows People,
+Studios and Classes as headed sections at once, because you don't know which
+half the thing you want is in: type "Stacey" and you want Stacey, and
+Stacey's gym, on the same screen. A heading only exists when its section has
+something in it, so a search that finds only places says "Studios" once and
+nothing about people.
 Both rows are the directory's own (`PersonRow`, `StudioRow` in
 `DirectoryRows.tsx`, shared with `DiscoverList`): the Coach badge, the
 availability dot, the classes-this-week line and the corner chevron have to
@@ -375,6 +376,34 @@ is the floor, and the number lives twice (the action and `SearchScreen`)
 because a `"use server"` file can only export async functions. Each keystroke's request carries a sequence
 number and only the newest may paint, or a slow "st" lands after "stacey" and
 the results go backwards while you type.
+
+**A class is searchable by its own words, and that is the answer to
+"subcategories" for now.** Somebody asked to pick Yoga and then add Vinyasa
+or Rocket so their class could be found by style. A field of free-text
+subcategories is the `certifications`/`disciplines` split falling the wrong
+way: a hundred spellings of one word and a filter nobody can use, which is
+exactly why `disciplines` is a pick from `STUDIO_TYPES` rather than a box.
+Coaches already write the style down, in the class's name or in their
+description, so search reads it there. `classHaystack()` in
+`discoverclasses.ts` is the one definition of what a class matches on: its
+name, its `classType` and its description, and deliberately nothing borrowed
+from whoever teaches it. A class that matched its coach's name would be the
+same answer twice under two headings, and People is already the heading that
+answers it. The section is dated occurrences like Discover's, capped at
+`CLASS_LIMIT` (40), and the fortnight it searches is the fortnight Discover
+loads, because it is the same `buildDiscoverClasses` call over the same rows.
+`searchAll` runs `publicSchedules` over every listable person rather than the
+ones whose name matched, or a class would only be findable through its coach.
+Two structural rules come with it. `ClassResults` is the shared component
+both Discover's Classes half and search render, for the reason
+`DirectoryRows` is shared: the ribbon has to mean the same thing on both
+screens. And `groupClassDays` lives inside that component rather than beside
+`DirClass`, because `discoverclasses.ts` reaches `@/db` and importing a
+*value* from it into a `"use client"` file drags `pg` into the browser
+bundle; the type import is erased and stays. `/search` calls `useBandTop()`
+for the same reason Discover does: a `.callist` day band sticks at
+`--dayband-top`, and a screen that draws one without publishing it pins the
+band at a guessed offset in the middle of a row.
 
 **A screen with the bottom bar needs the header links too.** `AppChrome`'s
 `headerNav` follows `bar` by default: above 940px the bottom bar hides and

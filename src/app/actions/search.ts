@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -9,6 +9,7 @@ import { fansVisible } from "@/lib/flags";
 import { runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
+import { buildDiscoverClasses, classHaystack, type DirClass } from "@/lib/discoverclasses";
 
 // One search across both halves of the directory: the people and the places.
 //
@@ -31,6 +32,11 @@ import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
 // functions, and a constant in one 500s every page that imports it.
 const MIN = 2;
 
+// How many occurrences a class search will draw. A weekly class is up to
+// fourteen rows over the window, so a common word turns into a scroll nobody
+// reads; the answer is the top of the list either way.
+const CLASS_LIMIT = 40;
+
 export async function searchAll(
   query: string,
   /** Narrows both halves to a place: a person's city, a studio's address.
@@ -38,8 +44,8 @@ export async function searchAll(
    *  doesn't have to share one string. Either field alone is a real search:
    *  a location by itself asks "who's here", which is a question too. */
   loc = "",
-): Promise<{ people: DirPerson[]; studios: DirStudio[] }> {
-  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[] };
+): Promise<{ people: DirPerson[]; studios: DirStudio[]; classes: DirClass[] }> {
+  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
   const userId = await getSessionUserId();
   if (!userId) return empty;
   if (!(await fansVisible())) return empty;
@@ -83,9 +89,13 @@ export async function searchAll(
     )
     .filter((r) => !locNeedle || (r.location ?? "").toLowerCase().includes(locNeedle));
 
-  // Only for the people who matched, so the count on a row still means what it
-  // does on Discover without loading every schedule to say it.
-  const classRows = (await publicSchedules(matched)).filter((c) => c.isPublic);
+  // Every listable person's schedule, once. It was the matched people only,
+  // which was right when this searched names and is wrong now that it
+  // searches classes: a class matches on its own words, so a Vinyasa class
+  // has to be findable whether or not its coach is called Vinyasa. The same
+  // rows then answer both questions, so this is one call rather than two.
+  const listable = allRows.filter((r) => !hidden.has(r.id));
+  const allClassRows = (await publicSchedules(listable)).filter((c) => c.isPublic);
   const start = new Date(`${todayIso()}T00:00:00Z`);
   const weekCount = new Map<string, number>();
   for (let i = 0; i < 7; i++) {
@@ -93,7 +103,7 @@ export async function searchAll(
     d.setUTCDate(start.getUTCDate() + i);
     const iso = d.toISOString().slice(0, 10);
     const dow = (d.getUTCDay() + 6) % 7;
-    for (const c of classRows) {
+    for (const c of allClassRows) {
       if (runsOn(c, iso, dow)) weekCount.set(c.ownerUserId, (weekCount.get(c.ownerUserId) ?? 0) + 1);
     }
   }
@@ -121,6 +131,66 @@ export async function searchAll(
     }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
 
+  // ---- the classes.
+  //
+  // The third section, and the one somebody actually asked for: "searchable
+  // by style". A class matches on its own words (its name, its type, its
+  // description), never on its coach's or its studio's, because those have
+  // their own headings on this screen and matching them here would be the
+  // same answer twice. That is also what makes this the cheap answer to
+  // subcategories: a coach writes "Vinyasa" or "Rocket" in the words they
+  // already use, and it is findable, with no vocabulary for anybody to agree
+  // on and no taxonomy to file a class into.
+  //
+  // Same two rules as the halves above: a delisted coach's classes are out
+  // (they own the listing they opted out of), and blocked either way is out.
+  // buildDiscoverClasses already keeps both, which is why it is the thing
+  // doing the work rather than a second query with the rules written again.
+  //
+  // The cost is honest: this expands a fortnight of every listable schedule
+  // per query, which is the ceiling Discover already accepts once per page
+  // load. It is fine while a city means a dozen coaches. When it bites, the
+  // fix is the same one named on buildDiscoverClasses: query the range
+  // instead of expanding it.
+  let classes: DirClass[] = [];
+  if (needle.length >= MIN) {
+    const gyms = await db.select().from(schema.users).where(eq(schema.users.kind, "gym"));
+    const gymIds = gyms.map((g) => g.id);
+    const [gymRows, marks] = await Promise.all([
+      gymIds.length
+        ? db
+            .select()
+            .from(schema.classes)
+            .where(and(inArray(schema.classes.userId, gymIds), eq(schema.classes.isPublic, true)))
+        : Promise.resolve([]),
+      db
+        .select({
+          classId: schema.attendances.classId,
+          occurrenceDate: schema.attendances.occurrenceDate,
+        })
+        .from(schema.attendances)
+        .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))),
+    ]);
+    // The words to match against, per class row, gathered before the rows are
+    // expanded into occurrences: a weekly class is many occurrences and one
+    // description.
+    const words = new Map<string, string>();
+    for (const c of [...allClassRows, ...gymRows]) words.set(c.id, classHaystack(c));
+    classes = buildDiscoverClasses({
+      viewerId: userId,
+      owners: [...listable, ...gyms],
+      hidden,
+      personRows: allClassRows,
+      gymRows,
+      studios: studioRows,
+      marks,
+    })
+      .filter((c) => (words.get(c.classId) ?? "").includes(needle))
+      // A cap, said out loud: a common word over a fortnight is a lot of
+      // occurrences, and a search is an answer rather than a schedule.
+      .slice(0, CLASS_LIMIT);
+  }
+
   const studios: DirStudio[] = studioRows
     .filter(
       (st) =>
@@ -143,5 +213,5 @@ export async function searchAll(
     }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
 
-  return { people, studios };
+  return { people, studios, classes };
 }

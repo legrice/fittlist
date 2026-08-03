@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { searchAll } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
+import { ClassResults } from "@/components/ClassResults";
+import { useBandTop } from "@/components/CalendarBits";
+import type { DirClass } from "@/lib/discoverclasses";
 import { Icon } from "@/components/Icon";
 
 // One box, both halves of the directory underneath it.
@@ -69,10 +72,14 @@ function writeRecent(hit: RecentHit): RecentHit[] {
   return next;
 }
 
-export function SearchScreen() {
+export function SearchScreen({ todayIso }: { todayIso: string }) {
+  // The classes draw the app's day bands, and they pin under the header.
+  // Every list that wears .callist has to say where that is or it guesses.
+  useBandTop();
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
+  const [classes, setClasses] = useState<DirClass[]>([]);
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
@@ -104,6 +111,7 @@ export function SearchScreen() {
     if (needle.length < MIN) {
       setPeople([]);
       setStudios([]);
+      setClasses([]);
       setBusy(false);
       setAsked("");
       run.current++;
@@ -117,6 +125,7 @@ export function SearchScreen() {
       if (run.current !== mine) return;
       setPeople(res.people);
       setStudios(res.studios);
+      setClasses(res.classes);
       setAsked(needle);
       setBusy(false);
     }, 220);
@@ -124,7 +133,8 @@ export function SearchScreen() {
   }, [q]);
 
   const short = q.trim().length < MIN;
-  const nothing = !short && !busy && asked === q.trim() && !people.length && !studios.length;
+  const nothing =
+    !short && !busy && asked === q.trim() && !people.length && !studios.length && !classes.length;
 
   return (
     <>
@@ -136,7 +146,8 @@ export function SearchScreen() {
             className="dissearch-in"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Coaches, members, studios"
+            // The three headings this screen can answer with, in their order.
+            placeholder="People, studios, classes"
             aria-label="Search fittlist"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -230,6 +241,19 @@ export function SearchScreen() {
                   <StudioRow key={st.id} studio={st} from="search" />
                 ))}
               </div>
+            </div>
+          )}
+          {/* The classes last, because the first two answer "who" and "where"
+              and this one answers "what is on". A heading only exists when
+              its section has something in it, the same as the other two: a
+              search that finds only classes says Classes once and nothing
+              about people. */}
+          {classes.length > 0 && (
+            <div className="srchsec">
+              <h2 className="srchhead">
+                Classes <span>{classes.length}</span>
+              </h2>
+              <ClassResults classes={classes} todayIso={todayIso} from="search" />
             </div>
           )}
         </div>

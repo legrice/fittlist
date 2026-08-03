@@ -2,13 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Agenda, ClassRow } from "@/components/Agenda";
 import { useBandTop } from "@/components/CalendarBits";
-import { ClassCardActions } from "@/components/ClassCardActions";
-import { ClassOpener } from "@/components/ClassOpener";
+import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
-import { fmtDayHeaderRel } from "@/lib/format";
 import type { DirClass } from "@/lib/discoverclasses";
 
 // The date ranges the Classes half offers, every one a slice of the
@@ -177,22 +174,6 @@ export function DiscoverList({
 
   // The row the Agenda hands back is the shared shape, so the ribbon's
   // source (whose it is, whether it's already in) is looked up by key.
-  const classByKey = useMemo(
-    () => new Map(shownClasses.map((c) => [`${c.classId}|${c.iso}`, c])),
-    [shownClasses],
-  );
-
-  // One day, one heading: the same grouped list every schedule in the app is.
-  const classDays = useMemo(() => {
-    const byIso = new Map<string, DirClass[]>();
-    for (const c of shownClasses) {
-      const arr = byIso.get(c.iso) ?? [];
-      arr.push(c);
-      byIso.set(c.iso, arr);
-    }
-    return [...byIso.entries()].map(([iso, items]) => ({ iso, items }));
-  }, [shownClasses]);
-
   // Studios have no city column, only a free-text address, so there is nothing
   // honest to filter them by yet. The address carries the town, and searching
   // it finds them.
@@ -405,56 +386,13 @@ export function DiscoverList({
               </div>
             </div>
           )}
-          {classDays.length === 0 ? (
+          {shownClasses.length === 0 ? (
             <div className="empty-block">
               <h2>Nothing in that stretch</h2>
               <p>Try a wider range, or take the type filter off.</p>
             </div>
           ) : (
-            <ClassOpener handle="">
-              <Agenda
-                className="callist"
-                today={todayIso}
-                days={classDays.map((d) => ({
-                  iso: d.iso,
-                  label: fmtDayHeaderRel(d.iso, todayIso),
-                  items: d.items.map((c) => ({
-                    key: `${c.classId}|${c.iso}`,
-                    name: c.name,
-                    hm: c.hm,
-                    ap: c.ap,
-                    durationMin: c.durationMin,
-                    where: c.where,
-                    coachName: c.coachName,
-                    coachPhoto: c.coachPhoto,
-                    coachColor: c.coachColor,
-                    href: `/${c.base}/${c.classId}?d=${c.iso}&from=discover`,
-                    classId: c.classId,
-                    iso: c.iso,
-                    base: c.base,
-                  })),
-                }))}
-                row={(item) => {
-                  const src = classByKey.get(item.key);
-                  return (
-                    <>
-                      <ClassRow item={item} />
-                      {/* The ribbon, the one control a class row carries
-                          anywhere. Not for one of your own. */}
-                      {src && (
-                        <ClassCardActions
-                          classId={src.classId}
-                          iso={src.iso}
-                          name={src.name}
-                          canAdd={!src.mine}
-                          initialOn={src.added}
-                        />
-                      )}
-                    </>
-                  );
-                }}
-              />
-            </ClassOpener>
+            <ClassResults classes={shownClasses} todayIso={todayIso} from="discover" />
           )}
         </>
       ) : tab === "studios" ? (

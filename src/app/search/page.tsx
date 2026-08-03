@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
 import { getSessionUserId } from "@/lib/session";
 import { AppChrome } from "@/components/AppChrome";
+import { todayIso } from "@/lib/format";
 import { SearchScreen } from "@/components/SearchScreen";
 import { lookMode } from "@/lib/darkmode";
 
@@ -27,7 +28,7 @@ export default async function SearchPage() {
     <section className="screen hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
-        <SearchScreen />
+        <SearchScreen todayIso={todayIso()} />
       </div>
     </section>
   );
