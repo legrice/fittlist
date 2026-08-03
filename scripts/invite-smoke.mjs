@@ -260,9 +260,9 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await skipSetup(pg);
   await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
-  // The banner is how anyone finds out they can invite at all: the settings row
-  // has always been there and nobody goes looking in settings for a thing they
-  // don't know exists.
+  // The banner is how anyone finds out they can invite at all: the card on the
+  // account has always been there and nobody goes looking through settings for
+  // a thing they don't know exists.
   {
     const bar = pg.locator(".invbanner");
     await bar.waitFor();
@@ -283,7 +283,10 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.goto(BASE + "/app?acct=1");
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
-  const row = pg.locator(".setrow", { hasText: "Invite people to the beta" });
+  // A coach's invite left the settings list for the tinted card on the account
+  // itself, so it is one tap rather than a scroll into settings. The same
+  // InviteSheet is behind it, which is why the heading below is unchanged.
+  const row = pg.locator(".acctinvite-btn");
   // centre it rather than letting scrollIntoViewIfNeeded park it under the tabs
   await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await row.click();

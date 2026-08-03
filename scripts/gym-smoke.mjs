@@ -253,7 +253,12 @@ console.log("the coach is told ok");
 {
   const feedFor = async (page) => {
     await page.goto(BASE + "/app?acct=1");
-    const r = page.locator(".setrow", { hasText: "Your week in your calendar" });
+    await page.locator(".acctwrap").waitFor();
+    await page.waitForTimeout(450); // the rows need a beat to hydrate
+    // All four calendar doors sit behind one group row now, so the feed is two
+    // taps: the group, then the row inside its sheet.
+    await page.locator(".settingslist .setrow", { hasText: "Calendar & sync" }).first().click();
+    const r = page.locator(".sheet .setrow", { hasText: "Your week in your calendar" });
     await r.waitFor();
     await r.click();
     const href = await page.locator('.installhow a[href^="webcal:"]').getAttribute("href");

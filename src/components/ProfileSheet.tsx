@@ -22,7 +22,7 @@ import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MessagesToggle } from "@/components/MessagesToggle";
 import { MyCalendar } from "@/components/MyCalendar";
-import { InviteFriends, InviteSheet } from "@/components/InviteFriends";
+import { InviteSheet } from "@/components/InviteFriends";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
