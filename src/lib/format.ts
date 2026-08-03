@@ -50,25 +50,24 @@ export function detectProvider(rawUrl: string): string {
   return "Website";
 }
 
-// Curated class categories. Kept short and canonical so the per-studio catalog
-// (and a future member-facing browse) stays organized instead of ten spellings
-// of the same thing.
-export const CLASS_TYPES = [
-  "Strength",
-  "HIIT",
-  "Conditioning",
-  "Bootcamp",
-  "Cycle",
-  "Yoga",
-  "Pilates",
-  "Barre",
-  "Mobility",
-  "Boxing",
-  "Run",
-  "Dance",
-  "Other",
-] as const;
-export type ClassType = (typeof CLASS_TYPES)[number];
+/**
+ * What a class is, from the one vocabulary.
+ *
+ * This was its own shorter list (thirteen words) while a studio's types and a
+ * coach's disciplines both came from `STUDIO_TYPES`, and the split quietly
+ * broke the rule the rest of the directory is built on: one word has to mean
+ * the same thing everywhere. "Kettlebell" found the kettlebell gyms and the
+ * kettlebell coaches and could not be put on a kettlebell class at all,
+ * because the class picker had never heard of it. Discover's chips were built
+ * from two vocabularies for the same idea, so a word that narrowed one half
+ * could not narrow another.
+ *
+ * It is the same list now. The alias stays because the name reads right at
+ * the call site: a class picks what it is, a studio picks what it offers, and
+ * they are the same set of words.
+ */
+export { STUDIO_TYPES as CLASS_TYPES } from "@/lib/studio";
+export type ClassType = string;
 
 // Studio colors cycle by directory index (studios.seq), deterministic.
 export const PALETTES = [

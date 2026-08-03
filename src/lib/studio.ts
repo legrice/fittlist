@@ -8,6 +8,7 @@ export const STUDIO_TYPES = [
   "HYROX",
   "Bootcamp",
   "HIIT",
+  "Conditioning",
   "Powerlifting",
   "Olympic weightlifting",
   "Kettlebell",

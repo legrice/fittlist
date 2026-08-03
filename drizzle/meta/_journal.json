@@ -498,6 +498,13 @@
       "when": 1785770864129,
       "tag": "0070_faithful_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1785781000000,
+      "tag": "0071_one_vocabulary",
+      "breakpoints": true
     }
   ]
 }

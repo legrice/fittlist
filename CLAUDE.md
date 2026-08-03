@@ -287,9 +287,26 @@ moves into the group for that reason: `/week` was its own route with its own
 copy of the shell, and left there it would have rebuilt the header and the bar
 on every tap of Plans.
 
-**One vocabulary for what a place offers and what a person teaches.**
-`STUDIO_TYPES` was the studio editor's list; `users.disciplines` picks from the
-same one, capped at four and validated against it in `updateProfile`, so a
+**One vocabulary for what a place offers, what a person teaches, and what a
+class is.** `STUDIO_TYPES` was the studio editor's list; `users.disciplines`
+picks from the same one, capped at four and validated against it in
+`updateProfile`, and `CLASS_TYPES` is now that same list re-exported from
+`format.ts` under the name that reads right at the call site. It was its own
+shorter thirteen words for a long time, and the split broke the rule quietly:
+"Kettlebell" found the kettlebell gyms and the kettlebell coaches and could
+not be put on a kettlebell class at all, because the class picker had never
+heard of it, so Discover drew its chips from two vocabularies for one idea and
+a word that narrowed one half could not narrow another. Merging them is what
+makes a class as findable as the people and places around it. Four words only
+ever lived in the class list and `drizzle/0071_one_vocabulary.sql` lands them:
+"Cycle" and "Run" rename to their shared-list synonyms, "Other" drops to null
+because the picker already offers "No type" and a category meaning "none of
+these" said twice is one too many, and "Conditioning" joined the shared list
+instead of moving, since a gym can be a conditioning gym as easily as a class
+can be a conditioning class. Every table that stores a type is migrated, or a
+catalog pull puts the old word straight back. Leaving them would have made
+orphans a coach could never pick again and drawn a "Cycle" chip beside a
+"Cycling" one, which is the exact drift one vocabulary exists to prevent. So a
 coach's "Yoga" is the same word as a studio's. That is what lets one filter in
 Discover narrow both halves. Free text would be a hundred spellings and a
 filter nobody could use, which is why `certifications` (free chips, a
