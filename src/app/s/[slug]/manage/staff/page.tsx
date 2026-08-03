@@ -3,25 +3,19 @@ import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { studioAccess } from "@/lib/studioaccess";
-import { gymCatalog, gymCoaches, gymSchedule } from "@/app/actions/gym";
-import { GymRota } from "@/components/GymRota";
+import { studioStaff } from "@/app/actions/gym";
+import { StudioStaffView } from "@/components/StudioStaffView";
 
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// The rota, for the people who run the place. Everything on this screen is
-// behind studioAccess: not a manager, and the page isn't there at all, which
-// is the same nothing an admin-only route gives anyone else.
-export default async function ManageStudioPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ w?: string }>;
-}) {
+// The studio's people: who runs the page, and who takes the classes. Manager
+// only, the same door the rota and the counts use. Unlike those two it does
+// not need the gym account: a studio is claimed the moment it has a manager,
+// and staff is what you set up before you turn a schedule on.
+export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { w } = await searchParams;
   const db = await getDb();
   const [studio] = await db
     .select()
@@ -32,7 +26,6 @@ export default async function ManageStudioPage({
         : eq(schema.studios.slug, slug),
     );
   if (!studio) notFound();
-
   const viewerId = await getSessionUserId();
   if (!viewerId) notFound();
   const [me] = await db
@@ -43,25 +36,14 @@ export default async function ManageStudioPage({
   const access = await studioAccess(studio.id, { id: viewerId, kind: me.kind });
   if (!access.isManager) notFound();
 
-  const [week, coaches, catalog, typeRows] = await Promise.all([
-    gymSchedule(studio.id, Number(w) || 0),
-    gymCoaches(studio.id),
-    gymCatalog(studio.id),
-    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
-  ]);
-
+  const staff = await studioStaff(studio.id);
+  if (!staff) notFound();
   return (
-    <GymRota
+    <StudioStaffView
       studioId={studio.id}
       studioName={studio.name}
-      studioAddress={studio.address}
       backHref={`/s/${studio.slug ?? studio.id}`}
-      manageBase={`/s/${studio.slug ?? studio.id}/manage`}
-      hasAccount={!!studio.accountUserId}
-      week={week}
-      coaches={coaches}
-      catalog={catalog}
-      customTypes={typeRows.map((t) => t.name)}
+      staff={staff}
     />
   );
 }

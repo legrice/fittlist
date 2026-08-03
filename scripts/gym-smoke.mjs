@@ -116,7 +116,7 @@ await matt.goto(BASE + studioHref);
 await matt.locator(".studioadmin").click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["The rota", "Shifts worked", "Edit studio info"])
+  for (const want of ["The rota", "Shifts worked", "Staff", "Edit studio info"])
     if (!rows.includes(want)) fail("the admin sheet is missing " + want + ": " + rows.join("|"));
 }
 await matt.locator(".sheet .stat .n").waitFor();
@@ -599,21 +599,49 @@ console.log("the coach is told ok");
 // list exists, "can you take my Thursday" stops being a text message plus a
 // manager: the coach hands the date over and everybody who should know hears.
 {
-  // The manager names Julia, and only Julia.
-  await matt.goto(BASE + studioHref + "/manage");
-  await matt.getByRole("button", { name: "Shift list" }).click();
-  await matt.locator(".sheet h2", { hasText: "Shift list" }).waitFor();
+  // The manager names Julia, and only Julia. The list lives on the staff
+  // screen now, beside who runs the page: two lists of the studio's people.
+  await matt.goto(BASE + studioHref + "/manage/staff");
+  await matt.locator(".admintop h1", { hasText: "Staff" }).waitFor();
   {
-    const names = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+    const names = (await matt.locator('[role="switch"] .t').allInnerTexts()).map((t) => t.trim());
     if (!names.includes("Julia") || !names.includes("Tom"))
       fail("the list should offer everyone who lists the studio: " + names.join("|"));
   }
-  await matt.locator(".sheet .setrow", { hasText: "Julia" }).click();
+  await matt.locator('[role="switch"]', { hasText: "Julia" }).click();
   await matt.waitForTimeout(600);
-  if ((await matt.locator('.sheet .setrow[aria-checked="true"]').count()) !== 1)
+  if ((await matt.locator('[role="switch"][aria-checked="true"]').count()) !== 1)
     fail("only Julia should be on the shift list");
-  await matt.locator(".sheetclose").first().click();
   console.log("the manager names the shift list ok");
+
+  // The keys are the managers' own to hand out: this was an admin-only action,
+  // so a gym wanting its own second manager had to write in and ask.
+  {
+    const mgrs = () => matt.locator(".staffrow");
+    if ((await mgrs().count()) !== 2)
+      fail("Matt and Julia were both handed the page: " + (await mgrs().count()));
+    // Somebody with no account can't be handed anything.
+    await matt.locator("#staffEmail").fill("nobody@example.com");
+    await matt.getByRole("button", { name: "Add", exact: true }).click();
+    await matt.getByText("Nobody with that email has an account yet").waitFor();
+    // Tom coaches here and now runs the page too.
+    await matt.locator("#staffEmail").fill("tom@example.com");
+    await matt.getByRole("button", { name: "Add", exact: true }).click();
+    await matt.waitForTimeout(1200);
+    if ((await mgrs().count()) !== 3) fail("Tom should run the page now");
+    // And he was told, because being handed the keys is not a thing to find
+    // out by accident.
+    await tom.goto(BASE + "/updates");
+    await tom.locator(".notifrow", { hasText: "You run Ironbound" }).waitFor();
+    // Taken back off, with the confirm in the way.
+    await matt.goto(BASE + studioHref + "/manage/staff");
+    await matt.locator(".staffrow", { hasText: "Tom" }).getByRole("button", { name: "Remove" }).click();
+    await matt.locator(".confirmsheet").waitFor();
+    await matt.getByRole("button", { name: "Remove Tom" }).click();
+    await matt.waitForTimeout(900);
+    if ((await mgrs().count()) !== 2) fail("Tom should be off the page again");
+    console.log("the managers hand the keys out themselves ok");
+  }
 
   // Tom hands a Thursday he is on straight to her. Matt coaches here too and
   // is not on the list, so he is not offered.

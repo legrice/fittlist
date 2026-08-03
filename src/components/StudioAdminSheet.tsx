@@ -78,11 +78,22 @@ export function StudioAdminSheet({
                   <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
                   <span className="setrow-txt">
                     <span className="t">The rota</span>
-                    <span className="s">The week, who&rsquo;s on it, and the shift list</span>
+                    <span className="s">The week, and who&rsquo;s on it</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </Link>
               )}
+              {/* Not gated on the schedule: a claimed studio has managers
+                  before it has a rota, and handing a second set of keys out is
+                  the first thing somebody needs to do. */}
+              <Link className="setrow" href={`/s/${slug}/manage/staff`}>
+                <span className="setrow-ic"><Icon name="groups" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Staff</span>
+                  <span className="s">Who runs this page, and who takes the classes</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </Link>
               {canSchedule && (
                 <Link className="setrow" href={`/s/${slug}/manage/counts`}>
                   <span className="setrow-ic"><Icon name="event_available" size={22} /></span>

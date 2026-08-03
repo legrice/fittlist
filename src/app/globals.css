@@ -4923,3 +4923,22 @@ button.ps-card { cursor: pointer; }
 .acctfoot-l:active { color: var(--ink); }
 .acctfoot-out { color: var(--ol); }
 .acctwho-url { display: block; font-size: 12.5px; color: var(--sa-ink, var(--ol)); opacity: .7; margin-top: 1px; }
+
+/* The studio's staff screen: two lists of people, and the one place a manager
+   can hand a second set of keys out without asking us for it. */
+.staffnote { font-size: 13px; line-height: 1.5; color: var(--ol); margin: -4px 0 12px; }
+/* A manager's row is read, not tapped: the control is the word at the end. */
+.staffrow { cursor: default; }
+.staffyou {
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  background: var(--si-tint); color: var(--si);
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; vertical-align: 1px;
+}
+.staffx { flex-shrink: 0; }
+.staffadd { display: flex; gap: 8px; margin: 14px 0 26px; }
+.staffadd input {
+  flex: 1; min-width: 0; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px;
+  font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
+}
+.staffadd input:focus { outline: none; border-color: var(--si); }
+.staffadd .staffaddbtn { width: auto; margin: 0; flex-shrink: 0; padding-left: 22px; padding-right: 22px; }

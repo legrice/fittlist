@@ -4,13 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  setRotaCoach,
   setShiftCover,
   type GymCatalogItem,
   type GymClassDto,
   type GymCoachDto,
   type GymWeekDto,
-  type RotaPoolDto,
 } from "@/app/actions/gym";
 import { clockParts } from "@/lib/format";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -54,7 +52,6 @@ export function GymRota({
   coaches,
   catalog,
   customTypes,
-  pool,
 }: {
   studioId: string;
   studioName: string;
@@ -68,8 +65,6 @@ export function GymRota({
   /** Classes already described at this studio, to pull in rather than retype. */
   catalog: GymCatalogItem[];
   customTypes: string[];
-  /** The shift list: who a shift can be handed to, and who could be added. */
-  pool: RotaPoolDto[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<Open | null>(null);
@@ -79,26 +74,6 @@ export function GymRota({
   const [covered, setCovered] = useState(false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  // The shift list, as the manager edits it. Optimistic: a switch that waits
-  // for the server reads as broken.
-  const [poolOpen, setPoolOpen] = useState(false);
-  const [inPool, setInPool] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(pool.map((p) => [p.id, p.inPool])),
-  );
-
-  const togglePool = (id: string) => {
-    if (pending) return;
-    const next = !inPool[id];
-    setInPool((s) => ({ ...s, [id]: next }));
-    start(async () => {
-      const res = await setRotaCoach(studioId, id, next);
-      if (!res.ok) {
-        setInPool((s) => ({ ...s, [id]: !next }));
-        toast(res.error ?? "Couldn't change that");
-      }
-    });
-  };
-
   const days = week?.days ?? [];
   const all = days.flatMap((d) => d.items);
   const openSlots = all.filter((c) => !c.onUserId).length;
@@ -207,11 +182,13 @@ export function GymRota({
       <Link className="btn ghost rotacounts" href={`${manageBase}/counts`}>
         <Icon name="calendar_month" size={17} /> Shifts worked
       </Link>
-      {/* Who a shift can be handed to. Anyone may say they coach here; this
-          list is the gym saying who really takes these classes. */}
-      <button className="btn ghost rotacounts rotapool" onClick={() => setPoolOpen(true)}>
-        <Icon name="groups" size={17} /> Shift list
-      </button>
+      {/* Who a shift can be handed to. It lives on the staff screen now, next
+          to who runs the page: they are the two lists of the studio's people
+          and keeping them a screen apart meant the shift list had no home of
+          its own, only a lid on this one. */}
+      <Link className="btn ghost rotacounts rotapool" href={`${manageBase}/staff`}>
+        <Icon name="groups" size={17} /> Staff
+      </Link>
 
       {/* A real week, dates and all, because that's what the spreadsheet is
           and what a swap is about. */}
@@ -274,53 +251,6 @@ export function GymRota({
         ))}
       </div>
 
-      {poolOpen && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPoolOpen(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setPoolOpen(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Shift list</h2>
-            <p className="lead">
-              The coaches a shift can be handed to. Anyone can say they coach here; this list
-              is you saying who takes these classes, and it is who a coach can pass a date to.
-            </p>
-            {pool.length === 0 ? (
-              <p className="adminempty">
-                Nobody lists this studio yet. Coaches add it under Places I coach.
-              </p>
-            ) : (
-              <div className="settingslist">
-                {pool.map((p) => (
-                  <button
-                    key={p.id}
-                    className="setrow"
-                    role="switch"
-                    aria-checked={!!inPool[p.id]}
-                    onClick={() => togglePool(p.id)}
-                  >
-                    <span className="setrow-txt">
-                      <span className="t">{p.name}</span>
-                    </span>
-                    <span className={`switch${inPool[p.id] ? " on" : ""}`} aria-hidden="true">
-                      <span className="switch-knob" />
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {open && (
         <Adder

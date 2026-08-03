@@ -1296,3 +1296,156 @@ export async function gymCounts(studioId: string, monthIso?: string): Promise<Gy
       .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)),
   };
 }
+
+// ---------------------------------------------------------------------------
+// The staff screen: who runs the page, and who takes the classes.
+//
+// Two different claims, which is why they are two lists rather than one. A
+// manager holds the keys to the page; a coach on the shift list takes the
+// classes on the rota. The same person is often both and neither implies the
+// other: an owner who never teaches runs the page, and a coach who teaches
+// every morning has no business editing the address.
+// ---------------------------------------------------------------------------
+
+/** May this caller run the place? Unlike `actingFor` this does not require the
+ *  gym account: a studio is claimed the moment it has a manager, and staff is
+ *  exactly what you set up before you turn a schedule on. */
+async function managing(studioId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { error: "Session expired." as const };
+  const db = await getDb();
+  const [me] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return { error: "Session expired." as const };
+  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
+  if (!studio) return { error: "Studio not found." as const };
+  const access = await studioAccess(studioId, { id: userId, kind: me.kind });
+  if (!access.isManager)
+    return { error: "Only the people who run this studio can do that." as const };
+  return { db, userId, studio };
+}
+
+export type StaffPerson = {
+  id: string;
+  name: string;
+  email: string;
+  /** They added themselves nothing: this is the viewer, so the row says so
+   *  and removing it warns rather than just doing it. */
+  isYou: boolean;
+};
+export type StudioStaffDto = {
+  managers: StaffPerson[];
+  /** Empty until the studio runs a schedule: a shift list with no rota to be
+   *  on is a question nobody asked. */
+  pool: RotaPoolDto[];
+  hasSchedule: boolean;
+};
+
+/** Both lists at once: the screen shows them together. */
+export async function studioStaff(studioId: string): Promise<StudioStaffDto | null> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return null;
+  const { db, userId, studio } = ctx;
+  const rows = await db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  const ids = rows.map((r) => r.userId);
+  const people = ids.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+    : [];
+  const managers = people
+    .map((p) => ({
+      id: p.id,
+      name: p.name.trim() || p.email.split("@")[0],
+      email: p.email,
+      isYou: p.id === userId,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  // The shift list needs the rota it feeds, so it waits for the account.
+  const pool = studio.accountUserId ? await rotaPool(studioId) : [];
+  return { managers, pool, hasSchedule: !!studio.accountUserId };
+}
+
+/**
+ * Hand a second set of keys out, without going through us.
+ *
+ * This was an admin-only action, which meant a gym that wanted its own manager
+ * on the page had to ask fittlist for it. A place of work has more than one
+ * person running it and that is the whole reason `studio_managers` is a join
+ * table rather than a column, so the people who already hold the keys are the
+ * right ones to hand them on.
+ */
+export async function addStudioManager(
+  studioId: string,
+  emailRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, userId, studio } = ctx;
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return { ok: false, error: "Enter their email." };
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+  // Deliberately the same words the admin's version uses: an invite flow for
+  // somebody with no account is its own feature, not a fallback hidden here.
+  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+  if (user.kind === "gym")
+    return { ok: false, error: "That's the studio's own account, not a person." };
+  const already = await db
+    .select({ id: schema.studioManagers.id })
+    .from(schema.studioManagers)
+    .where(
+      and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, user.id)),
+    );
+  if (already.length) return { ok: false, error: "They already run this page." };
+  await db
+    .insert(schema.studioManagers)
+    .values({ studioId, userId: user.id, addedByUserId: userId });
+  await addNotification(user.id, {
+    type: "studio_manager",
+    title: `You run ${studio.name} on fittlist`,
+    body: "You can edit its page, and its details are yours to state.",
+    href: `/s/${studio.slug ?? studio.id}`,
+  });
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  return { ok: true };
+}
+
+/**
+ * Take a set of keys back, including your own.
+ *
+ * The last one may not leave from here. An empty list returns the page to the
+ * commons, which is a real thing that happens and much too big to do by
+ * mistyping a tap on a phone; `currentAdmin()` still has the unguarded version
+ * for a gym that genuinely wants out. This is the same reason studioAccess
+ * keeps an admin door at all: somebody has to be able to fix a place that has
+ * locked itself out.
+ */
+export async function removeStudioManager(
+  studioId: string,
+  targetId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { db, studio } = ctx;
+  const rows = await db
+    .select({ userId: schema.studioManagers.userId })
+    .from(schema.studioManagers)
+    .where(eq(schema.studioManagers.studioId, studioId));
+  if (rows.length <= 1)
+    return {
+      ok: false,
+      error: "Somebody has to run the page. Add another manager before you leave.",
+    };
+  await db
+    .delete(schema.studioManagers)
+    .where(
+      and(eq(schema.studioManagers.studioId, studioId), eq(schema.studioManagers.userId, targetId)),
+    );
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  return { ok: true };
+}
