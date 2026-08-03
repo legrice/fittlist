@@ -168,7 +168,15 @@ export default async function FeedPage({
         {/* This is for an empty tab, not an empty week: someone who
             follows coaches with nothing on gets the agenda's own message. */}
         {railCoaches.length === 0 && followed.length === 0 ? (
-          <div className="empty-block">
+          <div className="empty-block emptyart-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="emptyart"
+              src="/illustrations/following-empty.png"
+              alt=""
+              width={356}
+              height={600}
+            />
             <h2>You&rsquo;re not following anyone</h2>
             <p>Follow a coach to see their schedule here.</p>
             {/* Onto the coaches, not the classes: the button says coaches. */}

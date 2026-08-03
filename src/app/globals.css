@@ -287,6 +287,19 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .empty-block .btn { width: auto; padding: 12px 22px; }
 /* Stacked actions breathe; inline-blocks were sitting on each other. */
 .empty-block .btn + .btn { margin-top: 10px; margin-left: 8px; }
+/* An empty state that leads with a drawing drops the dashed card. The box
+   is there to say "something goes here" on a screen with nothing on it; a
+   figure standing on the page says that better, and framing her turns the
+   one warm thing on the screen into a specimen. */
+.emptyart-block {
+  background: none; border: none; padding: 34px 22px 10px; margin-top: 8px;
+}
+.emptyart {
+  display: block; margin: 0 auto 26px;
+  height: 200px; width: auto; max-width: 100%;
+}
+.emptyart-block h2 { font-size: 21px; margin-bottom: 10px; }
+.emptyart-block p { font-size: 14px; max-width: 30ch; margin-inline: auto; }
 
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);
