@@ -24,16 +24,21 @@ const RANGES: { id: RangeId; label: string }[] = [
   { id: "14", label: "Next 14 days" },
 ];
 
-// The directory, which has two halves: the people and the places. Members
-// list alongside coaches now (a directory with everyone in it is what says
-// the room is lived-in), and the Coach badge on a row is what tells them
-// apart. The box is a door to the universal
-// search; the tabs pick a half; and the chip rail under them is the whole
-// filter: All leads, filled in by default (the one selected chip is what
-// says the others can be selected). On People the chips are the kinds
-// (Coaches, Members); on Studios they are the place's types. The
-// Filters sheet is gone for now; it returns when there are enough
-// filters to need one.
+// The directory, which has three halves: the classes, the coaches and the
+// places. The box is a door to the universal search; the tabs pick a half;
+// and the chip rail under two of them is the whole filter: All leads,
+// filled in by default (the one selected chip is what says the others can
+// be selected). On Coaches the chips are what they teach, on Studios what
+// the place offers, and both come from one vocabulary so the same word
+// means the same thing on either. Classes brings its own two dropdowns
+// instead. The Filters sheet is gone for now; it returns when there are
+// enough filters to need one.
+//
+// Members left this half when Classes arrived. They were listed to make
+// the room look lived-in, and a directory with real classes on it does
+// that honestly; a coach directory that is half people who teach nothing
+// is a worse answer to "who can I train with". Nobody is hidden: search
+// covers both kinds, and Home's people rail still mixes them.
 export function DiscoverList({
   people,
   studios = [],
@@ -56,7 +61,7 @@ export function DiscoverList({
   backHref: string;
   hideBack?: boolean;
 }) {
-  const [tab, setTab] = useState<"classes" | "people" | "studios">("classes");
+  const [tab, setTab] = useState<"classes" | "coaches" | "studios">("classes");
   // The Classes half's own two filters, both dropdowns rather than chips: a
   // date is one answer out of a list, and the types are a long multiselect
   // that would have run off the edge of a rail.
@@ -73,10 +78,7 @@ export function DiscoverList({
   // sheet again.
   void cities;
   const [types, setTypes] = useState<Set<string>>(new Set());
-  // Which kinds of people: multiselect, so both picked means the same as
-  // neither. The discipline chips left this half for now; the kinds are the
-  // filter, and the type vocabulary stays the studios'.
-  const [kinds, setKinds] = useState<Set<"coach" | "member">>(new Set());
+
 
   // A tap anywhere else closes an open dropdown, the way the mini calendar's
   // scrim does. Two of them open at once would be two answers to one row.
@@ -99,17 +101,11 @@ export function DiscoverList({
       else next.add(t);
       return next;
     });
-  const toggleKind = (k: "coach" | "member") =>
-    setKinds((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
-    });
-
   const shown = useMemo(() => {
-    return people.filter((c) => kinds.size === 0 || kinds.has(c.kind));
-  }, [people, kinds]);
+    return people
+      .filter((c) => c.kind === "coach")
+      .filter((c) => types.size === 0 || c.disciplines.some((d) => types.has(d)));
+  }, [people, types]);
 
   // Which dates the picked range covers. Everything is a slice of the
   // fortnight already in hand, so this is a pair of bounds and nothing more.
@@ -183,18 +179,17 @@ export function DiscoverList({
 
   // All is the absence of picks, and it leads the rail already filled in:
   // the one selected chip is what says the others can be selected.
-  const allOn = tab === "people" ? kinds.size === 0 : types.size === 0;
-  const clearAll = () => {
-    setTypes(new Set());
-    setKinds(new Set());
-  };
+  const allOn = types.size === 0;
+  const clearAll = () => setTypes(new Set());
   // What the lens in front of you can actually be narrowed by, and nothing
   // else: the studios' own type vocabulary, on the Studios half only.
   const disciplines = useMemo(() => {
     const seen = new Set<string>();
     if (tab === "studios") for (const st of studios) for (const t of st.types) seen.add(t);
+    if (tab === "coaches")
+      for (const c of people) if (c.kind === "coach") for (const d of c.disciplines) seen.add(d);
     return [...seen].sort((a, b) => a.localeCompare(b));
-  }, [studios, tab]);
+  }, [studios, people, tab]);
 
   return (
     <>
@@ -228,15 +223,15 @@ export function DiscoverList({
           Classes
         </button>
         <button
-          className={`pubtab${tab === "people" ? " sel" : ""}`}
-          aria-current={tab === "people" ? "page" : undefined}
+          className={`pubtab${tab === "coaches" ? " sel" : ""}`}
+          aria-current={tab === "coaches" ? "page" : undefined}
           onClick={() => {
-            setTab("people");
+            setTab("coaches");
             setTypes(new Set());
             closeMenus();
           }}
         >
-          People
+          Coaches
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -244,7 +239,6 @@ export function DiscoverList({
           onClick={() => {
             setTab("studios");
             setTypes(new Set());
-            setKinds(new Set());
             closeMenus();
           }}
         >
@@ -267,26 +261,6 @@ export function DiscoverList({
         >
           All
         </button>
-        {tab === "people" && (
-          <>
-            <button
-              type="button"
-              className={`chip${kinds.has("coach") ? " sel" : ""}`}
-              aria-pressed={kinds.has("coach")}
-              onClick={() => toggleKind("coach")}
-            >
-              Coaches
-            </button>
-            <button
-              type="button"
-              className={`chip${kinds.has("member") ? " sel" : ""}`}
-              aria-pressed={kinds.has("member")}
-              onClick={() => toggleKind("member")}
-            >
-              Members
-            </button>
-          </>
-        )}
         {disciplines.map((d) => (
           <button
             key={d}
@@ -458,13 +432,11 @@ export function DiscoverList({
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>Nobody here yet</h2>
-          <p>The list fills up as people join.</p>
+          <h2>No coaches here yet</h2>
+          <p>The list fills up as coaches put their week on fittlist.</p>
         </div>
       ) : (
         <div className="dislist dislist-bare">
-          {/* Mixed kinds now, so the Coach badge is the distinction that
-              matters, same as search. */}
           {shown.map((c) => (
             <PersonRow key={c.id} person={c} from="discover" />
           ))}

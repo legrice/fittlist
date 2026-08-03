@@ -11,7 +11,7 @@ const BASE = "http://localhost:3000";
 const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 // The directory opens on Classes now, so anything asserting on the People or
 // Studios rows picks its half first.
-const discHalf = async (p, half = "People") => {
+const discHalf = async (p, half = "Coaches") => {
   await p.goto(BASE + "/discover");
   await p.getByRole("button", { name: half, exact: true }).click();
 };
@@ -1240,14 +1240,14 @@ await fan.getByRole("link", { name: "Find coaches" }).click();
 await fan.locator(".clsfilters").waitFor();
 {
   const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
-  if (heads.join("|") !== "Classes|People|Studios")
-    fail("the directory's halves should be Classes, People, Studios: " + heads.join("|"));
+  if (heads.join("|") !== "Classes|Coaches|Studios")
+    fail("the directory's halves should be Classes, Coaches, Studios: " + heads.join("|"));
   // The count says what the filters left, and never a city.
   const line = await fan.locator(".clscount-line").innerText();
   if (!/\d+ class/.test(line)) fail("the classes half should count what it lists: " + line);
   if (/Jersey City/.test(line)) fail("the count line should carry no city");
 }
-await fan.getByRole("button", { name: "People", exact: true }).click();
+await fan.getByRole("button", { name: "Coaches", exact: true }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
 // which half of it you're in.
 await fan.locator(".distabs").waitFor();
@@ -1262,14 +1262,11 @@ if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
 if (await fan.locator(".disfol").count())
   fail("the corner Follow pill should be gone from directory rows");
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
-// People mixes kinds now, so the Coach badge is the distinction that
-// matters, same as search, and the rail's chips are the kinds.
-if (!(await fan.locator(".disrow .kindtag", { hasText: "Coach" }).count()))
-  fail("a mixed People list should badge the coaches");
+// The Coaches half lists coaches, and its chips are what they teach: one
+// vocabulary with the studios', so the same word narrows either.
 {
   const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((t) => t.trim());
-  if (chips.join("|") !== "All|Coaches|Members")
-    fail("the People rail should read All, Coaches, Members: " + chips.join("|"));
+  if (chips[0] !== "All") fail("the coaches rail should lead with All: " + chips.join("|"));
 }
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
@@ -1368,49 +1365,44 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).waitFor();
   if (await fan.locator(".chip-filters").count())
     fail("the Filters chip should be gone from the rail");
-  // A pick takes All off and narrows the list to the kind.
-  await fan.locator(".dischips .chip", { hasText: /^Coaches$/ }).click();
+  // A pick takes All off and narrows to the coaches who teach that thing.
+  await fan.locator(".dischips .chip", { hasText: /^Yoga$/ }).click();
   await fan.waitForTimeout(300);
   if (await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count())
     fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
-  // Multiselect: Members joins Coaches rather than replacing it.
-  await fan.locator(".dischips .chip", { hasText: /^Members$/ }).click();
-  await fan.waitForTimeout(300);
-  if ((await fan.locator(".dischips .chip.sel").count()) !== 2)
-    fail("two picks should both stay selected");
-  await fan.locator(".dischips .chip", { hasText: /^Members$/ }).click();
-  await fan.waitForTimeout(200);
   // Switching lens drops the pick with it: the other half can't honour it.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
   if (!(await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count()))
     fail("the other lens should open back on All");
   // All is the way back: tap it and the whole list returns.
-  await fan.getByRole("button", { name: "People", exact: true }).click();
+  await fan.getByRole("button", { name: "Coaches", exact: true }).click();
   await fan.waitForTimeout(200);
-  await fan.locator(".dischips .chip", { hasText: /^Coaches$/ }).click();
+  await fan.locator(".dischips .chip", { hasText: /^Yoga$/ }).click();
   await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
   await fan.waitForTimeout(300);
   await fan.locator(".disrow", { hasText: "Sam" }).waitFor();
   console.log("discover filters ok (All leads filled in, picks are multiselect)");
 }
 
-// A filter is only offered where it can narrow something. People's rail is
-// the kinds and nothing else; the type vocabulary is the Studios half's own.
+// A filter is only offered where it can narrow something: what these
+// coaches teach on one half, what these places offer on the other, from
+// one vocabulary so a word means the same on either.
 {
   await discHalf(fan);
   const chips = async () =>
     (await fan.locator(".dischips .chip").allInnerTexts()).map((c) => c.trim());
-  const peopleChips = await chips();
-  if (peopleChips.join("|") !== "All|Coaches|Members")
-    fail("People's rail is the kinds and nothing else: " + peopleChips.join("|"));
+  const coachChips = await chips();
+  if (coachChips[0] !== "All")
+    fail("the coaches rail should lead with All: " + coachChips.join("|"));
+  if (coachChips.includes("Members"))
+    fail("the kinds left the rail when members left the half");
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(200);
   const studioChips = await chips();
-  if (studioChips.includes("Coaches") || studioChips.includes("Members"))
-    fail("Studios should not offer the People kinds");
-  console.log("discover chips ok (kinds on People, types on Studios)");
+  if (studioChips[0] !== "All") fail("the studios rail should lead with All too");
+  console.log("discover chips ok (what they teach, what a place offers)");
 }
 
 // A profile carries no tab bar, so the arrow on the picture is the way off it

@@ -375,16 +375,17 @@ and none at 1280px is a dead end. The single opt-out is a profile
 (`headerNav={false}`), whose header floats over a photograph in white, where a
 row of ink links is a row nobody can read.
 
-**Discover has two halves: the people and the places.** Members list
-alongside coaches now, by Matt's call: a directory with everyone in it is
-what says the room is lived-in, and a directory of six coaches said the
-opposite. (They were held out while a member-follow bought nothing
-visible; mutual follows surface shared rows now, and the scale argument
-won.) The Coach badge on a row is the distinction, same as search, and
-the People rail's chips are the kinds: All leading filled-in, then
-Coaches and Members, multiselect. The quality bar (a schedule, or enough
-profile) stays a coach's alone; a member's row claims nothing but the
-person, so a name is enough. `discoverable = false` and blocks in either
+**Discover has three halves: the classes, the coaches and the places.**
+Members listed alongside coaches for a while, by Matt's call, because a
+directory of six coaches said the room was empty. Classes say the room is
+lived-in honestly now, so the half is Coaches again and members leave it:
+a coach directory half full of people who teach nothing is a worse answer
+to "who can I train with" than a shorter one. Nobody is hidden by that,
+which is what makes it safe: search covers both kinds, and Home's people
+rail still mixes them. The Coaches rail's chips are what they teach
+(`users.disciplines`), All leading filled-in, multiselect, from the same
+vocabulary the studios' chips use, so one word narrows either half. The
+quality bar (a schedule, or enough profile) is a coach's and always was. `discoverable = false` and blocks in either
 direction still mean not listed. Studios are not followable and
 never will be by this control, because you follow a person and a gym is a
 place; the row is the whole link to `/s/{slug}` and carries no pill. They also
@@ -439,15 +440,15 @@ matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
 **Discover's top is one stack: the search door, the halves as underline
-tabs, and (on People and Studios) the chip rail under them, led by All.
+tabs, and (on Coaches and Studios) the chip rail under them, led by All.
 Classes brings its own two dropdowns instead.** The People/Studios
 segment is the same underline tabs a profile's sections wear (`.pubtabs
 .distabs`), and the rail (`.dischips`, scrolling off the edge) is the whole
 filter now. All leads it, filled in by default: the one selected chip is
 what says the others can be selected, and tapping it clears every pick. On
-People the chips after it are the kinds, Coaches and Members, multiselect
-(both picked means the same as neither); on Studios they are the place's
-types, where picking two means either, not both. Any pick takes All off.
+Coaches the chips after it are what they teach; on Studios they are the
+place's types. Both are multiselect, where picking two means either, not
+both. Any pick takes All off.
 The Available-for-clients chip and the discipline chips left the People
 half when members joined the list; they come back the day the filters
 earn a sheet. There is no Filters chip and no sheet for now; both return
