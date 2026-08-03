@@ -38,7 +38,7 @@ await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Sarah");
 await p.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p);
-await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 async function addClass({ name, days, time, studio, first = false }) {
   if (first) await p.getByRole("button", { name: "Add your first class" }).click();

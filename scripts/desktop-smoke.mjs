@@ -28,7 +28,7 @@ for (const [i, n] of names.entries()) {
   await p.getByPlaceholder("Your name").fill(n);
   await p.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(p);
-  await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+  await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
   await p.getByRole("button", { name: "Add your first class" }).click();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(`${n} Class`);
   for (const d of ["Mo", "Tu", "We", "Th", "Fr"]) {

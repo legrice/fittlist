@@ -113,7 +113,7 @@ await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Sarah");
 await p.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p);
-await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 await p.goto(BASE + "/app?acct=1");
 await p.waitForTimeout(700);
 if (await p.getByText("Add to home screen").isVisible().catch(() => false))

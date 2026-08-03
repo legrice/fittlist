@@ -53,7 +53,7 @@ await admin.getByPlaceholder("Your name").fill("Matt Admin");
 await admin.getByRole("button", { name: "Claim it" }).click();
 await admin.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(admin);
-await admin.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await admin.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 await admin.goto(BASE + "/admin");
 await admin.getByRole("heading", { name: "Admin" }).waitFor();
@@ -177,7 +177,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
 
     // approved: the schedule side opens up
     await pg.goto(BASE + "/app");
-    await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
+    await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
     // the Schedule tab the modal promised is really there
     {
       const tabs = (await pg.locator(".navtab").allInnerTexts()).map((t) => t.trim());
@@ -258,7 +258,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.getByPlaceholder("Your name").fill("Riley Requestor");
   await pg.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(pg);
-  await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
+  await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
   // The banner is how anyone finds out they can invite at all: the settings row
   // has always been there and nobody goes looking in settings for a thing they

@@ -34,7 +34,7 @@ await ad.getByText("Pick your link.").waitFor();
 await ad.getByPlaceholder("Your name").fill("Matt");
 await ad.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(ad);
-await ad.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await ad.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 console.log("admin fixture ok");
 
 // the admin has nobody to send feedback to, so no row

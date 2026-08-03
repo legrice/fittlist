@@ -118,7 +118,7 @@ await page.getByRole("button", { name: "Claim it" }).click();
 // we land on the blank schedule with the add button (no auto-opened adder).
 await page.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(page);
-await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await page.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 if (!(await page.locator('.appshell[data-theme="poster"]').count())) fail("app should be Poster");
 console.log("setup wizard skippable, blank schedule ok");
 
@@ -919,7 +919,7 @@ await anonPage.getByRole("button", { name: "Claim it" }).click();
 // claiming a handle runs the setup wizard; skip it to land on the schedule
 await anonPage.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(anonPage);
-await anonPage.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await anonPage.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 console.log("footer signup flow ok (attribution checked post-run)");
 
 // Give Sam a class so there's a second coach for the coach-follows-coach test.
@@ -1740,7 +1740,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await rows.first().locator(".weekrow-x").click();
   await fan.getByRole("button", { name: "Remove it" }).click();
   await fan.getByText("Removed from your plans").waitFor();
-  await fan.locator(".empty-block", { hasText: "Nothing added yet" }).waitFor();
+  await fan.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
   await fan.goto(BASE + "/feed");
   // Put it back for the checks below.
   await fan.locator(".feedagenda .ps-event").first().click();

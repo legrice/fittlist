@@ -25,7 +25,7 @@ await co.getByText("Pick your link.").waitFor();
 await co.getByPlaceholder("Your name").fill("Carina Coach");
 await co.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(co);
-await co.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await co.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 await c1.close();
 console.log("coach fixture ok");
 

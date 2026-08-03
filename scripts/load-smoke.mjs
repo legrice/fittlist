@@ -34,7 +34,7 @@ const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" })
   await p.getByPlaceholder("Your name").fill("Load Coach");
   await p.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(p);
-  await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+  await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
   await p.getByRole("button", { name: "Add your first class" }).click();
   await p.getByPlaceholder("e.g. Barbell Strength").fill("Load Class");
   for (const d of ["Mo", "Tu", "We", "Th", "Fr"]) {

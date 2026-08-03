@@ -56,7 +56,7 @@ await p1.getByText("Pick your link.").waitFor();
 await p1.getByPlaceholder("Your name").fill("Nopw Coach");
 await p1.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p1);
-await p1.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await p1.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 console.log("passwordless account created ok");
 await c1.close();
 

@@ -22,7 +22,7 @@ await page.getByPlaceholder("Your name").fill("Coach");
 await page.getByRole("button", { name: "Claim it" }).click();
 await page.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(page);
-await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await page.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 // public class
 await page.getByRole("button", { name: "Add your first class" }).click();
