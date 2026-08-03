@@ -3345,6 +3345,11 @@ button.ps-card { cursor: pointer; }
 }
 /* Merged-agenda row: coach above the class name, studio below it. */
 .feedagenda { margin-top: 2px; }
+/* On Following the coach is the point of the list, so the face and name
+   step up a size from the base chip. */
+.feedagenda .ps-ecoach { font-size: 15px; gap: 8px; }
+.feedagenda .ps-ecoachav { width: 28px; height: 28px; }
+.feedagenda .ps-ecoachav-empty { font-size: 13px; }
 .ps-agenda .ps-ecoach {
   display: flex; align-items: center; gap: 6px; min-width: 0;
   font-size: 13px; font-weight: 600; color: var(--ol);
