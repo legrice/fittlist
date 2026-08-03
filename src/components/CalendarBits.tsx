@@ -18,15 +18,16 @@ export const KIND_LABEL: Record<CalKind, string> = {
   private: "Personal",
 };
 
-/** Which views exist so far. Day and Week join in phase two. */
-export type CalView = "list" | "month";
+/** Which views exist so far. Week is the one still to come. */
+export type CalView = "list" | "day" | "month";
 
 const VIEW_KEY = "fl-cal-view";
 
 /** The remembered view: a preference, not a filter, so it survives arrival. */
 export function loadCalView(): CalView {
   if (typeof window === "undefined") return "list";
-  return localStorage.getItem(VIEW_KEY) === "month" ? "month" : "list";
+  const v = localStorage.getItem(VIEW_KEY);
+  return v === "month" || v === "day" ? v : "list";
 }
 export function saveCalView(v: CalView) {
   try {
@@ -91,6 +92,17 @@ export function scrollToToday() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/** Straight to the top, both scrollers: the tabs layout scrolls the body
+ *  and the coach shell scrolls its .stage. The Day view wants this on
+ *  entry, because the List leaves its scroller deep in the compensated
+ *  past and a shorter view inherits that offset as a random landing. */
+export function scrollCalTop() {
+  const stage = document.querySelector<HTMLElement>(".stage");
+  if (stage) stage.scrollTop = 0;
+  const doc = document.scrollingElement;
+  if (doc) doc.scrollTop = 0;
+}
+
 /** The calendar's header as one sticky block: the month row and the kind
  *  checkmarks pin under the app header, with the divider underneath them,
  *  so the list scrolls beneath the chrome. The offset is the brandbar's
@@ -109,27 +121,41 @@ export function CalSticky({ children }: { children: ReactNode }) {
   );
 }
 
-/** The title row: the view menu as a bare glyph leading the month, and Add
- *  as the one orange circle across from them (the caller passes the Add
- *  button as children, so each screen keeps its own handler). The menu wore
- *  a circle, then a shared capsule with Add; both read as more chrome than
- *  two small controls earn. */
+const VIEW_ICON: Record<CalView, string> = {
+  list: "list",
+  day: "calendar_today",
+  month: "calendar_month",
+};
+
+/** The title row: the month leading at the gutter, and the right cluster of
+ *  three: the current view's own glyph (tap for the view sheet), the
+ *  filters glyph (tap for the kind sheet), and the orange plus the caller
+ *  passes as children so each screen keeps its own handler. The hamburger
+ *  is gone: the view button says what you're looking at, not that a menu
+ *  exists. */
 export function CalHead({
   label,
+  view,
   onMenu,
+  onFilter,
   children,
 }: {
   label: string;
+  view: CalView;
   onMenu: () => void;
+  onFilter: () => void;
   children: ReactNode;
 }) {
   return (
     <div className="calhead-row">
-      <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
-        <Icon name="menu" size={20} />
-      </button>
       <h2 className="calhead">{label}</h2>
       <span className="calhead-spacer" />
+      <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
+        <Icon name={VIEW_ICON[view]} size={21} />
+      </button>
+      <button className="calfilter" aria-label="Filters" onClick={onFilter}>
+        <Icon name="tune" size={21} />
+      </button>
       {children}
     </div>
   );
@@ -147,6 +173,7 @@ export function ViewSheet({
 }) {
   const rows: { v: CalView; icon: string; label: string; sub: string }[] = [
     { v: "list", icon: "list", label: "List", sub: "Your days as a list, from today" },
+    { v: "day", icon: "calendar_today", label: "Day", sub: "One day, hour by hour" },
     { v: "month", icon: "calendar_month", label: "Month", sub: "The whole month at a glance" },
   ];
   return (
@@ -189,51 +216,225 @@ export function ViewSheet({
   );
 }
 
-/** The kind filters: All leading, then a pill per kind, the same All-led
- *  rail Discover wears. All is on by default; picking a kind fills the pill
- *  with the colour its rows wear, so the rail is the legend and the filter
- *  in one. Multi-select; any pick takes All off, and clearing the last pick
- *  hands it back. */
-export function KindChecks({
+/** The kind filters, behind the header's filter glyph now: a bottom sheet
+ *  of switches, one per kind the calendar holds, each row wearing its
+ *  colour as a dot. Everything is on by default, and off on arrival
+ *  resets: a filter is a way of looking, not a fact worth storing. */
+export function KindFilterSheet({
   present,
-  picked,
+  on,
   onToggle,
-  onAll,
+  onClose,
 }: {
   present: CalKind[];
-  /** The kinds narrowed to. Empty means All: everything shows. */
-  picked: Set<CalKind>;
+  on: (k: CalKind) => boolean;
   onToggle: (k: CalKind) => void;
-  onAll: () => void;
+  onClose: () => void;
 }) {
-  if (present.length < 2) return null;
   return (
-    <div className="kindchecks" aria-label="Calendar filter">
-      <button
-        className={`kindcheck kindcheck-all${picked.size === 0 ? " on" : ""}`}
-        data-kind="all"
-        aria-pressed={picked.size === 0}
-        onClick={onAll}
-      >
-        All
+    <div
+      className="sheet-scrim"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="sheet">
+        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={16} />
+        </button>
+        <h2>Show on your calendar</h2>
+        <div className="settingslist ownermenu">
+          {present.map((k) => {
+            const checked = on(k);
+            return (
+              <button
+                key={k}
+                className="setrow"
+                data-kind={k}
+                aria-pressed={checked}
+                onClick={() => onToggle(k)}
+              >
+                <span className="setrow-ic">
+                  <span className={`kindfilter-dot kindfilter-${k}`} aria-hidden="true" />
+                </span>
+                <span className="setrow-txt">
+                  <span className="t">{KIND_LABEL[k]}</span>
+                </span>
+                <span className={`switch${checked ? " on" : ""}`} aria-hidden="true">
+                  <span className="switch-knob" />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The Day view's week strip, pinned in the sticky chrome: the selected
+ *  day's week, Monday-led, a chevron either side to walk the weeks. The
+ *  selected day fills orange; today rings itself so it stays findable. */
+export function DayStrip({
+  dayIso,
+  todayIso,
+  onPick,
+}: {
+  dayIso: string;
+  todayIso: string;
+  onPick: (iso: string) => void;
+}) {
+  const d = new Date(`${dayIso}T00:00:00Z`);
+  const dow = (d.getUTCDay() + 6) % 7;
+  const mon = new Date(d);
+  mon.setUTCDate(d.getUTCDate() - dow);
+  const days: { iso: string; n: number; wd: string }[] = [];
+  const WD = ["M", "T", "W", "T", "F", "S", "S"];
+  for (let i = 0; i < 7; i++) {
+    const x = new Date(mon);
+    x.setUTCDate(mon.getUTCDate() + i);
+    days.push({ iso: x.toISOString().slice(0, 10), n: x.getUTCDate(), wd: WD[i] });
+  }
+  const shift = (delta: number) => {
+    const x = new Date(`${dayIso}T00:00:00Z`);
+    x.setUTCDate(x.getUTCDate() + delta);
+    onPick(x.toISOString().slice(0, 10));
+  };
+  return (
+    <div className="daystrip" aria-label="Pick a day">
+      <button className="daystrip-arrow" aria-label="Previous week" onClick={() => shift(-7)}>
+        <Icon name="chevron_left" size={18} />
       </button>
-      {present.map((k) => {
-        const on = picked.has(k);
-        return (
-          <button
-            key={k}
-            className={`kindcheck kindcheck-${k}${on ? " on" : ""}`}
-            data-kind={k}
-            aria-pressed={on}
-            onClick={() => onToggle(k)}
-          >
-            {/* The legend: the kind's colour as a dot at rest, inverting to
-                white when the pill fills with that colour. */}
-            <span className="kindcheck-dot" aria-hidden="true" />
-            {KIND_LABEL[k]}
-          </button>
-        );
-      })}
+      {days.map((x) => (
+        <button
+          key={x.iso}
+          className={`daystrip-day${x.iso === dayIso ? " sel" : ""}${x.iso === todayIso ? " today" : ""}`}
+          aria-pressed={x.iso === dayIso}
+          onClick={() => onPick(x.iso)}
+        >
+          <span className="daystrip-wd">{x.wd}</span>
+          <span className="daystrip-n">{x.n}</span>
+        </button>
+      ))}
+      <button className="daystrip-arrow" aria-label="Next week" onClick={() => shift(7)}>
+        <Icon name="chevron_right" size={18} />
+      </button>
+    </div>
+  );
+}
+
+/** One event on the day's hour grid. Either wire `onTap`, or set the data
+ *  attributes and let a wrapping ClassOpener catch the tap the way it does
+ *  on the lists. */
+export type DayGridEvent = {
+  key: string;
+  kind: CalKind;
+  name: string;
+  /** Minutes from midnight. */
+  at: number;
+  durationMin: number;
+  where?: string | null;
+  onTap?: () => void;
+  classId?: string;
+  iso?: string;
+  base?: string;
+};
+
+const HOUR_PX = 60;
+
+/** The day, hour by hour: rules per hour, the events laid onto them by
+ *  when they are, in the kind's wash. Overlaps split the width into lanes
+ *  rather than stacking. The grid starts an hour before the first thing
+ *  and ends an hour after the last, bounded to a sane training day. */
+export function DayGrid({
+  dayIso,
+  events,
+}: {
+  dayIso: string;
+  events: DayGridEvent[];
+}) {
+  const sorted = [...events].sort((a, b) => a.at - b.at);
+  const first = sorted.length ? Math.min(...sorted.map((e) => e.at)) : 8 * 60;
+  const last = sorted.length ? Math.max(...sorted.map((e) => e.at + e.durationMin)) : 18 * 60;
+  const startH = Math.max(0, Math.min(Math.floor(first / 60) - 1, 7));
+  const endH = Math.min(24, Math.max(Math.ceil(last / 60) + 1, 20));
+  const hours: number[] = [];
+  for (let h = startH; h <= endH; h++) hours.push(h);
+  // Lanes: overlapping events sit side by side. Greedy by start time.
+  const lanes: DayGridEvent[][] = [];
+  const laneOf = new Map<string, { lane: number; lanes: number }>();
+  const clusters: DayGridEvent[][] = [];
+  let cluster: DayGridEvent[] = [];
+  let clusterEnd = -1;
+  for (const e of sorted) {
+    if (cluster.length && e.at >= clusterEnd) {
+      clusters.push(cluster);
+      cluster = [];
+      clusterEnd = -1;
+    }
+    cluster.push(e);
+    clusterEnd = Math.max(clusterEnd, e.at + e.durationMin);
+  }
+  if (cluster.length) clusters.push(cluster);
+  for (const c of clusters) {
+    lanes.length = 0;
+    for (const e of c) {
+      let lane = lanes.findIndex((l) => l[l.length - 1].at + l[l.length - 1].durationMin <= e.at);
+      if (lane === -1) {
+        lanes.push([]);
+        lane = lanes.length - 1;
+      }
+      lanes[lane].push(e);
+      laneOf.set(e.key, { lane, lanes: 0 });
+    }
+    for (const e of c) laneOf.get(e.key)!.lanes = lanes.length;
+  }
+  const fmtH = (h: number) =>
+    h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "Noon" : h === 24 ? "12 AM" : `${h - 12} PM`;
+  const fmtT = (min: number) => {
+    const h = Math.floor(min / 60) % 24;
+    const m = min % 60;
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    return `${hh}:${String(m).padStart(2, "0")}${h < 12 ? "a" : "p"}`;
+  };
+  return (
+    <div className="daygrid" data-day={dayIso}>
+      {hours.map((h) => (
+        <div key={h} className="daygrid-hour" style={{ top: (h - startH) * HOUR_PX }}>
+          <span className="daygrid-hlabel">{fmtH(h)}</span>
+          <span className="daygrid-hrule" />
+        </div>
+      ))}
+      <div className="daygrid-body" style={{ height: (endH - startH) * HOUR_PX }}>
+        {sorted.map((e) => {
+          const pos = laneOf.get(e.key)!;
+          const top = ((e.at - startH * 60) / 60) * HOUR_PX;
+          const height = Math.max((e.durationMin / 60) * HOUR_PX, 30);
+          const width = 100 / pos.lanes;
+          return (
+            <button
+              key={e.key}
+              className={`daygrid-ev ev-${e.kind}`}
+              style={{
+                top,
+                height,
+                left: `${pos.lane * width}%`,
+                width: `calc(${width}% - 4px)`,
+              }}
+              data-cid={e.classId}
+              data-d={e.iso}
+              data-base={e.base}
+              onClick={e.onTap}
+            >
+              <span className="daygrid-evnm">{e.name}</span>
+              <span className="daygrid-evt">
+                {fmtT(e.at)} to {fmtT(e.at + e.durationMin)}
+                {e.where ? ` · ${e.where}` : ""}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

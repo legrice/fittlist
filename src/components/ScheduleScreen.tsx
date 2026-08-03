@@ -28,16 +28,20 @@ import {
   CalBottomBar,
   CalHead,
   CalSticky,
-  KindChecks,
+  DayGrid,
+  DayStrip,
+  KindFilterSheet,
   MONTHS_AHEAD,
   MONTHS_BACK,
   MonthHeadRow,
   MonthScroll,
   ViewSheet,
   useListMonthSpy,
+  type DayGridEvent,
   loadCalView,
   monthLabel,
   saveCalView,
+  scrollCalTop,
   scrollToToday,
   usePastReveal,
   type CalKind,
@@ -129,14 +133,15 @@ export function ScheduleScreen({
   // the moment is warm.
   const [live, setLive] = useState<{ id: string; name: string } | null>(null);
   const [pBusy, setPBusy] = useState(false);
-  // Which kinds are narrowed to. Empty means All: everything shows, which
-  // is the default on arrival because a filter is a way of looking, not a
-  // fact worth storing. The view is different: a preference, so it
-  // survives arrival.
-  const [pickedKinds, setPickedKinds] = useState<Set<CalKind>>(new Set());
-  const kindOn = (k: CalKind) => pickedKinds.size === 0 || pickedKinds.has(k);
+  // Which kinds are switched off, in the sheet behind the header's filter
+  // glyph. Everything is on by default, and off on arrival resets: a
+  // filter is a way of looking, not a fact worth storing. The view is
+  // different: a preference, so it survives arrival.
+  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
+  const [filterSheet, setFilterSheet] = useState(false);
+  const kindOn = (k: CalKind) => !offKinds.has(k);
   const toggleKind = (k: CalKind) =>
-    setPickedKinds((prev) => {
+    setOffKinds((prev) => {
       const next = new Set(prev);
       if (next.has(k)) next.delete(k);
       else next.add(k);
@@ -147,8 +152,15 @@ export function ScheduleScreen({
   const [viewSheet, setViewSheet] = useState(false);
   // The month the grid is looking at; entering Month starts at today's.
   const [ym, setYm] = useState(todayIso.slice(0, 7));
+  // The Day view's day. Entering it starts at today.
+  const [dayIso, setDayIso] = useState(todayIso);
   const pickView = (v: CalView) => {
     if (v === "month") setYm(todayIso.slice(0, 7));
+    if (v === "day") {
+      setDayIso(todayIso);
+      setYm(todayIso.slice(0, 7));
+      scrollCalTop();
+    }
     setView(v);
     saveCalView(v);
   };
@@ -304,7 +316,7 @@ export function ScheduleScreen({
   // going to can sort into one day by when they actually are.
   const planMinutes = (p: WeekItem) => {
     const [h, m] = p.hm.split(":").map(Number);
-    return ((h % 12) + (p.ap === "pm" ? 12 : 0)) * 60 + (m || 0);
+    return ((h % 12) + (p.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
   };
   // A filter is only offered where it can narrow something: which kinds this
   // calendar actually holds. Coaching covers shifts too; a shift is you
@@ -345,7 +357,7 @@ export function ScheduleScreen({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, weeks, pickedKinds]);
+  }, [classes, plans, todayIso, weeks, offKinds]);
 
   // The days already run, revealed by scrolling up: calendar days this time
   // (the past has a fixed shape), no ended-filter (been-and-gone is the
@@ -374,11 +386,55 @@ export function ScheduleScreen({
     }
     return out.reverse();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, pastWeeks, pickedKinds]);
+  }, [classes, plans, todayIso, pastWeeks, offKinds]);
 
   // The title follows the List's scroll the same way it follows the
   // months': whichever day is under the header names the month.
   useListMonthSpy(view === "list", setYm, `${pastDays.length}|${days.length}`);
+
+  // The Day view's hours: both hats on the picked day, each event opening
+  // what its row would (the editor, the class sheet, the plan sheet).
+  const dayEvents = useMemo<DayGridEvent[]>(() => {
+    const out: DayGridEvent[] = [];
+    const dow = (new Date(`${dayIso}T00:00:00Z`).getUTCDay() + 6) % 7;
+    if (kindOn("coaching"))
+      for (const c of classes)
+        if (runsOn(c, dayIso, dow)) {
+          const studio = c.studioId ? studioById.get(c.studioId) : undefined;
+          out.push({
+            key: `c-${c.id}`,
+            kind: "coaching",
+            name: c.name,
+            at: timeToMinutes(c.startTime),
+            durationMin: c.durationMin,
+            where: studio ? studio.name : c.location,
+            onTap: () =>
+              c.shift
+                ? c.shiftBase && setShiftOpen({ base: c.shiftBase, classId: c.id, iso: dayIso })
+                : c.duplicateOf
+                  ? setDupe(c)
+                  : edit(c, dayIso),
+          });
+        }
+    for (const p of plans.find((d) => d.iso === dayIso)?.items ?? []) {
+      const k: CalKind = p.personal ? "private" : "added";
+      if (!kindOn(k)) continue;
+      out.push({
+        key: `p-${p.id}-${p.iso}`,
+        kind: k,
+        name: p.name,
+        at: planMinutes(p),
+        durationMin: p.durationMin,
+        where: p.where,
+        onTap: () =>
+          p.personal
+            ? setPlan(p.id)
+            : setGoingOpen({ base: p.handle, classId: p.classId, iso: p.iso }),
+      });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes, plans, dayIso, offKinds, studioById]);
 
   // The months, whole: every date the scroll's range holds, kinds filtered
   // the same way. No ended-filter here: the grid can look back, and a day
@@ -407,7 +463,7 @@ export function ScheduleScreen({
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, pickedKinds]);
+  }, [classes, plans, todayIso, offKinds]);
 
   // A day tapped on the grid lands on that day in the list: make sure the
   // list reaches it, switch, and scroll once it's painted.
@@ -442,13 +498,15 @@ export function ScheduleScreen({
 
         {invitesLeft !== 0 && <InvitesBanner />}
 
-        {/* The calendar's own header, pinned under the app's: the month with
-            the view menu, Add across from them, and the kind checkmarks, with
-            the divider underneath the lot. The list scrolls beneath it. */}
+        {/* The calendar's own header, pinned under the app's: the month at
+            the gutter, the view and filter glyphs with the plus across from
+            it, and the divider underneath. The list scrolls beneath it. */}
         <CalSticky>
           <CalHead
             label={monthLabel(ym, todayIso)}
+            view={view}
             onMenu={() => setViewSheet(true)}
+            onFilter={() => setFilterSheet(true)}
           >
             <button
               className="calhead-add"
@@ -458,20 +516,20 @@ export function ScheduleScreen({
               <Icon name="add" size={20} strokeWidth={2.6} />
             </button>
           </CalHead>
-          {/* The kind filters: the All-led rail, each pill filling with the
-              colour its rows wear. Only when there is more than one kind to
-              tell apart. */}
-          <KindChecks
-            present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
-              presentKinds.has(k),
-            )}
-            picked={pickedKinds}
-            onToggle={toggleKind}
-            onAll={() => setPickedKinds(new Set())}
-          />
           {/* The weekday initials pin with the chrome while the months
-              scroll beneath. */}
+              scroll beneath; the Day view pins its week strip in the same
+              spot. */}
           {view === "month" && <MonthHeadRow />}
+          {view === "day" && (
+            <DayStrip
+              dayIso={dayIso}
+              todayIso={todayIso}
+              onPick={(iso) => {
+                setDayIso(iso);
+                setYm(iso.slice(0, 7));
+              }}
+            />
+          )}
         </CalSticky>
         {view === "month" ? (
           <MonthScroll
@@ -480,6 +538,11 @@ export function ScheduleScreen({
             onDay={openDay}
             onMonthInView={setYm}
           />
+        ) : view === "day" ? (
+          <>
+            <h3 className="daygrid-head">{fmtDayHeaderRel(dayIso, todayIso)}</h3>
+            <DayGrid dayIso={dayIso} events={dayEvents} />
+          </>
         ) : !hasAnyClass && plans.length === 0 ? (
           <div className="empty-block">
             <h2>Your week is empty</h2>
@@ -911,6 +974,13 @@ export function ScheduleScreen({
       <CalBottomBar
         raised={showFanView}
         onToday={() => {
+          // In the Day view Today stays a day: it walks the strip home
+          // rather than switching how you're looking.
+          if (view === "day") {
+            setDayIso(todayIso);
+            setYm(todayIso.slice(0, 7));
+            return;
+          }
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
@@ -1014,6 +1084,17 @@ export function ScheduleScreen({
             if (v === "list") requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
           }}
           onClose={() => setViewSheet(false)}
+        />
+      )}
+
+      {filterSheet && (
+        <KindFilterSheet
+          present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
+            presentKinds.has(k),
+          )}
+          on={kindOn}
+          onToggle={toggleKind}
+          onClose={() => setFilterSheet(false)}
         />
       )}
 

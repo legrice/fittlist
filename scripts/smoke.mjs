@@ -1868,12 +1868,19 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
     if (!(await row.locator(".ps-event.ev-private").count()))
       fail("a personal event should wear the Personal colour");
   }
-  // Picking Personal narrows to it: the added rows leave, the event stays.
-  await fan.locator('.kindcheck[data-kind="private"]').click();
+  // The kind filters live behind the header's filter glyph now, as a sheet
+  // of switches. Turning Added off narrows to the event; back on restores.
+  await fan.locator(".calfilter").click();
+  await fan.getByRole("heading", { name: "Show on your calendar" }).waitFor();
+  await fan.locator('.setrow[data-kind="added"]').click();
+  await fan.locator(".sheetclose").click();
   await fan.locator(".ps-erow", { hasText: "Physio" }).first().waitFor();
   if (await fan.locator(".ps-event.ev-added").count())
-    fail("picking Personal should drop the added rows");
-  await fan.locator('.kindcheck[data-kind="all"]').click();
+    fail("switching Added off should drop the added rows");
+  await fan.locator(".calfilter").click();
+  await fan.locator('.setrow[data-kind="added"]').click();
+  await fan.locator(".sheetclose").click();
+  await fan.locator(".ps-event.ev-added").first().waitFor();
   console.log("an event ok (no class furniture, wears the Personal colour)");
 
   // Nothing about it is public. Not on their profile, not in the feed.
@@ -2142,38 +2149,40 @@ await page.locator(".ps-event").first().waitFor();
   if (await page.locator(".ps-corner").count())
     fail("the corner badges should have become the card colours");
 }
-// The filters are the All-led rail now: All on by default, a picked pill
-// fills with the colour its rows wear and narrows the list to that kind.
+// The filters live behind the header's filter glyph now: a sheet of
+// switches, one per kind the calendar holds, each wearing its colour as a
+// dot. Everything starts on; a switch off narrows the list.
 {
-  const chips = (await page.locator(".kindchecks .kindcheck").allInnerTexts()).map((t) => t.trim());
-  if (chips[0] !== "All" || !chips.includes("Teaching") || !chips.includes("Going"))
-    fail("the rail should lead with All then the kinds: " + chips.join("|"));
-  // All starts filled; picking Teaching fills it with the brand orange and
-  // takes All off.
-  const allBg = await page
-    .locator('.kindcheck[data-kind="all"]')
-    .evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (allBg === "rgb(255, 255, 255)") fail("All should start filled in: " + allBg);
-  await page.locator('.kindcheck[data-kind="coaching"]').click();
-  await page.waitForTimeout(300);
-  const pickedBg = await page
-    .locator('.kindcheck[data-kind="coaching"]')
-    .evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (pickedBg !== "rgb(221, 106, 53)")
-    fail("a picked Teaching pill should fill brand orange: " + pickedBg);
-  if (await page.locator(".ps-event", { hasText: "Conditioning" }).count())
-    fail("picking Teaching should drop the class they only attend");
+  if (await page.locator(".kindchecks").count())
+    fail("the pill rail should have moved into the filter sheet");
+  await page.locator(".calfilter").click();
+  await page.getByRole("heading", { name: "Show on your calendar" }).waitFor();
+  const rows = (await page.locator(".sheet .setrow").allInnerTexts()).map((t) => t.trim());
+  if (!rows.includes("Teaching") || !rows.includes("Going"))
+    fail("the sheet should list the kinds the calendar holds: " + rows.join("|"));
+  if (!(await page.locator('.setrow[data-kind="coaching"] .kindfilter-dot').count()))
+    fail("a filter row should wear its kind's dot");
+  if (await page.locator(".sheet .setrow .switch:not(.on)").count())
+    fail("every switch should start on");
+  // Going off drops the class they only attend and keeps the taught rows.
+  await page.locator('.setrow[data-kind="added"]').click();
+  await page.locator(".sheetclose").click();
+  await page.waitForFunction(() => !document.querySelector(".ps-event.ev-added"));
   if (!(await page.locator(".ps-event.ev-coaching").first().count()))
-    fail("picking Teaching should keep the taught rows");
-  // The other kind narrows the same way; All brings everything back.
-  await page.locator('.kindcheck[data-kind="coaching"]').click();
-  await page.locator('.kindcheck[data-kind="added"]').click();
+    fail("switching Going off should keep the taught rows");
+  // The switches flip independently: Going back on, Teaching off.
+  await page.locator(".calfilter").click();
+  await page.locator('.setrow[data-kind="added"]').click();
+  await page.locator('.setrow[data-kind="coaching"]').click();
+  await page.locator(".sheetclose").click();
   await page.locator(".ps-event.ev-added", { hasText: "Conditioning" }).first().waitFor();
   if (await page.locator(".ps-event.ev-coaching").count())
-    fail("picking Going alone should drop the taught rows");
-  await page.locator('.kindcheck[data-kind="all"]').click();
+    fail("switching Teaching off should drop the taught rows");
+  await page.locator(".calfilter").click();
+  await page.locator('.setrow[data-kind="coaching"]').click();
+  await page.locator(".sheetclose").click();
   await page.locator(".ps-event.ev-coaching").first().waitFor();
-  console.log("kind pills ok (All leads, a pick fills with its colour and narrows)");
+  console.log("kind filters ok (the sheet's switches narrow, the dots are the legend)");
 }
 // A Going row on your own schedule carries the filled ribbon, and tapping it
 // removes the class with the way back in the toast.
@@ -2202,10 +2211,35 @@ await page.locator(".ps-event").first().waitFor();
   if (await page.locator(".monthnav").count()) fail("the month chevrons should be gone");
   if (!(await page.locator(".monthpill.ev-coaching").first().count()))
     fail("the month grid should draw teaching pills in the teaching colour");
+  console.log("month view ok (the sheet switches, the grid wears the colours)");
+}
+// The day view: the week strip in the chrome, the day as an hour grid, and
+// a weekly class findable on its weekday. The view button wears the current
+// view's own glyph, so it changes as the view does.
+{
+  await page.locator(".calmenu").click();
+  await page.locator(".sheet .setrow", { hasText: "hour by hour" }).click();
+  await page.locator(".daystrip").waitFor();
+  await page.locator(".daygrid").waitFor();
+  if ((await page.locator(".daystrip-day").count()) !== 7)
+    fail("the day strip should hold the whole week");
+  if (!(await page.locator(".daystrip-day.sel").count()))
+    fail("the strip should mark the selected day");
+  // Barbell Strength runs Mon, Wed & Fri, so walking the strip finds it.
+  let found = false;
+  for (let i = 0; i < 7; i++) {
+    await page.locator(".daystrip-day").nth(i).click();
+    await page.waitForTimeout(150);
+    if (await page.locator(".daygrid-ev.ev-coaching").count()) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) fail("a weekly class should appear on its weekday in the day grid");
   await page.locator(".calmenu").click();
   await page.locator(".sheet .setrow", { hasText: "List" }).click();
   await page.locator(".ps-daycol").first().waitFor();
-  console.log("month view ok (the sheet switches, the grid wears the colours)");
+  console.log("day view ok (the strip walks the week, the grid holds the class)");
 }
 // with the bottom nav to cross between the two spaces
 await page.locator(".navtab", { hasText: "Following" }).click();

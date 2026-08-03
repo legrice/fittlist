@@ -616,8 +616,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The view menu leads the month as a bare glyph (it wore a circle, then a
    capsule shared with Add, and both were more chrome than it earns), and
    Add is the one orange circle across from them. */
-.calmenu {
-  flex-shrink: 0; width: 34px; height: 34px; margin-left: -7px;
+.calmenu, .calfilter {
+  flex-shrink: 0; width: 36px; height: 36px;
   display: inline-flex; align-items: center; justify-content: center;
   background: none; border: none; color: var(--ink); cursor: pointer;
 }
@@ -627,33 +627,76 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--si); color: #fff; border: none; cursor: pointer;
   padding: 0;
 }
-.calmenu:active, .calhead-add:active { transform: scale(.93); }
+.calmenu:active, .calfilter:active, .calhead-add:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
 .viewsheet-on { color: var(--go); }
-/* The kind filters: a checkmark per kind wearing the kind's colour, which
-   makes the row the legend and the filter at once. */
-.kindchecks { display: flex; gap: 8px; margin: 10px 0 12px; overflow-x: auto; scrollbar-width: none; }
-.kindchecks::-webkit-scrollbar { display: none; }
-/* All leads, filled in ink; a picked kind fills with the colour its rows
-   wear, which makes the rail the legend and the filter at once. The legend
-   holds at rest too: each kind pill carries its colour as a dot beside the
-   word, inverting to white on the fill. */
-.kindcheck {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
-  height: 32px; padding: 0 14px; border-radius: 999px; cursor: pointer;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 13px;
+/* The kind filters live in a sheet behind the header's filter glyph now:
+   a switch per kind, each row wearing its colour as a dot. */
+.kindfilter-dot { display: inline-block; width: 12px; height: 12px; border-radius: 999px; }
+.kindfilter-coaching { background: var(--si); }
+.kindfilter-added { background: var(--go); }
+.kindfilter-private { background: #3b82cc; }
+/* The Day view: the week strip pinned with the chrome, then the hours. */
+.daystrip {
+  display: flex; align-items: center; gap: 2px; margin: 10px 0 10px;
 }
-.kindcheck-dot { width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; }
-.kindcheck-coaching .kindcheck-dot { background: var(--si); }
-.kindcheck-added .kindcheck-dot { background: var(--go); }
-.kindcheck-private .kindcheck-dot { background: #3b82cc; }
-.kindcheck.on .kindcheck-dot { background: #fff; }
-.kindcheck-all.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-.kindcheck-coaching.on { background: var(--si); border-color: var(--si); color: #fff; }
-.kindcheck-added.on { background: var(--go); border-color: var(--go); color: #fff; }
-.kindcheck-private.on { background: #3b82cc; border-color: #3b82cc; color: #fff; }
+.daystrip-arrow {
+  flex-shrink: 0; width: 26px; height: 40px; display: inline-flex;
+  align-items: center; justify-content: center; color: var(--ol); cursor: pointer;
+}
+.daystrip-day {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 2px 0; cursor: pointer; border-radius: 12px;
+}
+.daystrip-wd {
+  font-size: 11px; font-weight: 700; color: var(--ol);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.daystrip-n {
+  width: 32px; height: 32px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 15px; color: var(--ink);
+}
+.daystrip-day.today .daystrip-n { box-shadow: inset 0 0 0 1.5px var(--line); }
+.daystrip-day.sel .daystrip-n { background: var(--si); color: #fff; box-shadow: none; }
+.daygrid-head {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 17px; text-align: center; margin: 14px 0 10px;
+}
+.daygrid { position: relative; margin: 0 0 30px; }
+.daygrid-hour { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 8px; }
+.daygrid-hlabel {
+  flex-shrink: 0; width: 48px; text-align: right; font-size: 11px; font-weight: 600;
+  color: var(--ol); transform: translateY(-1px);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+}
+.daygrid-hrule { flex: 1; border-top: 1px solid var(--line); }
+.daygrid-body { position: relative; margin-left: 60px; }
+.daygrid-ev {
+  position: absolute; z-index: 1; text-align: left; cursor: pointer;
+  border: none; border-radius: 9px; padding: 5px 9px 5px 12px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1px; align-items: flex-start;
+}
+.daygrid-ev::before {
+  content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 3px;
+  border-radius: 2px; background: currentColor;
+}
+.daygrid-ev.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.daygrid-ev.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
+.daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
+[data-mode="dark"] .daygrid-ev.ev-coaching { color: #f09062; }
+[data-mode="dark"] .daygrid-ev.ev-added { color: #7dc493; }
+[data-mode="dark"] .daygrid-ev.ev-private { color: #85b8e8; }
+.daygrid-evnm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700; font-size: 14px; line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.daygrid-evt {
+  font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 100%;
+}
 /* The kind's colour is the accent bar, not a card wash: the calendars are
    flat rows now, one look with Following, and the bar down the left says
    Teaching, Going or Personal in the same colours the filter chips wear.
@@ -687,7 +730,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .monthscroll { margin-top: 4px; }
 /* One month after another, no chevrons: the scroll is the navigation, and
    each block names itself while the sticky title follows along. */
-.monthblock { scroll-margin-top: 215px; margin-bottom: 30px; }
+.monthblock { scroll-margin-top: 175px; margin-bottom: 30px; }
 .monthblock-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 17px; margin: 0 0 8px;
@@ -756,7 +799,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 /* Today lands the first not-past day under the sticky chrome, with real
    air above the heading rather than grazing the divider. */
-.callist .ps-daygroup { scroll-margin-top: 192px; }
+.callist .ps-daygroup { scroll-margin-top: 150px; }
 /* The calendar's own header, stuck under the app's: the month row and the
    checkmarks pin (top is set to the brandbar's measured height), the
    divider under them is the wrapper's own edge, and the list slides

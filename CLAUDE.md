@@ -1207,12 +1207,31 @@ holds only what is real: no empty days, no time gutter. Following is
 everyone you follow; Schedule is you. Those stay legibly different.
 
 **The calendar has views, and the month is its name.** `CalendarBits.tsx`
-is the chrome both calendars share: the month as the title where "Your
-schedule" was, a circled menu beside it opening the view sheet (List and
-Month for now; Day and Week are deliberately not built yet), and the Month
-grid itself.
+is the chrome both calendars share: the month as the title at the gutter,
+then the header's right cluster of three, the view button, the filter
+button and the orange plus. The view button (`.calmenu`) wears the current
+view's own glyph (the list lines, a single-day calendar, the month grid)
+and opens the view sheet; it says what you're looking at, not that a menu
+exists, which is why the hamburger went. The views are List, Day and Month
+(Week is deliberately not built yet).
 The view is a preference (`fl-cal-view`, localStorage) and survives
-arrival, unlike the filters. Month is one continuous scroll of months
+arrival, unlike the filters.
+Day is one day as an hour grid (`DayGrid`): rules per hour, each event a
+wash in its kind's colour placed by when it is, overlaps splitting into
+lanes rather than stacking, the window an hour either side of what the day
+holds, bounded to a sane training day. The selected day's week rides the
+sticky chrome as a Monday-led strip (`DayStrip`, chevrons walking whole
+weeks, today ringed, the pick filled orange). Tapping an event does what
+its list row would: a teaching row opens the editor, a shift or Going row
+the class sheet (`DayGridEvent` carries `onTap`, or `data-cid`/`data-d`/
+`data-base` for a wrapping `ClassOpener`), a personal row `PlanSheet`.
+Entering Day resets the scroll (`scrollCalTop`), because the List leaves
+its scroller deep in the compensated past and a shorter view inherits that
+offset as a random landing; Today in Day view re-picks today rather than
+scrolling. The stacked `hm`/`ap` clock a `WeekItem` carries says "PM"
+uppercase, so anything folding it back to minutes compares
+case-insensitively; a `=== "pm"` put every evening class at dawn on the
+grid. Month is one continuous scroll of months
 (`MonthScroll`, this month first in view, `MONTHS_BACK` behind it and
 `MONTHS_AHEAD` ahead, no chevrons), each block naming itself while the
 sticky title follows whichever month is under the header and the weekday
@@ -1234,10 +1253,10 @@ The two nearest days head their sections as words, Today and Tomorrow
 resume from there.
 
 **The calendar's header sticks, and the List scrolls back in time.**
-`CalSticky` pins the month row, the Add pill and the kind checkmarks under
-the app header (it measures the brandbar, which is itself sticky, for its
-offset), with the divider under the checkmarks as its own bottom edge; the
-list slides beneath the chrome. `usePastReveal` is the way back: the list
+`CalSticky` pins the month row under the app header (it measures the
+brandbar, which is itself sticky, for its offset), plus whatever the view
+adds beneath it, the Month grid's weekday initials or the Day view's week
+strip; the list slides beneath the chrome. `usePastReveal` is the way back: the list
 still starts at today, and a sentinel above it prepends a slice of past
 days each time the top comes into view, compensating the scroll so the
 screen doesn't jump. It finds the real scroller by walking up from the
@@ -1258,9 +1277,9 @@ the tabs layout scrolls the body). Share wears the sparkle in the brand
 orange and opens the handing-on: a coach's small sheet (the story image,
 the week as text, the link), or a member's `ShareMyWeekSheet` straight,
 because that sheet already is the options. The floating plus went up to
-the header's top right as the one orange circle (`.calhead-add`), and the
-view menu leads the month as a bare glyph (`.calmenu`): it wore a circle,
-then a capsule shared with Add, and both were more chrome than two small
+the header's top right as the one orange circle (`.calhead-add`); the view
+and filter buttons beside it are bare glyphs (`.calmenu`, `.calfilter`),
+because circles and capsules were tried and were more chrome than small
 controls earn.
 The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
@@ -1288,14 +1307,14 @@ with its own darker ink). A full card fill shipped for a night and read as
 a poster wall, which is the lesson the photo cards taught first; the bar
 says the same thing at a glance without shouting. The corner badges
 (`.ps-corner`, `.ps-goingtag`) said it in words and are gone. The filters
-are an All-led pill rail (`KindChecks`, `.kindcheck`), the same shape
-Discover's chips wear: All leads filled in ink, each kind pill carries its
-colour as a dot beside the word, and a picked kind inverts (the pill fills
-with the colour its rows wear, the dot goes white), so the rail is the
-legend and the filter at once, picked or not. Picks multi-select and narrow to what's picked; All is the absence
-of picks and the way back, on by default on arrival (a filter is a way of
-looking, not a fact worth storing). The row
-only renders when the calendar holds at least two kinds. Colour by
+live behind the header's filter glyph now (`.calfilter`, the tune slider):
+`KindFilterSheet` is a bottom sheet of switches, one row per kind the
+calendar holds, each wearing its colour as a dot (`.kindfilter-dot`), so
+the sheet is the legend and the filter at once. Everything is on by
+default and off resets on arrival (a filter is a way of looking, not a
+fact worth storing); the rows narrow live behind the sheet, and the pill
+rail they replaced (`KindChecks`) is gone. The glyph renders whatever the
+calendar holds, and a sheet with one row still explains the one colour. Colour by
 relationship is three meanings, three colours, stable everywhere. Shift
 rides its own line above the name (which kind of yours it is comes before
 what it is); Private and Duplicate stay on the name line, facts about the

@@ -15,14 +15,18 @@ import {
   CalBottomBar,
   CalHead,
   CalSticky,
-  KindChecks,
+  DayGrid,
+  DayStrip,
+  KindFilterSheet,
   MonthHeadRow,
   MonthScroll,
   ViewSheet,
   useListMonthSpy,
+  type DayGridEvent,
   loadCalView,
   monthLabel,
   saveCalView,
+  scrollCalTop,
   scrollToToday,
   usePastReveal,
   type CalKind,
@@ -96,13 +100,14 @@ export function WeekScreen({
   const [inviteOpen, setInviteOpen] = useState(false);
   const [, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-  // Which kinds are narrowed to: the same All-led rail the coach's /app
-  // wears, minus Teaching, which a member hasn't got. Empty means All, and
-  // it resets on arrival; the view is a preference and survives it.
-  const [pickedKinds, setPickedKinds] = useState<Set<CalKind>>(new Set());
-  const kindOn = (k: CalKind) => pickedKinds.size === 0 || pickedKinds.has(k);
+  // Which kinds are switched off, in the sheet behind the header's filter
+  // glyph: the same sheet the coach's /app wears, minus Teaching, which a
+  // member hasn't got. Everything on by default; off resets on arrival.
+  const [offKinds, setOffKinds] = useState<Set<CalKind>>(new Set());
+  const [filterSheet, setFilterSheet] = useState(false);
+  const kindOn = (k: CalKind) => !offKinds.has(k);
   const toggleKind = (k: CalKind) =>
-    setPickedKinds((prev) => {
+    setOffKinds((prev) => {
       const next = new Set(prev);
       if (next.has(k)) next.delete(k);
       else next.add(k);
@@ -116,8 +121,15 @@ export function WeekScreen({
   const { pastWeeks, sentinel } = usePastReveal(CAL_PAST_DAYS / 7);
   // The floating Share pill: the week as a poster.
   const [shareWeek, setShareWeek] = useState(false);
+  // The Day view's day. Entering it starts at today.
+  const [dayIso, setDayIso] = useState(todayIso);
   const pickView = (v: CalView) => {
     if (v === "month") setYm(todayIso.slice(0, 7));
+    if (v === "day") {
+      setDayIso(todayIso);
+      setYm(todayIso.slice(0, 7));
+      scrollCalTop();
+    }
     setView(v);
     saveCalView(v);
   };
@@ -184,7 +196,7 @@ export function WeekScreen({
         return {
           kind: (i.personal ? "private" : "added") as CalKind,
           name: i.name,
-          at: ((h % 12) + (i.ap === "pm" ? 12 : 0)) * 60 + (m || 0),
+          at: ((h % 12) + (i.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0),
         };
       });
       rows.sort((a, b) => a.at - b.at);
@@ -236,23 +248,28 @@ export function WeekScreen({
         <CalSticky>
           <CalHead
             label={monthLabel(ym, todayIso)}
+            view={view}
             onMenu={() => setViewSheet(true)}
+            onFilter={() => setFilterSheet(true)}
           >
             <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>
               <Icon name="add" size={20} strokeWidth={2.6} />
             </button>
           </CalHead>
-          {/* The kind filters: the All-led rail, each pill filling with the
-              colour its rows wear. */}
-          <KindChecks
-            present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
-            picked={pickedKinds}
-            onToggle={toggleKind}
-            onAll={() => setPickedKinds(new Set())}
-          />
           {/* The weekday initials pin with the chrome while the months
-              scroll beneath. */}
+              scroll beneath; the Day view pins its week strip in the same
+              spot. */}
           {view === "month" && <MonthHeadRow />}
+          {view === "day" && (
+            <DayStrip
+              dayIso={dayIso}
+              todayIso={todayIso}
+              onPick={(iso) => {
+                setDayIso(iso);
+                setYm(iso.slice(0, 7));
+              }}
+            />
+          )}
         </CalSticky>
 
         {view === "month" ? (
@@ -262,6 +279,33 @@ export function WeekScreen({
             onDay={openDay}
             onMonthInView={setYm}
           />
+        ) : view === "day" ? (
+          <ClassOpener handle="">
+            <h3 className="daygrid-head">{fmtDayHeaderRel(dayIso, todayIso)}</h3>
+            <DayGrid
+              dayIso={dayIso}
+              events={(allShown.find((d) => d.iso === dayIso)?.items ?? []).map(
+                (i): DayGridEvent => {
+                  const [h, m] = i.hm.split(":").map(Number);
+                  const at = ((h % 12) + (i.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
+                  return {
+                    key: `${i.personal ? i.id : i.classId}|${i.iso}`,
+                    kind: i.personal ? "private" : "added",
+                    name: i.name,
+                    at,
+                    durationMin: i.durationMin,
+                    where: i.where,
+                    // A personal entry opens its own sheet; a real class
+                    // rides the wrapping ClassOpener by its data attributes.
+                    onTap: i.personal ? () => setPlan(i.id) : undefined,
+                    classId: i.personal ? undefined : i.classId,
+                    iso: i.iso,
+                    base: i.personal ? undefined : i.handle,
+                  };
+                },
+              )}
+            />
+          </ClassOpener>
         ) : shown.length === 0 && allShown.length === 0 ? (
           <div className="empty-block">
             <h2>Nothing added yet</h2>
@@ -396,6 +440,12 @@ export function WeekScreen({
       {/* The two floating doors: back to now, and the week as a poster. */}
       <CalBottomBar
         onToday={() => {
+          // In the Day view Today stays a day: it walks the strip home.
+          if (view === "day") {
+            setDayIso(todayIso);
+            setYm(todayIso.slice(0, 7));
+            return;
+          }
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
@@ -417,6 +467,15 @@ export function WeekScreen({
             if (v === "list") requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
           }}
           onClose={() => setViewSheet(false)}
+        />
+      )}
+
+      {filterSheet && (
+        <KindFilterSheet
+          present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
+          on={kindOn}
+          onToggle={toggleKind}
+          onClose={() => setFilterSheet(false)}
         />
       )}
 
