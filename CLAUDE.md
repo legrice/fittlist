@@ -1546,7 +1546,14 @@ Schedule is your own calendar; You is the person, the account screen
 included. `navTabs()` in `src/lib/nav.ts` is the one list both bars
 render, and it takes the Home flag rather than reading it, because both
 bars are client components and the answer is the server's. `/week` stays in the `(tabs)` route group and lights Schedule for
-a member; a coach landing on it is redirected to `/app`. In `?from=`
+a member; a coach landing on it is redirected to `/app`, and a member
+landing on `/app` is redirected to `landingHref()`. That second direction
+was missing for months and it was not a stray-URL problem: the installed
+app's `start_url` is `/app`, so every member who put fittlist on their home
+screen opened the coach's calendar on every launch, offering to add a class
+to a public page they cannot have and saying "add the classes you coach" to
+somebody who coaches none. The two redirects are one rule, and neither kind
+can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" means the Home tab now and the Following
 feed says `from=following`; the class page honours both. The current tab
 marks itself with a light brand-orange wash behind the glyph alone

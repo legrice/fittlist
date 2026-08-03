@@ -68,6 +68,7 @@ export default async function SchedulePage({
         passwordHash: schema.users.passwordHash,
         onboardedAt: schema.users.onboardedAt,
         announcement: schema.users.announcement,
+        kind: schema.users.kind,
       })
       .from(schema.users)
       .where(eq(schema.users.id, userId)),
@@ -76,6 +77,16 @@ export default async function SchedulePage({
   // First run after claiming a handle: send them through the setup wizard
   // (photo, profile, studios) before they land on their schedule.
   if (user && !user.onboardedAt) redirect("/welcome");
+  // This is the coach's calendar, and a member has no business on it: it
+  // offers adding a class to a public page they cannot have, and its empty
+  // state says "add the classes you coach" to somebody who coaches none.
+  //
+  // It matters more than a stray URL, because the installed app's start_url
+  // is /app: every member who put fittlist on their home screen was landing
+  // here on every launch. /week already redirects a coach to /app, and this
+  // is that rule said in the other direction, so neither kind can arrive on
+  // the other's calendar.
+  if (user && user.kind === "fan") redirect(await landingHref());
   // All independent, so they load together: awaited one by one they stacked
   // nine round trips onto every open of the schedule.
   const [fbHost, askFeedback, invitesLeft, customTypeRows, inboxRows, notifUnread, plans] =
