@@ -142,7 +142,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
     await skipSetup(pg);
     await pg.waitForURL("**/feed");
-    await pg.getByText("Nobody yet").waitFor();
+    await pg.getByText("You\u2019re not following anyone").waitFor();
     console.log("invited member signup ok");
 
     // 5) Becoming a coach is an ask now, answered in admin: the self-serve

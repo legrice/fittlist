@@ -138,7 +138,7 @@ await c3.close();
   await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
   await skipSetup(fp);
   await fp.waitForURL("**/feed");
-  await fp.getByText("Nobody yet").waitFor();
+  await fp.getByText("You\u2019re not following anyone").waitFor();
   // and it stuck: going back to / sends them to their feed, not a claim step
   await fp.goto(BASE + "/");
   await fp.waitForURL("**/feed");

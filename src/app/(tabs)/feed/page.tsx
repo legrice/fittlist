@@ -165,7 +165,7 @@ export default async function FeedPage({
 
   return (
     <>
-        {/* "Nobody yet" is for an empty tab, not an empty week: someone who
+        {/* This is for an empty tab, not an empty week: someone who
             follows coaches with nothing on gets the agenda's own message. */}
         {railCoaches.length === 0 && followed.length === 0 ? (
           <div className="empty-block">
