@@ -146,8 +146,8 @@ export function CalHead({
   view: CalView;
   onMenu: () => void;
   onFilter: () => void;
-  /** The month is a door too: tapping it (or its chevron) opens the mini
-   *  calendar, the way Google Calendar's title does. */
+  /** The month is a door too: tapping it opens the mini calendar, the way
+   *  Google Calendar's title does. */
   onTitle?: () => void;
   pickerOpen?: boolean;
   children: ReactNode;
@@ -158,9 +158,6 @@ export function CalHead({
       {onTitle ? (
         <button className="calhead-door" aria-expanded={pickerOpen} onClick={onTitle}>
           {title}
-          <span className={`calhead-chev${pickerOpen ? " up" : ""}`} aria-hidden="true">
-            <Icon name="expand_more" size={20} strokeWidth={2.2} />
-          </span>
         </button>
       ) : (
         title
@@ -177,11 +174,12 @@ export function CalHead({
   );
 }
 
-/** The mini calendar behind the month's chevron: one month as a compact
- *  grid, chevrons walking months, a dot under a day that holds anything,
- *  and a tap handing the date back to whatever view is open. It drops
- *  from the sticky header the way Google Calendar's does, with a
- *  click-away scrim over the page beneath. */
+/** The mini calendar behind the month: one month as a compact grid,
+ *  chevrons walking months, a dot under a day that holds anything, and a
+ *  tap handing the date back to whatever view is open. It drops from the
+ *  sticky header the way Google Calendar's does, with a click-away scrim
+ *  over the page beneath. The title is the whole door; it wore a chevron
+ *  for a day and the glyph was saying what the tap already says. */
 export function MiniCalPicker({
   ym: ymStart,
   dayIso,

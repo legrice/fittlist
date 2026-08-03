@@ -634,14 +634,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .calmenu:active, .calfilter:active, .calhead-add:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
-/* The month is a door: the title and its chevron open the mini calendar. */
+/* The month is the door to the mini calendar: the title alone, no chevron
+   beside it. The glyph said what the tap already says. */
 .calhead-door {
-  display: inline-flex; align-items: center; gap: 2px;
+  display: inline-flex; align-items: center;
   background: none; border: none; padding: 0; color: var(--ink); cursor: pointer;
   min-width: 0;
 }
-.calhead-chev { display: inline-flex; margin-top: 4px; transition: transform .18s ease; }
-.calhead-chev.up { transform: rotate(180deg); }
 /* The mini calendar, dropped from the sticky header the way Google
    Calendar's is: absolute against the sticky block, a click-away scrim
    over the page beneath, a dot under any day that holds something. */

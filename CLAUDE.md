@@ -1245,7 +1245,8 @@ Entering Day resets the scroll (`scrollCalTop`), because the List leaves
 its scroller deep in the compensated past and a shorter view inherits that
 offset as a random landing; Today in Day view re-picks today rather than
 scrolling.
-The month title is a door too (`.calhead-door`, the chevron beside it):
+The month title is a door too (`.calhead-door`, the title alone: it wore
+a chevron for a day, and the glyph was saying what the tap already says):
 it drops `MiniCalPicker` from the sticky header the way Google Calendar's
 does, one compact month with chevrons walking months, a dot under any day
 that holds something (the same `monthItems` map the Month grid draws
