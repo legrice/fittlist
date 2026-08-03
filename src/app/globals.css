@@ -613,13 +613,18 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   gap: 12px; margin: 14px 0 0;
 }
 .calhead-row .calhead { margin: 0; }
-/* The view menu leads the month as a bare glyph (it wore a circle, then a
-   capsule shared with Add, and both were more chrome than it earns), and
-   Add is the one orange circle across from them. */
+/* The view and filter buttons wear circles the size of the plus: three
+   round controls in a row, the plus the loud one. They were bare glyphs
+   for a moment and read as floating punctuation beside the solid circle. */
 .calmenu, .calfilter {
-  flex-shrink: 0; width: 36px; height: 36px;
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: none; border: none; color: var(--ink); cursor: pointer;
+  background: var(--card); border: none; color: var(--ink); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(25, 21, 2, .10);
+  padding: 0;
+}
+[data-mode="dark"] .calmenu, [data-mode="dark"] .calfilter {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
 .calhead-add {
   flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
@@ -629,6 +634,52 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .calmenu:active, .calfilter:active, .calhead-add:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
+/* The month is a door: the title and its chevron open the mini calendar. */
+.calhead-door {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: none; border: none; padding: 0; color: var(--ink); cursor: pointer;
+  min-width: 0;
+}
+.calhead-chev { display: inline-flex; margin-top: 4px; transition: transform .18s ease; }
+.calhead-chev.up { transform: rotate(180deg); }
+/* The mini calendar, dropped from the sticky header the way Google
+   Calendar's is: absolute against the sticky block, a click-away scrim
+   over the page beneath, a dot under any day that holds something. */
+.calpicker-scrim { position: fixed; inset: 0; }
+.calpicker {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--paper); border-bottom: 1px solid var(--line);
+  box-shadow: 0 22px 34px rgba(25, 21, 2, .16);
+  padding: 4px 14px 12px;
+}
+.calpicker-head { display: flex; align-items: center; gap: 2px; padding: 6px 4px 4px; }
+.calpicker-title { flex: 1; font-weight: 700; font-size: 15.5px; }
+.calpicker-arrow {
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--ink); cursor: pointer;
+}
+.calpicker-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+.calpicker-wd {
+  text-align: center; font-size: 10.5px; font-weight: 700; color: var(--ol);
+  padding: 4px 0 2px; letter-spacing: .04em;
+}
+.calpicker-d {
+  position: relative; height: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.calpicker-d .n {
+  width: 32px; height: 32px; border-radius: 999px;
+  display: grid; place-items: center;
+}
+.calpicker-d.today .n { box-shadow: inset 0 0 0 1.5px var(--line); }
+.calpicker-d.sel .n { background: var(--si); color: #fff; box-shadow: none; }
+.calpicker-dot {
+  position: absolute; bottom: 1px; width: 4px; height: 4px; border-radius: 999px;
+  background: var(--ol);
+}
+.calpicker-d.sel .calpicker-dot { background: var(--si); }
 .viewsheet-on { color: var(--go); }
 /* The kind filters live in a sheet behind the header's filter glyph now:
    a switch per kind, each row wearing its colour as a dot. */
@@ -730,7 +781,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .monthscroll { margin-top: 4px; }
 /* One month after another, no chevrons: the scroll is the navigation, and
    each block names itself while the sticky title follows along. */
-.monthblock { scroll-margin-top: 175px; margin-bottom: 30px; }
+.monthblock { scroll-margin-top: 190px; margin-bottom: 30px; }
 .monthblock-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 17px; margin: 0 0 8px;
@@ -799,7 +850,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 /* Today lands the first not-past day under the sticky chrome, with real
    air above the heading rather than grazing the divider. */
-.callist .ps-daygroup { scroll-margin-top: 150px; }
+.callist .ps-daygroup { scroll-margin-top: 165px; }
 /* The calendar's own header, stuck under the app's: the month row and the
    checkmarks pin (top is set to the brandbar's measured height), the
    divider under them is the wrapper's own edge, and the list slides
@@ -807,10 +858,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .calsticky {
   position: sticky; top: 0; z-index: 7;
   background: var(--paper);
-  margin: 0 -18px 12px; padding: 6px 18px 0;
+  margin: 0 -18px 12px; padding: 10px 18px 0;
   border-bottom: 1px solid var(--line);
 }
-.calsticky .calhead-row { margin-top: 0; }
+/* Air above and below the month row: the list's first heading slides right
+   under the divider, and a cramped band read as a rendering bug. */
+.calsticky .calhead-row { margin-top: 0; padding-bottom: 10px; }
 /* The calendar's slices, as the same underline tabs everywhere else: under
    the rail, above the list they narrow. They replaced a floating glass
    circle of switches, for the same reason Discover's rail replaced its
@@ -3489,11 +3542,18 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
 }
-.navtab.on .navav { opacity: 1; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); }
+.navtab.on .navav { opacity: 1; }
 /* The Plans count, on the tab's glyph. It hung off the header's heart until
    Plans became a tab. A state, not an alert: nothing is wrong, you just have
    four classes coming. Green, the same yes the add gives. */
-.navglyph { position: relative; display: flex; }
+/* The glyph's own box, so the current tab can shade it: a light brand-orange
+   wash behind the icon only, stroke and label untouched. It replaced the
+   white capsule behind the whole tab. */
+.navglyph {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 46px; height: 32px; border-radius: 11px;
+}
+.navtab.on .navglyph { background: rgba(221, 106, 53, .18); }
 .navdot {
   position: absolute; top: -5px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 999px; background: var(--go); color: #fff; font-size: 10px; font-weight: 800;
@@ -3589,12 +3649,8 @@ button.ps-card { cursor: pointer; }
     border-radius: 23px; padding: 8px 0 9px;
     transition: background .18s ease, opacity .18s ease;
   }
-  /* The current tab in its own capsule, the way the system bar marks one. */
-  .navtab.on {
-    background: rgba(255, 255, 255, .5);
-    background: color-mix(in srgb, var(--paper) 85%, transparent);
-    box-shadow: 0 1px 2px rgba(30, 24, 12, .08);
-  }
+  /* The glyph's orange wash marks the current tab here too; the white
+     capsule behind the whole tab said the same thing louder. */
   .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
   /* The FAB and the account view clear the pill, not the old full-width bar.
      A profile has no bar at all, so its own button stays low; this rule is
@@ -3604,7 +3660,6 @@ button.ps-card { cursor: pointer; }
   .pub.ownbar .fab { bottom: calc(100px + env(safe-area-inset-bottom)); }
 .pub.ownbar .profwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
 .pub.ownbar .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
-  [data-mode="dark"] .navtab.on { box-shadow: none; }
   [data-mode="dark"] .navbar {
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, .1),
@@ -4400,3 +4455,140 @@ button.ps-card { cursor: pointer; }
    no box to dash. */
 .callist .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
 .evcards .weekrow-x { position: absolute; top: 10px; right: 10px; z-index: 2; }
+
+/* ---------- Home ---------- */
+/* The landing tab: a finite mixed scroll. Rails bleed to the screen edge
+   past the page gutter so the next card peeks; the sections are the
+   wireframe's, in the house tokens. */
+.homewrap { padding-top: 2px; }
+.hm-place { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; }
+.hm-where {
+  font-size: 13px; font-weight: 700;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 12px;
+}
+.hm-when { font-size: 13px; color: var(--ol); }
+.hm-sec { padding: 20px 0 0; }
+.hm-sechead { display: flex; align-items: baseline; justify-content: space-between; }
+.hm-title {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 700; letter-spacing: -.02em; margin: 0;
+}
+.hm-see {
+  display: inline-flex; align-items: center; gap: 1px;
+  font-size: 13px; font-weight: 700; color: var(--ol); text-decoration: none;
+}
+.hm-sub { font-size: 12.5px; color: var(--ol); margin: 3px 0 0; }
+/* The Upcoming rail: your own next seven days as cards, the class colour
+   down the left spine. */
+.hm-rail {
+  display: flex; gap: 12px; overflow-x: auto;
+  padding: 10px 18px 6px; margin: 0 -18px;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.hm-rail::-webkit-scrollbar { display: none; }
+.hm-card {
+  position: relative; flex: 0 0 auto; scroll-snap-align: start; width: 250px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 14px 14px 22px;
+  display: flex; flex-direction: column; gap: 7px;
+  text-decoration: none; color: inherit; overflow: hidden;
+}
+.hm-spine {
+  position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px;
+  border-radius: 0 3px 3px 0; background: var(--si);
+}
+.hm-whenpill {
+  align-self: flex-start; font-size: 12px; font-weight: 700;
+  background: var(--ink); color: var(--paper);
+  padding: 5px 10px; border-radius: 999px;
+}
+.hm-whenpill.soon { background: var(--si); color: #fff; }
+.hm-cardnm { font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.hm-cardrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hm-cardav {
+  width: 22px; height: 22px; border-radius: 999px; overflow: hidden; flex: 0 0 auto;
+  display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff;
+}
+.hm-cardav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hm-cardmeta {
+  font-size: 13px; color: var(--ol); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hm-also { color: var(--go); font-weight: 600; }
+.hm-emptywrap { margin-top: 10px; }
+.hm-empty {
+  background: var(--card); border: 1.5px dashed rgba(25, 21, 2, .22); border-radius: 16px;
+  padding: 20px;
+}
+.hm-empty h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+.hm-empty p { margin: 0 0 14px; font-size: 13.5px; color: var(--ol); }
+.hm-empty .btn { display: inline-flex; width: auto; padding: 10px 18px; }
+/* People near you: the avatar rail that feeds the follow graph. The face
+   navigates; the pill follows, one tap, staying right here. */
+.hm-coachrail {
+  display: flex; gap: 16px; overflow-x: auto;
+  padding: 12px 18px 6px; margin: 0 -18px;
+  scrollbar-width: none;
+}
+.hm-coachrail::-webkit-scrollbar { display: none; }
+.hm-coach {
+  width: 92px; flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center;
+}
+.hm-coachlink {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-decoration: none; color: inherit; min-width: 0; width: 100%;
+}
+.hm-bigav {
+  width: 68px; height: 68px; border-radius: 999px; overflow: hidden;
+  display: grid; place-items: center; font-size: 22px; font-weight: 700; color: #fff;
+}
+.hm-bigav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hm-coachnm {
+  font-size: 13px; font-weight: 700; line-height: 1.2; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hm-coachsub {
+  font-size: 11px; color: var(--ol); line-height: 1.2; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hm-follow {
+  font-size: 11.5px; font-weight: 700; font-family: inherit;
+  border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 12px;
+  background: none; color: var(--ink); cursor: pointer;
+}
+.hm-follow:active { transform: scale(.95); }
+.hm-followed { border-color: var(--go); color: var(--go); }
+/* The vertical lists: studios (a place is a rounded rectangle) and
+   activity (a person is a circle). */
+.hm-list { margin-top: 6px; }
+.hm-lrow {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none; color: inherit;
+}
+.hm-list .hm-lrow:last-child { border-bottom: 0; }
+.hm-sq {
+  width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex: 0 0 auto;
+  display: grid; place-items: center; font-weight: 700; font-size: 16px; color: #fff;
+}
+.hm-sq img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hm-round { border-radius: 999px; }
+.hm-lrowtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hm-lrownm {
+  font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.hm-lrowsub {
+  font-size: 13px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hm-lrowchev { color: var(--ol); display: inline-flex; flex: 0 0 auto; }
+.hm-vbadge {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; flex: 0 0 auto;
+  color: var(--go); background: rgba(61, 139, 83, .12);
+  padding: 3px 7px; border-radius: 999px;
+}
+.hm-foot { font-size: 12px; color: var(--ol); margin: 12px 0 0; }
+[data-mode="dark"] .hm-empty { border-color: rgba(250, 248, 242, .22); }

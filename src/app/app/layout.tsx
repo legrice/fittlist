@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   // A member has a handle but no schedule, so this shell isn't theirs.
   if (!user?.handle) redirect("/");
-  if (user.kind === "fan") redirect("/feed");
+  if (user.kind === "fan") redirect("/home");
 
   return (
     <div className="appshell" data-theme={user.theme} data-mode={user.look === "dark" ? "dark" : undefined}>

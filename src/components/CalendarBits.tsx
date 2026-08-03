@@ -138,17 +138,33 @@ export function CalHead({
   view,
   onMenu,
   onFilter,
+  onTitle,
+  pickerOpen = false,
   children,
 }: {
   label: string;
   view: CalView;
   onMenu: () => void;
   onFilter: () => void;
+  /** The month is a door too: tapping it (or its chevron) opens the mini
+   *  calendar, the way Google Calendar's title does. */
+  onTitle?: () => void;
+  pickerOpen?: boolean;
   children: ReactNode;
 }) {
+  const title = <h2 className="calhead">{label}</h2>;
   return (
     <div className="calhead-row">
-      <h2 className="calhead">{label}</h2>
+      {onTitle ? (
+        <button className="calhead-door" aria-expanded={pickerOpen} onClick={onTitle}>
+          {title}
+          <span className={`calhead-chev${pickerOpen ? " up" : ""}`} aria-hidden="true">
+            <Icon name="expand_more" size={20} strokeWidth={2.2} />
+          </span>
+        </button>
+      ) : (
+        title
+      )}
       <span className="calhead-spacer" />
       <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
         <Icon name={VIEW_ICON[view]} size={21} />
@@ -158,6 +174,82 @@ export function CalHead({
       </button>
       {children}
     </div>
+  );
+}
+
+/** The mini calendar behind the month's chevron: one month as a compact
+ *  grid, chevrons walking months, a dot under a day that holds anything,
+ *  and a tap handing the date back to whatever view is open. It drops
+ *  from the sticky header the way Google Calendar's does, with a
+ *  click-away scrim over the page beneath. */
+export function MiniCalPicker({
+  ym: ymStart,
+  dayIso,
+  todayIso,
+  hasDot,
+  onPick,
+  onClose,
+}: {
+  ym: string;
+  /** The date to show picked (the Day view's selection; today elsewhere). */
+  dayIso: string;
+  todayIso: string;
+  hasDot?: (iso: string) => boolean;
+  onPick: (iso: string) => void;
+  onClose: () => void;
+}) {
+  const [ym, setYm] = useState(ymStart);
+  const [y, m] = ym.split("-").map(Number);
+  const shift = (by: number) => {
+    const d = new Date(Date.UTC(y, m - 1 + by, 1));
+    setYm(d.toISOString().slice(0, 7));
+  };
+  // Sunday-led, like the Month grid: the US week people read on paper.
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const daysIn = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const cells: (string | null)[] = [
+    ...Array.from({ length: firstDow }, () => null),
+    ...Array.from({ length: daysIn }, (_, i) => `${ym}-${String(i + 1).padStart(2, "0")}`),
+  ];
+  return (
+    <>
+      <div className="calpicker-scrim" onClick={onClose} aria-hidden="true" />
+      <div className="calpicker">
+        <div className="calpicker-head">
+          <span className="calpicker-title">{monthLabel(ym, todayIso)}</span>
+          <button className="calpicker-arrow" aria-label="Previous month" onClick={() => shift(-1)}>
+            <Icon name="chevron_left" size={18} />
+          </button>
+          <button className="calpicker-arrow" aria-label="Next month" onClick={() => shift(1)}>
+            <Icon name="chevron_right" size={18} />
+          </button>
+        </div>
+        <div className="calpicker-grid">
+          {["S", "M", "T", "W", "T", "F", "S"].map((w, i) => (
+            <span key={i} className="calpicker-wd">
+              {w}
+            </span>
+          ))}
+          {cells.map((iso, i) =>
+            iso ? (
+              <button
+                key={iso}
+                className={`calpicker-d${iso === dayIso ? " sel" : ""}${iso === todayIso ? " today" : ""}`}
+                onClick={() => {
+                  onClose();
+                  onPick(iso);
+                }}
+              >
+                <span className="n">{iso.slice(8).replace(/^0/, "")}</span>
+                {hasDot?.(iso) ? <span className="calpicker-dot" aria-hidden="true" /> : null}
+              </button>
+            ) : (
+              <span key={`b${i}`} />
+            ),
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -285,11 +377,12 @@ export function DayStrip({
   onPick: (iso: string) => void;
 }) {
   const d = new Date(`${dayIso}T00:00:00Z`);
-  const dow = (d.getUTCDay() + 6) % 7;
+  // Sunday-led, the same week the Month grid draws.
+  const dow = d.getUTCDay();
   const mon = new Date(d);
   mon.setUTCDate(d.getUTCDate() - dow);
   const days: { iso: string; n: number; wd: string }[] = [];
-  const WD = ["M", "T", "W", "T", "F", "S", "S"];
+  const WD = ["S", "M", "T", "W", "T", "F", "S"];
   for (let i = 0; i < 7; i++) {
     const x = new Date(mon);
     x.setUTCDate(mon.getUTCDate() + i);
@@ -532,7 +625,7 @@ export const MONTHS_AHEAD = 12;
 export function MonthHeadRow() {
   return (
     <div className="monthhead" aria-hidden="true">
-      {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+      {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
         <span key={i}>{d}</span>
       ))}
     </div>
@@ -556,7 +649,7 @@ function MonthBlock({
 }) {
   const [y, m] = ym.split("-").map(Number);
   const first = new Date(Date.UTC(y, m - 1, 1));
-  const lead = (first.getUTCDay() + 6) % 7; // days shown before the 1st
+  const lead = first.getUTCDay(); // days shown before the 1st, Sunday-led
   const start = new Date(first);
   start.setUTCDate(first.getUTCDate() - lead);
   const cells: { iso: string; day: number; inMonth: boolean }[] = [];

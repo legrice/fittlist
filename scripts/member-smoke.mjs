@@ -63,38 +63,40 @@ await p.locator("#wAbout").fill("Six mornings a week, mostly barbells.");
 await p.screenshot({ path: OUT + "/shot-member-wiz2.png" });
 await fillLocation(p);
 await p.getByRole("button", { name: "Finish setup" }).click();
-await p.waitForURL("**/feed");
-console.log("member setup ok (two steps, no studios, lands on their week)");
+await p.waitForURL("**/home");
+console.log("member setup ok (two steps, no studios, lands on Home)");
 
-// The same four tabs a coach gets. Only where Schedule points differs.
+// The same five tabs a coach gets. Only where Schedule points differs.
 {
-  const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (onFeed.length !== 4) fail(`a member should get four tabs, got ${onFeed.join(",")}`);
+  const onHome = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+  if (onHome.length !== 5) fail(`a member should get five tabs, got ${onHome.join(",")}`);
   if (
-    !onFeed[0].includes("Following") ||
-    !onFeed[1].includes("Discover") ||
-    !onFeed[2].includes("Schedule") ||
-    !onFeed[3].includes("You")
+    !onHome[0].includes("Home") ||
+    !onHome[1].includes("Following") ||
+    !onHome[2].includes("Search") ||
+    !onHome[3].includes("Schedule") ||
+    !onHome[4].includes("You")
   )
-    fail(`a member's tabs should be Following, Discover, Schedule, You, got ${onFeed.join(",")}`);
-  await p.locator(".navtab", { hasText: "Discover" }).click();
+    fail(`a member's tabs should be Home, Following, Search, Schedule, You, got ${onHome.join(",")}`);
+  await p.locator(".navtab", { hasText: "Search" }).click();
   await p.waitForURL("**/discover");
-  if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Discover");
+  if ((await p.locator(".navtab").count()) !== 5) fail("the bar should follow them to Search");
   await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
-  if ((await p.locator(".navtab").count()) !== 4) fail("and to their own calendar");
+  if ((await p.locator(".navtab").count()) !== 5) fail("and to their own calendar");
   if ((await p.locator(".navtab.on").innerText()).includes("Schedule") === false)
     fail("their calendar should light the Schedule tab");
-  // No plans ribbon, and no gear: the You tab is the door to the account.
+  // No plans ribbon, no gear, and no corner magnifier: Search is a tab.
   if (await p.locator(".plansbtn").count()) fail("the plans ribbon should be gone");
   if (await p.locator(".settingsbtn").count()) fail("the gear should be gone: You is the door");
+  if (await p.locator(".searchbtn").count()) fail("the magnifier should be gone: Search is a tab");
   await p.locator(".navtab", { hasText: "You" }).click();
   await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 4) fail("and to their account rows");
+  if ((await p.locator(".navtab").count()) !== 5) fail("and to their account rows");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }
-console.log("member tabs ok (Following, Discover, Schedule the calendar, You the person)");
+console.log("member tabs ok (Home, Following, Search, Schedule the calendar, You the person)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.
@@ -108,16 +110,16 @@ console.log("member tabs ok (Following, Discover, Schedule the calendar, You the
     },
     { times: 1 },
   );
-  await p.locator(".navtab", { hasText: "Discover" }).click();
+  await p.locator(".navtab", { hasText: "Search" }).click();
   await p.waitForTimeout(350);
   const mid = await p.evaluate(() => ({
     tabs: document.querySelectorAll(".navtab").length,
     avatar: !!document.querySelector(".navav"),
     lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
   }));
-  if (mid.tabs !== 4) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.tabs !== 5) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
-  if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
+  if (mid.lit !== "Search") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL("**/discover");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");

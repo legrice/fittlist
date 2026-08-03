@@ -31,6 +31,7 @@ import {
   DayGrid,
   DayStrip,
   KindFilterSheet,
+  MiniCalPicker,
   MONTHS_AHEAD,
   MONTHS_BACK,
   MonthHeadRow,
@@ -150,6 +151,8 @@ export function ScheduleScreen({
   const [view, setView] = useState<CalView>("list");
   useEffect(() => setView(loadCalView()), []);
   const [viewSheet, setViewSheet] = useState(false);
+  // The mini calendar behind the month's chevron.
+  const [pickerOpen, setPickerOpen] = useState(false);
   // The month the grid is looking at; entering Month starts at today's.
   const [ym, setYm] = useState(todayIso.slice(0, 7));
   // The Day view's day. Entering it starts at today.
@@ -481,16 +484,40 @@ export function ScheduleScreen({
     );
   };
 
+  // A date picked in the mini calendar jumps the view that's open: the Day
+  // view moves its selection, the Month scroll lands on that month, and
+  // the List scrolls to the day. A past date from the List opens Day
+  // instead, because Day is the one view that can show any date and the
+  // List only grows into the past as the scroll asks for it.
+  const pickDate = (iso: string) => {
+    if (view === "day") {
+      setDayIso(iso);
+      setYm(iso.slice(0, 7));
+    } else if (view === "month") {
+      setYm(iso.slice(0, 7));
+      requestAnimationFrame(() =>
+        document
+          .getElementById(`month-${iso.slice(0, 7)}`)
+          ?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      );
+    } else if (iso < todayIso) {
+      pickView("day");
+      setDayIso(iso);
+      setYm(iso.slice(0, 7));
+    } else {
+      openDay(iso);
+    }
+  };
+
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
-          search={showFanView}
           // The gear only where there is no You tab to hold the account: the
           // coaches-only mode has no tab bar, so the corner is the one door.
           settings={showFanView ? undefined : "/you"}
-          home={showFanView ? "/feed" : "/app"}
+          home={showFanView ? "/home" : "/app"}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}
@@ -507,6 +534,8 @@ export function ScheduleScreen({
             view={view}
             onMenu={() => setViewSheet(true)}
             onFilter={() => setFilterSheet(true)}
+            onTitle={() => setPickerOpen((o) => !o)}
+            pickerOpen={pickerOpen}
           >
             <button
               className="calhead-add"
@@ -528,6 +557,16 @@ export function ScheduleScreen({
                 setDayIso(iso);
                 setYm(iso.slice(0, 7));
               }}
+            />
+          )}
+          {pickerOpen && (
+            <MiniCalPicker
+              ym={ym}
+              dayIso={view === "day" ? dayIso : todayIso}
+              todayIso={todayIso}
+              hasDot={(iso) => monthItems.has(iso)}
+              onPick={pickDate}
+              onClose={() => setPickerOpen(false)}
             />
           )}
         </CalSticky>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { adminSetClassImage, adminSetClassLink } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
 import { Icon } from "@/components/Icon";
@@ -851,7 +851,23 @@ export function ClassSheet({
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
         <Icon name="bookmark_added" size={16} />
-        Added to your plans
+        <span className="favtoast-t">Added. Followers can see it.</span>
+        {/* The visibility choice in the moment it's made, not in settings:
+            off only touches Home's Activity and the "also going" lines. */}
+        {favOn && c && (
+          <button
+            className="favtoast-link"
+            onClick={() => {
+              setFavOn(false);
+              start(async () => {
+                const res = await setGoingVisibility(c.id, c.whenIso, false);
+                toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong");
+              });
+            }}
+          >
+            Make it private
+          </button>
+        )}
         <Link className="favtoast-link" href="/week" onClick={() => setFavOn(false)}>
           See them
         </Link>

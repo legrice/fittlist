@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Agenda, AgendaAvatar, ClassRow } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { RailArrows } from "@/components/RailArrows";
@@ -62,8 +62,13 @@ export function FeedAgenda({
   const [open, setOpen] = useState<{ handle: string; classId: string; iso: string } | null>(null);
   // The note that answers the ribbon: which class went to the plans, and the
   // way there. The ribbon filling says it happened; this says where it went,
-  // which is the thing a first tap can't know.
-  const [justAdded, setJustAdded] = useState<string | null>(null);
+  // which is the thing a first tap can't know. It carries the mark's keys
+  // too, because the note is also where the visibility choice lives: a mark
+  // shows to your followers by default, and the moment it's made is the
+  // moment to say so and offer the way off.
+  const [justAdded, setJustAdded] = useState<{ name: string; classId: string; iso: string } | null>(
+    null,
+  );
   const addTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (addTimer.current) clearTimeout(addTimer.current); }, []);
   const [, startTransition] = useTransition();
@@ -100,9 +105,9 @@ export function FeedAgenda({
     const k = `${classId}|${iso}`;
     setSwiped((s) => ({ ...s, [k]: next }));
     if (next && name) {
-      setJustAdded(name);
+      setJustAdded({ name, classId, iso });
       if (addTimer.current) clearTimeout(addTimer.current);
-      addTimer.current = setTimeout(() => setJustAdded(null), 4200);
+      addTimer.current = setTimeout(() => setJustAdded(null), 6500);
     } else if (!next) {
       setJustAdded(null);
     }
@@ -169,7 +174,7 @@ export function FeedAgenda({
           {/* One coach has a profile to go to; several don't, so the link
               makes way for the way back out. */}
           {picked.length === 1 ? (
-            <Link href={`/${picked[0].handle}?from=home`} className="feedfilter-link">
+            <Link href={`/${picked[0].handle}?from=following`} className="feedfilter-link">
               View profile <Icon name="chevron_right" size={16} />
             </Link>
           ) : (
@@ -275,7 +280,24 @@ export function FeedAgenda({
         {justAdded && (
           <>
             <Icon name="bookmark_added" size={16} />
-            <span className="favtoast-t">Added {justAdded} to your plans</span>
+            <span className="favtoast-t">Added {justAdded.name}. Followers can see it.</span>
+            {/* The visibility choice, in the moment it matters: the mark
+                shows to your followers by default, and this is the way off.
+                Off only touches Home's Activity and the "also going" lines;
+                the coach's roster and your own week keep the mark. */}
+            <button
+              className="favtoast-link"
+              onClick={() => {
+                const j = justAdded;
+                setJustAdded(null);
+                startTransition(async () => {
+                  const res = await setGoingVisibility(j.classId, j.iso, false);
+                  toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong.");
+                });
+              }}
+            >
+              Make it private
+            </button>
             <Link className="favtoast-link" href="/week" onClick={() => setJustAdded(null)}>
               See it
             </Link>

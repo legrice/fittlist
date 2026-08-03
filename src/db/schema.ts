@@ -660,6 +660,12 @@ export const attendances = pgTable(
     // (the coach and fellow goers) and nowhere public. Not users references,
     // on purpose: the friend without the app is still a person in the room.
     companions: jsonb("companions").$type<string[]>().notNull().default([]),
+    // Whether the mark shows to people who follow you: Home's Activity, an
+    // Upcoming card's "also going" line. Public by default, because a feed
+    // of nobody doing anything is no feed at all; the moment of marking
+    // says so out loud and offers the way off, and off means the mark shows
+    // only where it always did (the coach's roster, your own week).
+    isPublic: boolean("is_public").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],

@@ -18,6 +18,7 @@ import {
   DayGrid,
   DayStrip,
   KindFilterSheet,
+  MiniCalPicker,
   MonthHeadRow,
   MonthScroll,
   ViewSheet,
@@ -141,6 +142,30 @@ export function WeekScreen({
       ),
     );
   };
+  // The mini calendar behind the month's chevron. A date picked jumps the
+  // open view; a past date from the List opens Day instead, because Day is
+  // the one view that can show any date and the List only grows into the
+  // past as the scroll asks for it.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickDate = (iso: string) => {
+    if (view === "day") {
+      setDayIso(iso);
+      setYm(iso.slice(0, 7));
+    } else if (view === "month") {
+      setYm(iso.slice(0, 7));
+      requestAnimationFrame(() =>
+        document
+          .getElementById(`month-${iso.slice(0, 7)}`)
+          ?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      );
+    } else if (iso < todayIso) {
+      pickView("day");
+      setDayIso(iso);
+      setYm(iso.slice(0, 7));
+    } else {
+      openDay(iso);
+    }
+  };
 
   const remove = (classId: string, iso: string, key: string, personalId?: string) => {
     setConfirm(null);
@@ -251,6 +276,8 @@ export function WeekScreen({
             view={view}
             onMenu={() => setViewSheet(true)}
             onFilter={() => setFilterSheet(true)}
+            onTitle={() => setPickerOpen((o) => !o)}
+            pickerOpen={pickerOpen}
           >
             <button className="calhead-add" aria-label="Add" onClick={() => setAddMenu(true)}>
               <Icon name="add" size={20} strokeWidth={2.6} />
@@ -268,6 +295,16 @@ export function WeekScreen({
                 setDayIso(iso);
                 setYm(iso.slice(0, 7));
               }}
+            />
+          )}
+          {pickerOpen && (
+            <MiniCalPicker
+              ym={ym}
+              dayIso={view === "day" ? dayIso : todayIso}
+              todayIso={todayIso}
+              hasDot={(iso) => monthItems.has(iso)}
+              onPick={pickDate}
+              onClose={() => setPickerOpen(false)}
             />
           )}
         </CalSticky>

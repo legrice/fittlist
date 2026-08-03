@@ -31,5 +31,5 @@ export async function GET(req: Request) {
   }
   // Following is home for coaches too now; /feed also renders the
   // set-a-password prompt.
-  return NextResponse.redirect(`${origin}${fansEnabled() ? "/feed" : "/app"}${setpw}`);
+  return NextResponse.redirect(`${origin}${fansEnabled() ? "/home" : "/app"}${setpw}`);
 }

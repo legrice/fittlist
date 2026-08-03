@@ -10,9 +10,8 @@ import type { NavTab } from "@/lib/nav";
 export function AppHeader({
   unread = 0,
   settings,
-  search = false,
   avatar,
-  home = "/feed",
+  home = "/home",
   nav,
 }: {
   unread?: number;
@@ -21,9 +20,6 @@ export function AppHeader({
    *  the account. Everywhere the tabs render, You is the door and the
    *  corner stays clear. */
   settings?: string;
-  /** The magnifier, back in the corner now that the plans ribbon left it
-   *  room. Only where the member side is on: search is a signed-in door. */
-  search?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -46,19 +42,11 @@ export function AppHeader({
       </Link>
       {nav && <HeaderNav coach={nav.coach} active={nav.active} scheduleHref={nav.scheduleHref} />}
       <div className="brandbar-actions">
-        {/* The magnifier, the bell, the gear: the corner is for the things
-            you reach for from wherever you happen to be. The shield left
-            too, once the gear came back: the admin door is a row in the
-            account now, and a corner of one-off icons was filling up. */}
-        {search && (
-          <HeaderIconLink
-            className="searchbtn"
-            label="Search"
-            icon="search"
-            href="/search"
-            match="/search"
-          />
-        )}
+        {/* The bell, and (coaches-only mode) the gear: the corner is for
+            what you reach for from anywhere. The magnifier left when Search
+            became a tab, the same reason the shield left before it: a
+            corner of one-off icons was filling up, and the same glyph on a
+            tab and in the corner is one door drawn twice. */}
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"

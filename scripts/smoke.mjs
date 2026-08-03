@@ -1191,8 +1191,8 @@ await page.waitForURL(BASE + "/");
 await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
 await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
-// Every login lands on Following now; /app stopped being anyone's front door.
-await page.waitForURL(BASE + "/feed");
+// Every login lands on Home now; /app stopped being anyone's front door.
+await page.waitForURL(BASE + "/home");
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1217,6 +1217,12 @@ await fan.getByRole("heading", { name: "Add a photo." }).waitFor();
 if ((await fan.locator(".wizdot").count()) !== 2)
   fail("a member's setup is two steps: photo, then who they are");
 await skipSetup(fan);
+// Setup lands on Home now: the landing tab has something on it whether or
+// not the follow graph exists yet, and its empty Upcoming card says what
+// to do. Following still says Nobody yet until a follow exists.
+await fan.waitForURL("**/home");
+await fan.locator(".hm-empty", { hasText: "Nothing planned yet" }).waitFor();
+await fan.locator(".navtab", { hasText: "Following" }).click();
 await fan.getByText("Nobody yet").waitFor();
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
@@ -1426,13 +1432,11 @@ console.log("discover ok (chevron rows, Following said on the line)");
 // heading. The point is that you don't have to know which half a thing is in
 // before you look for it.
 {
-  // The magnifier is back in the header corner (the plans ribbon left it
-  // room), and the Discover box is the other door; the tab wears the compass
-  // again so the same glyph isn't on the screen twice.
+  // The corner magnifier left when Search became a tab: the tab bar's
+  // Search is the directory, and its box is the door to this screen.
   await fan.goto(BASE + "/feed");
-  await fan.locator(".searchbtn").waitFor();
-  await fan.locator(".searchbtn").click();
-  await fan.waitForURL(/\/search/);
+  if (await fan.locator(".searchbtn").count())
+    fail("the header magnifier should be gone now that Search is a tab");
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
@@ -1649,8 +1653,11 @@ await fan.locator(".classoverlay-nm").waitFor();
 if (!(await fan.locator(".feedagenda .ps-event").count()))
   fail("the week should stay behind the overlay");
 await fan.locator(".ovcta-save").click();
-// The note answers the tap, up in the top third, and it names the list.
-await fan.getByText("Added to your plans").waitFor();
+// The note answers the tap, says who can see the mark, and carries the way
+// off being seen: the visibility choice lives in the moment, not settings.
+// Wait on the lit toast, not the text: the shell's words are always in the
+// DOM, and the private link only mounts while the toast speaks.
+await fan.locator(".favtoast.on .favtoast-link", { hasText: "Make it private" }).waitFor();
 await fan.locator(".ovcta-save.on").waitFor();
 // Reopening it says the same thing: the save is on the server, not in the tab.
 await fan.locator(".ovcircle-back").click();
@@ -1701,12 +1708,12 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
 // ---- The member's Schedule tab: their calendar, whole screen. The tools
-// rail left it for the You tab, and the four tabs are the same for everyone.
+// rail left it for the You tab, and the five tabs are the same for everyone.
 {
   await fan.goto(BASE + "/feed");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
+  if ((await fan.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
@@ -1749,9 +1756,9 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
     if (off !== "Add") fail(`the control should read Add before the tap, got "${off}"`);
   }
   await fan.locator(".ovcta-save").click();
-  await fan.getByText("Added to your plans").waitFor();
-  // The calendar fills in, tick and all, and the word leaves with the tap. It
-  // was a heart, which said "favourite" and meant "I'm going".
+  await fan.getByText("Added. Followers can see it.").waitFor();
+  // The ribbon fills in solid and the word leaves with the tap. It was a
+  // heart, which said "favourite" and meant "I'm going".
   await fan.locator(".ovcta-save.on").waitFor();
   if ((await fan.locator(".ovcta-save").innerText()).trim())
     fail("the added calendar should drop the word");
@@ -1761,10 +1768,11 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
       .last()
       .evaluate((e) => ({ fill: getComputedStyle(e).fill, rule: getComputedStyle(e).fillRule }));
     if (paint.fill !== "rgb(250, 248, 242)")
-      fail("the added calendar should fill paper-white on the dark pill, got " + paint.fill);
-    // evenodd is what cuts the tick out of the fill; without it the tick is
-    // swallowed and the glyph is a solid box.
-    if (paint.rule !== "evenodd") fail("the tick should be a hole in the fill, got " + paint.rule);
+      fail("the added ribbon should fill paper-white on the dark pill, got " + paint.fill);
+    // The filled ribbon is solid now: the tick came off, so there is no
+    // evenodd hole left to cut. Solid against the outline at rest is the
+    // whole signal.
+    if (paint.rule === "evenodd") fail("the added ribbon should be solid, with no tick hole");
   }
   // Whose class it is, as a face and a name.
   await fan.locator(".classoverlay-coach .classsheet-av").waitFor();
@@ -2033,10 +2041,38 @@ await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).cl
 await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
-// the wordmark is the way back to the week from anywhere
+// the wordmark is the way home from anywhere
 await fan.locator(".brandbar-home").click();
-await fan.waitForURL("**/feed");
+await fan.waitForURL("**/home");
 console.log("going + share my week ok (1080x1920 png, from the account)");
+
+// ---- Home: the landing tab. Upcoming holds the marked class, the rails
+// hold the room, and the tabs are five with the directory renamed Search.
+{
+  await fan.locator(".hm-title", { hasText: "Upcoming" }).waitFor();
+  await fan.locator(".hm-card").first().waitFor();
+  // The You tab carries the viewer's initial inside it, so match by
+  // inclusion rather than the joined string.
+  const tabs = (await fan.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+  if (
+    tabs.length !== 5 ||
+    !tabs[0].includes("Home") ||
+    !tabs[1].includes("Following") ||
+    !tabs[2].includes("Search") ||
+    !tabs[3].includes("Schedule") ||
+    !tabs[4].includes("You")
+  )
+    fail("the tabs should read Home, Following, Search, Schedule, You: " + tabs.join("|"));
+  // The card opens the class sheet, the same as any list row.
+  await fan.locator(".hm-card").first().click();
+  await fan.locator(".classoverlay-nm").waitFor();
+  await fan.locator(".ovcircle-back").click();
+  await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
+  // The studios list is here, and the privacy line closes the page when
+  // Activity has anything to say.
+  await fan.locator(".hm-title", { hasText: "Studios" }).waitFor();
+  console.log("home ok (five tabs, upcoming card opens the class)");
+}
 
 // the merged weekly digest: one "Your week" email covering every coach they
 // follow, instead of one email per coach
@@ -2245,7 +2281,7 @@ await page.locator(".ps-event").first().waitFor();
 await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
-await page.locator(".navtab", { hasText: "Discover" }).click();
+await page.locator(".navtab", { hasText: "Search" }).click();
 await page.locator(".distabs").waitFor();
 // Schedule is the coaching calendar, whole screen: the rail left it for You.
 await page.locator(".navtab", { hasText: "Schedule" }).click();
@@ -2681,11 +2717,11 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// four tabs, and the account is the fourth — back in the app, since a
+// five tabs, and the account is the last — back in the app, since a
 // profile carries neither
 await page.goto(BASE + "/app");
 await page.locator(".calhead-add").waitFor();
-if ((await page.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
+if ((await page.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
 await openProfile(page);
 await closeProfile(page);
 // what a coach attends is private: it must not leak onto their public page

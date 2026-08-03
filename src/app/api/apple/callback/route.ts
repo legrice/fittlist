@@ -54,5 +54,5 @@ export async function POST(req: Request) {
   }
   await createSession(user.id);
   if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-  return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/feed" : "/app"}`, 302);
+  return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/home" : "/app"}`, 302);
 }

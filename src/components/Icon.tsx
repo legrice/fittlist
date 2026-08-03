@@ -42,7 +42,6 @@ import {
   Smartphone,
   Share,
   ShieldUser,
-  Sparkles,
   Sun,
   Users,
   UserRoundPlus,
@@ -77,19 +76,43 @@ function CalendarAdded({ size = 24 }: { size?: number }) {
 }
 
 /**
- * The ribbon, filled, with the tick cut out of it: the added state of "this is
- * in my plans". Same construction as CalendarAdded and for the same reason:
- * the tick is a hole in one evenodd path, so the whole glyph is currentColor
- * and reads on the dark pill, the card and the tab bar alike.
+ * The ribbon, filled solid: the added state of "this is in my plans". It
+ * carried a tick cut out of it for a while; the solid shape against the
+ * outline at rest already says in or out, and the hole was one mark too
+ * many at row size. Still one currentColor path, so it reads on the dark
+ * pill, the card and the tab bar alike.
  */
 function BookmarkAdded({ size = 24 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         fill="currentColor"
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M6.5 2h11A2.5 2.5 0 0 1 20 4.5V22l-8-4.6L4 22V4.5A2.5 2.5 0 0 1 6.5 2Zm1.06 8.13 3.35 3.35 6.03-6.03-1.55-1.55-4.48 4.48-1.8-1.8-1.55 1.55Z"
+        d="M6.5 2h11A2.5 2.5 0 0 1 20 4.5V22l-8-4.6L4 22V4.5A2.5 2.5 0 0 1 6.5 2Z"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Lucide's Sparkles with the big star filled in: the share moment's glyph,
+ * solid where the outline read as furniture. The two small sparks stay
+ * strokes so the shape keeps its air; everything is currentColor.
+ */
+function SparklesFilled({ size = 24, strokeWidth = 1.75 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+        d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        d="M20 3v4M22 5h-4M4 17v2M5 18H3"
       />
     </svg>
   );
@@ -114,7 +137,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   settings: Settings,
   alternate_email: AtSign,
   arrow_back: ArrowLeft,
-  auto_awesome: Sparkles,
+  auto_awesome: SparklesFilled,
   calendar_month: CalendarDays,
   calendar_today: Calendar,
   call: Phone,

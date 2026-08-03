@@ -47,7 +47,7 @@ export default async function Home({
     // land on /app, which since the one-shell change is the bare editable
     // schedule: every login and every visit to the root surfaced a page with
     // no identity, in what read as random places.
-    if (user?.handle) redirect(fansEnabled() ? "/feed" : "/app");
+    if (user?.handle) redirect(fansEnabled() ? "/home" : "/app");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered

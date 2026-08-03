@@ -726,7 +726,7 @@ console.log("the coach is told ok");
   await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(mem);
   await mem.getByRole("button", { name: "Finish setup" }).click();
-  await mem.waitForURL("**/feed");
+  await mem.waitForURL("**/home");
 
   await mem.goto(BASE + studioHref);
   await mem.locator(".ps-event", { hasText: "HYROX" }).click();
@@ -855,7 +855,7 @@ console.log("the coach is told ok");
   await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(mem);
   await mem.getByRole("button", { name: "Finish setup" }).click();
-  await mem.waitForURL("**/feed");
+  await mem.waitForURL("**/home");
   await mem.goto(BASE + "/tom");
   await mem.locator(".ps-event", { hasText: "Warm Up" }).first().click();
   await mem.locator(".classoverlay-nm", { hasText: "Warm Up" }).waitFor();
@@ -906,7 +906,16 @@ console.log("the coach is told ok");
   // Hand it over: his row goes, and the person who saved it keeps their spot.
   await tom.goto(BASE + "/app");
   await tom.locator(".ps-event", { hasText: "Warm Up" }).first().click();
-  await tom.getByRole("heading", { name: /is the gym.s now/ }).waitFor();
+  // One retry: under suite load the row has been seen to paint before its
+  // tap handler attaches, so the first click lands on nothing (same
+  // precedent as the goto stragglers). A second miss is a real failure.
+  try {
+    await tom.getByRole("heading", { name: /is the gym.s now/ }).waitFor({ timeout: 5000 });
+  } catch {
+    console.log("merge sheet missed the first tap; tapping once more");
+    await tom.locator(".ps-event", { hasText: "Warm Up" }).first().click();
+    await tom.getByRole("heading", { name: /is the gym.s now/ }).waitFor();
+  }
   await tom.getByRole("button", { name: "Hand it over" }).click();
   await tom.getByText(/Handed over/).waitFor();
   await tom.waitForTimeout(900);

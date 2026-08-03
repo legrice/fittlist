@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "schedule" | "you" | "none";
+export type NavTab = "home" | "following" | "discover" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -24,15 +24,17 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
   return [
-    // No Plans anywhere: the ribbon tried the tab bar, then the header
-    // corner, and then the list it pointed at merged into the calendar.
-    // Following leads because the merged week is the thing the app is for.
+    // Home leads and is the landing tab: a mixed scroll with something new
+    // on it whether or not your follow graph changed. Following only moves
+    // when the people you follow do, which made the app feel dead on the
+    // second visit.
+    { id: "home", href: "/home", icon: "home", label: "Home" },
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // The compass again: the header got its magnifier back once the plans
-    // ribbon left, and a magnifier on the tab beside a magnifier in the
-    // corner was the same glyph twice on one screen. Discover is browsing;
-    // searching is the header's corner and the box at the top of this tab.
-    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
+    // The directory wears the magnifier and the word Search now: Home and
+    // "Discover" both read as "find stuff", and two tabs that promise the
+    // same thing is one tab nobody opens. Home is curated, Search is
+    // intent; the header's corner magnifier left for the same reason.
+    { id: "discover", href: "/discover", icon: "search", label: "Search" },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.
@@ -48,7 +50,8 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
  *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
-  if (pathname.startsWith("/discover")) return "discover";
+  if (pathname.startsWith("/home")) return "home";
+  if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   if (pathname.startsWith("/feed")) return "following";
   // Both calendars are the Schedule tab: a coach's at /app, a member's at
   // /week. The person is /you.
@@ -70,9 +73,11 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
  * a member's all ask this one function, which is why they answer alike.
  */
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
-  if (from === "discover") return { href: "/discover", label: "Back to Discover" };
+  if (from === "discover") return { href: "/discover", label: "Back to Search" };
   if (from === "search") return { href: "/search", label: "Back to search" };
-  if (from === "home") return { href: "/feed", label: "Back to Following" };
+  // "home" means the Home tab now; the Following feed names itself.
+  if (from === "home") return { href: "/home", label: "Back home" };
+  if (from === "following") return { href: "/feed", label: "Back to Following" };
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
-  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
+  return signedIn ? { href: "/home", label: "Back home" } : { href: "/", label: "Back" };
 }

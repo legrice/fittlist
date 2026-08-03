@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { setGoing } from "@/app/actions/going";
+import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -73,7 +73,21 @@ export function ClassCardActions({
         {justAdded && (
           <>
             <Icon name="bookmark_added" size={16} />
-            <span className="favtoast-t">Added {name} to your plans</span>
+            <span className="favtoast-t">Added {name}. Followers can see it.</span>
+            {/* The visibility choice, in the moment: off only touches Home's
+                Activity and the "also going" lines. */}
+            <button
+              className="favtoast-link"
+              onClick={() => {
+                setJustAdded(false);
+                start(async () => {
+                  const res = await setGoingVisibility(classId, iso, false);
+                  toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong");
+                });
+              }}
+            >
+              Make it private
+            </button>
             <Link className="favtoast-link" href="/week" onClick={() => setJustAdded(false)}>
               See it
             </Link>

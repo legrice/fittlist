@@ -249,6 +249,19 @@ coach separately sees who marked Going on *their own* classes (`roster` in
 `classDetail`, owner-only): the mark was made at that coach, so the coach
 seeing it is what the mark meant, and it never shows where else anyone trains.
 
+**A Going mark shows to your followers by default, and the moment of marking
+is where the choice lives.** This is the Home spec's one deliberate change to
+the privacy line, made by Matt in `homescreenspec.md`: Activity and the "also
+going" lines are made of these marks, and a feed of nobody doing anything is
+no feed at all. `attendances.isPublic` (default true) is the switch; the note
+that answers every add ("Added. Followers can see it.") carries "Make it
+private" (`setGoingVisibility`), so the way off is offered in the moment
+rather than buried in settings. Off never touches where the mark always
+showed: the coach's roster and your own week keep it. The audience is still
+only people who follow you, it never shows where else you train beyond the
+marked class, and Personal rows never reach any of it: there is deliberately
+no column that could make one public.
+
 **A follow can be gated.** `users.approveFollowers` turns Follow into an ask:
 the tap writes a `follow_requests` row (unique per trainer+requester, its own
 table so a `subscribers` row keeps meaning exactly one active follow), the pill
@@ -1116,16 +1129,16 @@ A heart says favourite and means "I like this"; the tap puts the class on a
 list called Plans, and the glyph is the bookmark ribbon, because the ribbon is
 the one mark everybody already reads as "keep this". It was a calendar for a
 week, which said the right thing to nobody at a glance. The word stays Add
-(never save; see below), the pill is an empty ribbon that swaps for the same
-ribbon with a tick cut into it, and the Plans tab, the sheet's pill, the card's
-corner button and the swipe all wear the same pair, because one idea gets one
-glyph.
+(never save; see below), the pill is an empty ribbon that fills in solid, and
+the sheet's pill, the card's corner button and the swipe all wear the same
+pair, because one idea gets one glyph.
 
-`bookmark_added` in `Icon.tsx` is hand-drawn for the same reason `event_added`
-was: filling an outline glyph swallows the tick, and drawing the tick on top
-would mean knowing what colour it sits on. The tick is a hole in one
-`fill-rule: evenodd` path, so the whole thing is `currentColor` and works on
-the dark pill, the card and the tab bar alike.
+`bookmark_added` in `Icon.tsx` is hand-drawn: the filled ribbon carried a
+tick cut out of it for a while (the same evenodd-hole construction
+`event_added` still uses), and the tick came off, because solid against the
+outline at rest already says in or out and the hole was one mark too many
+at row size. Still one `currentColor` path, so it reads on the dark pill,
+the card and the tab bar alike.
 
 **Every schedule is the same flat row now.** Following (`.feedagenda`),
 both calendars, a coach's public page and a studio's page (`.callist`)
@@ -1220,15 +1233,27 @@ Day is one day as an hour grid (`DayGrid`): rules per hour, each event a
 wash in its kind's colour placed by when it is, overlaps splitting into
 lanes rather than stacking, the window an hour either side of what the day
 holds, bounded to a sane training day. The selected day's week rides the
-sticky chrome as a Monday-led strip (`DayStrip`, chevrons walking whole
-weeks, today ringed, the pick filled orange). Tapping an event does what
+sticky chrome as a week strip (`DayStrip`, chevrons walking whole
+weeks, today ringed, the pick filled orange). Every week the app draws as
+a grid (the Month scroll, the mini calendar, the day strip) starts on
+Sunday and ends on Saturday, the US week, by Matt's call; it was
+Monday-led for a day and read wrong against every paper calendar. Tapping an event does what
 its list row would: a teaching row opens the editor, a shift or Going row
 the class sheet (`DayGridEvent` carries `onTap`, or `data-cid`/`data-d`/
 `data-base` for a wrapping `ClassOpener`), a personal row `PlanSheet`.
 Entering Day resets the scroll (`scrollCalTop`), because the List leaves
 its scroller deep in the compensated past and a shorter view inherits that
 offset as a random landing; Today in Day view re-picks today rather than
-scrolling. The stacked `hm`/`ap` clock a `WeekItem` carries says "PM"
+scrolling.
+The month title is a door too (`.calhead-door`, the chevron beside it):
+it drops `MiniCalPicker` from the sticky header the way Google Calendar's
+does, one compact month with chevrons walking months, a dot under any day
+that holds something (the same `monthItems` map the Month grid draws
+from), and a click-away scrim. A picked date jumps the view that's open:
+Day moves its selection, Month scrolls to that month, the List scrolls to
+the day, and a past date picked from the List opens Day instead, because
+Day is the one view that can show any date while the List only grows into
+the past as the scroll asks for it. The stacked `hm`/`ap` clock a `WeekItem` carries says "PM"
 uppercase, so anything folding it back to minutes compares
 case-insensitively; a `=== "pm"` put every evening class at dawn on the
 grid. Month is one continuous scroll of months
@@ -1278,9 +1303,10 @@ orange and opens the handing-on: a coach's small sheet (the story image,
 the week as text, the link), or a member's `ShareMyWeekSheet` straight,
 because that sheet already is the options. The floating plus went up to
 the header's top right as the one orange circle (`.calhead-add`); the view
-and filter buttons beside it are bare glyphs (`.calmenu`, `.calfilter`),
-because circles and capsules were tried and were more chrome than small
-controls earn.
+and filter buttons beside it wear card-white circles of the same size
+(`.calmenu`, `.calfilter`), so the row is three round controls with the
+plus as the loud one. They were bare glyphs for a moment and read as
+floating punctuation beside the solid circle.
 The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class
@@ -1333,28 +1359,62 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**The tabs are four: Following, Discover, Schedule, You.** Plans is gone as
-a word in the chrome (it was a heart, a tab, then the header's ribbon with a
-count; the ribbon came off and nothing counts a badge, because a number that
-only grows is a scoreboard). Following leads because the merged week is the
-thing the app is for; Schedule is your own calendar; You is the person, the
-account screen included. The calendar and the identity split into two tabs
-because they shared one screen doing different jobs, and the full-size
-calendar that is coming wants the whole screen. `navTabs()` in
-`src/lib/nav.ts` is the one list both bars render. `/week` stays in the
-`(tabs)` route group and lights Schedule for a member; a coach landing on it
-is redirected to `/app`, so every old link (the toasts still say "See it")
-lands on the right calendar. Every header icon fills in on its own screen
-(`HeaderIconLink`, a client component over `usePathname`): the fill is the
-same "you are here" the tab bar says, said once per door. The fill is CSS on
-the first SVG path only, because the shield's tick and the bell's clapper
-are open strokes and filling those paints shapes nobody drew. The admin
-shield left the corner long ago: the admin's door is the Admin row on the
-You tab, because a corner of one-off icons was filling up. The magnifier
-sits in the header's corner (Discover's tab is the compass again), and
-Discover's box is the other way into the same search. A hamburger is
-deliberately not built: merch and an about page are the things that would go
-in it, and a lid over an empty shelf is where things go to be forgotten.
+**The tabs are five: Home, Following, Search, Schedule, You.** Home leads
+and is the landing tab (every sign-in, wizard ending and OAuth callback
+lands on `/home` when the member side is on; the wordmark points there
+too, and `backToFor`'s signed-in fallback follows): Following only moves
+when the people you follow do, which made the app feel dead on the second
+visit, and Home is the mixed scroll that has something on it either way.
+"Search" is the Discover directory renamed, route unchanged at
+`/discover`, because Home and "Discover" both read as "find stuff" and two
+tabs promising the same thing is one tab nobody opens: Home is curated,
+Search is intent. The tab wears the magnifier and the header's corner
+magnifier left with the rename, since the same glyph on a tab and in the
+corner is one door drawn twice; the `/search` box screen is still behind
+the directory's search door. Plans is gone as a word in the chrome, and
+nothing counts a badge, because a number that only grows is a scoreboard.
+Schedule is your own calendar; You is the person, the account screen
+included. `navTabs()` in `src/lib/nav.ts` is the one list both bars
+render. `/week` stays in the `(tabs)` route group and lights Schedule for
+a member; a coach landing on it is redirected to `/app`. In `?from=`
+tokens and `backToFor`, "home" means the Home tab now and the Following
+feed says `from=following`; the class page honours both. The current tab
+marks itself with a light brand-orange wash behind the glyph alone
+(`.navtab.on .navglyph`, the icon's stroke and the label untouched); it
+replaced the white capsule behind the whole tab, in the browser bar and
+the installed app's glass pill alike. Every header icon
+fills in on its own screen (`HeaderIconLink`); the fill is CSS on the
+first SVG path only, because the bell's clapper is an open stroke and
+filling it paints shapes nobody drew. A hamburger is deliberately not
+built: a lid over an empty shelf is where things go to be forgotten.
+
+**Home is a finite page that ends.** `homescreenspec.md` (with its
+wireframe) is the build spec; `src/lib/home.ts` is the one loader and
+`HomeScreen` the render. The sections in order: the place chip and the
+date; Upcoming (your own Going marks, next seven days, chronological, a
+rail of cards with the class colour down the spine, each card a
+`ClassOpener` door to the class sheet, with a designed empty state because
+your own list's emptiness is actionable); People near you (the follow
+graph's front door: an avatar rail of not-yet-followed people, your city
+first then newest, the face navigates and the pill follows in place);
+Studios (three rows, Verified badged with coach and class counts, a
+community row saying "added by N coaches", every row a door to `/s/{slug}`);
+Activity (what the people you follow did this week, coach posts first
+then attendance, each newest first: a batch of three or more new series
+reads "posted next week" with the count and the studios, a smaller add
+reads "added a class" leading with a studio they hadn't taught at before
+when there is one, both collapsed to one row per coach; then public Going
+marks, future ones "is going to" and passed ones "went to" with the
+relative day; grouped by seriesId throughout so a weekly class counts
+once, capped, closed by the privacy line. A coach putting next week up is
+the one thing here that regenerates without any growth in the follow
+graph, which is why it leads). Nothing is ranked: proximity is the location string, recency is
+createdAt, and every section with nothing to say is removed rather than
+shown empty, Upcoming excepted. Events and clubs are in the spec and
+deliberately not built. The one spec line not shipped: Follow on a
+verified studio's row, because the feed and digest pipelines are
+handle-keyed and a Follow that buys nothing visible would be a lie; the
+row is a door until following a gym means something.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

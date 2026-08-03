@@ -77,11 +77,17 @@ export default async function EventPage({ params, searchParams }: Props) {
 
   const viewerId = await getSessionUserId();
 
-  // Back goes where you actually came from — off the Following tab it returns
-  // there, not into a coach's calendar you never opened. (`from=home` is the
-  // link's own token; the tab it names is Following.)
-  const backHref = from === "home" ? "/feed" : `/${handle}/schedule`;
-  const backLabel = from === "home" ? "Back to Following" : `Back to ${user.name}’s schedule`;
+  // Back goes where you actually came from: off the Following tab it returns
+  // there, off Home it returns home, and a cold open falls back to the
+  // coach's schedule.
+  const backHref =
+    from === "home" ? "/home" : from === "following" ? "/feed" : `/${handle}/schedule`;
+  const backLabel =
+    from === "home"
+      ? "Back home"
+      : from === "following"
+        ? "Back to Following"
+        : `Back to ${user.name}’s schedule`;
 
   return (
     <div className="pub evpage" data-theme={user.theme} data-mode={await viewerLook()}>

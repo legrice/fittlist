@@ -70,7 +70,7 @@ const memberCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
   await p.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(p);
   await p.getByRole("button", { name: "Finish setup" }).click();
-  await p.waitForURL("**/feed");
+  await p.waitForURL("**/home");
   await p.goto(BASE + "/loadcoach");
   await p.locator(".profacts .followpill").waitFor();
   await p.waitForTimeout(300);

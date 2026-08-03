@@ -477,6 +477,13 @@
       "when": 1785666427445,
       "tag": "0067_fast_titania",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1785750845546,
+      "tag": "0068_oval_manta",
+      "breakpoints": true
     }
   ]
 }

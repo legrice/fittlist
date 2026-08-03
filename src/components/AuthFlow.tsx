@@ -131,7 +131,7 @@ export function AuthFlow({
     // Somebody who tapped Follow on a coach's page came here to do that, not
     // to read their own feed. The wizard consumes it instead when there's one
     // still to come, so this only reads it when the flow ends here.
-    else router.push(takeAfterAuth() ?? (fans || fan ? "/feed" : "/app"));
+    else router.push(takeAfterAuth() ?? (fans || fan ? "/home" : "/app"));
   };
 
   const submitPassword = () => {

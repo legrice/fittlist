@@ -135,7 +135,7 @@ export function OnboardingWizard({
       await completeOnboarding();
       // Back to whatever they were part way through, if signing in was in the
       // middle of something. Set on the way in by AuthFlow.
-      router.push(takeAfterAuth() ?? (fan ? "/feed" : "/app"));
+      router.push(takeAfterAuth() ?? (fan ? "/home" : "/app"));
       router.refresh();
     });
   };

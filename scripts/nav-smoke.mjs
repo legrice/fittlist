@@ -108,7 +108,16 @@ console.log("the class page back arrow pops ok");
 const cold = await b.newContext({ viewport: { width: 390, height: 844 } });
 const r = await cold.newPage();
 r.setDefaultTimeout(15000);
-await q.goto(BASE + "/sarah/schedule");
+// One retry: under suite load the load event has been seen to straggle
+// past the timeout while the page itself is fine (same precedent as the
+// member suite's /you arrival). A second try that also hangs is a real
+// failure.
+try {
+  await q.goto(BASE + "/sarah/schedule");
+} catch {
+  console.log("goto /sarah/schedule straggled; retrying once");
+  await q.goto(BASE + "/sarah/schedule");
+}
 {
   const href = await q.locator(".ps-event").first().getAttribute("href");
   await q.goto(BASE + href);

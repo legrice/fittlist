@@ -18,7 +18,7 @@ export default async function WelcomePage() {
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user?.handle) redirect("/");
   const fan = user.kind === "fan";
-  if (user.onboardedAt) redirect(fan ? "/feed" : "/app");
+  if (user.onboardedAt) redirect(fan ? "/home" : "/app");
 
   // A member never sees the studio step, so don't pay for the query.
   const [studioRows, mine] = fan

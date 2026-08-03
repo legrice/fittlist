@@ -64,3 +64,30 @@ export async function setGoing(
   revalidatePath("/app");
   return { ok: true };
 }
+
+// The way off being seen: a mark is public to your followers by default
+// (Home's Activity and the "also going" lines are made of them), and the
+// toast that announces the mark carries this switch, so the choice sits in
+// the moment rather than in settings. Off never touches where the mark
+// always showed: the coach's roster and your own week.
+export async function setGoingVisibility(
+  classId: string,
+  occurrenceDate: string,
+  isPublic: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in first." };
+  const db = await getDb();
+  await db
+    .update(schema.attendances)
+    .set({ isPublic })
+    .where(
+      and(
+        eq(schema.attendances.userId, userId),
+        eq(schema.attendances.classId, classId),
+        eq(schema.attendances.occurrenceDate, occurrenceDate),
+      ),
+    );
+  revalidatePath("/home");
+  return { ok: true };
+}

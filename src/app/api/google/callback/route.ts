@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     if (tokens.refresh_token) await storeCalendar(user.id, tokens.refresh_token, email);
     await createSession(user.id);
     if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-    return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/feed" : "/app"}`, 302);
+    return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/home" : "/app"}`, 302);
   }
 
   // ---- calendar connect flow (started while logged in): sub is the user id.
