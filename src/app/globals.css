@@ -828,8 +828,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      heading rather than a heading: three edges for one idea. The bottom
      rule alone does the sectioning, and it runs the full width of the
      screen, which is what makes it read as a section break at all. What is
-     left is the words and the line under them. */
-  background: transparent;
+     left is the words and the line under them.
+
+     The page's own ground, though, never `transparent`: the band is sticky,
+     so with nothing behind it the rows scroll straight through the words.
+     `--paper` is what makes it disappear into the page and still occlude
+     what passes under it, which is the whole trick. */
+  background: var(--paper);
   border-bottom: 1px solid var(--line);
   /* The same pull as .calsticky directly above it, so the chrome and the
      bands under it share their edges. Bleeding by the page gutter instead
