@@ -10,7 +10,7 @@ import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
-import { AgendaAvatar, DayBand } from "@/components/Agenda";
+import { AgendaAvatar, ClassRow, DayBand } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { ClassCardActions } from "@/components/ClassCardActions";
 import { Icon } from "@/components/Icon";
@@ -337,42 +337,29 @@ export async function PublicProfileView({
                     const href = `/${at?.base ?? handle}/${c.id}?d=${d.iso}`;
                     return (
                       <div key={`${d.iso}-${c.id}`} className="ps-erow">
-                      <Link
-                        className="ps-event"
-                        data-cid={c.id}
-                        data-d={d.iso}
-                        data-base={at?.key}
-                        href={href}
-                      >
-                        <span
-                          className="ps-accent"
-                          style={{ background: avatarColor(user) }}
-                          aria-hidden="true"
-                        />
-                        <span className="ps-ebody">
-                          {/* Redundant on purpose, by Matt's call: the page
-                              already names the coach, and the row says it
-                              again so it reads exactly like the same row on
-                              Following. */}
-                          <span className="ps-ecoach">
-                            <AgendaAvatar
-                              photo={user.photo}
-                              name={user.name}
-                              color={avatarColor(user)}
-                            />
-                            <span className="ps-ecoach-txt">{user.name}</span>
-                          </span>
-                          <span className="ps-enm">{c.name}</span>
-                          {where && <span className="ps-estudio">{where}</span>}
-                        </span>
-                        <span className="ps-etimecol">
-                          <span className="ps-etime">
-                            {start.hm}
-                            <span className="ps-ap">{start.ap}</span>
-                          </span>
-                          <span className="ps-edur">{c.durationMin} min</span>
-                        </span>
-                      </Link>
+                      {/* The same ClassRow Following draws, so the two lists
+                          cannot drift again. The coach line is redundant here
+                          (the page already names them) and stays on purpose,
+                          by Matt's call: the row has to read exactly like the
+                          row on Following. */}
+                      <ClassRow
+                        item={{
+                          key: `${d.iso}-${c.id}`,
+                          name: c.name,
+                          hm: start.hm,
+                          ap: start.ap,
+                          durationMin: c.durationMin,
+                          where,
+                          coachName: user.name,
+                          coachPhoto: user.photo,
+                          coachColor: avatarColor(user),
+                          on: myMarks.has(`${c.id}|${d.iso}`),
+                          href,
+                          classId: c.id,
+                          iso: d.iso,
+                          base: at?.key,
+                        }}
+                      />
                       {/* The ribbon, only for somebody the class could
                           belong to. The owner adds nothing: it is already
                           their class. A coach on the slot doesn't either,

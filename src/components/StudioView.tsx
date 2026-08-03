@@ -142,11 +142,20 @@ export async function StudioView({
     const pub = pubAll.filter((c) => c.isPublic);
     const owners = pub.length
       ? await db
-          .select({ id: schema.users.id, handle: schema.users.handle, name: schema.users.name })
+          .select({
+            id: schema.users.id,
+            handle: schema.users.handle,
+            name: schema.users.name,
+            photo: schema.users.photo,
+            avatarColor: schema.users.avatarColor,
+          })
           .from(schema.users)
           .where(inArray(schema.users.id, [...new Set(pub.map((c) => c.userId))]))
       : [];
     const handleOf = new Map(owners.map((o) => [o.id, o.handle]));
+    // Their face and colour, so the coach line on these rows is the one
+    // Following draws rather than a name in the added-tag's clothes.
+    const faceOf = new Map(owners.map((o) => [o.id, { photo: o.photo, color: avatarColor(o) }]));
     // Who put this class here. An unclaimed page is built by the people who
     // train at the place, and whoever runs it had no way to ask anybody about
     // a listing they did not recognise. A coach's name is already public on
@@ -177,6 +186,8 @@ export async function StudioView({
           durationMin: c.durationMin,
           base,
           coachName: nameOf.get(c.userId) ?? null,
+          coachPhoto: faceOf.get(c.userId)?.photo ?? null,
+          coachColor: faceOf.get(c.userId)?.color ?? null,
           where: c.location,
         });
       }
@@ -204,6 +215,27 @@ export async function StudioView({
   }
 
   const hasSchedule = !!s.accountUserId || community;
+  // What is already in their plans, so a row that is in shows Added rather
+  // than offering it twice. A studio has no owner to exclude the way a coach's
+  // page does: nobody's own page this is, so anybody signed in may add.
+  const scheduleIds = days.flatMap((d) => d.items.filter((i) => !i.plain).map((i) => i.id));
+  const canAddHere = signedIn && !!viewerId && scheduleIds.length > 0;
+  const studioMarks = new Set<string>();
+  if (canAddHere) {
+    const marks = await db
+      .select({
+        classId: schema.attendances.classId,
+        occurrenceDate: schema.attendances.occurrenceDate,
+      })
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, viewerId!),
+          inArray(schema.attendances.classId, scheduleIds),
+        ),
+      );
+    for (const m of marks) studioMarks.add(`${m.classId}|${m.occurrenceDate}`);
+  }
   // Every studio page wears the same three tabs now, whatever it holds:
   // Schedule leads (it is what the link is for, and an empty one is the
   // pitch), Info is the categories and the words, Coaches is who teaches
@@ -365,6 +397,8 @@ export async function StudioView({
               slug={s.slug ?? s.id}
               days={days}
               accent={avatarColor({ id: s.id })}
+              canAdd={canAddHere}
+              marks={studioMarks}
             />
           ) : (
             <div className="empty-block">

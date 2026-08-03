@@ -37,6 +37,10 @@ export type AgendaItem = {
   /** The real page behind it, when there is one. A row with a link is still a
    *  link, so a middle click and a crawler both get what they expect. */
   href?: string | null;
+  /** A fact with nothing behind it: a studio's community row, distilled from
+   *  members' entries. Not a link and not a button, because there is no page
+   *  and nothing to press. */
+  plain?: boolean;
   /** For ClassOpener, which reads these off the row rather than the list. */
   classId?: string;
   iso?: string;
@@ -164,6 +168,7 @@ export function ClassRow({
     </>
   );
   const cls = `ps-event${item.kind ? ` ev-${item.kind}` : ""}${item.on ? " goingon" : ""}`;
+  if (item.plain) return <div className={`${cls} ps-event-plain`}>{inner}</div>;
   // A plain anchor rather than next/link: these lists sit inside ClassOpener,
   // which catches the tap, and the href is there for the modified click and the
   // crawler. Prefetching a page nobody navigates to is work for nothing.

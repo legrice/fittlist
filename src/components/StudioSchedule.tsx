@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { clockParts, todayIso } from "@/lib/format";
-import { DayBand } from "@/components/Agenda";
+import { ClassRow, DayBand } from "@/components/Agenda";
+import { ClassCardActions } from "@/components/ClassCardActions";
 import { ClassOpener } from "@/components/ClassOpener";
 
 export type StudioDay = {
@@ -25,6 +25,10 @@ export type StudioDay = {
      *  under the personal adder's studio field is that the class joins this
      *  page, not that they do. */
     coachName?: string | null;
+    /** Their face and colour, so the coach line is the one Following draws
+     *  rather than a bare string. Only ever set where coachName is. */
+    coachPhoto?: string | null;
+    coachColor?: string | null;
     /** What the class says about where it is, when it says anything: a room
      *  or a floor. Never the studio's own name, which is the page title. */
     where?: string | null;
@@ -45,12 +49,20 @@ export function StudioSchedule({
   slug,
   days,
   accent,
+  canAdd = false,
+  marks,
 }: {
   slug: string;
   days: StudioDay[];
   /** The studio's own derived colour, worn on every row's bar: the same one
    *  its directory tile and empty banner wear. */
   accent: string;
+  /** A signed-in member looking at somebody else's place. The row carries the
+   *  same Add it carries on Following: a class you found here is a class you
+   *  wanted, and until now this was the one list you could not add from. */
+  canAdd?: boolean;
+  /** `classId|iso` for everything already in their plans. */
+  marks?: Set<string>;
 }) {
   if (days.length === 0) {
     return (
@@ -72,46 +84,48 @@ export function StudioSchedule({
             <div className="ps-daycards">
               {d.items.map((c) => {
                 const start = clockParts(c.startTime);
-                const inner = (
-                  <>
-                    <span className="ps-accent" style={{ background: accent }} aria-hidden="true" />
-                    <span className="ps-ebody">
-                      {c.coachName?.trim() && (
-                        <span className="ps-shifttop ps-tag-added">{c.coachName}</span>
-                      )}
-                      <span className="ps-enm">{c.name}</span>
-                      {c.where?.trim() && (
-                        <span className="ps-estudio ps-ewhere">{c.where}</span>
-                      )}
-                    </span>
-                    <span className="ps-etimecol">
-                      <span className="ps-etime">
-                        {start.hm}
-                        <span className="ps-ap">{start.ap}</span>
-                      </span>
-                      <span className="ps-edur">{c.durationMin} min</span>
-                    </span>
-                  </>
-                );
-                // Distilled from members' entries: a fact about the studio
-                // with no page behind it and nobody's name on it.
-                if (c.plain)
-                  return (
-                    <div key={`${d.iso}-${c.id}`} className="ps-event ps-event-plain">
-                      {inner}
-                    </div>
-                  );
+                const href = c.plain
+                  ? null
+                  : c.base
+                    ? `/${c.base}/${c.id}?d=${d.iso}`
+                    : `/s/${slug}/${c.id}?d=${d.iso}`;
                 return (
-                  <Link
-                    key={`${d.iso}-${c.id}`}
-                    className="ps-event"
-                    data-cid={c.id}
-                    data-d={d.iso}
-                    data-base={c.base ?? undefined}
-                    href={c.base ? `/${c.base}/${c.id}?d=${d.iso}` : `/s/${slug}/${c.id}?d=${d.iso}`}
-                  >
-                    {inner}
-                  </Link>
+                  <div key={`${d.iso}-${c.id}`} className="ps-erow">
+                    {/* The same ClassRow Following and a coach's page draw.
+                        This list used to hand-roll its own, which is how the
+                        coach line ended up wearing the Added-by-you tag's
+                        styling and how the Add button never arrived here. */}
+                    <ClassRow
+                      item={{
+                        key: `${d.iso}-${c.id}`,
+                        name: c.name,
+                        hm: start.hm,
+                        ap: start.ap,
+                        durationMin: c.durationMin,
+                        where: c.where,
+                        coachName: c.coachName,
+                        coachPhoto: c.coachPhoto,
+                        coachColor: c.coachColor ?? accent,
+                        on: marks?.has(`${c.id}|${d.iso}`),
+                        href,
+                        plain: c.plain,
+                        classId: c.id,
+                        iso: d.iso,
+                        base: c.base ?? undefined,
+                      }}
+                    />
+                    {/* Nothing to add on a plain row: it is a fact about the
+                        studio with no class row behind it to mark. */}
+                    {!c.plain && (
+                      <ClassCardActions
+                        classId={c.id}
+                        iso={d.iso}
+                        name={c.name}
+                        canAdd={canAdd}
+                        initialOn={!!marks?.has(`${c.id}|${d.iso}`)}
+                      />
+                    )}
+                  </div>
                 );
               })}
             </div>
