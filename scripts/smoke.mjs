@@ -1689,9 +1689,9 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
   if (card.shadow !== "none") fail("a Following row is flat, not a card: " + card.shadow);
   if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
   // The circle came off the ribbon: the added state is the glyph itself
-  // filling brand orange, on no background.
-  if (card.addInk !== "rgb(221, 106, 53)")
-    fail("the added ribbon glyph should fill brand orange, got " + card.addInk);
+  // filling in ink, on no background.
+  if (card.addInk !== "rgb(25, 21, 2)")
+    fail("the added ribbon glyph should fill in ink, got " + card.addInk);
   if (card.addBg !== "rgba(0, 0, 0, 0)")
     fail("the ribbon should carry no background, got " + card.addBg);
   if (card.shares > 0) fail("the share circle should be gone from Following rows");
@@ -2174,6 +2174,20 @@ await page.locator(".ps-event").first().waitFor();
   await page.locator('.kindcheck[data-kind="all"]').click();
   await page.locator(".ps-event.ev-coaching").first().waitFor();
   console.log("kind pills ok (All leads, a pick fills with its colour and narrows)");
+}
+// A Going row on your own schedule carries the filled ribbon, and tapping it
+// removes the class with the way back in the toast.
+{
+  const row = page.locator(".ps-erow").filter({ has: page.locator(".ps-event.ev-added") }).first();
+  await row.locator(".evcard-add.on").waitFor();
+  await row.locator(".evcard-add.on").click();
+  await page.locator(".favtoast", { hasText: "Removed" }).waitFor();
+  await page.waitForFunction(() => !document.querySelector(".ps-event.ev-added"), null, {
+    timeout: 10000,
+  });
+  await page.locator(".favtoast .favtoast-link", { hasText: "Undo" }).click();
+  await page.locator(".ps-event.ev-added").first().waitFor({ timeout: 10000 });
+  console.log("schedule ribbon ok (remove with undo, and the undo means it)");
 }
 // The month view: the menu beside the month opens the view sheet, Month
 // draws the grid with the same colours, and List is the way back.

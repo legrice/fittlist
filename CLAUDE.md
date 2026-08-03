@@ -1142,14 +1142,16 @@ chip takes on a Going row: Shift in the brand wash (`.ps-tag-shift`,
 `--si-tint` under `--si-ink`), Added by you on personal rows in the
 personal slate's wash with ink text (`.ps-tag-added`), each tag wearing
 its kind's colour quietly enough that the name stays loudest. The Add
-ribbon sits above the time in the right column, smaller, and the
-member's remove X takes that corner on their week; both are
+ribbon rides the top-right corner as the bare glyph (no circle: the
+button's box is only the hit area), sitting level with the coach chip's
+line, and fills in ink when the class is in; the
+member's remove X takes that corner on their week. Both are
 siblings of the row, never children, because a button inside a link is not
 a thing. The share circle came off every row (sharing lives on the class
 sheet, where one class has the whole screen), so the ribbon is a row's one
-action. The ribbon fills brand orange (`--si`) when a class is in,
-because the one mark the actions earn should be the same orange every Add
-wears. On the public page the pair loads the viewer's marks server-side so
+action. On your own schedule a Going row wears the filled ribbon too, and
+tapping it removes the class, with Undo in the toast rather than a
+confirm: the way back is cheaper than the question. On the public page the pair loads the viewer's marks server-side so
 the ribbon starts right; a photo per row was tried and read as a poster
 wall, so the overlay and the share card keep the photo, where one class
 has the whole screen. The public page's rows name the coach above the

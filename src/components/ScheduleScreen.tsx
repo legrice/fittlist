@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   CAL_PAST_DAYS,
   clockParts,
@@ -158,6 +158,39 @@ export function ScheduleScreen({
   // The Share pill at the bottom: the menu of ways, then the story sheet.
   const [shareMenu, setShareMenu] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  // A Going row just removed by its ribbon, held while the undo is offered.
+  const [removed, setRemoved] = useState<{ classId: string; iso: string; name: string } | null>(
+    null,
+  );
+  const removedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (removedTimer.current) clearTimeout(removedTimer.current); }, []);
+  const removeGoing = (p: WeekItem) => {
+    startMerge(async () => {
+      const res = await setGoing(p.classId, p.iso, false);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't remove that");
+        return;
+      }
+      setRemoved({ classId: p.classId, iso: p.iso, name: p.name });
+      if (removedTimer.current) clearTimeout(removedTimer.current);
+      removedTimer.current = setTimeout(() => setRemoved(null), 6000);
+      router.refresh();
+    });
+  };
+  const undoRemove = () => {
+    const r = removed;
+    if (!r) return;
+    setRemoved(null);
+    if (removedTimer.current) clearTimeout(removedTimer.current);
+    startMerge(async () => {
+      const res = await setGoing(r.classId, r.iso, true);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't undo that");
+        return;
+      }
+      router.refresh();
+    });
+  };
   // The coach's own colour marks the classes they teach.
   const myAccent = avatarColor({ id: userId, avatarColor: myColor });
   const [toastMsg, toastOn, toast] = useToast();
@@ -528,6 +561,18 @@ export function ScheduleScreen({
                               <span className="ps-edur">{p.durationMin} min</span>
                             </span>
                           </button>
+                          {/* The filled ribbon: this class is in your
+                              schedule, and tapping it takes it out, with the
+                              undo in the toast. A sibling, never a child. */}
+                          {!p.personal && (
+                            <button
+                              className="evcard-add on"
+                              aria-label={`Remove ${p.name} from your schedule`}
+                              onClick={() => removeGoing(p)}
+                            >
+                              <Icon name="bookmark_added" size={20} />
+                            </button>
+                          )}
                           </div>
                         );
                       }
@@ -1022,9 +1067,20 @@ export function ScheduleScreen({
         />
       )}
 
-      {/* Everything about your page, behind the pill that wears your face.
-          The rows a visitor can't have: the way in to look at it, the way in
-          to change it, and every way of handing it on. */}
+      {/* The removal's receipt, with the way back: the same bar the Add
+          answers with, holding Undo instead of See it. */}
+      <div className={`favtoast listadded${removed ? " on" : ""}`} aria-hidden={!removed}>
+        {removed && (
+          <>
+            <Icon name="bookmark" size={16} />
+            <span className="favtoast-t">Removed {removed.name} from your schedule</span>
+            <button className="favtoast-link" onClick={undoRemove}>
+              Undo
+            </button>
+          </>
+        )}
+      </div>
+
       <Toast msg={toastMsg} on={toastOn} />
     </section>
   );

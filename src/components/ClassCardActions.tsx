@@ -64,7 +64,7 @@ export function ClassCardActions({
           aria-pressed={on}
           onClick={toggle}
         >
-          <Icon name={on ? "bookmark_added" : "bookmark"} size={18} />
+          <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
         </button>
       )}
       {/* The same note every other Add answers with, naming the list it
