@@ -1151,6 +1151,22 @@ allow; a new reference that isn't listed there makes deleting any user fail
 outright. `notifications.actor_user_id` is de-attributed rather than deleted,
 so "someone followed your schedule" survives its subject leaving.
 
+**On desktop the header belongs to the window, and the column belongs to the
+reading.** Above 940px `.brandbar` bleeds to both window edges and sits its
+contents 64px in from them, in both shells (`.screen.hasnav` and `.appshell`)
+off one rule: wordmark hard left, the search and bell hard right, the tab
+links centred. It used to pad back to the 660px column, which put the whole
+lockup in a huddle in the middle of a 1440px screen with the rule running out
+past it on both sides, and a header that lines up with the paragraph width is
+a header pretending to be content. The links are absolutely centred rather
+than left to `space-between`: the wordmark and the icon cluster are different
+widths, so with three flex children the middle one is only ever centred by
+accident. Absolute is safe because the bar is sticky and so a containing
+block, and because the three never meet (at 940px the sides take about 240px
+of the 812px between the paddings). Below the breakpoint nothing changes: the
+links are `display: none`, the nav goes back to `static`, and the bar keeps
+the page's own 18px gutter.
+
 **Desktop chrome is pointer-gated, not width-gated.** The bottom bar hides at
 940px and `HeaderNav` takes over; the coach-rail arrows key off
 `(hover: hover) and (pointer: fine)`, because "can't swipe" is a property of

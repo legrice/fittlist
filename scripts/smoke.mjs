@@ -1211,17 +1211,25 @@ await fan.waitForURL("**/feed");
 // screen contradicting the word that got somebody there.
 await fan.getByRole("link", { name: "Find coaches" }).click();
 await fan.locator(".distabs .pubtab.sel", { hasText: "Coaches" }).waitFor();
-// and the Classes half is one tap over, with its own two filters
+// and the Classes half is one tap over, wearing the same rail the other
+// two halves wear: the range dropdown, the Type dropdown and the total
+// count all left, and one chip rail led by All is the whole filter.
 await fan.getByRole("button", { name: "Classes", exact: true }).click();
-await fan.locator(".clsfilters").waitFor();
+await fan.locator(".dischips").waitFor();
 {
   const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
   if (heads.join("|") !== "Classes|Coaches|Studios")
     fail("the directory's halves should be Classes, Coaches, Studios: " + heads.join("|"));
-  // The count says what the filters left, and never a city.
-  const line = await fan.locator(".clscount-line").innerText();
-  if (!/\d+ class/.test(line)) fail("the classes half should count what it lists: " + line);
-  if (/Jersey City/.test(line)) fail("the count line should carry no city");
+  if (await fan.locator(".clsfilters, .clspill").count())
+    fail("the range and type dropdowns should be gone from the classes half");
+  if (await fan.locator(".clscount-line").count())
+    fail("the total class count should be gone");
+  const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((t) => t.trim());
+  if (chips[0] !== "All") fail("the classes rail should lead with All: " + chips.join("|"));
+  // One size on every half, the filter pill's own: at the old chip size a
+  // filter read as decoration and nobody was finding the coaches.
+  const h = await fan.locator(".dischips .chip").first().evaluate((e) => e.getBoundingClientRect().height);
+  if (Math.round(h) !== 38) fail("the rail's chips should be 38px tall, got " + h);
 }
 await fan.getByRole("button", { name: "Coaches", exact: true }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
@@ -1239,10 +1247,16 @@ if (await fan.locator(".disfol").count())
   fail("the corner Follow pill should be gone from directory rows");
 await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
 // The Coaches half lists coaches, and its chips are what they teach: one
-// vocabulary with the studios', so the same word narrows either.
+// vocabulary with the studios', so the same word narrows either. Nobody in
+// this fixture has said what they teach, so the rail is not drawn at all:
+// a lone All is a filter that can only ever narrow nothing, and the rule is
+// that a filter is offered where it can narrow something. If it is drawn,
+// All leads it.
 {
   const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((t) => t.trim());
-  if (chips[0] !== "All") fail("the coaches rail should lead with All: " + chips.join("|"));
+  if (chips.length === 1) fail("a rail of nothing but All should not be drawn");
+  if (chips.length && chips[0] !== "All")
+    fail("the coaches rail should lead with All: " + chips.join("|"));
 }
 await fan.locator(".disrow", { hasText: "Matt" }).locator("a.disrow-main").click();
 await fan.waitForURL("**/matt**");
@@ -1348,10 +1362,17 @@ console.log("discover ok (chevron rows, Following said on the line)");
     fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
   // Switching lens drops the pick with it: the other half can't honour it.
+  // No studio here has said what it offers, so that half draws no rail at
+  // all; either way what must be true is that nothing is left picked.
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(300);
-  if (!(await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count()))
-    fail("the other lens should open back on All");
+  {
+    const sel = (await fan.locator(".dischips .chip.sel").allInnerTexts()).map((t) => t.trim());
+    if (sel.some((t) => t !== "All"))
+      fail("switching lens should drop the pick: " + sel.join("|"));
+    if (await fan.locator(".dischips .chip").count())
+      if (!sel.includes("All")) fail("a drawn rail should open back on All");
+  }
   // All is the way back: tap it and the whole list returns.
   await fan.getByRole("button", { name: "Coaches", exact: true }).click();
   await fan.waitForTimeout(200);
@@ -1377,8 +1398,19 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.getByRole("button", { name: "Studios", exact: true }).click();
   await fan.waitForTimeout(200);
   const studioChips = await chips();
-  if (studioChips[0] !== "All") fail("the studios rail should lead with All too");
-  console.log("discover chips ok (what they teach, what a place offers)");
+  // No studio here offers anything yet, so there is nothing to narrow by and
+  // the rail is not drawn. That is the rule, not an omission: a lone All can
+  // only ever narrow nothing.
+  if (studioChips.length === 1) fail("a rail of nothing but All should not be drawn");
+  if (studioChips.length && studioChips[0] !== "All")
+    fail("the studios rail should lead with All too");
+  // And the Classes half always has one, because a class carries its type.
+  await fan.getByRole("button", { name: "Classes", exact: true }).click();
+  await fan.waitForTimeout(200);
+  const classChips = await chips();
+  if (classChips[0] !== "All") fail("the classes rail should lead with All: " + classChips.join("|"));
+  if (classChips.length < 2) fail("the classes rail should carry the types the fortnight holds");
+  console.log("discover chips ok (what they teach, what a place offers, what runs)");
 }
 
 // A profile carries no tab bar, so the arrow on the picture is the way off it

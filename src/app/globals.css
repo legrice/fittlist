@@ -1080,14 +1080,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      pad its content back in so the lockup stays aligned with the column. The
      stage clips the vw overhang (scrollbar width) so no horizontal scroll. */
   .appshell .stage { overflow-x: hidden; }
-  /* .appshell prefix: the base .brandbar rule is declared later in the file,
-     so the full-bleed override needs the extra specificity to win. */
-  .appshell .brandbar {
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    padding-left: calc(50vw - 50%);
-    padding-right: calc(50vw - 50%);
-  }
+  /* The bleed and the 64px gutter now live with the desktop nav rules, so
+     both shells (the coach's .appshell and the tabs group's .screen.hasnav)
+     get one header treatment. They used to pad back to the reading column,
+     which put the wordmark in the middle of a wide screen. */
 
   /* auth centered */
   .ob { justify-content: center; }
@@ -3761,7 +3757,27 @@ button.ps-card { cursor: pointer; }
   width: 100%; max-width: 660px; margin: 0 auto;
 }
 .navbar { display: none; }
-.headnav { display: flex; align-items: center; gap: 26px; } }
+.headnav { display: flex; align-items: center; gap: 26px; }
+
+/* Desktop header: the window's width, not the column's.
+   The bar bleeds to both window edges so its rule runs the whole way across,
+   and its contents sit 64px in from those edges rather than lining up with
+   the 660px reading column. A header is chrome for the window; the column is
+   for reading, and pinning the wordmark to it left most of a 1440px screen
+   empty on either side of a huddle in the middle.
+   The links centre on the window rather than falling wherever
+   space-between drops them: the wordmark and the icon cluster are different
+   widths, so with three flex children the middle one is only ever centred by
+   accident. Absolute is safe here because the bar is sticky (a containing
+   block) and the three never meet: at the 940px breakpoint the sides take
+   about 240px of the 812px between the paddings. */
+.screen.hasnav .brandbar, .appshell .brandbar {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: 64px;
+  padding-right: 64px;
+}
+.brandbar .headnav { position: absolute; left: 50%; transform: translateX(-50%); } }
 
 /* ----------------------------------------------------------------------------
    Installed only: the tab bar as a floating glass pill.
