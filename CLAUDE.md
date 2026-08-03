@@ -1372,10 +1372,19 @@ places, by Matt's call, and the rule is the reason: the top right corner
 is the one part of a phone a thumb cannot reach, and adding is the thing
 somebody opens this screen to do. So Add floats bottom right in the brand
 orange (`.caladd`, beside Today's white pill), and Share went up to the
-header as the third circle in its cluster (`.calshare`, keeping the orange
-sparkle) beside the view and filter buttons (`.calmenu`, `.calfilter`).
+header beside the view and filter buttons (`.calmenu`, `.calfilter`).
 The loud colour follows the primary action rather than staying where it
 was drawn.
+Share wears its word (`.calshare`, a pill rather than a third circle,
+keeping the orange sparkle): it is the one control in that cluster that
+does something rather than changes how you are looking, and the sparkle
+alone never said which. The row's gap is 10px and not 12px because of it,
+and that number is load-bearing: at twelve, "September" lost its last
+letters to the ellipsis by six pixels. The title is also the thing that
+yields (`.calhead` truncates, the controls never shrink), because a month
+in another year carries one ("September 2027") and the cluster it would
+otherwise shove off the edge is the way out of the screen. Changing the
+pill's width or the gap means measuring the longest ordinary month again.
 The Add button asks which kind first: both
 calendars open the same sheet and pre-answer the form, so the Adder's own
 chair question never shows from here: a coach's offers three rows (a class

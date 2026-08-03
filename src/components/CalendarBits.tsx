@@ -82,14 +82,17 @@ export function CalBottomBar({
   );
 }
 
-/** Share, as the header's third circle: the same size and drawing as the
- *  view and filter buttons beside it, keeping its orange sparkle. */
+/** Share, in the header's cluster: the same drawing as the view and filter
+ *  buttons beside it, keeping its orange sparkle, and wearing the word. The
+ *  sparkle alone is the one glyph up there that names an act rather than a
+ *  way of looking, and an act should say what it is. */
 export function CalShare({ onShare }: { onShare: () => void }) {
   return (
-    <button className="calshare" aria-label="Share" onClick={onShare}>
+    <button className="calshare" onClick={onShare}>
       <span className="calshare-ic" aria-hidden="true">
         <Icon name="auto_awesome" size={19} />
       </span>
+      Share
     </button>
   );
 }

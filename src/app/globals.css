@@ -608,11 +608,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The add button, across from the calendar's name: the floating plus came
    off both calendars, and the corner it held is being kept clear for a full
    size calendar someday. */
+/* Ten rather than twelve between the controls: the Share pill wears its
+   word now, and at twelve the longest ordinary month ("September") lost its
+   last letters to the ellipsis by six pixels. The title is what the room is
+   for. */
 .calhead-row {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin: 14px 0 0;
+  gap: 10px; margin: 14px 0 0;
 }
-.calhead-row .calhead { margin: 0; }
+/* The title yields before the controls do. A month in another year carries
+   it ("September 2027"), and the cluster it would otherwise shove off the
+   edge is the way out of the screen. */
+.calhead-row .calhead {
+  margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 /* The view and filter buttons wear circles the size of the plus: three
    round controls in a row, the plus the loud one. They were bare glyphs
    for a moment and read as floating punctuation beside the solid circle. */
@@ -626,14 +635,18 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .calmenu, [data-mode="dark"] .calfilter {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
-/* Share, as the third circle in the header's cluster: the same drawing as
-   the view and filter buttons, keeping its orange sparkle. */
+/* Share in the header's cluster: the same drawing as the view and filter
+   buttons, keeping its orange sparkle, and wearing the word. A pill rather
+   than a third circle, because it is the one control up there that does
+   something rather than changes how you are looking, and the sparkle alone
+   never said which. */
 .calshare {
-  flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; height: 40px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--card); color: var(--ink); border: none; cursor: pointer;
   box-shadow: 0 1px 4px rgba(25, 21, 2, .10);
-  padding: 0;
+  padding: 0 14px 0 11px;
+  font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -.01em;
 }
 [data-mode="dark"] .calshare { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10); }
 .calshare-ic { display: inline-flex; color: var(--si); }
@@ -644,7 +657,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .calhead-door {
   display: inline-flex; align-items: center;
   background: none; border: none; padding: 0; color: var(--ink); cursor: pointer;
-  min-width: 0;
+  min-width: 0; overflow: hidden;
 }
 /* The mini calendar, dropped from the sticky header the way Google
    Calendar's is: absolute against the sticky block, a click-away scrim
