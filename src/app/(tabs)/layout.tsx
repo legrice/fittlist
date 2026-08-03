@@ -57,9 +57,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           home={landing}
-          // No magnifier: Search is a tab now. No gear: the You tab is the
-          // door to the account, and a second door in the corner said it
-          // twice.
+          // Every screen in this group is the member side, so the magnifier
+          // is always right here. No gear: the You tab is the door to the
+          // account, and a second door in the corner said it twice.
+          search
           nav={{ coach: isCoach, scheduleHref, home: showHome }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

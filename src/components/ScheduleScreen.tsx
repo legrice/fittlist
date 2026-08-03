@@ -526,6 +526,7 @@ export function ScheduleScreen({
           // coaches-only mode has no tab bar, so the corner is the one door.
           settings={showFanView ? undefined : "/you"}
           home={showFanView ? landing : "/app"}
+          search={showFanView}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app", home: showHome } : undefined}

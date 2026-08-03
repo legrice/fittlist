@@ -32,11 +32,12 @@ export function navTabs(coach: boolean, scheduleHref?: string, home = false): Na
     // four it always was and Following leads.
     ...(home ? [{ id: "home" as const, href: "/home", icon: "home", label: "Home" }] : []),
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // The directory wears the magnifier and the word Search now: Home and
-    // "Discover" both read as "find stuff", and two tabs that promise the
-    // same thing is one tab nobody opens. Home is curated, Search is
-    // intent; the header's corner magnifier left for the same reason.
-    { id: "discover", href: "/discover", icon: "search", label: "Search" },
+    // Discover again, and the compass with it: the directory grew a
+    // Classes half, which is browsing rather than looking something up,
+    // and the magnifier went back to the header's corner where a search
+    // that spans every half belongs. The same glyph is never on a tab and
+    // in the corner at once.
+    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.
@@ -75,7 +76,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
  * a member's all ask this one function, which is why they answer alike.
  */
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
-  if (from === "discover") return { href: "/discover", label: "Back to Search" };
+  if (from === "discover") return { href: "/discover", label: "Back to Discover" };
   if (from === "search") return { href: "/search", label: "Back to search" };
   // "home" means the Home tab now; the Following feed names itself. Only
   // somebody who can see Home ever leaves with that token, so it is safe

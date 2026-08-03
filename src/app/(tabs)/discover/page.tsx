@@ -5,6 +5,7 @@ import { publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
+import { discoverClasses } from "@/lib/discoverclasses";
 import { runsOn, todayIso } from "@/lib/format";
 import { DiscoverList } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
@@ -129,6 +130,8 @@ export default async function DiscoverPage() {
       <DiscoverList
         people={people}
         studios={studios}
+        classes={await discoverClasses(userId)}
+        todayIso={todayIso()}
         cities={cities}
         myCity={me.location?.trim() || null}
         backHref="/feed"

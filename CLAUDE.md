@@ -297,6 +297,30 @@ credential) and `disciplines` (a pick, a category) are different fields.
 `TypePicker` renders it for both, and "accepting clients" is a filter for free
 because `users.availability` already says it.
 
+**Discover has three halves now, and Classes leads.** The directory
+answered "who teaches near me" and never "what can I do on Thursday",
+which is the question people actually open the app with, so
+`discoverClasses()` (`src/lib/discoverclasses.ts`) lists real dated
+occurrences: public, from somebody who hasn't delisted themselves,
+nobody blocked either way, not already been and gone, a gym's own rota
+included (it has no handle, so the row carries the base its page lives
+under). Two dropdowns rather than chips, because a date is one answer
+out of a list and the types are a long multiselect that would run off a
+rail's edge: the range (Today, Tomorrow, This weekend, Next 7, Next 14)
+and Type, which wears the number it picked. Under them a bare count, no
+city: the directory is one town for now, and a label that never changes
+is furniture. The rows are the app's one class row (`Agenda` +
+`ClassCardActions`), so the ribbon means here exactly what it means on a
+profile. The whole fortnight loads once and every range is a slice of
+it, so a pick is instant and nothing round-trips; that is the same
+ceiling search hit before it moved to the server, and "Pick a date" is
+deliberately absent until this becomes an action that takes a range,
+because a dropdown that can't honour one of its own rows is worse than a
+shorter dropdown. The tab is Discover again and wears the compass, and
+the magnifier went back to the header's corner: browsing is the tab,
+searching every half at once is the corner, and the same glyph is never
+in both places.
+
 **Search is one box over both halves; Discover is a segment you pick first.**
 `/search` sits behind the header's magnifier and shows People and Studios as
 two headed sections at once, because you don't know which half the thing you
@@ -415,7 +439,8 @@ matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
 **Discover's top is one stack: the search door, the halves as underline
-tabs, and the chip rail under them, led by All.** The People/Studios
+tabs, and (on People and Studios) the chip rail under them, led by All.
+Classes brings its own two dropdowns instead.** The People/Studios
 segment is the same underline tabs a profile's sections wear (`.pubtabs
 .distabs`), and the rail (`.dischips`, scrolling off the edge) is the whole
 filter now. All leads it, filled in by default: the one selected chip is

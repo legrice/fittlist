@@ -10,6 +10,7 @@ import type { NavTab } from "@/lib/nav";
 export function AppHeader({
   unread = 0,
   settings,
+  search = false,
   avatar,
   home = "/feed",
   nav,
@@ -20,6 +21,10 @@ export function AppHeader({
    *  the account. Everywhere the tabs render, You is the door and the
    *  corner stays clear. */
   settings?: string;
+  /** The magnifier, back in the corner now that the tab says Discover
+   *  again: a search that spans every half of the directory starts here,
+   *  and browsing is the tab. Only where the member side is on. */
+  search?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -49,11 +54,18 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* The bell, and (coaches-only mode) the gear: the corner is for
-            what you reach for from anywhere. The magnifier left when Search
-            became a tab, the same reason the shield left before it: a
-            corner of one-off icons was filling up, and the same glyph on a
-            tab and in the corner is one door drawn twice. */}
+        {/* The magnifier, the bell, and (coaches-only mode) the gear: the
+            corner is for what you reach for from anywhere. The shield left
+            long ago, because a corner of one-off icons fills up. */}
+        {search && (
+          <HeaderIconLink
+            className="searchbtn"
+            label="Search"
+            icon="search"
+            href="/search"
+            match="/search"
+          />
+        )}
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"

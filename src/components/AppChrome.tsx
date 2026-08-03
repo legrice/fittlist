@@ -70,6 +70,7 @@ export async function AppChrome({
       // the bare editable schedule: a page with no identity that read as
       // showing up at random.
       home={fans ? await landingHref() : "/app"}
+      search={fans}
       // The gear only where there is no You tab to hold the account: the
       // coaches-only mode has no tab bar, so the corner is the one door.
       settings={fans ? undefined : "/you"}
