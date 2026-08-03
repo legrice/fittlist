@@ -77,21 +77,14 @@ export function ClassCardActions({
           <>
             <Icon name="bookmark_added" size={16} />
             <span className="favtoast-t">Added {name}. Followers can see it.</span>
-            {/* The visibility choice, in the moment: off only touches Home's
-                Activity and the "also going" lines. */}
-            <button
+            {/* See it lands on the week with this occurrence marked, so the
+                note hands over to the thing itself rather than to a list to
+                search. */}
+            <Link
               className="favtoast-link"
-              onClick={() => {
-                setJustAdded(false);
-                start(async () => {
-                  const res = await setGoingVisibility(classId, iso, false);
-                  toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong");
-                });
-              }}
+              href={`/week?hl=${encodeURIComponent(`${classId}.${iso}`)}`}
+              onClick={() => setJustAdded(false)}
             >
-              Make it private
-            </button>
-            <Link className="favtoast-link" href="/week" onClick={() => setJustAdded(false)}>
               See it
             </Link>
           </>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { dayBandParts } from "@/lib/format";
+import { dayBandLabel } from "@/lib/format";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -89,12 +89,24 @@ export function AgendaAvatar({
  * into the page reads as mud, and this one has to lift off it. Today's name
  * is the one spot of brand in the list.
  */
-export function DayBand({ iso, today }: { iso: string; today?: string }) {
-  const { day, date } = dayBandParts(iso, today);
+export function DayBand({
+  iso,
+  today,
+  count,
+}: {
+  iso: string;
+  today?: string;
+  /** How many classes the day holds, across from its name. */
+  count?: number;
+}) {
   return (
     <div className={`ps-daycol${today && iso === today ? " ps-daycol-today" : ""}`}>
-      <span className="ps-dayname">{day}</span>
-      <span className="ps-daydate">{date}</span>
+      <span className="ps-dayname">{dayBandLabel(iso, today)}</span>
+      {count != null && (
+        <span className="ps-daycount">
+          {count} {count === 1 ? "class" : "classes"}
+        </span>
+      )}
     </div>
   );
 }
@@ -203,7 +215,7 @@ export function Agenda({
           id={`day-${d.iso}`}
           className={`ps-daygroup${dimBefore && d.iso < dimBefore ? " ps-pastday" : ""}`}
         >
-          <DayBand iso={d.iso} today={today} />
+          <DayBand iso={d.iso} today={today} count={d.items.length} />
           <div className="ps-daycards">
             {d.items.map((i) => (
               <div key={i.key} className="ps-erow">

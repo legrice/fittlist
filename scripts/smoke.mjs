@@ -1673,11 +1673,12 @@ await fan.locator(".classoverlay-nm").waitFor();
 if (!(await fan.locator(".feedagenda .ps-event").count()))
   fail("the week should stay behind the overlay");
 await fan.locator(".ovcta-save").click();
-// The note answers the tap, says who can see the mark, and carries the way
-// off being seen: the visibility choice lives in the moment, not settings.
-// Wait on the lit toast, not the text: the shell's words are always in the
-// DOM, and the private link only mounts while the toast speaks.
-await fan.locator(".favtoast.on .favtoast-link", { hasText: "Make it private" }).waitFor();
+// The note answers the tap and hands over to the week, pointed at the one
+// occurrence it means. The visibility choice came off it by Matt's call, so
+// the only link is the way there.
+await fan.locator(".favtoast.on .favtoast-link", { hasText: "See them" }).waitFor();
+if (await fan.locator(".favtoast.on .favtoast-link", { hasText: "Make it private" }).count())
+  fail("the note should no longer offer the private option");
 await fan.locator(".ovcta-save.on").waitFor();
 // Reopening it says the same thing: the save is on the server, not in the tab.
 await fan.locator(".ovcircle-back").click();

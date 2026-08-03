@@ -15,6 +15,7 @@ import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { AgendaAvatar, DayBand } from "@/components/Agenda";
+import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { ClassLiveSheet } from "@/components/ClassLiveSheet";
 import { ClassSheet } from "@/components/ClassSheet";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -525,6 +526,7 @@ export function ScheduleScreen({
 
   return (
     <section className={`screen${showFanView ? " hasnav" : ""}`}>
+      <HighlightOnLand />
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
@@ -619,8 +621,14 @@ export function ScheduleScreen({
                   id={`day-${d.iso}`}
                   className={`ps-daygroup${d.past ? " ps-pastday" : ""}`}
                 >
-                  <DayBand iso={d.iso} today={todayIso} />
+                  {/* Both hats counted, because both are drawn under it. */}
+                  <DayBand iso={d.iso} today={todayIso} count={d.items.length + d.extras.length} />
                   <div className="ps-daycards">
+                    {/* Every row here carries its occurrence's two keys
+                        (data-cid, data-d), so "See it" can find the one it
+                        means on landing. A member's rows get them from
+                        ClassRow; this list builds its own markup, and was
+                        the one place the highlight went blind. */}
                     {/* One day, both hats, in time order: the classes you
                         teach and the ones you're going to are one calendar. */}
                     {[
@@ -636,6 +644,8 @@ export function ScheduleScreen({
                           <button
                             className={`ps-event ev-${p.personal ? "private" : "added"}`}
                             data-plan={p.personal ? "yours" : "going"}
+                            data-cid={p.personal ? undefined : p.classId}
+                            data-d={p.iso}
                             onClick={() =>
                               p.personal
                                 ? setPlan(p.id)

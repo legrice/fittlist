@@ -214,13 +214,14 @@ export const CAL_PAST_DAYS = 56;
 
 /** "Today", "Tomorrow", then the ordinary day header: the two days you
  *  stand closest to read better as words than dates. One helper so
- *  Following and the calendars can't disagree on where words end. */
+ *  Following and the calendars can't disagree on where words end.
+ *
+ *  The relative word no longer replaces the date, it leads it: "Today" alone
+ *  made somebody work out which date they were looking at, and every other
+ *  heading in the app was already saying one. `dayBandLabel` is the single
+ *  answer, so a heading and a band can't word the same day differently. */
 export function fmtDayHeaderRel(iso: string, today = todayIso()): string {
-  if (iso === today) return "Today";
-  const d = new Date(`${today}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  if (iso === d.toISOString().slice(0, 10)) return "Tomorrow";
-  return fmtDayHeader(iso);
+  return dayBandLabel(iso, today);
 }
 
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
@@ -327,21 +328,22 @@ export function fmtDayHeader(iso: string): string {
  * what today is; a weekday and a date are the same whatever the clock says,
  * so `today` is optional and its absence just means no Today or Tomorrow.
  */
-export function dayBandParts(iso: string, today?: string): { day: string; date: string } {
+export function dayBandLabel(iso: string, today?: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  let day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
   if (today) {
     const t = new Date(`${today}T00:00:00Z`);
     t.setUTCDate(t.getUTCDate() + 1);
-    const tomorrow = t.toISOString().slice(0, 10);
-    if (iso === today || iso === tomorrow) {
-      // The nearest two days lose their weekday to the relative word, so the
-      // right-hand side puts it back short: "Today" still has to say when.
-      const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-      return { day: iso === today ? "Today" : "Tomorrow", date: `${wd}, ${md}` };
-    }
+    if (iso === today) day = "Today";
+    else if (iso === t.toISOString().slice(0, 10)) day = "Tomorrow";
   }
-  return { day: d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" }), date: md };
+  // The date label's own dash, the same one fmtDayHeader carries and for the
+  // same reason: a date is a label rather than a sentence, and this is the
+  // shape it is wanted in. Today and Tomorrow keep their date rather than
+  // replacing it, so a relative word still says which day it means.
+  // check-copy-ignore
+  return `${day} — ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

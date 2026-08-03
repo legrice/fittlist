@@ -277,91 +277,106 @@ export function DiscoverList({
 
       {tab === "classes" ? (
         <>
-          {/* Two dropdowns and a count. A date is one answer out of a list,
-              so its menu picks one; the types are a long multiselect, so
-              theirs checks many and wears the number it picked. */}
+          {/* Two filters and the count they left, on one line. Both open
+              bottom sheets rather than dropping a panel: a menu anchored to
+              a pill has to guess which edge it can grow off, and the type
+              list is long enough to run past the bottom of a phone. A sheet
+              has the room and one place to be. */}
           <div className="clsfilters">
-            <div className="clsdrop">
+            <button
+              type="button"
+              className={`clspill${rangeOpen ? " open" : ""}`}
+              aria-expanded={rangeOpen}
+              onClick={() => setRangeOpen(true)}
+            >
+              {RANGES.find((r) => r.id === range)?.label}
+              <Icon name="expand_more" size={16} />
+            </button>
+            {classTypeOptions.length > 0 && (
               <button
                 type="button"
-                className={`clspill${rangeOpen ? " open" : ""}`}
-                aria-expanded={rangeOpen}
-                onClick={() => {
-                  setTypeOpen(false);
-                  setRangeOpen((o) => !o);
-                }}
+                className={`clspill${classTypes.size ? " picked" : ""}${typeOpen ? " open" : ""}`}
+                aria-expanded={typeOpen}
+                onClick={() => setTypeOpen(true)}
               >
-                {RANGES.find((r) => r.id === range)?.label}
+                Type
+                {classTypes.size > 0 && <span className="clscount">{classTypes.size}</span>}
                 <Icon name="expand_more" size={16} />
               </button>
-              {rangeOpen && (
-                <>
-                  <div className="clsdrop-scrim" onClick={closeMenus} aria-hidden="true" />
-                  <div className="clsmenu" role="listbox">
-                    {RANGES.map((r) => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        className="clsopt"
-                        role="option"
-                        aria-selected={range === r.id}
-                        onClick={() => {
-                          setRange(r.id);
-                          setRangeOpen(false);
-                        }}
-                      >
-                        <span>{r.label}</span>
-                        {range === r.id && <Icon name="check" size={18} className="clsopt-on" />}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-            {classTypeOptions.length > 0 && (
-              <div className="clsdrop">
-                <button
-                  type="button"
-                  className={`clspill${classTypes.size ? " picked" : ""}${typeOpen ? " open" : ""}`}
-                  aria-expanded={typeOpen}
-                  onClick={() => {
-                    setRangeOpen(false);
-                    setTypeOpen((o) => !o);
-                  }}
-                >
-                  Type
-                  {classTypes.size > 0 && <span className="clscount">{classTypes.size}</span>}
-                  <Icon name="expand_more" size={16} />
+            )}
+            {/* What the filters left, counted, across from them. No city: the
+                directory is one town for now, and a label that never changes
+                is furniture. */}
+            <span className="clscount-line">
+              {shownClasses.length} {shownClasses.length === 1 ? "class" : "classes"}
+            </span>
+          </div>
+          {rangeOpen && (
+            <div className="sheet-scrim" onClick={closeMenus}>
+              <div className="sheet" onClick={(e) => e.stopPropagation()}>
+                <button className="sheetclose" onClick={closeMenus} aria-label="Close">
+                  <Icon name="close" size={20} />
                 </button>
-                {typeOpen && (
-                  <>
-                    <div className="clsdrop-scrim" onClick={closeMenus} aria-hidden="true" />
-                    <div className="clsmenu clsmenu-r">
-                      {classTypeOptions.map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          className="clsopt"
-                          aria-pressed={classTypes.has(v)}
-                          onClick={() => toggleClassType(v)}
-                        >
-                          <span className={`clsbox${classTypes.has(v) ? " on" : ""}`} aria-hidden="true">
-                            {classTypes.has(v) && <Icon name="check" size={14} />}
-                          </span>
-                          <span>{v}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                <h2>When</h2>
+                <div className="settingslist">
+                  {RANGES.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="clsopt"
+                      role="option"
+                      aria-selected={range === r.id}
+                      onClick={() => {
+                        setRange(r.id);
+                        setRangeOpen(false);
+                      }}
+                    >
+                      <span>{r.label}</span>
+                      {range === r.id && <Icon name="check" size={18} className="clsopt-on" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {typeOpen && (
+            <div className="sheet-scrim" onClick={closeMenus}>
+              <div className="sheet" onClick={(e) => e.stopPropagation()}>
+                <button className="sheetclose" onClick={closeMenus} aria-label="Close">
+                  <Icon name="close" size={20} />
+                </button>
+                <h2>Type</h2>
+                <div className="settingslist">
+                  {classTypeOptions.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className="clsopt"
+                      aria-pressed={classTypes.has(v)}
+                      onClick={() => toggleClassType(v)}
+                    >
+                      <span className={`clsbox${classTypes.has(v) ? " on" : ""}`} aria-hidden="true">
+                        {classTypes.has(v) && <Icon name="check" size={14} />}
+                      </span>
+                      <span>{v}</span>
+                    </button>
+                  ))}
+                </div>
+                {/* Multiselect needs a way back to none: unpicking six chips
+                    one at a time is the filter holding you hostage. Only
+                    offered when there is something to clear. */}
+                {classTypes.size > 0 && (
+                  <button
+                    type="button"
+                    className="btn ghost clsclear"
+                    onClick={() => setClassTypes(new Set())}
+                  >
+                    Clear all
+                  </button>
                 )}
               </div>
-            )}
-          </div>
-          {/* What the filters left, counted. No city: the directory is one
-              town for now, and a label that never changes is furniture. */}
-          <p className="clscount-line">
-            {shownClasses.length} {shownClasses.length === 1 ? "class" : "classes"}
-          </p>
+            </div>
+          )}
           {classDays.length === 0 ? (
             <div className="empty-block">
               <h2>Nothing in that stretch</h2>

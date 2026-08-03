@@ -19,7 +19,15 @@ export const dynamic = "force-dynamic";
 // It loads the adder's ingredients too, because adding a class you go to is
 // the same form as adding one you teach: the studio directory, your own saved
 // classes, the shared type list.
-export default async function WeekPage() {
+export default async function WeekPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ hl?: string }>;
+}) {
+  // A coach's own calendar is /app, and the note that answers an add always
+  // points here: the occurrence it wants highlighted has to survive the hop
+  // or See it lands a coach at the top of their week with nothing marked.
+  const { hl } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -66,7 +74,7 @@ export default async function WeekPage() {
   // A coach's calendar is /app, and everything here is merged into it now:
   // /week is the member's Schedule tab, and a coach landing on an old link is
   // sent to their own.
-  if (me && me.kind !== "fan") redirect("/app");
+  if (me && me.kind !== "fan") redirect(hl ? `/app?hl=${encodeURIComponent(hl)}` : "/app");
 
   return (
     <WeekScreen

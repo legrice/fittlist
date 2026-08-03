@@ -57,7 +57,7 @@ export function StudioSchedule({
       <div className="ps-week ps-agenda callist">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
-            <DayBand iso={d.iso} today={today} />
+            <DayBand iso={d.iso} today={today} count={d.items.length} />
             <div className="ps-daycards">
               {d.items.map((c) => {
                 const start = clockParts(c.startTime);

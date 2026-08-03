@@ -852,23 +852,11 @@ export function ClassSheet({
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
         <Icon name="bookmark_added" size={16} />
         <span className="favtoast-t">Added. Followers can see it.</span>
-        {/* The visibility choice in the moment it's made, not in settings:
-            off only touches Home's Activity and the "also going" lines. */}
-        {favOn && c && (
-          <button
-            className="favtoast-link"
-            onClick={() => {
-              setFavOn(false);
-              start(async () => {
-                const res = await setGoingVisibility(c.id, c.whenIso, false);
-                toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong");
-              });
-            }}
-          >
-            Make it private
-          </button>
-        )}
-        <Link className="favtoast-link" href="/week" onClick={() => setFavOn(false)}>
+        <Link
+          className="favtoast-link"
+          href={c ? `/week?hl=${encodeURIComponent(`${c.id}.${c.whenIso}`)}` : "/week"}
+          onClick={() => setFavOn(false)}
+        >
           See them
         </Link>
       </div>

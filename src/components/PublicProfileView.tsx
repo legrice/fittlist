@@ -324,7 +324,7 @@ export async function PublicProfileView({
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
               <div key={d.iso} className="ps-daygroup">
-                <DayBand iso={d.iso} today={today} />
+                <DayBand iso={d.iso} today={today} count={d.items.length} />
                 <div className="ps-daycards">
                   {d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;

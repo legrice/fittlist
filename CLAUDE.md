@@ -304,12 +304,20 @@ which is the question people actually open the app with, so
 occurrences: public, from somebody who hasn't delisted themselves,
 nobody blocked either way, not already been and gone, a gym's own rota
 included (it has no handle, so the row carries the base its page lives
-under). Two dropdowns rather than chips, because a date is one answer
+under). Two filters rather than chips, because a date is one answer
 out of a list and the types are a long multiselect that would run off a
 rail's edge: the range (Today, Tomorrow, This weekend, Next 7, Next 14)
-and Type, which wears the number it picked. Under them a bare count, no
-city: the directory is one town for now, and a label that never changes
-is furniture. The rows are the app's one class row (`Agenda` +
+and Type, which wears the number it picked and offers Clear all once
+anything is picked, since unpicking six one at a time is the filter
+holding you hostage. Both open bottom sheets now rather than panels
+anchored to their own pill: one had to hang off its right edge to stay on
+screen and the type list could run past the bottom of a phone, and a
+sheet is the shape every other list of choices here already takes. The
+count sits across from them on the same line, no city: the directory is
+one town for now, and a label that never changes is furniture. `.clspill`
+has a fixed 38px height and the badge a `line-height: 1`, because the
+count is taller than the label's line box and a padded pill grew the
+whole row the moment a type was picked. The rows are the app's one class row (`Agenda` +
 `ClassCardActions`), so the ribbon means here exactly what it means on a
 profile. The whole fortnight loads once and every range is a slice of
 it, so a pick is instant and nothing round-trips; that is the same
@@ -1264,9 +1272,41 @@ and deliberately not by the page gutter: the list's wrapper keeps its 18px
 at the desktop breakpoint while `.pad` widens to 38, so bleeding by the
 gutter ran the band 20px past the column on each side.
 
+The band says the day and its date on the left and how many classes on the
+right: "TODAY — AUG 5" against "2 classes". The relative words lead their
+date rather than replacing it (`dayBandLabel`, which `fmtDayHeaderRel` now
+just calls, so a heading and a band can't word one day differently); "Today"
+alone made somebody work out which date they were looking at while every
+other heading in the app was already saying one. That dash is the date
+label's own, the same exemption `fmtDayHeader` carries, and it needs the
+`check-copy-ignore` pragma or the build fails.
+
 `AgendaDay.label` is the casualty and is now written everywhere and read
 nowhere. Removing it touches eight files and is its own commit; until then,
 editing it changes nothing on screen.
+
+**"See it" points at the class it means.** The note that answers an add
+offers a way to the week it joined, and a week is a long list: arriving at
+the top of it and hunting for the row you just added is the work the note was
+meant to save. The link carries `?hl={classId}.{iso}` and `HighlightOnLand`
+lights that occurrence for three seconds and scrolls it into view. It works
+off the DOM (`data-cid`/`data-d`, which the rows already carry for
+ClassOpener) rather than threading state through the list, because the
+highlight is a moment rather than something the week owns. Two things it
+learned the hard way: the row is not painted on the first frame after a
+client-side tap, so it waits for the row and gives up after four seconds
+rather than checking once; and a coach's calendar builds its own markup, so
+those rows had to be given the two keys or the highlight went blind on
+`/app`. The `/week` route carries `hl` through its redirect to `/app` for the
+same reason.
+
+**The note no longer offers the private option, by Matt's call.** This
+reverses the rule above it: the moment of marking was where the choice lived,
+and now nothing offers it. `setGoingVisibility` still exists and
+`attendances.isPublic` still means what it meant, but no surface calls it, so
+a mark is public to your followers with no way off. That is a gap rather than
+a decision that has landed somewhere: the setting needs a home (the class
+sheet's own row, or Privacy and reach) before this can be called finished.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both

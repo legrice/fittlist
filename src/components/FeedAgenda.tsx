@@ -287,24 +287,11 @@ export function FeedAgenda({
           <>
             <Icon name="bookmark_added" size={16} />
             <span className="favtoast-t">Added {justAdded.name}. Followers can see it.</span>
-            {/* The visibility choice, in the moment it matters: the mark
-                shows to your followers by default, and this is the way off.
-                Off only touches Home's Activity and the "also going" lines;
-                the coach's roster and your own week keep the mark. */}
-            <button
+            <Link
               className="favtoast-link"
-              onClick={() => {
-                const j = justAdded;
-                setJustAdded(null);
-                startTransition(async () => {
-                  const res = await setGoingVisibility(j.classId, j.iso, false);
-                  toast(res.ok ? "Only you and the coach can see this one." : res.error ?? "Something went wrong.");
-                });
-              }}
+              href={`/week?hl=${encodeURIComponent(`${justAdded.classId}.${justAdded.iso}`)}`}
+              onClick={() => setJustAdded(null)}
             >
-              Make it private
-            </button>
-            <Link className="favtoast-link" href="/week" onClick={() => setJustAdded(null)}>
               See it
             </Link>
           </>

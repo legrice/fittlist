@@ -810,11 +810,15 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
   color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis;
 }
-.ps-daydate {
+/* How many, across from which day. The day name carries its own date now
+   (the label's dash, the same one every date label here wears), so the right
+   of the band is free for the count. */
+.ps-daycount {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
-  overflow: hidden; text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 /* Today is the only band that carries the brand, so it reads as the one you
    are standing in without a second mark. */
@@ -832,6 +836,23 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    measure, and their own name row is what pins there. The band is a band on
    those screens; it just doesn't follow. */
 .pub .ps-agenda.callist .ps-daycol { position: static; }
+/* "See it" lands on the week and points at the one row it means. A wash
+   rather than an outline, because the row already has a coloured bar and a
+   second edge would fight it, and it fades on its own: a mark that stayed
+   would become part of how the row looks. The negative inset lets the wash
+   reach past the row's own padding so it reads as one lit block. */
+.ps-hl {
+  border-radius: 10px;
+  margin: 0 -8px; padding: 0 8px;
+  animation: ps-hl-fade 3s ease-out forwards;
+}
+@keyframes ps-hl-fade {
+  0%, 60% { background: rgba(240, 200, 60, .38); }
+  100% { background: rgba(240, 200, 60, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-hl { animation-duration: 3s; }
+}
 /* The coach line breathes before the class name: who, a beat, then what. */
 /* The chip rides 2px higher, and the ribbon across from it sits on the
    chip's own line. */
@@ -4685,13 +4706,18 @@ button.ps-card { cursor: pointer; }
 /* Two dropdowns and a count. A date is one answer out of a list; the types
    are a long multiselect that would have run off the edge of a chip rail,
    so it checks many and wears the number it picked. */
-.clsfilters { display: flex; gap: 10px; margin: 12px 0 0; }
-.clsdrop { position: relative; }
+/* The filters and the count they left, on one line. */
+.clsfilters { display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; }
 .clspill {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink);
   background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-  padding: 9px 14px; cursor: pointer;
+  padding: 0 14px; cursor: pointer;
+  /* Fixed, not padded: the count badge is taller than the label's line box,
+     so on a padded pill the row grew the moment a type was picked and every
+     pill beside it jumped. The height is the pill's own now, and the badge
+     sits inside it. */
+  height: 38px; flex: 0 0 auto;
 }
 .clspill.picked, .clspill.open { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .clspill:active { transform: scale(.97); }
@@ -4699,19 +4725,14 @@ button.ps-card { cursor: pointer; }
   display: inline-grid; place-items: center; min-width: 19px; height: 19px;
   border-radius: 999px; background: var(--si); color: #fff;
   font-size: 11px; font-weight: 700; padding: 0 5px;
+  /* Out of the line box entirely, so it can never push the pill taller. */
+  line-height: 1; flex: 0 0 auto;
 }
-/* The menu drops from its own pill, over a click-away scrim, the way the
-   mini calendar does. */
-.clsdrop-scrim { position: fixed; inset: 0; z-index: 20; }
-.clsmenu {
-  position: absolute; top: calc(100% + 8px); left: 0; z-index: 21;
-  min-width: 232px; max-height: 340px; overflow-y: auto;
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 18px 34px rgba(25, 21, 2, .16);
-}
-/* A menu hanging off the second pill would run past the screen's edge, so
-   it hangs from its own right instead. */
-.clsmenu-r { left: auto; right: 0; }
+/* Both filters open the app's own bottom sheet now. The anchored menus are
+   gone: one had to hang off its own right edge to stay on screen, and the
+   type list was long enough to run off the bottom of a phone. A sheet has
+   the room, scrolls on its own, and is the shape every other list of
+   choices here already takes. */
 .clsopt {
   display: flex; align-items: center; gap: 12px; width: 100%;
   padding: 14px 16px; background: none; border: none; cursor: pointer;
@@ -4727,6 +4748,11 @@ button.ps-card { cursor: pointer; }
   display: grid; place-items: center; color: #fff;
 }
 .clsbox.on { background: var(--si); box-shadow: none; }
-/* What the filters left, counted. No city label: the directory is one town
-   for now, and a word that never changes is furniture. */
-.clscount-line { font-size: 13px; color: var(--ol); margin: 12px 0 4px; }
+/* What the filters left, counted, across from them rather than under them:
+   it answers the filters, so it belongs on their line. No city label: the
+   directory is one town for now, and a word that never changes is
+   furniture. */
+.clscount-line { font-size: 13px; color: var(--ol); margin-left: auto; white-space: nowrap; }
+/* The way back to no types picked. Unpicking six one at a time is the
+   filter holding you hostage. */
+.clsclear { width: 100%; margin-top: 14px; }

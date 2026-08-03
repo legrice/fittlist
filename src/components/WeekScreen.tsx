@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/personal";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Agenda, ClassRow } from "@/components/Agenda";
+import { HighlightOnLand } from "@/components/HighlightOnLand";
 import {
   CalBottomBar,
   CalHead,
@@ -267,6 +268,7 @@ export function WeekScreen({
     // already leaves room for the bar. The extra room here is for the floating
     // Share pill, which sits above it.
     <>
+      <HighlightOnLand />
       <div className="weekwrap">
         {/* The calendar's own header, pinned under the app's: the month with
             the view menu, Add across from them, and the kind checkmarks, with
