@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 
@@ -79,6 +80,69 @@ export function CalBottomBar({
         Add
       </button>
     </>
+  );
+}
+
+/**
+ * The calendar with nothing on it: the whole screen, and no chrome at all.
+ *
+ * A month title, a view menu, a filter, a Share and a Today are five controls
+ * over an empty list. They are ways of looking at something, and there is
+ * nothing to look at; a filter that can only ever hide nothing, and a view
+ * switcher between three empty views, teach a first-time user that this
+ * screen is complicated before it has done anything for them. So the screens
+ * that draw this draw only this: the figure, one line of what the screen is
+ * for, and the two things there are to do about it.
+ *
+ * Both calendars render it, which is why it lives here with the rest of the
+ * chrome. What differs is a coach's job and a member's, so the words and
+ * which button leads are the caller's: a coach with an empty week has a
+ * public page that does not work yet, and telling them to go browsing first
+ * would be telling them the wrong thing.
+ */
+export function CalEmpty({
+  body,
+  addLabel,
+  onAdd,
+  /** Which of the two leads. A coach publishes first; a member looks first. */
+  lead = "discover",
+}: {
+  body: string;
+  addLabel: string;
+  onAdd: () => void;
+  lead?: "discover" | "add";
+}) {
+  return (
+    <div className="empty-block emptyart-block calempty">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="emptyart"
+        src="/illustrations/following-empty.png"
+        alt=""
+        width={356}
+        height={600}
+      />
+      <h2>Your week is wide open</h2>
+      <p>{body}</p>
+      {/* The one that leads reads first as well as loudest. A filled button
+          under an outline one says the second thing is the real thing, which
+          is a sentence read backwards. */}
+      <div className="calempty-cta">
+        {lead === "add" && (
+          <button className="btn si" onClick={onAdd}>
+            {addLabel}
+          </button>
+        )}
+        <Link className={`btn ${lead === "discover" ? "si" : "ghost"}`} href="/discover">
+          Discover classes
+        </Link>
+        {lead === "discover" && (
+          <button className="btn ghost" onClick={onAdd}>
+            {addLabel}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

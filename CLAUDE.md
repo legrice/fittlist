@@ -1411,6 +1411,25 @@ tapped in the Month grid lies beyond it. The public profile keeps its
 View more, because a stranger's page is a pitch rather than a tool. Following is
 everyone you follow; Schedule is you. Those stay legibly different.
 
+**An empty calendar has no chrome at all.** `CalEmpty` in `CalendarBits.tsx`
+is the whole screen when there is nothing on it: the figure, one line, and two
+buttons. The month title, the view button, the filter, Share, Today and the
+orange Add all come off, because every one of them is a way of looking at
+something and there is nothing to look at; a view switcher between three empty
+views and a filter that can only hide nothing teach somebody the screen is
+complicated before it has done anything for them. Both calendars render it, and
+what differs is only the words and which button leads: a member looks first
+("Add classes you like to attend, or discover classes already on the
+schedule", Discover filled), a coach publishes first ("Add the classes you
+coach", Add your first class filled), because a coach with an empty week has a
+public page that does not work yet and sending them browsing would be the wrong
+instruction. The one that leads is drawn first as well as loudest; a filled
+button under an outline one is a sentence read backwards. `bare` is computed
+from the raw rows, never from the filtered ones: a kind switched off is a way
+of looking, and "nothing coming up" is a week that has run its course and keeps
+its chrome. It reuses Following's illustration deliberately, until there is a
+second one.
+
 **The calendar has views, and the month is its name.** `CalendarBits.tsx`
 is the chrome both calendars share: the month as the title at the gutter,
 then the header's right cluster of three, the view button, the filter

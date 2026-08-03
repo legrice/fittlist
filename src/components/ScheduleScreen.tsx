@@ -27,6 +27,7 @@ import { NavBar } from "@/components/NavBar";
 import { avatarColor } from "@/lib/avatar";
 import {
   CalBottomBar,
+  CalEmpty,
   CalHead,
   CalShare,
   CalSticky,
@@ -346,6 +347,12 @@ export function ScheduleScreen({
     return seen;
   }, [classes, plans]);
 
+  // Nothing on the calendar at all: no class they teach, no shift, nothing
+  // they added, nothing of their own. Not the same as "nothing coming up",
+  // which is a week that has run its course and keeps the chrome, and not the
+  // same as a filter hiding everything, which is a way of looking.
+  const bare = classes.length === 0 && plans.every((d) => d.items.length === 0);
+
   const days = useMemo(() => {
     const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
     const start = new Date(`${todayIso}T00:00:00Z`);
@@ -545,6 +552,7 @@ export function ScheduleScreen({
         {/* The calendar's own header, pinned under the app's: the month at
             the gutter, the view and filter glyphs with the plus across from
             it, and the divider underneath. The list scrolls beneath it. */}
+        {!bare && (
         <CalSticky>
           <CalHead
             label={monthLabel(ym, todayIso)}
@@ -583,7 +591,15 @@ export function ScheduleScreen({
             />
           )}
         </CalSticky>
-        {view === "month" ? (
+        )}
+        {bare ? (
+          <CalEmpty
+            body="Add the classes you coach, or discover classes already on the schedule."
+            addLabel="Add your first class"
+            lead="add"
+            onAdd={() => setAdder({ open: true })}
+          />
+        ) : view === "month" ? (
           <MonthScroll
             todayIso={todayIso}
             items={monthItems}
@@ -595,17 +611,6 @@ export function ScheduleScreen({
             <h3 className="daygrid-head">{fmtDayHeaderRel(dayIso, todayIso)}</h3>
             <DayGrid dayIso={dayIso} events={dayEvents} />
           </>
-        ) : !hasAnyClass && plans.length === 0 ? (
-          <div className="empty-block">
-            <h2>Your week is empty</h2>
-            <p>
-              Add the classes you coach, every studio in one schedule. Your link starts working with
-              the first one.
-            </p>
-            <button className="btn si" onClick={() => setAdder({ open: true })}>
-              Add your first class
-            </button>
-          </div>
         ) : (
           <>
             {/* The way back in time: while this is on screen the list grows
@@ -1021,7 +1026,9 @@ export function ScheduleScreen({
       )}
 
       {/* The two floating doors: back to now, and every way of handing the
-          calendar on. */}
+          calendar on. Neither over an empty calendar: Today lands on nothing
+          and there is no week to hand on. */}
+      {!bare && (
       <CalBottomBar
         raised={showFanView}
         onToday={() => {
@@ -1037,6 +1044,7 @@ export function ScheduleScreen({
         }}
         onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
       />
+      )}
 
       {shareMenu && (
         <div

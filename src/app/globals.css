@@ -300,6 +300,15 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 }
 .emptyart-block h2 { font-size: 21px; margin-bottom: 10px; }
 .emptyart-block p { font-size: 14px; max-width: 30ch; margin-inline: auto; }
+/* Two doors off an empty calendar. Stacked rather than side by side: at 390px
+   "Discover classes" and "Add your first class" on one line wrap inside their
+   own pills, and a button whose label breaks reads as a mistake. They keep the
+   list's own width so they line up with everything that will replace them. */
+.calempty-cta {
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: 300px; margin: 0 auto;
+}
+.calempty-cta .btn { width: 100%; margin: 0; }
 
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);

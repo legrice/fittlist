@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setGoing } from "@/app/actions/going";
@@ -14,6 +13,7 @@ import { Agenda, ClassRow } from "@/components/Agenda";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import {
   CalBottomBar,
+  CalEmpty,
   CalHead,
   CalShare,
   CalSticky,
@@ -186,6 +186,15 @@ export function WeekScreen({
     });
   };
 
+  // Nothing on the calendar at all: not "nothing this week", and not
+  // "everything is filtered out", but no row anywhere in the window the
+  // loader handed over, minus whatever was just removed. It reads the raw
+  // days rather than the filtered ones on purpose, because a kind switched
+  // off is a way of looking and this is a question about what exists.
+  const bare = days.every((d) =>
+    d.items.every((i) => gone[`${i.personal ? i.id : i.classId}|${i.iso}`]),
+  );
+
   // A filter is only offered where it can narrow something: both kinds have
   // to be on the calendar before the row appears at all.
   const presentKinds = new Set<CalKind>(
@@ -272,7 +281,9 @@ export function WeekScreen({
       <div className="weekwrap">
         {/* The calendar's own header, pinned under the app's: the month with
             the view menu, Add across from them, and the kind checkmarks, with
-            the divider underneath the lot. */}
+            the divider underneath the lot. None of it on an empty calendar:
+            they are all ways of looking at something. */}
+        {!bare && (
         <CalSticky>
           <CalHead
             label={monthLabel(ym, todayIso)}
@@ -311,8 +322,15 @@ export function WeekScreen({
             />
           )}
         </CalSticky>
+        )}
 
-        {view === "month" ? (
+        {bare ? (
+          <CalEmpty
+            body="Add classes you like to attend, or discover classes already on the schedule."
+            addLabel="Add a class"
+            onAdd={() => setAddMenu(true)}
+          />
+        ) : view === "month" ? (
           <MonthScroll
             todayIso={todayIso}
             items={monthItems}
@@ -346,28 +364,6 @@ export function WeekScreen({
               )}
             />
           </ClassOpener>
-        ) : shown.length === 0 && allShown.length === 0 ? (
-          <div className="empty-block">
-            <h2>Nothing added yet</h2>
-            <p>
-              Add a class from Following or a coach&rsquo;s page and it lands here,
-              and drops off once it&rsquo;s been and gone.
-            </p>
-            <Link className="btn si" href="/feed">
-              Find something to add
-            </Link>
-            {/* The other way in: a class you go to whose coach isn't here
-                yet. Yours alone; nothing public. */}
-            <button
-              className="btn ghost"
-              onClick={() => {
-                setPersonalEvent(false);
-                setAddOpen(true);
-              }}
-            >
-              Add a class
-            </button>
-          </div>
         ) : (
           <>
             {/* The way back in time: while this is on screen the list grows
@@ -478,7 +474,10 @@ export function WeekScreen({
           </>
         )}
       </div>
-      {/* The two floating doors: back to now, and the week as a poster. */}
+      {/* The two floating doors: back to now, and the week as a poster.
+          Neither is offered over an empty calendar: Today lands on nothing,
+          and the empty state's own two buttons are the only way on. */}
+      {!bare && (
       <CalBottomBar
         onToday={() => {
           // In the Day view Today stays a day: it walks the strip home.
@@ -492,6 +491,7 @@ export function WeekScreen({
         }}
         onAdd={() => setAddMenu(true)}
       />
+      )}
 
       {shareWeek && (
         <ShareMyWeekSheet onClose={() => setShareWeek(false)} firstIso={shown[0]?.iso} />
