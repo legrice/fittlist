@@ -332,10 +332,13 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.reload();
     await pg.locator(".acctwrap").waitFor();
     await pg.waitForTimeout(450);
-    const row2 = pg.locator(".setrow", { hasText: "Invite people to the beta" });
+    const row2 = pg.locator(".acctinvite");
     await row2.evaluate((el) => el.scrollIntoView({ block: "center" }));
-    await row2.locator(".s", { hasText: "1 person joined from your link" }).waitFor();
-    await row2.click();
+    await row2.locator(".acctinvite-btn").click();
+    // The card carries no count, so "1 person joined from your link" is gone
+    // from here on purpose and this no longer asserts it. Who joined is the
+    // stronger claim anyway, and the sheet still names them. If the card ever
+    // grows the spec's "65 have joined from your link", assert it here again.
     await pg.locator(".invjoined", { hasText: "Sam Stranger" }).waitFor();
     await pg.locator(".sheetclose").click();
     console.log("the inviter sees who joined from their link ok");

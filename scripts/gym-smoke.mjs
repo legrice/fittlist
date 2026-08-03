@@ -31,6 +31,22 @@ const weekDay = (i) => {
 };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
+// A coach's settings leaves all sit behind one of four group rows now, so
+// reaching one is two taps: the group on the account, then the row inside the
+// sheet it opens. A sheet left up by a previous step holds a .settingslist of
+// its own, so it has to be closed first or the group row is the wrong list's.
+const openSetting = async (pg, group) => {
+  await pg.locator(".acctwrap").waitFor();
+  await pg.waitForTimeout(450); // a navigation, so the rows need a beat
+  for (let i = 0; i < 3; i++) {
+    if (!(await pg.locator(".sheet").count())) break;
+    await pg.locator(".sheet .sheetclose, .sheet .sheetback").first().click().catch(() => {});
+    await pg.waitForTimeout(350);
+  }
+  await pg.locator(".settingslist .setrow", { hasText: group }).first().click();
+  await pg.waitForTimeout(450);
+};
+
 const mkCoach = async (email, name, withClass) => {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
@@ -253,11 +269,7 @@ console.log("the coach is told ok");
 {
   const feedFor = async (page) => {
     await page.goto(BASE + "/app?acct=1");
-    await page.locator(".acctwrap").waitFor();
-    await page.waitForTimeout(450); // the rows need a beat to hydrate
-    // All four calendar doors sit behind one group row now, so the feed is two
-    // taps: the group, then the row inside its sheet.
-    await page.locator(".settingslist .setrow", { hasText: "Calendar & sync" }).first().click();
+    await openSetting(page, "Calendar & sync");
     const r = page.locator(".sheet .setrow", { hasText: "Your week in your calendar" });
     await r.waitFor();
     await r.click();
@@ -430,7 +442,8 @@ console.log("the coach is told ok");
 // different question from the gym naming anybody, which stays off either way.
 {
   await tom.goto(BASE + "/app?acct=1");
-  const sw = tom.locator(".setrow", { hasText: "Gym shifts on your page" });
+  await openSetting(tom, "Your page");
+  const sw = tom.locator(".sheet .setrow", { hasText: "Gym shifts on your page" });
   await sw.waitFor();
   if (!/calendar only/i.test(await sw.innerText())) fail("the switch should start off");
   await sw.click();
@@ -489,7 +502,8 @@ console.log("the coach is told ok");
   await matt.locator(".sheetclose").first().click();
 
   await tom.goto(BASE + "/app?acct=1");
-  await tom.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+  await openSetting(tom, "Your page");
+  await tom.locator(".sheet .setrow", { hasText: "Gym shifts on your page" }).click();
   await tom.waitForTimeout(900);
   await tom.goto(BASE + "/tom");
   await tom.waitForTimeout(400);
@@ -656,7 +670,8 @@ console.log("the coach is told ok");
 // coach who wants nothing public still gets their week.
 {
   await tom.goto(BASE + "/app?acct=1");
-  const row = tom.locator(".setrow", { hasText: "Your week in your calendar" });
+  await openSetting(tom, "Calendar & sync");
+  const row = tom.locator(".sheet .setrow", { hasText: "Your week in your calendar" });
   await row.waitFor();
   if (!/shifts you.re on/i.test(await row.innerText()))
     fail("a coach on a rota should be told the feed carries their shifts");
@@ -893,7 +908,8 @@ console.log("the coach is told ok");
 
   // Nobody else sees it twice, whether or not he shares his shifts.
   await tom.goto(BASE + "/app?acct=1");
-  await tom.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+  await openSetting(tom, "Your page");
+  await tom.locator(".sheet .setrow", { hasText: "Gym shifts on your page" }).click();
   await tom.waitForTimeout(900);
   await tom.goto(BASE + "/tom");
   await tom.waitForTimeout(400);
