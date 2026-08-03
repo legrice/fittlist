@@ -3127,9 +3127,12 @@ await openProfile(page);
 await page.waitForTimeout(450);
 await openSetting(page, "Privacy & reach");
 await page.locator(".sheet .setrow", { hasText: "Messages" }).click();
+// Scoped to the sheet: the Privacy & reach group row on the scroll behind it
+// says "Messages off" in its subtitle, carries no aria-pressed, and sits
+// earlier in the DOM, so an unscoped .setrow finds that one forever.
 await page.waitForFunction(
   () =>
-    [...document.querySelectorAll(".setrow")]
+    [...document.querySelectorAll(".sheet .setrow")]
       .find((r) => r.textContent?.includes("Messages"))
       ?.getAttribute("aria-pressed") === "true",
 );
