@@ -309,6 +309,13 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   max-width: 300px; margin: 0 auto;
 }
 .calempty-cta .btn { width: 100%; margin: 0; }
+/* The adjacent-sibling rule above (.empty-block .btn + .btn) is a three-class
+   selector and the one above this is two, so it won the second button and
+   pushed it 8px right of the first. Two stacked buttons an eighth of an inch
+   out of line is the kind of thing you see before you can say what it is.
+   This matches its specificity and comes later, so the gap does the spacing
+   and nothing does the nudging. */
+.calempty-cta .btn + .btn { margin-top: 0; margin-left: 0; }
 
 .class-card {
   display: flex; gap: 12px; align-items: center; background: var(--card);

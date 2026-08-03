@@ -26,6 +26,22 @@ await co.getByPlaceholder("Your name").fill("Carina Coach");
 await co.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(co);
 await co.getByRole("heading", { name: "Your week is wide open" }).waitFor();
+// The two doors off an empty calendar are stacked, so they line up. They did
+// not: the dashed empty state's own `.btn + .btn` rule is a three-class
+// selector and pushed the second one 8px right, which is exactly the sort of
+// misalignment you notice before you can name it.
+{
+  const box = (sel) => co.locator(sel).evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    return { l: Math.round(r.left), w: Math.round(r.width) };
+  });
+  const first = await box(".calempty-cta .btn:first-child");
+  const second = await box(".calempty-cta .btn:last-child");
+  if (first.l !== second.l)
+    fail(`the empty state's buttons should share a left edge: ${first.l} vs ${second.l}`);
+  if (first.w !== second.w)
+    fail(`the empty state's buttons should share a width: ${first.w} vs ${second.w}`);
+}
 await c1.close();
 console.log("coach fixture ok");
 
