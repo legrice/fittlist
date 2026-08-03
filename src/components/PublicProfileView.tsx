@@ -10,7 +10,7 @@ import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
-import { AgendaAvatar } from "@/components/Agenda";
+import { AgendaAvatar, DayBand } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { ClassCardActions } from "@/components/ClassCardActions";
 import { Icon } from "@/components/Icon";
@@ -180,7 +180,8 @@ export async function PublicProfileView({
     for (const m of marks) myMarks.add(`${m.classId}|${m.occurrenceDate}`);
   }
 
-  const start = new Date(`${todayIso()}T00:00:00Z`);
+  const today = todayIso();
+  const start = new Date(`${today}T00:00:00Z`);
   const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);
@@ -323,7 +324,7 @@ export async function PublicProfileView({
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
               <div key={d.iso} className="ps-daygroup">
-                <div className="ps-daycol">{d.label}</div>
+                <DayBand iso={d.iso} today={today} />
                 <div className="ps-daycards">
                   {d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;

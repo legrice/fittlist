@@ -778,10 +778,60 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    The heading carries real weight now: it is the section's name, and at the
    base rule's 500 it read as a caption. */
 /* Doubled class on purpose: the base .ps-agenda heading rule sits later in
-   the file and would win a tie. */
+   the file and would win a tie.
+
+   The day is a band now, and it wins its hierarchy on the opposite axis to
+   the class names under it: small, wide-tracked and uppercase against large,
+   tight and mixed-case. A heading that competes on weight and size with its
+   own contents reads as another entry, which is what this was.
+
+   The band is the card colour, not a darker cream. A strip a step darker
+   than the page is the drab, earthy answer: it sinks into the paper and
+   turns the list muddy. This one lifts off it instead, which is barely a
+   tint in daylight and still unmistakably a level. It also stays out of the
+   colour doctrine's way: orange, green and blue mean teaching, going and
+   personal, and a band tinted any of them would be a fourth claim on a
+   meaning that is already taken. Today's name is the one spot of brand. */
 .ps-agenda.callist .ps-daycol, .ps-agenda.feedagenda .ps-daycol {
-  border-bottom: 1px solid var(--line); padding-bottom: 8px; font-weight: 700;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  /* The same pull as .calsticky directly above it, so the chrome and the
+     bands under it share their edges. Bleeding by the page gutter instead
+     was wrong at the desktop breakpoint: the list's own wrapper keeps its
+     18px there while .pad widens to 38, so the band ran 20px past the
+     column on each side. */
+  margin: 0 -18px;
+  padding: 9px 18px;
+  white-space: nowrap;
 }
+.ps-dayname {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink);
+}
+.ps-daydate {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
+  overflow: hidden; text-overflow: ellipsis;
+}
+/* Today is the only band that carries the brand, so it reads as the one you
+   are standing in without a second mark. */
+.ps-daycol-today .ps-dayname { color: var(--si); }
+/* The band pins under the calendar's own chrome, which is itself pinned
+   under the app header: CalSticky measures both and publishes the sum,
+   because a band that sticks to the top of the window slides behind them.
+   Under the chrome's z-7 and over the rows. Sticky is bounded by the day
+   group, so the last band lets go at the end of its own day rather than
+   riding the scroll to the bottom. */
+.ps-agenda.callist .ps-daycol {
+  position: sticky; top: var(--dayband-top, 150px); z-index: 5;
+}
+/* A profile and a studio page (both `.pub`) have no calendar chrome to
+   measure, and their own name row is what pins there. The band is a band on
+   those screens; it just doesn't follow. */
+.pub .ps-agenda.callist .ps-daycol { position: static; }
 /* The coach line breathes before the class name: who, a beat, then what. */
 /* The chip rides 2px higher, and the ribbon across from it sits on the
    chip's own line. */

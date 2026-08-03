@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { dayBandParts } from "@/lib/format";
 
 // One class row, everywhere a day-by-day list of them appears.
 //
@@ -42,7 +43,16 @@ export type AgendaItem = {
   base?: string;
 };
 
-export type AgendaDay = { iso: string; label: string; items: AgendaItem[] };
+export type AgendaDay = {
+  iso: string;
+  /** No longer what the band renders: `DayBand` derives its own two halves
+   *  from `iso` so every list words a day the same way. Callers still build
+   *  this and nothing reads it, which is a cleanup of its own rather than a
+   *  thing to do halfway inside a visual change. Editing it changes nothing
+   *  on screen; change `dayBandParts` instead. */
+  label: string;
+  items: AgendaItem[];
+};
 
 export function AgendaAvatar({
   photo,
@@ -62,6 +72,30 @@ export function AgendaAvatar({
     <span className={`${cls} ${cls}-empty`} style={{ background: color }} aria-hidden="true">
       {(name.trim().charAt(0) || "?").toUpperCase()}
     </span>
+  );
+}
+
+/**
+ * The day heading, on every list of classes there is.
+ *
+ * It used to be the same visual species as the class names under it: large,
+ * bold, dark, left-aligned, the same weight. A heading that competes on the
+ * axis its own contents own doesn't read as a level above them, it reads as
+ * another entry, and making it bigger only sharpens the fight. So it goes the
+ * other way: small, wide-tracked and uppercase against large, tight and
+ * mixed-case, on a band of its own.
+ *
+ * The band is the paper colour rather than a darker cream: a strip that sinks
+ * into the page reads as mud, and this one has to lift off it. Today's name
+ * is the one spot of brand in the list.
+ */
+export function DayBand({ iso, today }: { iso: string; today?: string }) {
+  const { day, date } = dayBandParts(iso, today);
+  return (
+    <div className={`ps-daycol${today && iso === today ? " ps-daycol-today" : ""}`}>
+      <span className="ps-dayname">{day}</span>
+      <span className="ps-daydate">{date}</span>
+    </div>
   );
 }
 
@@ -145,6 +179,7 @@ export function Agenda({
   days,
   className = "",
   dimBefore,
+  today,
   row,
 }: {
   days: AgendaDay[];
@@ -152,6 +187,10 @@ export function Agenda({
   /** Days before this iso render dimmed: the scrolled-back past is a record,
    *  not the plan, and it says so the way the month grid does. */
   dimBefore?: string;
+  /** The app's today, so the two nearest bands can say Today and Tomorrow.
+   *  A caller without one gets weekdays all the way down, which is right
+   *  rather than wrong: a list nobody is standing in has no "today". */
+  today?: string;
   row: (item: AgendaItem, day: AgendaDay) => ReactNode;
 }) {
   return (
@@ -164,7 +203,7 @@ export function Agenda({
           id={`day-${d.iso}`}
           className={`ps-daygroup${dimBefore && d.iso < dimBefore ? " ps-pastday" : ""}`}
         >
-          <div className="ps-daycol">{d.label}</div>
+          <DayBand iso={d.iso} today={today} />
           <div className="ps-daycards">
             {d.items.map((i) => (
               <div key={i.key} className="ps-erow">

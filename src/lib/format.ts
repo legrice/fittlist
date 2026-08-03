@@ -318,6 +318,32 @@ export function fmtDayHeader(iso: string): string {
   return `${weekday} — ${md}`;
 }
 
+/**
+ * The day heading split in two: the name on the left, the date on the right.
+ *
+ * The band wants them apart rather than joined by the dash, so the relative
+ * word and the absolute date are both scannable and the right-hand column
+ * stays aligned down the whole scroll. Only the relative words need to know
+ * what today is; a weekday and a date are the same whatever the clock says,
+ * so `today` is optional and its absence just means no Today or Tomorrow.
+ */
+export function dayBandParts(iso: string, today?: string): { day: string; date: string } {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  if (today) {
+    const t = new Date(`${today}T00:00:00Z`);
+    t.setUTCDate(t.getUTCDate() + 1);
+    const tomorrow = t.toISOString().slice(0, 10);
+    if (iso === today || iso === tomorrow) {
+      // The nearest two days lose their weekday to the relative word, so the
+      // right-hand side puts it back short: "Today" still has to say when.
+      const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+      return { day: iso === today ? "Today" : "Tomorrow", date: `${wd}, ${md}` };
+    }
+  }
+  return { day: d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" }), date: md };
+}
+
 /** Where a one-off falls relative to the current Mon–Sun week.
     Weekly classes (specificDate null) always show → "current". */
 export function weekBucket(

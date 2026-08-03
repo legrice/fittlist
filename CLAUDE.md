@@ -1232,6 +1232,42 @@ Following's row exactly. The `.evcards` card skin has no schedule left to
 dress (the rota keeps its own dense rows: a working surface where density
 is the point).
 
+**A day is a band, and it wins on the opposite axis to the class names under
+it.** The heading used to be the same visual species as the classes it
+introduced: large, bold, dark, left-aligned, the same weight. A heading that
+competes on the axis its own contents own doesn't read as a level above
+them, it reads as another entry, and making it bigger only sharpens the
+fight. So `DayBand` (`src/components/Agenda.tsx`) goes the other way: small,
+wide-tracked, uppercase, the day name left and the date right
+(`dayBandParts` in `format.ts`, which is where Today and Tomorrow are
+decided). Splitting them is what keeps the right-hand column aligned down a
+long scroll, and it is why the calendars carry no em dash.
+
+The band is `--card`, not a darker cream. A strip a step darker than the
+page sinks into it and turns the list earthy, which is the drab answer; this
+one lifts off instead. It also stays out of the colour doctrine's way: the
+brand orange, the green and the blue already mean teaching, going and
+personal, and a band tinted any of them would be a fourth claim on a taken
+meaning. Today's name in `--si` is the list's one spot of brand.
+
+It pins on the calendars only (`.callist`, `top: var(--dayband-top)`).
+`CalSticky` publishes that number because it is the brandbar plus its own
+height, it moves with the view (the Day strip, the Month grid's weekday
+row), and a band that stuck to the top of the window would slide behind
+both; it is watched with a `ResizeObserver` rather than read once. Sticky is
+bounded by the day group, so the last band lets go at the end of its own day
+instead of riding the scroll to the bottom. A profile and a studio page
+(`.pub`) have their own pinned name row and set it back to `static`.
+
+The band bleeds by 18px, the same pull `.calsticky` uses directly above it,
+and deliberately not by the page gutter: the list's wrapper keeps its 18px
+at the desktop breakpoint while `.pad` widens to 38, so bleeding by the
+gutter ran the band 20px past the column on each side.
+
+`AgendaDay.label` is the casualty and is now written everywhere and read
+nowhere. Removing it touches eight files and is its own commit; until then,
+editing it changes nothing on screen.
+
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
 Following and Your plans render it. They had drifted into two designs for one

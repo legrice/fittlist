@@ -14,7 +14,7 @@ import {
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { AgendaAvatar } from "@/components/Agenda";
+import { AgendaAvatar, DayBand } from "@/components/Agenda";
 import { ClassLiveSheet } from "@/components/ClassLiveSheet";
 import { ClassSheet } from "@/components/ClassSheet";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -619,7 +619,7 @@ export function ScheduleScreen({
                   id={`day-${d.iso}`}
                   className={`ps-daygroup${d.past ? " ps-pastday" : ""}`}
                 >
-                  <div className="ps-daycol">{d.label}</div>
+                  <DayBand iso={d.iso} today={todayIso} />
                   <div className="ps-daycards">
                     {/* One day, both hats, in time order: the classes you
                         teach and the ones you're going to are one calendar. */}

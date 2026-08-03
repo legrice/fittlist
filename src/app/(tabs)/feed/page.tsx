@@ -180,6 +180,7 @@ export default async function FeedPage({
           </div>
         ) : (
           <FeedAgenda
+            todayIso={todayIso()}
             coaches={railCoaches.map((c) => ({
               id: c.id,
               handle: c.handle!,

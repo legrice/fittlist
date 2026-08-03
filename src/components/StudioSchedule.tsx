@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { clockParts } from "@/lib/format";
+import { clockParts, todayIso } from "@/lib/format";
+import { DayBand } from "@/components/Agenda";
 import { ClassOpener } from "@/components/ClassOpener";
 
 export type StudioDay = {
@@ -48,6 +49,7 @@ export function StudioSchedule({
       </div>
     );
   }
+  const today = todayIso();
   return (
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
@@ -55,7 +57,7 @@ export function StudioSchedule({
       <div className="ps-week ps-agenda callist">
         {days.map((d) => (
           <div key={d.iso} className="ps-daygroup">
-            <div className="ps-daycol">{d.label}</div>
+            <DayBand iso={d.iso} today={today} />
             <div className="ps-daycards">
               {d.items.map((c) => {
                 const start = clockParts(c.startTime);

@@ -371,6 +371,7 @@ export function DiscoverList({
             <ClassOpener handle="">
               <Agenda
                 className="callist"
+                today={todayIso}
                 days={classDays.map((d) => ({
                   iso: d.iso,
                   label: fmtDayHeaderRel(d.iso, todayIso),

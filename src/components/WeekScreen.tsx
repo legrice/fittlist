@@ -378,6 +378,7 @@ export function WeekScreen({
             <ClassOpener handle="">
               <Agenda
                 className="callist"
+                today={todayIso}
                 dimBefore={todayIso}
                 days={[...pastShown, ...shown].map((d) => ({
                   iso: d.iso,

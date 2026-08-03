@@ -128,8 +128,23 @@ export function scrollCalTop() {
 export function CalSticky({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     const bb = document.querySelector<HTMLElement>(".brandbar");
-    if (bb && ref.current) ref.current.style.top = `${bb.offsetHeight}px`;
+    // Two numbers out of one measurement: where this block pins, and where
+    // the day bands pin under it. The bands can't know the second on their
+    // own, and it moves with the view (the Day strip and the Month grid's
+    // weekday row both live in here), so it is watched rather than read once.
+    const apply = () => {
+      const top = bb?.offsetHeight ?? 0;
+      el.style.top = `${top}px`;
+      document.documentElement.style.setProperty("--dayband-top", `${top + el.offsetHeight}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    if (bb) ro.observe(bb);
+    return () => ro.disconnect();
   }, []);
   return (
     <div ref={ref} className="calsticky">

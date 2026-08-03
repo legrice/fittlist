@@ -43,11 +43,15 @@ export function FeedAgenda({
   coaches,
   days,
   meId,
+  todayIso,
 }: {
   coaches: FeedCoach[];
   days: FeedDay[];
   /** The viewer, when they're a coach — their own classes are in here too. */
   meId?: string;
+  /** The app's today, for the two bands that say it in words. The server's,
+   *  not the browser's: the app's day is Eastern and the device's may not be. */
+  todayIso: string;
 }) {
   const router = useRouter();
   // A set, not one id: people train with more than one coach and want to see
@@ -203,6 +207,7 @@ export function FeedAgenda({
         // a wall of white cards hid it.
         <Agenda
           className="feedagenda"
+          today={todayIso}
           days={shown.map((d) => ({
             iso: d.iso,
             label: d.label,
