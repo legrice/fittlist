@@ -29,7 +29,19 @@ import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { myWeekText } from "@/app/actions/weektext";
 import { Toast, useToast } from "@/components/Toast";
 
-type View = "home" | "security" | "contact" | "gcal" | "availability";
+// The four the spec's settings list opens, plus the leaves each of those
+// holds. A leaf is still reachable on its own, because the sub-screen is a
+// list of rows and each row opens one.
+type View =
+  | "home"
+  | "page"
+  | "calendar"
+  | "reach"
+  | "account"
+  | "security"
+  | "contact"
+  | "gcal"
+  | "availability";
 
 // The trainer's account. Home shows the profile tile, the share cards, and
 // the settings lists; each settings row opens a bottom sheet. As `page` it is
@@ -44,7 +56,7 @@ export function ProfileSheet({
   title,
   photo,
   subsCount,
-  profileViews,
+  followingCount,
   requestCount,
   email,
   instagram,
@@ -79,7 +91,8 @@ export function ProfileSheet({
   title: string;
   photo: string | null;
   subsCount: number;
-  profileViews: number;
+  /** Who you follow. Every stat here opens a list now. */
+  followingCount: number;
   requestCount: number;
   email: string;
   instagram: string;
@@ -118,6 +131,10 @@ export function ProfileSheet({
   const [view, setView] = useState<View>("home");
 
   const [shareOpen, setShareOpen] = useState(false);
+  // Share is one door with five ways behind it now, not five tiles across
+  // the top of the screen. `storyOpen` is the story image the old Share
+  // button opened straight; it is a row in the menu.
+  const [shareMenu, setShareMenu] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -305,6 +322,18 @@ export function ProfileSheet({
     })();
   };
 
+  // The plainest of the five ways to hand the page on, and the one people
+  // reach for most: the URL itself.
+  const copyLink = async () => {
+    const url = `${typeof window === "undefined" ? "" : window.location.origin}/${handle}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Link copied, ready to paste");
+    } catch {
+      toast(url);
+    }
+  };
+
   const copyCal = async () => {
     try {
       await navigator.clipboard.writeText(webcalUrl);
@@ -339,14 +368,17 @@ export function ProfileSheet({
   };
   const availLabel = (avail && AVAIL_LABEL[avail]) || "Not shown on your page";
 
-  const viewTitle =
-    view === "security"
-      ? "Login & security"
-      : view === "contact"
-        ? "Contact info"
-        : view === "availability"
-          ? "Availability"
-          : "Google Calendar";
+  const VIEW_TITLE: Record<Exclude<View, "home">, string> = {
+    page: "Your page",
+    calendar: "Calendar & sync",
+    reach: "Privacy & reach",
+    account: "Account",
+    security: "Login & security",
+    contact: "Contact info",
+    availability: "Availability",
+    gcal: "Google Calendar",
+  };
+  const viewTitle = view === "home" ? "" : VIEW_TITLE[view];
 
   return (
     <>
@@ -386,6 +418,9 @@ export function ProfileSheet({
             <span className="acctwho-txt">
               <span className="acctwho-nm">{firstName}</span>
               {title ? <span className="acctwho-sub">{title}</span> : null}
+              {/* The address people are actually handed. It is the one thing
+                  this screen is about and it was nowhere on it. */}
+              <span className="acctwho-url">fittlist.co/{handle}</span>
             </span>
           </button>
           {/* Editing shouldn't need a detour through the preview: this opens
@@ -395,197 +430,145 @@ export function ProfileSheet({
           </button>
         </div>
 
+        {/* Three counts of people, and every one of them opens the list it
+            counts, which is why every one carries a chevron. Profile views
+            left: it was the only number here with nowhere to go, and a
+            vanity figure beside two relationships is the wrong thing to put
+            at the top of somebody's own page. */}
         <div className="acctstats acctstats-grid">
-          <div className="acctstat">
-            <span className="n">{profileViews}</span>
-            <span className="l">Profile views</span>
-          </div>
-          {/* The only stat with somewhere to go: a number of people is a list. */}
+          <button className="acctstat" onClick={() => router.push("/following")}>
+            <span className="n">{followingCount}</span>
+            <span className="l">
+              Following <Icon name="chevron_right" size={13} />
+            </span>
+          </button>
           <button className="acctstat" onClick={() => router.push("/followers")}>
             <span className="n">{subsCount}</span>
-            <span className="l">Followers</span>
+            <span className="l">
+              Followers <Icon name="chevron_right" size={13} />
+            </span>
           </button>
-          {/* Same as Followers: a number of people is a list, so it opens one.
-              It was a dead number sitting next to a live one. */}
           <button className="acctstat" onClick={() => router.push("/requests")}>
-            <span className="n">{requestCount}</span>
-            <span className="l">Requests</span>
-          </button>
-        </div>
-
-        <div className="acctcards">
-          <button className="acctcard" onClick={goProfile}>
-            <span className="acctcard-ic"><Icon name="account_circle" size={26} /></span>
-            <span className="acctcard-t">Preview profile</span>
-            <span className="acctcard-s">See and edit your public page</span>
-          </button>
-          <button className="acctcard" onClick={() => setShareOpen(true)}>
-            <span className="acctcard-ic"><Icon name="campaign" size={26} /></span>
-            <span className="acctcard-t">Share your schedule</span>
-            <span className="acctcard-s">A story image with your link</span>
-          </button>
-          {/* The two doors the calendar's rail used to hold: the profile as a
-              picture, and the page as a scannable code. Halves, so the grid
-              stays two by two. */}
-          <button className="acctcard" onClick={() => setCardOpen(true)}>
-            <span className="acctcard-ic"><Icon name="auto_awesome" size={26} /></span>
-            <span className="acctcard-t">Share your profile</span>
-            <span className="acctcard-s">A square card for a post</span>
-          </button>
-          <button className="acctcard" onClick={() => setQrOpen(true)}>
-            <span className="acctcard-ic"><Icon name="qr_code_2" size={26} /></span>
-            <span className="acctcard-t">Your QR code</span>
-            <span className="acctcard-s">Scans straight to your page</span>
-          </button>
-          {/* The Requests row that lived below moved into the stat tile above
-              (a number of people is a list, and the tile opens it); the spot
-              goes to growth. Same tile grid, so every gap up here matches. */}
-          <button className="acctcard acctcard-wide" onClick={() => setInviteOpen(true)}>
-            <span className="acctcard-ic"><Icon name="groups" size={26} /></span>
-            <span className="acctcard-txt">
-              <span className="acctcard-t">Share your beta link</span>
-              <span className="acctcard-s">Anyone who opens it can join fittlist</span>
+            <span className="n">
+              {requestCount}
+              {requestCount > 0 && <span className="acctstat-dot" aria-hidden="true" />}
+            </span>
+            <span className="l">
+              Requests <Icon name="chevron_right" size={13} />
             </span>
           </button>
         </div>
 
-        <h3 className="setgroup-h">Your page</h3>
+        {/* Two buttons where five tiles were. Four of those tiles were the
+            same act in different output formats and they took the whole
+            first screen of somebody's own page; they are rows in one sheet
+            now. Preview outlined, Share filled: the same pair, the same
+            weights and the same spot the visitor's Message and Follow take
+            on the public page. */}
+        <div className="acctacts">
+          <button className="btn ghost" onClick={goProfile}>
+            Preview page
+          </button>
+          <button className="btn si" onClick={() => setShareMenu(true)}>
+            Share
+          </button>
+        </div>
+
+        {/* One list of four rows, each opening a sub-screen, each subtitle
+            saying where the setting stands so the top level answers most of
+            it without a tap. It was five headed groups and eighteen rows on
+            one scroll, and the calendar alone was in four different places. */}
+        {/* Prime space on somebody's own page, so it earns it by naming the
+            reason rather than asking a favour: the people you train with
+            being here is what makes the app work. It is the beta's card and
+            it should not become fixed ad space; when invites stop being the
+            priority it collapses to a row in the share sheet, which is
+            already where the same link lives. It carries no count yet: the
+            spec's "65 have joined from your link" is the line that does the
+            real work here, and a number nobody has counted is worse than
+            none. Wiring it is its own commit. */}
+        <div className="acctinvite">
+          <div className="acctinvite-txt">
+            <h3>Share the love</h3>
+            <p>Fittlist works better when the people you train with are on it.</p>
+          </div>
+          <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
+            Invite
+          </button>
+        </div>
+
+        <h3 className="setgroup-h">Settings</h3>
         <div className="settingslist">
-          {/* Availability leads: the state of your books changes far more often
-              than your bio, and the row says where it stands without opening. */}
-          <button className="setrow" onClick={() => openView("availability")}>
-            <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+          <button className="setrow" onClick={() => openView("page")}>
+            <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Availability</span>
-              <span className="s">{availLabel}</span>
+              <span className="t">Your page</span>
+              <span className="s">Your link, contact info, availability</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
-          <button className="setrow" onClick={() => openView("contact")}>
-            <span className="setrow-ic"><Icon name="alternate_email" size={22} /></span>
+          <button className="setrow" onClick={() => openView("calendar")}>
+            <span className="setrow-ic"><Icon name="event" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Contact info</span>
-              <span className="s">How people reach you</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </button>
-          <ChangeHandle />
-          {googleConfigured && (
-            <button className="setrow" onClick={() => openView("gcal")}>
-              <span className="setrow-ic"><Icon name="event" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Google Calendar</span>
-                <span className="s">{connected ? "Connected" : "Sync your classes"}</span>
+              <span className="t">Calendar &amp; sync</span>
+              <span className="s">
+                {googleConfigured && connected ? "Google connected" : "Google"}, Apple and Outlook,
+                your week as text
               </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-            </button>
-          )}
-          {/* Only once a gym has actually put them on something. A switch for
-              a thing you don't have is a question nobody asked. */}
-          {shiftCount > 0 && (
-            <ShiftsPublicToggle initialOn={shiftsPublic} count={shiftCount} />
-          )}
-        </div>
-
-        {/* Reach: the switches and the block list belong together, because
-            they're all one question — who gets to you, and how. */}
-        <h3 className="setgroup-h">Who can reach you</h3>
-        <div className="settingslist">
-          <MessagesToggle initialOn={messagesOpen} />
-          {showFanView && <DiscoverableToggle initialOn={discoverable} />}
-          <ApproveFollowersToggle initialOn={approveFollowers} />
-          {/* Quiet, and quietly reachable: the only place a block is visible. */}
-          <a className="setrow" href="/blocked">
+            </span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </button>
+          <button className="setrow" onClick={() => openView("reach")}>
             <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Removed people</span>
-              <span className="s">Who can&rsquo;t see your page</span>
+              <span className="t">Privacy &amp; reach</span>
+              <span className="s">
+                {`Messages ${messagesOpen ? "on" : "off"}`}
+                {showFanView ? ` · ${discoverable ? "Listed" : "Not listed"}` : ""}
+                {` · Approvals ${approveFollowers ? "on" : "off"}`}
+              </span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </a>
-        </div>
-
-        <h3 className="setgroup-h">Account &amp; app</h3>
-        <div className="settingslist">
-          <button className="setrow" onClick={() => openView("security")}>
+          </button>
+          <button className="setrow" onClick={() => openView("account")}>
             <span className="setrow-ic"><Icon name="lock" size={22} /></span>
             <span className="setrow-txt">
-              <span className="t">Login &amp; security</span>
-              <span className="s">Email, password, and passkeys</span>
+              <span className="t">Account</span>
+              <span className="s">Login, notifications, appearance</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>
-          {/* Back, because a gym's rota puts shifts in here and a coach has to
-              be able to see what they're teaching without opening the app.
-              Not knowing you were on is what cost somebody a class. */}
-          <MyCalendar hasShifts={shiftCount > 0} />
-          <NotificationPrefs />
-          <DarkModeToggle initialOn={look === "dark"} />
         </div>
 
-        {/* "Your week" and "Share classes you're attending" used to live here.
-            The Following tab already is your week, so the row was a second
-            door to the same room. Add to Home Screen left too: the installed
-            shell lags the site while features ship this fast. */}
-        <h3 className="setgroup-h">The beta</h3>
-        <div className="settingslist">
-          {/* Beta users bring the next beta users in. */}
-          <InviteFriends />
+        {/* Plain links, not a section. Admin, Brand and Ethos are internal
+            and were three rows under their own heading on every staff
+            account's page; a footer is where a thing you use twice a month
+            belongs. */}
+        <div className="acctfoot">
           {canSendFeedback && (
-            <a className="setrow setrow-hi" href="/feedback">
-              <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Send feedback</span>
-                <span className="s">Tell us what&rsquo;s broken or missing</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            <a className="acctfoot-l" href="/feedback">
+              Send feedback
             </a>
           )}
+          {isAdmin && (
+            <>
+              <a className="acctfoot-l" href="/admin">
+                Admin
+              </a>
+              <a className="acctfoot-l" href="/brand">
+                Brand
+              </a>
+              <a className="acctfoot-l" href="/ethos">
+                Ethos
+              </a>
+            </>
+          )}
+          <form action={logout}>
+            <button type="submit" className="acctfoot-l acctfoot-out">
+              Log out
+            </button>
+          </form>
         </div>
-
-        {isAdmin && (
-          <>
-            <h3 className="setgroup-h">Admin</h3>
-            <div className="settingslist">
-              <a className="setrow" href="/admin">
-                <span className="setrow-ic"><Icon name="admin_panel_settings" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Admin</span>
-                  <span className="s">Coaches, studios, sign-in links</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </a>
-              <a className="setrow" href="/brand">
-                <span className="setrow-ic"><Icon name="palette" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Brand</span>
-                  <span className="s">The mark, colour, type and voice</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </a>
-              <a className="setrow" href="/ethos">
-                <span className="setrow-ic"><Icon name="favorite" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Ethos</span>
-                  <span className="s">The laws, and the lines we don&rsquo;t cross</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </a>
-            </div>
-          </>
-        )}
-
-        <button className="calcopy" onClick={copyWeekText}>
-          Copy your week as text, ready to paste
-        </button>
-        <button className="calcopy" onClick={copyCal}>
-          Apple or Outlook? Copy your calendar feed link
-        </button>
-        <form action={logout}>
-          <button type="submit" className="logoutbtn">
-            Log out
-          </button>
-        </form>
       </div>
 
       {/* Every settings section opens the same way: a bottom sheet over the
@@ -603,6 +586,106 @@ export function ProfileSheet({
               <Icon name="close" size={16} />
             </button>
             <h2>{viewTitle}</h2>
+
+          {/* The four sub-screens. Each is the rows that used to sit under a
+              heading on the main scroll, and the leaves they open are the
+              same sheets as before, so nothing learned a new behaviour. */}
+          {view === "page" && (
+            <div className="settingslist">
+              <button className="setrow" onClick={() => openView("availability")}>
+                <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Availability</span>
+                  <span className="s">{availLabel}</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button className="setrow" onClick={() => openView("contact")}>
+                <span className="setrow-ic"><Icon name="alternate_email" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Contact info</span>
+                  <span className="s">How people reach you</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <ChangeHandle />
+              {/* Only once a gym has actually put them on something. A switch
+                  for a thing you don't have is a question nobody asked. */}
+              {shiftCount > 0 && (
+                <ShiftsPublicToggle initialOn={shiftsPublic} count={shiftCount} />
+              )}
+            </div>
+          )}
+
+          {/* All four calendar doors on one screen, which is the whole reason
+              this screen exists: Google was under Your page, the week feed was
+              under Account, and the two copies were loose links in the
+              footer. Somebody looking for calendar settings had to find four
+              places. */}
+          {view === "calendar" && (
+            <div className="settingslist">
+              {googleConfigured && (
+                <button className="setrow" onClick={() => openView("gcal")}>
+                  <span className="setrow-ic"><Icon name="event" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Google Calendar</span>
+                    <span className="s">{connected ? "Connected" : "Sync your classes"}</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              )}
+              <MyCalendar hasShifts={shiftCount > 0} />
+              <button className="setrow" onClick={copyCal}>
+                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Apple or Outlook</span>
+                  <span className="s">Copy your calendar feed link</span>
+                </span>
+              </button>
+              <button className="setrow" onClick={copyWeekText}>
+                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Your week as text</span>
+                  <span className="s">Ready to paste anywhere</span>
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Who gets to you, and how. The switches live behind a tap rather
+              than on the landing screen, because a toggle you can catch with
+              a thumb on the way past is how somebody silently leaves
+              Discover. */}
+          {view === "reach" && (
+            <div className="settingslist">
+              <MessagesToggle initialOn={messagesOpen} />
+              {showFanView && <DiscoverableToggle initialOn={discoverable} />}
+              <ApproveFollowersToggle initialOn={approveFollowers} />
+              <a className="setrow" href="/blocked">
+                <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Removed people</span>
+                  <span className="s">Who can&rsquo;t see your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
+            </div>
+          )}
+
+          {view === "account" && (
+            <div className="settingslist">
+              <button className="setrow" onClick={() => openView("security")}>
+                <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Login &amp; security</span>
+                  <span className="s">Email, password, and passkeys</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <NotificationPrefs />
+              <DarkModeToggle initialOn={look === "dark"} />
+            </div>
+          )}
 
           {view === "security" && (
             <div className="secblock">
@@ -776,6 +859,100 @@ export function ProfileSheet({
             <div className="publishwrap">
               <button className="btn si" onClick={savePassword} disabled={busy || newPw.length < 8}>
                 {busy ? "Saving…" : "Save password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* One sheet, five ways, the public URL at the top so the sheet says
+          what it is about before it says what you can do with it. */}
+      {shareMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShareMenu(false);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setShareMenu(false)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Share</h2>
+            <p className="lead">fittlist.co/{handle}</p>
+            <div className="settingslist ownermenu">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  copyLink();
+                }}
+              >
+                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Copy link</span>
+                  <span className="s">Paste it anywhere</span>
+                </span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setShareOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Schedule story</span>
+                  <span className="s">A tall image of your week</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setCardOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Profile card</span>
+                  <span className="s">A square image for a post</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setQrOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">QR code</span>
+                  <span className="s">Scans straight to your page</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setInviteOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="groups" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Beta invite link</span>
+                  <span className="s">Anyone who opens it can join</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
             </div>
           </div>

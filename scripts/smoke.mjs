@@ -51,6 +51,13 @@ const openProfile = async (pg) => {
   await pg.waitForTimeout(450);
 };
 // A tab is not a thing you close: leaving the account is going somewhere.
+// The settings reorg put every leaf behind one of four rows, so opening one
+// is two taps: the group, then the row inside its sheet.
+const openSetting = async (pg, group) => {
+  await pg.locator(".settingslist .setrow", { hasText: group }).first().click();
+  await pg.waitForTimeout(450);
+};
+
 const closeProfile = async (pg) => {
   await pg.goto(BASE + "/app");
   await pg.locator(".caladd").waitFor();
@@ -405,10 +412,17 @@ if (await page.locator(".calbar-title", { hasText: "You" }).count())
 await expect(page.locator(".acctwho .acctwho-nm", { hasText: "Matt" }).isVisible(), "the who row shows their name");
 if ((await page.locator(".acctstats .acctstat").count()) !== 3) fail("expected three analytics stats");
 if (await page.getByText("Schedule opens").count()) fail("Schedule opens should be gone");
-await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat");
-await expect(page.locator(".acctstats .acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
-await expect(page.locator(".acctcard", { hasText: "Preview profile" }).isVisible(), "preview profile card");
-await expect(page.locator(".acctcard", { hasText: "Share your schedule" }).isVisible(), "share your week card");
+// Three counts of people, every one of them a door to the list it counts.
+// Profile views left: it was the only number here with nowhere to go.
+if (await page.getByText("Profile views").count()) fail("Profile views should be off the You tab");
+await expect(page.locator(".acctstats button.acctstat", { hasText: "Following" }).isVisible(), "following stat");
+await expect(page.locator(".acctstats button.acctstat", { hasText: "Followers" }).isVisible(), "followers stat");
+if ((await page.locator(".acctstats button.acctstat").count()) !== 3)
+  fail("all three stats should open a list");
+// Two buttons where five share tiles were.
+if (await page.locator(".acctcard").count()) fail("the five share tiles should be gone");
+await expect(page.locator(".acctacts .btn", { hasText: "Preview page" }).isVisible(), "preview page button");
+await expect(page.locator(".acctacts .btn", { hasText: "Share" }).isVisible(), "share button");
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
 // ---- tap the avatar -> public profile page with owner back + edit
@@ -534,7 +548,8 @@ await page.locator(".sheet .sheetclose, .adderclose").first().click().catch(() =
 await page.goto(BASE + "/app");
 // and the QR is still reachable from the account view
 await openProfile(page);
-await page.locator(".acctcard", { hasText: "QR code" }).click();
+await page.getByRole("button", { name: "Share", exact: true }).click();
+await page.locator(".sheet .setrow", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet"));
@@ -938,8 +953,16 @@ await closeLive(anonPage);
 console.log("second coach has a class ok");
 
 await openProfile(page);
-const vis1 = await page.locator(".acctstats .acctstat").nth(0).locator(".n").textContent();
-if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch), got " + vis1);
+// Profile views came off the You tab with the reorg: it was the only number
+// up there with nowhere to go. The rollup still records (a studio's own page
+// reads the same `page_visits` table through `coachAnalytics`), but a coach
+// has no surface for their own count any more, so there is nothing to assert
+// here. If the number gets a home again, this is where the check goes back.
+{
+  const first = (await page.locator(".acctstats .acctstat").nth(0).innerText()).trim();
+  if (!first.includes("Following"))
+    fail("the first stat should be Following now, got " + first);
+}
 
 // A visitor lands knowing whose app this is and how to get in. The footer line
 // asks coaches to claim a page; this asks the person reading to join. Its own
@@ -974,8 +997,13 @@ if (vis1.trim() !== "3") fail("profile views should be 3 (2 anon views + 1 fetch
   await look.close();
   console.log("visitor header ok (one door, the sheet carries the other, credit kept)");
 }
-await expect(page.locator(".acctstats .acctstat", { hasText: "Profile views" }).isVisible(), "profile views stat labelled");
-console.log("visit stats ok");
+// The three stats are counts of people now, and every one opens its list.
+for (const l of ["Following", "Followers", "Requests"])
+  await expect(
+    page.locator(".acctstats button.acctstat", { hasText: l }).isVisible(),
+    `${l} stat opens a list`,
+  );
+console.log("stats ok (three counts of people, three doors)");
 
 // ================= v1.5: story image =================
 const story = await ctx.request.get(BASE + "/api/story/matt?span=week");
@@ -1004,7 +1032,8 @@ console.log("ical feed ok (VEVENT + weekly RRULE)");
 
 // share sheet UI from the account page
 await openProfile(page);
-await page.locator(".acctcard", { hasText: "Share your schedule" }).click();
+await page.getByRole("button", { name: "Share", exact: true }).click();
+await page.locator(".sheet .setrow", { hasText: "Schedule story" }).click();
 await page.locator(".sheet h2", { hasText: "Share your schedule" }).waitFor();
 await page.waitForFunction(() => {
   const img = document.querySelector(".storyimg");
@@ -1109,7 +1138,9 @@ await cdp.send("WebAuthn.addVirtualAuthenticator", {
   },
 });
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Login & security" }).click();
+// Login & security lives under Account since the reorg, so it is two taps.
+await page.locator(".settingslist .setrow", { hasText: "Account" }).first().click();
+await page.locator(".sheet .setrow", { hasText: "Login & security" }).click();
 await page.getByRole("heading", { name: "Login & security" }).waitFor();
 // enroll a passkey (single passkey -> offers Remove afterwards)
 await page.locator(".secrow", { hasText: "Face ID" }).getByRole("button", { name: "Add" }).click();
@@ -2122,7 +2153,8 @@ console.log("digest opt-out ok (email stops, follows survive)");
 // the directory opt-out: off means gone from Find coaches, page still public.
 // Checked from the fan's browser — a coach never sees themselves listed.
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
+await openSetting(page, "Privacy & reach");
+await page.locator(".sheet .setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await discHalf(fan);
 await fan.locator(".distabs").waitFor();
@@ -2131,7 +2163,8 @@ if (await fan.locator(".disrow", { hasText: "Matt" }).count())
 const pub = await fan.request.get(`${BASE}/matt`);
 if (!pub.ok()) fail("opting out of the directory broke the public page");
 await openProfile(page);
-await page.locator(".setrow", { hasText: "Listed in Discover" }).click();
+await openSetting(page, "Privacy & reach");
+await page.locator(".sheet .setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "People can find you" }).waitFor();
 await discHalf(fan);
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
@@ -2336,20 +2369,28 @@ await page.locator(".navtab", { hasText: "You" }).click();
 await page.waitForURL(/\/you/);
 await page.locator(".acctwrap").waitFor();
 if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
+// One Share door with all five ways behind it, rather than four tiles of
+// the same act in different output formats across the first screen.
+await page.getByRole("button", { name: "Share", exact: true }).click();
 {
-  const cards = (await page.locator(".acctcard").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["Preview profile", "Share your schedule", "Share your profile", "Your QR code"])
-    if (!cards.some((c) => c.includes(want)))
-      fail(`the You tab should offer "${want}", got ` + cards.join("|"));
+  const ways = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+  for (const want of ["Copy link", "Schedule story", "Profile card", "QR code", "Beta invite link"])
+    if (!ways.includes(want))
+      fail(`the share sheet should offer "${want}", got ` + ways.join("|"));
 }
-// The QR card opens the code.
-await page.locator(".acctcard", { hasText: "QR code" }).click();
+await page.locator(".sheet .setrow", { hasText: "QR code" }).click();
 await page.locator(".sheet .qrframe").waitFor();
 await page.locator(".sheet .sheetclose").click();
 await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
-// The week-as-text copy kept its door too.
-if (!(await page.locator(".calcopy", { hasText: "week as text" }).count()))
-  fail("Copy your week as text should live on the You tab");
+// All four calendar doors on one screen, which is the reason it exists.
+await page.locator(".settingslist .setrow", { hasText: "Calendar & sync" }).click();
+{
+  const body = await page.locator(".sheet").first().innerText();
+  for (const want of ["Apple or Outlook", "Your week as text"])
+    if (!body.includes(want)) fail(`Calendar & sync should hold "${want}"`);
+}
+await page.locator(".sheet .sheetclose, .sheet .sheetback").first().click();
+await page.waitForTimeout(400);
 // The who row is the way to the page itself.
 await page.locator(".acctwho-id").click();
 await page.waitForURL(/\/matt/);
@@ -2909,7 +2950,8 @@ console.log("avatar colour ok (fills the circle)");
 await openProfile(page);
 await page.waitForTimeout(450); // the account slides up
 {
-  const row = page.locator(".setrow", { hasText: "Availability" });
+  await openSetting(page, "Your page");
+  const row = page.locator(".sheet .setrow", { hasText: "Availability" });
   await row.scrollIntoViewIfNeeded();
   if (!(await row.innerText()).includes("Not shown"))
     fail("a new coach's availability should start hidden");
@@ -2936,7 +2978,8 @@ await page.goto(BASE + "/app");
 await openProfile(page);
 await page.waitForTimeout(450);
 {
-  const row = page.locator(".setrow", { hasText: "Availability" });
+  await openSetting(page, "Your page");
+  const row = page.locator(".sheet .setrow", { hasText: "Availability" });
   await row.scrollIntoViewIfNeeded();
   if (!(await row.innerText()).includes("Accepting new clients"))
     fail("the row should report the choice, got " + (await row.innerText()));
@@ -2961,7 +3004,8 @@ console.log("availability moved to settings ok");
 // Request private session button. Same trap that ate the location once.
 await openProfile(page);
 await page.waitForTimeout(450);
-await page.locator(".setrow", { hasText: "Contact info" }).click();
+await openSetting(page, "Your page");
+await page.locator(".sheet .setrow", { hasText: "Contact info" }).click();
 await page.locator("#cEmail").waitFor();
 await page.locator("#cEmail").fill("matt@coach.example.com");
 // The phone rides on this screen too, so it has to be re-stated here or the
@@ -2976,7 +3020,8 @@ await page.getByText("NASM CPT").first().waitFor();
 await openProfile(page);
 await page.waitForTimeout(450);
 {
-  const row = page.locator(".setrow", { hasText: "Availability" });
+  await openSetting(page, "Your page");
+  const row = page.locator(".sheet .setrow", { hasText: "Availability" });
   await row.scrollIntoViewIfNeeded();
   if (!(await row.innerText()).includes("Accepting new clients"))
     fail("saving contact info cleared availability: " + (await row.innerText()));
@@ -3038,7 +3083,8 @@ console.log("messages sent ok (the Contact sheet, twice)");
 await openProfile(page);
 await page.waitForTimeout(450);
 {
-  const row = page.locator(".setrow", { hasText: "Messages" });
+  await openSetting(page, "Privacy & reach");
+  const row = page.locator(".sheet .setrow", { hasText: "Messages" });
   await row.scrollIntoViewIfNeeded();
   if ((await row.getAttribute("aria-pressed")) !== "true") fail("messages should start on");
   await row.click();
@@ -3071,7 +3117,8 @@ await closeProfile(page);
 // back on, so the rest of the suite has a door to knock at
 await openProfile(page);
 await page.waitForTimeout(450);
-await page.locator(".setrow", { hasText: "Messages" }).click();
+await openSetting(page, "Privacy & reach");
+await page.locator(".sheet .setrow", { hasText: "Messages" }).click();
 await page.waitForFunction(
   () =>
     [...document.querySelectorAll(".setrow")]
@@ -3124,11 +3171,13 @@ await openProfile(page);
   if (!(await stat.innerText()).includes("2")) fail("the stat should count them");
   if (await page.locator(".setrow", { hasText: "Nobody has asked about private sessions" }).count())
     fail("the standalone Requests row should be gone");
-  await page.locator(".acctcard", { hasText: "Share your beta link" }).waitFor();
+  // The beta link is the invite card's button now, and a row in the share
+  // sheet; the tile it used to be went with the other four.
+  await page.locator(".acctinvite .acctinvite-btn").waitFor();
   await stat.click();
   await page.waitForURL(/\/requests/);
 }
-console.log("requests door ok (the stat opens the list, beta-link tile in the old spot)");
+console.log("requests door ok (the stat opens the list, invite card in the old spot)");
 
 // deleting a coach has to clear every row that points at them — follows they
 // made, "going" marks on their classes, notifications, inquiry threads. Miss

@@ -4874,3 +4874,51 @@ button.ps-card { cursor: pointer; }
 /* The way back to no types picked. Unpicking six one at a time is the
    filter holding you hostage. */
 .clsclear { width: 100%; margin-top: 14px; }
+
+/* ----------------------------------------------------------------------------
+   The You screen, reorganised: two buttons, the invite card, four settings
+   rows, a footer of plain links.
+   ---------------------------------------------------------------------------- */
+/* The visitor's two pills, on your own page: same shapes, same weights, same
+   spot. Five share tiles used to sit here and take the whole first screen. */
+.acctacts { display: flex; gap: 10px; margin: 16px 0 0; }
+.acctacts .btn { flex: 1; width: auto; margin: 0; }
+/* Every stat opens the list it counts, so every one carries the chevron and
+   the dot rides the number rather than the label. */
+.acctstat .l { display: inline-flex; align-items: center; gap: 2px; }
+.acctstat .l svg { opacity: .45; }
+.acctstat-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--si); vertical-align: 6px; margin-left: 4px;
+}
+/* Sienna-tinted, full width, directly under the buttons. */
+.acctinvite {
+  display: flex; align-items: center; gap: 14px; margin: 18px 0 0; padding: 16px;
+  background: var(--si-tint); border: 1px solid var(--si-line, var(--line)); border-radius: 16px;
+}
+.acctinvite-txt { flex: 1; min-width: 0; }
+.acctinvite h3 {
+  margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 17px; letter-spacing: -.02em;
+}
+.acctinvite p { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: var(--ol); }
+.acctinvite-btn {
+  flex: 0 0 auto; border: 0; background: var(--si); color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+}
+/* Admin, Brand and Ethos are internal and were three rows under their own
+   heading on every staff account. A footer is where a thing you use twice a
+   month belongs, and plain links are what say "this is not the app". */
+.acctfoot {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  padding: 26px 0 10px;
+}
+.acctfoot-l {
+  border: 0; background: none; padding: 0; font-family: inherit;
+  font-size: 14px; font-weight: 600; color: var(--ol); cursor: pointer;
+  text-decoration: none;
+}
+.acctfoot-l:active { color: var(--ink); }
+.acctfoot-out { color: var(--ol); }
+.acctwho-url { display: block; font-size: 12.5px; color: var(--sa-ink, var(--ol)); opacity: .7; margin-top: 1px; }

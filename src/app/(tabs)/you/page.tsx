@@ -7,7 +7,6 @@ import { feedbackHost } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import { getSessionUserId } from "@/lib/session";
-import { coachAnalytics } from "@/lib/visits";
 import { myWeek } from "@/lib/week";
 import { MemberAccount } from "@/components/MemberAccount";
 import { ProfileSheet } from "@/components/ProfileSheet";
@@ -73,7 +72,7 @@ export default async function YouPage({
   if (!me.handle) redirect("/welcome");
 
   // All independent, so they load together rather than stacking round trips.
-  const [gconn, passkeyRows, inboxRows, analytics, subRows, shiftRows] = await Promise.all([
+  const [gconn, passkeyRows, inboxRows, subRows, shiftRows, followingRows] = await Promise.all([
     isGoogleConnected(userId),
     db
       .select({ id: schema.credentials.id })
@@ -83,7 +82,6 @@ export default async function YouPage({
       .select({ n: schema.inquiryThreads.coachUnread, kind: schema.inquiryThreads.kind })
       .from(schema.inquiryThreads)
       .where(eq(schema.inquiryThreads.coachUserId, userId)),
-    coachAnalytics(userId),
     db
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
@@ -94,6 +92,12 @@ export default async function YouPage({
       .select({ id: schema.classes.id })
       .from(schema.classes)
       .where(eq(schema.classes.coachUserId, userId)),
+    // Who you follow. Followers was a live number beside a dead one for
+    // months; a count of people is a list, and all three of them open one.
+    db
+      .select({ id: schema.subscribers.id })
+      .from(schema.subscribers)
+      .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
   ]);
   // Requests are inquiries only: the admin is a coach too, and their feedback
   // threads live on the same table.
@@ -108,7 +112,7 @@ export default async function YouPage({
       title={me.title ?? ""}
       photo={me.photo}
       subsCount={subRows.length}
-      profileViews={analytics.profileViews}
+      followingCount={followingRows.filter((r) => r.id).length}
       requestCount={requestCount}
       email={me.email}
       instagram={me.instagram ?? ""}
