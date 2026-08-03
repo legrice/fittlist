@@ -122,29 +122,31 @@ export function HomeScreen({
 function UpcomingCard({ u }: { u: HomeUpcoming }) {
   return (
     <a className="hm-card" href={u.href} data-cid={u.classId} data-d={u.iso} data-base={u.base}>
-      <span className="hm-spine" aria-hidden="true" />
-      <span className={`hm-whenpill${u.dayLabel === "Today" ? " soon" : ""}`}>
+      {/* The pill is quiet now: it says when, which every card says, so a
+          loud one on every card is a rail of shouting. The spine came off
+          for the same reason, and because the colour meant a kind on a rail
+          where every card is the same kind. */}
+      <span className="hm-whenpill">
         {u.dayLabel} · {u.time}
       </span>
       <span className="hm-cardnm">{u.name}</span>
-      {(u.coachName || u.where) && (
+      {/* Who, then where. They were one run-on line with a dot between them
+          and the studio was the half that got cut; the length took a line of
+          its own underneath and said the least of the three. */}
+      {u.coachName && (
         <span className="hm-cardrow">
-          {u.coachName && (
-            <span className="hm-cardav" style={{ background: u.coachColor }}>
-              {u.coachPhoto ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={u.coachPhoto} alt="" />
-              ) : (
-                initialOf(u.coachName)
-              )}
-            </span>
-          )}
-          <span className="hm-cardmeta">
-            {[u.coachName, u.where].filter(Boolean).join(" · ")}
+          <span className="hm-cardav" style={{ background: u.coachColor }}>
+            {u.coachPhoto ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={u.coachPhoto} alt="" />
+            ) : (
+              initialOf(u.coachName)
+            )}
           </span>
+          <span className="hm-cardmeta">{u.coachName}</span>
         </span>
       )}
-      <span className="hm-cardmeta">{u.durationMin} min</span>
+      {u.where && <span className="hm-cardmeta">{u.where}</span>}
       {u.alsoGoing.length > 0 && (
         <span className="hm-cardmeta hm-also">
           {u.alsoGoing.length === 1
@@ -214,7 +216,14 @@ function StudioLine({ s }: { s: HomeStudio }) {
           {s.name}
           {/* The word alone, in the quiet green: the page behind the row
               carries the full badge and its explaining sheet. */}
-          {s.verified && <span className="hm-vbadge">Verified</span>}
+          {/* In a list the mark is enough: the word repeated down a column
+              is a column of one word, and the tick is what people already
+              read as verified. The page itself still says it in full. */}
+          {s.verified && (
+            <span className="hm-vtick" aria-label="Verified">
+              <Icon name="verified" size={16} />
+            </span>
+          )}
         </span>
         <span className="hm-lrowsub">{s.sub}</span>
       </span>

@@ -823,8 +823,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    meaning that is already taken. Today's name is the one spot of brand. */
 .ps-agenda.callist .ps-daycol, .ps-agenda.feedagenda .ps-daycol {
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  background: var(--card);
-  border-top: 1px solid var(--line);
+  /* No ground and no top rule. The band was a white strip with a line above
+     and below, which on a near-white page reads as a box drawn around a
+     heading rather than a heading: three edges for one idea. The bottom
+     rule alone does the sectioning, and it runs the full width of the
+     screen, which is what makes it read as a section break at all. What is
+     left is the words and the line under them. */
+  background: transparent;
   border-bottom: 1px solid var(--line);
   /* The same pull as .calsticky directly above it, so the chrome and the
      bands under it share their edges. Bleeding by the page gutter instead
@@ -4705,20 +4710,20 @@ button.ps-card { cursor: pointer; }
 .hm-card {
   position: relative; flex: 0 0 auto; scroll-snap-align: start; width: 250px;
   background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  padding: 14px 14px 14px 22px;
+  padding: 14px;
   display: flex; flex-direction: column; gap: 7px;
   text-decoration: none; color: inherit; overflow: hidden;
 }
-.hm-spine {
-  position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px;
-  border-radius: 0 3px 3px 0; background: var(--si);
-}
+/* The pill says when, which is the one thing every card on this rail says,
+   so it is quiet: a wash and dark words rather than a filled brand shape
+   repeated down a scroll. The spine went with it, because the colour bar
+   means "your relationship to this row" everywhere else and every card on
+   this rail is the same relationship. */
 .hm-whenpill {
   align-self: flex-start; font-size: 12px; font-weight: 700;
-  background: var(--ink); color: var(--paper);
+  background: var(--cl); color: var(--ink);
   padding: 5px 10px; border-radius: 999px;
 }
-.hm-whenpill.soon { background: var(--si); color: #fff; }
 .hm-cardnm { font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
 .hm-cardrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .hm-cardav {
@@ -4800,11 +4805,11 @@ button.ps-card { cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .hm-lrowchev { color: var(--ol); display: inline-flex; flex: 0 0 auto; }
-.hm-vbadge {
-  font-size: 10px; font-weight: 700; letter-spacing: .04em; flex: 0 0 auto;
-  color: var(--go); background: rgba(61, 139, 83, .12);
-  padding: 3px 7px; border-radius: 999px;
-}
+/* The mark, not the word: a green tick beside the name, sitting on the
+   name's own line. The pill said "Verified" down a column of names and was
+   most of the row's right-hand side. */
+.hm-vtick { display: inline-flex; align-items: center; color: var(--go); flex: 0 0 auto; }
+
 .hm-foot { font-size: 12px; color: var(--ol); margin: 12px 0 0; }
 [data-mode="dark"] .hm-empty { border-color: rgba(250, 248, 242, .22); }
 

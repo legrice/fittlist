@@ -1347,9 +1347,13 @@ wide-tracked, uppercase, the day name left and the date right
 decided). Splitting them is what keeps the right-hand column aligned down a
 long scroll, and it is why the calendars carry no em dash.
 
-The band is `--card`, not a darker cream. A strip a step darker than the
-page sinks into it and turns the list earthy, which is the drab answer; this
-one lifts off instead. It also stays out of the colour doctrine's way: the
+The band has no ground of its own and no top rule, only the words and the
+line under them. It was `--card` between two hairlines for a while: a
+darker cream sank into the page and turned the list earthy, and the white
+strip that replaced it read as a box drawn around a heading rather than a
+heading, three edges for one idea. The bottom rule alone does the
+sectioning, and it runs the full width of the screen, which is what makes
+it read as a break at all. It also stays out of the colour doctrine's way: the
 brand orange, the green and the blue already mean teaching, going and
 personal, and a band tinted any of them would be a fourth claim on a taken
 meaning. Today's name in `--si` is the list's one spot of brand.
@@ -1715,8 +1719,12 @@ rail of cards with the class colour down the spine, each card a
 your own list's emptiness is actionable); People near you (the follow
 graph's front door: an avatar rail of not-yet-followed people, your city
 first then newest, the face navigates and the pill follows in place);
-Studios (three rows, Verified badged with coach and class counts, a
-community row saying "added by N coaches", every row a door to `/s/{slug}`);
+Studios (three rows with coach and class counts, a
+community row saying "added by N coaches", every row a door to `/s/{slug}`;
+a verified one wears the tick beside its name and not the word, because
+"Verified" repeated down a column of names is a column of one word and the
+tick is what people already read as verified, while the studio's own page
+still says it in full where there is room to explain what it means);
 Activity (what the people you follow did this week, coach posts first
 then attendance, each newest first: a batch of three or more new series
 reads "posted next week" with the count and the studios, a smaller add
