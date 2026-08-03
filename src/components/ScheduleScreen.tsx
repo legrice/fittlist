@@ -680,10 +680,11 @@ export function ScheduleScreen({
                           {!p.personal && (
                             <button
                               className="evcard-add on"
-                              aria-label={`Remove ${p.name} from your schedule`}
+                              aria-label={`Added ${p.name}. Tap to remove it from your schedule.`}
                               onClick={() => removeGoing(p)}
                             >
                               <Icon name="bookmark_added" size={20} />
+                              <span className="evcard-add-t">Added</span>
                             </button>
                           )}
                           </div>

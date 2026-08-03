@@ -246,11 +246,12 @@ export function FeedAgenda({
                   sheet, where one class has the whole screen. */}
               <button
                 className={`evcard-add${item.on ? " on" : ""}`}
-                aria-label={item.on ? "In your plans" : "Add to your plans"}
+                aria-label={item.on ? "Added to your plans" : "Add to your plans"}
                 aria-pressed={!!item.on}
                 onClick={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
               >
                 <Icon name={item.on ? "bookmark_added" : "bookmark"} size={20} />
+                <span className="evcard-add-t">{item.on ? "Added" : "Add"}</span>
               </button>
             </>
           )}

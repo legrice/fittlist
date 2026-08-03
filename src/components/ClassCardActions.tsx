@@ -54,17 +54,20 @@ export function ClassCardActions({
 
   return (
     <>
-      {/* The ribbon alone: the share circle came off every row, because
-          sharing lives on the class sheet, where one class has the whole
-          screen. */}
+      {/* The ribbon and its word: the share circle came off every row,
+          because sharing lives on the class sheet, where one class has the
+          whole screen. The label repeats in the spoken name on purpose: the
+          visible word has to be inside the accessible one, or "click Added"
+          reaches nothing. */}
       {canAdd && (
         <button
           className={`evcard-add${on ? " on" : ""}`}
-          aria-label={on ? "In your plans" : "Add to your plans"}
+          aria-label={on ? "Added to your plans" : "Add to your plans"}
           aria-pressed={on}
           onClick={toggle}
         >
           <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
+          <span className="evcard-add-t">{on ? "Added" : "Add"}</span>
         </button>
       )}
       {/* The same note every other Add answers with, naming the list it

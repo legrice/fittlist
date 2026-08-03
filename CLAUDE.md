@@ -1183,6 +1183,22 @@ outline at rest already says in or out and the hole was one mark too many
 at row size. Still one `currentColor` path, so it reads on the dark pill,
 the card and the tab bar alike.
 
+**The ribbon on a row carries its word.** A glyph alone is a mark people
+have to be taught, and the one action the whole member side turns on cannot
+be the thing nobody recognises: the row now reads an outline ribbon and
+Add, filling to a solid ribbon and Added on the tap. It is the label that
+changes as well as the fill, because Add is an offer and Added is a state,
+and the note that answers already says the same word. The cost is a word
+repeated down a long list, and it is worth it while nobody has learned the
+mark; when everybody has, the word is what comes off, not the glyph.
+`.evcard-add` is an auto-width hit area rather than a fixed circle, and the
+row's first line reserves room for it (`:has(.evcard-add)` on the coach chip
+and on a bare `.ps-enm`, which is what a gym's row leads with, since a gym
+has no coach to name). The gate matters: a coach's own teaching rows carry
+no such button and must not reserve the space. The spoken name contains the
+visible one on all three call sites ("Added to your plans", not "In your
+plans"), or saying "click Added" reaches nothing.
+
 **Every schedule is the same flat row now.** Following (`.feedagenda`),
 both calendars, a coach's public page and a studio's page (`.callist`)
 strip the card skin from the shared `.ps-event` row: transparent ground, a

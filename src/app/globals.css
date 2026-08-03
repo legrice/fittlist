@@ -773,6 +773,15 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The chip rides 2px higher, and the ribbon across from it sits on the
    chip's own line. */
 .callist .ps-ecoach, .feedagenda .ps-ecoach { margin-top: -2px; margin-bottom: 6px; }
+/* The Add control floats over the row's first line, so that line gives it
+   room rather than running under it: the coach chip where there is one, and
+   the class name itself on a gym's row, which has no coach to name. Gated on
+   the button actually being there, or a coach's own teaching rows would
+   reserve 84px for a control they never carry. */
+.ps-erow:has(.evcard-add) .ps-ecoach,
+.ps-erow:has(.evcard-add) .ps-ebody > .ps-enm:first-child {
+  padding-right: 84px;
+}
 /* Scrolled-back days are a record, not the plan: dimmed the way the month
    grid dims them. */
 .callist .ps-pastday { opacity: .55; }
@@ -4400,13 +4409,22 @@ button.ps-card { cursor: pointer; }
    share circle came off every row; sharing lives on the class sheet. The
    ribbon lost its circle too: at rest it is the bare outline glyph, and
    the button's box is only the hit area. */
+/* The glyph carries the word. A ribbon alone is a mark people have to be
+   taught, and the one action the whole member side turns on cannot be the
+   thing nobody recognises; the sheet's pill has always said Add, so the row
+   says it too and the vocabulary is one word deep. It is the label that
+   changes on the tap, not just the fill: Add is an offer, Added is a state,
+   and the toast that answers already says the same word. */
 .evcard-add {
   position: absolute; right: 12px; bottom: 12px; z-index: 2;
-  width: 42px; height: 42px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
+  height: 42px; border-radius: 999px; padding: 0 8px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
   background: none; color: var(--ink); border: none;
   transition: transform .08s;
 }
+/* Quiet: the class name stays the loudest thing on the row, and a column of
+   these down a long list has to read as a control rather than as copy. */
+.evcard-add-t { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
 /* Added fills the glyph in ink: the filled ribbon is the state said
    plainly, and black is the ink the row already speaks. */
 .evcard-add.on { color: var(--ink); }
@@ -4430,7 +4448,7 @@ button.ps-card { cursor: pointer; }
    card's green ring belongs to the card skin it came from. */
 .feedagenda .ps-event.goingon, .callist .ps-event.goingon { box-shadow: none; }
 .feedagenda .ps-erow { position: relative; gap: 0; }
-.feedagenda .evcard-add { top: 13px; bottom: auto; width: 32px; height: 32px; right: 6px; }
+.feedagenda .evcard-add { top: 13px; bottom: auto; height: 32px; right: 6px; padding: 0 6px; }
 .feedagenda .ps-etimecol { margin-top: 36px; }
 /* The calendars wear the same flat rows (.callist), with the kind's colour
    on the bar. The share circle rides top-right above the time; the member's
@@ -4447,7 +4465,7 @@ button.ps-card { cursor: pointer; }
 .callist .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
 .callist .ps-erow { position: relative; gap: 0; }
 /* The corner ribbon, same as Following's. */
-.callist .evcard-add { top: 11px; bottom: auto; width: 32px; height: 32px; right: 6px; }
+.callist .evcard-add { top: 11px; bottom: auto; height: 32px; right: 6px; padding: 0 6px; }
 .callist .weekrow-x { position: absolute; top: 10px; right: 6px; z-index: 2; }
 .callist .ps-etimecol { margin-top: 34px; }
 /* A shift says so above the name, the spot the coach chip takes on a Going
