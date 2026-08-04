@@ -101,9 +101,6 @@ export function DiscoverList({
   // what a pop back is.
   const pick = (next: DiscoverHalf) => {
     setTab(next);
-    // Switching lens drops the pick, same as before: the other half can't
-    // honour a word it doesn't use.
-    if (next === "coaches" || next === "studios") setTypes(new Set());
     if (typeof window !== "undefined") {
       const url = next === "classes" ? "/discover" : `/discover?half=${next}`;
       window.history.replaceState(null, "", url);
@@ -115,7 +112,6 @@ export function DiscoverList({
   // answers that without hiding the whole filter behind a tap. Its own state
   // rather than the `types` the other halves share, because the vocabularies
   // are still different lists and a pick can't survive the switch.
-  const [classTypes, setClassTypes] = useState<Set<string>>(new Set());
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
   // Filters chip would be reporting a choice nobody made.
@@ -126,14 +122,6 @@ export function DiscoverList({
   void cities;
   const [types, setTypes] = useState<Set<string>>(new Set());
 
-
-  const toggleClassType = (v: string) =>
-    setClassTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(v)) next.delete(v);
-      else next.add(v);
-      return next;
-    });
 
   const toggleType = (t: string) =>
     setTypes((prev) => {
@@ -150,10 +138,8 @@ export function DiscoverList({
 
   const shownClasses = useMemo(
     () =>
-      classes.filter(
-        (c) => classTypes.size === 0 || (c.classType ? classTypes.has(c.classType) : false),
-      ),
-    [classes, classTypes],
+      classes.filter((c) => types.size === 0 || (c.classType ? types.has(c.classType) : false)),
+    [classes, types],
   );
 
   // A filter is only offered where it can narrow something: the types the
@@ -194,6 +180,17 @@ export function DiscoverList({
     return [];
   }, [studios, people, tab]);
 
+  // The words this half can narrow by, plus any pick carried in from another
+  // half. A selection that survives the switch has to stay visible or it is a
+  // list quietly filtered by something with no chip to un-pick: the rail says
+  // what is on, and All is the way back off all of it.
+  const railWords = useMemo(() => {
+    const here = tab === "classes" ? classTypeOptions : disciplines;
+    const carried = [...types].filter((t) => !here.includes(t)).sort();
+    return [...here, ...carried];
+  }, [tab, classTypeOptions, disciplines, types]);
+
+
   return (
     <>
       {/* The box first, because searching is the thing people came to do. It
@@ -217,12 +214,18 @@ export function DiscoverList({
           top, so every filter is in sight rather than behind a floating
           pill. */}
       <div className="pubtabs distabs" aria-label="Discover sections">
+        {/* The count under each label is what the half holds *given the pick*,
+            not what it holds in total. With one selection running across all
+            three, that is the useful number: pick Yoga and the tabs say where
+            the yoga actually is, which is the "where is the supply" job the
+            counts are here to do. A total would only ever repeat itself. */}
         <button
           className={`pubtab${tab === "classes" ? " sel" : ""}`}
           aria-current={tab === "classes" ? "page" : undefined}
           onClick={() => pick("classes")}
         >
           Classes
+          <span className="pubtab-cnt">{shownClasses.length} coming up</span>
         </button>
         <button
           className={`pubtab${tab === "coaches" ? " sel" : ""}`}
@@ -230,6 +233,7 @@ export function DiscoverList({
           onClick={() => pick("coaches")}
         >
           Coaches
+          <span className="pubtab-cnt">{shown.length} listed</span>
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -237,6 +241,7 @@ export function DiscoverList({
           onClick={() => pick("studios")}
         >
           Studios
+          <span className="pubtab-cnt">{shownStudios.length} listed</span>
         </button>
       </div>
 
@@ -246,25 +251,25 @@ export function DiscoverList({
           back, which is why there is no Clear all anywhere. Classes had two
           bottom sheets here instead; a sheet is a tap that hides the whole
           filter, and the answer to a long type list is a rail that scrolls. */}
-      {(tab === "classes" ? classTypeOptions.length > 0 : disciplines.length > 0) && (
+      {railWords.length > 0 && (
         <div className="dischips" aria-label="Filters">
           <button
             type="button"
-            className={`chip${(tab === "classes" ? classTypes.size === 0 : allOn) ? " sel" : ""}`}
-            aria-pressed={tab === "classes" ? classTypes.size === 0 : allOn}
-            onClick={() => (tab === "classes" ? setClassTypes(new Set()) : clearAll())}
+            className={`chip${allOn ? " sel" : ""}`}
+            aria-pressed={allOn}
+            onClick={clearAll}
           >
             All
           </button>
-          {(tab === "classes" ? classTypeOptions : disciplines).map((d) => {
-            const on = tab === "classes" ? classTypes.has(d) : types.has(d);
+          {railWords.map((d) => {
+            const on = types.has(d);
             return (
               <button
                 key={d}
                 type="button"
                 className={`chip${on ? " sel" : ""}`}
                 aria-pressed={on}
-                onClick={() => (tab === "classes" ? toggleClassType(d) : toggleType(d))}
+                onClick={() => toggleType(d)}
               >
                 {d}
               </button>

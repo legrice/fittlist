@@ -97,7 +97,7 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   if (await p.locator('.navtab[data-tab="home"]').count())
     fail("Home should be hidden from a member while it is admin-only");
   await p.locator(".navtab", { hasText: "Discover" }).click();
-  await p.waitForURL("**/discover");
+  await p.waitForURL(/\/discover/);
   if ((await p.locator(".navtab").count()) !== 4) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
@@ -140,7 +140,7 @@ console.log("member tabs ok (Following, Discover, Schedule the calendar, You the
   if (mid.tabs !== 4) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
-  await p.waitForURL("**/discover");
+  await p.waitForURL(/\/discover/);
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }

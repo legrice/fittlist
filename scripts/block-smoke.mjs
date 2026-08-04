@@ -102,7 +102,7 @@ console.log("member added a class ok");
 // --- BEFORE: Discover lists the coach, the page loads
 await m.goto(BASE + "/discover");
 // Classes lead the directory; Coaches is where a coach is listed.
-await m.getByRole("button", { name: "Coaches", exact: true }).click();
+await m.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
 await m.locator(".disrow").first().waitFor();
 if (!(await m.locator(".disrow", { hasText: "Carina" }).count()))
   fail("Discover doesn't list the coach before the block, so the after isn't a test");
@@ -132,7 +132,7 @@ for (const path of ["/carina/about", "/carina/contact", "/carina/schedule"]) {
 console.log("every profile tab is simply not there ok");
 
 await m.goto(BASE + "/discover");
-await m.getByRole("button", { name: "Coaches", exact: true }).click();
+await m.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
 await m.waitForTimeout(800);
 if (await m.locator(".disrow", { hasText: "Carina" }).count())
   fail("Discover still lists a coach who blocked this member");

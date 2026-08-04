@@ -11,9 +11,12 @@ const BASE = "http://localhost:3000";
 const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 // The directory opens on Classes now, so anything asserting on the People or
 // Studios rows picks its half first.
+// Each tab carries its count under the label now, so its accessible name is
+// "Coaches 12 listed" and an exact match on the bare word finds nothing. The
+// tab row is the scope: one .pubtab per half, and only one contains the word.
 const discHalf = async (p, half = "Coaches") => {
   await p.goto(BASE + "/discover");
-  await p.getByRole("button", { name: half, exact: true }).click();
+  await p.locator(".distabs .pubtab", { hasText: half }).click();
 };
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
@@ -1253,12 +1256,23 @@ await fan.locator(".distabs .pubtab.sel", { hasText: "Coaches" }).waitFor();
 // and the Classes half is one tap over, wearing the same rail the other
 // two halves wear: the range dropdown, the Type dropdown and the total
 // count all left, and one chip rail led by All is the whole filter.
-await fan.getByRole("button", { name: "Classes", exact: true }).click();
+await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
 await fan.locator(".dischips").waitFor();
 {
-  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
+  // The label is the first line; the count sits under it.
+  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) =>
+    s.split("\n")[0].trim(),
+  );
   if (heads.join("|") !== "Classes|Coaches|Studios")
     fail("the directory's halves should be Classes, Coaches, Studios: " + heads.join("|"));
+  // Each half says what it holds, and it says it for the pick in front of you
+  // rather than in total: with one selection running across all three, that is
+  // what answers "is there any yoga on the other side" without switching.
+  {
+    const counts = (await fan.locator(".distabs .pubtab-cnt").allInnerTexts()).map((t) => t.trim());
+    if (counts.length !== 3 || !counts.every((c) => /^\d+ \w/.test(c)))
+      fail("each half should carry its own count: " + counts.join("|"));
+  }
   if (await fan.locator(".clsfilters, .clspill").count())
     fail("the range and type dropdowns should be gone from the classes half");
   if (await fan.locator(".clscount-line").count())
@@ -1270,7 +1284,28 @@ await fan.locator(".dischips").waitFor();
   const h = await fan.locator(".dischips .chip").first().evaluate((e) => e.getBoundingClientRect().height);
   if (Math.round(h) !== 38) fail("the rail's chips should be 38px tall, got " + h);
 }
-await fan.getByRole("button", { name: "Coaches", exact: true }).click();
+// One pick, carried across the halves. The two vocabularies became one in
+// 0071_one_vocabulary, so a word one half can honour the others can too, and
+// somebody thinking "yoga" should pick it once rather than per half. The rail
+// keeps showing it wherever they land: a selection with no chip to un-pick is
+// a list quietly filtered by something invisible.
+{
+  const word = (await fan.locator(".dischips .chip").nth(1).innerText()).trim();
+  await fan.locator(".dischips .chip", { hasText: word }).first().click();
+  await fan.waitForTimeout(300);
+  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
+  await fan.waitForTimeout(400);
+  const carried = fan.locator(".dischips .chip.sel", { hasText: word });
+  if (!(await carried.count())) fail(`the ${word} pick should survive the switch of half`);
+  // And All is the way back off it, on whichever half you are standing.
+  await fan.locator(".dischips .chip", { hasText: "All" }).first().click();
+  await fan.waitForTimeout(300);
+  if (await fan.locator(".dischips .chip.sel", { hasText: word }).count())
+    fail("All should clear a pick carried in from another half");
+  await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
+  await fan.waitForTimeout(300);
+}
+await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
 // which half of it you're in.
 await fan.locator(".distabs").waitFor();
@@ -1280,11 +1315,23 @@ await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 if (!(await fan.locator(".disrow", { hasText: "class" }).count()))
   fail("directory row missing the classes-this-week line");
 // The box is a door to the universal search; the list itself is browsed.
-// The corner pill is gone: the row is a door with a chevron, following is
-// the page's decision, and a row you follow says so quietly on its sub-line.
-if (await fan.locator(".disfol").count())
-  fail("the corner Follow pill should be gone from directory rows");
-await fan.locator(".disrow", { hasText: "Matt" }).locator(".disrow-chev").first().waitFor();
+// The Follow pill is back on a person's row, by Matt's call: following is
+// most of what somebody is doing while they read this list, and sending them
+// to a page to do it put a navigation between the want and the act. The
+// chevron steps aside for it (two things in one corner is the row shouting)
+// and the sub-line drops its "· Following", because the pill says both.
+// Search keeps the quieter row, which is checked further down.
+{
+  const row = fan.locator(".disrow", { hasText: "Matt" }).first();
+  await row.locator(".disfollow").waitFor();
+  if (await row.locator(".disrow-chev").count())
+    fail("the chevron and the pill should not share the corner");
+  // Coaches only on this half, so the badge would never distinguish anything.
+  if (await row.locator(".kindtag").count())
+    fail("the Coach badge should be gone from the coaches half");
+  if (/Following/.test(await row.locator(".sub").innerText()))
+    fail("the sub-line shouldn't say Following while the pill does");
+}
 // The Coaches half lists coaches, and its chips are what they teach: one
 // vocabulary with the studios', so the same word narrows either. Nobody in
 // this fixture has said what they teach, so the rail is not drawn at all:
@@ -1303,13 +1350,14 @@ await fan.locator(".profacts .followpill").waitFor();
 await fan.waitForTimeout(400);
 await fan.locator(".profacts .followpill").click();
 await fan.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
-// and back on Discover, the row's line says so
+// and back on Discover, the row's own pill says so: it is the same follow
+// however it was made, so the list has to agree with the page.
 await discHalf(fan);
 await fan
   .locator(".disrow", { hasText: "Matt" })
-  .locator(".sub", { hasText: "Following" })
+  .locator(".disfollow", { hasText: "Following" })
   .waitFor();
-console.log("discover ok (chevron rows, Following said on the line)");
+console.log("discover ok (the row's pill agrees with the profile)");
 
 // Two halves of the directory, one row of controls. A studio is a place, so
 // it isn't followable and carries no city filter: it has an address and
@@ -1323,11 +1371,11 @@ console.log("discover ok (chevron rows, Following said on the line)");
   if (await fan.locator(".dissearch-in").count())
     fail("Discover's box should be a door, not a filter");
 
-  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
   await fan.locator(".disrow-studio").first().waitFor();
   if (await fan.locator(".discitysel").count())
     fail("a studio has an address, not a city to filter by");
-  if (await fan.locator(".disfol").count())
+  if (await fan.locator(".disrow-studio .disfollow").count())
     fail("a studio is a place, not somebody you follow");
   // A long gym name gets the width a Follow pill would have taken.
   const wide = await fan
@@ -1356,7 +1404,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.locator(".dissearch-in").first().fill("Ironbound");
   await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
   await fan.goBack();
-  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
   await fan.locator(".disrow-studio").first().waitFor();
   // A place is a rectangle, a person a circle: the same shape rule the
   // profile heads follow, at row size.
@@ -1400,23 +1448,30 @@ console.log("discover ok (chevron rows, Following said on the line)");
   if (await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count())
     fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
-  // Switching lens drops the pick with it: the other half can't honour it.
-  // No studio here has said what it offers, so that half draws no rail at
-  // all; either way what must be true is that nothing is left picked.
-  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  // Switching lens keeps the pick now, by Matt's call and per the Discover
+  // spec: the two vocabularies became one in 0071_one_vocabulary, so a word
+  // one half can honour the others can too, and somebody thinking "yoga"
+  // should pick it once rather than once per half. This reverses the old
+  // rule, which dropped it because the lists genuinely differed.
+  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
+  await fan.waitForTimeout(300);
+  {
+    // No studio here has said what it offers, so the half has no words of its
+    // own; the carried pick is drawn anyway, because a selection still
+    // filtering the list with no chip to un-pick is a list narrowed by
+    // something invisible.
+    const sel = (await fan.locator(".dischips .chip.sel").allInnerTexts()).map((t) => t.trim());
+    if (!sel.includes("Yoga")) fail("the pick should survive the lens: " + sel.join("|"));
+    if (sel.includes("All")) fail("All can't lead while a pick is on");
+  }
+  // All is the way back, from whichever half you are standing on.
+  await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
   await fan.waitForTimeout(300);
   {
     const sel = (await fan.locator(".dischips .chip.sel").allInnerTexts()).map((t) => t.trim());
-    if (sel.some((t) => t !== "All"))
-      fail("switching lens should drop the pick: " + sel.join("|"));
-    if (await fan.locator(".dischips .chip").count())
-      if (!sel.includes("All")) fail("a drawn rail should open back on All");
+    if (sel.some((t) => t !== "All")) fail("All should clear a carried pick: " + sel.join("|"));
   }
-  // All is the way back: tap it and the whole list returns.
-  await fan.getByRole("button", { name: "Coaches", exact: true }).click();
-  await fan.waitForTimeout(200);
-  await fan.locator(".dischips .chip", { hasText: /^Yoga$/ }).click();
-  await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
+  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
   await fan.waitForTimeout(300);
   await fan.locator(".disrow", { hasText: "Sam" }).waitFor();
   console.log("discover filters ok (All leads filled in, picks are multiselect)");
@@ -1434,7 +1489,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
     fail("the coaches rail should lead with All: " + coachChips.join("|"));
   if (coachChips.includes("Members"))
     fail("the kinds left the rail when members left the half");
-  await fan.getByRole("button", { name: "Studios", exact: true }).click();
+  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
   await fan.waitForTimeout(200);
   const studioChips = await chips();
   // No studio here offers anything yet, so there is nothing to narrow by and
@@ -1444,7 +1499,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
   if (studioChips.length && studioChips[0] !== "All")
     fail("the studios rail should lead with All too");
   // And the Classes half always has one, because a class carries its type.
-  await fan.getByRole("button", { name: "Classes", exact: true }).click();
+  await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
   await fan.waitForTimeout(200);
   const classChips = await chips();
   if (classChips[0] !== "All") fail("the classes rail should lead with All: " + classChips.join("|"));
@@ -1467,7 +1522,7 @@ console.log("discover ok (chevron rows, Following said on the line)");
   await fan.waitForURL(/\/discover/);
   // Popping back lands on the directory's own default half, which is
   // Classes; the coach rows are one tap over.
-  await fan.getByRole("button", { name: "Coaches", exact: true }).click();
+  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
   await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
   await fan.locator(".pubhead").first().waitFor();
   if (!(await fan.locator(".profback .evback").count()))
@@ -2622,7 +2677,7 @@ await expect(
 );
 // The way off a profile is the arrow on the picture, however you arrived.
 await page.locator(".profback .evback").click();
-await page.waitForURL("**/discover");
+await page.waitForURL(/\/discover/);
 // the selected tab is a filled pill again (the underline came and went; the
 // pill is the design)
 await page.goto(BASE + "/matt");

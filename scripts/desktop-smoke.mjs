@@ -77,7 +77,7 @@ for (const n of names) {
   // person, and the pill by their name is where the follow happens.
   await m.goto(`${BASE}/discover`);
   // Classes lead the directory now; Coaches is one tap over.
-  await m.getByRole("button", { name: "Coaches", exact: true }).click();
+  await m.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
   // Exact name: the list orders newest-first now, so a substring match on
   // "Matt" lands on MattsWife, who joined after him and sits above him.
   const row = m.locator(".disrow", {

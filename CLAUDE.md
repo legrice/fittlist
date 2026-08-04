@@ -527,8 +527,29 @@ chips are built from what the lens in front of you actually holds:
 `studios.types` on Studios, `users.disciplines` on Coaches, the types the
 fortnight actually carries on Classes. Pooling the halves once offered the
 coaches the studios' vocabulary, and every chip there filtered to nobody.
-Switching lens drops the pick, since the other half can't honour a word it
-doesn't use, and the rail is not drawn at all where nothing has a word yet.
+The rail is not drawn at all where nothing has a word yet.
+
+**But the pick itself survives the lens.** Switching halves used to drop it,
+because the two vocabularies were genuinely different lists and the other
+half could not honour a word it did not use. `drizzle/0071_one_vocabulary.sql`
+ended that: `CLASS_TYPES` is `STUDIO_TYPES` re-exported, so a word one half
+can honour the others can too, and somebody thinking "yoga" should pick it
+once rather than once per half. One `types` selection now drives all three.
+The rail still offers only the words the half in front of you can narrow by,
+*plus* anything carried in, because a pick that still filters the list with no
+chip to un-pick it is a list narrowed by something invisible; All is the way
+off, from whichever half you are standing on. The cost is real and worth
+saying: a half can look empty because of a word picked on a different one,
+and the carried chip sitting there selected is the whole explanation.
+
+**Each half says how much it holds, for the pick in front of you.** The count
+under a tab label (`.pubtab-cnt`) is `shownClasses`/`shown`/`shownStudios`,
+never the total: with one selection running across all three, "6 coming up"
+against "0 listed" is what answers "is there any yoga on the other side"
+without switching to look. A total would only ever repeat itself. It lands in
+the tab's accessible name too ("Coaches, 12 listed"), which is deliberate, a
+screen reader should hear what the eye reads. Anything addressing those tabs
+has to stop matching the bare word: four suites did, in four different ways.
 
 **The rail is busiest first, and one size on every half.** `rankByUse` in
 `DiscoverList` counts what is behind each word on the screen in front of you
