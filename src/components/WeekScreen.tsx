@@ -62,6 +62,7 @@ export function WeekScreen({
   templates,
   customTypes,
   lastUsed,
+  autoOpenAdder = false,
 }: {
   days: WeekDay[];
   /** The app's today, from the app's clock, for the month header and grid. */
@@ -74,6 +75,11 @@ export function WeekScreen({
   templates: TemplateDto[];
   customTypes: string[];
   lastUsed: LastUsed;
+  /** Arrive with the adder already up. The composer's empty state sends a
+   *  member here, and landing on the calendar they already know is empty,
+   *  with the button they were promised nowhere in sight, is the offer being
+   *  withdrawn on arrival. */
+  autoOpenAdder?: boolean;
 }) {
   const router = useRouter();
   const [gone, setGone] = useState<Record<string, boolean>>({});
@@ -118,6 +124,15 @@ export function WeekScreen({
       else next.add(k);
       return next;
     });
+  // The composer's empty state sends them here to fill the week in, so the
+  // form is already up when they land. The URL is tidied behind them, or a
+  // reload reopens a sheet they closed on purpose.
+  useEffect(() => {
+    if (autoOpenAdder) {
+      setAddOpen(true);
+      window.history.replaceState(null, "", "/week");
+    }
+  }, [autoOpenAdder]);
   const [view, setView] = useState<CalView>("list");
   useEffect(() => setView(loadCalView()), []);
   const [viewSheet, setViewSheet] = useState(false);

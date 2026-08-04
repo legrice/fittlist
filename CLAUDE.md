@@ -107,6 +107,10 @@ node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, swap, count
 rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 node scripts/plans-smoke.mjs      # your plans: the shared rows, your own class
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/share-smoke.mjs      # the composer: both canvases, the picker, empty
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -1733,6 +1737,83 @@ what stops the empty poster being the first one anybody sees. Seven is the
 ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
+
+**The middle of the tab bar is Share, and it is an act rather than a place.**
+`/share` is the composer, opened by the one tab drawn unlike its neighbours: a
+filled brand circle, the same loud orange Add class wears, because handing your
+week on is the thing that grows the network and it was three taps down a
+settings screen. It keeps its label; a glyph alone is a mark people have to be
+taught, and this is not the tap to teach that way. `NavItem.center` is what
+makes it different, and only the bottom bar reads it: `HeaderNav` draws Share as
+one more word, because a raised button in a row of text links is a button
+shouting at four words.
+
+The composer is a full screen that opens *over* the app and carries no tab bar,
+which is why `/share` sits outside the `(tabs)` group. The X is the way off, and
+it is a `BackLink` with `anywhere`, so it pops to whatever is beneath and falls
+back to the feed for a URL opened cold.
+
+Five things about the old share sheet made it a form rather than a composer, and
+each has an answer on this screen. The preview sat under three controls and was
+cropped by the time you scrolled to it, so it is on top and takes every pixel the
+drawer doesn't; the drawer's ceiling is 50vh and not 56, because at 56 the
+picture came out 209px tall on a phone, which is a thumbnail of the thing the
+screen is for. Style was a dropdown, so it is swatches: a colour hidden behind a
+word is a colour nobody tries. The headline was a blank field duplicating a
+choice already made, so it is derived from the segment (Coaching is "Come train
+with me", Going is "My week") and shown as a line you read with a small Edit;
+once somebody types their own, **switching segments stops overwriting it**,
+because a coach who writes something personal, switches to see how it looks and
+loses it will not write anything personal again. Save and Share were two buttons
+for one intent, so Share leads and Save to photos is the quiet one under it. And
+an empty week drew an empty picture, so it draws the style with a line on it and
+turns the primary into an offer instead: `Add a class you coach` for a coach,
+`Add something to your week` for a member, both landing on the calendar with the
+adder already up (`?add=1`, which `/week` honours now as well as `/app`).
+
+There is deliberately **no pull bar above the Edit tab**. The spec drew both; two
+affordances for one act is one too many, and the word says what a grab handle
+only hints at.
+
+**One loader and one paint behind every share image.** `shareWeek()` in
+`src/lib/shareweek.ts` is what goes on a picture for a range and a hat, and both
+the image route and the screen ask it: the picker says "3 of 5 showing" and the
+picture has to be those three, which two queries were never going to keep true.
+`renderStory()` in `src/lib/storyimage.tsx` is the paint, shared by all three
+routes (`/api/story/[handle]`, `/api/story/me`, `/api/story/compose`). There were
+two copies of that tree before the composer and they had already drifted; a third
+was the point at which a fix to one stopped being a fix to any. What differs
+between them is which rows they load and what the footer says, which is data, so
+the data is the argument.
+
+The composer's state lives entirely in the query string, so the preview redraws
+without a round trip and the thing that gets shared is the thing that was on
+screen. `hide` is a list of `{classId}.{iso}` keys: a class row id alone is not
+enough, because one weekly class is one row on several dates and hiding Tuesday
+must not hide Thursday. Hiding is the image's business only and the sheet says so
+in as many words, because without that line people read a checkbox as a delete
+and stop touching the control.
+
+**Two hats, never merged.** A coach promoting the classes they teach and a coach
+showing where they train are two different posts with two different asks, so
+there is no combined view. A member has one hat, so the segment is removed rather
+than disabled: a control with one option is a control that teaches somebody the
+screen is more complicated than it is. The two hats keep separate hide sets,
+because a key hidden from one list means nothing in the other.
+
+**Square is a real second canvas, not a crop.** 1080x1080 against the story's
+1080x1920, picked in the header because a format is a property of the output
+rather than a choice about the content. `storyPadding()` and `listBudget()` both
+take the format now, so the sums and the paint agree on either; a square is a
+little over half the height, so the same week summarises sooner on it and the
+furniture scales with it. The story's safe area is unchanged and load-bearing:
+content stops 240px from the top and 280px from the bottom so the handle and the
+lockup clear Instagram's reply bar, and that lockup is the acquisition channel.
+
+**Not built, on purpose.** No stickers, drawing or freeform text: Instagram's
+editor is better than anything here and people decorate there anyway, and the
+value is that the output is automatically correct and on brand. No custom colour
+picker, no custom fonts, and the logo does not come off.
 
 **The tabs are four: Following, Search, Schedule, You.** Home was built and
 dark-launched behind `homeVisible()` for a while and is now parked: the route,

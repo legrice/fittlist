@@ -22,12 +22,12 @@ export const dynamic = "force-dynamic";
 export default async function WeekPage({
   searchParams,
 }: {
-  searchParams: Promise<{ hl?: string }>;
+  searchParams: Promise<{ hl?: string; add?: string }>;
 }) {
   // A coach's own calendar is /app, and the note that answers an add always
   // points here: the occurrence it wants highlighted has to survive the hop
   // or See it lands a coach at the top of their week with nothing marked.
-  const { hl } = await searchParams;
+  const { hl, add } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -84,6 +84,7 @@ export default async function WeekPage({
       templates={templates}
       customTypes={customTypeRows.map((r) => r.name)}
       lastUsed={lastUsed}
+      autoOpenAdder={add === "1"}
     />
   );
 }

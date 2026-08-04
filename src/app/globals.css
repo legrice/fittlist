@@ -3745,6 +3745,28 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
 }
 .navtab:active { background: var(--cl); }
+/* Share is the one tab that does something rather than going somewhere, so it
+   is drawn as the thing it is: a filled brand circle in the middle of the row,
+   the same loud orange Add class wears for the same reason. It keeps the
+   label, because a glyph alone is a mark people have to be taught and this is
+   the tap the whole network turns on. The wash the current tab puts behind a
+   glyph is suppressed here: the circle is already filled, and a tint behind a
+   solid is a smudge. */
+.navtab-center .navglyph {
+  width: 46px; height: 32px; background: none;
+}
+.navtab-center.on .navglyph { background: none; }
+.navtab-center .navglyph::before {
+  content: ""; position: absolute; width: 40px; height: 40px; border-radius: 999px;
+  background: var(--si); box-shadow: 0 3px 10px rgba(221, 106, 53, .34);
+}
+.navtab-center .navglyph > * { position: relative; color: #fff; }
+.navtab-center { color: var(--ol); }
+/* The circle stands a little proud of the row without breaking the bar's
+   height: the label stays on the same baseline as its neighbours', so the
+   five tabs still read as one row. */
+.navtab-center .navglyph { margin-top: -6px; }
+.navtab-center span:last-of-type { margin-top: -2px; }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
 /* The nav is fixed over everything below it, so the account needs enough room
@@ -4983,3 +5005,127 @@ button.ps-card { cursor: pointer; }
 .staffpend { display: block; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--si-ink); }
 .staffreq-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .staffreq-yes { width: auto; margin: 0; padding: 9px 16px; font-size: 13px; flex-shrink: 0; }
+
+/* ---- The share composer -------------------------------------------------
+   A full screen, not a card: the picture takes every pixel the controls
+   don't, because the thing you are making should not be the thing you have
+   to scroll to. Three fixed rows (the title, the drawer, the buttons) and one
+   that flexes (the stage). */
+.composer {
+  position: fixed; inset: 0; z-index: 50; background: var(--paper);
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+.comphead { display: flex; align-items: center; gap: 10px; padding: 8px 18px 10px; flex: 0 0 auto; }
+.comphead h1 { flex: 1; margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
+.compx { flex: 0 0 auto; }
+/* Format rides the title because it is a property of the output rather than
+   a choice about the content, which is what the drawer is for. */
+.compfmt { display: inline-flex; background: rgba(25, 21, 2, .06); border-radius: 999px; padding: 3px; flex: 0 0 auto; }
+.compfmt button {
+  border: 0; background: none; cursor: pointer; padding: 6px 11px; border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 800; color: var(--ol);
+}
+.compfmt button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 21, 2, .12); }
+
+.compstage {
+  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+  padding: 2px 18px 10px; overflow: hidden;
+}
+/* The image is bounded by the stage's height, so collapsing the drawer grows
+   it rather than pushing it off the screen. */
+.compimg {
+  max-height: 100%; max-width: 100%; width: auto; height: 100%;
+  aspect-ratio: 9 / 16; object-fit: contain; border-radius: 16px;
+  box-shadow: 0 14px 38px rgba(25, 21, 2, .24); background: var(--cl);
+}
+.compimg.sq { aspect-ratio: 1 / 1; }
+
+.compdrawer {
+  flex: 0 0 auto; background: var(--card); border-top: 1px solid var(--line);
+  border-radius: 22px 22px 0 0; box-shadow: 0 -6px 24px rgba(25, 21, 2, .08);
+  /* The picture gets the rest, so this is a ceiling rather than a height: at
+     56vh the preview came out 209px tall on a 390x844 phone, which is a
+     thumbnail of the thing the screen is for. The drawer scrolls; the picture
+     cannot. */
+  max-height: 50vh; overflow-y: auto;
+}
+.compdrawer.shut { max-height: none; overflow: visible; }
+/* The one way in and out of the tools. No pull bar above it: two affordances
+   for one act is one too many, and the word says what a grab handle only
+   hints at. */
+.comptab {
+  position: sticky; top: 0; z-index: 2; width: 100%; border: 0; background: var(--card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px 0 11px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--ol);
+}
+.compctl { padding: 0 18px 13px; }
+.complbl {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ol); margin-bottom: 7px; display: block;
+}
+.compseg { display: flex; background: rgba(25, 21, 2, .06); border-radius: 12px; padding: 3px; }
+.compseg button {
+  flex: 1; border: 0; background: none; cursor: pointer; padding: 9px 4px; border-radius: 10px;
+  font-family: inherit; font-size: 13.5px; font-weight: 800; color: var(--ol);
+}
+.compseg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 21, 2, .13); }
+
+/* The headline is a line you read with a way to change it, not a blank field
+   asking a question its owner already answered. */
+.comphl { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: rgba(25, 21, 2, .045); border-radius: 12px; }
+.comphl em {
+  flex: 1; min-width: 0; font-style: normal; font-size: 13.5px; font-weight: 800;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.comphl-edit { border: 0; background: none; cursor: pointer; flex: 0 0 auto; font-family: inherit; font-size: 13px; font-weight: 800; color: var(--si); }
+
+.compfields { display: flex; gap: 10px; }
+.compfield { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.compfield.days { flex: 0 0 128px; }
+.compfield .editinput { margin: 0; }
+.comprange { margin: 8px 0 0; font-size: 12.5px; font-weight: 700; color: var(--ol); }
+.comprow {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 13px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  font-family: inherit; cursor: pointer; text-align: left; color: var(--ink);
+}
+.comprow-t { flex: 1; font-size: 15px; font-weight: 800; }
+.comprow-t small { display: block; font-size: 12.5px; font-weight: 600; color: var(--ol); margin-top: 2px; }
+.comprow-a { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; color: var(--si); }
+
+/* Swatches, not a dropdown: the pairing has to be visible before it is
+   tapped, and a colour hidden behind a word is a colour nobody tries. */
+.compsw { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; }
+.compsw::-webkit-scrollbar { display: none; }
+.compsw-b {
+  flex: 0 0 auto; width: 46px; height: 46px; border-radius: 14px; cursor: pointer;
+  position: relative; border: 1px solid rgba(25, 21, 2, .12); overflow: hidden; padding: 0;
+}
+.compsw-b span { position: absolute; left: 0; right: 0; bottom: 0; height: 36%; }
+.compsw-b[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--ink); }
+.compmore { width: 100%; border: 0; background: none; cursor: pointer; padding: 0 18px 13px; text-align: left; font-family: inherit; font-size: 13px; font-weight: 800; color: var(--ol); }
+.compmorebox .storyphoto + .storyphoto { border-top: 1px solid var(--line); }
+.compmorebox .storyphoto small { display: block; font-size: 12px; font-weight: 600; color: var(--ol); margin-top: 1px; }
+
+.compacts { flex: 0 0 auto; padding: 10px 18px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--card); }
+.compacts .btn { margin: 0; }
+/* One intent, so one button. Save is the quiet way to the same picture. */
+.compsave { width: 100%; border: 0; background: none; cursor: pointer; padding: 11px 0 0; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--ol); }
+/* An empty range is an offer rather than a broken picture, and the offer is
+   loud enough to read as the next thing to do. */
+.compwarn { background: var(--si); }
+.compcheck {
+  width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto;
+  border: 1.7px solid rgba(25, 21, 2, .28); display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.compcheck.on { background: var(--si); border-color: var(--si); }
+.compnote { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ol); }
+
+/* On a wide screen the picture has more height than it knows what to do with,
+   so it is the column that is bounded rather than the row. */
+@media (min-width: 940px) {
+  .compstage { padding: 8px 18px 14px; }
+  .compdrawer { max-width: 620px; margin: 0 auto; width: 100%; border-radius: 22px 22px 0 0; }
+  .compacts { max-width: 620px; margin: 0 auto; width: 100%; }
+}

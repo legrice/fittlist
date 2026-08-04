@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "schedule" | "you" | "none";
+export type NavTab = "following" | "discover" | "share" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -12,6 +12,11 @@ export type NavItem = {
   label: string;
   /** Render the viewer's own face instead of the icon. */
   face?: boolean;
+  /** The one tab that is an act rather than a place. The bottom bar draws it
+   *  raised and filled in the middle of the row; the header draws it as an
+   *  ordinary link, because a raised button in a row of text links is a
+   *  button shouting at four words. */
+  center?: boolean;
 };
 
 /**
@@ -34,6 +39,12 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
     // that spans every half belongs. The same glyph is never on a tab and
     // in the corner at once.
     { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
+    // The middle of the bar, raised and filled: handing your week on is the
+    // one thing here that grows the network, and it was three taps down a
+    // settings screen. It is an act rather than a place, which is why it is
+    // drawn unlike its neighbours and why it opens over the app instead of
+    // becoming another screen with a bar at the bottom.
+    { id: "share", href: "/share", icon: "ios_share", label: "Share", center: true },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.
@@ -55,6 +66,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // /week. The person is /you.
   if (pathname.startsWith("/week") || pathname.startsWith("/app")) return "schedule";
   if (pathname.startsWith("/you")) return "you";
+  if (pathname.startsWith("/share")) return "share";
   return "none";
 }
 

@@ -71,7 +71,15 @@ const LIFTED_H = 73;
 /** The "+ 3 more days" line. */
 const MORE_H = 52;
 
+/** The two canvases. A story is what gets posted to Stories; a square is what
+ *  gets pasted into a group chat and posted to feed, and it is the shorter of
+ *  the two by a long way, so the same week has to summarise sooner on it. */
+export type StoryFormat = "story" | "square";
 const CANVAS_H = 1920;
+const SQUARE_H = 1080;
+/** A square has no reply bar over it, so its margins are ordinary margins. */
+const SQ_PAD_TOP = 92;
+const SQ_PAD_BOTTOM = 92;
 /**
  * The safe area, which is the whole reason these two are not the same number.
  *
@@ -97,17 +105,22 @@ const CITY_H = 52;
  * headline is the one part that changes size with the coach's own words, so
  * the caller measures that and passes it in.
  */
-export function listBudget(headlineHeight: number, hasCity = false): number {
-  return (
-    CANVAS_H -
-    PAD_TOP -
-    PAD_BOTTOM -
-    KICKER_H -
-    headlineHeight -
-    FOOTER_H -
-    VERB_H -
-    (hasCity ? CITY_H : 0)
-  );
+export function listBudget(
+  headlineHeight: number,
+  hasCity = false,
+  format: StoryFormat = "story",
+): number {
+  const [h, top, bottom] =
+    format === "square" ? [SQUARE_H, SQ_PAD_TOP, SQ_PAD_BOTTOM] : [CANVAS_H, PAD_TOP, PAD_BOTTOM];
+  return h - top - bottom - KICKER_H - headlineHeight - FOOTER_H - VERB_H - (hasCity ? CITY_H : 0);
+}
+
+/** The padding the canvas is drawn with, so the route and the sums can't
+ *  disagree about the safe area. */
+export function storyPadding(format: StoryFormat): { top: number; bottom: number; side: number } {
+  return format === "square"
+    ? { top: SQ_PAD_TOP, bottom: SQ_PAD_BOTTOM, side: 86 }
+    : { top: PAD_TOP, bottom: PAD_BOTTOM, side: 86 };
 }
 
 /**
