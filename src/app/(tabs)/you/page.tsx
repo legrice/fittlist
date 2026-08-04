@@ -36,7 +36,7 @@ export default async function YouPage({
 
   if (me.kind === "fan") {
     if (!(await fansVisible())) redirect("/");
-    const [going, week] = await Promise.all([
+    const [going, week, fanRuns] = await Promise.all([
       db
         .select({ id: schema.attendances.id })
         .from(schema.attendances)
@@ -44,10 +44,17 @@ export default async function YouPage({
       // For the share poster's starting day: the first day their week holds
       // something, not an empty today.
       myWeek(userId),
+      // A member can run a studio too, and had the same dead end.
+      db
+        .select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug })
+        .from(schema.studioManagers)
+        .innerJoin(schema.studios, eq(schema.studios.id, schema.studioManagers.studioId))
+        .where(eq(schema.studioManagers.userId, userId)),
     ]);
 
     return (
       <MemberAccount
+        runs={fanRuns.map((r) => ({ name: r.name, slug: r.slug ?? r.id }))}
         name={me.name}
         email={me.email}
         handle={me.handle}
@@ -72,7 +79,8 @@ export default async function YouPage({
   if (!me.handle) redirect("/welcome");
 
   // All independent, so they load together rather than stacking round trips.
-  const [gconn, passkeyRows, inboxRows, subRows, shiftRows, followingRows] = await Promise.all([
+  const [gconn, passkeyRows, inboxRows, subRows, shiftRows, followingRows, runRows] =
+    await Promise.all([
     isGoogleConnected(userId),
     db
       .select({ id: schema.credentials.id })
@@ -98,6 +106,15 @@ export default async function YouPage({
       .select({ id: schema.subscribers.id })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
+    // The studios this person runs. Managing a place was reachable only from
+    // the studio's own page, so somebody who runs a gym but doesn't teach at
+    // it had no listing anywhere: Where I coach is driven by coach_studios,
+    // which a manager need not have a row in.
+    db
+      .select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug })
+      .from(schema.studioManagers)
+      .innerJoin(schema.studios, eq(schema.studios.id, schema.studioManagers.studioId))
+      .where(eq(schema.studioManagers.userId, userId)),
   ]);
   // Requests are inquiries only: the admin is a coach too, and their feedback
   // threads live on the same table.
@@ -129,6 +146,7 @@ export default async function YouPage({
       passkeyCount={passkeyRows.length}
       isAdmin={adminEmails().includes(me.email.toLowerCase())}
       canSendFeedback={canSendFeedback}
+      runs={runRows.map((r) => ({ name: r.name, slug: r.slug ?? r.id }))}
       shiftCount={shiftRows.length}
       shiftsPublic={me.shiftsPublic}
       avatarColor={avatarColor(me)}

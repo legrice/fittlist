@@ -74,6 +74,7 @@ export function ProfileSheet({
   isAdmin = false,
   canSendFeedback = false,
   shiftCount = 0,
+  runs = [],
   shiftsPublic = false,
   avatarColor,
   showFanView = false,
@@ -116,6 +117,11 @@ export function ProfileSheet({
   shiftCount?: number;
   /** Their answer to whether those shifts show on their public page. */
   shiftsPublic?: boolean;
+  /** The studios they run, if any. Managing one was reachable only from the
+   *  studio's own page, which is no help to somebody who runs a gym without
+   *  teaching there: Where I coach is built from coach_studios and a manager
+   *  need not be in it. */
+  runs?: { name: string; slug: string }[];
   /** The coach's own palette colour, so a photo-less avatar reads as theirs. */
   avatarColor: string;
   showFanView?: boolean;
@@ -496,6 +502,28 @@ export function ProfileSheet({
             Invite
           </button>
         </div>
+
+        {/* A place you run is not a setting, so it sits above them with the
+            other things that are yours. It was reachable only by navigating
+            to the studio's own page and finding the floating pill, which is
+            no way to find something you own. */}
+        {runs.length > 0 && (
+          <>
+            <h3 className="setgroup-h">{runs.length === 1 ? "The studio you run" : "The studios you run"}</h3>
+            <div className="settingslist">
+              {runs.map((st) => (
+                <a key={st.slug} className="setrow" href={`/s/${st.slug}`}>
+                  <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">{st.name}</span>
+                    <span className="s">Its page, its rota, and its staff</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </a>
+              ))}
+            </div>
+          </>
+        )}
 
         <h3 className="setgroup-h">Settings</h3>
         <div className="settingslist">

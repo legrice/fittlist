@@ -18,6 +18,7 @@ import { StartCoaching } from "@/components/StartCoaching";
 // page, no QR code, no stats — just who they are, the classes they marked
 // Going, and the switches.
 export function MemberAccount({
+  runs = [],
   name,
   email,
   handle,
@@ -35,6 +36,9 @@ export function MemberAccount({
   approveFollowers = false,
   messagesOpen = true,
 }: {
+  /** The studios they run. A member can be a manager: addStudioManager only
+   *  refuses a gym's own account. */
+  runs?: { name: string; slug: string }[];
   name: string;
   email: string;
   handle: string | null;
@@ -85,6 +89,24 @@ export function MemberAccount({
 
       {/* Grouped like the coach side: your profile first, then the things you
           do, then account plumbing, then the beta. */}
+      {runs.length > 0 && (
+        <>
+          <h3 className="setgroup-h">{runs.length === 1 ? "The studio you run" : "The studios you run"}</h3>
+          <div className="settingslist">
+            {runs.map((st) => (
+              <a key={st.slug} className="setrow" href={`/s/${st.slug}`}>
+                <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">{st.name}</span>
+                  <span className="s">Its page, its rota, and its staff</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
       <h3 className="setgroup-h">Profile</h3>
       <div className="settingslist">
         <MemberProfileEditor

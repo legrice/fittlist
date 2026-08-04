@@ -103,6 +103,30 @@ await card().getByRole("button", { name: "Turn on its schedule" }).click();
 await matt.getByText("Its schedule is on").waitFor();
 console.log("gym account on ok");
 
+// Running a place shows up on your own account. It used to be reachable only
+// by navigating to the studio's page and finding the floating pill, which is
+// no way to find something you own, and Where I coach is no help either: that
+// is built from coach_studios and a manager need not have a row in it.
+{
+  await matt.goto(BASE + "/you");
+  await matt.locator(".acctwrap").waitFor();
+  const row = matt.locator(".setrow", { hasText: "Ironbound" });
+  await row.waitFor();
+  const href = await row.getAttribute("href");
+  if (!href?.startsWith("/s/")) fail("the row should open the studio: " + href);
+  await row.click();
+  await matt.waitForURL(/\/s\//);
+  await matt.locator(".studioadmin").waitFor();
+  console.log("the studio you run is on your own account ok");
+}
+// Somebody who runs nothing is told nothing.
+{
+  await tom.goto(BASE + "/you");
+  await tom.locator(".acctwrap").waitFor();
+  if (await tom.locator(".setrow", { hasText: "Ironbound" }).count())
+    fail("a coach who runs no studio shouldn't see one");
+}
+
 // The studio picker autocompletes names, so read the slug rather than guess it.
 await matt.goto(BASE + "/matt/studios");
 const studioHref = await matt.locator('a[href^="/s/"]').first().getAttribute("href");

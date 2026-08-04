@@ -1,6 +1,7 @@
 import {
   Activity,
   Bookmark,
+  Store,
   ArrowLeft,
   ArrowUpRight,
   AtSign,
@@ -175,6 +176,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   // doing looks like, and it is not a bell (that is news addressed to you)
   // and not a compass (that is browsing).
   activity: Activity,
+  storefront: Store,
   open_in_new: ExternalLink,
   phone_iphone: Smartphone,
   person_add: UserRoundPlus,
