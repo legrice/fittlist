@@ -248,7 +248,29 @@ follow shows through is mutual: two members who follow *each other* see each
 other on shared rows in Your week (`alsoGoing` in `myWeek`) and each other's
 upcoming week on their profiles (`sharedWeek`, real public classes only, never
 `personal_classes`). One-way follows surface nothing, which is what makes
-tapping Follow on a person safe; agreeing to each other is the consent. A
+tapping Follow on a person safe; agreeing to each other is the consent.
+
+**The mutual week now carries personal entries too, by Matt's call.** It was
+public classes only, on the grounds that there was deliberately no way to share
+one of your own; a member whose week is mostly their own entries showed a
+mutual follow an empty page, which is the whole thing this list exists to
+avoid. What did **not** change is the audience, and that is what makes it safe:
+still only somebody you follow who follows you back, never a stranger with the
+link and never a one-way follower. That double tap is why a row here can name
+a place and a time that no public surface ever could, which matters because
+these rows say things like "Private with Kia, Client's home". Nothing about
+this reaches a public page, a share image or Discover. A coach's page carries
+the same list behind a Teaching/Going segment (`ProfileWeekSwitch`), drawn only
+for a viewer who can actually see the second half, and their own entries reach
+a fortnight rather than the calendar's nine weeks: this is somebody else's
+page, and two weeks answers "what are they up to" without handing over two
+months of a person's movements.
+
+The add sheet says which is which in a word rather than a sentence each:
+Public for a class you coach, Shared for one you are going to, Private for
+anything else. Three sentences of subtext on a sheet whose whole job is one tap
+is three things to read; the tags line up so the three can be compared at a
+glance. A
 coach separately sees who marked Going on *their own* classes (`roster` in
 `classDetail`, owner-only): the mark was made at that coach, so the coach
 seeing it is what the mark meant, and it never shows where else anyone trains.

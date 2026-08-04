@@ -112,28 +112,46 @@ export type SharedWeekItem = {
   ap: string;
   durationMin: number;
   where: string | null;
-  handle: string;
-  coachName: string;
+  /** The base its class page lives under, or null for one of their own: a
+   *  personal entry has no page, so its row is plain text. */
+  handle: string | null;
+  /** Whose class it is, or null for one of their own. */
+  coachName: string | null;
 };
 
-/** The week someone shows the people they follow back: only real, public
- *  classes they added, from today forward. Personal entries never appear
- *  here; there is deliberately no way to share those. */
+/**
+ * The week someone shows the people they follow back, from today forward.
+ *
+ * Both halves of it now: the marks they made at a coach's real class, and the
+ * entries they keep themselves. Personal entries used to be excluded outright,
+ * on the grounds that there was deliberately no way to share them, and by
+ * Matt's call that is no longer the rule: a week made mostly of your own
+ * entries showed a mutual follow an empty page, which is the whole thing this
+ * list exists to avoid.
+ *
+ * The audience is unchanged and is what makes it safe: only somebody you
+ * follow who follows you back, never a stranger with the link, and never a
+ * one-way follower. That mutual tap is the consent, and it is why a row here
+ * can name a place and a time that a public page never could.
+ */
 export async function sharedWeek(
   userId: string,
 ): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
   const db = await getDb();
-  const marks = await db
-    .select()
-    .from(schema.attendances)
-    .where(
-      and(
-        eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, todayIso()),
-      ),
-    )
-    .orderBy(asc(schema.attendances.occurrenceDate));
-  if (marks.length === 0) return [];
+  const [marks, own] = await Promise.all([
+    db
+      .select()
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, todayIso()),
+        ),
+      )
+      .orderBy(asc(schema.attendances.occurrenceDate)),
+    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+  ]);
+  if (marks.length === 0 && own.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = (
@@ -178,6 +196,51 @@ export async function sharedWeek(
     });
     byDay.set(m.occurrenceDate, list);
   }
+
+  // Their own entries, expanded the same way the calendar expands them, out to
+  // a fortnight rather than the calendar's nine weeks: this is somebody
+  // else's page, and two weeks answers "what are they up to" without handing
+  // over two months of a person's movements.
+  const SHARED_WEEKS = 2;
+  const ownStudioIds = [...new Set(own.map((p) => p.studioId).filter((x): x is string => !!x))];
+  const ownStudios = ownStudioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, ownStudioIds))
+    : [];
+  const ownStudioById = new Map(ownStudios.map((s) => [s.id, s]));
+  for (const p of own) {
+    const first = personalNext(p);
+    if (!first) continue;
+    const dates: string[] = [];
+    if (p.specificDate) dates.push(first);
+    else {
+      let iso = first;
+      for (let k = 0; k < SHARED_WEEKS; k++) {
+        if (p.endsOn && iso > p.endsOn) break;
+        dates.push(iso);
+        const d = new Date(`${iso}T00:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + 7);
+        iso = d.toISOString().slice(0, 10);
+      }
+    }
+    const t = clockParts(p.startTime);
+    for (const iso of dates) {
+      const list = byDay.get(iso) ?? [];
+      list.push({
+        classId: p.id,
+        iso,
+        name: p.name,
+        hm: t.hm,
+        ap: t.ap,
+        durationMin: p.durationMin,
+        where: p.studioId ? (ownStudioById.get(p.studioId)?.name ?? null) : p.location,
+        // No page and nobody else's name: one of their own is a plain row.
+        handle: null,
+        coachName: null,
+      });
+      byDay.set(iso, list);
+    }
+  }
+
   return [...byDay.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([iso, items]) => ({

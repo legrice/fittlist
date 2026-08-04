@@ -9,6 +9,8 @@ import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
+import { mutualFollow, sharedWeek } from "@/lib/week";
+import { ProfileWeekSwitch } from "@/components/ProfileWeekSwitch";
 
 import { AgendaAvatar, ClassRow, DayBand } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
@@ -303,6 +305,50 @@ export async function PublicProfileView({
         ways.links.length
       ));
 
+  // The other hat. A coach trains too, and their page could not say so: the
+  // going week is the same mutual-follow list a member's profile carries, and
+  // it is loaded only for somebody allowed to see it, because a segment whose
+  // second half is always empty is a control that means nothing.
+  const canSeeGoing =
+    !!viewerId && ((await fansVisible()) && (isOwner || (await mutualFollow(viewerId, user.id))));
+  const goingWeek = canSeeGoing ? await sharedWeek(user.id) : [];
+
+  const goingRows = (
+    <div className="memweek">
+      <p className="memweek-note">
+        {isOwner
+          ? "People you follow back see this. Nobody else does."
+          : "You can see this because you follow each other."}
+      </p>
+      {goingWeek.length === 0 ? (
+        <div className="empty-block">
+          <h2>Nothing yet</h2>
+          <p>
+            {isOwner
+              ? "Classes you add as going to land here."
+              : `${user.name.split(/\s+/)[0]} hasn't added anything this week.`}
+          </p>
+        </div>
+      ) : (
+        goingWeek.map((day) => (
+          <div key={day.iso} className="memweek-day">
+            <div className="memweek-dayh">{day.label}</div>
+            {day.items.map((i) => (
+              <div key={`${i.classId}-${i.iso}`} className="memweek-row">
+                <span className="memweek-txt">
+                  <span className="nm">{i.name}</span>
+                  <span className="sub">
+                    {[`${i.hm}${i.ap}`, i.coachName, i.where].filter(Boolean).join(" \u00b7 ")}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </div>
+  );
+
   const schedule = (
     <>
       {days.length === 0 ? (
@@ -530,7 +576,15 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
-          {tab === "about" ? about : tab === "studios" && studios ? studios : schedule}
+          {tab === "about" ? (
+            about
+          ) : tab === "studios" && studios ? (
+            studios
+          ) : canSeeGoing ? (
+            <ProfileWeekSwitch teaching={schedule} going={goingRows} />
+          ) : (
+            schedule
+          )}
         </ProfileTabs>
         </FollowSync>
         {/* The primary action holds the thumb spot, in the same glass the

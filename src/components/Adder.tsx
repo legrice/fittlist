@@ -168,7 +168,7 @@ export function Adder({
       ? isPersonalEdit
         ? {
             title: "Edit class",
-            lead: "Yours alone. Change anything; none of it is published.",
+            lead: "Change anything. People you follow back see this; nobody else does.",
           }
         : personal.event
           ? {
@@ -177,7 +177,7 @@ export function Adder({
             }
           : {
             title: "Add a class",
-            lead: "A class you go to. It lands in your plans and nowhere else, and the studio gets the details so the next person doesn't type them again.",
+            lead: "A class you go to. It lands on your calendar and on the week people you follow back can see, and the studio gets the details so the next person doesn't type them again.",
           }
       : isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }

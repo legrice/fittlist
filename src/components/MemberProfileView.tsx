@@ -223,25 +223,37 @@ export async function MemberProfileView({
             {week.map((day) => (
               <div key={day.iso} className="memweek-day">
                 <div className="memweek-dayh">{day.label}</div>
-                {day.items.map((i) => (
-                  <Link
-                    key={`${i.classId}-${i.iso}`}
-                    className="memweek-row"
-                    href={`/${i.handle}/${i.classId}?d=${i.iso}`}
-                  >
+                {day.items.map((i) => {
+                  const sub = [
+                    `${i.hm}${i.ap}`,
+                    i.coachName,
+                    i.where,
+                  ].filter(Boolean).join(" · ");
+                  const body = (
                     <span className="memweek-txt">
                       <span className="nm">{i.name}</span>
-                      <span className="sub">
-                        {i.hm}
-                        {i.ap} · {i.coachName}
-                        {i.where ? ` · ${i.where}` : ""}
+                      <span className="sub">{sub}</span>
+                    </span>
+                  );
+                  // One of their own has no page to open, so it is a plain
+                  // row rather than a link with nowhere to go.
+                  return i.handle ? (
+                    <Link
+                      key={`${i.classId}-${i.iso}`}
+                      className="memweek-row"
+                      href={`/${i.handle}/${i.classId}?d=${i.iso}`}
+                    >
+                      {body}
+                      <span className="memweek-chev">
+                        <Icon name="chevron_right" size={18} />
                       </span>
-                    </span>
-                    <span className="memweek-chev">
-                      <Icon name="chevron_right" size={18} />
-                    </span>
-                  </Link>
-                ))}
+                    </Link>
+                  ) : (
+                    <div key={`${i.classId}-${i.iso}`} className="memweek-row">
+                      {body}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>

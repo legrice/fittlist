@@ -1367,13 +1367,9 @@ console.log("discover ok (the row's pill agrees with the profile)");
     if (new Set(faces.map(([, bg]) => bg)).size < 2)
       fail("a directory of one colour is as unreadable as a directory of pins");
   }
-  // Searching an address finds the town, through the universal search the
-  // box now opens.
-  await fan.locator(".dissearch-door").click();
-  await fan.waitForURL(/\/search/);
-  await fan.locator(".dissearch-in").first().fill("Ironbound");
+  // Already on search, where the studio rows live: the address finds the town
+  // the same way the name finds the place.
   await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  await fan.locator(".disrow-studio").first().waitFor();
   // A place is a rectangle, a person a circle: the same shape rule the
   // profile heads follow, at row size.
   {
@@ -1493,6 +1489,10 @@ console.log("discover ok (the row's pill agrees with the profile)");
   if (await fan.locator(".searchbtn").count())
     fail("the header magnifier should be gone: Discover's tab wears it");
   await fan.goto(BASE + "/discover");
+  // Recent is per device and this block is about the screen with nothing on
+  // it, so it starts from nothing: a studio row was tapped from search
+  // further up, which is exactly what Recent is for.
+  await fan.evaluate(() => localStorage.removeItem("fl-recent-searches"));
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
   // Nothing typed yet: a prompt and the door to browsing, not the directory.
@@ -1505,7 +1505,16 @@ console.log("discover ok (the row's pill agrees with the profile)");
   // asking for the whole directory.
   await fan.locator(".dissearch-in").first().fill("m");
   await fan.waitForTimeout(600);
-  if (await fan.locator(".srchhead").count()) fail("one character should not search");
+  {
+    // Recent is a heading too, and tapping a studio row from here earlier put
+    // one there, so this asks whether a *search* ran rather than whether any
+    // heading exists.
+    const heads = (await fan.locator(".srchhead").allInnerTexts()).map((t) =>
+      t.split("\n")[0].trim(),
+    );
+    if (heads.some((h) => /^(People|Studios|Classes)$/i.test(h)))
+      fail("one character should not search: " + heads.join("|"));
+  }
 
   // A coach and a studio that share a word: both sections, both named.
   await fan.locator(".dissearch-in").first().fill("ironbound");
@@ -1947,11 +1956,20 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.locator(".ps-event.ev-added").first().waitFor();
   console.log("an event ok (no class furniture, wears the Personal colour)");
 
-  // Nothing about it is public. Not on their profile, not in the feed.
+  // One of your own reaches the mutual-follow week now, by Matt's call: a
+  // member whose week is mostly their own entries showed a mutual follow an
+  // empty page. What did not change is the audience, and that is the whole
+  // safety of it: the owner sees their own, and a stranger with the link sees
+  // nothing at all.
   {
     const mine = await (await fan.request.get(`${BASE}/lindley`)).text();
-    if (/Wellness Off the Mat/.test(mine))
-      fail("a class you only go to must not appear on your own page");
+    if (!/Wellness Off the Mat/.test(mine))
+      fail("your own entries should be on the week you show people you follow back");
+    const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const seen = await (await strangerCtx.request.get(`${BASE}/lindley`)).text();
+    await strangerCtx.close();
+    if (/Wellness Off the Mat/.test(seen))
+      fail("a stranger with the link must not see one of your own");
   }
 
   // The poster covers the range you ask for, and it starts where your plans
@@ -2798,11 +2816,20 @@ await page.locator(".caladd").waitFor();
 }
 await openProfile(page);
 await closeProfile(page);
-// what a coach attends is private: it must not leak onto their public page
-const pubHtml = await (await page.request.get(`${BASE}/matt/schedule`)).text();
-if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(pubHtml))
-  fail("a class the coach attends leaked onto their public page");
-console.log("coach following ok (separate from their schedule, never public)");
+// What a coach attends is behind the Going half of their own page, on the
+// same mutual-follow rule a member's week uses: the owner sees it, and a
+// stranger with the link sees nothing at all.
+{
+  const mine = await (await page.request.get(`${BASE}/matt/schedule`)).text();
+  if (!/Sam&#x27;s Conditioning|Sam's Conditioning/.test(mine))
+    fail("a coach should see their own Going week");
+  const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const seen = await (await strangerCtx.request.get(`${BASE}/matt/schedule`)).text();
+  await strangerCtx.close();
+  if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(seen))
+    fail("a class the coach attends leaked onto their public page");
+}
+console.log("coach following ok (behind the mutual rule, never public)");
 
 // ---- the Followers stat opens the list of who they are, and coaches among
 // them can be followed back. Three shapes have to render: a coach (page, so a

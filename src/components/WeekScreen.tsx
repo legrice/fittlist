@@ -612,8 +612,9 @@ export function WeekScreen({
               >
                 <span className="setrow-ic"><Icon name="bookmark" size={22} /></span>
                 <span className="setrow-txt">
-                  <span className="t">A class you&rsquo;re going to</span>
-                  <span className="s">Yours alone; nothing public</span>
+                  <span className="t">
+                    A class you&rsquo;re going to <span className="addtag">Shared</span>
+                  </span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
@@ -627,8 +628,9 @@ export function WeekScreen({
               >
                 <span className="setrow-ic"><Icon name="calendar_today" size={22} /></span>
                 <span className="setrow-txt">
-                  <span className="t">Anything else</span>
-                  <span className="s">An appointment, a session, time you&rsquo;re keeping</span>
+                  <span className="t">
+                    Anything else <span className="addtag">Private</span>
+                  </span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
