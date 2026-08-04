@@ -52,8 +52,6 @@ import {
   type CalView,
   type MonthCellItem,
 } from "@/components/CalendarBits";
-import { ShareWeekSheet } from "@/components/ShareWeekSheet";
-import { myWeekText } from "@/app/actions/weektext";
 import { Icon } from "@/components/Icon";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { Toast, useToast } from "@/components/Toast";
@@ -183,8 +181,6 @@ export function ScheduleScreen({
   // Scrolling up reveals the past, a couple of weeks at a time.
   const { pastWeeks, sentinel } = usePastReveal(MAX_PAST_WEEKS);
   // The Share pill at the bottom: the menu of ways, then the story sheet.
-  const [shareMenu, setShareMenu] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   // A Going row just removed by its ribbon, held while the undo is offered.
   const [removed, setRemoved] = useState<{ classId: string; iso: string; name: string } | null>(
     null,
@@ -560,7 +556,7 @@ export function ScheduleScreen({
           >
             {/* Share took the corner Add used to hold: a thumb can't
                 reach up here, and adding is what this screen is for. */}
-            <CalShare onShare={() => setShareMenu(true)} />
+            <CalShare onShare={() => router.push("/share")} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -1042,91 +1038,6 @@ export function ScheduleScreen({
       />
       )}
 
-      {shareMenu && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShareMenu(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setShareMenu(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Share your schedule</h2>
-            <div className="settingslist ownermenu">
-              <button
-                className="setrow"
-                onClick={() => {
-                  setShareMenu(false);
-                  setShareOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Share your week</span>
-                  <span className="s">A story image with your link</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={async () => {
-                  setShareMenu(false);
-                  const res = await myWeekText();
-                  if (!res.ok || !res.text) {
-                    toast(res.error ?? "Couldn't copy that");
-                    return;
-                  }
-                  try {
-                    await navigator.clipboard.writeText(res.text);
-                    toast("Week copied, ready to paste");
-                  } catch {
-                    toast("Couldn't copy that");
-                  }
-                }}
-              >
-                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Copy your week</span>
-                  <span className="s">As text, ready to paste</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={async () => {
-                  setShareMenu(false);
-                  try {
-                    await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
-                    toast("Link copied, ready to paste");
-                  } catch {
-                    toast("Couldn't copy that");
-                  }
-                }}
-              >
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Copy your link</span>
-                  <span className="s">Straight to your page</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ShareWeekSheet
-        handle={handle}
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        onToast={toast}
-      />
 
       {viewSheet && (
         <ViewSheet
@@ -1153,17 +1064,7 @@ export function ScheduleScreen({
         />
       )}
 
-      {showFanView && (
-        <NavBar
-          active="schedule"
-          scheduleHref="/app"
-          face={{
-            photo,
-            color: myAccent,
-            initial: (name.trim().charAt(0) || "?").toUpperCase(),
-          }}
-        />
-      )}
+      {showFanView && <NavBar active="schedule" scheduleHref="/app" />}
 
       {adder.open && (
         <Adder

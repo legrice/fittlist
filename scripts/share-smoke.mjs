@@ -75,27 +75,27 @@ await coach.waitForTimeout(1200);
 await coach.locator(".sheetclose").first().click().catch(() => {});
 console.log("a coach put a week up ok");
 
-// ---- Share is the middle of the bar, drawn like its neighbours
+// ---- Share is the calendar's own button, not a tab
 await coach.goto(BASE + "/feed");
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
-  if (tabs.length !== 5) fail("expected five tabs, got " + tabs.length + ": " + tabs.join("|"));
-  if (!/Share/.test(tabs[2])) fail("Share should be the middle tab: " + tabs.join("|"));
-  // A raised filled circle shipped for a build and came back out: the bar's
-  // job is five equals, and what makes Share different is where it goes.
-  if (await coach.locator(".navtab-center").count())
-    fail("the Share tab should be drawn like every other tab");
+  if (tabs.length !== 3) fail("expected three tabs, got " + tabs.length + ": " + tabs.join("|"));
+  // Share took the middle of the bar for a build and came back out: it is an
+  // act rather than a place, and it belongs on the screen it is about.
+  if (tabs.some((t) => /Share/.test(t)))
+    fail("Share should not be a tab: " + tabs.join("|"));
 }
-await coach.locator(".navtab", { hasText: "Share" }).click();
+await coach.goto(BASE + "/app");
+await coach.locator(".calshare").click();
 await coach.waitForURL(/\/share/);
 await coach.locator(".composer").waitFor();
 await coach.locator(".adderhead h2", { hasText: "Share your schedule" }).waitFor();
 // It opens over the app: no bar underneath competing with it.
 if (await coach.locator(".navbar:visible").count())
   fail("the editor should cover the tab bar, not sit above it");
-console.log("the middle of the bar opens the editor ok");
+console.log("the calendar's Share button opens the editor ok");
 
 // ---- everything is in one scroll: no drawer, no format picker, no headline
 {
@@ -230,6 +230,17 @@ console.log("an empty week offers rather than draws nothing ok");
     fail("the studio named while adding should reach the directory");
 }
 console.log("adding from the picker fills the calendar and the directory ok");
+
+// The editor is reachable above the breakpoint too, where the bar is gone: it
+// hangs off the calendar's own Share button, which is on every width. A week
+// with something on it, because an empty calendar drops its whole chrome and
+// the Share button with it: you cannot make a picture of nothing.
+await coach.setViewportSize({ width: 1280, height: 900 });
+await coach.goto(BASE + "/app");
+await coach.locator(".calshare").click();
+await coach.waitForURL(/\/share/);
+await coach.locator(".composer").waitFor();
+console.log("the editor is reachable on desktop ok");
 await coach.close();
 
 // ---- a member has one hat, so the segment is gone rather than disabled
@@ -247,16 +258,6 @@ if (!/headline=My\+week/.test(await member.locator(".storyimg").getAttribute("sr
 }
 console.log("a member gets one hat and no segment ok");
 
-// The editor is reachable above the breakpoint too, where the bar is gone.
-await member.setViewportSize({ width: 1280, height: 900 });
-await member.goto(BASE + "/feed");
-await member.locator(".headnav").waitFor();
-{
-  const links = await member.locator(".headnav-l").allInnerTexts();
-  if (!links.some((l) => /Share/.test(l)))
-    fail("the header needs Share too, or the editor is a dead end on desktop: " + links.join("|"));
-}
-console.log("the editor is reachable on desktop ok");
 await member.close();
 
 await b.close();

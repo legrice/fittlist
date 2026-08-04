@@ -1776,22 +1776,20 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**The middle of the tab bar is Share, and it wears the sparkle.**
-`/share` is the editor, and the tab is drawn exactly like its four
-neighbours: same glyph box, same label, same brand-orange wash behind the icon
-when it is the current one. A raised filled circle in the middle shipped for a
-build and came back out, by Matt's call: the bar's whole job is five equals,
-and a button shouting at four words is a bar that has stopped being a bar. What
-makes Share different is where it goes, not how loud it is. The glyph is
-`auto_awesome_outline`, the sparkle drawn as a stroke, rather than the share
-arrow, which is the system gesture and not this act. Outline for the same
-reason the circle went: the other four tabs are strokes, and a solid one in
-the middle is a fifth weight on a row whose whole job is five equals. The
-filled `auto_awesome` stays everywhere it is a button or a row (the calendar's
-Share pill, the share sheets), where solid is what stops it reading as
-furniture. It keeps
-its label; a glyph alone is a mark people have to be taught, and this is not
-the tap to teach that way.
+**Share is the calendar's own button, not a tab.** `/share` is the editor, and
+the one control that opens it is `CalShare` in the top right of the Schedule
+screen, on both calendars. It was the middle of the tab bar for a stretch,
+raised and filled, then flat and outlined; it came off entirely by Matt's call,
+and the reason is the one the bar keeps teaching: Share is an act rather than a
+place, and a bottom bar is for the screens you move between. An act belongs on
+the screen it is about, which is the week it draws.
+
+The cost is real and worth writing down: an empty calendar drops its whole
+chrome (`CalEmpty`), the Share button with it, so somebody with nothing on
+their week has no route to the editor at all. That is defensible, because a
+picture of nothing is not worth making and the empty calendar's own job is to
+get a class onto it, but it means the editor's empty state now only catches the
+case where the *range* is bare and the calendar is not.
 
 The editor is a full screen that opens *over* the app and carries no tab bar,
 which is why `/share` sits outside the `(tabs)` group. The X is the way off, and
@@ -1896,7 +1894,7 @@ editor is better than anything here and people decorate there anyway, and the
 value is that the output is automatically correct and on brand. No custom colour
 picker, no custom fonts, and the logo does not come off.
 
-**The tabs are four: Following, Search, Schedule, You.** Home was built and
+**The tabs are three: Following, Discover, Schedule.** Home was built and
 dark-launched behind `homeVisible()` for a while and is now parked: the route,
 the screen and `home.ts` are gone, and `landingHref()` answers `/feed` for
 everyone. It stays a function because the answer has already changed twice and
@@ -1907,16 +1905,25 @@ A client can't ask who is an admin, so `AuthFlow`
 and `OnboardingWizard` still take the landing as a prop from their server
 parent rather than guessing.
 
-"Search" is the Discover directory renamed, route unchanged at
-`/discover`, because Home and "Discover" both read as "find stuff" and two
-tabs promising the same thing is one tab nobody opens: Home is curated,
-Search is intent. The tab wears the magnifier and the header's corner
-magnifier left with the rename, since the same glyph on a tab and in the
-corner is one door drawn twice; the `/search` box screen is still behind
-the directory's search door. Plans is gone as a word in the chrome, and
-nothing counts a badge, because a number that only grows is a scoreboard.
-Schedule is your own calendar; You is the person, the account screen
-included. `navTabs()` in `src/lib/nav.ts` is the one list both bars
+The tab is Discover and it wears the magnifier. It carried the compass
+while the header's corner held a magnifier of its own, because the same
+glyph must never be drawn twice on one screen; the corner is your face
+now, so the mark comes back to the tab that means finding something, and
+the `/search` box screen is still behind the directory's own search door.
+Plans is gone as a word in the chrome, and nothing counts a badge, because
+a number that only grows is a scoreboard. Schedule is your own calendar.
+
+**You is the face in the header's top right, not a tab.** It was the last
+tab, carrying your photo instead of a glyph, and it came off with Share by
+Matt's call: a person is not a place either, and the corner is where a
+profile door lives in every app anybody already uses. `AppHeader`'s
+`avatar` takes an `href` and the tabs layout passes `/you`; the magnifier
+that used to sit there came off in the same move, since Discover's tab
+wears that glyph again. On desktop the bottom bar hides and `HeaderNav`
+takes over, but the face is in the header at every width, so You is never
+the dead end that rule exists to prevent. The coaches-only shell has no
+member side and so no face: it keeps the gear, which is its one door to
+the account. `navTabs()` in `src/lib/nav.ts` is the one list both bars
 render, and it takes the Home flag rather than reading it, because both
 bars are client components and the answer is the server's. `/week` stays in the `(tabs)` route group and lights Schedule for
 a member; a coach landing on it is redirected to `/app`, and a member
@@ -1928,7 +1935,16 @@ to a public page they cannot have and saying "add the classes you coach" to
 somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" is no longer a destination and the Following
-feed says `from=following`; the class page honours both. The current tab
+feed says `from=following`; the class page honours both. Following's day bands are quieter than the calendars': regular weight, two
+pixels up (`.ps-agenda.feedagenda .ps-dayname`). The uppercase tracked 800 is
+right for a working calendar, where a band has to win against a dense grid of
+its own rows; on a feed you are reading rather than working, and a heading that
+shouts competes with the class names under it. Scoped to `.feedagenda` on
+purpose, so the two calendars keep the band they were tuned for. The count on
+the right is untouched. The case and the tracking are untouched too, so the
+band still reads TOMORROW rather than Tomorrow; that is a separate call.
+
+The current tab
 marks itself in the brand colour and nothing else: `.navtab.on` sets
 `--si` and every glyph is `currentColor`, so the icon and the word both
 take it, the way Airbnb marks Explore. It was a light orange wash behind

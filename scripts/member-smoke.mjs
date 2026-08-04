@@ -82,29 +82,28 @@ await p.getByRole("button", { name: "Finish setup" }).click();
 await p.waitForURL("**/feed");
 console.log("member setup ok (two steps, no studios, lands on Following)");
 
-// The same five tabs a coach gets: Share is the middle of the bar for
-// everybody. Only where Schedule points differs.
+// The same three tabs a coach gets. Only where Schedule points differs, and
+// You is the header's face rather than a tab, because a person is not a
+// place.
 {
   const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (onFeed.length !== 5) fail(`a member should get five tabs, got ${onFeed.join(",")}`);
+  if (onFeed.length !== 3) fail(`a member should get three tabs, got ${onFeed.join(",")}`);
   if (
     !onFeed[0].includes("Following") ||
     !onFeed[1].includes("Discover") ||
-    !onFeed[2].includes("Share") ||
-    !onFeed[3].includes("Schedule") ||
-    !onFeed[4].includes("You")
+    !onFeed[2].includes("Schedule")
   )
-    fail(
-      `a member's tabs should be Following, Discover, Share, Schedule, You, got ${onFeed.join(",")}`,
-    );
+    fail(`a member's tabs should be Following, Discover, Schedule, got ${onFeed.join(",")}`);
+  if (!(await p.locator(".brandbar-actions .usericon").count()))
+    fail("the header should carry the viewer's face as the way to You");
   if (await p.locator('.navtab[data-tab="home"]').count())
     fail("Home should be hidden from a member while it is admin-only");
   await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL(/\/discover/);
-  if ((await p.locator(".navtab").count()) !== 5) fail("the bar should follow them to Discover");
+  if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
-  if ((await p.locator(".navtab").count()) !== 5) fail("and to their own calendar");
+  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own calendar");
   if ((await p.locator(".navtab.on").innerText()).includes("Schedule") === false)
     fail("their calendar should light the Schedule tab");
   // No plans ribbon, no gear, and no corner magnifier: Search is a tab.
@@ -113,13 +112,13 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   // The magnifier is back in the corner now that the tab says Discover.
   if (!(await p.locator(".searchbtn").count()))
     fail("the header magnifier should be back beside the bell");
-  await p.locator(".navtab", { hasText: "You" }).click();
+  await p.locator(".brandbar-actions .usericon").click();
   await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 5) fail("and to their account rows");
+  if ((await p.locator(".navtab").count()) !== 3) fail("and to their account rows");
   await p.locator(".navtab", { hasText: "Following" }).click();
   await p.waitForURL("**/feed");
 }
-console.log("member tabs ok (Following, Discover, Share, Schedule, You)");
+console.log("member tabs ok (Following, Discover, Schedule, and You in the corner)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.
@@ -137,10 +136,10 @@ console.log("member tabs ok (Following, Discover, Share, Schedule, You)");
   await p.waitForTimeout(350);
   const mid = await p.evaluate(() => ({
     tabs: document.querySelectorAll(".navtab").length,
-    avatar: !!document.querySelector(".navav"),
+    avatar: !!document.querySelector(".brandbar-actions .usericon"),
     lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
   }));
-  if (mid.tabs !== 5) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.tabs !== 3) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL(/\/discover/);

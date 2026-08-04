@@ -56,16 +56,17 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           home={landing}
-          // Every screen in this group is the member side, so the magnifier
-          // is always right here. No gear: the You tab is the door to the
-          // account, and a second door in the corner said it twice.
-          search
+          // Your face is the corner now, and it is the way to You: the tab
+          // came off the bar, because a person is not a place. The magnifier
+          // came off with it, since Discover's tab wears that glyph again and
+          // the same mark is never drawn twice on one screen.
+          avatar={{ ...face, href: "/you" }}
           nav={{ coach: isCoach, scheduleHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} />
+      <NavBar coach={isCoach} scheduleHref={scheduleHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

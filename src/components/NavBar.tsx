@@ -8,16 +8,17 @@ import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
 
-/** The viewer's own face, for the You tab. */
+/** The viewer's own face. It rides the header's top right now rather than a
+ *  tab, but the shape is still what a shell hands around. */
 export type NavFace = { photo: string | null; color: string; initial: string };
 
-// The whole app in thumb reach. A member gets the two tabs that mean something
-// to them; You is a coach's own page, and they don't have one. Above 940px this
-// hides and HeaderNav takes over, off the same list.
+// The whole app in thumb reach: the three screens you move between. Share and
+// You both came off, because one is an act and the other is a person, and
+// neither is a place. Above 940px this hides and HeaderNav takes over, off the
+// same list.
 export function NavBar({
   active,
   coach = true,
-  face,
   scheduleHref,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
@@ -25,9 +26,6 @@ export function NavBar({
   active?: NavTab;
   /** Which calendar the Schedule tab points at. */
   coach?: boolean;
-  /** Photo or initial for the You tab. Without it the tab falls back to its
-   *  icon, which is what a screen that doesn't know who you are should do. */
-  face?: NavFace;
   /** Where Schedule goes; defaults by role. */
   scheduleHref?: string;
 }) {
@@ -38,22 +36,11 @@ export function NavBar({
       {navTabs(coach, scheduleHref).map((t) => {
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;
-        const glyph =
-          t.face && face ? (
-            face.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="navav" src={face.photo} alt="" />
-            ) : (
-              <span className="navav navav-empty" style={{ background: face.color }} aria-hidden="true">
-                {face.initial}
-              </span>
-            )
-          ) : (
-            <Icon name={t.icon} size={26} />
-          );
         const inner = (
           <>
-            <span className="navglyph">{glyph}</span>
+            <span className="navglyph">
+              <Icon name={t.icon} size={26} />
+            </span>
             <span>{t.label}</span>
           </>
         );

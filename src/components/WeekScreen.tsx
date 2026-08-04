@@ -37,7 +37,6 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { CAL_PAST_DAYS, fmtDayHeaderRel } from "@/lib/format";
-import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -139,8 +138,6 @@ export function WeekScreen({
   const [ym, setYm] = useState(todayIso.slice(0, 7));
   // Scrolling up reveals the past, a couple of weeks at a time.
   const { pastWeeks, sentinel } = usePastReveal(CAL_PAST_DAYS / 7);
-  // The floating Share pill: the week as a poster.
-  const [shareWeek, setShareWeek] = useState(false);
   // Arriving here from an add, which is the moment the week became worth
   // showing somebody. A coach's publish ends on the share moment for exactly
   // this reason; a member's add ended on nothing, and the poster sat behind a
@@ -342,7 +339,7 @@ export function WeekScreen({
           >
             {/* Share took the corner Add used to hold: a thumb can't
                 reach up here, and adding is what this screen is for. */}
-            <CalShare onShare={() => setShareWeek(true)} />
+            <CalShare onShare={() => router.push("/share")} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -553,7 +550,7 @@ export function WeekScreen({
               className="folhint-go"
               onClick={() => {
                 closeWeekShare(true);
-                setShareWeek(true);
+                router.push("/share");
               }}
             >
               Share my week
@@ -565,9 +562,6 @@ export function WeekScreen({
         </div>
       )}
 
-      {shareWeek && (
-        <ShareMyWeekSheet onClose={() => setShareWeek(false)} firstIso={shown[0]?.iso} />
-      )}
 
       {viewSheet && (
         <ViewSheet

@@ -425,7 +425,7 @@ console.log("saved-class links carry over ok");
 // ---- the account: the You tab, a page of its own. An old ?acct=1 link (the
 // gear's href for months) still lands on it.
 await expect(
-  page.locator('.navtab[data-tab="you"] .navav-empty').filter({ hasText: "M" }).isVisible(),
+  page.locator(".brandbar-actions .usericon .usericon-initial").filter({ hasText: "M" }).isVisible(),
   "the You tab carries their face (initial fallback)",
 );
 await page.goto(BASE + "/app?acct=1");
@@ -1844,7 +1844,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.goto(BASE + "/feed");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
+  if ((await fan.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
@@ -2165,7 +2165,7 @@ if (await fan.locator(".goingshare").count())
 // and the gear is gone from the corner because You is the door now.
 if (await fan.locator(".settingsbtn").count())
   fail("the gear should have left the corner: the You tab is the door");
-await fan.locator(".navtab", { hasText: "You" }).click();
+await fan.locator(".brandbar-actions .usericon").click();
 await fan.waitForURL("**/you");
 await fan.locator(".memberid").waitFor();
 await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
@@ -2184,17 +2184,16 @@ console.log("going + share my week ok (1080x1920 png, from the account)");
   // inclusion rather than the joined string.
   const tabs = (await fan.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
   if (
-    tabs.length !== 5 ||
+    tabs.length !== 3 ||
     !tabs[0].includes("Following") ||
     !tabs[1].includes("Discover") ||
-    !tabs[2].includes("Share") ||
-    !tabs[3].includes("Schedule") ||
-    !tabs[4].includes("You")
+    !tabs[2].includes("Schedule")
   )
-    fail(
-      "a member's tabs should read Following, Discover, Share, Schedule, You: " + tabs.join("|"),
-    );
-  console.log("member tabs ok (five, Share in the middle, no Home)");
+    fail("a member's tabs should read Following, Discover, Schedule: " + tabs.join("|"));
+  // You is the header's face now, not a tab: a person is not a place.
+  if (!(await fan.locator(".brandbar-actions .usericon").count()))
+    fail("the header should carry the viewer's face as the way to You");
+  console.log("member tabs ok (three, and You is the corner)");
 }
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -2409,9 +2408,9 @@ await page.locator(".ps-event").first().waitFor();
   const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/[ \t\n]+/g, " ").trim(),
   );
-  if (tabs.length !== 5 || tabs.some((t) => /Home/.test(t)))
-    fail("five tabs, none of them Home: " + tabs.join("|"));
-  console.log("home is gone ok (five tabs for everyone, Share in the middle)");
+  if (tabs.length !== 3 || tabs.some((t) => /Home/.test(t)))
+    fail("three tabs, none of them Home: " + tabs.join("|"));
+  console.log("home is gone ok (three tabs for everyone)");
 }
 
 // with the bottom nav to cross between the two spaces
@@ -2437,7 +2436,7 @@ if (await page.locator(".schedtools").count())
   if (h > 130) fail("the Schedule-tab row should hug its content, got " + h + "px tall");
 }
 // You is the person: the account screen as a page, cards for the shares.
-await page.locator(".navtab", { hasText: "You" }).click();
+await page.locator(".brandbar-actions .usericon").click();
 await page.waitForURL(/\/you/);
 await page.locator(".acctwrap").waitFor();
 if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
@@ -2757,7 +2756,7 @@ console.log("profile tabs are links ok (three URLs, one section each)");
   await page.locator(".caladd").waitFor();
   if (await page.locator(".settingsbtn").count())
     fail("the gear should have left the corner: the You tab is the door");
-  await page.locator(".navtab", { hasText: "You" }).click();
+  await page.locator(".brandbar-actions .usericon").click();
   await page.waitForURL("**/you");
   await page.locator(".acctwrap").waitFor();
   if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
@@ -2864,14 +2863,14 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// Five tabs, admin or not: Home was a fifth in this account's bar only and is
-// parked; the fifth now is Share, which everybody gets. Back in the app, since
-// a profile carries no bar at all.
+// Three tabs, admin or not: the bar is Following, Discover and Schedule, and
+// Share and You have both left it. Back in the app, since a profile carries no
+// bar at all.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
 {
   const n = await page.locator(".navtab").count();
-  if (n !== 5) fail("expected 5 tabs, got " + n);
+  if (n !== 3) fail("expected 3 tabs, got " + n);
 }
 await openProfile(page);
 await closeProfile(page);

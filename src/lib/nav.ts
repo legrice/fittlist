@@ -10,12 +10,18 @@ export type NavItem = {
   href: string;
   icon: string;
   label: string;
-  /** Render the viewer's own face instead of the icon. */
-  face?: boolean;
 };
 
 /**
- * The same five tabs for everyone.
+ * Three tabs, for everyone.
+ *
+ * It was five for a while: Share took the middle and You carried your face at
+ * the end. Both have come off, by Matt's call. Share is an act rather than a
+ * place and it now opens from the one screen it is about, the calendar's own
+ * Share button; You is a person rather than a place either, and your face
+ * sits in the header's top right where a profile door usually lives. What is
+ * left is the three screens you actually move between, which is what a bottom
+ * bar is for.
  *
  * A member used to get two and a coach three, which meant the app rearranged
  * itself the moment somebody started coaching, and every screen had to know
@@ -28,31 +34,15 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
     // new on it whether or not your follow graph changed. Following only
     // moves when the people you follow do, which made the app feel dead on
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // Discover again, and the compass with it: the directory grew a
-    // Classes half, which is browsing rather than looking something up,
-    // and the magnifier went back to the header's corner where a search
-    // that spans every half belongs. The same glyph is never on a tab and
-    // in the corner at once.
-    { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
-    // The middle of the bar: handing your week on is the one thing here that
-    // grows the network, and it was three taps down a settings screen. It
-    // wears the sparkle rather than the share arrow, and it is drawn exactly
-    // like its neighbours: a raised filled circle shipped for a build and
-    // read as a button shouting at four words, where the bar's whole job is
-    // five equals. The glyph is the outlined sparkle for the same reason the
-    // circle went: the other four are strokes, and a solid one in the middle
-    // is a fifth weight on a row of equals. What makes Share different is
-    // where it goes, not how loud it is, so it opens over the app rather than
-    // becoming another screen with a bar at the bottom of it.
-    { id: "share", href: "/share", icon: "auto_awesome_outline", label: "Share" },
+    // Discover, wearing the magnifier again. It carried the compass while the
+    // header's corner held a magnifier of its own, because the same glyph
+    // must never be drawn twice on one screen; the corner is your face now,
+    // so the mark comes back to the tab that means finding something.
+    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.
     { id: "schedule", href: scheduleHref ?? (coach ? "/app" : "/week"), icon: "calendar_today", label: "Schedule" },
-    // The person: profile, sharing, and the account rows, one screen for
-    // both kinds. It carries your face rather than an icon, because it's the
-    // one tab that is a person rather than a place.
-    { id: "you", href: "/you", icon: "account_circle", label: "You", face: true },
   ];
 }
 

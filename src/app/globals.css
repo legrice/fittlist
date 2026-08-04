@@ -859,6 +859,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
   flex-shrink: 0;
 }
+/* Following's bands are quieter than the calendars': regular weight, two
+   pixels up. The uppercase tracked 800 was the right call for a working
+   calendar, where a band has to win against a dense grid of its own rows; on
+   a feed you are reading rather than working, and a heading that shouts is a
+   heading competing with the class names under it. Scoped to `.feedagenda`
+   deliberately, so the calendars keep the band they were tuned for. The count
+   on the right is untouched. */
+.ps-agenda.feedagenda .ps-dayname { font-size: 14px; font-weight: 400; }
 /* Today is the only band that carries the brand, so it reads as the one you
    are standing in without a second mark. */
 .ps-daycol-today .ps-dayname { color: var(--si); }
