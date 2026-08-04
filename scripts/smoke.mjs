@@ -266,10 +266,24 @@ await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
   await page.locator(".caladd").waitFor();
-  // The reload resets the past window; `before` was counted with it revealed,
-  // so wait for the first slice to render again before counting.
+  // The reload resets the past window, which renders in slices as the sentinel
+  // comes into view, so the row count climbs for a moment after the page is
+  // up. Waiting for the first slice is not waiting for the last one: a single
+  // count taken here lands mid-reveal often enough to fail about one run in
+  // ten. Poll for the settled number, the same way the check above the reload
+  // already does, and report what was actually there if it never arrives.
   await page.locator(".ps-pastday").first().waitFor();
-  if ((await rowsFor()) !== before - 1) fail("the cancelled week came back after a reload");
+  await page
+    .waitForFunction(
+      ([id, n]) => document.querySelectorAll(`.ps-event[data-cid="${id}"]`).length === n - 1,
+      [cid, before],
+      { timeout: 10000 },
+    )
+    .catch(async () => {
+      fail(
+        `the cancelled week came back after a reload: ${await rowsFor()} rows, expected ${before - 1}`,
+      );
+    });
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
   const ics = await (await page.request.get(`${BASE}/api/cal/matt`)).text();
