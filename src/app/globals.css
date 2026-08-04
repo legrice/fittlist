@@ -4938,6 +4938,11 @@ button.ps-card { cursor: pointer; }
   font-size: 11px; font-weight: 700; letter-spacing: .02em; vertical-align: 1px;
 }
 .staffx { flex-shrink: 0; }
+/* Your own shift carries two words now, Transfer and Give up, so they need a
+   gap between them and the room to sit on one line. The row's name column
+   yields first, because a class name can wrap and a pair of verbs cannot. */
+.staffrow .setrow-txt { min-width: 0; }
+.staffrow .staffx + .staffx { margin-left: 14px; }
 .staffadd { display: flex; gap: 8px; margin: 14px 0 26px; }
 .staffadd input {
   flex: 1; min-width: 0; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px;

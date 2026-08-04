@@ -767,6 +767,52 @@ console.log("the coach is told ok");
     console.log("the managers hand the keys out themselves ok");
   }
 
+  // The same hand-over, from the staff screen's own rows. A coach's shifts are
+  // listed there and the only thing offered used to be Give up, so "can you
+  // take my Thursday" still meant opening the class. Transfer sits beside it
+  // now, off the same list and the same action.
+  {
+    await tom.goto(BASE + studioHref + "/shifts");
+    await tom.locator(".pubtabs .pubtab", { hasText: "My shifts" }).click();
+    await tom.waitForTimeout(500);
+    // Whichever date he is actually holding: Julia is the standing coach by
+    // now, so what is left on his list is the covers that came back to him.
+    const row = tom.locator(".setrow", { hasText: "HYROX" }).first();
+    if (!(await row.count())) fail("Tom should still be on a HYROX date");
+    await row.waitFor();
+    if (!(await row.getByRole("button", { name: "Give up" }).count()))
+      fail("a shift of your own keeps its give-up");
+    await row.getByRole("button", { name: "Transfer" }).click();
+    await tom.getByRole("heading", { name: "Transfer shift" }).waitFor();
+    // The gym's shift list and nobody else: Julia is on it, Matt coaches here
+    // and is not, and Tom is never offered himself.
+    {
+      const names = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+      if (names.length !== 1 || names[0] !== "Julia")
+        fail("Transfer should offer the shift list, nobody else: " + names.join("|"));
+    }
+    await tom.locator(".sheet .setrow", { hasText: "Julia" }).click();
+    // It confirms before anybody is told, the same as giving up does.
+    await tom.getByRole("heading", { name: "Give HYROX to Julia?" }).waitFor();
+    await tom.getByRole("button", { name: "Ask the studio" }).click();
+    await tom.getByText(/Asked the studio to send it to Julia/).waitFor();
+    await tom.waitForTimeout(900);
+
+    // And it really is only an ask: the manager answers it, and that is when
+    // it moves. Cleared here so the queue is empty for the tests below.
+    await matt.goto(BASE + studioHref + "/shifts");
+    await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
+    await matt.waitForTimeout(500);
+    await matt
+      .locator(".setrow", { hasText: "HYROX" })
+      .first()
+      .getByRole("button", { name: "Approve" })
+      .click();
+    await matt.getByText("Approved").waitFor();
+    await matt.waitForTimeout(1000);
+    console.log("a shift handed on from the staff screen ok");
+  }
+
   // Tom hands a Thursday he is on straight to her. Matt coaches here too and
   // is not on the list, so he is not offered.
   const nextThu = weekDay(17);

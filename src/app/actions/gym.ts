@@ -1754,6 +1754,12 @@ export type StaffView = {
   all: StaffShift[];
   requests: ShiftRequestDto[];
   approvalOn: boolean;
+  /** Who a shift can be handed to: the gym's own shift list, minus the
+   *  viewer. One list for the whole screen rather than one per row, because
+   *  it is the same answer for every date at the same studio. Empty leaves
+   *  the rows with Give up alone, which is the honest thing when the managers
+   *  have named nobody. */
+  sendable: { id: string; name: string }[];
 };
 
 /** May this person see a studio's staff side at all? */
@@ -1802,6 +1808,7 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
       all: [],
       requests: [],
       approvalOn: !!studio.approveShiftChanges,
+      sendable: [],
     };
 
   const rows = (
@@ -1886,7 +1893,37 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
     all,
     requests: isManager ? await shiftRequests(studioId) : [],
     approvalOn: !!studio.approveShiftChanges,
+    // Only when they are on something: a list of names is no use to somebody
+    // with nothing to hand over, and this is a query per screen either way.
+    sendable: mine.length ? await sendableAt(db, studioId, userId) : [],
   };
+}
+
+/**
+ * Who a coach at this studio may hand a date to: the gym's own shift list,
+ * minus themselves.
+ *
+ * The list is the managers' claim rather than the directory's, because anyone
+ * may say they coach at a gym and not everyone who does teaches the group
+ * classes. `sendShiftTo` refuses anybody not on it, so this and the action
+ * have to read the same table or the sheet would offer a name the action then
+ * rejects.
+ */
+async function sendableAt(
+  db: Awaited<ReturnType<typeof getDb>>,
+  studioId: string,
+  userId: string,
+): Promise<{ id: string; name: string }[]> {
+  const pool = await db
+    .select({ userId: schema.studioRotaCoaches.userId })
+    .from(schema.studioRotaCoaches)
+    .where(eq(schema.studioRotaCoaches.studioId, studioId));
+  const ids = pool.map((p) => p.userId).filter((id) => id !== userId);
+  if (!ids.length) return [];
+  const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
+  return people
+    .map((p) => ({ id: p.id, name: p.name.trim() || p.email.split("@")[0] }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**

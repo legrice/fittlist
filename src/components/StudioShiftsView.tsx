@@ -3,7 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { answerShiftRequest, claimShift, giveUpShift, type StaffView } from "@/app/actions/gym";
+import {
+  answerShiftRequest,
+  claimShift,
+  giveUpShift,
+  sendShiftTo,
+  type StaffView,
+} from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
@@ -44,6 +50,16 @@ export function StudioShiftsView({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [confirm, setConfirm] = useState<{ classId: string; iso: string; name: string } | null>(null);
+  // Handing a date to a named coach. Two steps, like the class sheet's: the
+  // list of names first, because eight names under one verb read as eight
+  // options, then the confirm, because the notice goes out the moment it runs
+  // and a single tap was texting somebody a shift.
+  const [transfer, setTransfer] = useState<{ classId: string; iso: string; name: string } | null>(
+    null,
+  );
+  const [sendTo, setSendTo] = useState<
+    { classId: string; iso: string; name: string; toId: string; toName: string } | null
+  >(null);
 
   const act = (
     fn: () => Promise<{ ok: boolean; error?: string; pending?: boolean }>,
@@ -197,16 +213,32 @@ export function StudioShiftsView({
                 </span>
                 {s.pending && <span className="staffpend">{s.pending}</span>}
               </span>
-              {/* One action per row, and it is the one that fits the row: your
-                  own shift can be given up, an open one can be taken. */}
+              {/* The actions that fit the row: your own shift can be handed to
+                  somebody or given up, an open one can be taken. Transfer
+                  only exists where the managers have named somebody it could
+                  go to; without a list it would be a button that opens an
+                  empty sheet. */}
               {s.mine ? (
-                <button
-                  className="tertiary staffx"
-                  disabled={pending}
-                  onClick={() => setConfirm({ classId: s.classId, iso: s.iso, name: s.name })}
-                >
-                  Give up
-                </button>
+                <>
+                  {view.sendable.length > 0 && (
+                    <button
+                      className="tertiary staffx"
+                      disabled={pending}
+                      onClick={() =>
+                        setTransfer({ classId: s.classId, iso: s.iso, name: s.name })
+                      }
+                    >
+                      Transfer
+                    </button>
+                  )}
+                  <button
+                    className="tertiary staffx"
+                    disabled={pending}
+                    onClick={() => setConfirm({ classId: s.classId, iso: s.iso, name: s.name })}
+                  >
+                    Give up
+                  </button>
+                </>
               ) : s.open ? (
                 <button
                   className="btn si staffreq-yes"
@@ -224,6 +256,92 @@ export function StudioShiftsView({
       )}
 
       {/* Giving a date back opens it and tells the gym, so it asks first. */}
+      {/* Who takes it. The gym's shift list, not the directory's: anyone may
+          say they coach here, and `sendShiftTo` refuses anybody not on it. */}
+      {transfer && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setTransfer(null);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setTransfer(null)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>Transfer shift</h2>
+            <p className="lead">
+              Who takes {transfer.name}? They and the studio are told; the rest of the week is
+              unchanged.
+            </p>
+            <div className="settingslist ownermenu">
+              {view.sendable.map((p) => (
+                <button
+                  key={p.id}
+                  className="setrow"
+                  disabled={pending}
+                  onClick={() => {
+                    setSendTo({ ...transfer, toId: p.id, toName: p.name });
+                    setTransfer(null);
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">{p.name}</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* The doing step. It confirms for the same reason giving up does: the
+          notice goes out the moment it runs, and where the studio approves
+          changes this is an ask rather than a done thing, which is why the
+          toast reads off `pending` rather than off the setting. */}
+      {sendTo && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSendTo(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Give {sendTo.name} to {sendTo.toName}?</h2>
+            <p className="lead">
+              {view.approvalOn
+                ? "The studio is asked first. Nothing moves on anybody's calendar until they answer."
+                : "They are put on it and told, and so is the studio."}
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                onClick={() => {
+                  const t = sendTo;
+                  setSendTo(null);
+                  act(
+                    () => sendShiftTo(t.classId, t.iso, t.toId),
+                    `Transferred to ${t.toName}`,
+                    `Asked the studio to send it to ${t.toName}`,
+                  );
+                }}
+              >
+                {view.approvalOn ? "Ask the studio" : "Transfer it"}
+              </button>
+              <button className="btn ghost" style={{ marginTop: 8 }} onClick={() => setSendTo(null)}>
+                Keep it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirm && (
         <div
           className="sheet-scrim"
