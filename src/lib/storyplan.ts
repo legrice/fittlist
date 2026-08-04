@@ -72,19 +72,42 @@ const LIFTED_H = 73;
 const MORE_H = 52;
 
 const CANVAS_H = 1920;
-const PAD_Y = 104;
+/**
+ * The safe area, which is the whole reason these two are not the same number.
+ *
+ * On Instagram Stories the bottom of the canvas sits under the reply bar and
+ * the swipe-up affordance, and the handle and the lockup were flush against
+ * it: the one element that makes this an acquisition channel was the one most
+ * likely to be covered. Content now stops 280px from the bottom and starts
+ * 240px from the top. The orange bar is not content and still bleeds.
+ */
+const PAD_TOP = 240;
+const PAD_BOTTOM = 280;
 /** "Week of Jul 31" and its margin. */
 const KICKER_H = 71;
-/** The url and the lockup along the bottom. */
+/** The verb, the url and the lockup along the bottom. */
 const FOOTER_H = 76;
+/** "Full schedule at", the small line above the url. */
+const VERB_H = 46;
+/** The city under the headline, when the profile has one. */
+const CITY_H = 52;
 
 /**
  * How much room the list gets, once the furniture has taken its share. The
  * headline is the one part that changes size with the coach's own words, so
  * the caller measures that and passes it in.
  */
-export function listBudget(headlineHeight: number): number {
-  return CANVAS_H - PAD_Y * 2 - KICKER_H - headlineHeight - FOOTER_H;
+export function listBudget(headlineHeight: number, hasCity = false): number {
+  return (
+    CANVAS_H -
+    PAD_TOP -
+    PAD_BOTTOM -
+    KICKER_H -
+    headlineHeight -
+    FOOTER_H -
+    VERB_H -
+    (hasCity ? CITY_H : 0)
+  );
 }
 
 /**

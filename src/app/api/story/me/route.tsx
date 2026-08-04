@@ -160,6 +160,12 @@ export async function GET(req: Request) {
   const maxLine = Math.max(line1.length, line2.length);
   const hSize = maxLine <= 9 ? 104 : maxLine <= 13 ? 86 : 70;
   const showPhoto = prefs.showPhoto !== false && !!me.photo;
+  // Said once, from the profile: a studio's name places nobody who is not
+  // already local.
+  const city = (me.location ?? "").trim();
+  // A member's own poster points at their own page when they have claimed a
+  // handle. Without one there is nothing to point at but the front door.
+  const myHandle = (me.handle ?? "").trim();
 
   // Same three levels of detail as the coach's poster, for the same reason:
   // the canvas doesn't grow, so a full week has to summarise rather than run
@@ -174,7 +180,7 @@ export async function GET(req: Request) {
         who: c.who,
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city),
   );
   const m =
     plan.tier === 1
@@ -191,7 +197,7 @@ export async function GET(req: Request) {
           flexDirection: "column",
           background: t.bg,
           color: t.fg,
-          padding: "104px 86px",
+          padding: "240px 86px 280px",
           fontFamily: "Delight",
         }}
       >
@@ -231,7 +237,7 @@ export async function GET(req: Request) {
             height={172}
             style={{
               position: "absolute",
-              top: 96,
+              top: 232,
               right: 86,
               borderRadius: 999,
               objectFit: "cover",
@@ -259,6 +265,12 @@ export async function GET(req: Request) {
         </div>
 
         {/* What every class has in common, said once instead of on every row. */}
+        {city && (
+          <div style={{ display: "flex", fontSize: 38, color: t.faint, marginTop: -58, marginBottom: 34 }}>
+            {city}
+          </div>
+        )}
+
         {plan.lifted && (
           <div style={{ display: "flex", fontSize: 36, color: t.faint, marginBottom: 30 }}>
             {plan.lifted}
@@ -384,7 +396,14 @@ export async function GET(req: Request) {
             alignItems: "center",
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: 40 }}>fittlist.co</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600, fontSize: 30, color: t.faint, letterSpacing: 1 }}>
+              Join me
+            </span>
+            <span style={{ fontWeight: 600, fontSize: 40 }}>
+              {myHandle ? `fittlist.co/${myHandle}` : "fittlist.co"}
+            </span>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={56} height={57} />

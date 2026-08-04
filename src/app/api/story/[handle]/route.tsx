@@ -93,6 +93,10 @@ export async function GET(
   const maxLine = Math.max(line1.length, line2.length);
   const hSize = maxLine <= 9 ? 104 : maxLine <= 13 ? 86 : 70;
   const showPhoto = prefs.showPhoto !== false && !!user.photo;
+  // "Ironbound Performance Athletics" means nothing two towns over, so the
+  // city is said once, from the profile. The studios on the rows say where in
+  // town; this says which town.
+  const city = (user.location ?? "").trim();
 
   // How much detail the week can carry: everything if it fits, the same rows
   // tighter if it doesn't, and a line a day when even that is too much.
@@ -105,7 +109,7 @@ export async function GET(
         where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city),
   );
   // Tier 1 is the poster as it has always looked; tier 2 is the same shape
   // with the air taken out of it.
@@ -124,7 +128,7 @@ export async function GET(
           flexDirection: "column",
           background: t.bg,
           color: t.fg,
-          padding: "104px 86px",
+          padding: "240px 86px 280px",
           fontFamily: "Delight",
         }}
       >
@@ -163,7 +167,7 @@ export async function GET(
             height={172}
             style={{
               position: "absolute",
-              top: 96,
+              top: 232,
               right: 86,
               borderRadius: 999,
               objectFit: "cover",
@@ -189,6 +193,12 @@ export async function GET(
           <span>{line1}</span>
           {line2 && <span style={{ color: t.accent }}>{line2}</span>}
         </div>
+
+        {city && (
+          <div style={{ display: "flex", fontSize: 38, color: t.faint, marginTop: -58, marginBottom: 34 }}>
+            {city}
+          </div>
+        )}
 
         {/* What every class has in common, said once instead of on every row. */}
         {plan.lifted && (
@@ -324,9 +334,12 @@ export async function GET(
             alignItems: "center",
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: 40 }}>
-            fittlist.co/{handle}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600, fontSize: 30, color: t.faint, letterSpacing: 1 }}>
+              Full schedule at
+            </span>
+            <span style={{ fontWeight: 600, fontSize: 40 }}>fittlist.co/{handle}</span>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={56} height={57} />
