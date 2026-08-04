@@ -7,6 +7,7 @@ import { feedbackHost } from "@/lib/feedback";
 import { fansVisible } from "@/lib/flags";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import { getSessionUserId } from "@/lib/session";
+import { myStaffStudios } from "@/app/actions/gym";
 import { myWeek } from "@/lib/week";
 import { MemberAccount } from "@/components/MemberAccount";
 import { ProfileSheet } from "@/components/ProfileSheet";
@@ -44,17 +45,13 @@ export default async function YouPage({
       // For the share poster's starting day: the first day their week holds
       // something, not an empty today.
       myWeek(userId),
-      // A member can run a studio too, and had the same dead end.
-      db
-        .select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug })
-        .from(schema.studioManagers)
-        .innerJoin(schema.studios, eq(schema.studios.id, schema.studioManagers.studioId))
-        .where(eq(schema.studioManagers.userId, userId)),
+      // A member can be staff at a studio too, and had the same dead end.
+      myStaffStudios(),
     ]);
 
     return (
       <MemberAccount
-        runs={fanRuns.map((r) => ({ name: r.name, slug: r.slug ?? r.id }))}
+        runs={fanRuns}
         name={me.name}
         email={me.email}
         handle={me.handle}
@@ -110,11 +107,7 @@ export default async function YouPage({
     // the studio's own page, so somebody who runs a gym but doesn't teach at
     // it had no listing anywhere: Where I coach is driven by coach_studios,
     // which a manager need not have a row in.
-    db
-      .select({ id: schema.studios.id, name: schema.studios.name, slug: schema.studios.slug })
-      .from(schema.studioManagers)
-      .innerJoin(schema.studios, eq(schema.studios.id, schema.studioManagers.studioId))
-      .where(eq(schema.studioManagers.userId, userId)),
+    myStaffStudios(),
   ]);
   // Requests are inquiries only: the admin is a coach too, and their feedback
   // threads live on the same table.
@@ -146,7 +139,7 @@ export default async function YouPage({
       passkeyCount={passkeyRows.length}
       isAdmin={adminEmails().includes(me.email.toLowerCase())}
       canSendFeedback={canSendFeedback}
-      runs={runRows.map((r) => ({ name: r.name, slug: r.slug ?? r.id }))}
+      runs={runRows}
       shiftCount={shiftRows.length}
       shiftsPublic={me.shiftsPublic}
       avatarColor={avatarColor(me)}

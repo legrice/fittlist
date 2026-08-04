@@ -223,8 +223,14 @@ export function ClassSheet({
   // Giving a date up and taking one are the same shape: one call, then reload
   // the sheet so it says what is true now rather than what was true.
   const act = (
-    fn: (classId: string, occurrenceDate: string) => Promise<{ ok: boolean; error?: string }>,
+    fn: (
+      classId: string,
+      occurrenceDate: string,
+    ) => Promise<{ ok: boolean; error?: string; pending?: boolean }>,
     done: string,
+    /** What to say when the studio has to agree first. Without this a screen
+     *  says "it's yours" about a shift nobody has approved. */
+    asked?: string,
   ) => {
     if (!c || shifting) return;
     startShift(async () => {
@@ -233,14 +239,15 @@ export function ClassSheet({
         toast(res.error ?? "Couldn't do that");
         return;
       }
-      toast(done);
+      toast(res.pending ? (asked ?? "Asked the studio") : done);
       const fresh = await classDetail(handle, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
     });
   };
-  // Hand the date straight to a named coach. Agreed over the counter, written
-  // down here: a notice, not a request, same as the rest of the rota.
+  // Hand the date straight to a named coach. Where the studio approves shift
+  // changes this is an ask and the toast says so; where it does not, it is
+  // the old thing: agreed over the counter, written down here.
   const send = (toId: string, toName: string) => {
     if (!c || shifting) return;
     startShift(async () => {
@@ -249,7 +256,7 @@ export function ClassSheet({
         toast(res.error ?? "Couldn't do that");
         return;
       }
-      toast(`Transferred to ${toName}`);
+      toast(res.pending ? `Asked the studio to send it to ${toName}` : `Transferred to ${toName}`);
       const fresh = await classDetail(handle, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
@@ -594,7 +601,7 @@ export function ClassSheet({
               <button
                 className="btn si shiftbox-btn"
                 disabled={shifting}
-                onClick={() => act(claimShift, "It's yours")}
+                onClick={() => act(claimShift, "It's yours", "Asked the studio")}
               >
                 {shifting ? "One moment…" : "I'll take it"}
               </button>

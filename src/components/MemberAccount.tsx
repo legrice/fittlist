@@ -38,7 +38,7 @@ export function MemberAccount({
 }: {
   /** The studios they run. A member can be a manager: addStudioManager only
    *  refuses a gym's own account. */
-  runs?: { name: string; slug: string }[];
+  runs?: { name: string; slug: string; admin: boolean }[];
   name: string;
   email: string;
   handle: string | null;
@@ -91,10 +91,10 @@ export function MemberAccount({
           do, then account plumbing, then the beta. */}
       {runs.length > 0 && (
         <>
-          <h3 className="setgroup-h">{runs.length === 1 ? "The studio you run" : "The studios you run"}</h3>
+          <h3 className="setgroup-h">Your studios</h3>
           <div className="settingslist">
             {runs.map((st) => (
-              <a key={st.slug} className="setrow" href={`/s/${st.slug}`}>
+              <a key={st.slug} className="setrow" href={`/s/${st.slug}/shifts`}>
                 <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
                 <span className="setrow-txt">
                   <span className="t">{st.name}</span>

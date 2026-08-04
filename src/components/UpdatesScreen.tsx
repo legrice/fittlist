@@ -54,6 +54,11 @@ const ICON: Record<string, string> = {
   studio_manager: "verified",
   shift_assigned: "calendar_month",
   shift_dropped: "event",
+  // A change waiting on the studio, and the answer when it is no. A type with
+  // no entry here renders a blank circle and nothing complains, which is how
+  // every notification row was empty for months.
+  shift_request: "schedule",
+  shift_declined: "close",
 };
 
 function fmt(d: Date | string) {

@@ -1,6 +1,6 @@
 {
-  "id": "0071one0-voca-bula-ry00-000000000071",
-  "prevId": "edf97ab1-dbd9-48b6-a7d7-7a3760815375",
+  "id": "4f39dedc-e837-4b64-9293-619968b6422b",
+  "prevId": "0071one0-voca-bula-ry00-000000000071",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2427,6 +2427,209 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.shift_requests": {
+      "name": "shift_requests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "studio_id": {
+          "name": "studio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class_id": {
+          "name": "class_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurrence_date": {
+          "name": "occurrence_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_user_id": {
+          "name": "from_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_user_id": {
+          "name": "to_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "decided_by_user_id": {
+          "name": "decided_by_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decided_at": {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "shift_requests_live": {
+          "name": "shift_requests_live",
+          "columns": [
+            {
+              "expression": "class_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "occurrence_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "to_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "shift_requests_studio_state": {
+          "name": "shift_requests_studio_state",
+          "columns": [
+            {
+              "expression": "studio_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "shift_requests_studio_id_studios_id_fk": {
+          "name": "shift_requests_studio_id_studios_id_fk",
+          "tableFrom": "shift_requests",
+          "tableTo": "studios",
+          "columnsFrom": [
+            "studio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shift_requests_class_id_classes_id_fk": {
+          "name": "shift_requests_class_id_classes_id_fk",
+          "tableFrom": "shift_requests",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shift_requests_from_user_id_users_id_fk": {
+          "name": "shift_requests_from_user_id_users_id_fk",
+          "tableFrom": "shift_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "from_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shift_requests_to_user_id_users_id_fk": {
+          "name": "shift_requests_to_user_id_users_id_fk",
+          "tableFrom": "shift_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "to_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shift_requests_decided_by_user_id_users_id_fk": {
+          "name": "shift_requests_decided_by_user_id_users_id_fk",
+          "tableFrom": "shift_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "decided_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.studio_classes": {
       "name": "studio_classes",
       "schema": "",
@@ -3120,6 +3323,13 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "approve_shift_changes": {
+          "name": "approve_shift_changes",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "created_at": {
           "name": "created_at",

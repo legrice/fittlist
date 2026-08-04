@@ -1023,8 +1023,34 @@ class needs a taker and that notice is what the lost text message was for;
 taking one tells the managers only, since everyone else was told so that one
 of them would do exactly this. Handing a date *to* somebody writes the cover
 straight onto them and tells them and the managers: the swap was agreed over
-the counter, and this is the writing-down. All of it is a notice, not a
-request: nobody asks permission, and nobody finds out too late.
+the counter, and this is the writing-down.
+
+**But taking or handing on a shift now asks first, by default.**
+`studios.approveShiftChanges` defaults true, per the staff spec, and it
+reverses the rule above for the two acts that give somebody a shift: a pickup
+and a hand-over become rows in `shift_requests`, and a manager answers them on
+the studio's shifts screen. The old behaviour is the switch turned off, which
+some studios will want, and the doctrine it rested on ("a notice, not a
+request: nobody asks permission, and nobody finds out too late") is now the
+argument for offering that setting rather than for the default.
+
+Releasing is deliberately **not** part of this. Handing a date back opens the
+slot immediately whatever the setting says: a class nobody is on, sitting in a
+queue waiting for permission to be uncovered, is the failure the whole
+coverage story is about.
+
+One rule makes approvals safe, and anything added here has to keep it: **a
+pending change never writes `shift_covers`.** The cover is written at the
+moment of approval and not before, so until a manager answers, no public page,
+no feed, no `.ics` and nobody's own calendar says the shift has moved. Two
+cases skip the queue because they restore the rota rather than change it:
+taking back a date you gave up yourself, and handing one back to whoever
+normally teaches it.
+
+`claimShift` and `sendShiftTo` return `pending` so a screen can say which
+thing happened. That is not cosmetic: the class sheet toasted "It's yours"
+after an ask for one build, which tells a coach a class is theirs when the
+studio has not agreed, and turning up to it is the consequence.
 
 **Who a shift can be handed to is the gym's list, not the directory's.**
 Anyone may say they coach at a gym (the directory runs on trust), and not

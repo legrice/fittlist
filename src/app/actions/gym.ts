@@ -12,6 +12,7 @@ import {
   fmtDays,
   fmtTime,
   mondayOfCurrentWeek,
+  occurrenceEnded,
   runsOn,
   timeToMinutes,
   todayIso,
@@ -920,7 +921,7 @@ export async function giveUpShift(
 export async function claimShift(
   classId: string,
   occurrenceDate: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; pending?: boolean }> {
   const ctx = await shiftFor(classId, occurrenceDate);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, userId, me, cls, studio, cover, on } = ctx;
@@ -928,6 +929,26 @@ export async function claimShift(
   if (me?.kind === "fan") return { ok: false, error: "That's for coaches at this studio." };
   if (!(await coachesHere(db, studio.id)).has(userId))
     return { ok: false, error: "That's for coaches at this studio." };
+
+  // Taking back a date you gave up yourself is not a change to anybody, so it
+  // never waits: the slot returns to the person the class already names.
+  if (userId !== cls.coachUserId) {
+    const filed = await fileRequest(db, {
+      studio,
+      cls,
+      occurrenceDate,
+      kind: "pickup",
+      fromUserId: cover?.coachUserId ?? cls.coachUserId ?? null,
+      toUserId: userId,
+      askedBy: userId,
+      askerName: me?.name?.trim() || "A coach",
+      toName: me?.name?.trim() || "A coach",
+    });
+    // `pending` is what stops a screen saying "it's yours" about something
+    // the studio has not agreed to.
+    if (filed.filed)
+      return filed.error ? { ok: false, error: filed.error } : { ok: true, pending: true };
+  }
 
   if (userId === cls.coachUserId) {
     // Taking back a date they'd given up: the exception stops existing.
@@ -980,7 +1001,7 @@ export async function sendShiftTo(
   classId: string,
   occurrenceDate: string,
   toUserId: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; pending?: boolean }> {
   const ctx = await shiftFor(classId, occurrenceDate);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { db, userId, me, cls, studio, cover, on } = ctx;
@@ -999,6 +1020,35 @@ export async function sendShiftTo(
       ),
     );
   if (!listed) return { ok: false, error: "They aren't on this gym's shift list." };
+
+  // Handing a date back to whoever normally teaches it is putting the rota
+  // back the way it was, so there is nothing for a manager to weigh.
+  if (toUserId !== cls.coachUserId) {
+    const filed = await fileRequest(db, {
+      studio,
+      cls,
+      occurrenceDate,
+      kind: "transfer",
+      fromUserId: userId,
+      toUserId,
+      askedBy: userId,
+      askerName: me?.name?.trim() || "A coach",
+      toName: target.name.trim() || target.email.split("@")[0],
+    });
+    if (filed.filed) {
+      if (filed.error) return { ok: false, error: filed.error };
+      // The named coach hears that they have been asked for, not that it is
+      // theirs: it is not, until the studio says so.
+      await addNotification(toUserId, {
+        type: "shift_request",
+        title: `You've been asked to cover ${cls.name}`,
+        body: `${fmtDateLong(occurrenceDate)}, ${fmtTime(cls.startTime)} at ${studio.name}. Waiting on the studio.`,
+        href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${occurrenceDate}`,
+        actorUserId: userId,
+      });
+      return { ok: true, pending: true };
+    }
+  }
 
   if (toUserId === cls.coachUserId) {
     // Handing it back to whoever normally teaches it: the exception stops
@@ -1448,4 +1498,426 @@ export async function removeStudioManager(
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Shift changes that wait on a manager.
+//
+// Per the staff spec, `studios.approveShiftChanges` is on by default: picking
+// up an open shift and being handed one both become asks rather than facts.
+// This reverses what the rota did before, which was deliberate at the time
+// ("a notice, not a request: nobody asks permission, and nobody finds out too
+// late") and is now the studio's own switch. With it off, everything below
+// falls straight through to the immediate write and the old behaviour stands.
+//
+// The one rule that makes this safe: a pending change never touches
+// `shift_covers`. Until a manager answers, no public page, no feed, no .ics
+// and no coach's own calendar says anything has moved, because the only table
+// that would tell them has not been written.
+// ---------------------------------------------------------------------------
+
+export type ShiftRequestDto = {
+  id: string;
+  kind: "pickup" | "transfer";
+  className: string;
+  whenLong: string;
+  iso: string;
+  fromName: string | null;
+  toName: string;
+  /** The viewer is the one who asked, so the row reads as theirs. */
+  mine: boolean;
+};
+
+/** Does this studio make a change wait? */
+async function needsApproval(db: Awaited<ReturnType<typeof getDb>>, studioId: string) {
+  const [s] = await db
+    .select({ on: schema.studios.approveShiftChanges })
+    .from(schema.studios)
+    .where(eq(schema.studios.id, studioId));
+  return !!s?.on;
+}
+
+/** File the ask, and tell the managers there is one. Returns false when the
+ *  studio takes changes immediately, so the caller does the real write. */
+async function fileRequest(
+  db: Awaited<ReturnType<typeof getDb>>,
+  args: {
+    studio: typeof schema.studios.$inferSelect;
+    cls: typeof schema.classes.$inferSelect;
+    occurrenceDate: string;
+    kind: "pickup" | "transfer";
+    fromUserId: string | null;
+    toUserId: string;
+    askedBy: string;
+    askerName: string;
+    toName: string;
+  },
+): Promise<{ filed: boolean; error?: string }> {
+  if (!(await needsApproval(db, args.studio.id))) return { filed: false };
+  const dupe = await db
+    .select({ id: schema.shiftRequests.id })
+    .from(schema.shiftRequests)
+    .where(
+      and(
+        eq(schema.shiftRequests.classId, args.cls.id),
+        eq(schema.shiftRequests.occurrenceDate, args.occurrenceDate),
+        eq(schema.shiftRequests.toUserId, args.toUserId),
+        eq(schema.shiftRequests.state, "pending"),
+      ),
+    );
+  if (dupe.length) return { filed: true, error: "That's already waiting on the studio." };
+  await db.insert(schema.shiftRequests).values({
+    studioId: args.studio.id,
+    classId: args.cls.id,
+    occurrenceDate: args.occurrenceDate,
+    kind: args.kind,
+    fromUserId: args.fromUserId,
+    toUserId: args.toUserId,
+  });
+  const when = `${fmtDateLong(args.occurrenceDate)}, ${fmtTime(args.cls.startTime)}`;
+  await tellTheGym(
+    db,
+    args.studio,
+    [],
+    {
+      type: "shift_request",
+      title:
+        args.kind === "pickup"
+          ? `${args.askerName} wants ${args.cls.name}`
+          : `${args.askerName} is handing ${args.cls.name} to ${args.toName}`,
+      body: `${when}. Waiting on you.`,
+      href: `/s/${args.studio.slug ?? args.studio.id}/manage/staff`,
+      actorUserId: args.askedBy,
+    },
+    false,
+  );
+  return { filed: true };
+}
+
+/** Everything waiting on this studio, newest first. Managers only. */
+export async function shiftRequests(studioId: string): Promise<ShiftRequestDto[]> {
+  const ctx = await managing(studioId);
+  if ("error" in ctx) return [];
+  const { db, userId } = ctx;
+  const rows = await db
+    .select()
+    .from(schema.shiftRequests)
+    .where(and(eq(schema.shiftRequests.studioId, studioId), eq(schema.shiftRequests.state, "pending")));
+  if (!rows.length) return [];
+  const ids = [...new Set(rows.flatMap((r) => [r.toUserId, r.fromUserId].filter(Boolean) as string[]))];
+  const people = ids.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, ids))
+    : [];
+  const nameOf = new Map(people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]]));
+  const clsIds = [...new Set(rows.map((r) => r.classId))];
+  const clsRows = await db.select().from(schema.classes).where(inArray(schema.classes.id, clsIds));
+  const clsById = new Map(clsRows.map((c) => [c.id, c]));
+  return rows
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .map((r) => {
+      const c = clsById.get(r.classId);
+      return {
+        id: r.id,
+        kind: r.kind as "pickup" | "transfer",
+        className: c?.name ?? "A class",
+        whenLong: c ? `${fmtDateLong(r.occurrenceDate)}, ${fmtTime(c.startTime)}` : fmtDateLong(r.occurrenceDate),
+        iso: r.occurrenceDate,
+        fromName: r.fromUserId ? (nameOf.get(r.fromUserId) ?? null) : null,
+        toName: nameOf.get(r.toUserId) ?? "A coach",
+        mine: r.toUserId === userId,
+      };
+    });
+}
+
+/**
+ * Say yes or no. Approving is the moment the change becomes true, so it is
+ * also the moment the cover is written: everything before this was an ask.
+ */
+export async function answerShiftRequest(
+  requestId: string,
+  approve: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const db = await getDb();
+  const [req] = await db
+    .select()
+    .from(schema.shiftRequests)
+    .where(eq(schema.shiftRequests.id, requestId));
+  if (!req) return { ok: false, error: "That request is gone." };
+  const ctx = await managing(req.studioId);
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { studio } = ctx;
+  if (req.state !== "pending") return { ok: false, error: "That one is already answered." };
+  const [cls] = await db.select().from(schema.classes).where(eq(schema.classes.id, req.classId));
+  if (!cls) return { ok: false, error: "That class is gone." };
+
+  await db
+    .update(schema.shiftRequests)
+    .set({ state: approve ? "approved" : "declined", decidedByUserId: userId, decidedAt: new Date() })
+    .where(eq(schema.shiftRequests.id, requestId));
+
+  if (approve) {
+    // Now, and only now, the calendars learn about it.
+    const [cover] = await db
+      .select()
+      .from(schema.shiftCovers)
+      .where(
+        and(
+          eq(schema.shiftCovers.classId, req.classId),
+          eq(schema.shiftCovers.occurrenceDate, req.occurrenceDate),
+        ),
+      );
+    if (req.toUserId === cls.coachUserId) {
+      if (cover) await db.delete(schema.shiftCovers).where(eq(schema.shiftCovers.id, cover.id));
+    } else if (cover) {
+      await db
+        .update(schema.shiftCovers)
+        .set({ coachUserId: req.toUserId, createdByUserId: userId })
+        .where(eq(schema.shiftCovers.id, cover.id));
+    } else {
+      await db.insert(schema.shiftCovers).values({
+        classId: req.classId,
+        occurrenceDate: req.occurrenceDate,
+        coachUserId: req.toUserId,
+        createdByUserId: userId,
+      });
+    }
+  }
+
+  const when = `${fmtDateLong(req.occurrenceDate)}, ${fmtTime(cls.startTime)}`;
+  // The asker hears either way. A declined ask that says nothing is how
+  // somebody turns up to a class that was never theirs.
+  await addNotification(req.toUserId, {
+    type: approve ? "shift_assigned" : "shift_declined",
+    title: approve ? `You're on ${cls.name}` : `${cls.name} stayed where it was`,
+    body: approve
+      ? `${when} at ${studio.name}. The studio said yes.`
+      : `${when} at ${studio.name}. The studio didn't approve the change.`,
+    href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${req.occurrenceDate}`,
+    actorUserId: userId,
+  });
+  // A transfer has somebody on the other end of it who also arranged this.
+  if (req.fromUserId && req.fromUserId !== req.toUserId) {
+    await addNotification(req.fromUserId, {
+      type: approve ? "shift_assigned" : "shift_declined",
+      title: approve ? `${cls.name} is covered` : `${cls.name} is still yours`,
+      body: approve
+        ? `${when} at ${studio.name}. The studio approved the hand-over.`
+        : `${when} at ${studio.name}. The studio didn't approve it.`,
+      href: `/s/${studio.slug ?? studio.id}/${cls.id}?d=${req.occurrenceDate}`,
+      actorUserId: userId,
+    });
+  }
+  revalidatePath("/app");
+  revalidatePath(`/s/${studio.slug ?? studio.id}`);
+  revalidatePath(`/s/${studio.slug ?? studio.id}/manage/staff`);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// The staff side, for a coach who is not a manager.
+//
+// Everything above this point answers to `actingFor` or `managing`, both of
+// which mean "you run this place". A coach who merely works here had no studio
+// screen at all: the rota is the managers' and the studio page is the public
+// one. The spec's arrangement is that My shifts is the default tab for
+// everyone, admin or not, and the admin's extra powers are extra tabs rather
+// than a separate app.
+// ---------------------------------------------------------------------------
+
+export type StaffShift = {
+  classId: string;
+  iso: string;
+  name: string;
+  timeLabel: string;
+  durationMin: number;
+  where: string | null;
+  /** Nobody is on it. */
+  open: boolean;
+  /** The viewer is on it. */
+  mine: boolean;
+  /** Who is on it, for the admin's full view. Null when nobody is. */
+  onName: string | null;
+  /** A pending ask against this date, said on the row. */
+  pending: string | null;
+};
+export type StaffView = {
+  studioName: string;
+  slug: string;
+  isManager: boolean;
+  /** They coach here, whether or not they run the place. */
+  isStaff: boolean;
+  coachCount: number;
+  mine: StaffShift[];
+  open: StaffShift[];
+  all: StaffShift[];
+  requests: ShiftRequestDto[];
+  approvalOn: boolean;
+};
+
+/** May this person see a studio's staff side at all? */
+async function staffing(studioId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return { error: "Session expired." as const };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { error: "Session expired." as const };
+  const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
+  if (!studio) return { error: "Studio not found." as const };
+  const access = await studioAccess(studioId, { id: userId, kind: me.kind });
+  // A coach who lists this studio is staff. That is the same union the rota
+  // and the studio's Coaches tab already use, so nobody has to be added twice.
+  const isStaff = (await coachesHere(db, studioId)).has(userId);
+  if (!access.isManager && !isStaff)
+    return { error: "That's for the people who work at this studio." as const };
+  return { db, userId, me, studio, isManager: access.isManager, isStaff };
+}
+
+/**
+ * The staff side of one studio, for whoever is looking.
+ *
+ * A fortnight forward, because a rota is planned about that far ahead and the
+ * question this screen answers ("am I on anything, is anything uncovered") has
+ * no useful answer beyond it. Today's passed occurrences come off with the
+ * same predicate every other surface uses.
+ */
+export async function staffView(studioId: string): Promise<StaffView | null> {
+  const ctx = await staffing(studioId);
+  if ("error" in ctx) return null;
+  const { db, userId, studio, isManager, isStaff } = ctx;
+  if (!studio.accountUserId) return null;
+
+  const rows = (
+    await db
+      .select()
+      .from(schema.classes)
+      .where(
+        and(eq(schema.classes.userId, studio.accountUserId), eq(schema.classes.studioId, studioId)),
+      )
+  ).filter((c) => c.isPublic);
+  const covers = rows.length
+    ? await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, rows.map((r) => r.id)))
+    : [];
+  const coverBy = new Map(covers.map((c) => [`${c.classId}|${c.occurrenceDate}`, c]));
+  const pending = rows.length
+    ? await db
+        .select()
+        .from(schema.shiftRequests)
+        .where(
+          and(eq(schema.shiftRequests.studioId, studioId), eq(schema.shiftRequests.state, "pending")),
+        )
+    : [];
+  const ids = new Set<string>();
+  for (const r of rows) if (r.coachUserId) ids.add(r.coachUserId);
+  for (const c of covers) if (c.coachUserId) ids.add(c.coachUserId);
+  for (const p of pending) ids.add(p.toUserId);
+  const people = ids.size
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, [...ids]))
+    : [];
+  const nameOf = new Map(people.map((p) => [p.id, p.name.trim() || p.email.split("@")[0]] as const));
+  const pendBy = new Map(pending.map((p) => [`${p.classId}|${p.occurrenceDate}`, p]));
+
+  const today = todayIso();
+  const start = new Date(`${today}T00:00:00Z`);
+  const mine: StaffShift[] = [];
+  const open: StaffShift[] = [];
+  const all: StaffShift[] = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = (d.getUTCDay() + 6) % 7;
+    for (const r of rows
+      .filter((c) => runsOn(c, iso, dow))
+      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))) {
+      if (occurrenceEnded(iso, r.startTime, r.durationMin)) continue;
+      const cover = coverBy.get(`${r.id}|${iso}`);
+      const onUserId = cover ? cover.coachUserId : r.coachUserId;
+      const ask = pendBy.get(`${r.id}|${iso}`);
+      const item: StaffShift = {
+        classId: r.id,
+        iso,
+        name: r.name,
+        timeLabel: `${fmtDayHeader(iso)} · ${fmtTime(r.startTime)}`,
+        durationMin: r.durationMin,
+        where: r.location,
+        open: !onUserId,
+        mine: onUserId === userId,
+        onName: onUserId ? (nameOf.get(onUserId) ?? null) : null,
+        pending: ask
+          ? ask.kind === "pickup"
+            ? `${nameOf.get(ask.toUserId) ?? "A coach"} asked for this one`
+            : `Offered to ${nameOf.get(ask.toUserId) ?? "a coach"}`
+          : null,
+      };
+      if (item.mine) mine.push(item);
+      if (item.open) open.push(item);
+      all.push(item);
+    }
+  }
+  return {
+    studioName: studio.name,
+    slug: studio.slug ?? studio.id,
+    isManager,
+    isStaff,
+    coachCount: (await coachesHere(db, studioId)).size,
+    mine,
+    open,
+    all,
+    requests: isManager ? await shiftRequests(studioId) : [],
+    approvalOn: !!studio.approveShiftChanges,
+  };
+}
+
+/**
+ * Every studio this account is staff at, with whether they run it.
+ *
+ * Deliberately session-derived rather than taking a user id: this is exported
+ * from a `"use server"` file, so a parameter would be a callable endpoint for
+ * reading anybody's affiliations.
+ *
+ * It exists so "Your studios" and the staff screen answer the same question
+ * the same way. They did not for one build: this list joined `coach_studios`
+ * alone while `staffing()` used the union that also counts having a class
+ * there, so a coach who had only ever listed a class was staff to the screen
+ * and a stranger to the list that was supposed to link them to it.
+ */
+export async function myStaffStudios(): Promise<
+  { id: string; name: string; slug: string; admin: boolean }[]
+> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
+  const db = await getDb();
+  const [picked, classRows, managed] = await Promise.all([
+    db
+      .select({ studioId: schema.coachStudios.studioId })
+      .from(schema.coachStudios)
+      .where(eq(schema.coachStudios.userId, userId)),
+    db
+      .select({ studioId: schema.classes.studioId })
+      .from(schema.classes)
+      .where(eq(schema.classes.userId, userId)),
+    db
+      .select({ studioId: schema.studioManagers.studioId })
+      .from(schema.studioManagers)
+      .where(eq(schema.studioManagers.userId, userId)),
+  ]);
+  const runs = new Set(managed.map((r) => r.studioId));
+  const ids = [
+    ...new Set(
+      [...picked, ...classRows, ...managed]
+        .map((r) => r.studioId)
+        .filter((id): id is string => !!id),
+    ),
+  ];
+  if (!ids.length) return [];
+  const rows = await db.select().from(schema.studios).where(inArray(schema.studios.id, ids));
+  return rows
+    .map((s) => ({ id: s.id, name: s.name, slug: s.slug ?? s.id, admin: runs.has(s.id) }))
+    // The places you run first: they carry the work that only you can do.
+    .sort((a, b) => Number(b.admin) - Number(a.admin) || a.name.localeCompare(b.name));
 }

@@ -121,7 +121,7 @@ export function ProfileSheet({
    *  studio's own page, which is no help to somebody who runs a gym without
    *  teaching there: Where I coach is built from coach_studios and a manager
    *  need not be in it. */
-  runs?: { name: string; slug: string }[];
+  runs?: { name: string; slug: string; admin: boolean }[];
   /** The coach's own palette colour, so a photo-less avatar reads as theirs. */
   avatarColor: string;
   showFanView?: boolean;
@@ -509,14 +509,19 @@ export function ProfileSheet({
             no way to find something you own. */}
         {runs.length > 0 && (
           <>
-            <h3 className="setgroup-h">{runs.length === 1 ? "The studio you run" : "The studios you run"}</h3>
+            <h3 className="setgroup-h">Your studios</h3>
             <div className="settingslist">
               {runs.map((st) => (
-                <a key={st.slug} className="setrow" href={`/s/${st.slug}`}>
+                <a key={st.slug} className="setrow" href={`/s/${st.slug}/shifts`}>
                   <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
                   <span className="setrow-txt">
-                    <span className="t">{st.name}</span>
-                    <span className="s">Its page, its rota, and its staff</span>
+                    <span className="t">
+                      {st.name}
+                      <span className="staffrole">{st.admin ? "Admin" : "Coach"}</span>
+                    </span>
+                    <span className="s">
+                      {st.admin ? "Shifts, the rota, and who works here" : "Your shifts and what's open"}
+                    </span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </a>

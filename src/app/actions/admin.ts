@@ -429,6 +429,7 @@ export async function adminDeleteStudio(
   // The edit history, the keys and the shift list go with the studio they
   // describe.
   await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.studioId, id));
+  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.studioId, id));
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.studioId, id));
   await db.delete(schema.studioEdits).where(eq(schema.studioEdits.studioId, id));
   await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
@@ -553,6 +554,16 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   // gym's shift list goes too: a list naming somebody who left is a hand-off
   // to nobody.
   await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.userId, id));
+  // Any shift change they were part of goes with them. A request naming
+  // somebody who left is an ask nobody can answer and a hand-off to nobody,
+  // so both directions are deleted rather than de-attributed; the decider is
+  // only cleared, because an answered request is a fact about the studio.
+  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.toUserId, id));
+  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.fromUserId, id));
+  await db
+    .update(schema.shiftRequests)
+    .set({ decidedByUserId: null })
+    .where(eq(schema.shiftRequests.decidedByUserId, id));
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
   await db
     .update(schema.studioManagers)

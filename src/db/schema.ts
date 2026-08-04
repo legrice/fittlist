@@ -246,6 +246,11 @@ export const studios = pgTable("studios", {
   // Tom can teach without a public profile and Josh can publish a schedule
   // without naming anyone. Its managers act for it; see studio_managers.
   accountUserId: uuid("account_user_id").references(() => users.id),
+  // Whether a coach handing a shift on or picking one up needs a manager to
+  // say yes. On by default, per the staff spec. Off restores what the rota
+  // did before this existed: the change lands the moment it is made and
+  // everybody who should know is told, which some studios will prefer.
+  approveShiftChanges: boolean("approve_shift_changes").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -272,6 +277,51 @@ export const shiftCovers = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("shift_covers_once").on(t.classId, t.occurrenceDate)],
+);
+
+// A shift change waiting on a manager.
+//
+// The rota's own tables say what is true: `classes.coachUserId` is who
+// normally teaches a slot and `shift_covers` is one date's exception. Neither
+// can hold "somebody would like this to be true", which is what an approval
+// queue is, so a pending change lives here and only becomes a cover once it
+// is approved. That keeps the calendars honest: nothing a manager has not
+// answered ever reaches a public page, a feed, or anybody's .ics.
+//
+// It is keyed on the class and the date rather than on a cover row, for the
+// same reason a report is keyed on the series: the cover may not exist yet
+// (a pickup of a never-assigned slot) and may be deleted underneath it.
+export const shiftRequests = pgTable(
+  "shift_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    classId: uuid("class_id").notNull().references(() => classes.id),
+    occurrenceDate: date("occurrence_date").notNull(),
+    /** "pickup" (an open shift somebody wants) or "transfer" (a named
+     *  hand-over). The two read differently to a manager and are the same
+     *  write once approved. */
+    kind: text("kind").notNull(),
+    /** Who the shift is coming from. Null on a pickup of a slot nobody held. */
+    fromUserId: uuid("from_user_id").references(() => users.id),
+    /** Who it would land on. Never null: a request with nobody on the end of
+     *  it is a release, and a release is immediate. */
+    toUserId: uuid("to_user_id").notNull().references(() => users.id),
+    /** pending | approved | declined. Answered rows are kept, because the
+     *  Requests tab becomes a log when a studio turns approval off and a
+     *  declined ask is a thing the coach should still be able to see. */
+    state: text("state").notNull().default("pending"),
+    decidedByUserId: uuid("decided_by_user_id").references(() => users.id),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // One live ask per person per slot. Two coaches may both want the same
+    // open shift, which is a real race a manager settles, so the index
+    // carries the taker.
+    uniqueIndex("shift_requests_live").on(t.classId, t.occurrenceDate, t.toUserId, t.state),
+    index("shift_requests_studio_state").on(t.studioId, t.state),
+  ],
 );
 
 // Who a shift can be handed to. Anyone may say they coach at a gym (the

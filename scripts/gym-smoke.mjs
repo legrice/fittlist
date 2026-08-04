@@ -113,18 +113,26 @@ console.log("gym account on ok");
   const row = matt.locator(".setrow", { hasText: "Ironbound" });
   await row.waitFor();
   const href = await row.getAttribute("href");
-  if (!href?.startsWith("/s/")) fail("the row should open the studio: " + href);
+  // It opens the shifts screen, not the public page: what you came to your
+  // own account for is the work, and the role tag says which kind you are.
+  if (!href?.endsWith("/shifts")) fail("the row should open the shifts screen: " + href);
+  if (!/Admin/.test(await row.innerText())) fail("a manager's row should say Admin");
   await row.click();
-  await matt.waitForURL(/\/s\//);
-  await matt.locator(".studioadmin").waitFor();
+  await matt.waitForURL(/\/shifts/);
+  await matt.locator(".staffbar").waitFor();
   console.log("the studio you run is on your own account ok");
 }
-// Somebody who runs nothing is told nothing.
+// A coach who works here but runs nothing gets the row too, tagged Coach:
+// the spec's Your studios is anybody affiliated as staff, and the shifts
+// screen is exactly what a staff coach never had a door to.
 {
   await tom.goto(BASE + "/you");
   await tom.locator(".acctwrap").waitFor();
-  if (await tom.locator(".setrow", { hasText: "Ironbound" }).count())
-    fail("a coach who runs no studio shouldn't see one");
+  const row = tom.locator(".setrow", { hasText: "Ironbound" });
+  await row.waitFor();
+  const txt = await row.innerText();
+  if (!/Coach/.test(txt)) fail("a staff coach's row should say Coach: " + txt);
+  if (/Admin/.test(txt)) fail("a staff coach is not an admin");
 }
 
 // The studio picker autocompletes names, so read the slug rather than guess it.
@@ -286,6 +294,45 @@ console.log("the coach is told ok");
   if (!nextTxt.includes("Tom")) fail("next week should still be the regular coach: " + nextTxt);
   if (/covering/i.test(nextTxt)) fail("next week should carry no exception");
   console.log("the standing rota is untouched ok");
+}
+
+// The staff side, for a coach who does not run the place.
+//
+// This is the hole the staff spec is mostly about: /manage is the managers'
+// and a coach who merely works here had no studio screen at all. My shifts is
+// the default tab for everyone, admin or not, because a manager is almost
+// always also a coach and a manager-only mode that hides their own shifts is
+// the thing to avoid.
+{
+  await tom.goto(BASE + studioHref + "/shifts");
+  await tom.locator(".admintop h1").waitFor();
+  {
+    const sub = await tom.locator(".adminsub").innerText();
+    if (!/You coach here/.test(sub)) fail("a staff coach should be told they coach here: " + sub);
+  }
+  // No admin doors for somebody who does not run the place.
+  if (await tom.locator(".staffbar").count()) fail("a staff coach shouldn't get the admin bar");
+  {
+    const tabs = (await tom.locator(".pubtabs .pubtab").allInnerTexts()).map((t) =>
+      t.split("\n")[0].trim(),
+    );
+    if (tabs.join("|") !== "My shifts|Open") fail("a staff coach gets two tabs: " + tabs.join("|"));
+  }
+  // He is on the HYROX, so it is on his own tab.
+  if (!(await tom.locator(".setrow", { hasText: "HYROX" }).count()))
+    fail("Tom's own shift should be on My shifts");
+  console.log("a staff coach has a shifts screen ok");
+
+  // The manager gets the same screen plus the extra doors and the queue.
+  await matt.goto(BASE + studioHref + "/shifts");
+  await matt.locator(".staffbar").waitFor();
+  {
+    const tabs = (await matt.locator(".pubtabs .pubtab").allInnerTexts()).map((t) =>
+      t.split("\n")[0].trim(),
+    );
+    if (!tabs.includes("Requests")) fail("a manager gets the queue: " + tabs.join("|"));
+  }
+  console.log("a manager gets the same screen plus the queue ok");
 }
 
 // Both calendars move: the date leaves Tom's and lands in Julia's. Getting
@@ -591,9 +638,30 @@ console.log("the coach is told ok");
   await call.click();
   await julia.locator(".classoverlay-nm", { hasText: "HYROX" }).waitFor();
   await julia.getByRole("button", { name: /take it/i }).click();
-  await julia.getByText("It's yours").waitFor();
+  // Approval is on by default now, so taking an open date is an ask and the
+  // sheet says so. It would be worse to say "it's yours" about something the
+  // studio has not agreed to: she would turn up to a class that is not hers.
+  await julia.getByText("Asked the studio").waitFor();
   await julia.waitForTimeout(900);
-  console.log("a coach takes an open date ok");
+  console.log("a coach asks for an open date ok");
+
+  // Nothing has moved yet: the rota still shows the slot open, because a
+  // pending change never writes a cover.
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  {
+    const still = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+    await still.waitFor();
+    if (/Julia/.test(await still.innerText()))
+      fail("a pending ask reached the rota before anybody approved it");
+  }
+  // The manager answers it, and that is the moment it becomes true.
+  await matt.goto(BASE + studioHref + "/shifts");
+  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
+  await matt.waitForTimeout(400);
+  await matt.locator(".setrow", { hasText: "Julia" }).first().getByRole("button", { name: "Approve" }).click();
+  await matt.getByText("Approved").waitFor();
+  await matt.waitForTimeout(1000);
+  console.log("the studio approves it ok");
 
   // It moved, on the rota and on both their schedules.
   await matt.goto(BASE + studioHref + "/manage?w=1");
@@ -612,8 +680,8 @@ console.log("the coach is told ok");
 
   // And the manager is told, because it is still their rota.
   await matt.goto(BASE + "/updates");
-  await matt.locator(".notifrow", { hasText: "took HYROX" }).waitFor();
-  console.log("the manager is told without having to do it ok");
+  await matt.locator(".notifrow", { hasText: /HYROX/ }).first().waitFor();
+  console.log("the manager hears about the change ok");
 }
 
 // ---- the shift list, and handing a date straight to somebody
@@ -695,19 +763,37 @@ console.log("the coach is told ok");
   // Named, then asked: the confirm says who takes it before anyone is told.
   await tom.getByRole("heading", { name: "Transfer to Julia?" }).waitFor();
   await tom.getByRole("button", { name: "Transfer to Julia" }).click();
-  await tom.getByText("Transferred to Julia").waitFor();
+  // With approval on, a hand-over is an ask too, and the toast says so rather
+  // than telling Tom it is done.
+  await tom.getByText(/Asked the studio to send it to Julia/).waitFor();
   await tom.waitForTimeout(900);
-  console.log("a date handed straight to a coach ok");
+  console.log("a date offered straight to a coach ok");
 
-  // She hears it came from him; the manager gets the receipt; the rota says
-  // who is really on it.
+  // She hears she has been asked for, not that it is hers: it is not, yet.
   await julia.goto(BASE + "/updates");
-  const got = julia.locator(".notifrow", { hasText: "You're covering HYROX" }).first();
-  await got.waitFor();
-  if (!/Tom handed it to you/.test(await got.innerText()))
-    fail("the hand-off should say who it came from");
-  await matt.goto(BASE + "/updates");
-  await matt.locator(".notifrow", { hasText: "Tom handed HYROX to Julia" }).first().waitFor();
+  const asked = julia.locator(".notifrow", { hasText: /asked to cover HYROX/i }).first();
+  await asked.waitFor();
+  // The rota still says Tom until somebody answers.
+  await matt.goto(BASE + studioHref + "/manage?w=2");
+  {
+    const still = matt.locator(".ps-event", { hasText: "HYROX" }).first();
+    await still.waitFor();
+    if (/Julia/.test(await still.innerText()))
+      fail("a pending hand-over reached the rota before it was approved");
+  }
+  // The manager says yes, and then it is hers.
+  await matt.goto(BASE + studioHref + "/shifts");
+  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
+  await matt.waitForTimeout(400);
+  await matt
+    .locator(".setrow", { hasText: "handing HYROX to Julia" })
+    .first()
+    .getByRole("button", { name: "Approve" })
+    .click();
+  await matt.getByText("Approved").waitFor();
+  await matt.waitForTimeout(1000);
+  await julia.goto(BASE + "/updates");
+  await julia.locator(".notifrow", { hasText: /You're on HYROX/ }).first().waitFor();
   await matt.goto(BASE + studioHref + "/manage?w=2");
   const onRota = matt.locator(".ps-event", { hasText: "HYROX" }).first();
   await onRota.waitFor();
@@ -1016,6 +1102,57 @@ if (await tom.locator(".rota").count())
 if ((await tom.locator("body").innerText()).includes("HYROX"))
   fail("the rota leaked its classes to a coach who doesn't run the studio");
 console.log("the rota is closed to everyone else ok");
+
+// Approval is on by default, and the point of it is that nothing a manager
+// has not answered reaches a calendar.
+//
+// Self-contained: it builds its own slot and leaves it unassigned rather than
+// borrowing a coach or a class from the tests above, which by this point have
+// swapped, handed on and merged their way through both. The slot is open from
+// birth, so there is nothing to give up first.
+{
+  await matt.goto(BASE + studioHref + "/manage?w=1");
+  await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#fName").waitFor();
+  await matt.locator("#fName").fill("Cover Test");
+  await matt.locator("#fStart").fill("11:00");
+  await matt.getByRole("button", { name: "Add to the schedule" }).click();
+  await matt.getByText("Added to the week").waitFor();
+  await matt.waitForTimeout(900);
+
+  // Julia asks for it. She still lists a class here, so she is a coach at the
+  // studio; Tom's own class was merged into the gym earlier, which takes him
+  // out of that union.
+  await julia.goto(BASE + studioHref + "/shifts");
+  await julia.locator(".pubtabs .pubtab", { hasText: "Open" }).click();
+  await julia.waitForTimeout(500);
+  const open = julia.locator(".setrow", { hasText: "Cover Test" }).first();
+  await open.waitFor();
+  await open.getByRole("button", { name: "Pick up" }).click();
+  await julia.getByText("Asked the studio").waitFor();
+  await julia.waitForTimeout(900);
+
+  // Nothing has moved: the gym's public page does not carry her name.
+  await julia.goto(BASE + studioHref);
+  await julia.waitForTimeout(500);
+  if (/Julia/.test(await julia.locator(".ps-week").innerText()))
+    fail("a pending ask reached the studio's public page");
+
+  // The manager answers, and that is the moment it becomes true.
+  await matt.goto(BASE + studioHref + "/shifts");
+  await matt.locator(".pubtabs .pubtab", { hasText: "Requests" }).click();
+  await matt.waitForTimeout(500);
+  await matt
+    .locator(".setrow", { hasText: "Cover Test" })
+    .first()
+    .getByRole("button", { name: "Approve" })
+    .click();
+  await matt.getByText("Approved").waitFor();
+  await matt.waitForTimeout(1200);
+  await julia.goto(BASE + "/updates");
+  await julia.locator(".notifrow", { hasText: /You're on Cover Test/ }).first().waitFor();
+  console.log("approval holds a change off the calendars until it is answered ok");
+}
 
 await b.close();
 console.log("GYM CHECKS PASSED");
