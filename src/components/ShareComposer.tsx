@@ -12,37 +12,44 @@ import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// The share composer: the picture first, the controls under it, one Share.
+// The Share tab's editor.
 //
-// Five things about the old editor made it a form rather than a composer, and
-// each is answered here. The preview sat below three controls and was cropped
-// by the time you scrolled to it, so it is on top and takes every pixel the
-// controls don't. Style was a dropdown, so it is swatches. The headline was a
-// blank field duplicating a choice already made, so it is derived from the
-// segment and edited only if somebody wants to. Save and Share were two
-// buttons for one intent, so Share leads and Save is the quiet one under it.
-// And an empty week produced an empty image, so it produces an offer instead.
+// This is the coach's old "Share your schedule" sheet, promoted to the tab and
+// given the one control it never had. It replaced a full-screen composer with
+// a collapsing drawer, which was more screen than the job needs: everything
+// here fits in one scroll, so nothing is behind a pull and the picture is the
+// thing you scroll to rather than the thing you uncover. Two edits came with
+// the move, both Matt's call:
+//
+//   * My week / Today is gone, and the Classes picker stands in its place. A
+//     range was the wrong question: the answer is "the coming week" nearly
+//     every time, and what people actually want to change is which classes are
+//     on the picture. That control also adds, which is what makes this screen
+//     the place calendars and the studio catalog get filled in.
+//   * The headline field is gone. It maps from the hat and nothing else can
+//     set it here.
 
 /**
  * What the picture says at the top, and the whole of what it can say.
  *
- * It was a line with an Edit beside it, which was already the small version of
- * a blank field; both are gone. The headline is a function of the segment, so
- * there is nothing here to get wrong, nothing to leave half-typed, and no
- * saved words to quietly override the hat you are standing on. The composer
- * sends it explicitly for that last reason: a coach who typed one into the old
- * sheet has it on `storyPrefs`, and falling back to that would put their
- * Coaching words over a Going picture.
+ * The composer sends it explicitly rather than letting the route fall back to
+ * `storyPrefs`: a coach who typed one into the old sheet still has it stored,
+ * and inheriting it would put their Coaching words over a Going picture.
  */
 const HEADLINE: Record<ShareKind, string> = {
   coaching: "Come train with me",
   going: "My week",
 };
 
+/** The window the picture draws. There is no control for it: a start date and
+ *  a length were two questions whose answer was "this coming week" almost
+ *  every time, and the Classes picker is the honest version of the one thing
+ *  people wanted them for. */
+const SPAN_DAYS = 7;
+
 export function ShareComposer({
   canCoach,
   hasPhoto,
-  hasCity,
   today,
   firstIso,
   studios,
@@ -55,10 +62,9 @@ export function ShareComposer({
    *  should be. */
   canCoach: boolean;
   hasPhoto: boolean;
-  hasCity: boolean;
   today: string;
-  /** The first day their week holds something, so the composer opens on a
-   *  picture rather than on an empty one they have to work out. */
+  /** The first day their week holds something, so the picture opens on a week
+   *  rather than on an empty one they have to work out. */
   firstIso: string;
   /** The adder's ingredients. Making the picture and keeping the calendar are
    *  the same act here: a class typed into the classes sheet lands on the
@@ -74,21 +80,8 @@ export function ShareComposer({
 
   const [kind, setKind] = useState<ShareKind>(canCoach ? "coaching" : "going");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
-  const [from, setFrom] = useState(firstIso);
-  const [days, setDays] = useState(7);
-  // Shut on arrival: you open this screen to see the picture, not to fill in
-  // a form, and the whole point of the drawer is that the picture gets the
-  // room when the tools are not in use. Everything is already answered when
-  // you land (the hat, the range, the style), so the first thing on screen is
-  // a result rather than a set of questions about one.
-  const [open, setOpen] = useState(false);
-
-  const headline = HEADLINE[kind];
-
+  const [styleOpen, setStyleOpen] = useState(false);
   const [showPhoto, setShowPhoto] = useState(true);
-  const [showStudios, setShowStudios] = useState(true);
-  const [showCity, setShowCity] = useState(true);
-  const [more, setMore] = useState(false);
 
   const [rows, setRows] = useState<ShareRow[] | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -100,6 +93,9 @@ export function ShareComposer({
   // picture has no reason of its own to redraw. This is that reason.
   const [bust, setBust] = useState(0);
 
+  const from = firstIso > today ? firstIso : today;
+  const headline = HEADLINE[kind];
+
   useEffect(() => {
     setCanShareFiles(
       typeof navigator !== "undefined" &&
@@ -109,19 +105,19 @@ export function ShareComposer({
     getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
   }, []);
 
-  // The rows behind the count and the picker. Reloaded whenever the question
-  // changes, never filtered on the client: the picture is drawn from the same
-  // loader on the server, and two filters would drift.
+  // The rows behind the count and the picker. Never filtered on the client:
+  // the picture is drawn from the same loader on the server, and two filters
+  // would drift.
   const load = useCallback(() => {
     let live = true;
     setRows(null);
-    shareRows({ kind, from, days }).then((r) => {
+    shareRows({ kind, from, days: SPAN_DAYS }).then((r) => {
       if (live) setRows(r);
     });
     return () => {
       live = false;
     };
-  }, [kind, from, days, bust]);
+  }, [kind, from, bust]);
   useEffect(load, [load]);
 
   const shown = (rows ?? []).filter((r) => !hidden.has(r.key));
@@ -131,17 +127,15 @@ export function ShareComposer({
     kind,
     theme: themeId,
     from,
-    days: String(days),
+    days: String(SPAN_DAYS),
     headline,
     photo: showPhoto ? "1" : "0",
-    studios: showStudios ? "1" : "0",
-    city: showCity ? "1" : "0",
   });
   const hideList = [...hidden].join(",");
   if (hideList) q.set("hide", hideList);
   if (bust) q.set("v", String(bust));
   const src = `/api/story/compose?${q.toString()}`;
-  const fileName = `fittlist-${kind}.png`;
+  const fileName = `fittlist-${kind}-${themeId}.png`;
 
   const pickKind = (k: ShareKind) => {
     setKind(k);
@@ -156,7 +150,7 @@ export function ShareComposer({
     await setStoryPrefs({ showPhoto: v });
   };
 
-  const doShare = async () => {
+  const shareStory = async () => {
     if (sharing) return;
     setSharing(true);
     try {
@@ -181,168 +175,139 @@ export function ShareComposer({
     }
   };
 
-  const save = () => {
-    const a = document.createElement("a");
-    a.href = src;
-    a.download = fileName;
-    a.click();
-  };
-
   // An empty range is an offer, not a broken picture. A coach with an empty
   // week almost never has an empty week; they have a stale calendar, so the
   // ask is to add one. A member's calendar does not depend on coaches, so
   // theirs leads with their own.
   const emptyCta = kind === "coaching" ? "Add a class you coach" : "Add something to your week";
-  const goAdd = () => router.push(kind === "coaching" ? "/app?add=1" : "/week?add=1");
 
   return (
     <div className="composer">
-      <div className="comphead">
-        <h1>Share</h1>
+      <div className="adderhead">
+        <h2>Share your schedule</h2>
         {/* Opened from the tab bar there is always something beneath, and
             `anywhere` pops to it; typed cold there is not, and the feed is
             the honest fallback rather than a dead button. */}
-        <BackLink className="iconbtn compx" href="/feed" anywhere label="Close">
-          <Icon name="close" size={18} />
+        <BackLink className="iconbtn sheetclose adderclose" href="/feed" anywhere label="Close">
+          <Icon name="close" size={16} />
         </BackLink>
       </div>
 
-      <div className="compstage">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="compimg" src={src} alt="Preview of your story image" />
-      </div>
-
-      <div className={`compdrawer${open ? "" : " shut"}`}>
-        {/* The way in and out of the tools is this one tab. There is no pull
-            bar above it: two affordances for one act is one too many, and the
-            word says what the shape only hints at. */}
-        <button
-          className="comptab"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <Icon name={open ? "expand_more" : "expand_less"} size={16} />
-          {open ? "Done editing" : "Edit"}
-        </button>
-
-        <div className="compctls" hidden={!open}>
-          {canCoach && (
-            <div className="compctl">
-              <div className="complbl">What to show</div>
-              <div className="compseg" role="group" aria-label="What to show">
-                <button
-                  aria-pressed={kind === "coaching"}
-                  onClick={() => pickKind("coaching")}
-                >
-                  Coaching
-                </button>
-                <button aria-pressed={kind === "going"} onClick={() => pickKind("going")}>
-                  Going
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="compctl">
-            <div className="compfields">
-              <label className="compfield">
-                <span className="complbl">Starts</span>
-                <input
-                  className="editinput"
-                  type="date"
-                  value={from}
-                  min={today}
-                  onChange={(e) => setFrom(e.target.value || today)}
-                />
-              </label>
-              <label className="compfield days">
-                <span className="complbl">Days</span>
-                <select
-                  className="editinput"
-                  value={days}
-                  onChange={(e) => setDays(Number(e.target.value))}
-                >
-                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                    <option key={n} value={n}>
-                      {n} {n === 1 ? "day" : "days"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <p className="comprange">{rangeWords(from, days)}</p>
-            <button className="comprow" onClick={() => setPicker(true)}>
-              <span className="comprow-t">
-                Classes
-                <small>
-                  {rows === null
-                    ? "Loading"
-                    : rows.length === 0
-                      ? "Nothing in this range"
-                      : shown.length === rows.length
-                        ? `All ${rows.length} showing`
-                        : `${shown.length} of ${rows.length} showing`}
-                </small>
-              </span>
-              <span className="comprow-a">Edit ›</span>
+      {canCoach && (
+        <div className="share-toggles">
+          <div className="seg">
+            <button
+              className={kind === "coaching" ? "sel" : ""}
+              onClick={() => pickKind("coaching")}
+            >
+              Coaching
+            </button>
+            <button className={kind === "going" ? "sel" : ""} onClick={() => pickKind("going")}>
+              Going
             </button>
           </div>
+        </div>
+      )}
 
-          <div className="compctl">
-            <div className="complbl">Style</div>
-            <div className="compsw">
-              {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
-                ([id, t]) => (
-                  <button
-                    key={id}
-                    className="compsw-b"
-                    aria-pressed={id === themeId}
-                    aria-label={t.label}
-                    title={t.label}
-                    style={{ background: t.bg }}
-                    onClick={() => setThemeId(id)}
-                  >
-                    <span style={{ background: t.accent }} />
-                  </button>
-                ),
-              )}
-            </div>
-          </div>
+      <div className="storycustom">
+        {/* What is on the picture, and the way to put something new on it.
+            This is where My week / Today used to be: a range was the wrong
+            question, and this is the one people were really asking. */}
+        <label className="flabel">
+          Classes <span>· what goes on your image</span>
+        </label>
+        <button className="comprow" onClick={() => setPicker(true)}>
+          <span className="comprow-t">
+            {rows === null
+              ? "Loading"
+              : rows.length === 0
+                ? "Nothing this week"
+                : shown.length === rows.length
+                  ? `All ${rows.length} showing`
+                  : `${shown.length} of ${rows.length} showing`}
+            <small>{rangeWords(from)}</small>
+          </span>
+          <span className="comprow-a">Edit ›</span>
+        </button>
 
-          <button className="compmore" onClick={() => setMore((v) => !v)}>
-            More options {more ? "▴" : "▾"}
+        <label className="flabel" htmlFor="stTheme">
+          Style <span>· colours for your image</span>
+        </label>
+        <div className="stylepick">
+          <button
+            id="stTheme"
+            className="stylepick-btn"
+            aria-haspopup="listbox"
+            aria-expanded={styleOpen}
+            onClick={() => setStyleOpen((v) => !v)}
+          >
+            <span
+              className="swd"
+              style={{
+                background: STORY_THEMES[themeId].bg,
+                borderColor: STORY_THEMES[themeId].accent,
+              }}
+            />
+            <span className="stylepick-lbl">{STORY_THEMES[themeId].label}</span>
+            <Icon name="expand_more" size={18} />
           </button>
-          {more && (
-            <div className="compctl compmorebox">
-              {hasPhoto && (
-                <Switch on={showPhoto} onTap={togglePhoto} title="Show my photo" />
-              )}
-              <Switch
-                on={showStudios}
-                onTap={() => setShowStudios((v) => !v)}
-                title="Show studio names"
-                sub="Off keeps a busy week short"
-              />
-              {hasCity && (
-                <Switch on={showCity} onTap={() => setShowCity((v) => !v)} title="Show city" />
-              )}
+          {styleOpen && (
+            <div className="stylepick-menu" role="listbox" aria-label="Style">
+              {(
+                Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]
+              ).map(([id, t]) => (
+                <button
+                  key={id}
+                  role="option"
+                  aria-selected={id === themeId}
+                  className={`stylepick-row${id === themeId ? " sel" : ""}`}
+                  onClick={() => {
+                    setThemeId(id);
+                    setStyleOpen(false);
+                  }}
+                >
+                  <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
+                  <span className="stylepick-lbl">{t.label}</span>
+                  {id === themeId && <Icon name="check" size={16} />}
+                </button>
+              ))}
             </div>
           )}
         </div>
+
+        {hasPhoto && (
+          <button className="storyphoto" onClick={togglePhoto} aria-pressed={showPhoto}>
+            <span>Show my photo</span>
+            <span className={`switch${showPhoto ? " on" : ""}`} aria-hidden="true">
+              <span className="switch-knob" />
+            </span>
+          </button>
+        )}
       </div>
 
-      <div className="compacts">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="storyimg" src={src} alt="Story image of your week" />
+
+      <div className="publishwrap">
         {bare ? (
-          <button className="btn compwarn" onClick={goAdd}>
+          <button
+            className="btn compwarn"
+            onClick={() => router.push(kind === "coaching" ? "/app?add=1" : "/week?add=1")}
+          >
             {emptyCta}
           </button>
         ) : (
           <>
-            <button className="btn" disabled={sharing || rows === null} onClick={doShare}>
-              {sharing ? "Opening…" : "Share"}
+            <button className="btn" disabled={sharing || rows === null} onClick={shareStory}>
+              {sharing ? "Opening…" : "Save image"}
             </button>
-            <button className="compsave" onClick={save}>
-              Save to photos
+            <button
+              className="btn ghost"
+              style={{ marginTop: 8 }}
+              disabled={sharing || rows === null}
+              onClick={shareStory}
+            >
+              Share image
             </button>
           </>
         )}
@@ -364,7 +329,7 @@ export function ShareComposer({
               <Icon name="close" size={16} />
             </button>
             <h2>Classes on your image</h2>
-            <p className="lead">{rangeWords(from, days)}</p>
+            <p className="lead">{rangeWords(from)}</p>
             {rows && rows.length > 0 ? (
               <div className="settingslist">
                 {rows.map((r) => {
@@ -397,14 +362,14 @@ export function ShareComposer({
                 })}
               </div>
             ) : (
-              <p className="lead">Nothing in this range yet.</p>
+              <p className="lead">Nothing on your calendar this week yet.</p>
             )}
-            {/* The point of the whole screen. Picking what goes on the
-                image and keeping your calendar are the same list, so doing
-                one does the other: a class typed here lands on the calendar,
-                and when a studio was named it lands in that studio's catalog
-                too, which is how a studio that isn't here yet arrives with a
-                real class already on it. */}
+            {/* The point of the whole screen. Picking what goes on the image
+                and keeping your calendar are the same list, so doing one does
+                the other: a class typed here lands on the calendar, and when a
+                studio was named it lands in that studio's catalog too, which is
+                how a studio that isn't here yet arrives with a real class
+                already on it. */}
             <button className="compadd" onClick={() => setAdding(true)}>
               + Add a class
             </button>
@@ -456,34 +421,10 @@ export function ShareComposer({
   );
 }
 
-function Switch({
-  on,
-  onTap,
-  title,
-  sub,
-}: {
-  on: boolean;
-  onTap: () => void;
-  title: string;
-  sub?: string;
-}) {
-  return (
-    <button className="storyphoto" onClick={onTap} aria-pressed={on}>
-      <span>
-        {title}
-        {sub && <small>{sub}</small>}
-      </span>
-      <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
-        <span className="switch-knob" />
-      </span>
-    </button>
-  );
-}
-
-/** The range in words, under the two fields: "Mon Aug 3 to Sun Aug 9". Two
- *  compact fields plus one line of confirmation beats a scrolling strip of
- *  dates and a row of number buttons. */
-function rangeWords(from: string, days: number): string {
+/** The week the picture covers, said the way a person would: "Aug 4 to Aug
+ *  10". There is no control for it, so this is a statement rather than a
+ *  confirmation of something that was picked. */
+function rangeWords(from: string): string {
   const fmt = (iso: string) =>
     new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
       weekday: "short",
@@ -491,8 +432,7 @@ function rangeWords(from: string, days: number): string {
       day: "numeric",
       timeZone: "UTC",
     });
-  if (days === 1) return fmt(from);
-  const last = new Date(Date.parse(`${from}T00:00:00Z`) + (days - 1) * 864e5)
+  const last = new Date(Date.parse(`${from}T00:00:00Z`) + (SPAN_DAYS - 1) * 864e5)
     .toISOString()
     .slice(0, 10);
   return `${fmt(from)} to ${fmt(last)}`;

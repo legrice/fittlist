@@ -9,13 +9,10 @@ import { ShareComposer } from "@/components/ShareComposer";
 
 export const dynamic = "force-dynamic";
 
-// The share composer, opened by the middle of the tab bar.
+// The Share tab's editor, opened by the middle of the tab bar.
 //
 // It is a full screen rather than a sheet, and it deliberately carries no tab
-// bar: it opens over the app and the X is the way off, so nothing competes
-// with the picture for the space. That is the one thing the old editor got
-// most wrong, where the preview sat under three controls and was cropped by
-// the time you scrolled to it.
+// bar: it opens over the app and the X is the way off.
 //
 // It loads the adder's ingredients too, because making the picture and keeping
 // the calendar are the same act: the classes sheet adds as well as picks, and
@@ -78,7 +75,6 @@ export default async function SharePage() {
     <ShareComposer
       canCoach={me.kind !== "fan"}
       hasPhoto={!!me.photo}
-      hasCity={!!(me.location ?? "").trim()}
       today={today}
       firstIso={first && first > today ? first : today}
       studios={studios}

@@ -4984,104 +4984,42 @@ button.ps-card { cursor: pointer; }
 .staffreq-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .staffreq-yes { width: auto; margin: 0; padding: 9px 16px; font-size: 13px; flex-shrink: 0; }
 
-/* ---- The share composer -------------------------------------------------
-   A full screen, not a card: the picture takes every pixel the controls
-   don't, because the thing you are making should not be the thing you have
-   to scroll to. Three fixed rows (the title, the drawer, the buttons) and one
-   that flexes (the stage). */
+/* ---- The Share tab's editor ---------------------------------------------
+   The coach's old "Share your schedule" sheet, promoted to a full screen. It
+   replaced a composer with a collapsing drawer: everything here fits in one
+   scroll, so nothing is behind a pull and the picture is a thing you scroll to
+   rather than a thing you uncover. Most of what it wears is the sheet's own
+   (`.adderhead`, `.share-toggles`, `.storycustom`, `.stylepick`, `.storyimg`,
+   `.publishwrap`), which is the point of promoting it rather than rebuilding
+   it. `--pad-b` is what `.publishwrap` pulls itself down by; a sheet sets it,
+   so a page has to. */
 .composer {
-  position: fixed; inset: 0; z-index: 50; background: var(--paper);
+  position: fixed; inset: 0; z-index: 50; background: var(--card);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  --pad-b: 20px;
+  padding: calc(10px + env(safe-area-inset-top)) 20px var(--pad-b);
   display: flex; flex-direction: column;
-  padding-top: env(safe-area-inset-top);
 }
-.comphead { display: flex; align-items: center; gap: 10px; padding: 8px 18px 10px; flex: 0 0 auto; }
-.comphead h1 { flex: 1; margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
-.compx { flex: 0 0 auto; }
+/* The picture is the point, so it takes what a phone can give it rather than
+   the sheet's 250px thumbnail. Driven by height rather than width, because
+   what it has to fit inside is the room the controls and the sticky footer
+   leave: at 250px wide the poster ran under the buttons and the last day of
+   the week was something you had to scroll for. */
+.composer .storyimg { height: min(44vh, 420px); width: auto; max-width: 62vw; }
+.composer .publishwrap { margin-top: auto; }
 
-.compstage {
-  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
-  padding: 2px 18px 10px; overflow: hidden;
-}
-/* The image is bounded by the stage's height, so collapsing the drawer grows
-   it rather than pushing it off the screen. */
-.compimg {
-  max-height: 100%; max-width: 100%; width: auto; height: 100%;
-  aspect-ratio: 9 / 16; object-fit: contain; border-radius: 16px;
-  box-shadow: 0 14px 38px rgba(25, 21, 2, .24); background: var(--cl);
-}
-
-.compdrawer {
-  flex: 0 0 auto; background: var(--card); border-top: 1px solid var(--line);
-  border-radius: 22px 22px 0 0; box-shadow: 0 -6px 24px rgba(25, 21, 2, .08);
-  /* The picture gets the rest, so this is a ceiling rather than a height: at
-     56vh the preview came out 209px tall on a 390x844 phone, which is a
-     thumbnail of the thing the screen is for. The drawer scrolls; the picture
-     cannot. */
-  max-height: 50vh; overflow-y: auto;
-}
-.compdrawer.shut { max-height: none; overflow: visible; }
-/* The one way in and out of the tools. No pull bar above it: two affordances
-   for one act is one too many, and the word says what a grab handle only
-   hints at. */
-.comptab {
-  position: sticky; top: 0; z-index: 2; width: 100%; border: 0; background: var(--card);
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 13px 0 11px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--ol);
-}
-.compctl { padding: 0 18px 13px; }
-.complbl {
-  font-size: 10.5px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase;
-  color: var(--ol); margin-bottom: 7px; display: block;
-}
-.compseg { display: flex; background: rgba(25, 21, 2, .06); border-radius: 12px; padding: 3px; }
-.compseg button {
-  flex: 1; border: 0; background: none; cursor: pointer; padding: 9px 4px; border-radius: 10px;
-  font-family: inherit; font-size: 13.5px; font-weight: 800; color: var(--ol);
-}
-.compseg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 21, 2, .13); }
-
-
-/* A grid rather than a flex row, and `minmax(0, ...)` rather than `1fr`:
-   iOS renders input[type=date] at an intrinsic width it will not shrink
-   below, so as a flex item it ran straight under the Days select and the two
-   boxes overlapped. A track that is allowed to be narrower than its content,
-   plus an input that may shrink inside it, is what makes that impossible
-   rather than unlikely. */
-.compfields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 116px); gap: 10px; }
-.compfield { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.compfield .editinput { margin: 0; min-width: 0; width: 100%; }
-/* Left, like every other field here: iOS centres a date and the row then read
-   as two different kinds of control. */
-.compfield input[type="date"] { appearance: none; -webkit-appearance: none; text-align: left; }
-.comprange { margin: 8px 0 0; font-size: 12.5px; font-weight: 700; color: var(--ol); }
+/* What goes on the image, standing where My week / Today used to. A range was
+   the wrong question: the answer is this coming week nearly every time, and
+   what people want to change is which classes are on the picture. */
 .comprow {
-  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 13px;
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 13px;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
   font-family: inherit; cursor: pointer; text-align: left; color: var(--ink);
 }
-.comprow-t { flex: 1; font-size: 15px; font-weight: 800; }
+.comprow-t { flex: 1; font-size: 15px; font-weight: 700; }
 .comprow-t small { display: block; font-size: 12.5px; font-weight: 600; color: var(--ol); margin-top: 2px; }
 .comprow-a { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; color: var(--si); }
-
-/* Swatches, not a dropdown: the pairing has to be visible before it is
-   tapped, and a colour hidden behind a word is a colour nobody tries. */
-.compsw { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; }
-.compsw::-webkit-scrollbar { display: none; }
-.compsw-b {
-  flex: 0 0 auto; width: 46px; height: 46px; border-radius: 14px; cursor: pointer;
-  position: relative; border: 1px solid rgba(25, 21, 2, .12); overflow: hidden; padding: 0;
-}
-.compsw-b span { position: absolute; left: 0; right: 0; bottom: 0; height: 36%; }
-.compsw-b[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--ink); }
-.compmore { width: 100%; border: 0; background: none; cursor: pointer; padding: 0 18px 13px; text-align: left; font-family: inherit; font-size: 13px; font-weight: 800; color: var(--ol); }
-.compmorebox .storyphoto + .storyphoto { border-top: 1px solid var(--line); }
-.compmorebox .storyphoto small { display: block; font-size: 12px; font-weight: 600; color: var(--ol); margin-top: 1px; }
-
-.compacts { flex: 0 0 auto; padding: 10px 18px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--card); }
-.compacts .btn { margin: 0; }
-/* One intent, so one button. Save is the quiet way to the same picture. */
-.compsave { width: 100%; border: 0; background: none; cursor: pointer; padding: 11px 0 0; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--ol); }
-/* An empty range is an offer rather than a broken picture, and the offer is
+/* An empty week is an offer rather than a broken picture, and the offer is
    loud enough to read as the next thing to do. */
 .compwarn { background: var(--si); }
 .compcheck {
@@ -5091,13 +5029,6 @@ button.ps-card { cursor: pointer; }
 .compcheck.on { background: var(--si); border-color: var(--si); }
 .compnote { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ol); }
 
-/* On a wide screen the picture has more height than it knows what to do with,
-   so it is the column that is bounded rather than the row. */
-@media (min-width: 940px) {
-  .compstage { padding: 8px 18px 14px; }
-  .compdrawer { max-width: 620px; margin: 0 auto; width: 100%; border-radius: 22px 22px 0 0; }
-  .compacts { max-width: 620px; margin: 0 auto; width: 100%; }
-}
 /* + Add a class, at the foot of the picker: the composer is where calendars
    get kept current, so the way to add one is in the sheet you are already in
    rather than a trip to another tab. Dashed, because it makes something that

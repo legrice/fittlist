@@ -1739,7 +1739,7 @@ floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
 **The middle of the tab bar is Share, and it wears the sparkle.**
-`/share` is the composer, and the tab is drawn exactly like its four
+`/share` is the editor, and the tab is drawn exactly like its four
 neighbours: same glyph box, same label, same brand-orange wash behind the icon
 when it is the current one. A raised filled circle in the middle shipped for a
 build and came back out, by Matt's call: the bar's whole job is five equals,
@@ -1750,66 +1750,43 @@ than the share arrow, which is the system gesture and not this act. It keeps
 its label; a glyph alone is a mark people have to be taught, and this is not
 the tap to teach that way.
 
-The composer is a full screen that opens *over* the app and carries no tab bar,
+The editor is a full screen that opens *over* the app and carries no tab bar,
 which is why `/share` sits outside the `(tabs)` group. The X is the way off, and
 it is a `BackLink` with `anywhere`, so it pops to whatever is beneath and falls
 back to the feed for a URL opened cold.
 
-Five things about the old share sheet made it a form rather than a composer, and
-each has an answer on this screen. The preview sat under three controls and was
-cropped by the time you scrolled to it, so it is on top and takes every pixel the
-drawer doesn't; the drawer's ceiling is 50vh and not 56, because at 56 the
-picture came out 209px tall on a phone, which is a thumbnail of the thing the
-screen is for. Style was a dropdown, so it is swatches: a colour hidden behind a
-word is a colour nobody tries. Save and Share were two buttons for one intent, so
-Share leads and Save to photos is the quiet one under it. And an empty week drew
-an empty picture, so it draws the style with a line on it and turns the primary
-into an offer instead: `Add a class you coach` for a coach, `Add something to
-your week` for a member, both landing on the calendar with the adder already up
-(`?add=1`, which `/week` honours now as well as `/app`).
+**It is the coach's old "Share your schedule" sheet, promoted.** A full-screen
+composer shipped first: preview on top, controls in a drawer that collapsed, a
+Story/Square picker in the header, a derived headline with an Edit beside it,
+one Share with Save quiet underneath. Matt preferred the sheet, and it is the
+better answer for the reason it usually is: everything fits in one scroll, so
+nothing is behind a pull, the picture is a thing you scroll to rather than a
+thing you uncover, and there is no state to be in. `ShareComposer` renders that
+sheet's own furniture (`.adderhead`, `.share-toggles`, `.storycustom`,
+`.stylepick`, `.storyimg`, `.publishwrap`) rather than a second set of controls
+that would drift from it; the page sets `--pad-b` because `.publishwrap` pulls
+itself down by it and a sheet was the only thing that used to.
 
-**The headline is derived and cannot be edited.** It was a blank field, then a
-line you read with a small Edit beside it, which is the same field wearing a
-smaller coat; both are gone by Matt's call. `HEADLINE` maps the segment to the
-words ("Come train with me", "My week") and the composer sends them explicitly
-on every request rather than letting the route fall back to `storyPrefs`: a
-coach who typed one into the old sheet still has it stored, and inheriting it
-would put their Coaching words over a Going picture. The old rule about their
-own words surviving a segment switch went with the control it protected. What
-is lost is real and worth saying: a coach cannot put their own sentence on the
-picture from here. The other sheets still write `storyPrefs.headline`, so the
-pref is not dead, it just has no door on this screen.
+Three things came off in the move and one came with it. **My week / Today is
+gone**, and the Classes picker stands where it was: a range was the wrong
+question, because the answer is this coming week nearly every time, and what
+people actually want to change is which classes are on the picture. `SPAN_DAYS`
+is 7 and there is no control for it. **The headline field is gone**; it maps
+from the hat (`HEADLINE`), and the editor sends it explicitly on every request
+rather than letting the route fall back to `storyPrefs`, because a coach who
+typed one into the old sheet still has it stored and inheriting it would put
+Coaching words over a Going picture. **Story/Square is gone** from the header;
+the square canvas still renders at `/api/story/compose?fmt=square` and
+`share-smoke` holds it there so it cannot rot while it waits for a control to
+offer it again, which makes it a thing to finish rather than a thing that is
+finished. What came with it is the Coaching/Going segment, which the sheet never
+had: a member has one hat and gets no segment at all, and without it they would
+have no way to share.
 
-**One canvas is offered.** Story and Square rode the header for a build and the
-picker came off: a format toggle above a picture is a question asked before
-anybody has decided what the picture says. The square canvas is still built and
-still renders (`/api/story/compose?fmt=square`, and `storyPadding` and
-`listBudget` still take a format), and `share-smoke` asserts it at the route so
-it cannot rot while it waits for a control to offer it again. Nothing in the app
-asks for one, which makes this a thing to finish rather than a thing that is
-finished: either it comes back as a control, or the second canvas should go.
-
-**The date row is a grid, not a flex row.** `input[type="date"]` on iOS renders
-at an intrinsic width it will not shrink below, so as a flex item it ran under
-the Days select and the two boxes overlapped on a real phone while looking
-correct in Chromium. `grid-template-columns: minmax(0, 1fr) minmax(0, 116px)`
-plus `min-width: 0` on the input is what makes that impossible rather than
-unlikely, and the input is `appearance: none` and left aligned so a date reads
-like every other field rather than a centred button.
-
-There is deliberately **no pull bar above the Edit tab**. The spec drew both; two
-affordances for one act is one too many, and the word says what a grab handle
-only hints at.
-
-**The drawer arrives shut.** Everything is already answered when you land (the
-hat, the range, the style, the words), so the first thing on screen is a result
-rather than a set of questions about one, and the picture gets the whole screen
-until somebody asks for the tools. That is what the spec meant by opening
-already rendered, and it is the reason the collapse exists at all: with the
-drawer open the preview is about a third of the height it is with it shut.
-Anything driving this screen has to pull the tools up first, which is why
-`share-smoke` carries an `openTools` helper rather than reaching straight for a
-control.
+The poster is sized by height rather than width (`min(44vh, 420px)`), because
+what it has to fit inside is the room the controls and the sticky footer leave.
+At the sheet's 250px it ran under the buttons and the last day of the week was
+something you had to scroll for.
 
 **One loader and one paint behind every share image.** `shareWeek()` in
 `src/lib/shareweek.ts` is what goes on a picture for a range and a hat, and both
