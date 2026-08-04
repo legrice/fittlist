@@ -39,10 +39,12 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
     // wears the sparkle rather than the share arrow, and it is drawn exactly
     // like its neighbours: a raised filled circle shipped for a build and
     // read as a button shouting at four words, where the bar's whole job is
-    // five equals. What makes it different is where it goes, not how loud it
-    // is, so it opens over the app rather than becoming another screen with a
-    // bar at the bottom of it.
-    { id: "share", href: "/share", icon: "auto_awesome", label: "Share" },
+    // five equals. The glyph is the outlined sparkle for the same reason the
+    // circle went: the other four are strokes, and a solid one in the middle
+    // is a fifth weight on a row of equals. What makes Share different is
+    // where it goes, not how loud it is, so it opens over the app rather than
+    // becoming another screen with a bar at the bottom of it.
+    { id: "share", href: "/share", icon: "auto_awesome_outline", label: "Share" },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.

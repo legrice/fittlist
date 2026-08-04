@@ -1776,8 +1776,13 @@ when it is the current one. A raised filled circle in the middle shipped for a
 build and came back out, by Matt's call: the bar's whole job is five equals,
 and a button shouting at four words is a bar that has stopped being a bar. What
 makes Share different is where it goes, not how loud it is. The glyph is
-`auto_awesome`, the same filled sparkle the calendar's Share pill wears, rather
-than the share arrow, which is the system gesture and not this act. It keeps
+`auto_awesome_outline`, the sparkle drawn as a stroke, rather than the share
+arrow, which is the system gesture and not this act. Outline for the same
+reason the circle went: the other four tabs are strokes, and a solid one in
+the middle is a fifth weight on a row whose whole job is five equals. The
+filled `auto_awesome` stays everywhere it is a button or a row (the calendar's
+Share pill, the share sheets), where solid is what stops it reading as
+furniture. It keeps
 its label; a glyph alone is a mark people have to be taught, and this is not
 the tap to teach that way.
 

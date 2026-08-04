@@ -121,6 +121,31 @@ function SparklesFilled({ size = 24, strokeWidth = 1.75 }: { size?: number; stro
   );
 }
 
+/**
+ * The same sparkle, outlined. The tab bar's four other glyphs are strokes, so
+ * a solid one in the middle read as a fifth weight on a row whose whole job is
+ * five equals. The filled one stays everywhere it is a button or a row, where
+ * solid is what stops it reading as furniture.
+ */
+function SparklesOutline({ size = 24, strokeWidth = 1.75 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+        d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        d="M20 3v4M22 5h-4M4 17v2M5 18H3"
+      />
+    </svg>
+  );
+}
+
 // Lucide, drawn inline as SVG. Call sites keep the old Material names — this
 // map is the only place that knows the difference — so changing sets again is
 // a one-file job. No icon font also means no blocking request to Google and no
@@ -141,6 +166,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   alternate_email: AtSign,
   arrow_back: ArrowLeft,
   auto_awesome: SparklesFilled,
+  auto_awesome_outline: SparklesOutline,
   calendar_month: CalendarDays,
   calendar_today: Calendar,
   call: Phone,
