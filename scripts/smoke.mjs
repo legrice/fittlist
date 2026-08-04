@@ -506,36 +506,39 @@ if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   if (await where.locator(".icon svg").count())
     fail("the map pin should be gone from schedule listings");
 }
-// The calendar's header is one sticky block: month, menu, Add, checkmarks,
-// divider. Add and Share traded places: Add floats bottom right where a
-// thumb already is, Share took the header's corner.
+// The calendar's header is one sticky block: month, view, filter, Add. Add and
+// Share have traded places again: a plus needs no word and no reach, so it is
+// a circle in the cluster, and Share is the act this screen ends on, so it
+// takes the loud pill under a thumb.
 if (!(await page.locator(".calsticky .calhead").count()))
   fail("the month title should sit inside the sticky calendar header");
-if (!(await page.locator(".calsticky .calshare").count()))
-  fail("Share should sit in the header's cluster, beside the view and filter");
-if (await page.locator(".calsticky .caladd").count())
-  fail("Add should have left the header for the thumb's corner");
+if (!(await page.locator(".calsticky .caladd").count()))
+  fail("Add should sit in the header's cluster, beside the view and filter");
+if (await page.locator(".calsticky .calshare").count())
+  fail("Share should have left the header for the thumb's corner");
 if (!(await page.locator(".todayfab").count()))
-  fail("Today should float bottom left, across from Add");
-if (!(await page.locator(".caladd").count()))
-  fail("Add should float bottom right, in reach");
+  fail("Today should float bottom left, across from Share");
+if (!(await page.locator(".calshare").count()))
+  fail("Share should float bottom right, in reach");
+// The plus is a glyph alone at that size: a word beside it in a row of two
+// circles is a third shape.
+if ((await page.locator(".calsticky .caladd").innerText()).trim())
+  fail("the header's Add should be the plus alone, with no word");
 // Scrolling up reveals what has been: the daily class has past occurrences,
 // and the first slice reveals itself from the top of the list.
 await page.locator(".ps-pastday .ps-event").first().waitFor();
 if (!((await page.locator(".ps-pastday").first().getAttribute("class")).includes("ps-pastday")))
   fail("past days should render dimmed above today");
 console.log("sticky header + past scrollback ok");
-// The header's Share circle opens the ways of handing the schedule on.
+// The calendar's Share goes straight to the editor. It opened a sheet of three
+// rows once (the image, the week as text, the link); the editor is the one
+// generator now, and the other two still live on the profile's own Share.
 await page.locator(".calshare").click();
-{
-  const rows = (await page.locator(".ownermenu .setrow .t").allInnerTexts()).map((t) => t.trim());
-  const want = ["Share your week", "Copy your week", "Copy your link"];
-  if (JSON.stringify(rows) !== JSON.stringify(want))
-    fail(`calendar share rows: ${rows.join(" | ")}`);
-  await page.locator(".sheetclose").click();
-  await page.waitForFunction(() => !document.querySelector(".sheet-scrim"));
-}
-console.log("calendar share pill ok (three ways to hand the week on)");
+await page.waitForURL(/\/share/);
+await page.locator(".composer").waitFor();
+await page.goBack();
+await page.locator(".calshare").waitFor();
+console.log("the calendar's Share opens the editor ok");
 // Share holds every way of sharing, and each row goes where it says
 await page.goto(BASE + "/matt");
 {
@@ -1561,12 +1564,12 @@ console.log("discover ok (the row's pill agrees with the profile)");
 // heading. The point is that you don't have to know which half a thing is in
 // before you look for it.
 {
-  // The magnifier is back in the header's corner now that the tab says
-  // Discover again, and the Discover box is the other door to this screen:
-  // browsing is the tab, searching every half at once is the corner.
+  // Discover's own box is the door to this screen. The header's magnifier
+  // left when the tab took that glyph back: the same mark is never drawn
+  // twice on one screen, and the corner is your face now.
   await fan.goto(BASE + "/feed");
-  await fan.locator(".searchbtn").click();
-  await fan.waitForURL(/\/search/);
+  if (await fan.locator(".searchbtn").count())
+    fail("the header magnifier should be gone: Discover's tab wears it");
   await fan.goto(BASE + "/discover");
   await fan.locator(".dissearch-door").click();
   await fan.waitForURL(/\/search/);
