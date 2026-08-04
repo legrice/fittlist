@@ -29,6 +29,24 @@ const weekDay = (i) => {
   d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7) + i);
   return d.toISOString().slice(0, 10);
 };
+/** Put a fixture late enough that it cannot have run yet.
+ *
+ *  Every public surface drops an occurrence once it has ended, which is the
+ *  app working as designed. A fixture on weekday W at 07:00 therefore shows
+ *  on six days of the week and vanishes on the seventh: today's has been and
+ *  gone, and next week's is seven days out, past the end of the window these
+ *  pages draw. That made this suite pass or fail by the hour, and it took a
+ *  Tuesday afternoon to notice.
+ *
+ *  23:00 to 23:59 is the fix: it ends a minute before midnight, so it is
+ *  still ahead on its own day whenever the suite runs. The end has to be set
+ *  explicitly because the form derives it from the start, and 23:00 plus an
+ *  hour wraps to 00:00. */
+const lateSlot = async (pg) => {
+  await pg.locator("#fStart").fill("23:00");
+  await pg.locator("#fEnd").fill("23:59");
+};
+
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
 // A coach's settings leaves all sit behind one of four group rows now, so
@@ -66,6 +84,7 @@ const mkCoach = async (email, name, withClass) => {
     await p.getByRole("button", { name: "Add your first class" }).click();
     await p.getByPlaceholder("e.g. Barbell Strength").fill("Warm Up");
     await p.getByRole("button", { name: "Mo", exact: true }).click();
+    await lateSlot(p);
     await p.getByRole("button", { name: "Select or start typing a studio" }).click();
     await p.getByRole("heading", { name: "Choose a studio" }).waitFor();
     const existing = p.locator(".studio-row", { hasText: "Ironbound" }).first();
@@ -203,7 +222,7 @@ if (await matt.locator("#fCoach").count() === 0) fail("a gym's adder needs the r
 if (await matt.locator(".studio-sel").count()) fail("a gym should never be asked for a studio");
 if (await matt.getByText("Who sees this?").count()) fail("a gym has no private classes");
 await matt.locator("#fName").fill("HYROX");
-await matt.locator("#fStart").fill("07:00");
+await lateSlot(matt);
 await matt.getByRole("button", { name: "Add to the schedule" }).click();
 await matt.getByText("Added to the week").waitFor();
 await matt.waitForTimeout(600);
@@ -230,7 +249,7 @@ console.log("assignment ok (Tom is on it)");
 await tom.goto(BASE + "/updates");
 await tom.locator(".notifrow", { hasText: "You're coaching HYROX" }).waitFor();
 const body = await tom.locator(".notifrow", { hasText: "HYROX" }).innerText();
-if (!/THU|Thu/i.test(body) || !body.includes("7:00a")) fail("the notice should say when: " + body);
+if (!/THU|Thu/i.test(body) || !body.includes("11:00p")) fail("the notice should say when: " + body);
 if (!(await tom.locator(".notifrow .icon svg").first().count()))
   fail("the shift notice rendered a blank circle");
 console.log("the coach is told ok");
@@ -262,7 +281,7 @@ console.log("the coach is told ok");
   const linkBox = matt.locator('input[aria-label="Link"]').last();
   await linkBox.fill("https://ironbound.example/book");
   await matt.locator(".linktag").first().waitFor();
-  await matt.locator("#fStart").fill("12:00");
+  await lateSlot(matt);
   await matt.locator("#fCoach").selectOption({ label: "Julia" });
   await matt.getByRole("button", { name: "Add to the schedule" }).click();
   await matt.getByText("Added to the week").waitFor();
@@ -808,6 +827,10 @@ console.log("the coach is told ok");
       const names = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
       if (names.length !== 1 || names[0] !== "Julia")
         fail("Transfer should offer the shift list, nobody else: " + names.join("|"));
+      // A face per person, not a column of identical glyphs: this is the
+      // moment somebody picks who to hand a class to.
+      if (!(await tom.locator(".sheet .setrow .sendav").count()))
+        fail("the transfer list should wear the coaches' avatars");
     }
     await tom.locator(".sheet .setrow", { hasText: "Julia" }).click();
     // It confirms before anybody is told, the same as giving up does.
@@ -854,6 +877,9 @@ console.log("the coach is told ok");
     const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
     if (rows.length !== 1 || !/Julia/.test(rows[0]) || /Matt/.test(rows.join("|")))
       fail("Transfer should offer the shift list, nobody else: " + rows.join("|"));
+    // Same list from the other door, so it wears the same faces.
+    if (!(await tom.locator(".sheet .setrow .sendav").count()))
+      fail("the class sheet's transfer list should wear the coaches' avatars");
   }
   await tom.locator(".sheet .setrow", { hasText: "Julia" }).click();
   // Named, then asked: the confirm says who takes it before anyone is told.
@@ -1009,7 +1035,7 @@ console.log("the coach is told ok");
     await matt.goto(BASE + studioHref + "/manage");
     await matt.locator(".rotaday", { hasText: "Friday" }).getByRole("button", { name: "Add" }).click();
     await matt.locator("#fName").fill("Rota Naming");
-    await matt.locator("#fStart").fill("07:30");
+    await lateSlot(matt);
     await matt.locator("#fCoach").selectOption({ label: "Julia" });
     await matt.getByRole("button", { name: "Add to the schedule" }).click();
     await matt.getByText("Added to the week").waitFor();
@@ -1204,7 +1230,7 @@ console.log("the coach is told ok");
   await matt.locator(".rotaday", { hasText: "Monday" }).getByRole("button", { name: "Add" }).click();
   await matt.locator("#fName").waitFor();
   await matt.locator("#fName").fill("Warm Up");
-  await matt.locator("#fStart").fill("06:00");
+  await lateSlot(matt);
   await matt.locator("#fCoach").selectOption({ label: "Tom" });
   await matt.getByRole("button", { name: "Add to the schedule" }).click();
   await matt.getByText("Added to the week").waitFor();

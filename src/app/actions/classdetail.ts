@@ -6,6 +6,7 @@ import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } f
 import { avatarColor } from "@/lib/avatar";
 import { isBlocked } from "@/lib/blocks";
 import { shiftCoach, shiftNaming } from "@/lib/coachweek";
+import { sendableAt, type Sendable } from "@/lib/rota";
 import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { fansVisible } from "@/lib/flags";
 import { currentAdmin } from "@/lib/admin";
@@ -78,7 +79,7 @@ export type ClassDetail = {
     canClaim: boolean;
     /** Who this date can be handed straight to: the gym's shift list, minus
      *  the viewer. Only filled when the viewer is the one on it. */
-    sendable: { id: string; name: string }[];
+    sendable: Sendable[];
   } | null;
 };
 
@@ -262,20 +263,9 @@ export async function classDetail(
     // somebody rather than only opening it up and hoping. Managers name the
     // list, because anyone may say they coach here and not everyone who does
     // takes these classes.
-    let sendable: { id: string; name: string }[] = [];
-    if (on === viewerId) {
-      const pool = await db
-        .select({ userId: schema.studioRotaCoaches.userId })
-        .from(schema.studioRotaCoaches)
-        .where(eq(schema.studioRotaCoaches.studioId, c.studioId));
-      const ids = pool.map((p) => p.userId).filter((id) => id !== viewerId);
-      if (ids.length) {
-        const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
-        sendable = people
-          .map((p) => ({ id: p.id, name: p.name.trim() || p.email.split("@")[0] }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-      }
-    }
+    // The same list the staff screen's own Transfer sheet offers, from the
+    // one loader: two sheets from two doors onto one act.
+    const sendable: Sendable[] = on === viewerId ? await sendableAt(c.studioId, viewerId) : [];
     // Only shown to somebody it means something to: the person on it, or a
     // coach here looking at a slot with nobody on. A member sees none of this,
     // and no name: whether a coach is listed is a separate switch.

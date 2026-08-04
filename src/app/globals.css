@@ -3701,6 +3701,18 @@ button.ps-card { cursor: pointer; }
   color: #fff; background: var(--si);
 }
 .ps-ecoach-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A face in a settings row's icon slot, for the shift transfer lists. Sized
+   to the slot rather than to the row's text, so the column of faces lines up
+   with the glyphs every other .setrow in the same sheet wears. */
+.sendav {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px; object-fit: cover;
+  background: #eae3d2; display: block;
+}
+.sendav-empty {
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
+  color: #fff;
+}
 /* Your own classes sit in the same merged week as the coaches you follow — the
    tag is how you tell at a glance which ones you teach. */
 .ps-youtag {

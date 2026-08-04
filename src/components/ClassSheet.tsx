@@ -7,6 +7,7 @@ import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
+import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { readPhoto } from "@/lib/photo";
@@ -777,7 +778,13 @@ export function ClassSheet({
                     setConfirmShift({ kind: "send", id: p.id, name: p.name });
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-ic">
+                    {/* The face, not a glyph. This is the moment somebody
+                        picks who to hand a class to, and a column of
+                        identical outlines makes colleagues into text to
+                        parse. */}
+                    <AgendaAvatar photo={p.photo} name={p.name} color={p.color} cls="sendav" />
+                  </span>
                   <span className="setrow-txt">
                     <span className="t">{p.name}</span>
                   </span>

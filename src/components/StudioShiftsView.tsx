@@ -13,6 +13,7 @@ import {
 import { BackLink } from "@/components/BackLink";
 import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import type { StudioEditProps } from "@/components/StudioOwnerBar";
+import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -335,7 +336,13 @@ export function StudioShiftsView({
                     setTransfer(null);
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-ic">
+                    {/* The face, not a glyph. This is the moment somebody
+                        picks who to hand a class to, and a column of
+                        identical outlines makes colleagues into text to
+                        parse. */}
+                    <AgendaAvatar photo={p.photo} name={p.name} color={p.color} cls="sendav" />
+                  </span>
                   <span className="setrow-txt">
                     <span className="t">{p.name}</span>
                   </span>
