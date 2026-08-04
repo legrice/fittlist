@@ -1071,8 +1071,21 @@ export function ScheduleScreen({
           present={(["coaching", "added", "private"] as CalKind[]).filter((k) =>
             presentKinds.has(k),
           )}
+          // A coach wears all three hats, so all three can be offered.
+          absent={(["coaching", "added", "private"] as CalKind[]).filter(
+            (k) => !presentKinds.has(k),
+          )}
           on={kindOn}
           onToggle={toggleKind}
+          onAdd={(k) => {
+            setFilterSheet(false);
+            if (k === "coaching") {
+              setAdder({ open: true });
+              return;
+            }
+            setPersonalEvent(k === "private");
+            setPersonalOpen(true);
+          }}
           onClose={() => setFilterSheet(false)}
         />
       )}

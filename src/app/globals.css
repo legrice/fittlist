@@ -743,6 +743,28 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .kindfilter-coaching { background: var(--si); }
 .kindfilter-added { background: var(--go); }
 .kindfilter-private { background: #3b82cc; }
+/* A kind you have none of. Not a switch, because a filter over nothing can
+   only hide nothing; one line saying what would be there and one word to put
+   something in it. Deliberately quieter than the rows above: the switches are
+   what this sheet is for, and three CTAs shouting under them would make an
+   offer out of a control. The dot is dimmed to the same idea, present but not
+   yet earned. */
+.kindempties { margin-top: 14px; display: flex; flex-direction: column; gap: 2px; }
+.kindempty {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 2px;
+}
+.kindempty .kindfilter-dot { opacity: .35; flex-shrink: 0; }
+.kindempty-t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; color: var(--ol); flex: 1; min-width: 0;
+}
+.kindempty-a {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; font-weight: 700; color: var(--si);
+  background: none; border: none; padding: 0; cursor: pointer; flex-shrink: 0;
+}
+.kindempty-a:active { opacity: .6; }
 /* The Day view: the week strip pinned with the chrome, then the hours. */
 .daystrip {
   display: flex; align-items: center; gap: 2px; margin: 10px 0 10px;
@@ -3633,6 +3655,14 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
 }
+/* The way to lengthen the rail, at the end of it. Dashed where All is solid:
+   both are circles that are not a person, and the dash is what says this one
+   is a slot to fill rather than a lens to look through. It never dims with
+   the others when a face is picked, because it is a door rather than one of
+   the things being filtered. */
+.feedav-plus { border-style: dashed; color: var(--ol); background: transparent; }
+.feedav-add { text-decoration: none; }
+.feedstrip.hassel .feedav-add { opacity: 1; }
 .feedav-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 12px;
   max-width: 84px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;

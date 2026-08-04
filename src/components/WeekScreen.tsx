@@ -581,8 +581,16 @@ export function WeekScreen({
       {filterSheet && (
         <KindFilterSheet
           present={(["added", "private"] as CalKind[]).filter((k) => presentKinds.has(k))}
+          // Never "coaching": a member cannot publish a class, so offering it
+          // here would be a door onto a wall.
+          absent={(["added", "private"] as CalKind[]).filter((k) => !presentKinds.has(k))}
           on={kindOn}
           onToggle={toggleKind}
+          onAdd={(k) => {
+            setFilterSheet(false);
+            setPersonalEvent(k === "private");
+            setAddOpen(true);
+          }}
           onClose={() => setFilterSheet(false)}
         />
       )}

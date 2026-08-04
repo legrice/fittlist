@@ -131,7 +131,9 @@ await m.waitForTimeout(500);
   await m.goto(BASE + "/feed");
   await m.locator(".feedstrip").waitFor();
   await m.locator(".feedav").first().waitFor();
-  const n = await m.locator(".feedav").count();
+  // Buttons only: the rail ends in a Find link, which is a door rather than
+  // one of the faces this count is about.
+  const n = await m.locator("button.feedav").count();
   if (n !== names.length + 1)
     fail(`expected ${names.length + 1} avatars in the rail, got ${n} at ${m.url()}`);
 }

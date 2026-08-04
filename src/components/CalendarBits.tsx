@@ -429,15 +429,33 @@ export function ViewSheet({
  *  of switches, one per kind the calendar holds, each row wearing its
  *  colour as a dot. Everything is on by default, and off on arrival
  *  resets: a filter is a way of looking, not a fact worth storing. */
+/** What an absent kind says, and what its one button offers. A filter for a
+ *  kind you have none of can only hide nothing, so the row says what would
+ *  be there instead and hands over the way to put something in it. Kept to
+ *  one line each on purpose: this is a filter sheet, not an onboarding
+ *  screen, and three paragraphs under two switches would bury the switches. */
+const KIND_EMPTY: Record<CalKind, { says: string; cta: string }> = {
+  coaching: { says: "You aren't teaching anything yet.", cta: "Add a class" },
+  added: { says: "You aren't going to any classes.", cta: "Add one" },
+  private: { says: "Nothing on your personal calendar.", cta: "Add one" },
+};
+
 export function KindFilterSheet({
   present,
+  absent = [],
   on,
   onToggle,
+  onAdd,
   onClose,
 }: {
   present: CalKind[];
+  /** The kinds this person could have and doesn't. Never a kind they cannot
+   *  have at all: a member gets no Teaching row, because publishing is a
+   *  coach's and offering it here would be an invitation to a wall. */
+  absent?: CalKind[];
   on: (k: CalKind) => boolean;
   onToggle: (k: CalKind) => void;
+  onAdd?: (k: CalKind) => void;
   onClose: () => void;
 }) {
   return (
@@ -476,6 +494,19 @@ export function KindFilterSheet({
             );
           })}
         </div>
+        {onAdd && absent.length > 0 && (
+          <div className="kindempties">
+            {absent.map((k) => (
+              <div className="kindempty" key={k}>
+                <span className={`kindfilter-dot kindfilter-${k}`} aria-hidden="true" />
+                <span className="kindempty-t">{KIND_EMPTY[k].says}</span>
+                <button className="kindempty-a" onClick={() => onAdd(k)}>
+                  {KIND_EMPTY[k].cta}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -172,6 +172,17 @@ export function FeedAgenda({
             <span className="feedav-nm">{c.name.trim().split(/\s+/)[0]}</span>
           </button>
         ))}
+        {/* The end of the rail is where you notice the list is short, so the
+            way to lengthen it lives there. A link rather than a filter: it
+            wears the faces' shape so it reads as part of the row, and the
+            dashed ring says it is a slot to fill rather than somebody who is
+            already in it. */}
+        <Link className="feedav feedav-add" href="/discover">
+          <span className="feedav-img feedav-all feedav-plus" aria-hidden="true">
+            <Icon name="add" size={30} />
+          </span>
+          <span className="feedav-nm">Find</span>
+        </Link>
       </div>
       <RailArrows railRef={railRef} />
       </div>

@@ -1615,6 +1615,14 @@ console.log("studio edits are coach-only ok (no edit row in a member's menu)");
 await fan.goto(BASE + "/feed");
 // phase 2: merged agenda — avatar strip on top, chronological class rows below
 await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
+// The rail ends in the way to lengthen it: a door to Discover, never one of
+// the faces, so it keeps its full opacity when a face is picked.
+{
+  const add = fan.locator(".feedav-add");
+  await add.waitFor();
+  if ((await add.getAttribute("href")) !== "/discover")
+    fail("the rail's plus should open Discover: " + (await add.getAttribute("href")));
+}
 await fan.locator(".feedagenda .ps-event").first().waitFor();
 const feedRows = await fan.locator(".feedagenda .ps-event").count();
 if (feedRows < 1) fail("feed agenda has no class rows");
@@ -1643,7 +1651,7 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
 // the rail only carries coaches with something in the week — a chip that can
 // only ever empty the screen doesn't belong there
 {
-  const chips = (await fan.locator(".feedav-nm").allInnerTexts())
+  const chips = (await fan.locator("button.feedav .feedav-nm").allInnerTexts())
     .map((t) => t.trim())
     .filter((t) => t !== "All");
   const inWeek = await fan.locator(".feedagenda .ps-ecoach-txt").allInnerTexts();
@@ -2263,6 +2271,24 @@ await page.locator(".ps-event").first().waitFor();
     fail("the pill rail should have moved into the filter sheet");
   await page.locator(".calfilter").click();
   await page.getByRole("heading", { name: "Show on your calendar" }).waitFor();
+
+  // A kind you have none of gets a line rather than a switch: a filter over
+  // nothing can only hide nothing, so the row says what would be there and
+  // hands over the way to put something in it. This coach teaches and goes
+  // to classes and has nothing personal, so that is the one offered.
+  {
+    const empty = page.locator(".kindempty", { hasText: "personal calendar" });
+    await empty.waitFor();
+    if (await page.locator(".kindempty .switch").count())
+      fail("an empty kind should offer a way in, not a switch that hides nothing");
+    await empty.locator(".kindempty-a").click();
+    await page.locator(".adderhead").waitFor();
+    await page.locator(".adderclose").click();
+    await page.waitForTimeout(400);
+    await page.locator(".calfilter").click();
+    await page.getByRole("heading", { name: "Show on your calendar" }).waitFor();
+  }
+
   const rows = (await page.locator(".sheet .setrow").allInnerTexts()).map((t) => t.trim());
   if (!rows.includes("Teaching") || !rows.includes("Going"))
     fail("the sheet should list the kinds the calendar holds: " + rows.join("|"));
