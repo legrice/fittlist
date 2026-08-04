@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ActivityRow } from "@/components/ActivityRow";
-import type { HomeActivity } from "@/lib/home";
+import type { ActivityItem } from "@/lib/activity";
 
 // Activity, as its own page: the same feed Home previews, with nothing taken
 // off the end. A finite page that ends, like Home; no infinite scroll, and
 // nothing ranked. Coach posts lead, then the going marks, newest first.
-export function ActivityScreen({ items }: { items: HomeActivity[] }) {
+export function ActivityScreen({ items }: { items: ActivityItem[] }) {
   return (
     <div className="pad">
       <h1 className="acthead">Activity</h1>

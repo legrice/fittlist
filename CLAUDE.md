@@ -318,11 +318,11 @@ because `users.availability` already says it.
 the argument that "what can I do on Thursday" is the question people open the
 app with. Coaches leads now, by Matt's call and per the Discover spec, for a
 different one: a follow is what makes every other surface work, and Following,
-Activity and Home's Upcoming are all empty until one happens, so the act that
+Activity and a new member's week are all empty until one happens, so the act that
 unlocks the app should be one tap from opening the tab. A bare `/discover` is
 Coaches; the other two name themselves in the URL. Anything whose own word is
-not "coaches" has to deep-link past the default, which is why Home's empty
-state and the empty calendar both point at `?half=classes`: a button reading
+not "coaches" has to deep-link past the default, which is why the empty
+calendar points at `?half=classes`: a button reading
 Find a class that opens onto a list of people is the screen contradicting the
 word that got somebody there. The directory
 answered "who teaches near me" and never "what can I do on Thursday",
@@ -457,8 +457,7 @@ directory of six coaches said the room was empty. Classes say the room is
 lived-in honestly now, so the half is Coaches again and members leave it:
 a coach directory half full of people who teach nothing is a worse answer
 to "who can I train with" than a shorter one. Nobody is hidden by that,
-which is what makes it safe: search covers both kinds, and Home's people
-rail still mixes them. The Coaches rail's chips are what they teach
+which is what makes it safe: search covers both kinds. The Coaches rail's chips are what they teach
 (`users.disciplines`), All leading filled-in, multiselect, from the same
 vocabulary the studios' chips use, so one word narrows either half. The
 quality bar (a schedule, or enough profile) is a coach's and always was. `discoverable = false` and blocks in either
@@ -1202,16 +1201,24 @@ theirs to say, and a gym account replaces it with the real rota. This is
 the inventory building itself, and it is also the pitch: a studio arriving
 finds its page already worth keeping.
 
-**A manager's own studio page carries one floating door: Studio admin.**
-`StudioAdminSheet` sits where a member's Book and a coach's plus live,
-because on your own gym's page the thing you came to do is run the place.
-The sheet holds the rota, Shifts worked, the studio editor, the share, and
-the page's view count; the rows that need the gym account only appear once
-it exists. Views are tracked against `studios.accountUserId` through the
-same `page_visits` rollup a coach's page uses (main landing only, no
-managers, no bots, recorded in `/s/[slug]/page.tsx`), so the number means
-the same thing everywhere it appears. The old "The schedule" pill in the
-actions row is gone: it was one door of several.
+**Running a studio is reached from the You tab and nowhere else.** It floated
+on the studio's own public page for a while (`StudioAdminSheet` where a
+member's Book and a coach's plus live), on the argument that on your own gym's
+page the thing you came to do is run the place. That was wrong about which page
+you are on: `/s/{slug}` is the page strangers read, and a manager's tools
+drawn on top of it are tools in the shop window. Your studios is a group of
+rows on You, the same place your own page and your own settings are, and each
+row opens `/s/{slug}/shifts`, which is the working screen.
+
+`StudioAdminSheet` survives as the overflow on that screen rather than a
+floating pill: the two things a manager does weekly are named buttons (All
+shifts, Coaches) and the rest is behind `.staffmore` at the end of the row,
+which holds Shifts worked, the studio editor, the share and the page's view
+count. The rows that need the gym account only appear once it exists. Views
+are tracked against `studios.accountUserId` through the same `page_visits`
+rollup a coach's page uses (main landing only, no managers, no bots, recorded
+in `/s/[slug]/page.tsx`), so the number means the same thing everywhere it
+appears.
 
 **A studio is the commons until somebody claims it.** The directory has always
 run on trust: any coach can correct any entry, because a row nobody owns is
@@ -1723,20 +1730,17 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**The tabs are five where Home is visible, four everywhere else: Home,
-Following, Search, Schedule, You.** Home leads when it's there, and it is
-dark-launched (`homeVisible()`: an admin, or `HOME_ENABLED=true`), by
-Matt's call, until it's right. While it's dark the tab is in his bar and
-nobody else's, `/home` answers everyone else with Following (the URL is
-guessable, so it gets the same answer the bar gives), and nothing lands
-there: `landingHref()` is the one answer for signing in, finishing setup,
-the wordmark and the OAuth callbacks, and it says `/feed` for everyone
-the tab is hidden from. A client can't ask who is an admin, so `AuthFlow`
-and `OnboardingWizard` take the landing as a prop from their server
-parent rather than guessing. Following leads for everyone else, and only
-moves when the people you follow do, which made the app feel dead on the
-second visit; Home is the mixed scroll that has something on it either
-way, which is why it takes the lead the day the flag opens.
+**The tabs are four: Following, Search, Schedule, You.** Home was built and
+dark-launched behind `homeVisible()` for a while and is now parked: the route,
+the screen and `home.ts` are gone, and `landingHref()` answers `/feed` for
+everyone. It stays a function because the answer has already changed twice and
+every caller asks rather than assuming. The concept is kept, not lost:
+`homescreenspec.md` and its wireframe are still here, and the one part of Home
+that outlived it (Activity) moved to `src/lib/activity.ts` and `/activity`.
+A client can't ask who is an admin, so `AuthFlow`
+and `OnboardingWizard` still take the landing as a prop from their server
+parent rather than guessing.
+
 "Search" is the Discover directory renamed, route unchanged at
 `/discover`, because Home and "Discover" both read as "find stuff" and two
 tabs promising the same thing is one tab nobody opens: Home is curated,
@@ -1757,7 +1761,7 @@ screen opened the coach's calendar on every launch, offering to add a class
 to a public page they cannot have and saying "add the classes you coach" to
 somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
-tokens and `backToFor`, "home" means the Home tab now and the Following
+tokens and `backToFor`, "home" is no longer a destination and the Following
 feed says `from=following`; the class page honours both. The current tab
 marks itself with a light brand-orange wash behind the glyph alone
 (`.navtab.on .navglyph`, the icon's stroke and the label untouched); it
@@ -1768,37 +1772,37 @@ first SVG path only, because the bell's clapper is an open stroke and
 filling it paints shapes nobody drew. A hamburger is deliberately not
 built: a lid over an empty shelf is where things go to be forgotten.
 
-**Home is a finite page that ends.** `homescreenspec.md` (with its
-wireframe) is the build spec; `src/lib/home.ts` is the one loader and
-`HomeScreen` the render. The sections in order: the place chip and the
-date; Upcoming (your own Going marks, next seven days, chronological, a
-rail of cards with the class colour down the spine, each card a
-`ClassOpener` door to the class sheet, with a designed empty state because
-your own list's emptiness is actionable); People near you (the follow
-graph's front door: an avatar rail of not-yet-followed people, your city
-first then newest, the face navigates and the pill follows in place);
-Studios (three rows with coach and class counts, a
-community row saying "added by N coaches", every row a door to `/s/{slug}`;
-a verified one wears the tick beside its name and not the word, because
-"Verified" repeated down a column of names is a column of one word and the
-tick is what people already read as verified, while the studio's own page
-still says it in full where there is room to explain what it means);
-Activity (what the people you follow did this week, coach posts first
-then attendance, each newest first: a batch of three or more new series
-reads "posted next week" with the count and the studios, a smaller add
-reads "added a class" leading with a studio they hadn't taught at before
-when there is one, both collapsed to one row per coach; then public Going
-marks, future ones "is going to" and passed ones "went to" with the
-relative day; grouped by seriesId throughout so a weekly class counts
-once, capped, closed by the privacy line. A coach putting next week up is
-the one thing here that regenerates without any growth in the follow
-graph, which is why it leads). Nothing is ranked: proximity is the location string, recency is
-createdAt, and every section with nothing to say is removed rather than
-shown empty, Upcoming excepted. Events and clubs are in the spec and
-deliberately not built. The one spec line not shipped: Follow on a
-verified studio's row, because the feed and digest pipelines are
-handle-keyed and a Follow that buys nothing visible would be a lie; the
-row is a door until following a gym means something.
+**Home is parked, and Activity is what survived it.** `homescreenspec.md`
+(with its wireframe) is still the spec, and it is worth keeping: the reasoning
+about Upcoming, the people rail, the studios and the privacy line is the
+thinking, not the code. What shipped was the whole screen behind a flag only an
+admin could open, which is a screen nobody was using and a loader nobody was
+reading. It is deleted rather than left dark, because a dark screen still has
+to be kept working by everybody who changes anything under it.
+
+Activity is the exception and it moved out whole: `activityFeed()` in
+`src/lib/activity.ts`, rendered by `/activity`. The rules came with it, and
+they are the ones worth restating: only public acts reach it, a Going mark is
+public by default and a personal row has no column that could make one public,
+it groups by `seriesId` so a weekly class counts once, and coach posts lead
+because a coach putting next week up is the one thing there that regenerates
+without the follow graph growing.
+
+**Activity has no door, and that is a decision waiting rather than a decision
+made.** It sat behind a heartbeat in the header for a build; the icon came off
+by Matt's call, because the header is the search and the bell and a third glyph
+next to them was a screen asking to be visited rather than answering anything.
+The route, the loader and `activity-smoke` are all still here and still green,
+reached by typing the URL. That is exactly the dark screen the paragraph above
+argues against, and it is on purpose for now: what Activity needs is a home
+that is somebody's habit (a section on Following, most likely, where the people
+you follow already are), not a fifth icon. Until it gets one, this is a thing to
+finish, not a thing that is finished.
+
+The `.hm-*` classes in `globals.css` are Activity's now. Some of them only ever
+dressed Home and are dead; they are left alone deliberately, because guessing
+which is which by eye is how a live rule gets deleted, and a sweep is its own
+commit.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

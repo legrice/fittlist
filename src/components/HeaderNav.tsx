@@ -15,7 +15,6 @@ export function HeaderNav({
   coach = true,
   active,
   scheduleHref,
-  home = false,
 }: {
   coach?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
@@ -23,13 +22,12 @@ export function HeaderNav({
   /** Where Schedule goes; defaults by role. */
   scheduleHref?: string;
   /** Whether Home is one of the links. Dark-launched; the server says. */
-  home?: boolean;
 }) {
   const here = activeTab(usePathname(), active);
 
   return (
     <nav className="headnav" aria-label="Main">
-      {navTabs(coach, scheduleHref, home).map((t) => {
+      {navTabs(coach, scheduleHref).map((t) => {
         const cls = `headnav-l${here === t.id ? " on" : ""}`;
         const current = here === t.id ? "page" : undefined;
         return (

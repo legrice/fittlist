@@ -1,4 +1,4 @@
-// Activity: its own page, behind the header's heartbeat and nothing else.
+// Activity: its own page, reached by its URL and nothing else.
 //
 // The feed is made of public acts by the people you follow, so the fixture is
 // a coach who posts a week, a member who marks Going in public, and a second
@@ -51,18 +51,20 @@ await coach.locator(".publishwrap .btn").click();
 await coach.waitForTimeout(900);
 console.log("a coach put a week up ok");
 
-// The heartbeat is on every shell, not just the tabbed one. A coach's
-// Schedule is /app, which sits outside the (tabs) group and renders its own
-// header, so it was the one screen the icon went missing from.
+// The heartbeat is off every shell, by Matt's call: the header carries the
+// search and the bell and nothing else. Activity keeps working and keeps its
+// URL; what it has no longer is a door.
 {
   await coach.goto(BASE + "/app");
   await coach.locator(".caladd").waitFor();
-  if (!(await coach.locator(".brandbar-actions .activitybtn").count()))
-    fail("the coach's schedule lost the Activity heartbeat");
+  if (await coach.locator(".brandbar-actions .activitybtn").count())
+    fail("the Activity heartbeat is back on the coach's schedule");
   await coach.goto(BASE + "/feed");
-  await coach.locator(".brandbar-actions .activitybtn").waitFor();
+  await coach.locator(".brandbar-actions").waitFor();
+  if (await coach.locator(".brandbar-actions .activitybtn").count())
+    fail("the Activity heartbeat is back on Following");
 }
-console.log("the heartbeat is on both shells ok");
+console.log("no heartbeat on either shell ok");
 
 // A member who marks one of them, publicly (the default).
 const goer = await mk("sam@example.com", "Sam Goer", true);
@@ -82,16 +84,14 @@ for (const who of ["erinclyne", "samgoer"]) {
 }
 console.log("followed the coach and the member ok");
 
-// The heartbeat is the door, and it is the only one: Activity is not a tab.
+// Activity is not a tab and no longer an icon: the URL is the only way in.
 await me.goto(BASE + "/feed");
-await me.locator(".brandbar-actions .activitybtn").waitFor();
 {
   const tabs = (await me.locator(".navtab").allInnerTexts()).map((t) => t.trim());
   if (tabs.some((t) => /activity/i.test(t)))
     fail("Activity should not be a tab: " + tabs.join("|"));
 }
-await me.locator(".brandbar-actions .activitybtn").click();
-await me.waitForURL(/\/activity/);
+await me.goto(BASE + "/activity");
 await me.locator(".acthead", { hasText: "Activity" }).waitFor();
 
 // Both kinds of row, and the coach's post leads.

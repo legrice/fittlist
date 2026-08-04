@@ -1,6 +1,7 @@
 import { eq, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { coachAnalytics } from "@/lib/visits";
 import { staffView } from "@/app/actions/gym";
 import { StudioShiftsView } from "@/components/StudioShiftsView";
 
@@ -28,5 +29,31 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
   if (!studio) notFound();
   const view = await staffView(studio.id);
   if (!view) notFound();
-  return <StudioShiftsView view={view} />;
+  // The overflow's contents, and only for whoever runs the place.
+  const pageViews =
+    view.isManager && studio.accountUserId
+      ? (await coachAnalytics(studio.accountUserId)).profileViews
+      : null;
+  return (
+    <StudioShiftsView
+      view={view}
+      pageViews={pageViews}
+      studio={
+        view.isManager
+          ? {
+              id: studio.id,
+              name: studio.name,
+              address: studio.address,
+              types: studio.types,
+              about: studio.about ?? "",
+              photo: studio.photo,
+              contactEmail: studio.contactEmail ?? "",
+              phone: studio.phone ?? "",
+              website: studio.website ?? "",
+              instagram: studio.instagram ?? "",
+            }
+          : null
+      }
+    />
+  );
 }

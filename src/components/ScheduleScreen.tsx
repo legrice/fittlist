@@ -95,7 +95,6 @@ export function ScheduleScreen({
   photo,
   invitesLeft,
   showFanView,
-  showHome,
   landing,
   userId,
   myColor,
@@ -121,9 +120,6 @@ export function ScheduleScreen({
   photo: string | null;
   invitesLeft: number;
   showFanView: boolean;
-  /** Whether the Home tab is in this viewer's bar. Dark-launched: an admin,
-   *  or HOME_ENABLED=true. The server decides. */
-  showHome: boolean;
   /** Where the wordmark goes: the landing tab, or /app without the member
    *  side. One answer, so it can't point at a tab this viewer hasn't got. */
   landing: string;
@@ -542,12 +538,9 @@ export function ScheduleScreen({
           settings={showFanView ? undefined : "/you"}
           home={showFanView ? landing : "/app"}
           search={showFanView}
-          // Gated the same way, and for the same reason: Activity is made of
-          // the follow graph, so it means nothing without the member side.
-          activity={showFanView}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
-          nav={showFanView ? { active: "schedule", scheduleHref: "/app", home: showHome } : undefined}
+          nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}
@@ -1164,7 +1157,6 @@ export function ScheduleScreen({
         <NavBar
           active="schedule"
           scheduleHref="/app"
-          home={showHome}
           face={{
             photo,
             color: myAccent,

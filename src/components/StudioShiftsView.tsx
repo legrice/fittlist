@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { answerShiftRequest, claimShift, giveUpShift, type StaffView } from "@/app/actions/gym";
 import { BackLink } from "@/components/BackLink";
+import { StudioAdminSheet } from "@/components/StudioAdminSheet";
+import type { StudioEditProps } from "@/components/StudioOwnerBar";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -21,7 +23,17 @@ type Tab = "mine" | "open" | "all" | "requests";
 // here. The rota is already a real dated week with adding, editing and
 // assigning on it, and a second calendar would drift from it the way the
 // class row drifted into six copies.
-export function StudioShiftsView({ view }: { view: StaffView }) {
+export function StudioShiftsView({
+  view,
+  pageViews,
+  studio,
+}: {
+  view: StaffView;
+  /** The studio's own settings, behind the overflow. Null for a staff coach:
+   *  the sheet is the manager's, and so is everything in it. */
+  pageViews: number | null;
+  studio: StudioEditProps | null;
+}) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("mine");
   const [pending, start] = useTransition();
@@ -84,6 +96,18 @@ export function StudioShiftsView({ view }: { view: StaffView }) {
           <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage/staff`}>
             <Icon name="groups" size={16} /> Coaches
           </Link>
+          {/* Everything running a studio needs that isn't one of those two.
+              It used to float on the studio's public page; this is the only
+              way in now, which is the point: a manager's tools do not belong
+              on the page strangers read. */}
+          {studio && (
+            <StudioAdminSheet
+              slug={view.slug}
+              canSchedule
+              pageViews={pageViews}
+              studio={studio}
+            />
+          )}
         </div>
       )}
 

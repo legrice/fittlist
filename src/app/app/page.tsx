@@ -6,7 +6,7 @@ import { CAL_PAST_DAYS, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
-import { fansVisible, homeVisible, landingHref } from "@/lib/flags";
+import { fansVisible, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { unreadNotifications } from "@/lib/notify";
 import { myWeek } from "@/lib/week";
@@ -188,7 +188,6 @@ export default async function SchedulePage({
       name={user?.name ?? ""}
       photo={user?.photo ?? null}
       showFanView={await fansVisible()}
-      showHome={await homeVisible()}
       landing={await landingHref()}
       userId={userId}
       myColor={user?.avatarColor ?? null}

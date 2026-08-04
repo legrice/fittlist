@@ -30,25 +30,9 @@ export async function fansVisible(): Promise<boolean> {
   return !!(await currentAdmin());
 }
 
-// Home is dark-launched the same way the member side was: it exists, it is
-// built, and while it is being got right only an admin can see it. For
-// everyone else the tab isn't in the bar, /home sends them to Following, and
-// Following is still where signing in lands. HOME_ENABLED=true opens it to
-// everyone, exactly, the way every flag here compares.
-export function homeEnabled(): boolean {
-  return process.env.HOME_ENABLED === "true";
-}
-
-export async function homeVisible(): Promise<boolean> {
-  if (homeEnabled()) return true;
-  const { currentAdmin } = await import("@/lib/admin");
-  return !!(await currentAdmin());
-}
-
-/** Where signing in, finishing setup and the wordmark all point. One
- *  answer, so the landing can't disagree with which tabs exist. While Home
- *  is dark this is Following for everyone but an admin with a session the
- *  caller can already read; the flag opens it to all. */
+// Where signing in lands, and where the wordmark goes. One answer since Home
+// was parked; it stays a function because the answer has changed twice and
+// every caller already asks rather than assuming.
 export async function landingHref(): Promise<string> {
-  return (await homeVisible()) ? "/home" : "/feed";
+  return "/feed";
 }

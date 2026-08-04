@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "home" | "following" | "discover" | "schedule" | "you" | "none";
+export type NavTab = "following" | "discover" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -22,15 +22,11 @@ export type NavItem = {
  * which shell it was in. Both sides have a page of their own now, so both get
  * the tab; only where it points differs.
  */
-export function navTabs(coach: boolean, scheduleHref?: string, home = false): NavItem[] {
+export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
   return [
     // Home leads where it's visible at all: a mixed scroll with something
     // new on it whether or not your follow graph changed. Following only
     // moves when the people you follow do, which made the app feel dead on
-    // the second visit. It is dark-launched for now (`homeVisible()`, an
-    // admin or HOME_ENABLED=true), so for everyone else this list is the
-    // four it always was and Following leads.
-    ...(home ? [{ id: "home" as const, href: "/home", icon: "home", label: "Home" }] : []),
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // Discover again, and the compass with it: the directory grew a
     // Classes half, which is browsing rather than looking something up,
@@ -53,7 +49,6 @@ export function navTabs(coach: boolean, scheduleHref?: string, home = false): Na
  *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
-  if (pathname.startsWith("/home")) return "home";
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
   if (pathname.startsWith("/feed")) return "following";
   // Both calendars are the Schedule tab: a coach's at /app, a member's at
@@ -78,10 +73,8 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
 export function backToFor(from: string | undefined, signedIn: boolean): { href: string; label: string } {
   if (from === "discover") return { href: "/discover", label: "Back to Discover" };
   if (from === "search") return { href: "/search", label: "Back to search" };
-  // "home" means the Home tab now; the Following feed names itself. Only
-  // somebody who can see Home ever leaves with that token, so it is safe
-  // to honour while the tab is dark.
-  if (from === "home") return { href: "/home", label: "Back home" };
+  // The Home tab is parked, so its token answers like anything unknown:
+  // the front door. Old links carrying ?from=home still land somewhere real.
   if (from === "following") return { href: "/feed", label: "Back to Following" };
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
   // The cold-open fallback stays Following: it has to land somewhere every

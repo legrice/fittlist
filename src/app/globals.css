@@ -4971,6 +4971,10 @@ button.ps-card { cursor: pointer; }
    Your studios row, and a pending ask said on the shift it is about. */
 .staffbar { display: flex; gap: 8px; margin: 0 0 16px; }
 .staffbar-b { width: auto; margin: 0; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; }
+/* The overflow is a glyph, so it takes the square of a button rather than the
+   width of a word, and sits at the far end of the row: what is named comes
+   first, and the lid over the rest is last. */
+.staffmore { margin-left: auto; padding: 9px 11px; }
 .staffrole {
   margin-left: 8px; padding: 2px 8px; border-radius: 999px;
   background: var(--si-tint); color: var(--si-ink);

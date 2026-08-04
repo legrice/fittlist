@@ -81,7 +81,7 @@ export default async function EventPage({ params, searchParams }: Props) {
   // there, off Home it returns home, and a cold open falls back to the
   // coach's schedule.
   const backHref =
-    from === "home" ? "/home" : from === "following" ? "/feed" : `/${handle}/schedule`;
+    from === "following" ? "/feed" : `/${handle}/schedule`;
   const backLabel =
     from === "home"
       ? "Back home"

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { fansVisible } from "@/lib/flags";
-import { activityFeed } from "@/lib/home";
+import { activityFeed } from "@/lib/activity";
 import { getSessionUserId } from "@/lib/session";
 import { ActivityScreen } from "@/components/ActivityScreen";
 

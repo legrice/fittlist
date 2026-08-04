@@ -11,7 +11,6 @@ export function AppHeader({
   unread = 0,
   settings,
   search = false,
-  activity = false,
   avatar,
   home = "/feed",
   nav,
@@ -26,8 +25,6 @@ export function AppHeader({
    *  again: a search that spans every half of the directory starts here,
    *  and browsing is the tab. Only where the member side is on. */
   search?: boolean;
-  /** Show the heartbeat, which is the only way to Activity. */
-  activity?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -41,7 +38,7 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; home?: boolean };
+  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string };
 }) {
   return (
     <div className="brandbar">
@@ -53,7 +50,6 @@ export function AppHeader({
           coach={nav.coach}
           active={nav.active}
           scheduleHref={nav.scheduleHref}
-          home={nav.home}
         />
       )}
       <div className="brandbar-actions">
@@ -67,20 +63,6 @@ export function AppHeader({
             icon="search"
             href="/search"
             match="/search"
-          />
-        )}
-        {/* Activity is its own page, and this is its only door: it is not a
-            tab, because it is a thing you drop in on rather than one of the
-            four places you live. The heartbeat says "what people are doing",
-            which the bell (news addressed to you) and the compass (browsing)
-            both mean something else. */}
-        {activity && (
-          <HeaderIconLink
-            className="activitybtn"
-            label="Activity"
-            icon="activity"
-            href="/activity"
-            match="/activity"
           />
         )}
         <HeaderIconLink

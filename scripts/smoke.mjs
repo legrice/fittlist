@@ -1226,7 +1226,6 @@ await page.getByRole("button", { name: "Already have an account? Sign in" }).cli
 await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
 // Every login lands on Following; /app stopped being anyone's front door.
-// (Home is dark-launched, so nothing lands there while it is admin-only.)
 await page.waitForURL(BASE + "/feed");
 console.log("passkey login ok");
 
@@ -1254,12 +1253,10 @@ if ((await fan.locator(".wizdot").count()) !== 2)
 await skipSetup(fan);
 await fan.waitForURL("**/feed");
 await fan.getByText("You\u2019re not following anyone").waitFor();
-// Home is dark-launched: a member has no Home tab, and the URL answers
-// with Following rather than a page they were never shown.
+// Home is parked. Nobody has the tab, and the concept is kept in
+// homescreenspec.md rather than in a route nobody can reach.
 if (await fan.locator('.navtab[data-tab="home"]').count())
-  fail("Home should be hidden while it is admin-only");
-await fan.goto(BASE + "/home");
-await fan.waitForURL("**/feed");
+  fail("the Home tab should be gone");
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
 // Find coaches names the half it means, so it lands on the coaches rather
@@ -2182,8 +2179,8 @@ await fan.locator(".brandbar-home").click();
 await fan.waitForURL("**/feed");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
-// ---- The member's tabs, while Home is dark: the four they always were,
-// with the directory called Discover again.
+// ---- The member's tabs: the four they always were, with the directory
+// called Discover again.
 {
   // The You tab carries the viewer's initial inside it, so match by
   // inclusion rather than the joined string.
@@ -2196,7 +2193,7 @@ console.log("going + share my week ok (1080x1920 png, from the account)");
     !tabs[3].includes("You")
   )
     fail("a member's tabs should read Following, Discover, Schedule, You: " + tabs.join("|"));
-  console.log("member tabs ok (four, no Home while it is dark)");
+  console.log("member tabs ok (four, and no Home)");
 }
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -2256,9 +2253,9 @@ await page.goto(BASE + "/sam");
 await page.locator(".profacts .followpill", { hasText: "Follow" }).click();
 await page.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 await page.goto(BASE + "/feed");
-// their own classes belong on their Home too, beside the ones they follow
+// their own classes belong on Following too, beside the ones they follow
 if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" }).count()))
-  fail("a coach's own classes should show on their Home");
+  fail("a coach's own classes should show on Following");
 await page.locator(".feedav", { hasText: "Matt" }).waitFor();
 await page.locator(".feedagenda .ps-event", { hasText: "Conditioning" }).first().click();
 await page.locator(".ovcta-save").click();
@@ -2289,7 +2286,7 @@ await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
   const marked = await page.locator(".feedagenda .ps-event.goingon").count();
   if (marked !== 1) fail(`only the followed class should be marked, got ${marked}`);
 }
-console.log("own classes on Home ok (visible, not attendable)");
+console.log("own classes on Following ok (visible, not attendable)");
 
 // and the coach's calendar holds both hats now: the class they added rides
 // along with what they teach, wearing the Going green and the coach's face,
@@ -2404,21 +2401,16 @@ await page.locator(".ps-event").first().waitFor();
   await page.locator(".ps-daycol").first().waitFor();
   console.log("day view ok (the strip walks the week, the grid holds the class)");
 }
-// ---- Home, for the one person who can see it. It is dark-launched behind
-// an admin (ADMIN_EMAILS holds this account), so the tab is in this bar and
-// nobody else's, and the page it opens is the real one.
+// ---- Home is parked, so nobody gets a fifth tab, admin or not. The feed it
+// used to carry lives at /activity, behind the header's heartbeat.
 {
   await page.goto(BASE + "/app");
-  await page.locator('.navtab[data-tab="home"]').click();
-  await page.waitForURL("**/home");
-  await page.locator(".hm-title", { hasText: "Upcoming" }).waitFor();
-  // The sections that need no follow graph: your own next seven days, with
-  // its designed empty state, and the studios.
-  await page.locator(".hm-title", { hasText: "Studios" }).waitFor();
-  const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (tabs.length !== 5 || !tabs[0].includes("Home"))
-    fail("an admin should get Home at the head of five tabs: " + tabs.join("|"));
-  console.log("home ok (admin only, and it renders)");
+  const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) =>
+    t.replace(/[ \t\n]+/g, " ").trim(),
+  );
+  if (tabs.length !== 4 || tabs.some((t) => /Home/.test(t)))
+    fail("four tabs, none of them Home: " + tabs.join("|"));
+  console.log("home is gone ok (four tabs for everyone)");
 }
 
 // with the bottom nav to cross between the two spaces
@@ -2871,11 +2863,14 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// five tabs for this account (it is the admin, so Home is in its bar), and
-// the account is the last — back in the app, since a profile carries neither
+// Four tabs, admin or not: Home was the fifth in this account's bar only, and
+// it is parked. Back in the app, since a profile carries no bar at all.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
-if ((await page.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
+{
+  const n = await page.locator(".navtab").count();
+  if (n !== 4) fail("expected 4 tabs, got " + n);
+}
 await openProfile(page);
 await closeProfile(page);
 // what a coach attends is private: it must not leak onto their public page

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { homeVisible, landingHref } from "@/lib/flags";
+import { landingHref } from "@/lib/flags";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { unreadNotifications } from "@/lib/notify";
@@ -33,12 +33,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // In parallel: these are independent, and this layout runs on every tab
   // switch, so awaiting them one by one stacked four round trips onto every
   // tap of the bar.
-  const [unread, promptDue, invitesLeft, showHome, landing] = await Promise.all([
+  const [unread, promptDue, invitesLeft, landing] = await Promise.all([
     unreadNotifications(userId),
     feedbackPromptDue(userId),
     invitesBannerCount(),
-    // Home is dark: in the bar for an admin only, until it's ready.
-    homeVisible(),
     landingHref(),
   ]);
   // "How is it going?", once they have been here long enough to know.
@@ -62,14 +60,12 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // is always right here. No gear: the You tab is the door to the
           // account, and a second door in the corner said it twice.
           search
-          // Activity has no tab; the heartbeat in the corner is its only door.
-          activity
-          nav={{ coach: isCoach, scheduleHref, home: showHome }}
+          nav={{ coach: isCoach, scheduleHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} home={showHome} />
+      <NavBar coach={isCoach} face={face} scheduleHref={scheduleHref} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

@@ -6,10 +6,11 @@ import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
 
-// The manager's own door, floating where a member's Book and a coach's plus
-// live: on your own gym's page the thing you came to do is run the place. One
-// sheet holds everything that means today, and the shape leaves room for what
-// a paid studio account will hold later.
+// Everything about running a studio that isn't already a control on the
+// shifts screen. It used to float on the studio's public page, which put a
+// manager's tools on the page strangers read; the way in is the You tab now,
+// and this is the overflow beside the two buttons there, holding what those
+// buttons don't: the counts, the editor, the share, and the page's views.
 export function StudioAdminSheet({
   slug,
   canSchedule,
@@ -45,9 +46,12 @@ export function StudioAdminSheet({
 
   return (
     <>
-      <button className="fab studioadmin" onClick={() => setOpen(true)}>
-        <Icon name="admin_panel_settings" size={19} />
-        Studio admin
+      <button
+        className="btn ghost staffbar-b staffmore"
+        aria-label="More studio settings"
+        onClick={() => setOpen(true)}
+      >
+        <Icon name="more_horiz" size={18} />
       </button>
 
       {open && (
@@ -73,27 +77,6 @@ export function StudioAdminSheet({
               </div>
             )}
             <div className="settingslist ownermenu">
-              {canSchedule && (
-                <Link className="setrow" href={`/s/${slug}/manage`}>
-                  <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
-                  <span className="setrow-txt">
-                    <span className="t">All shifts</span>
-                    <span className="s">The week, and who&rsquo;s on it</span>
-                  </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-                </Link>
-              )}
-              {/* Not gated on the schedule: a claimed studio has managers
-                  before it has a rota, and handing a second set of keys out is
-                  the first thing somebody needs to do. */}
-              <Link className="setrow" href={`/s/${slug}/manage/staff`}>
-                <span className="setrow-ic"><Icon name="groups" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Staff</span>
-                  <span className="s">Who runs this page, and who takes the classes</span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </Link>
               {canSchedule && (
                 <Link className="setrow" href={`/s/${slug}/manage/counts`}>
                   <span className="setrow-ic"><Icon name="event_available" size={22} /></span>

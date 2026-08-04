@@ -88,6 +88,6 @@ export async function setGoingVisibility(
         eq(schema.attendances.occurrenceDate, occurrenceDate),
       ),
     );
-  revalidatePath("/home");
+  revalidatePath("/activity");
   return { ok: true };
 }

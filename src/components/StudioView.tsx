@@ -9,7 +9,6 @@ import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
 import { mapsUrlFor } from "@/lib/studio";
 import { studioAccess } from "@/lib/studioaccess";
-import { coachAnalytics } from "@/lib/visits";
 import { AppChrome } from "@/components/AppChrome";
 import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
@@ -18,7 +17,6 @@ import { InviteCoach } from "@/components/InviteCoach";
 import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
-import { StudioAdminSheet } from "@/components/StudioAdminSheet";
 import { StudioMenu } from "@/components/StudioMenu";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
@@ -495,28 +493,6 @@ export async function StudioView({
           ))}
 
         </ProfileTabs>
-
-        {/* The manager's own door, floating where the one action of a screen
-            lives: on your own gym's page, that action is running the place. */}
-        {access.isManager && (
-          <StudioAdminSheet
-            slug={s.slug ?? s.id}
-            canSchedule={!!s.accountUserId}
-            pageViews={s.accountUserId ? (await coachAnalytics(s.accountUserId)).profileViews : null}
-            studio={{
-              id: s.id,
-              name: s.name,
-              address: s.address,
-              types: s.types,
-              about: s.about ?? "",
-              photo: s.photo,
-              contactEmail: s.contactEmail ?? "",
-              phone: s.phone ?? "",
-              website: s.website ?? "",
-              instagram: s.instagram ?? "",
-            }}
-          />
-        )}
 
         {!signedIn && (
           <div className="madewith">
