@@ -37,6 +37,7 @@ export default async function ShiftsPage({ params }: { params: Promise<{ slug: s
   return (
     <StudioShiftsView
       view={view}
+      canSchedule={!!studio.accountUserId}
       pageViews={pageViews}
       studio={
         view.isManager

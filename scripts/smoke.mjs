@@ -3350,17 +3350,25 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
   await studioCard().getByText("matt@example.com").waitFor();
   console.log("studio claimed ok");
 
-  // The manager's own page grows the floating Studio admin pill: everything
-  // about running the place behind one door. No gym account yet, so it holds
-  // the editor and the share and none of the rota rows.
+  // Running the place is reached from the You tab, never from the page
+  // strangers read: the public studio page carries no manager's control at
+  // all, and Your studios opens the shifts screen where the overflow lives.
+  // No gym account yet, so the overflow holds the editor and the share and
+  // none of the rota rows.
   await page.goto(BASE + "/s/ironbound-strength");
-  await page.locator(".studioadmin").click();
+  if (await page.locator(".studioadmin").count())
+    fail("the public studio page should carry no manager's door");
+  await page.goto(BASE + "/you");
+  await page.locator(".acctwrap").waitFor();
+  await page.locator(".setrow", { hasText: "Ironbound Strength" }).click();
+  await page.waitForURL(/\/shifts/);
+  await page.locator(".staffmore").click();
   {
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
     if (!rows.includes("Edit studio info"))
-      fail("the admin sheet should hold the editor: " + rows.join("|"));
-    if (rows.includes("All shifts"))
-      fail("no gym account means no shifts row yet: " + rows.join("|"));
+      fail("the overflow should hold the editor: " + rows.join("|"));
+    if (rows.includes("Shifts worked"))
+      fail("no gym account means no counts row yet: " + rows.join("|"));
   }
   await page.locator(".sheetclose").first().click();
   await page.waitForFunction(() => !document.querySelector(".sheet"));

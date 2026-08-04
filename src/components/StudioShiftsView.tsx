@@ -27,12 +27,17 @@ export function StudioShiftsView({
   view,
   pageViews,
   studio,
+  canSchedule,
 }: {
   view: StaffView;
   /** The studio's own settings, behind the overflow. Null for a staff coach:
    *  the sheet is the manager's, and so is everything in it. */
   pageViews: number | null;
   studio: StudioEditProps | null;
+  /** The gym account exists, so there is a rota to count and to link to. A
+   *  studio without one still renders this screen (it is the only door to the
+   *  editor), it just has no shifts on it. */
+  canSchedule: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("mine");
@@ -108,7 +113,7 @@ export function StudioShiftsView({
           {studio && (
             <StudioAdminSheet
               slug={view.slug}
-              canSchedule
+              canSchedule={canSchedule}
               pageViews={pageViews}
               studio={studio}
             />
@@ -171,9 +176,13 @@ export function StudioShiftsView({
         )
       ) : rows.length === 0 ? (
         <p className="adminempty">
-          {tab === "mine"
-            ? "You aren't on anything here in the next fortnight."
-            : "Every shift has somebody on it."}
+          {/* No gym account means there is no rota at all, which is a
+              different thing from a rota you happen not to be on. */}
+          {!canSchedule
+            ? "This studio isn't running its schedule here yet. Write to us and we'll turn it on."
+            : tab === "mine"
+              ? "You aren't on anything here in the next fortnight."
+              : "Every shift has somebody on it."}
         </p>
       ) : (
         <div className="settingslist">

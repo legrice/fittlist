@@ -147,19 +147,27 @@ const studioHref = await matt.locator('a[href^="/s/"]').first().getAttribute("hr
 if (!studioHref) fail("no studio on the coach's page");
 console.log("studio at " + studioHref);
 
-// the rota, from the studio page
+// The rota, from the shifts screen. The studio's public page carries no
+// manager's control at all now: the tools are not drawn in the shop window.
 await matt.goto(BASE + studioHref);
-// The manager's tools live behind the floating Studio admin pill now, and
-// with the account on it holds the rota, the counts, and the page views.
-await matt.locator(".studioadmin").click();
+if (await matt.locator(".studioadmin").count())
+  fail("the public studio page should carry no manager's door");
+await matt.goto(BASE + studioHref + "/shifts");
+// The two weekly acts are named buttons; the overflow holds the rest, and
+// with the account on that includes the counts and the page views.
+await matt.locator(".staffbar .staffmore").click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["All shifts", "Shifts worked", "Staff", "Edit studio info"])
-    if (!rows.includes(want)) fail("the admin sheet is missing " + want + ": " + rows.join("|"));
+  for (const want of ["Shifts worked", "Edit studio info", "Share this studio"])
+    if (!rows.includes(want)) fail("the overflow is missing " + want + ": " + rows.join("|"));
+  // The two that became buttons must not also be rows: one door each.
+  for (const gone of ["All shifts", "Staff"])
+    if (rows.includes(gone)) fail(gone + " is a button now, not an overflow row: " + rows.join("|"));
 }
 await matt.locator(".sheet .stat .n").waitFor();
-// Anchored: the counts row's sub-line says "the rota" too.
-await matt.locator(".sheet .setrow", { hasText: /^All shifts/ }).click();
+await matt.locator(".sheetclose").first().click();
+await matt.waitForFunction(() => !document.querySelector(".sheet"));
+await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
 

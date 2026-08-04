@@ -1786,7 +1786,23 @@ export async function staffView(studioId: string): Promise<StaffView | null> {
   const ctx = await staffing(studioId);
   if ("error" in ctx) return null;
   const { db, userId, studio, isManager, isStaff } = ctx;
-  if (!studio.accountUserId) return null;
+  // No gym account means no rota to draw, but the screen still has to render:
+  // Your studios on the You tab is the only way to run a place now, and 404ing
+  // here left a manager whose studio has no schedule yet with no route to the
+  // editor at all. Empty lists, and the overflow carries the rest.
+  if (!studio.accountUserId)
+    return {
+      studioName: studio.name,
+      slug: studio.slug ?? studio.id,
+      isManager,
+      isStaff,
+      coachCount: (await coachesHere(db, studio.id)).size,
+      mine: [],
+      open: [],
+      all: [],
+      requests: [],
+      approvalOn: !!studio.approveShiftChanges,
+    };
 
   const rows = (
     await db
