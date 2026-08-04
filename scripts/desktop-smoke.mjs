@@ -114,13 +114,22 @@ await m.waitForTimeout(500);
   await m.locator(".headnav-l", { hasText: "Following" }).click();
   await m.waitForURL(/\/feed/);
   await m.locator(".headnav-l.on", { hasText: "Following" }).waitFor();
-  await m.locator(".feedav").first().waitFor();
+  // Deliberately no assertion on the rail's contents here. This block is
+  // about the links: where they go and which one lights. What the page holds
+  // after a client-side navigation is Next's business, and the header's
+  // <Link> prefetches /feed early enough that the payload it serves can
+  // predate the follows below, which made this line fail about a third of
+  // the time for reasons that had nothing to do with the header.
   console.log("header links navigate and light up ok");
 }
 
 // Nine avatars (All, plus the eight) is what makes the rail overflow, so a
 // missing arrow below should mean the arrow is broken, not the fixture.
 {
+  // A real load, not whatever the client router had cached: the arrows are
+  // what this section is testing, and they need the full rail to be there.
+  await m.goto(BASE + "/feed");
+  await m.locator(".feedstrip").waitFor();
   await m.locator(".feedav").first().waitFor();
   const n = await m.locator(".feedav").count();
   if (n !== names.length + 1)
