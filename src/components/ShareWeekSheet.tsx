@@ -177,7 +177,7 @@ export function ShareWeekSheet({
           )}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />
+        <img className="storyimg" style={{ background: STORY_THEMES[themeId].bg }} src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />
         <div className="publishwrap">
           {canShareFiles ? (
             <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Save image"}</button>

@@ -214,7 +214,7 @@ export function ShareMyWeekSheet({
           )}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" src={storyUrl} alt="Story image of the classes in my week" />
+        <img className="storyimg" style={{ background: STORY_THEMES[themeId].bg }} src={storyUrl} alt="Story image of the classes in my week" />
         {err && <p className="err">{err}</p>}
         <div className="publishwrap">
           {canShareFiles ? (

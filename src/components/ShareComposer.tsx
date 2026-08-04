@@ -286,7 +286,12 @@ export function ShareComposer({
       </div>
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="storyimg" src={src} alt="Story image of your week" />
+      <img
+        className="storyimg"
+        style={{ background: STORY_THEMES[themeId].bg }}
+        src={src}
+        alt="Story image of your week"
+      />
 
       <div className="publishwrap">
         {bare ? (
