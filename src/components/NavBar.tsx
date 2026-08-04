@@ -37,7 +37,7 @@ export function NavBar({
     <nav className="navbar" aria-label="Main">
       {navTabs(coach, scheduleHref).map((t) => {
         const on = here === t.id;
-        const cls = `navtab${on ? " on" : ""}${t.center ? " navtab-center" : ""}`;
+        const cls = `navtab${on ? " on" : ""}`;
         const glyph =
           t.face && face ? (
             face.photo ? (

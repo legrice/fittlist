@@ -1738,15 +1738,17 @@ ceiling because the canvas is fixed and `planStory` has to fit it; one is the
 floor because "I'm at this tonight" is a real thing to post. The kicker names
 the range it drew rather than the day it was made.
 
-**The middle of the tab bar is Share, and it is an act rather than a place.**
-`/share` is the composer, opened by the one tab drawn unlike its neighbours: a
-filled brand circle, the same loud orange Add class wears, because handing your
-week on is the thing that grows the network and it was three taps down a
-settings screen. It keeps its label; a glyph alone is a mark people have to be
-taught, and this is not the tap to teach that way. `NavItem.center` is what
-makes it different, and only the bottom bar reads it: `HeaderNav` draws Share as
-one more word, because a raised button in a row of text links is a button
-shouting at four words.
+**The middle of the tab bar is Share, and it wears the sparkle.**
+`/share` is the composer, and the tab is drawn exactly like its four
+neighbours: same glyph box, same label, same brand-orange wash behind the icon
+when it is the current one. A raised filled circle in the middle shipped for a
+build and came back out, by Matt's call: the bar's whole job is five equals,
+and a button shouting at four words is a bar that has stopped being a bar. What
+makes Share different is where it goes, not how loud it is. The glyph is
+`auto_awesome`, the same filled sparkle the calendar's Share pill wears, rather
+than the share arrow, which is the system gesture and not this act. It keeps
+its label; a glyph alone is a mark people have to be taught, and this is not
+the tap to teach that way.
 
 The composer is a full screen that opens *over* the app and carries no tab bar,
 which is why `/share` sits outside the `(tabs)` group. The X is the way off, and
@@ -1759,17 +1761,41 @@ cropped by the time you scrolled to it, so it is on top and takes every pixel th
 drawer doesn't; the drawer's ceiling is 50vh and not 56, because at 56 the
 picture came out 209px tall on a phone, which is a thumbnail of the thing the
 screen is for. Style was a dropdown, so it is swatches: a colour hidden behind a
-word is a colour nobody tries. The headline was a blank field duplicating a
-choice already made, so it is derived from the segment (Coaching is "Come train
-with me", Going is "My week") and shown as a line you read with a small Edit;
-once somebody types their own, **switching segments stops overwriting it**,
-because a coach who writes something personal, switches to see how it looks and
-loses it will not write anything personal again. Save and Share were two buttons
-for one intent, so Share leads and Save to photos is the quiet one under it. And
-an empty week drew an empty picture, so it draws the style with a line on it and
-turns the primary into an offer instead: `Add a class you coach` for a coach,
-`Add something to your week` for a member, both landing on the calendar with the
-adder already up (`?add=1`, which `/week` honours now as well as `/app`).
+word is a colour nobody tries. Save and Share were two buttons for one intent, so
+Share leads and Save to photos is the quiet one under it. And an empty week drew
+an empty picture, so it draws the style with a line on it and turns the primary
+into an offer instead: `Add a class you coach` for a coach, `Add something to
+your week` for a member, both landing on the calendar with the adder already up
+(`?add=1`, which `/week` honours now as well as `/app`).
+
+**The headline is derived and cannot be edited.** It was a blank field, then a
+line you read with a small Edit beside it, which is the same field wearing a
+smaller coat; both are gone by Matt's call. `HEADLINE` maps the segment to the
+words ("Come train with me", "My week") and the composer sends them explicitly
+on every request rather than letting the route fall back to `storyPrefs`: a
+coach who typed one into the old sheet still has it stored, and inheriting it
+would put their Coaching words over a Going picture. The old rule about their
+own words surviving a segment switch went with the control it protected. What
+is lost is real and worth saying: a coach cannot put their own sentence on the
+picture from here. The other sheets still write `storyPrefs.headline`, so the
+pref is not dead, it just has no door on this screen.
+
+**One canvas is offered.** Story and Square rode the header for a build and the
+picker came off: a format toggle above a picture is a question asked before
+anybody has decided what the picture says. The square canvas is still built and
+still renders (`/api/story/compose?fmt=square`, and `storyPadding` and
+`listBudget` still take a format), and `share-smoke` asserts it at the route so
+it cannot rot while it waits for a control to offer it again. Nothing in the app
+asks for one, which makes this a thing to finish rather than a thing that is
+finished: either it comes back as a control, or the second canvas should go.
+
+**The date row is a grid, not a flex row.** `input[type="date"]` on iOS renders
+at an intrinsic width it will not shrink below, so as a flex item it ran under
+the Days select and the two boxes overlapped on a real phone while looking
+correct in Chromium. `grid-template-columns: minmax(0, 1fr) minmax(0, 116px)`
+plus `min-width: 0` on the input is what makes that impossible rather than
+unlikely, and the input is `appearance: none` and left aligned so a date reads
+like every other field rather than a centred button.
 
 There is deliberately **no pull bar above the Edit tab**. The spec drew both; two
 affordances for one act is one too many, and the word says what a grab handle

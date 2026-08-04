@@ -69,7 +69,7 @@ await coach.waitForTimeout(1200);
 await coach.locator(".sheetclose").first().click().catch(() => {});
 console.log("a coach put a week up ok");
 
-// ---- Share is the middle of the bar, and it is an act rather than a place
+// ---- Share is the middle of the bar, and it is drawn like its neighbours
 await coach.goto(BASE + "/feed");
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
@@ -77,10 +77,12 @@ await coach.goto(BASE + "/feed");
   );
   if (tabs.length !== 5) fail("expected five tabs, got " + tabs.length + ": " + tabs.join("|"));
   if (!/Share/.test(tabs[2])) fail("Share should be the middle tab: " + tabs.join("|"));
-  if (!(await coach.locator(".navtab-center").count()))
-    fail("the middle tab should be the raised one");
+  // A raised filled circle shipped for a build and came back out: the bar's
+  // job is five equals, and what makes Share different is where it goes.
+  if (await coach.locator(".navtab-center").count())
+    fail("the Share tab should be drawn like every other tab");
 }
-await coach.locator(".navtab-center").click();
+await coach.locator(".navtab", { hasText: "Share" }).click();
 await coach.waitForURL(/\/share/);
 await coach.locator(".compimg").waitFor();
 // The composer opens over the app: no bar underneath competing with it.
@@ -88,7 +90,7 @@ if (await coach.locator(".navbar:visible").count())
   fail("the composer should cover the tab bar, not sit above it");
 console.log("the middle of the bar opens the composer ok");
 
-// ---- the preview is a real image of the format that was asked for
+// ---- the preview is a real 1080x1920 story, and there is no format to pick
 const sizeOf = async () =>
   coach.locator(".compimg").evaluate(async (i) => {
     if (!i.complete) await new Promise((r) => i.addEventListener("load", r, { once: true }));
@@ -102,21 +104,21 @@ await coach.waitForFunction(() => {
   const [w, h] = await sizeOf();
   if (w !== 1080 || h !== 1920) fail(`a story should be 1080x1920, got ${w}x${h}`);
 }
-await coach.locator(".compfmt button", { hasText: "Square" }).click();
-await coach.waitForFunction(() => {
-  const i = document.querySelector(".compimg");
-  return i && i.naturalHeight === 1080;
-}, null, { timeout: 30000 });
+if (await coach.locator(".compfmt").count())
+  fail("the Story/Square picker should be gone: the composer makes a story");
+// The square canvas is still drawn by the route, and nothing in the app asks
+// for one. Held here so the second format cannot rot while it waits for a
+// control to offer it again.
 {
-  const [w, h] = await sizeOf();
-  if (w !== 1080 || h !== 1080) fail(`a square should be 1080x1080, got ${w}x${h}`);
+  const r = await coach.request.get(`${BASE}/api/story/compose?kind=coaching&fmt=square`);
+  if (!r.ok()) fail("the square canvas should still render at the route");
+  const buf = await r.body();
+  // PNG: width and height are big-endian 32-bit at byte 16 and 20.
+  const w = buf.readUInt32BE(16);
+  const h = buf.readUInt32BE(20);
+  if (w !== 1080 || h !== 1080) fail(`the square route should be 1080x1080, got ${w}x${h}`);
 }
-await coach.locator(".compfmt button", { hasText: "Story" }).click();
-await coach.waitForFunction(() => {
-  const i = document.querySelector(".compimg");
-  return i && i.naturalHeight === 1920;
-}, null, { timeout: 30000 });
-console.log("both canvases ok (1080x1920 and 1080x1080)");
+console.log("one canvas offered, and the square still renders at the route ok");
 
 // ---- the drawer collapses and the picture takes the room
 {
@@ -220,27 +222,25 @@ await settled(coach);
 }
 console.log("adding from the picker fills the calendar and the directory ok");
 
-// ---- the headline is derived from the segment, and their own words survive it
+// ---- the headline is derived from the segment, and cannot be edited
 await coach.goto(BASE + "/share");
 await coach.locator(".compimg").waitFor();
 {
-  if ((await coach.locator(".comphl em").innerText()) !== "Come train with me")
-    fail("Coaching should derive its headline");
+  if (await coach.locator(".comphl").count())
+    fail("the headline is derived now: there should be no line to edit");
+  if (await coach.locator(".complbl", { hasText: "Headline" }).count())
+    fail("the headline control should be gone entirely");
+  // It is still what the picture says, and it still follows the segment: the
+  // query the preview is drawn from carries it.
+  const story = () => coach.locator(".compimg").getAttribute("src");
+  if (!/headline=Come\+train\+with\+me/.test(await story()))
+    fail("Coaching should draw its own headline: " + (await story()));
   await coach.locator(".compseg button", { hasText: "Going" }).click();
   await coach.waitForTimeout(400);
-  if ((await coach.locator(".comphl em").innerText()) !== "My week")
-    fail("Going should derive its own headline");
-  // Their own words, and then a segment switch that must not eat them.
-  await coach.locator(".comphl-edit").click();
-  await coach.locator(".sheet input").fill("Fridays are for legs");
-  await coach.locator(".sheet .publishwrap .btn", { hasText: "Save" }).click();
-  await coach.waitForTimeout(500);
-  await coach.locator(".compseg button", { hasText: "Coaching" }).click();
-  await coach.waitForTimeout(400);
-  if ((await coach.locator(".comphl em").innerText()) !== "Fridays are for legs")
-    fail("a switch after typing your own headline must keep it");
+  if (!/headline=My\+week/.test(await story()))
+    fail("Going should draw its own headline: " + (await story()));
 }
-console.log("the headline derives, and their own words win ok");
+console.log("the headline derives from the segment and offers no edit ok");
 
 await coach.close();
 
@@ -251,8 +251,8 @@ await member.locator(".compimg").waitFor();
 await settled(member);
 if (await member.locator(".compseg").count())
   fail("a member should not get a segment with one option in it");
-if ((await member.locator(".comphl em").innerText()) !== "My week")
-  fail("a member's headline is My week");
+if (!/headline=My\+week/.test(await member.locator(".compimg").getAttribute("src")))
+  fail("a member's picture should say My week");
 {
   const cta = await member.locator(".compacts .btn").innerText();
   if (!/Add something to your week/.test(cta)) fail("an empty member should be offered: " + cta);

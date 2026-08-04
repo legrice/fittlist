@@ -3745,28 +3745,6 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
 }
 .navtab:active { background: var(--cl); }
-/* Share is the one tab that does something rather than going somewhere, so it
-   is drawn as the thing it is: a filled brand circle in the middle of the row,
-   the same loud orange Add class wears for the same reason. It keeps the
-   label, because a glyph alone is a mark people have to be taught and this is
-   the tap the whole network turns on. The wash the current tab puts behind a
-   glyph is suppressed here: the circle is already filled, and a tint behind a
-   solid is a smudge. */
-.navtab-center .navglyph {
-  width: 46px; height: 32px; background: none;
-}
-.navtab-center.on .navglyph { background: none; }
-.navtab-center .navglyph::before {
-  content: ""; position: absolute; width: 40px; height: 40px; border-radius: 999px;
-  background: var(--si); box-shadow: 0 3px 10px rgba(221, 106, 53, .34);
-}
-.navtab-center .navglyph > * { position: relative; color: #fff; }
-.navtab-center { color: var(--ol); }
-/* The circle stands a little proud of the row without breaking the bar's
-   height: the label stays on the same baseline as its neighbours', so the
-   five tabs still read as one row. */
-.navtab-center .navglyph { margin-top: -6px; }
-.navtab-center span:last-of-type { margin-top: -2px; }
 /* the FAB clears the bar rather than sitting on it */
 .hasnav .fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
 /* The nav is fixed over everything below it, so the account needs enough room
@@ -5019,14 +4997,6 @@ button.ps-card { cursor: pointer; }
 .comphead { display: flex; align-items: center; gap: 10px; padding: 8px 18px 10px; flex: 0 0 auto; }
 .comphead h1 { flex: 1; margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
 .compx { flex: 0 0 auto; }
-/* Format rides the title because it is a property of the output rather than
-   a choice about the content, which is what the drawer is for. */
-.compfmt { display: inline-flex; background: rgba(25, 21, 2, .06); border-radius: 999px; padding: 3px; flex: 0 0 auto; }
-.compfmt button {
-  border: 0; background: none; cursor: pointer; padding: 6px 11px; border-radius: 999px;
-  font-family: inherit; font-size: 12px; font-weight: 800; color: var(--ol);
-}
-.compfmt button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 21, 2, .12); }
 
 .compstage {
   flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
@@ -5039,7 +5009,6 @@ button.ps-card { cursor: pointer; }
   aspect-ratio: 9 / 16; object-fit: contain; border-radius: 16px;
   box-shadow: 0 14px 38px rgba(25, 21, 2, .24); background: var(--cl);
 }
-.compimg.sq { aspect-ratio: 1 / 1; }
 
 .compdrawer {
   flex: 0 0 auto; background: var(--card); border-top: 1px solid var(--line);
@@ -5071,19 +5040,19 @@ button.ps-card { cursor: pointer; }
 }
 .compseg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(25, 21, 2, .13); }
 
-/* The headline is a line you read with a way to change it, not a blank field
-   asking a question its owner already answered. */
-.comphl { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: rgba(25, 21, 2, .045); border-radius: 12px; }
-.comphl em {
-  flex: 1; min-width: 0; font-style: normal; font-size: 13.5px; font-weight: 800;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.comphl-edit { border: 0; background: none; cursor: pointer; flex: 0 0 auto; font-family: inherit; font-size: 13px; font-weight: 800; color: var(--si); }
 
-.compfields { display: flex; gap: 10px; }
-.compfield { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.compfield.days { flex: 0 0 128px; }
-.compfield .editinput { margin: 0; }
+/* A grid rather than a flex row, and `minmax(0, ...)` rather than `1fr`:
+   iOS renders input[type=date] at an intrinsic width it will not shrink
+   below, so as a flex item it ran straight under the Days select and the two
+   boxes overlapped. A track that is allowed to be narrower than its content,
+   plus an input that may shrink inside it, is what makes that impossible
+   rather than unlikely. */
+.compfields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 116px); gap: 10px; }
+.compfield { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.compfield .editinput { margin: 0; min-width: 0; width: 100%; }
+/* Left, like every other field here: iOS centres a date and the row then read
+   as two different kinds of control. */
+.compfield input[type="date"] { appearance: none; -webkit-appearance: none; text-align: left; }
 .comprange { margin: 8px 0 0; font-size: 12.5px; font-weight: 700; color: var(--ol); }
 .comprow {
   display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 13px;

@@ -23,13 +23,21 @@ import { Toast, useToast } from "@/components/Toast";
 // buttons for one intent, so Share leads and Save is the quiet one under it.
 // And an empty week produced an empty image, so it produces an offer instead.
 
-/** What the picture says at the top, per hat. Derived, never a blank field. */
+/**
+ * What the picture says at the top, and the whole of what it can say.
+ *
+ * It was a line with an Edit beside it, which was already the small version of
+ * a blank field; both are gone. The headline is a function of the segment, so
+ * there is nothing here to get wrong, nothing to leave half-typed, and no
+ * saved words to quietly override the hat you are standing on. The composer
+ * sends it explicitly for that last reason: a coach who typed one into the old
+ * sheet has it on `storyPrefs`, and falling back to that would put their
+ * Coaching words over a Going picture.
+ */
 const HEADLINE: Record<ShareKind, string> = {
   coaching: "Come train with me",
   going: "My week",
 };
-
-type Fmt = "story" | "square";
 
 export function ShareComposer({
   canCoach,
@@ -65,19 +73,12 @@ export function ShareComposer({
   const [toastMsg, toastOn, toast] = useToast();
 
   const [kind, setKind] = useState<ShareKind>(canCoach ? "coaching" : "going");
-  const [fmt, setFmt] = useState<Fmt>("story");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [from, setFrom] = useState(firstIso);
   const [days, setDays] = useState(7);
   const [open, setOpen] = useState(true);
 
-  // Their own words win from the moment they type any. A coach who writes
-  // something personal, switches segments to see how it looks and loses it
-  // will not write anything personal again.
-  const [headline, setHeadline] = useState(HEADLINE[canCoach ? "coaching" : "going"]);
-  const [ownWords, setOwnWords] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  const headline = HEADLINE[kind];
 
   const [showPhoto, setShowPhoto] = useState(true);
   const [showStudios, setShowStudios] = useState(true);
@@ -100,13 +101,7 @@ export function ShareComposer({
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function",
     );
-    getStoryPrefs().then((p) => {
-      if (p.headline) {
-        setHeadline(p.headline);
-        setOwnWords(true);
-      }
-      setShowPhoto(p.showPhoto);
-    });
+    getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
   }, []);
 
   // The rows behind the count and the picker. Reloaded whenever the question
@@ -129,7 +124,6 @@ export function ShareComposer({
 
   const q = new URLSearchParams({
     kind,
-    fmt,
     theme: themeId,
     from,
     days: String(days),
@@ -142,30 +136,13 @@ export function ShareComposer({
   if (hideList) q.set("hide", hideList);
   if (bust) q.set("v", String(bust));
   const src = `/api/story/compose?${q.toString()}`;
-  const fileName = `fittlist-${kind}-${fmt}.png`;
+  const fileName = `fittlist-${kind}.png`;
 
   const pickKind = (k: ShareKind) => {
     setKind(k);
-    if (!ownWords) setHeadline(HEADLINE[k]);
     // A hidden class belongs to the list it was hidden from; carrying the
     // keys across would silently drop rows from a week nobody had looked at.
     setHidden(new Set());
-  };
-
-  const saveHeadline = async () => {
-    const clean = draft.replace(/\s+/g, " ").trim();
-    setEditing(false);
-    if (!clean) return;
-    setHeadline(clean);
-    setOwnWords(true);
-    await setStoryPrefs({ headline: clean });
-  };
-
-  const resetHeadline = async () => {
-    setEditing(false);
-    setOwnWords(false);
-    setHeadline(HEADLINE[kind]);
-    await setStoryPrefs({ headline: "" });
   };
 
   const togglePhoto = async () => {
@@ -217,17 +194,6 @@ export function ShareComposer({
     <div className="composer">
       <div className="comphead">
         <h1>Share</h1>
-        {/* Format is a property of the output rather than of the content, so
-            it sits with the title and not in the drawer with the choices
-            about what to draw. */}
-        <div className="compfmt" role="group" aria-label="Format">
-          <button aria-pressed={fmt === "story"} onClick={() => setFmt("story")}>
-            Story
-          </button>
-          <button aria-pressed={fmt === "square"} onClick={() => setFmt("square")}>
-            Square
-          </button>
-        </div>
         {/* Opened from the tab bar there is always something beneath, and
             `anywhere` pops to it; typed cold there is not, and the feed is
             the honest fallback rather than a dead button. */}
@@ -236,13 +202,9 @@ export function ShareComposer({
         </BackLink>
       </div>
 
-      <div className={`compstage${open ? "" : " wide"}`}>
+      <div className="compstage">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className={`compimg${fmt === "square" ? " sq" : ""}`}
-          src={src}
-          alt={`Preview of your ${fmt === "square" ? "square" : "story"} image`}
-        />
+        <img className="compimg" src={src} alt="Preview of your story image" />
       </div>
 
       <div className={`compdrawer${open ? "" : " shut"}`}>
@@ -275,22 +237,6 @@ export function ShareComposer({
               </div>
             </div>
           )}
-
-          <div className="compctl">
-            <div className="complbl">Headline</div>
-            <div className="comphl">
-              <em>{headline}</em>
-              <button
-                className="comphl-edit"
-                onClick={() => {
-                  setDraft(headline);
-                  setEditing(true);
-                }}
-              >
-                Edit
-              </button>
-            </div>
-          </div>
 
           <div className="compctl">
             <div className="compfields">
@@ -396,48 +342,6 @@ export function ShareComposer({
           </>
         )}
       </div>
-
-      {editing && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setEditing(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setEditing(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Headline</h2>
-            <input
-              className="editinput"
-              type="text"
-              maxLength={28}
-              autoFocus
-              value={draft}
-              placeholder={HEADLINE[kind]}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveHeadline();
-              }}
-            />
-            <div className="publishwrap">
-              <button className="btn" onClick={saveHeadline}>
-                Save
-              </button>
-              {ownWords && (
-                <button className="btn ghost" style={{ marginTop: 8 }} onClick={resetHeadline}>
-                  Use the default again
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {picker && (
         <div

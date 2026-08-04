@@ -12,15 +12,10 @@ export type NavItem = {
   label: string;
   /** Render the viewer's own face instead of the icon. */
   face?: boolean;
-  /** The one tab that is an act rather than a place. The bottom bar draws it
-   *  raised and filled in the middle of the row; the header draws it as an
-   *  ordinary link, because a raised button in a row of text links is a
-   *  button shouting at four words. */
-  center?: boolean;
 };
 
 /**
- * The same four tabs for everyone.
+ * The same five tabs for everyone.
  *
  * A member used to get two and a coach three, which meant the app rearranged
  * itself the moment somebody started coaching, and every screen had to know
@@ -39,12 +34,15 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
     // that spans every half belongs. The same glyph is never on a tab and
     // in the corner at once.
     { id: "discover", href: "/discover", icon: "travel_explore", label: "Discover" },
-    // The middle of the bar, raised and filled: handing your week on is the
-    // one thing here that grows the network, and it was three taps down a
-    // settings screen. It is an act rather than a place, which is why it is
-    // drawn unlike its neighbours and why it opens over the app instead of
-    // becoming another screen with a bar at the bottom.
-    { id: "share", href: "/share", icon: "ios_share", label: "Share", center: true },
+    // The middle of the bar: handing your week on is the one thing here that
+    // grows the network, and it was three taps down a settings screen. It
+    // wears the sparkle rather than the share arrow, and it is drawn exactly
+    // like its neighbours: a raised filled circle shipped for a build and
+    // read as a button shouting at four words, where the bar's whole job is
+    // five equals. What makes it different is where it goes, not how loud it
+    // is, so it opens over the app rather than becoming another screen with a
+    // bar at the bottom of it.
+    { id: "share", href: "/share", icon: "auto_awesome", label: "Share" },
     // The working calendar, one tap from anywhere and behind nothing: the
     // one time it sat behind another screen it got buried, and that was bad
     // enough to reverse. A coach's is /app, a member's /week.
