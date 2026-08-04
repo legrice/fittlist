@@ -120,7 +120,13 @@ console.log("gym account on ok");
   await row.click();
   await matt.waitForURL(/\/shifts/);
   await matt.locator(".staffbar").waitFor();
-  console.log("the studio you run is on your own account ok");
+  // And closing goes back where you came from, which is the only place you
+  // can have come from. It used to land on the studio's public page, which
+  // is a page a manager never asked for and has no way back off.
+  await matt.locator(".acctclose").click();
+  await matt.waitForURL(/\/you$/);
+  await matt.locator(".acctwrap").waitFor();
+  console.log("the studio you run is on your own account ok (and closes back to it)");
 }
 // A coach who works here but runs nothing gets the row too, tagged Coach:
 // the spec's Your studios is anybody affiliated as staff, and the shifts

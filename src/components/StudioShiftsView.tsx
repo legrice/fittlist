@@ -79,7 +79,12 @@ export function StudioShiftsView({
             {view.coachCount} {view.coachCount === 1 ? "coach" : "coaches"}
           </p>
         </div>
-        <BackLink className="iconbtn acctclose" href={`/s/${view.slug}`} label="Back to the studio">
+        {/* Your studios on the You tab is the only way in here, so it is the
+            only way out: closing onto the studio's public page dropped a
+            manager somewhere they never came from, with no route back to the
+            screen they were working on. BackLink pops when You is genuinely
+            beneath and pushes for a shifts URL opened cold. */}
+        <BackLink className="iconbtn acctclose" href="/you" label="Back to You">
           <Icon name="close" size={18} />
         </BackLink>
       </div>

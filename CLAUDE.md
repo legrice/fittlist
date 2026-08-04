@@ -1208,7 +1208,11 @@ page the thing you came to do is run the place. That was wrong about which page
 you are on: `/s/{slug}` is the page strangers read, and a manager's tools
 drawn on top of it are tools in the shop window. Your studios is a group of
 rows on You, the same place your own page and your own settings are, and each
-row opens `/s/{slug}/shifts`, which is the working screen.
+row opens `/s/{slug}/shifts`, which is the working screen. Its close points at
+`/you` and never at the studio's own page: one way in means one way out, and
+closing onto a public page a manager never asked for left them somewhere with
+no route back to the screen they were working on. It stays a `BackLink`, so it
+pops when You is genuinely beneath and pushes for a shifts URL opened cold.
 
 `StudioAdminSheet` survives as the overflow on that screen rather than a
 floating pill: the two things a manager does weekly are named buttons (All
