@@ -318,41 +318,27 @@ credential) and `disciplines` (a pick, a category) are different fields.
 `TypePicker` renders it for both, and "accepting clients" is a filter for free
 because `users.availability` already says it.
 
-**Discover has three halves, and Coaches leads.** Classes led for a while, on
-the argument that "what can I do on Thursday" is the question people open the
-app with. Coaches leads now, by Matt's call and per the Discover spec, for a
-different one: a follow is what makes every other surface work, and Following,
-Activity and a new member's week are all empty until one happens, so the act that
-unlocks the app should be one tap from opening the tab. A bare `/discover` is
-Coaches; the other two name themselves in the URL. Anything whose own word is
-not "coaches" has to deep-link past the default, which is why the empty
-calendar points at `?half=classes`: a button reading
-Find a class that opens onto a list of people is the screen contradicting the
-word that got somebody there. The directory
-answered "who teaches near me" and never "what can I do on Thursday",
-which is the question people actually open the app with, so
-`discoverClasses()` (`src/lib/discoverclasses.ts`) lists real dated
-occurrences: public, from somebody who hasn't delisted themselves,
-nobody blocked either way, not already been and gone, a gym's own rota
-included (it has no handle, so the row carries the base its page lives
-under). It wears the same chip rail the other two halves do, and
-nothing else: the date range (Today, Tomorrow, This weekend, Next 7,
-Next 14) and the Type dropdown and the total count are all gone. The
-range was five answers behind a tap above a list that is already grouped
-by day and already says which day each group is, and a filter that
-mostly removes classes is the wrong control for a directory whose
-problem is having too few; the day bands are the range, and the list
-scrolls. The count went with it: it was a number nobody could act on.
-When a date pick comes back it comes back as a real query rather than a
-slice of the window the page happens to hold, which is the same note
-`buildDiscoverClasses` carries. The rows are the app's one class row (`Agenda` +
-`ClassCardActions`), so the ribbon means here exactly what it means on a
-profile. The whole fortnight loads once, so a pick is instant and
-nothing round-trips; that is the same
-ceiling search hit before it moved to the server. The tab is Discover again and wears the compass, and
-the magnifier went back to the header's corner: browsing is the tab,
-searching every half at once is the corner, and the same glyph is never
-in both places.
+**Discover is one list: the coaches.** It had three halves for a while, then
+two, and it is one by Matt's call. Classes went first (a dated list of
+occurrences is a schedule, and it muddied what somebody is on this screen to
+do), then Studios (a place is not somebody you follow, so a directory of them
+answers a question nobody has yet). What is left is the act every other surface
+waits on: Following, Activity and a new member's week are all empty until a
+follow happens, so the screen that makes one is the whole screen. No tabs, no
+counts, no page title.
+
+Nothing is hidden by that, which is what makes it safe: `/search` still answers
+for all three, with People, Studios and Classes as headed sections, and the
+studio rows there are the same `StudioRow` the directory drew. The chip rail
+stays, built from `users.disciplines` and led by All, because narrowing a list
+of people by what they teach is the one filter that helps you pick one.
+`discoverable = false` and blocks in either direction still mean not listed, and
+the quality bar (a schedule, or enough profile) is still a coach's.
+
+The page stopped loading what the departed halves needed: the classes call, the
+attendance marks, the gym rotas and the whole studio query are gone from it. A
+query nobody reads is one that gets slower without anybody noticing. `?half=`
+is read and ignored, so every old link still lands somewhere real.
 
 **Search is one box over all three halves; Discover is a segment you pick
 first.** `/search` sits behind the header's magnifier and shows People,
@@ -1943,16 +1929,16 @@ to a public page they cannot have and saying "add the classes you coach" to
 somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" is no longer a destination and the Following
-feed says `from=following`; the class page honours both. The band's words are regular weight and two pixels up (`.ps-dayname`, 14px/400,
-everywhere a band is drawn: Following, both calendars, a profile, a studio). It
-was an uppercase tracked 800, which won its fight with the rows under it by
-shouting, and that is the mistake the band was built to avoid in the first
-place: a heading that competes on the axis its own contents own reads as
-another entry rather than a level above them. The tracking, the case, the count
-on the right and the full-width rule all stay, which is already four ways of
-saying "this is a heading"; the weight was a fifth. It landed on Following
-first and went everywhere in the next commit, because one schedule grammar
-across every list is the whole point of `Agenda`.
+feed says `from=following`; the class page honours both. The band's words are title case at 14px/600 (`.ps-dayname`, everywhere a band
+is drawn: Following, both calendars, a profile, a studio). It was uppercase and
+tracked at 800, then at 400, and neither was the point: what makes this a level
+above the rows is the rule under it and the count across from it, not the case
+or the weight. `dayBandLabel` already produces "Today, Aug 5" in title case, so
+the CSS just got out of its way; the .13em tracking went with the capitals,
+because that is spacing for capitals and reads as gaps between letters in a
+word anybody can lowercase. Today's name is no longer brand orange either: the
+band says "Today" in words, which is the same claim said twice with a colour
+that means teaching everywhere else in the app.
 
 The current tab
 marks itself in the brand colour and nothing else: `.navtab.on` sets

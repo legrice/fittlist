@@ -223,11 +223,14 @@ console.log("an empty week offers rather than draws nothing ok");
   await coach.locator(".caladd").waitFor();
   if (!(await coach.locator(".ps-event", { hasText: "Reformer Pilates" }).count()))
     fail("a class added from the editor should be on the calendar");
-  // And the studio it named is in the directory, which is the inventory
-  // filling itself in behind somebody making a picture.
-  const dir = await coach.request.get(`${BASE}/discover?half=studios`);
-  if (!(await dir.text()).includes("Asana Soul Practice"))
-    fail("the studio named while adding should reach the directory");
+  // And the studio it named is findable, which is the inventory filling
+  // itself in behind somebody making a picture. Studios left Discover, so the
+  // surface that answers for them is the search every half lands in.
+  await coach.goto(BASE + "/search");
+  await coach.locator(".dissearch-in").first().fill("Asana");
+  await coach.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
+  if (!(await coach.locator(".disrow-studio", { hasText: "Asana Soul Practice" }).count()))
+    fail("the studio named while adding should be findable");
 }
 console.log("adding from the picker fills the calendar and the directory ok");
 

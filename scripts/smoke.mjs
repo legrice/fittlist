@@ -14,9 +14,11 @@ const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
 // for a while, which made an exact match on the bare word find nothing; the
 // counts are gone but this stays a hasText match scoped to the tab row, since
 // that is right either way and the count may earn its place back.
-const discHalf = async (p, half = "Coaches") => {
+// Discover is one list now, so there is no half to pick: this is just the
+// door, kept as a helper because every caller used to need the second tap.
+const discHalf = async (p) => {
   await p.goto(BASE + "/discover");
-  await p.locator(".distabs .pubtab", { hasText: half }).click();
+  await p.locator(".dislist").waitFor();
 };
 const expect = async (cond, msg) => { if (!(await cond)) fail(msg); };
 const readLog = () => fs.readFileSync(process.env.SERVER_LOG ?? (SCRATCH + "/server.log"), "utf8");
@@ -1262,31 +1264,14 @@ if (await fan.locator('.navtab[data-tab="home"]').count())
   fail("the Home tab should be gone");
 
 // phase 3: the directory. Empty feed points at it; follow happens inline.
-// Find coaches names the half it means, so it lands on the coaches rather
-// than on the classes: a button that says one and opens the other is the
-// screen contradicting the word that got somebody there.
+// It is one list now: Classes went first and Studios followed, both because a
+// directory you cannot follow anything from is not doing this screen's one
+// job. So there are no halves to pick and nothing to name.
 await fan.getByRole("link", { name: "Find coaches" }).click();
-await fan.locator(".distabs .pubtab.sel", { hasText: "Coaches" }).waitFor();
-// Two halves. Classes was a third for a while and came out: a dated list of
-// occurrences muddied what the directory is for, which is finding somebody to
-// follow. The rail under them is checked further down, where these coaches
-// have disciplines to be filtered by; a rail is not drawn where nothing can
-// narrow anything.
-{
-  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
-  if (heads.join("|") !== "Coaches|Studios")
-    fail("the directory's halves should be Coaches and Studios: " + heads.join("|"));
-  // Three words and nothing else. The halves each carried a count of what they
-  // held for the pick in front of you; three numbers across the top of a
-  // browsing screen is the app apologising for its own size before anybody has
-  // looked.
-  if (await fan.locator(".distabs .pubtab-cnt").count())
-    fail("the halves should carry no count pills");
-}
-await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
-// The page title is gone: the tab bar says Discover, and the segment says
-// which half of it you're in.
-await fan.locator(".distabs").waitFor();
+await fan.locator(".dislist").waitFor();
+if (await fan.locator(".distabs").count())
+  fail("Discover is one list: there should be no halves to pick");
+// The page title is gone: the tab bar already says Discover.
 if (await fan.locator(".calbar-title", { hasText: "Discover" }).count())
   fail("the page still spends a headline on what the tab bar already says");
 await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
@@ -1349,7 +1334,14 @@ console.log("discover ok (the row's pill agrees with the profile)");
   if (await fan.locator(".dissearch-in").count())
     fail("Discover's box should be a door, not a filter");
 
-  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
+  // Studios left Discover with Classes: a directory you cannot follow anything
+  // from is not doing this screen's one job. The rows live on /search, and the
+  // component is shared, so the shape rules are checked where they render.
+  if (await fan.locator(".distabs").count())
+    fail("Discover is one list now: there should be no halves to pick");
+  await fan.locator(".dissearch-door").click();
+  await fan.waitForURL(/\/search/);
+  await fan.locator(".dissearch-in").first().fill("Ironbound");
   await fan.locator(".disrow-studio").first().waitFor();
   if (await fan.locator(".discitysel").count())
     fail("a studio has an address, not a city to filter by");
@@ -1381,8 +1373,6 @@ console.log("discover ok (the row's pill agrees with the profile)");
   await fan.waitForURL(/\/search/);
   await fan.locator(".dissearch-in").first().fill("Ironbound");
   await fan.locator(".srchsec", { hasText: "STUDIOS" }).waitFor();
-  await fan.goBack();
-  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
   await fan.locator(".disrow-studio").first().waitFor();
   // A place is a rectangle, a person a circle: the same shape rule the
   // profile heads follow, at row size.
@@ -1426,57 +1416,33 @@ console.log("discover ok (the row's pill agrees with the profile)");
   if (await fan.locator(".dischips .chip.sel", { hasText: /^All$/ }).count())
     fail("a pick should take All off");
   await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
-  // Switching lens keeps the pick now, by Matt's call and per the Discover
-  // spec: the two vocabularies became one in 0071_one_vocabulary, so a word
-  // one half can honour the others can too, and somebody thinking "yoga"
-  // should pick it once rather than once per half. This reverses the old
-  // rule, which dropped it because the lists genuinely differed.
-  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
-  await fan.waitForTimeout(300);
-  {
-    // No studio here has said what it offers, so the half has no words of its
-    // own; the carried pick is drawn anyway, because a selection still
-    // filtering the list with no chip to un-pick is a list narrowed by
-    // something invisible.
-    const sel = (await fan.locator(".dischips .chip.sel").allInnerTexts()).map((t) => t.trim());
-    if (!sel.includes("Yoga")) fail("the pick should survive the lens: " + sel.join("|"));
-    if (sel.includes("All")) fail("All can't lead while a pick is on");
-  }
-  // All is the way back, from whichever half you are standing on.
+  // All is the way back off a pick.
   await fan.locator(".dischips .chip", { hasText: /^All$/ }).first().click();
   await fan.waitForTimeout(300);
   {
     const sel = (await fan.locator(".dischips .chip.sel").allInnerTexts()).map((t) => t.trim());
-    if (sel.some((t) => t !== "All")) fail("All should clear a carried pick: " + sel.join("|"));
+    if (sel.some((t) => t !== "All")) fail("All should clear a pick: " + sel.join("|"));
   }
-  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
-  await fan.waitForTimeout(300);
   await fan.locator(".disrow", { hasText: "Sam" }).waitFor();
   console.log("discover filters ok (All leads filled in, picks are multiselect)");
 }
 
-// A filter is only offered where it can narrow something: what these
-// coaches teach on one half, what these places offer on the other, from
-// one vocabulary so a word means the same on either.
+// A filter is only offered where it can narrow something: what these coaches
+// say they teach, and nothing borrowed from a list that is no longer here.
 {
   await discHalf(fan);
-  const chips = async () =>
-    (await fan.locator(".dischips .chip").allInnerTexts()).map((c) => c.trim());
-  const coachChips = await chips();
-  if (coachChips[0] !== "All")
-    fail("the coaches rail should lead with All: " + coachChips.join("|"));
-  if (coachChips.includes("Members"))
-    fail("the kinds left the rail when members left the half");
-  await fan.locator(".distabs .pubtab", { hasText: "Studios" }).click();
-  await fan.waitForTimeout(200);
-  const studioChips = await chips();
-  // No studio here offers anything yet, so there is nothing to narrow by and
-  // the rail is not drawn. That is the rule, not an omission: a lone All can
-  // only ever narrow nothing.
-  if (studioChips.length === 1) fail("a rail of nothing but All should not be drawn");
-  if (studioChips.length && studioChips[0] !== "All")
-    fail("the studios rail should lead with All too");
-  console.log("discover chips ok (what they teach, what a place offers)");
+  const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((c) => c.trim());
+  if (chips[0] !== "All") fail("the rail should lead with All: " + chips.join("|"));
+  if (chips.includes("Members"))
+    fail("the kinds left the rail when members left the list");
+  // One size, the filter pill's own: at the base chip size a filter read as
+  // decoration on a screen whose whole job is finding somebody.
+  const h = await fan
+    .locator(".dischips .chip")
+    .first()
+    .evaluate((e) => e.getBoundingClientRect().height);
+  if (Math.round(h) !== 38) fail("the rail's chips should be 38px tall, got " + h);
+  console.log("discover chips ok (what they teach)");
 }
 
 // A profile carries no tab bar, so the arrow on the picture is the way off it
@@ -2192,7 +2158,6 @@ await openSetting(page, "Privacy & reach");
 await page.locator(".sheet .setrow", { hasText: "Listed in Discover" }).click();
 await page.locator(".setrow", { hasText: "only people with your link" }).waitFor();
 await discHalf(fan);
-await fan.locator(".distabs").waitFor();
 if (await fan.locator(".disrow", { hasText: "Matt" }).count())
   fail("opted-out coach still listed in the directory");
 const pub = await fan.request.get(`${BASE}/matt`);
@@ -2377,7 +2342,7 @@ await page.locator(".navtab", { hasText: "Following" }).click();
 await page.locator(".feedstrip").waitFor();
 await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
 await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".distabs").waitFor();
+await page.locator(".dissearchrow").waitFor();
 // Schedule is the coaching calendar, whole screen: the rail left it for You.
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.waitForURL(/\/app/);

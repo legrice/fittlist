@@ -6,8 +6,8 @@ import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { runsOn, todayIso } from "@/lib/format";
-import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
-import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
+import { DiscoverList } from "@/components/DiscoverList";
+import type { DirPerson } from "@/components/DirectoryRows";
 import { avatarColor } from "@/lib/avatar";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +20,11 @@ export default async function DiscoverPage({
 }: {
   searchParams: Promise<{ half?: string }>;
 }) {
-  // A link can name the half it means, and Studios is the only one that has
-  // to: a bare /discover opens on Coaches. `?half=classes` is still honoured
-  // as far as landing somewhere real, which is Coaches, because that half has
-  // been taken out and old links have to land: a dated class list muddied
-  // what Discover is for, which is finding somebody to follow.
-  const { half } = await searchParams;
-  const startHalf: DiscoverHalf = half === "studios" ? "studios" : "coaches";
+  // Discover is one list now: the coaches. Classes went first, then Studios,
+  // both for the same reason, which is that a directory nobody can follow
+  // anything from is not doing the one job this screen has. `?half=` is read
+  // and ignored, so every old link still lands somewhere real.
+  await searchParams;
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
@@ -45,7 +43,7 @@ export default async function DiscoverPage({
   // three ways, so the users, the schedules and the studios are fetched once
   // and shared: the classes half fetching its own ran `publicSchedules`
   // twice and scanned the users twice to draw one page.
-  const [everyone, hidden, followRows, askRows, studioRows] = await Promise.all([
+  const [everyone, hidden, followRows, askRows] = await Promise.all([
     // Gyms come along: they own classes and have no handle, so a
     // handle-filtered query would drop every rota in the directory.
     db.select().from(schema.users),
@@ -60,7 +58,6 @@ export default async function DiscoverPage({
       .select({ trainerUserId: schema.followRequests.trainerUserId })
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
-    db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
   const allRows = everyone.filter((r) => !!r.handle && r.discoverable);
   const rows = allRows.filter((r) => !hidden.has(r.id));
@@ -125,30 +122,14 @@ export default async function DiscoverPage({
     a.localeCompare(b),
   );
 
-  // The other half of the directory. Every studio, in name order: a row here
-  // is a place, and a place doesn't get ranked by whether it signed up. The
-  // tag says which of them you can see a week for, which is the useful part.
-  const studios: DirStudio[] = studioRows.map((st) => ({
-    id: st.id,
-    slug: st.slug ?? st.id,
-    name: st.name,
-    address: st.address,
-    photo: st.photo,
-    types: st.types,
-    hasSchedule: !!st.accountUserId,
-    color: avatarColor({ id: st.id }),
-  }));
-
   return (
     <>
       {/* The title lives inside the list now, so the coaches-only switch can
           sit directly across from it. */}
       <DiscoverList
         people={people}
-        studios={studios}
         cities={cities}
         myCity={me.location?.trim() || null}
-        startHalf={startHalf}
         backHref="/feed"
         hideBack
       />

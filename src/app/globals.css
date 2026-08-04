@@ -844,14 +844,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .ps-dayname {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* Regular, two pixels up. It was an uppercase tracked 800, which won its
-     fight with the rows under it by shouting: a heading that competes on the
-     axis its own contents own reads as another entry rather than a level
-     above them. The band already has the tracking, the case and a full-width
-     rule to say what it is; the weight was one claim too many. Every list
-     that draws a band gets this, so a schedule reads the same wherever it
-     is. */
-  font-size: 14px; font-weight: 400; letter-spacing: .13em; text-transform: uppercase;
+  /* Title case, and read rather than shouted. It was an uppercase tracked 800
+     for a long time, then an uppercase tracked 400, and neither was the point:
+     what makes this a level above the rows is the rule under it and the count
+     across from it, not the case. `dayBandLabel` already produces "Today,
+     Aug 5" in title case, so this is only the CSS getting out of its way. The
+     tracking goes with the caps, because .13em is spacing for capitals and
+     reads as a gap between letters in a word anybody can lowercase. */
+  font-size: 14px; font-weight: 600; letter-spacing: 0;
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis;
 }
@@ -863,9 +863,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
   flex-shrink: 0;
 }
-/* Today is the only band that carries the brand, so it reads as the one you
-   are standing in without a second mark. */
-.ps-daycol-today .ps-dayname { color: var(--si); }
 /* The band pins under the calendar's own chrome, which is itself pinned
    under the app header: CalSticky measures both and publishes the sum,
    because a band that sticks to the top of the window slides behind them.
@@ -983,16 +980,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    places with Add, which went up to the header's cluster as a plus: a plus
    needs no word and no reach, and handing the week on is what this screen
    exists to end on. The shape is the one Add wore, unchanged. */
+/* White like Today across from it, with the sparkle carrying the colour. A
+   solid orange pill is the loudest thing on a screen whose point is the week
+   under it, and the plus in the header is already the one filled control. */
 .calshare {
   position: fixed; right: 16px;
   bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 46px; padding: 0 22px 0 18px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--si); border: none; color: #fff;
+  background: var(--card); border: none; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
+.calshare .icon { color: var(--si); }
 .todayfab:active, .calshare:active { transform: scale(.95); }
 .todayfab.calfabs-low, .calshare.calfabs-low {
   bottom: calc(20px + env(safe-area-inset-bottom));

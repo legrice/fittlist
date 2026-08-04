@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useBandTop } from "@/components/CalendarBits";
 import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
-import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
+import { PersonRow, type DirPerson } from "@/components/DirectoryRows";
 
 /**
  * The date range filter is gone, and the whole fortnight is what you get.
@@ -39,8 +39,6 @@ function rankByUse(values: (string | null | undefined)[]): string[] {
 }
 
 /** Which of the directory's three halves is in front of you. */
-export type DiscoverHalf = "coaches" | "studios";
-
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
 // and the chip rail under two of them is the whole filter: All leads,
@@ -58,22 +56,18 @@ export type DiscoverHalf = "coaches" | "studios";
 // covers both kinds, and Home's people rail still mixes them.
 export function DiscoverList({
   people,
-  studios = [],
   cities,
   myCity = null,
   backHref,
   hideBack = false,
-  startHalf = "coaches",
 }: {
   people: DirPerson[];
-  studios?: DirStudio[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
   /** Which half to open on, for a link that means one of them. */
-  startHalf?: DiscoverHalf;
 }) {
   // The Classes half draws the app's day bands, and they pin. Nothing above
   // this list is sticky except the app header (the search door, the halves
@@ -82,31 +76,8 @@ export function DiscoverList({
   // and pinned halfway down the screen, through the middle of a class row.
   useBandTop();
   // Coaches lead, per the Discover spec: a follow is what makes every other
-  // surface work (Following, Activity and Home's Upcoming are all empty until
-  // one happens), so the act that unlocks the app is one tap from opening the
-  // tab. Anything whose own word names a different half has to deep-link past
-  // this, or the button contradicts the screen it opens.
-  const [tab, setTab] = useState<DiscoverHalf>(startHalf);
-  // The half goes in the URL as you switch, because leaving it in state alone
-  // meant a profile's back arrow returned you to Classes however you got
-  // there: the arrow pops history, and the entry it popped to had forgotten
-  // which half you were reading. replaceState rather than a router call, so
-  // the switch stays a client-side toggle and doesn't refetch the page; the
-  // server only reads `half` when somebody arrives cold, which is exactly
-  // what a pop back is.
-  const pick = (next: DiscoverHalf) => {
-    setTab(next);
-    if (typeof window !== "undefined") {
-      const url = next === "coaches" ? "/discover" : `/discover?half=${next}`;
-      window.history.replaceState(null, "", url);
-    }
-  };
-  // The Classes half's types. A rail like the other two halves wear now,
-  // rather than a bottom sheet: the sheet existed because the type list was
-  // long enough to run off a rail's edge, and a rail that scrolls sideways
-  // answers that without hiding the whole filter behind a tap. Its own state
-  // rather than the `types` the other halves share, because the vocabularies
-  // are still different lists and a pick can't survive the switch.
+  // surface work (Following and Activity are both empty until one happens), so
+  // the act that unlocks the app is the whole screen.
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
   // Filters chip would be reporting a choice nobody made.
@@ -133,39 +104,17 @@ export function DiscoverList({
 
   // The row the Agenda hands back is the shared shape, so the ribbon's
   // source (whose it is, whether it's already in) is looked up by key.
-  // Studios have no city column, only a free-text address, so there is nothing
-  // honest to filter them by yet. The address carries the town, and searching
-  // it finds them.
-  const shownStudios = useMemo(() => {
-    return studios.filter((st) => {
-      // One vocabulary across the directory, so the same pick narrows both
-      // halves: the yoga teachers, and the places that offer yoga.
-      if (types.size > 0 && !st.types.some((t) => types.has(t))) return false;
-      return true;
-    });
-  }, [studios, types]);
-
   // All is the absence of picks, and it leads the rail already filled in:
   // the one selected chip is what says the others can be selected.
   const allOn = types.size === 0;
   const clearAll = () => setTypes(new Set());
-  // What the lens in front of you can actually be narrowed by, and nothing
-  // else: the studios' own type vocabulary, on the Studios half only.
-  const disciplines = useMemo(() => {
-    if (tab === "studios") return rankByUse(studios.flatMap((st) => st.types));
-    if (tab === "coaches")
-      return rankByUse(people.filter((c) => c.kind === "coach").flatMap((c) => c.disciplines));
-    return [];
-  }, [studios, people, tab]);
-
-  // The words this half can narrow by, plus any pick carried in from another
-  // half. A selection that survives the switch has to stay visible or it is a
-  // list quietly filtered by something with no chip to un-pick: the rail says
-  // what is on, and All is the way back off all of it.
-  const railWords = useMemo(() => {
-    const carried = [...types].filter((t) => !disciplines.includes(t)).sort();
-    return [...disciplines, ...carried];
-  }, [disciplines, types]);
+  // What the list in front of you can actually be narrowed by, and nothing
+  // else: what these coaches say they teach. Busiest first, because a rail is
+  // read left to right and only its first few chips are seen without a swipe.
+  const railWords = useMemo(
+    () => rankByUse(people.filter((c) => c.kind === "coach").flatMap((c) => c.disciplines)),
+    [people],
+  );
 
 
   return (
@@ -183,35 +132,6 @@ export function DiscoverList({
               field, and a door whose words change on opening is two doors. */}
           <span className="dissearch-ph">Search classes, studios, or coaches</span>
         </Link>
-      </div>
-
-      {/* No page title: the tab bar already says Discover. The halves are
-          underline tabs, the same drawing a profile's sections wear, and the
-          chips ride under them: search, tabs, chips, one stack across the
-          top, so every filter is in sight rather than behind a floating
-          pill. */}
-      <div className="pubtabs distabs" aria-label="Discover sections">
-        {/* Three words and nothing else. Each carried a count of what its half
-            held for the pick in front of you, which answered "where is the
-            supply" at the cost of putting three numbers across the top of a
-            screen whose job is browsing: a directory that is honestly small
-            reads as small, and saying so three times in pills is the app
-            apologising for itself before anybody has looked. The number is
-            still one line of code away if it earns its place back. */}
-        <button
-          className={`pubtab${tab === "coaches" ? " sel" : ""}`}
-          aria-current={tab === "coaches" ? "page" : undefined}
-          onClick={() => pick("coaches")}
-        >
-          Coaches
-        </button>
-        <button
-          className={`pubtab${tab === "studios" ? " sel" : ""}`}
-          aria-current={tab === "studios" ? "page" : undefined}
-          onClick={() => pick("studios")}
-        >
-          Studios
-        </button>
       </div>
 
       {/* One rail, all three halves. All leads it, filled in by default: the
@@ -247,22 +167,6 @@ export function DiscoverList({
         </div>
       )}
 
-      {tab === "studios" ? (
-        shownStudios.length === 0 ? (
-          <div className="empty-block">
-            <h2>No studios yet</h2>
-            <p>Studios arrive as coaches add the places they teach.</p>
-          </div>
-        ) : (
-          <div className="dislist dislist-bare">
-            {shownStudios.map((st) => (
-              <StudioRow key={st.id} studio={st} from="discover" />
-            ))}
-          </div>
-        )
-      ) : (
-      <>
-
 
       {shown.length === 0 ? (
         <div className="empty-block">
@@ -278,8 +182,6 @@ export function DiscoverList({
             <PersonRow key={c.id} person={c} from="discover" kindTag={false} follow />
           ))}
         </div>
-      )}
-      </>
       )}
 
       {/* Coaches have the bottom nav; fans need a way back. */}
