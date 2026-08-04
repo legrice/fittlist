@@ -9,7 +9,7 @@ import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
-import { mutualFollow, sharedWeek } from "@/lib/week";
+import { canSeeWeek, sharedWeek } from "@/lib/week";
 import { ProfileWeekSwitch } from "@/components/ProfileWeekSwitch";
 
 import { AgendaAvatar, ClassRow, DayBand } from "@/components/Agenda";
@@ -309,17 +309,18 @@ export async function PublicProfileView({
   // going week is the same mutual-follow list a member's profile carries, and
   // it is loaded only for somebody allowed to see it, because a segment whose
   // second half is always empty is a control that means nothing.
-  const canSeeGoing =
-    !!viewerId && ((await fansVisible()) && (isOwner || (await mutualFollow(viewerId, user.id))));
+  const canSeeGoing = (await fansVisible()) && (await canSeeWeek(viewerId, user));
   const goingWeek = canSeeGoing ? await sharedWeek(user.id) : [];
 
   const goingRows = (
     <div className="memweek">
-      <p className="memweek-note">
-        {isOwner
-          ? "People you follow back see this. Nobody else does."
-          : "You can see this because you follow each other."}
-      </p>
+      {isOwner && (
+        <p className="memweek-note">
+          {user.approveFollowers
+            ? "The people you have approved see this. Nobody else does."
+            : "Anyone who opens your page can see this."}
+        </p>
+      )}
       {goingWeek.length === 0 ? (
         <div className="empty-block">
           <h2>Nothing yet</h2>

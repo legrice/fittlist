@@ -664,19 +664,22 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .calmenu, [data-mode="dark"] .calfilter {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
-/* Add in the header's cluster: the same circle as the view and filter buttons
-   beside it, filled in brand orange, and the plus alone. It traded places with
-   Share, which took the floating pill under a thumb. A plus is the one glyph
-   nobody has to be taught, so it needs no word at this size; the colour is
-   what keeps the primary action loud when it is a third of what it was. */
-.caladd {
-  flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); border: none; color: #fff; cursor: pointer;
+/* Share in the header's cluster: the same drawing as the view and filter
+   buttons, white with its sparkle carrying the colour, and wearing the word.
+   A pill rather than a third circle, because it is the one control up there
+   that does something rather than changing how you are looking, and the
+   sparkle alone never said which. */
+.calshare {
+  flex-shrink: 0; height: 40px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--card); color: var(--ink); border: none; cursor: pointer;
   box-shadow: 0 1px 4px rgba(25, 21, 2, .10);
-  padding: 0;
+  padding: 0 14px 0 11px;
+  font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -.01em;
 }
-.calmenu:active, .calfilter:active, .caladd:active { transform: scale(.93); }
+[data-mode="dark"] .calshare { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10); }
+.calshare-ic { display: inline-flex; color: var(--si); }
+.calmenu:active, .calfilter:active, .calshare:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
 /* The month is the door to the mini calendar: the title alone, no chevron
    beside it. The glyph said what the tap already says. */
@@ -980,22 +983,21 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    places with Add, which went up to the header's cluster as a plus: a plus
    needs no word and no reach, and handing the week on is what this screen
    exists to end on. The shape is the one Add wore, unchanged. */
-/* White like Today across from it, with the sparkle carrying the colour. A
-   solid orange pill is the loudest thing on a screen whose point is the week
-   under it, and the plus in the header is already the one filled control. */
-.calshare {
+/* Add is the loud one, and it floats where a thumb already is: the top right
+   corner is the one part of a phone a thumb cannot reach, and adding is what
+   somebody opens this screen to do. */
+.caladd {
   position: fixed; right: 16px;
   bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 46px; padding: 0 22px 0 18px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--card); border: none; color: var(--ink);
+  background: var(--si); border: none; color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.calshare .icon { color: var(--si); }
-.todayfab:active, .calshare:active { transform: scale(.95); }
-.todayfab.calfabs-low, .calshare.calfabs-low {
+.todayfab:active, .caladd:active { transform: scale(.95); }
+.todayfab.calfabs-low, .caladd.calfabs-low {
   bottom: calc(20px + env(safe-area-inset-bottom));
 }
 /* Today lands the first not-past day under the sticky chrome, with real air
@@ -1288,9 +1290,12 @@ button.bl-band { cursor: pointer; }
   color: var(--ink); white-space: nowrap;
 }
 .dashlink:active { background: var(--cl); }
+/* The corner face is the way to You now that the tab has gone, and it sits
+   beside the bell rather than competing with it: at 38px it read as the
+   loudest thing in the header, which a door to your own account is not. */
 .usericon {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px; border-radius: 999px; overflow: hidden;
+  width: 30px; height: 30px; border-radius: 999px; overflow: hidden;
   background: #eae3d2; color: #191502; border: 1px solid var(--line); box-shadow: none; padding: 0;
 }
 .usericon:active { opacity: .7; }
@@ -1299,7 +1304,7 @@ button.bl-band { cursor: pointer; }
    behind the letter only, leaving a tinted glyph on the default grey disc. */
 .usericon-initial {
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; line-height: 1; color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px; line-height: 1; color: #fff;
 }
 .ps-upnext { font-size: 30px; margin: 34px 0 16px; color: var(--pg-day); }
 /* schedule: day sections with shadowed white class cards (containers, not lines) */

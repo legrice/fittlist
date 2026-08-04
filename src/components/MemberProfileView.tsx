@@ -7,7 +7,7 @@ import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { fansVisible } from "@/lib/flags";
-import { mutualFollow, sharedWeek } from "@/lib/week";
+import { canSeeWeek, sharedWeek } from "@/lib/week";
 import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
@@ -84,14 +84,13 @@ export async function MemberProfileView({
     }
   }
 
-  // Their week, for the people they follow back. This is the calendar members
-  // keep asking to share, gated on the one consent the app trusts: you both
-  // tapped Follow on each other. One-way followers and strangers see nothing;
-  // the owner sees it too, with a line saying exactly who else can. Real,
-  // public classes only; personal entries have no way to appear here.
-  const mutual =
-    !!viewerId && !isOwner && (await fansVisible()) && (await mutualFollow(viewerId, user.id));
-  const week = mutual || (isOwner && (await fansVisible())) ? await sharedWeek(user.id) : [];
+  // Their week. Open unless they have approve-first on, and then it is
+  // followers only: the same switch that turns Follow into an ask decides
+  // what a stranger can see, which is the Instagram rule and the whole rule.
+  // Knowing who is going where and when is what this app is for, so the
+  // default is that you can see it.
+  const canSee = (await fansVisible()) && (await canSeeWeek(viewerId, user));
+  const week = canSee ? await sharedWeek(user.id) : [];
   const firstName = name.split(/\s+/)[0];
 
   const backTo = backToFor(from, !!viewerId);
@@ -189,37 +188,36 @@ export async function MemberProfileView({
             </div>
           ))}
 
-        {/* Schedule: the classes they're going to, still gated on the one
-            consent the app trusts. A stranger or a one-way follower gets the
-            same words whatever the week holds, so the empty state can't be
-            used to guess it. */}
-        {tab === "schedule" && !mutual && !isOwner && (
+        {/* Approve-first and not following yet: say so plainly and name the
+            way in. It says the same words whatever the week holds, so it
+            cannot be read for whether there is anything behind it. */}
+        {tab === "schedule" && !canSee && (
           <div className="empty-block">
-            <h2>Their week is shared both ways</h2>
-            <p>
-              Follow each other and you&rsquo;ll see the classes {firstName} is going to.
-            </p>
+            <h2>Follow to see {firstName}&rsquo;s schedule</h2>
+            <p>{firstName} approves followers, so their week is for the people they let in.</p>
           </div>
         )}
-        {tab === "schedule" && (mutual || isOwner) && week.length === 0 && (
+        {tab === "schedule" && canSee && week.length === 0 && (
           <div className="empty-block">
             <h2>Nothing coming up</h2>
             <p>
               {isOwner
-                ? "Add a class and the people you follow back will see it here."
+                ? "Add a class and it shows up here."
                 : `${firstName} hasn't added anything this week.`}
             </p>
           </div>
         )}
 
-        {tab === "schedule" && (mutual || isOwner) && week.length > 0 && (
+        {tab === "schedule" && canSee && week.length > 0 && (
           <div className="memweek">
             <h2 className="prof-sec-h">{isOwner ? "Your week" : `${firstName}'s week`}</h2>
-            <p className="memweek-note">
-              {isOwner
-                ? "People you follow back see this. Nobody else does."
-                : "You can see this because you follow each other."}
-            </p>
+            {isOwner && (
+              <p className="memweek-note">
+                {user.approveFollowers
+                  ? "The people you have approved see this. Nobody else does."
+                  : "Anyone who opens your page can see this."}
+              </p>
+            )}
             {week.map((day) => (
               <div key={day.iso} className="memweek-day">
                 <div className="memweek-dayh">{day.label}</div>

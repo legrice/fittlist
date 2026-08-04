@@ -250,21 +250,34 @@ upcoming week on their profiles (`sharedWeek`, real public classes only, never
 `personal_classes`). One-way follows surface nothing, which is what makes
 tapping Follow on a person safe; agreeing to each other is the consent.
 
-**The mutual week now carries personal entries too, by Matt's call.** It was
-public classes only, on the grounds that there was deliberately no way to share
-one of your own; a member whose week is mostly their own entries showed a
-mutual follow an empty page, which is the whole thing this list exists to
-avoid. What did **not** change is the audience, and that is what makes it safe:
-still only somebody you follow who follows you back, never a stranger with the
-link and never a one-way follower. That double tap is why a row here can name
-a place and a time that no public surface ever could, which matters because
-these rows say things like "Private with Kia, Client's home". Nothing about
-this reaches a public page, a share image or Discover. A coach's page carries
-the same list behind a Teaching/Going segment (`ProfileWeekSwitch`), drawn only
-for a viewer who can actually see the second half, and their own entries reach
-a fortnight rather than the calendar's nine weeks: this is somebody else's
-page, and two weeks answers "what are they up to" without handing over two
-months of a person's movements.
+**A week is open unless its owner has approve-first on, and that is the whole
+rule.** `canSeeWeek()` is the one answer: your own always, anybody's if
+`users.approveFollowers` is off, and only an approved follower's if it is on.
+It took a mutual follow for a build, which meant somebody had to follow you
+back before you could see when they train, and that is a handshake nobody asked
+for on a schedule. This is a scheduling app: knowing who is going where and
+when is the point, so the default is that you can see it.
+
+The switch is the one already in settings, which is what makes this simple
+rather than a second privacy model: gating who may follow now also gates what
+they see, the way a private account works everywhere else. Turned on, a
+stranger gets "Follow to see Erin's schedule" in as many words, saying the same
+thing whatever the week holds so it cannot be read for whether there is
+anything behind it. A signed-out viewer counts as following nobody, which is
+right, because they cannot have been approved.
+
+The week carries personal entries as well as marks, so it says things like
+"Private with Kia, Client's home". That is the cost of the open default and it
+is worth naming: an open account's week is readable by anyone with the link,
+and approve-first is the answer for anybody who does not want that. A coach's
+page carries the same list behind a Teaching/Going segment
+(`ProfileWeekSwitch`, the share editor's `.seg` rather than a second row of
+`.pubtab` underlines), drawn only for a viewer who can see the second half. A
+coach's **teaching** week is never gated by this: that page is the product, and
+hiding it would break the one thing a link is for. Personal entries reach a
+fortnight rather than the calendar's nine weeks, because this is somebody
+else's page and two weeks answers "what are they up to" without handing over
+two months of a person's movements.
 
 The add sheet says which is which in a word rather than a sentence each:
 Public for a class you coach, Shared for one you are going to, Private for
@@ -1722,7 +1735,11 @@ the list scrolls into the past: it lands on the first not-past day
 (`scrollToToday`, which knows the coach shell scrolls its `.stage` where
 the tabs layout scrolls the body).
 
-The two have traded places twice. Add floated bottom right for a while and
+The two have traded places three times, and they are back where they started:
+Add under the thumb, Share up beside the filter. A plus that needs no word is a
+good argument for a small circle, but adding is still the thing somebody opens
+this screen to do, and the corner is the one part of a phone a thumb cannot
+reach. Take this as settled unless the screen's job changes. Add floated bottom right for a while and
 Share sat in the header, on the argument that the top right corner is the one
 part of a phone a thumb cannot reach and adding is what somebody opens this
 screen to do. They are the other way round again, by Matt's call, and the

@@ -15,7 +15,7 @@ import {
   CalBottomBar,
   CalEmpty,
   CalHead,
-  CalAdd,
+  CalShare,
   CalSticky,
   DayGrid,
   DayStrip,
@@ -339,7 +339,7 @@ export function WeekScreen({
           >
             {/* Share took the corner Add used to hold: a thumb can't
                 reach up here, and adding is what this screen is for. */}
-            <CalAdd onAdd={() => setAddMenu(true)} />
+            <CalShare onShare={() => router.push("/share")} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -534,7 +534,7 @@ export function WeekScreen({
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
-        onShare={() => router.push("/share")}
+        onAdd={() => setAddMenu(true)}
       />
       )}
 

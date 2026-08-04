@@ -62,12 +62,12 @@ export function monthLabel(ym: string, todayIso: string) {
 export function CalBottomBar({
   raised = true,
   onToday,
-  onShare,
+  onAdd,
 }: {
   /** Sitting above a tab bar, or on a screen without one. */
   raised?: boolean;
   onToday: () => void;
-  onShare: () => void;
+  onAdd: () => void;
 }) {
   const lift = raised ? "" : " calfabs-low";
   return (
@@ -75,13 +75,12 @@ export function CalBottomBar({
       <button className={`todayfab${lift}`} onClick={onToday}>
         Today
       </button>
-      {/* Share floats where Add used to, in the shape Add used to wear. They
-          traded places: adding is one glyph everybody already reads, so it
-          costs nothing in the header's cluster, while Share is the act this
-          screen exists to end on and it earns the loud pill under a thumb. */}
-      <button className={`calshare${lift}`} onClick={onShare}>
-        <Icon name="auto_awesome" size={19} />
-        Share
+      {/* Add is the loud one and it floats where a thumb already is: the top
+          right corner is the one part of a phone a thumb cannot reach, and
+          adding is what somebody opens this screen to do. */}
+      <button className={`caladd${lift}`} onClick={onAdd}>
+        <Icon name="add" size={19} strokeWidth={2.6} />
+        Add
       </button>
     </>
   );
@@ -150,14 +149,17 @@ export function CalEmpty({
   );
 }
 
-/** Add, in the header's cluster: the same circle as the view and filter
- *  buttons beside it, filled in brand orange, and the plus alone. A plus is
- *  the one glyph nobody has to be taught, so it needs no word; the colour is
- *  what keeps the primary action loud at a third of the size. */
-export function CalAdd({ onAdd }: { onAdd: () => void }) {
+/** Share, in the header's cluster: the same drawing as the view and filter
+ *  buttons beside it, white with the sparkle carrying the colour, and wearing
+ *  the word. It is the one control up there that does something rather than
+ *  changing how you are looking, and the sparkle alone never said which. */
+export function CalShare({ onShare }: { onShare: () => void }) {
   return (
-    <button className="caladd" aria-label="Add" onClick={onAdd}>
-      <Icon name="add" size={20} strokeWidth={2.6} />
+    <button className="calshare" onClick={onShare}>
+      <span className="calshare-ic" aria-hidden="true">
+        <Icon name="auto_awesome" size={19} />
+      </span>
+      Share
     </button>
   );
 }

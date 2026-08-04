@@ -66,42 +66,49 @@ export function personalNext(p: {
   return p.endsOn && iso > p.endsOn ? null : iso;
 }
 
-/** Do these two people follow each other? Both directions, neither opted out.
- *  Account follows always carry the follower's email, so the pair of email
- *  matches is the whole check. */
-export async function mutualFollow(aId: string, bId: string): Promise<boolean> {
-  if (aId === bId) return false;
+/**
+ * May this viewer see that person's week?
+ *
+ * The Instagram rule, and it is the whole rule: an account is open unless its
+ * owner has turned approve-first on, and then it is followers only. It used to
+ * take a mutual follow, which meant somebody had to follow you back before you
+ * could see when they train, and that is a handshake nobody asked for on a
+ * schedule. This is a scheduling app: knowing who is going where and when is
+ * the point, so the default is that you can see it.
+ *
+ * `users.approveFollowers` is the one switch, already in settings and already
+ * what turns Follow into an ask. Nothing new to set, and the two halves of
+ * "private account" now agree: gating who may follow gates what they see.
+ *
+ * A signed-out viewer counts as following nobody, so an approve-first person's
+ * week is invisible to them, which is right: they cannot have been approved.
+ */
+export async function canSeeWeek(
+  viewerId: string | null,
+  owner: { id: string; approveFollowers: boolean },
+): Promise<boolean> {
+  if (viewerId === owner.id) return true;
+  if (!owner.approveFollowers) return true;
+  if (!viewerId) return false;
   const db = await getDb();
-  const people = await db
-    .select({ id: schema.users.id, email: schema.users.email })
+  const [viewer] = await db
+    .select({ email: schema.users.email })
     .from(schema.users)
-    .where(inArray(schema.users.id, [aId, bId]));
-  const a = people.find((p) => p.id === aId);
-  const b = people.find((p) => p.id === bId);
-  if (!a || !b) return false;
-  const [aFollowsB, bFollowsA] = await Promise.all([
-    db
-      .select({ id: schema.subscribers.id })
-      .from(schema.subscribers)
-      .where(
-        and(
-          eq(schema.subscribers.trainerUserId, bId),
-          eq(schema.subscribers.email, a.email),
-          isNull(schema.subscribers.optedOutAt),
-        ),
+    .where(eq(schema.users.id, viewerId));
+  if (!viewer) return false;
+  // Approved follows are the only rows in `subscribers`: an ask that has not
+  // been answered lives in `follow_requests` and is not one of these.
+  const rows = await db
+    .select({ id: schema.subscribers.id })
+    .from(schema.subscribers)
+    .where(
+      and(
+        eq(schema.subscribers.trainerUserId, owner.id),
+        eq(schema.subscribers.email, viewer.email),
+        isNull(schema.subscribers.optedOutAt),
       ),
-    db
-      .select({ id: schema.subscribers.id })
-      .from(schema.subscribers)
-      .where(
-        and(
-          eq(schema.subscribers.trainerUserId, aId),
-          eq(schema.subscribers.email, b.email),
-          isNull(schema.subscribers.optedOutAt),
-        ),
-      ),
-  ]);
-  return aFollowsB.length > 0 && bFollowsA.length > 0;
+    );
+  return rows.length > 0;
 }
 
 export type SharedWeekItem = {

@@ -508,24 +508,19 @@ if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   if (await where.locator(".icon svg").count())
     fail("the map pin should be gone from schedule listings");
 }
-// The calendar's header is one sticky block: month, view, filter, Add. Add and
-// Share have traded places again: a plus needs no word and no reach, so it is
-// a circle in the cluster, and Share is the act this screen ends on, so it
-// takes the loud pill under a thumb.
+// The calendar's header is one sticky block: month, view, filter, Share. Add
+// is back under the thumb, where the thing you open this screen to do belongs,
+// and Share is back beside the filter.
 if (!(await page.locator(".calsticky .calhead").count()))
   fail("the month title should sit inside the sticky calendar header");
-if (!(await page.locator(".calsticky .caladd").count()))
-  fail("Add should sit in the header's cluster, beside the view and filter");
-if (await page.locator(".calsticky .calshare").count())
-  fail("Share should have left the header for the thumb's corner");
+if (!(await page.locator(".calsticky .calshare").count()))
+  fail("Share should sit in the header's cluster, beside the view and filter");
+if (await page.locator(".calsticky .caladd").count())
+  fail("Add should have left the header for the thumb's corner");
 if (!(await page.locator(".todayfab").count()))
-  fail("Today should float bottom left, across from Share");
-if (!(await page.locator(".calshare").count()))
-  fail("Share should float bottom right, in reach");
-// The plus is a glyph alone at that size: a word beside it in a row of two
-// circles is a third shape.
-if ((await page.locator(".calsticky .caladd").innerText()).trim())
-  fail("the header's Add should be the plus alone, with no word");
+  fail("Today should float bottom left, across from Add");
+if (!(await page.locator(".caladd").count()))
+  fail("Add should float bottom right, in reach");
 // Scrolling up reveals what has been: the daily class has past occurrences,
 // and the first slice reveals itself from the top of the list.
 await page.locator(".ps-pastday .ps-event").first().waitFor();
@@ -1956,11 +1951,10 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.locator(".ps-event.ev-added").first().waitFor();
   console.log("an event ok (no class furniture, wears the Personal colour)");
 
-  // One of your own reaches the mutual-follow week now, by Matt's call: a
-  // member whose week is mostly their own entries showed a mutual follow an
-  // empty page. What did not change is the audience, and that is the whole
-  // safety of it: the owner sees their own, and a stranger with the link sees
-  // nothing at all.
+  // Your own entries are on your week, and who sees that week is the
+  // Instagram rule: open unless you have approve-first on. This account does
+  // not, so a stranger with the link sees it too, which is the point of a
+  // scheduling app. The approve-first half is checked further down.
   {
     const mine = await (await fan.request.get(`${BASE}/lindley`)).text();
     if (!/Wellness Off the Mat/.test(mine))
@@ -1968,8 +1962,8 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
     const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const seen = await (await strangerCtx.request.get(`${BASE}/lindley`)).text();
     await strangerCtx.close();
-    if (/Wellness Off the Mat/.test(seen))
-      fail("a stranger with the link must not see one of your own");
+    if (!/Wellness Off the Mat/.test(seen))
+      fail("an open account's week should be visible to anyone with the link");
   }
 
   // The poster covers the range you ask for, and it starts where your plans
@@ -2816,20 +2810,39 @@ await page.locator(".caladd").waitFor();
 }
 await openProfile(page);
 await closeProfile(page);
-// What a coach attends is behind the Going half of their own page, on the
-// same mutual-follow rule a member's week uses: the owner sees it, and a
-// stranger with the link sees nothing at all.
+// What a coach attends sits behind the Going half of their own page, on the
+// same rule a member's week uses: open unless they have approve-first on.
 {
   const mine = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   if (!/Sam&#x27;s Conditioning|Sam's Conditioning/.test(mine))
     fail("a coach should see their own Going week");
+}
+console.log("coach following ok (the Going half of their own page)");
+
+// ---- The other half of the rule: approve-first closes the week. It is the
+// Instagram model and the one switch does both jobs, so gating who may follow
+// gates what they see, and a stranger is told plainly rather than shown an
+// empty page they could read as "nothing on".
+{
+  await openProfile(page);
+  await openSetting(page, "Privacy & reach");
+  await page.locator(".sheet .setrow", { hasText: "Approve followers" }).click();
+  await page.waitForTimeout(700);
   const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const seen = await (await strangerCtx.request.get(`${BASE}/matt/schedule`)).text();
   await strangerCtx.close();
   if (/Sam&#x27;s Conditioning|Sam's Conditioning/.test(seen))
-    fail("a class the coach attends leaked onto their public page");
+    fail("approve-first should close the Going week to a stranger");
+  // The coach's own teaching week stays public whatever this switch says: that
+  // page is the product, and hiding it would break the one thing a link is for.
+  if (!/Barbell Strength/.test(seen))
+    fail("approve-first must not hide the classes a coach teaches");
+  // Put it back, so what follows sees the account it expects.
+  await page.locator(".sheet .setrow", { hasText: "Approve followers" }).click();
+  await page.waitForTimeout(700);
+  await closeProfile(page);
 }
-console.log("coach following ok (behind the mutual rule, never public)");
+console.log("approve-first closes the week, and never the teaching page ok");
 
 // ---- the Followers stat opens the list of who they are, and coaches among
 // them can be followed back. Three shapes have to render: a coach (page, so a
