@@ -81,7 +81,7 @@ export function StudioAdminSheet({
                 <Link className="setrow" href={`/s/${slug}/manage/counts`}>
                   <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
                   <span className="setrow-txt">
-                    <span className="t">Shifts worked</span>
+                    <span className="t">Shift counter</span>
                     <span className="s">Counted from the schedule, split for a pay run</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>

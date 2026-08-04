@@ -116,7 +116,7 @@ export function GymRota({
             <h1>{studioName}</h1>
             <p className="adminsub">The schedule</p>
           </div>
-          <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio">
+          <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
             <Icon name="close" size={18} />
           </BackLink>
         </div>
@@ -172,23 +172,10 @@ export function GymRota({
                 (openSlots ? ` · ${openSlots} with nobody on` : "")}
           </p>
         </div>
-        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio">
+        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
           <Icon name="close" size={18} />
         </BackLink>
       </div>
-
-      {/* Counted from this schedule rather than tallied by hand, which is the
-          whole reason the rota is worth keeping here. */}
-      <Link className="btn ghost rotacounts" href={`${manageBase}/counts`}>
-        <Icon name="calendar_month" size={17} /> Shifts worked
-      </Link>
-      {/* Who a shift can be handed to. It lives on the staff screen now, next
-          to who runs the page: they are the two lists of the studio's people
-          and keeping them a screen apart meant the shift list had no home of
-          its own, only a lid on this one. */}
-      <Link className="btn ghost rotacounts rotapool" href={`${manageBase}/staff`}>
-        <Icon name="groups" size={17} /> Staff
-      </Link>
 
       {/* A real week, dates and all, because that's what the spreadsheet is
           and what a swap is about. */}

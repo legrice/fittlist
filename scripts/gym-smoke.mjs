@@ -158,7 +158,7 @@ await matt.goto(BASE + studioHref + "/shifts");
 await matt.locator(".staffbar .staffmore").click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["Shifts worked", "Edit studio info", "Share this studio"])
+  for (const want of ["Shift counter", "Edit studio info", "Share this studio"])
     if (!rows.includes(want)) fail("the overflow is missing " + want + ": " + rows.join("|"));
   // The two that became buttons must not also be rows: one door each.
   for (const gone of ["All shifts", "Staff"])
@@ -170,6 +170,21 @@ await matt.waitForFunction(() => !document.querySelector(".sheet"));
 await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
+
+// The rota is a full-screen sheet over the screen that opened it: it carries
+// no doors of its own (they were the two you arrived past), and closing goes
+// back to the shifts screen rather than to the studio's public page.
+{
+  for (const gone of ["Shifts worked", "Shift counter", "Staff"])
+    if (await matt.locator(".pad .btn", { hasText: gone }).count())
+      fail(gone + " should not be a door on the rota: you arrived through it");
+  await matt.locator(".acctclose").click();
+  await matt.waitForURL(/\/shifts$/);
+  await matt.locator(".staffbar").waitFor();
+  await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
+  await matt.waitForURL("**/manage");
+  await matt.locator(".admintop h1").waitFor();
+}
 
 // add a class with nobody on it. The form is the coach's own adder, handed the
 // gym's studio and one extra field, so the ids are the adder's.
@@ -405,10 +420,13 @@ console.log("the coach is told ok");
 // class existed, including the weeks Julia covered and the weeks before he was
 // on it at all. That's somebody's paycheck, so the past gets frozen.
 {
-  await matt.goto(BASE + studioHref + "/manage");
-  await matt.getByRole("link", { name: "Shifts worked" }).click();
+  // The counter is reached from the shifts screen's overflow now: the rota
+  // carries no doors of its own, because it is a screen you opened from one.
+  await matt.goto(BASE + studioHref + "/shifts");
+  await matt.locator(".staffbar .staffmore").click();
+  await matt.locator(".sheet .setrow", { hasText: "Shift counter" }).click();
   await matt.waitForURL("**/counts");
-  await matt.getByRole("heading", { name: "Shifts worked" }).waitFor();
+  await matt.getByRole("heading", { name: "Shift counter" }).waitFor();
   // A class added today may have no occurrences left in this month, so count
   // the month where its weekly slot actually falls.
   const nextMonth = (() => {

@@ -4496,8 +4496,6 @@ button.ps-card { cursor: pointer; }
 
 /* The way through from the rota to what it adds up to, and the shift list
    beside it. */
-.rotacounts { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; }
-.rotapool { margin-left: 8px; }
 
 /* The calendar's tools, across the top of the coach's own week: the page it
    publishes, and the two ways to hand it on. A rail rather than a stack, and

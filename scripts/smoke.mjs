@@ -3371,7 +3371,7 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
     if (!rows.includes("Edit studio info"))
       fail("the overflow should hold the editor: " + rows.join("|"));
-    if (rows.includes("Shifts worked"))
+    if (rows.includes("Shift counter"))
       fail("no gym account means no counts row yet: " + rows.join("|"));
   }
   await page.locator(".sheetclose").first().click();

@@ -1221,8 +1221,19 @@ pops when You is genuinely beneath and pushes for a shifts URL opened cold.
 `StudioAdminSheet` survives as the overflow on that screen rather than a
 floating pill: the two things a manager does weekly are named buttons (All
 shifts, Coaches) and the rest is behind `.staffmore` at the end of the row,
-which holds Shifts worked, the studio editor, the share and the page's view
-count. The rows that need the gym account only appear once it exists. Views
+which holds the shift counter, the studio editor, the share and the page's view
+count.
+
+**Every screen under the shifts screen closes back onto it.** The rota, the
+shift counter and the coaches list are all opened from there and nowhere else,
+so all three point their close at `/s/{slug}/shifts` rather than at the studio's
+public page. The rota carries no doors of its own any more: it had Shifts worked
+and Staff across its top, which was the screen you arrived from offering you the
+way you came. One way in, one way out, and the whole stack behaves like a
+full-screen sheet over the screen that opened it. "Shifts worked" is the shift
+counter now, in the overflow row and on its own heading: what it counts is
+shifts, and what it is is a counter, so the old name read like a record of work
+done rather than a tally you check before a pay run. The rows that need the gym account only appear once it exists. Views
 are tracked against `studios.accountUserId` through the same `page_visits`
 rollup a coach's page uses (main landing only, no managers, no bots, recorded
 in `/s/[slug]/page.tsx`), so the number means the same thing everywhere it
