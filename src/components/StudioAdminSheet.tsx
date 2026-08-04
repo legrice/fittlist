@@ -77,7 +77,7 @@ export function StudioAdminSheet({
                 <Link className="setrow" href={`/s/${slug}/manage`}>
                   <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
                   <span className="setrow-txt">
-                    <span className="t">The rota</span>
+                    <span className="t">All shifts</span>
                     <span className="s">The week, and who&rsquo;s on it</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
@@ -99,7 +99,7 @@ export function StudioAdminSheet({
                   <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
                   <span className="setrow-txt">
                     <span className="t">Shifts worked</span>
-                    <span className="s">Counted from the rota, split for a pay run</span>
+                    <span className="s">Counted from the schedule, split for a pay run</span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
                 </Link>

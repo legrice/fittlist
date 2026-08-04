@@ -133,7 +133,7 @@ export function CalEmpty({
             {addLabel}
           </button>
         )}
-        <Link className={`btn ${lead === "discover" ? "si" : "ghost"}`} href="/discover">
+        <Link className={`btn ${lead === "discover" ? "si" : "ghost"}`} href="/discover?half=classes">
           Discover classes
         </Link>
         {lead === "discover" && (

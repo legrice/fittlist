@@ -520,7 +520,7 @@ export function ProfileSheet({
                       <span className="staffrole">{st.admin ? "Admin" : "Coach"}</span>
                     </span>
                     <span className="s">
-                      {st.admin ? "Shifts, the rota, and who works here" : "Your shifts and what's open"}
+                      {st.admin ? "Shifts, the schedule, and who works here" : "Your shifts and what's open"}
                     </span>
                   </span>
                   <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>

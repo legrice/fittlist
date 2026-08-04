@@ -66,7 +66,7 @@ export function DiscoverList({
   myCity = null,
   backHref,
   hideBack = false,
-  startHalf = "classes",
+  startHalf = "coaches",
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
@@ -88,9 +88,11 @@ export function DiscoverList({
   // and nothing else. Without this the bands fell back to a guessed offset
   // and pinned halfway down the screen, through the middle of a class row.
   useBandTop();
-  // Classes lead, unless somebody was sent to a particular half. "Find
-  // coaches" has to land on the coaches, or the button's own word is the
-  // one thing the screen it opens isn't showing.
+  // Coaches lead, per the Discover spec: a follow is what makes every other
+  // surface work (Following, Activity and Home's Upcoming are all empty until
+  // one happens), so the act that unlocks the app is one tap from opening the
+  // tab. Anything whose own word names a different half has to deep-link past
+  // this, or the button contradicts the screen it opens.
   const [tab, setTab] = useState<DiscoverHalf>(startHalf);
   // The half goes in the URL as you switch, because leaving it in state alone
   // meant a profile's back arrow returned you to Classes however you got
@@ -102,7 +104,7 @@ export function DiscoverList({
   const pick = (next: DiscoverHalf) => {
     setTab(next);
     if (typeof window !== "undefined") {
-      const url = next === "classes" ? "/discover" : `/discover?half=${next}`;
+      const url = next === "coaches" ? "/discover" : `/discover?half=${next}`;
       window.history.replaceState(null, "", url);
     }
   };
@@ -220,20 +222,20 @@ export function DiscoverList({
             the yoga actually is, which is the "where is the supply" job the
             counts are here to do. A total would only ever repeat itself. */}
         <button
-          className={`pubtab${tab === "classes" ? " sel" : ""}`}
-          aria-current={tab === "classes" ? "page" : undefined}
-          onClick={() => pick("classes")}
-        >
-          Classes
-          <span className="pubtab-cnt">{shownClasses.length} coming up</span>
-        </button>
-        <button
           className={`pubtab${tab === "coaches" ? " sel" : ""}`}
           aria-current={tab === "coaches" ? "page" : undefined}
           onClick={() => pick("coaches")}
         >
           Coaches
-          <span className="pubtab-cnt">{shown.length} listed</span>
+          <span className="pubtab-cnt">{shown.length}</span>
+        </button>
+        <button
+          className={`pubtab${tab === "classes" ? " sel" : ""}`}
+          aria-current={tab === "classes" ? "page" : undefined}
+          onClick={() => pick("classes")}
+        >
+          Classes
+          <span className="pubtab-cnt">{shownClasses.length}</span>
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -241,7 +243,7 @@ export function DiscoverList({
           onClick={() => pick("studios")}
         >
           Studios
-          <span className="pubtab-cnt">{shownStudios.length} listed</span>
+          <span className="pubtab-cnt">{shownStudios.length}</span>
         </button>
       </div>
 

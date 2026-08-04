@@ -98,7 +98,7 @@ export function MemberAccount({
                 <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
                 <span className="setrow-txt">
                   <span className="t">{st.name}</span>
-                  <span className="s">Its page, its rota, and its staff</span>
+                  <span className="s">Its shifts, its schedule, and who works there</span>
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </a>

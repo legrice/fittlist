@@ -21,12 +21,13 @@ export default async function DiscoverPage({
 }: {
   searchParams: Promise<{ half?: string }>;
 }) {
-  // A link can name the half it means. "Find coaches" does, because a button
-  // that says coaches and opens onto classes is the screen contradicting the
-  // word that got somebody there.
+  // A link can name the half it means, and anything whose word is not
+  // "coaches" now has to: a bare /discover opens on Coaches, so a button
+  // reading Find a class that lands on a list of people is the screen
+  // contradicting the word that got somebody there.
   const { half } = await searchParams;
   const startHalf: DiscoverHalf =
-    half === "coaches" || half === "studios" ? half : "classes";
+    half === "classes" || half === "studios" ? half : "coaches";
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");

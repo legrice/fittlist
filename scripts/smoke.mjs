@@ -1274,18 +1274,20 @@ await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
 await fan.locator(".dischips").waitFor();
 {
   // The label is the first line; the count sits under it.
+  // The count pill rides beside the label, so strip digits rather than
+  // taking the first line.
   const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) =>
-    s.split("\n")[0].trim(),
+    s.replace(/\s*\d+\s*$/, "").trim(),
   );
-  if (heads.join("|") !== "Classes|Coaches|Studios")
-    fail("the directory's halves should be Classes, Coaches, Studios: " + heads.join("|"));
+  if (heads.join("|") !== "Coaches|Classes|Studios")
+    fail("the directory's halves should be Coaches, Classes, Studios: " + heads.join("|"));
   // Each half says what it holds, and it says it for the pick in front of you
   // rather than in total: with one selection running across all three, that is
   // what answers "is there any yoga on the other side" without switching.
   {
     const counts = (await fan.locator(".distabs .pubtab-cnt").allInnerTexts()).map((t) => t.trim());
-    if (counts.length !== 3 || !counts.every((c) => /^\d+ \w/.test(c)))
-      fail("each half should carry its own count: " + counts.join("|"));
+    if (counts.length !== 3 || !counts.every((c) => /^\d+$/.test(c)))
+      fail("each half should carry its own count pill: " + counts.join("|"));
   }
   if (await fan.locator(".clsfilters, .clspill").count())
     fail("the range and type dropdowns should be gone from the classes half");
@@ -3362,8 +3364,8 @@ console.log("studio edit log ok (who, what, when on the Studios tab)");
     const rows = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
     if (!rows.includes("Edit studio info"))
       fail("the admin sheet should hold the editor: " + rows.join("|"));
-    if (rows.includes("The rota"))
-      fail("no gym account means no rota row yet: " + rows.join("|"));
+    if (rows.includes("All shifts"))
+      fail("no gym account means no shifts row yet: " + rows.join("|"));
   }
   await page.locator(".sheetclose").first().click();
   await page.waitForFunction(() => !document.querySelector(".sheet"));

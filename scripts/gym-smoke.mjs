@@ -148,12 +148,12 @@ await matt.goto(BASE + studioHref);
 await matt.locator(".studioadmin").click();
 {
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["The rota", "Shifts worked", "Staff", "Edit studio info"])
+  for (const want of ["All shifts", "Shifts worked", "Staff", "Edit studio info"])
     if (!rows.includes(want)) fail("the admin sheet is missing " + want + ": " + rows.join("|"));
 }
 await matt.locator(".sheet .stat .n").waitFor();
 // Anchored: the counts row's sub-line says "the rota" too.
-await matt.locator(".sheet .setrow", { hasText: /^The rota/ }).click();
+await matt.locator(".sheet .setrow", { hasText: /^All shifts/ }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
 

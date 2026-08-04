@@ -288,7 +288,7 @@ export function GymRota({
                 </select>
                 <p className="durnote" style={{ marginTop: 8, marginBottom: 18 }}>
                   {covered
-                    ? "Just this one. The standing rota is unchanged, and both of them have been told."
+                    ? "Just this one. The weekly slot is unchanged, and both of them have been told."
                     : "Changing this only changes this date. Whoever it moves to and from hears about it."}
                 </p>
               </>

@@ -54,7 +54,7 @@ export function HomeScreen({
             <div className="hm-empty">
               <h3>Nothing planned yet</h3>
               <p>Mark a class as going and it shows up here.</p>
-              <Link className="btn si hm-emptybtn" href="/discover">
+              <Link className="btn si hm-emptybtn" href="/discover?half=classes">
                 Find a class
               </Link>
             </div>

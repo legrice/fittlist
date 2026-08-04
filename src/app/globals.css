@@ -4948,9 +4948,18 @@ button.ps-card { cursor: pointer; }
    pick, so with one selection across all three it answers "is there any yoga
    on the classes side" without switching. The active one is brand, the rest
    are quiet, which is the same gap the labels themselves keep. */
-.distabs .pubtab { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.pubtab-cnt { font-size: 11.5px; font-weight: 700; letter-spacing: 0; color: var(--ol); opacity: .62; }
-.distabs .pubtab.sel .pubtab-cnt { color: var(--si); opacity: 1; }
+/* The count rides beside the label as a brand pill, by Matt's call: it reads
+   as a badge on the tab rather than a second line of label, and the same
+   treatment carries to the studio's shifts tabs. Fixed height rather than
+   padded, the same reason .chip's is: a padded pill grows the row the moment
+   a three-digit count turns up. */
+.distabs .pubtab { display: inline-flex; flex-direction: row; align-items: center; gap: 7px; }
+.pubtab-cnt {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--si); color: #fff;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0;
+}
 
 /* Activity as its own page. The rows are Home's, so only the heading is new. */
 .acthead {

@@ -102,8 +102,9 @@ export function StudioStaffView({
 
       <h3 className="setgroup-h">Who runs this page</h3>
       <p className="staffnote">
-        They can edit the studio&rsquo;s details, run the rota, and add somebody else. Being
-        handed the keys is not something to find out by accident, so they are told.
+        They can edit the studio&rsquo;s details, set who is on which shift, and add
+        somebody else. Being handed the keys is not something to find out by accident, so
+        they are told.
       </p>
       <div className="settingslist">
         {managers.map((m) => (
@@ -186,8 +187,8 @@ export function StudioStaffView({
             <h2>{confirm.isYou ? "Leave this page?" : `Remove ${confirm.name}?`}</h2>
             <p className="lead">
               {confirm.isYou
-                ? "You will not be able to edit the studio or run its rota, and you would need one of the others to add you back."
-                : "They will not be able to edit the studio or run its rota. Nothing tells them."}
+                ? "You will not be able to edit the studio or its shifts, and you would need one of the others to add you back."
+                : "They will not be able to edit the studio or its shifts. Nothing tells them."}
             </p>
             <div className="publishwrap nostick">
               <button

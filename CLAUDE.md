@@ -314,7 +314,17 @@ credential) and `disciplines` (a pick, a category) are different fields.
 `TypePicker` renders it for both, and "accepting clients" is a filter for free
 because `users.availability` already says it.
 
-**Discover has three halves now, and Classes leads.** The directory
+**Discover has three halves, and Coaches leads.** Classes led for a while, on
+the argument that "what can I do on Thursday" is the question people open the
+app with. Coaches leads now, by Matt's call and per the Discover spec, for a
+different one: a follow is what makes every other surface work, and Following,
+Activity and Home's Upcoming are all empty until one happens, so the act that
+unlocks the app should be one tap from opening the tab. A bare `/discover` is
+Coaches; the other two name themselves in the URL. Anything whose own word is
+not "coaches" has to deep-link past the default, which is why Home's empty
+state and the empty calendar both point at `?half=classes`: a button reading
+Find a class that opens onto a list of people is the screen contradicting the
+word that got somebody there. The directory
 answered "who teaches near me" and never "what can I do on Thursday",
 which is the question people actually open the app with, so
 `discoverClasses()` (`src/lib/discoverclasses.ts`) lists real dated
@@ -543,7 +553,8 @@ saying: a half can look empty because of a word picked on a different one,
 and the carried chip sitting there selected is the whole explanation.
 
 **Each half says how much it holds, for the pick in front of you.** The count
-under a tab label (`.pubtab-cnt`) is `shownClasses`/`shown`/`shownStudios`,
+beside a tab label (`.pubtab-cnt`, a brand pill with white text) is
+`shownClasses`/`shown`/`shownStudios`,
 never the total: with one selection running across all three, "6 coming up"
 against "0 listed" is what answers "is there any yoga on the other side"
 without switching to look. A total would only ever repeat itself. It lands in

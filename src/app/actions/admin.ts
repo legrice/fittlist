@@ -362,7 +362,7 @@ export async function adminEnableStudioSchedule(
     .from(schema.studioManagers)
     .where(eq(schema.studioManagers.studioId, studioId));
   if (!managers.length)
-    return { ok: false, error: "Hand the page to somebody first: a rota needs someone to run it." };
+    return { ok: false, error: "Hand the page to somebody first: a schedule needs someone to run it." };
 
   // An address nobody can receive mail at or sign up with, so the account can
   // never be logged into and never collides with a real person's email.
