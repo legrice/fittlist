@@ -1786,6 +1786,23 @@ was the point at which a fix to one stopped being a fix to any. What differs
 between them is which rows they load and what the footer says, which is data, so
 the data is the argument.
 
+**The classes sheet adds as well as picks, and that is the point of the whole
+screen.** Choosing what goes on the picture and keeping your calendar current
+are the same list, so doing one does the other: `+ Add a class` at the foot of
+the sheet opens the ordinary `Adder`, which is why `/share` loads the studio
+directory, the templates and the type list the way `/week` does. A class typed
+there lands on the calendar, and when a studio was named it lands in that
+studio's catalog too, so the next person to add it gets the details already
+filled in and a studio that isn't here yet arrives in the directory with a real
+class on it. Somebody making a picture of their own week fills the inventory in
+behind them, which is the growth argument for this screen and the reason the
+form has to be one tap from the picture rather than a trip to another tab and
+back. The hat decides the form: Going gets the personal adder, Coaching gets
+the publishing one, and the segment above has already answered the chair
+question so the form never asks it again. An add changes the week without
+changing a single control, so the picture has no reason of its own to redraw
+and `bust` is that reason.
+
 The composer's state lives entirely in the query string, so the preview redraws
 without a round trip and the thing that gets shared is the thing that was on
 screen. `hide` is a list of `{classId}.{iso}` keys: a class row id alone is not

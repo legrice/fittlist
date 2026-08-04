@@ -6,6 +6,8 @@ import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { shareRows, type ShareRow } from "@/app/actions/share";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import type { ShareKind } from "@/lib/shareweek";
+import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -35,6 +37,10 @@ export function ShareComposer({
   hasCity,
   today,
   firstIso,
+  studios,
+  templates,
+  customTypes,
+  lastUsed,
 }: {
   /** A member has one hat, so the segment would be a control with one option.
    *  It is removed rather than disabled, and their model stays as simple as it
@@ -46,6 +52,14 @@ export function ShareComposer({
   /** The first day their week holds something, so the composer opens on a
    *  picture rather than on an empty one they have to work out. */
   firstIso: string;
+  /** The adder's ingredients. Making the picture and keeping the calendar are
+   *  the same act here: a class typed into the classes sheet lands on the
+   *  calendar, and when a studio was named it lands in that studio's catalog
+   *  too, so the next person to add it gets the details already filled in. */
+  studios: StudioDto[];
+  templates: TemplateDto[];
+  customTypes: string[];
+  lastUsed: LastUsed;
 }) {
   const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
@@ -73,8 +87,12 @@ export function ShareComposer({
   const [rows, setRows] = useState<ShareRow[] | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [picker, setPicker] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [canShareFiles, setCanShareFiles] = useState(false);
+  // Adding a class changes the week without changing a single control, so the
+  // picture has no reason of its own to redraw. This is that reason.
+  const [bust, setBust] = useState(0);
 
   useEffect(() => {
     setCanShareFiles(
@@ -103,7 +121,7 @@ export function ShareComposer({
     return () => {
       live = false;
     };
-  }, [kind, from, days]);
+  }, [kind, from, days, bust]);
   useEffect(load, [load]);
 
   const shown = (rows ?? []).filter((r) => !hidden.has(r.key));
@@ -122,6 +140,7 @@ export function ShareComposer({
   });
   const hideList = [...hidden].join(",");
   if (hideList) q.set("hide", hideList);
+  if (bust) q.set("v", String(bust));
   const src = `/api/story/compose?${q.toString()}`;
   const fileName = `fittlist-${kind}-${fmt}.png`;
 
@@ -471,11 +490,18 @@ export function ShareComposer({
             ) : (
               <p className="lead">Nothing in this range yet.</p>
             )}
-            {/* Said out loud, because without it people read a checkbox as a
-                delete and stop touching the control that makes the picture
-                worth sending. */}
+            {/* The point of the whole screen. Picking what goes on the
+                image and keeping your calendar are the same list, so doing
+                one does the other: a class typed here lands on the calendar,
+                and when a studio was named it lands in that studio's catalog
+                too, which is how a studio that isn't here yet arrives with a
+                real class already on it. */}
+            <button className="compadd" onClick={() => setAdding(true)}>
+              + Add a class
+            </button>
             <p className="compnote">
               Unchecking hides a class from the image. It stays on your calendar.
+              Anything you add here is added to your calendar too.
             </p>
             <div className="publishwrap">
               <button className="btn" onClick={() => setPicker(false)}>
@@ -484,6 +510,36 @@ export function ShareComposer({
             </div>
           </div>
         </div>
+      )}
+
+      {adding && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          // Which hat you are wearing decides which form you get: the
+          // Coaching picture is made of classes you publish, the Going one of
+          // classes you attend. Asking again here would be asking a question
+          // the segment above has already answered.
+          personal={kind === "going" ? { canCoach: false } : undefined}
+          onClose={() => setAdding(false)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setAdding(false);
+            // The week changed under a picture whose controls did not, so the
+            // redraw has to be asked for.
+            setBust((n) => n + 1);
+            toast(msg);
+          }}
+          onDeleted={(msg) => {
+            setAdding(false);
+            setBust((n) => n + 1);
+            toast(msg);
+          }}
+        />
       )}
 
       <Toast msg={toastMsg} on={toastOn} />

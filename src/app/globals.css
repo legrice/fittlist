@@ -5129,3 +5129,12 @@ button.ps-card { cursor: pointer; }
   .compdrawer { max-width: 620px; margin: 0 auto; width: 100%; border-radius: 22px 22px 0 0; }
   .compacts { max-width: 620px; margin: 0 auto; width: 100%; }
 }
+/* + Add a class, at the foot of the picker: the composer is where calendars
+   get kept current, so the way to add one is in the sheet you are already in
+   rather than a trip to another tab. Dashed, because it makes something that
+   isn't there yet. */
+.compadd {
+  width: 100%; margin-top: 12px; padding: 13px; border-radius: 12px;
+  border: 1.5px dashed rgba(25, 21, 2, .28); background: none; cursor: pointer;
+  font-family: inherit; font-size: 14.5px; font-weight: 800; color: var(--ink);
+}

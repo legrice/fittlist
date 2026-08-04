@@ -155,6 +155,71 @@ console.log("the Edit tab is the only pull, and it grows the picture ok");
 }
 console.log("the picker hides from the image only ok");
 
+// ---- an empty range is an offer, not a blank picture. This has to run
+// before the block below, which is the one that puts a class on this hat.
+await coach.goto(BASE + "/share");
+await coach.locator(".compimg").waitFor();
+{
+  await coach.locator(".compseg button", { hasText: "Going" }).click();
+  await settled(coach);
+  const cta = await coach.locator(".compacts .btn").innerText();
+  if (!/Add something to your week/.test(cta)) fail("expected the member-ish offer, got " + cta);
+  if (await coach.locator(".compsave").count())
+    fail("Save to photos should not be offered for an empty picture");
+}
+console.log("an empty week offers rather than draws nothing ok");
+
+// ---- adding from the picker: the composer is where calendars get kept
+// current, so a class typed here has to land on the calendar and, when a
+// studio was named, in that studio's catalog. That loop is the whole growth
+// argument for this screen: somebody makes a picture, and the inventory fills
+// in behind them.
+await coach.goto(BASE + "/share");
+await coach.locator(".compimg").waitFor();
+await settled(coach);
+{
+  await coach.locator(".compseg button", { hasText: "Going" }).click();
+  await settled(coach);
+  await coach.locator(".comprow").click();
+  await coach.locator(".sheet h2", { hasText: "Classes on your image" }).waitFor();
+  if (!/added to your calendar too/i.test(await coach.locator(".compnote").innerText()))
+    fail("the sheet has to say an add reaches the calendar, not just the picture");
+  await coach.locator(".compadd").click();
+  await coach.locator("#fName").waitFor();
+  await coach.locator("#fName").fill("Reformer Pilates");
+  for (const d of ["Tu", "Th"])
+    await coach.getByRole("button", { name: d, exact: true }).click();
+  await coach.getByRole("button", { name: "Select or start typing a studio" }).click();
+  await coach.getByRole("button", { name: "+ New studio" }).click();
+  await coach.getByPlaceholder("e.g. Palisade Barbell").fill("Asana Soul Practice");
+  await coach
+    .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
+    .fill("124 1st St, Jersey City, NJ");
+  await coach.getByRole("button", { name: "Add studio" }).click();
+  await coach.locator(".studio-sel .nm").waitFor();
+  await coach.getByRole("button", { name: "Add to your plans" }).click();
+  // Back on the composer, with the picture redrawn around it.
+  await coach.locator(".compimg").waitFor();
+  await coach.waitForFunction(() => {
+    const el = document.querySelector(".comprow-t small");
+    return el && /showing/.test(el.textContent || "");
+  }, null, { timeout: 30000 });
+  const row = await coach.locator(".comprow-t").innerText();
+  if (!/showing/.test(row)) fail("the added class should count on the picture: " + row);
+  // It is on the calendar, not only on the image.
+  await coach.goto(BASE + "/week");
+  await coach.goto(BASE + "/app");
+  await coach.locator(".caladd").waitFor();
+  if (!(await coach.locator(".ps-event", { hasText: "Reformer Pilates" }).count()))
+    fail("a class added from the composer should be on the calendar");
+  // And the studio it named is in the directory, which is the inventory
+  // filling itself in behind somebody making a picture.
+  const dir = await coach.request.get(`${BASE}/discover?half=studios`);
+  if (!(await dir.text()).includes("Asana Soul Practice"))
+    fail("the studio named while adding should reach the directory");
+}
+console.log("adding from the picker fills the calendar and the directory ok");
+
 // ---- the headline is derived from the segment, and their own words survive it
 await coach.goto(BASE + "/share");
 await coach.locator(".compimg").waitFor();
@@ -177,16 +242,6 @@ await coach.locator(".compimg").waitFor();
 }
 console.log("the headline derives, and their own words win ok");
 
-// ---- an empty range is an offer, not a blank picture
-{
-  await coach.locator(".compseg button", { hasText: "Going" }).click();
-  await settled(coach);
-  const cta = await coach.locator(".compacts .btn").innerText();
-  if (!/Add something to your week/.test(cta)) fail("expected the member-ish offer, got " + cta);
-  if (await coach.locator(".compsave").count())
-    fail("Save to photos should not be offered for an empty picture");
-}
-console.log("an empty week offers rather than draws nothing ok");
 await coach.close();
 
 // ---- a member has one hat, so the segment is gone rather than disabled

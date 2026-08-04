@@ -100,10 +100,11 @@ await m.waitForTimeout(500);
 {
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
-  // The same four everyone gets while Home is dark-launched behind an
-  // admin; only where Schedule points differs.
-  if (labels.join("|") !== "Following|Discover|Schedule|You")
-    fail(`the header links should be Following, Discover, Schedule and You, got ${labels}`);
+  // The same five everyone gets; only where Schedule points differs. Share is
+  // a word here rather than the bar's raised circle: a raised button in a row
+  // of text links is a button shouting at four words.
+  if (labels.join("|") !== "Following|Discover|Share|Schedule|You")
+    fail(`the header links should be Following, Discover, Share, Schedule and You, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();

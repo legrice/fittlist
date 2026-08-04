@@ -1846,7 +1846,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.goto(BASE + "/feed");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 4) fail("expected 4 tabs");
+  if ((await fan.locator(".navtab").count()) !== 5) fail("expected 5 tabs");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
@@ -2186,14 +2186,17 @@ console.log("going + share my week ok (1080x1920 png, from the account)");
   // inclusion rather than the joined string.
   const tabs = (await fan.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
   if (
-    tabs.length !== 4 ||
+    tabs.length !== 5 ||
     !tabs[0].includes("Following") ||
     !tabs[1].includes("Discover") ||
-    !tabs[2].includes("Schedule") ||
-    !tabs[3].includes("You")
+    !tabs[2].includes("Share") ||
+    !tabs[3].includes("Schedule") ||
+    !tabs[4].includes("You")
   )
-    fail("a member's tabs should read Following, Discover, Schedule, You: " + tabs.join("|"));
-  console.log("member tabs ok (four, and no Home)");
+    fail(
+      "a member's tabs should read Following, Discover, Share, Schedule, You: " + tabs.join("|"),
+    );
+  console.log("member tabs ok (five, Share in the middle, no Home)");
 }
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -2408,9 +2411,9 @@ await page.locator(".ps-event").first().waitFor();
   const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/[ \t\n]+/g, " ").trim(),
   );
-  if (tabs.length !== 4 || tabs.some((t) => /Home/.test(t)))
-    fail("four tabs, none of them Home: " + tabs.join("|"));
-  console.log("home is gone ok (four tabs for everyone)");
+  if (tabs.length !== 5 || tabs.some((t) => /Home/.test(t)))
+    fail("five tabs, none of them Home: " + tabs.join("|"));
+  console.log("home is gone ok (five tabs for everyone, Share in the middle)");
 }
 
 // with the bottom nav to cross between the two spaces
@@ -2863,13 +2866,14 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// Four tabs, admin or not: Home was the fifth in this account's bar only, and
-// it is parked. Back in the app, since a profile carries no bar at all.
+// Five tabs, admin or not: Home was a fifth in this account's bar only and is
+// parked; the fifth now is Share, which everybody gets. Back in the app, since
+// a profile carries no bar at all.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
 {
   const n = await page.locator(".navtab").count();
-  if (n !== 4) fail("expected 4 tabs, got " + n);
+  if (n !== 5) fail("expected 5 tabs, got " + n);
 }
 await openProfile(page);
 await closeProfile(page);
