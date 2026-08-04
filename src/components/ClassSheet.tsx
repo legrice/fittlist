@@ -477,13 +477,19 @@ export function ClassSheet({
               the feed or your saves this is often the first time you meet a
               coach, and their name is the natural next tap.
 
-              A gym gets no such row. It is a place rather than a person, it has
-              no page at /{handle} to tap through to, and "coached by Ironbound
-              Performance Athletics" is not true of anybody. The studio row
-              below already says where, and who is teaching is the gym's own
-              switch, which is off. */}
-          {!c.ownerIsGym && (
-          <Link className="classoverlay-coach" href={`/${c.handle}`}>
+              A gym is never the name here: it is a place rather than a person,
+              it has no page to tap through to, and "coached by Ironbound
+              Performance Athletics" is not true of anybody. But the person on
+              the rota is, where they show their shifts, because then they have
+              already published this class as theirs and it carries their name
+              on their own page. Where they do not, the row is gone entirely and
+              the studio row below says where: whether a gym's schedule names
+              anybody is the gym's call, and it stays off.
+
+              The condition is `coachHandle` rather than "is the owner a gym",
+              because what this row needs is somebody with a page behind it. */}
+          {c.coachHandle && (
+          <Link className="classoverlay-coach" href={`/${c.coachHandle}`}>
             {c.coachPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className="classsheet-av" src={c.coachPhoto} alt="" />

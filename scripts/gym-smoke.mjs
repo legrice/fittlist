@@ -989,8 +989,78 @@ console.log("the coach is told ok");
   await mem.locator(".favtoast.on").waitFor();
   await mem.goto(BASE + "/week");
   await mem.locator(".ps-enm", { hasText: "HYROX" }).waitFor();
-  await memCtx.close();
   console.log("a member can add the gym's class ok (it lands in their plans)");
+
+  // ---- who the row names
+  //
+  // A gym owns its classes, so a row built from the owner named the gym where
+  // the coach chip goes and the gym again as the place, and the person you
+  // followed to find the class was nowhere on it.
+  //
+  // Its own slot rather than one of the ones above: every coach here also has
+  // a "Warm Up" of their own from signup and HYROX has a cover on it, so
+  // neither can say which row was matched.
+  //
+  // Both sides of the gate, because the gate is the whole point. Off, the row
+  // stays the gym's: whether a gym's schedule names anybody is the gym's call.
+  // On, she has published the shift as hers and it already carries her name on
+  // her own page, so the calendar saying it too is one fact said once.
+  {
+    await matt.goto(BASE + studioHref + "/manage");
+    await matt.locator(".rotaday", { hasText: "Friday" }).getByRole("button", { name: "Add" }).click();
+    await matt.locator("#fName").fill("Rota Naming");
+    await matt.locator("#fStart").fill("07:30");
+    await matt.locator("#fCoach").selectOption({ label: "Julia" });
+    await matt.getByRole("button", { name: "Add to the schedule" }).click();
+    await matt.getByText("Added to the week").waitFor();
+    await matt.waitForTimeout(700);
+
+    await mem.goto(BASE + studioHref);
+    await mem.locator(".ps-event", { hasText: "Rota Naming" }).first().click();
+    await mem.locator(".classoverlay-nm", { hasText: "Rota Naming" }).waitFor();
+    if (await mem.locator(".classoverlay-coach").count())
+      fail("a gym's class should name nobody while its coach keeps shifts private");
+    await mem.locator(".ovcta-save").click();
+    await mem.locator(".favtoast.on").waitFor();
+
+    const chip = () =>
+      mem.locator(".ps-erow", { hasText: "Rota Naming" }).first().locator(".ps-ecoach-txt");
+    await mem.goto(BASE + "/week");
+    await mem.locator(".ps-enm", { hasText: "Rota Naming" }).first().waitFor();
+    if (await chip().count()) {
+      const who = await chip().innerText();
+      if (/Julia/.test(who)) fail("a private shift put the coach's name on a member's week");
+    }
+
+    // Julia's own answer, and the only thing that changes.
+    await julia.goto(BASE + "/you");
+    await julia.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+    await julia.waitForTimeout(900);
+
+    await mem.goto(BASE + "/week");
+    await mem.locator(".ps-enm", { hasText: "Rota Naming" }).first().waitFor();
+    await chip().first().waitFor();
+    const named = await chip().first().innerText();
+    if (!/Julia/.test(named)) fail("her shift is public now, so the row should say so: " + named);
+
+    // And the sheet agrees with the row it was opened from.
+    await mem.locator(".ps-event", { hasText: "Rota Naming" }).first().click();
+    await mem.locator(".classoverlay-nm", { hasText: "Rota Naming" }).waitFor();
+    const coachRow = mem.locator(".classoverlay-coach");
+    await coachRow.waitFor();
+    if (!/Julia/.test(await coachRow.innerText()))
+      fail("the sheet should name whoever the row named");
+    // It taps through to her, not to the studio the class is addressed under.
+    const href = await coachRow.getAttribute("href");
+    if (!/^\/julia/i.test(href ?? "")) fail("the coach row should open the coach: " + href);
+
+    // Put it back, so nothing after this depends on a switch this block flipped.
+    await julia.goto(BASE + "/you");
+    await julia.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+    await julia.waitForTimeout(900);
+    console.log("a gym's row names the coach only where she shows her shifts ok");
+  }
+  await memCtx.close();
 }
 
 // The coach on the slot can't mark themselves down for it: teaching it isn't

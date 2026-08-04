@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
 
 // The classes someone has added, from today forward.
@@ -170,6 +171,11 @@ export async function sharedWeek(
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
+  // A gym owns its classes, so the row's owner is the place. Who is actually
+  // on it comes from the rota, where that coach shows their shifts.
+  const naming = await shiftNaming(
+    classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+  );
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
@@ -199,7 +205,7 @@ export async function sharedWeek(
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
-      coachName: coach.name,
+      coachName: shiftCoach(naming, c.id, m.occurrenceDate)?.name ?? coach.name,
     });
     byDay.set(m.occurrenceDate, list);
   }
@@ -300,6 +306,11 @@ export async function myWeek(
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
+  // A gym owns its classes, so the row's owner is the place. Who is actually
+  // on it comes from the rota, where that coach shows their shifts.
+  const naming = await shiftNaming(
+    classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+  );
 
   // Both halves' studios in one query: a class's, and the places on your own
   // entries, which have a real studio now rather than a line of free text.
@@ -420,9 +431,13 @@ export async function myWeek(
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
-      coachName: coach.name,
-      coachPhoto: coach.photo,
-      coachColor: avatarColor(coach),
+      // The rota's person where they show their shifts, the owner otherwise.
+      // The face has to travel with the name or the chip reads as the gym
+      // wearing somebody else's.
+      ...(() => {
+        const who = shiftCoach(naming, c.id, m.occurrenceDate) ?? coach;
+        return { coachName: who.name, coachPhoto: who.photo, coachColor: avatarColor(who) };
+      })(),
       alsoGoing: alsoByKey.get(`${m.classId}|${m.occurrenceDate}`),
     });
     byDay.set(m.occurrenceDate, list);

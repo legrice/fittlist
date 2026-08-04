@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { isBlocked } from "@/lib/blocks";
+import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { fansVisible } from "@/lib/flags";
 import { currentAdmin } from "@/lib/admin";
@@ -23,6 +24,11 @@ export type ClassDetail = {
   coachName: string;
   coachPhoto: string | null;
   coachColor: string;
+  /** Whose page the "Coached by" row taps through to, or null for no row.
+   *  Not derived from `handle`, which is the base the *class* lives under: a
+   *  gym's class is addressed under the studio while the person on it has a
+   *  page of their own. Null is a gym class with nobody we may name on it. */
+  coachHandle: string | null;
   name: string;
   classType: string | null;
   description: string | null;
@@ -61,10 +67,6 @@ export type ClassDetail = {
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
-  /** The owner is a gym, not a person. Nothing here is "coached by" anybody:
-   *  whether a coach's name is ever shown is the gym's own switch, and it is
-   *  off. The studio row below says where, which is the whole truth of it. */
-  ownerIsGym: boolean;
   /** A gym's class, seen by somebody who could be on it. Null on a coach's own
    *  class, and for anyone with no standing at the studio. */
   shift: {
@@ -312,12 +314,22 @@ export async function classDetail(
   if (locationText) gcalParams.set("location", locationText);
   if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn));
 
+  // Who to put on the row. A gym owns its classes, so the owner is the place;
+  // the person is on the rota, and only where they show their shifts. Resolved
+  // apart from the `shift` block above, which is the rota's controls and only
+  // exists for a signed-in viewer on a future date: who taught a class is not
+  // a question that should depend on either.
+  const onDuty =
+    user.kind === "gym" ? shiftCoach(await shiftNaming([c.id]), c.id, whenIso) : null;
+  const who = onDuty ?? user;
+
   return {
     id: c.id,
     handle: base,
-    coachName: user.name,
-    coachPhoto: user.photo,
-    coachColor: avatarColor(user),
+    coachName: who.name,
+    coachPhoto: who.photo,
+    coachColor: avatarColor(who),
+    coachHandle: who.kind === "gym" ? null : who.handle,
     name: c.name,
     classType: c.classType,
     description: c.description,
@@ -344,7 +356,6 @@ export async function classDetail(
     addedPublic,
     past,
     roster,
-    ownerIsGym: user.kind === "gym",
     adminPhoto,
     adminLink,
     shift,
