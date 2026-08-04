@@ -51,6 +51,19 @@ await coach.locator(".publishwrap .btn").click();
 await coach.waitForTimeout(900);
 console.log("a coach put a week up ok");
 
+// The heartbeat is on every shell, not just the tabbed one. A coach's
+// Schedule is /app, which sits outside the (tabs) group and renders its own
+// header, so it was the one screen the icon went missing from.
+{
+  await coach.goto(BASE + "/app");
+  await coach.locator(".caladd").waitFor();
+  if (!(await coach.locator(".brandbar-actions .activitybtn").count()))
+    fail("the coach's schedule lost the Activity heartbeat");
+  await coach.goto(BASE + "/feed");
+  await coach.locator(".brandbar-actions .activitybtn").waitFor();
+}
+console.log("the heartbeat is on both shells ok");
+
 // A member who marks one of them, publicly (the default).
 const goer = await mk("sam@example.com", "Sam Goer", true);
 await goer.goto(BASE + "/erinclyne");

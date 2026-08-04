@@ -542,6 +542,9 @@ export function ScheduleScreen({
           settings={showFanView ? undefined : "/you"}
           home={showFanView ? landing : "/app"}
           search={showFanView}
+          // Gated the same way, and for the same reason: Activity is made of
+          // the follow graph, so it means nothing without the member side.
+          activity={showFanView}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app", home: showHome } : undefined}
