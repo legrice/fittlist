@@ -136,7 +136,14 @@ await m.waitForTimeout(500);
     fail(`expected ${names.length + 1} avatars in the rail, got ${n} at ${m.url()}`);
 }
 const rightArrow = m.locator(".railarrow-r");
-if (!(await rightArrow.isVisible())) fail("no right arrow with a rail that overflows");
+// Waited for, not polled once. RailArrows measures after mount and again when
+// the webfont swaps in and reflows the labels, so on the frame the avatars
+// exist the arrow legitimately does not yet. A single isVisible() passed this
+// alone and lost the race under the battery's load, which is the worst kind of
+// assertion: green on a quiet machine and red on a busy one.
+await rightArrow.waitFor({ state: "visible" }).catch(() => {
+  fail("no right arrow with a rail that overflows");
+});
 if (await m.locator(".railarrow-l").isVisible().catch(() => false))
   fail("left arrow showing at the start of the rail");
 await m.screenshot({ path: OUT + "/shot-rail-1-right.png" });
@@ -147,7 +154,10 @@ await m.waitForTimeout(700);
 const after = await m.locator(".feedstrip").evaluate((e) => e.scrollLeft);
 if (after <= before) fail(`the arrow did not scroll (${before} -> ${after})`);
 console.log(`scrolled ${before} -> ${after} ok`);
-if (!(await m.locator(".railarrow-l").isVisible())) fail("left arrow missing after scrolling");
+await m
+  .locator(".railarrow-l")
+  .waitFor({ state: "visible" })
+  .catch(() => fail("left arrow missing after scrolling"));
 await m.screenshot({ path: OUT + "/shot-rail-2-both.png" });
 
 // scroll to the end: the right arrow retires

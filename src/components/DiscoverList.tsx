@@ -130,7 +130,7 @@ export function DiscoverList({
           <Icon name="search" size={19} className="dissearch-ic" />
           {/* The door says what the field behind it says: it is drawn as that
               field, and a door whose words change on opening is two doors. */}
-          <span className="dissearch-ph">Search classes, studios, or coaches</span>
+          <span className="dissearch-ph">Search coaches by name</span>
         </Link>
       </div>
 

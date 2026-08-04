@@ -1032,9 +1032,12 @@ console.log("the coach is told ok");
       if (/Julia/.test(who)) fail("a private shift put the coach's name on a member's week");
     }
 
-    // Julia's own answer, and the only thing that changes.
+    // Julia's own answer, and the only thing that changes. The switch lives
+    // under Settings > Your page, and only once a gym has put her on
+    // something, which by now it has.
     await julia.goto(BASE + "/you");
-    await julia.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+    await openSetting(julia, "Your page");
+    await julia.locator(".sheet .setrow", { hasText: "Gym shifts on your page" }).click();
     await julia.waitForTimeout(900);
 
     await mem.goto(BASE + "/week");
@@ -1056,7 +1059,8 @@ console.log("the coach is told ok");
 
     // Put it back, so nothing after this depends on a switch this block flipped.
     await julia.goto(BASE + "/you");
-    await julia.locator(".setrow", { hasText: "Gym shifts on your page" }).click();
+    await openSetting(julia, "Your page");
+    await julia.locator(".sheet .setrow", { hasText: "Gym shifts on your page" }).click();
     await julia.waitForTimeout(900);
     console.log("a gym's row names the coach only where she shows her shifts ok");
   }

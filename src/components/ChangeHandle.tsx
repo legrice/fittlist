@@ -68,7 +68,10 @@ export function ChangeHandle() {
           <Icon name="link" size={22} />
         </span>
         <span className="setrow-txt">
-          <span className="t">Your link</span>
+          {/* "Handle" is what people call it: the row under it already
+              shows the whole link, so the label naming the same thing again
+              was a heading that repeated its own value. */}
+          <span className="t">Handle</span>
           <span className="s">fittlist.co/{handle}</span>
         </span>
         <span className="setrow-chev">
@@ -89,10 +92,10 @@ export function ChangeHandle() {
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
               <Icon name="close" size={16} />
             </button>
-            <h2>Change your link</h2>
+            <h2>Change your handle</h2>
             {locked ? (
               <p className="lead">
-                You changed your link recently, so it&rsquo;s settled for now. You can change it
+                You changed your handle recently, so it&rsquo;s settled for now. You can change it
                 again on {new Date(`${lockedUntil}T00:00:00Z`).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
@@ -107,7 +110,7 @@ export function ChangeHandle() {
                   forwarding. You can do this once every 90 days.
                 </p>
                 <label className="flabel" htmlFor="chHandle">
-                  New link
+                  New handle
                 </label>
                 <div className="editprefix editprefix-url">
                   <span className="editprefix-at">fittlist.co/</span>

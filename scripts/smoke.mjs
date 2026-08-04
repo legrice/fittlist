@@ -2836,7 +2836,7 @@ console.log("coach following ok (the Going half of their own page)");
 {
   await openProfile(page);
   await openSetting(page, "Privacy & reach");
-  await page.locator(".sheet .setrow", { hasText: "Approve followers" }).click();
+  await page.locator(".sheet .setrow", { hasText: "Account privacy" }).click();
   await page.waitForTimeout(700);
   const strangerCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const seen = await (await strangerCtx.request.get(`${BASE}/matt/schedule`)).text();
@@ -2848,7 +2848,7 @@ console.log("coach following ok (the Going half of their own page)");
   if (!/Barbell Strength/.test(seen))
     fail("approve-first must not hide the classes a coach teaches");
   // Put it back, so what follows sees the account it expects.
-  await page.locator(".sheet .setrow", { hasText: "Approve followers" }).click();
+  await page.locator(".sheet .setrow", { hasText: "Account privacy" }).click();
   await page.waitForTimeout(700);
   await closeProfile(page);
 }

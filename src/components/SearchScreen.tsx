@@ -146,12 +146,16 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             className="dissearch-in"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            // The three things this screen can answer with. "Coaches" rather
-            // than "people" because it is the word somebody is looking for
-            // when they open this; the People heading still holds members,
-            // and a placeholder is a hint about what to type rather than a
-            // table of contents.
-            placeholder="Search classes, studios, or coaches"
+            // Deliberately narrower than what this screen answers: it still
+            // returns Studios and Classes as their own headed sections, and
+            // still matches a town and a discipline. Discover is one list of
+            // coaches now, so its door promising three halves sent people
+            // looking for two that are not on the screen they came from, and
+            // the door and this field have to say the same words or they are
+            // two doors. Under-promising is the safe side of that trade: the
+            // other sections are a bonus when they land rather than a promise
+            // that goes unmet. Widen it the day Discover carries them again.
+            placeholder="Search coaches by name"
             aria-label="Search fittlist"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus

@@ -518,7 +518,7 @@ export function ProfileSheet({
             <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
             <span className="setrow-txt">
               <span className="t">Your page</span>
-              <span className="s">Your link, contact info, availability</span>
+              <span className="s">Handle, contact info, availability</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>

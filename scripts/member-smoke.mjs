@@ -183,6 +183,31 @@ await p.screenshot({ path: OUT + "/shot-member-profile.png", fullPage: true });
 console.log("member profile ok (Schedule and Info tabs, nothing about who they follow)");
 
 
+// A member claims a handle and has a page at it, so handing it on is theirs
+// too: the three ways there are, and the invite card a coach gets.
+{
+  await p.goto(BASE + "/you");
+  await p.locator(".setrow", { hasText: "Share profile" }).click();
+  await p.locator(".sheet h2", { hasText: "Share" }).waitFor();
+  for (const row of ["Copy link", "Profile card", "QR code"])
+    await p.locator(".sheet .setrow", { hasText: row }).waitFor();
+  await p.locator(".sheet .setrow", { hasText: "QR code" }).click();
+  await p.locator(".qrimg").waitFor();
+  await p.locator(".sheet .sheetclose").first().click();
+  await p.waitForTimeout(400);
+
+  // The renamed rows, both of which a coach's settings say the same way.
+  await p.locator(".setrow", { hasText: "Handle" }).first().waitFor();
+  if (await p.locator(".setrow", { hasText: "Your link" }).count())
+    fail("the handle row should not still say Your link");
+  await p.locator(".setrow", { hasText: "Account privacy" }).first().waitFor();
+  if (await p.locator(".setrow", { hasText: "Approve followers" }).count())
+    fail("the privacy row should not still say Approve followers");
+
+  await p.locator(".acctinvite", { hasText: "Share the love" }).waitFor();
+  console.log("a member can hand their page on, and the wording matches a coach's ok");
+}
+
 // and it's editable from the account
 await p.goto(BASE + "/you");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
