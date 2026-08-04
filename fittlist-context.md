@@ -164,7 +164,7 @@ Sizes are set per component in `globals.css`. Representative values:
 | Profile tab (`.pubtab`) | 17px | 600 |
 | Body / row title (`.setrow .t`) | 16px | 500-600 |
 | Secondary line (`.setrow .s`, `.sub`) | 13px | 400 |
-| Day band (`.ps-dayname`) | 11-12px | 700, uppercase, wide tracking |
+| Day band (`.ps-dayname`) | 15px | 500, title case, no tracking |
 
 ### Spacing, radii, shadows, breakpoints
 

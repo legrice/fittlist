@@ -1968,11 +1968,14 @@ to a public page they cannot have and saying "add the classes you coach" to
 somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" is no longer a destination and the Following
-feed says `from=following`; the class page honours both. The band's words are title case at 14px/600 (`.ps-dayname`, everywhere a band
+feed says `from=following`; the class page honours both. The band's words are title case at 15px/500 (`.ps-dayname`, everywhere a band
 is drawn: Following, both calendars, a profile, a studio). It was uppercase and
 tracked at 800, then at 400, and neither was the point: what makes this a level
 above the rows is the rule under it and the count across from it, not the case
-or the weight. `dayBandLabel` already produces "Today, Aug 5" in title case, so
+or the weight. Size does the separating now and weight steps back out of the
+way: a point larger than the rows under it, a step lighter than a heading, which
+reads as a level above without shouting.
+`dayBandLabel` already produces "Today, Aug 5" in title case, so
 the CSS just got out of its way; the .13em tracking went with the capitals,
 because that is spacing for capitals and reads as gaps between letters in a
 word anybody can lowercase. Today's name is no longer brand orange either: the

@@ -853,8 +853,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      across from it, not the case. `dayBandLabel` already produces "Today,
      Aug 5" in title case, so this is only the CSS getting out of its way. The
      tracking goes with the caps, because .13em is spacing for capitals and
-     reads as a gap between letters in a word anybody can lowercase. */
-  font-size: 14px; font-weight: 600; letter-spacing: 0;
+     reads as a gap between letters in a word anybody can lowercase. Size does
+     the separating now rather than weight: a point bigger than the rows and a
+     step lighter than a heading, which is a level above without being loud. */
+  font-size: 15px; font-weight: 500; letter-spacing: 0;
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis;
 }
