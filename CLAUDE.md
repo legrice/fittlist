@@ -1086,6 +1086,17 @@ and the action can't disagree. An empty list just leaves the hand-back. Both
 directions clear in `adminDeleteUser`, and `adminDeleteStudio` clears the
 studio's rows.
 
+The staff screen's own rows offer it too. A coach's shifts are listed there and
+the only thing beside them was Give up, so "can you take my Thursday" still
+meant finding the class and opening it. Transfer sits next to Give up now, off
+the same list and the same action: `staffView` returns `sendable` once for the
+screen (the studio's shift list minus the viewer) rather than once per row,
+because it is the same answer for every date at the same studio, and the row
+only draws the control when that list has somebody on it. Both steps are the
+class sheet's, for its reasons: the names first, because eight names under one
+verb read as eight options, then a confirm, because the notice goes out the
+moment it runs.
+
 On the class itself, a coach's own shift puts Manage shift on the floating
 pill (the spot a member's Book and Add live, because the date is theirs to
 manage, not to book) and a sheet behind it holds two rows: Give up this
