@@ -1267,57 +1267,21 @@ if (await fan.locator('.navtab[data-tab="home"]').count())
 // screen contradicting the word that got somebody there.
 await fan.getByRole("link", { name: "Find coaches" }).click();
 await fan.locator(".distabs .pubtab.sel", { hasText: "Coaches" }).waitFor();
-// and the Classes half is one tap over, wearing the same rail the other
-// two halves wear: the range dropdown, the Type dropdown and the total
-// count all left, and one chip rail led by All is the whole filter.
-await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
-await fan.locator(".dischips").waitFor();
+// Two halves. Classes was a third for a while and came out: a dated list of
+// occurrences muddied what the directory is for, which is finding somebody to
+// follow. The rail under them is checked further down, where these coaches
+// have disciplines to be filtered by; a rail is not drawn where nothing can
+// narrow anything.
 {
-  // The label is the first line; the count sits under it.
-  // The count pill rides beside the label, so strip digits rather than
-  // taking the first line.
-  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) =>
-    s.replace(/\s*\d+\s*$/, "").trim(),
-  );
-  if (heads.join("|") !== "Coaches|Classes|Studios")
-    fail("the directory's halves should be Coaches, Classes, Studios: " + heads.join("|"));
+  const heads = (await fan.locator(".distabs .pubtab").allInnerTexts()).map((s) => s.trim());
+  if (heads.join("|") !== "Coaches|Studios")
+    fail("the directory's halves should be Coaches and Studios: " + heads.join("|"));
   // Three words and nothing else. The halves each carried a count of what they
   // held for the pick in front of you; three numbers across the top of a
   // browsing screen is the app apologising for its own size before anybody has
   // looked.
   if (await fan.locator(".distabs .pubtab-cnt").count())
     fail("the halves should carry no count pills");
-  if (await fan.locator(".clsfilters, .clspill").count())
-    fail("the range and type dropdowns should be gone from the classes half");
-  if (await fan.locator(".clscount-line").count())
-    fail("the total class count should be gone");
-  const chips = (await fan.locator(".dischips .chip").allInnerTexts()).map((t) => t.trim());
-  if (chips[0] !== "All") fail("the classes rail should lead with All: " + chips.join("|"));
-  // One size on every half, the filter pill's own: at the old chip size a
-  // filter read as decoration and nobody was finding the coaches.
-  const h = await fan.locator(".dischips .chip").first().evaluate((e) => e.getBoundingClientRect().height);
-  if (Math.round(h) !== 38) fail("the rail's chips should be 38px tall, got " + h);
-}
-// One pick, carried across the halves. The two vocabularies became one in
-// 0071_one_vocabulary, so a word one half can honour the others can too, and
-// somebody thinking "yoga" should pick it once rather than per half. The rail
-// keeps showing it wherever they land: a selection with no chip to un-pick is
-// a list quietly filtered by something invisible.
-{
-  const word = (await fan.locator(".dischips .chip").nth(1).innerText()).trim();
-  await fan.locator(".dischips .chip", { hasText: word }).first().click();
-  await fan.waitForTimeout(300);
-  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
-  await fan.waitForTimeout(400);
-  const carried = fan.locator(".dischips .chip.sel", { hasText: word });
-  if (!(await carried.count())) fail(`the ${word} pick should survive the switch of half`);
-  // And All is the way back off it, on whichever half you are standing.
-  await fan.locator(".dischips .chip", { hasText: "All" }).first().click();
-  await fan.waitForTimeout(300);
-  if (await fan.locator(".dischips .chip.sel", { hasText: word }).count())
-    fail("All should clear a pick carried in from another half");
-  await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
-  await fan.waitForTimeout(300);
 }
 await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
 // The page title is gone: the tab bar says Discover, and the segment says
@@ -1512,13 +1476,7 @@ console.log("discover ok (the row's pill agrees with the profile)");
   if (studioChips.length === 1) fail("a rail of nothing but All should not be drawn");
   if (studioChips.length && studioChips[0] !== "All")
     fail("the studios rail should lead with All too");
-  // And the Classes half always has one, because a class carries its type.
-  await fan.locator(".distabs .pubtab", { hasText: "Classes" }).click();
-  await fan.waitForTimeout(200);
-  const classChips = await chips();
-  if (classChips[0] !== "All") fail("the classes rail should lead with All: " + classChips.join("|"));
-  if (classChips.length < 2) fail("the classes rail should carry the types the fortnight holds");
-  console.log("discover chips ok (what they teach, what a place offers, what runs)");
+  console.log("discover chips ok (what they teach, what a place offers)");
 }
 
 // A profile carries no tab bar, so the arrow on the picture is the way off it
@@ -1534,9 +1492,7 @@ console.log("discover ok (the row's pill agrees with the profile)");
     fail("a profile should carry no tab bar: the arrow is the way off it");
   await fan.locator(".profback .evback").click();
   await fan.waitForURL(/\/discover/);
-  // Popping back lands on the directory's own default half, which is
-  // Classes; the coach rows are one tap over.
-  await fan.locator(".distabs .pubtab", { hasText: "Coaches" }).click();
+  // Popping back lands on the directory's own default half, which is Coaches.
   await fan.locator(".disrow", { hasText: "Sam" }).locator(".disrow-main").click();
   await fan.locator(".pubhead").first().waitFor();
   if (!(await fan.locator(".profback .evback").count()))

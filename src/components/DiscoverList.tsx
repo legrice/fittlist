@@ -6,7 +6,6 @@ import { useBandTop } from "@/components/CalendarBits";
 import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
-import type { DirClass } from "@/lib/discoverclasses";
 
 /**
  * The date range filter is gone, and the whole fortnight is what you get.
@@ -40,7 +39,7 @@ function rankByUse(values: (string | null | undefined)[]): string[] {
 }
 
 /** Which of the directory's three halves is in front of you. */
-export type DiscoverHalf = "classes" | "coaches" | "studios";
+export type DiscoverHalf = "coaches" | "studios";
 
 // The directory, which has three halves: the classes, the coaches and the
 // places. The box is a door to the universal search; the tabs pick a half;
@@ -60,8 +59,6 @@ export type DiscoverHalf = "classes" | "coaches" | "studios";
 export function DiscoverList({
   people,
   studios = [],
-  classes = [],
-  todayIso,
   cities,
   myCity = null,
   backHref,
@@ -70,10 +67,6 @@ export function DiscoverList({
 }: {
   people: DirPerson[];
   studios?: DirStudio[];
-  /** Every listable occurrence in the next fortnight, in time order. */
-  classes?: DirClass[];
-  /** The app's today, from the app's clock, for the range slices. */
-  todayIso: string;
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
@@ -138,23 +131,6 @@ export function DiscoverList({
       .filter((c) => types.size === 0 || c.disciplines.some((d) => types.has(d)));
   }, [people, types]);
 
-  const shownClasses = useMemo(
-    () =>
-      classes.filter((c) => types.size === 0 || (c.classType ? types.has(c.classType) : false)),
-    [classes, types],
-  );
-
-  // A filter is only offered where it can narrow something: the types the
-  // fortnight actually holds, not the whole vocabulary. Busiest first, and
-  // that ordering is the rail's whole argument for existing: a rail is read
-  // left to right and only the first few are seen without a swipe, so the
-  // ones worth seeing are the ones with the most behind them. Alphabetical
-  // would put Barre in front of Yoga for no reason anybody could name.
-  const classTypeOptions = useMemo(
-    () => rankByUse(classes.map((c) => c.classType)),
-    [classes],
-  );
-
   // The row the Agenda hands back is the shared shape, so the ribbon's
   // source (whose it is, whether it's already in) is looked up by key.
   // Studios have no city column, only a free-text address, so there is nothing
@@ -187,10 +163,9 @@ export function DiscoverList({
   // list quietly filtered by something with no chip to un-pick: the rail says
   // what is on, and All is the way back off all of it.
   const railWords = useMemo(() => {
-    const here = tab === "classes" ? classTypeOptions : disciplines;
-    const carried = [...types].filter((t) => !here.includes(t)).sort();
-    return [...here, ...carried];
-  }, [tab, classTypeOptions, disciplines, types]);
+    const carried = [...types].filter((t) => !disciplines.includes(t)).sort();
+    return [...disciplines, ...carried];
+  }, [disciplines, types]);
 
 
   return (
@@ -229,13 +204,6 @@ export function DiscoverList({
           onClick={() => pick("coaches")}
         >
           Coaches
-        </button>
-        <button
-          className={`pubtab${tab === "classes" ? " sel" : ""}`}
-          aria-current={tab === "classes" ? "page" : undefined}
-          onClick={() => pick("classes")}
-        >
-          Classes
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -279,18 +247,7 @@ export function DiscoverList({
         </div>
       )}
 
-      {tab === "classes" ? (
-        <>
-          {shownClasses.length === 0 ? (
-            <div className="empty-block">
-              <h2>Nothing of that kind</h2>
-              <p>Tap All to see every class coming up.</p>
-            </div>
-          ) : (
-            <ClassResults classes={shownClasses} todayIso={todayIso} from="discover" />
-          )}
-        </>
-      ) : tab === "studios" ? (
+      {tab === "studios" ? (
         shownStudios.length === 0 ? (
           <div className="empty-block">
             <h2>No studios yet</h2>

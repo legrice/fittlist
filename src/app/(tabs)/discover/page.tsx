@@ -5,7 +5,6 @@ import { publicSchedules } from "@/lib/coachweek";
 import { fansVisible } from "@/lib/flags";
 import { hiddenFrom } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
-import { buildDiscoverClasses } from "@/lib/discoverclasses";
 import { runsOn, todayIso } from "@/lib/format";
 import { DiscoverList, type DiscoverHalf } from "@/components/DiscoverList";
 import type { DirPerson, DirStudio } from "@/components/DirectoryRows";
@@ -21,13 +20,13 @@ export default async function DiscoverPage({
 }: {
   searchParams: Promise<{ half?: string }>;
 }) {
-  // A link can name the half it means, and anything whose word is not
-  // "coaches" now has to: a bare /discover opens on Coaches, so a button
-  // reading Find a class that lands on a list of people is the screen
-  // contradicting the word that got somebody there.
+  // A link can name the half it means, and Studios is the only one that has
+  // to: a bare /discover opens on Coaches. `?half=classes` is still honoured
+  // as far as landing somewhere real, which is Coaches, because that half has
+  // been taken out and old links have to land: a dated class list muddied
+  // what Discover is for, which is finding somebody to follow.
   const { half } = await searchParams;
-  const startHalf: DiscoverHalf =
-    half === "classes" || half === "studios" ? half : "coaches";
+  const startHalf: DiscoverHalf = half === "studios" ? "studios" : "coaches";
   if (!(await fansVisible())) redirect("/");
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
@@ -46,7 +45,7 @@ export default async function DiscoverPage({
   // three ways, so the users, the schedules and the studios are fetched once
   // and shared: the classes half fetching its own ran `publicSchedules`
   // twice and scanned the users twice to draw one page.
-  const [everyone, hidden, followRows, askRows, marks, studioRows] = await Promise.all([
+  const [everyone, hidden, followRows, askRows, studioRows] = await Promise.all([
     // Gyms come along: they own classes and have no handle, so a
     // handle-filtered query would drop every rota in the directory.
     db.select().from(schema.users),
@@ -61,35 +60,16 @@ export default async function DiscoverPage({
       .select({ trainerUserId: schema.followRequests.trainerUserId })
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
-    // The viewer's own marks, for the ribbon on a class row.
-    db
-      .select({
-        classId: schema.attendances.classId,
-        occurrenceDate: schema.attendances.occurrenceDate,
-      })
-      .from(schema.attendances)
-      .where(and(eq(schema.attendances.userId, userId), gte(schema.attendances.occurrenceDate, todayIso()))),
     db.select().from(schema.studios).orderBy(schema.studios.name),
   ]);
   const allRows = everyone.filter((r) => !!r.handle && r.discoverable);
   const rows = allRows.filter((r) => !hidden.has(r.id));
 
   // Their own classes plus the shifts each has chosen to show, so the count
-  // below matches what opening their page actually shows. Run once, read by
-  // the coach counts and the classes list alike. The gyms' own rotas come
-  // beside them: a gym owns its classes and has no handle to find them by,
-  // so the ids come from the users already in hand.
-  const gymIds = everyone.filter((u) => u.kind === "gym").map((u) => u.id);
-  const [schedRows, gymRows] = await Promise.all([
-    publicSchedules(rows),
-    gymIds.length
-      ? db
-          .select()
-          .from(schema.classes)
-          .where(and(inArray(schema.classes.userId, gymIds), eq(schema.classes.isPublic, true)))
-      : Promise.resolve([]),
-  ]);
-  const classRows = schedRows.filter((c) => c.isPublic);
+  // below matches what opening their page actually shows. The gyms' own rotas
+  // left with the classes half: nothing on this screen reads them now, and a
+  // query nobody reads is a query that gets slower without anybody noticing.
+  const classRows = (await publicSchedules(rows)).filter((c) => c.isPublic);
 
   // "Classes this week" — the signal that a page is actually live, and the
   // thing a fan is deciding on.
@@ -166,16 +146,6 @@ export default async function DiscoverPage({
       <DiscoverList
         people={people}
         studios={studios}
-        classes={buildDiscoverClasses({
-          viewerId: userId,
-          owners: everyone,
-          hidden,
-          personRows: schedRows,
-          gymRows,
-          studios: studioRows,
-          marks,
-        })}
-        todayIso={todayIso()}
         cities={cities}
         myCity={me.location?.trim() || null}
         startHalf={startHalf}

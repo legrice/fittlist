@@ -108,13 +108,17 @@ export function CalEmpty({
   body,
   addLabel,
   onAdd,
-  /** Which of the two leads. A coach publishes first; a member looks first. */
-  lead = "discover",
+  /** Offer the way to find somebody to follow, under the add. A member gets
+   *  it, because a calendar with nothing on it is usually a follow list with
+   *  nothing on it; a coach does not, because the one thing a coach with an
+   *  empty week needs is their first class on it, and a second button here
+   *  sends them browsing instead of publishing. */
+  findCoach = false,
 }: {
   body: string;
   addLabel: string;
   onAdd: () => void;
-  lead?: "discover" | "add";
+  findCoach?: boolean;
 }) {
   return (
     <div className="empty-block emptyart-block calempty">
@@ -130,20 +134,16 @@ export function CalEmpty({
       <p>{body}</p>
       {/* The one that leads reads first as well as loudest. A filled button
           under an outline one says the second thing is the real thing, which
-          is a sentence read backwards. */}
+          is a sentence read backwards. Putting something on the calendar is
+          what this screen is for, so it leads either way. */}
       <div className="calempty-cta">
-        {lead === "add" && (
-          <button className="btn si" onClick={onAdd}>
-            {addLabel}
-          </button>
-        )}
-        <Link className={`btn ${lead === "discover" ? "si" : "ghost"}`} href="/discover?half=classes">
-          Discover classes
-        </Link>
-        {lead === "discover" && (
-          <button className="btn ghost" onClick={onAdd}>
-            {addLabel}
-          </button>
+        <button className="btn si" onClick={onAdd}>
+          {addLabel}
+        </button>
+        {findCoach && (
+          <Link className="btn ghost" href="/discover">
+            Find a coach to follow
+          </Link>
         )}
       </div>
     </div>

@@ -597,9 +597,8 @@ export function ScheduleScreen({
         )}
         {bare ? (
           <CalEmpty
-            body="Add the classes you coach, or discover classes already on the schedule."
+            body="Add the classes you coach and they land on your public page."
             addLabel="Add your first class"
-            lead="add"
             onAdd={() => setAdder({ open: true })}
           />
         ) : view === "month" ? (

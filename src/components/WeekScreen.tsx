@@ -370,8 +370,9 @@ export function WeekScreen({
 
         {bare ? (
           <CalEmpty
-            body="Add classes you like to attend, or discover classes already on the schedule."
+            body="Add a class you're going to, or follow a coach and pick from their week."
             addLabel="Add a class"
+            findCoach
             onAdd={() => setAddMenu(true)}
           />
         ) : view === "month" ? (
