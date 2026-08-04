@@ -76,7 +76,12 @@ export function ShareComposer({
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [from, setFrom] = useState(firstIso);
   const [days, setDays] = useState(7);
-  const [open, setOpen] = useState(true);
+  // Shut on arrival: you open this screen to see the picture, not to fill in
+  // a form, and the whole point of the drawer is that the picture gets the
+  // room when the tools are not in use. Everything is already answered when
+  // you land (the hat, the range, the style), so the first thing on screen is
+  // a result rather than a set of questions about one.
+  const [open, setOpen] = useState(false);
 
   const headline = HEADLINE[kind];
 

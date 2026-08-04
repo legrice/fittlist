@@ -1801,6 +1801,16 @@ There is deliberately **no pull bar above the Edit tab**. The spec drew both; tw
 affordances for one act is one too many, and the word says what a grab handle
 only hints at.
 
+**The drawer arrives shut.** Everything is already answered when you land (the
+hat, the range, the style, the words), so the first thing on screen is a result
+rather than a set of questions about one, and the picture gets the whole screen
+until somebody asks for the tools. That is what the spec meant by opening
+already rendered, and it is the reason the collapse exists at all: with the
+drawer open the preview is about a third of the height it is with it shut.
+Anything driving this screen has to pull the tools up first, which is why
+`share-smoke` carries an `openTools` helper rather than reaching straight for a
+control.
+
 **One loader and one paint behind every share image.** `shareWeek()` in
 `src/lib/shareweek.ts` is what goes on a picture for a range and a hat, and both
 the image route and the screen ask it: the picker says "3 of 5 showing" and the
@@ -1845,13 +1855,21 @@ screen is more complicated than it is. The two hats keep separate hide sets,
 because a key hidden from one list means nothing in the other.
 
 **Square is a real second canvas, not a crop.** 1080x1080 against the story's
-1080x1920, picked in the header because a format is a property of the output
-rather than a choice about the content. `storyPadding()` and `listBudget()` both
-take the format now, so the sums and the paint agree on either; a square is a
-little over half the height, so the same week summarises sooner on it and the
-furniture scales with it. The story's safe area is unchanged and load-bearing:
-content stops 240px from the top and 280px from the bottom so the handle and the
-lockup clear Instagram's reply bar, and that lockup is the acquisition channel.
+1080x1920. `storyPadding()` and `listBudget()` both take the format, so the sums
+and the paint agree on either; a square is a little over half the height, so the
+same week summarises sooner on it and the furniture scales with it.
+
+**The margins are ordinary margins, by Matt's call.** They were 240 top and 280
+bottom for a while, held apart to clear Instagram's profile row and its reply
+bar, on the argument that the lockup is the acquisition channel and the last
+thing that should be covered. They are 104 and 104 again, which is what they
+were before that change: at the wider numbers a light week read as a band of
+content floating in a lot of nothing, and the composer shows the whole canvas,
+so that emptiness is what somebody sees while deciding whether to post at all.
+The cost is written down rather than left to be discovered: posted to Stories,
+the footer now sits inside the reply bar's zone and can be partly covered.
+`PAD_BOTTOM` in `storyplan.ts` is the one line back, and everything follows it
+because `listBudget` and `storyPadding` both read from there.
 
 **Not built, on purpose.** No stickers, drawing or freeform text: Instagram's
 editor is better than anything here and people decorate there anyway, and the

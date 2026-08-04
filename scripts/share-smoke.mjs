@@ -25,6 +25,16 @@ const settled = (p) =>
     return el && !/Loading/.test(el.textContent || "");
   }, null, { timeout: 30000 });
 
+/** The drawer arrives shut, so anything driving a control has to pull it up
+ *  first, exactly as a person would. */
+const openTools = async (p) => {
+  await p.locator(".compimg").waitFor();
+  if ((await p.locator(".comptab").innerText()).trim() === "Edit") {
+    await p.locator(".comptab").click();
+    await p.waitForTimeout(350);
+  }
+};
+
 const mk = async (email, name, member) => {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
@@ -120,22 +130,24 @@ if (await coach.locator(".compfmt").count())
 }
 console.log("one canvas offered, and the square still renders at the route ok");
 
-// ---- the drawer collapses and the picture takes the room
+// ---- it arrives on the picture, and the Edit tab is what costs it room
 {
-  const open = (await coach.locator(".compimg").boundingBox()).height;
+  // Shut on landing: you open this screen to see a result, not to answer a
+  // form, so the first thing on it is the picture at full size.
+  if ((await coach.locator(".comptab").innerText()).trim() !== "Edit")
+    fail("the drawer should arrive collapsed, with the tab reading Edit");
+  const shut = (await coach.locator(".compimg").boundingBox()).height;
   await coach.locator(".comptab").click();
   await coach.waitForTimeout(500);
-  const shut = (await coach.locator(".compimg").boundingBox()).height;
+  const open = (await coach.locator(".compimg").boundingBox()).height;
   if (shut <= open * 1.4)
-    fail(`collapsing should grow the preview, got ${Math.round(open)} -> ${Math.round(shut)}`);
+    fail(`opening the tools should cost the picture room, got ${Math.round(shut)} -> ${Math.round(open)}`);
   // One control, not two: the pull bar came off and the word is the whole
   // affordance.
   if (await coach.locator(".compdrawer .grab").count())
     fail("the drawer should carry no pull bar, only the Edit tab");
-  await coach.locator(".comptab").click();
-  await coach.waitForTimeout(400);
 }
-console.log("the Edit tab is the only pull, and it grows the picture ok");
+console.log("it arrives on the picture, and Edit pulls the tools up ok");
 
 // ---- the picker counts what is on the image, and hiding is not deleting
 {
@@ -160,7 +172,7 @@ console.log("the picker hides from the image only ok");
 // ---- an empty range is an offer, not a blank picture. This has to run
 // before the block below, which is the one that puts a class on this hat.
 await coach.goto(BASE + "/share");
-await coach.locator(".compimg").waitFor();
+await openTools(coach);
 {
   await coach.locator(".compseg button", { hasText: "Going" }).click();
   await settled(coach);
@@ -177,7 +189,7 @@ console.log("an empty week offers rather than draws nothing ok");
 // argument for this screen: somebody makes a picture, and the inventory fills
 // in behind them.
 await coach.goto(BASE + "/share");
-await coach.locator(".compimg").waitFor();
+await openTools(coach);
 await settled(coach);
 {
   await coach.locator(".compseg button", { hasText: "Going" }).click();
@@ -224,7 +236,7 @@ console.log("adding from the picker fills the calendar and the directory ok");
 
 // ---- the headline is derived from the segment, and cannot be edited
 await coach.goto(BASE + "/share");
-await coach.locator(".compimg").waitFor();
+await openTools(coach);
 {
   if (await coach.locator(".comphl").count())
     fail("the headline is derived now: there should be no line to edit");

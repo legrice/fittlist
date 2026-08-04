@@ -81,16 +81,23 @@ const SQUARE_H = 1080;
 const SQ_PAD_TOP = 92;
 const SQ_PAD_BOTTOM = 92;
 /**
- * The safe area, which is the whole reason these two are not the same number.
+ * The margins, and they are ordinary margins again.
  *
- * On Instagram Stories the bottom of the canvas sits under the reply bar and
- * the swipe-up affordance, and the handle and the lockup were flush against
- * it: the one element that makes this an acquisition channel was the one most
- * likely to be covered. Content now stops 280px from the bottom and starts
- * 240px from the top. The orange bar is not content and still bleeds.
+ * They were 240 and 280 for a while, held apart to clear Instagram's profile
+ * row at the top and its reply bar at the bottom, on the argument that the
+ * lockup is the acquisition channel and the last thing that should be covered.
+ * Matt's call is that the picture has to be worth looking at first: at those
+ * numbers a light week read as a band of content floating in a lot of nothing,
+ * and the composer's preview shows the whole canvas, so the empty space is what
+ * somebody sees while deciding whether to post at all.
+ *
+ * The cost is real and worth writing down rather than discovering: posted to
+ * Stories, the footer now sits inside the reply bar's zone and can be partly
+ * covered. Raising `PAD_BOTTOM` is the one-line way back, and the sums follow
+ * it because `listBudget` and `storyPadding` both read from here.
  */
-const PAD_TOP = 240;
-const PAD_BOTTOM = 280;
+const PAD_TOP = 104;
+const PAD_BOTTOM = 104;
 /** "Week of Jul 31" and its margin. */
 const KICKER_H = 71;
 /** The verb, the url and the lockup along the bottom. */
