@@ -1,4 +1,5 @@
 import {
+  Activity,
   Bookmark,
   ArrowLeft,
   ArrowUpRight,
@@ -170,6 +171,10 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   mail: Mail,
   north_east: ArrowUpRight,
   notifications: Bell,
+  // The heartbeat, for Activity: a pulse is what a feed of what people are
+  // doing looks like, and it is not a bell (that is news addressed to you)
+  // and not a compass (that is browsing).
+  activity: Activity,
   open_in_new: ExternalLink,
   phone_iphone: Smartphone,
   person_add: UserRoundPlus,

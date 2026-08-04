@@ -7,7 +7,8 @@ import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { initialOf } from "@/lib/avatar";
-import type { HomeActivity, HomeData, HomePerson, HomeStudio, HomeUpcoming } from "@/lib/home";
+import { ActivityRow } from "@/components/ActivityRow";
+import type { HomeData, HomePerson, HomeStudio, HomeUpcoming } from "@/lib/home";
 
 // The Home tab: a mixed scroll that has something on it whether or not your
 // follow graph changed. Your own next seven days lead (they're yours, and
@@ -97,13 +98,13 @@ export function HomeScreen({
         <section className="hm-sec">
           <div className="hm-sechead">
             <h2 className="hm-title">Activity</h2>
-            <Link className="hm-see" href="/feed">
-              Following <Icon name="chevron_right" size={15} />
+            <Link className="hm-see" href="/activity">
+              See all <Icon name="chevron_right" size={15} />
             </Link>
           </div>
           <div className="hm-list">
             {data.activity.map((a) => (
-              <ActivityLine key={a.key} a={a} />
+              <ActivityRow key={a.key} a={a} />
             ))}
           </div>
           {/* The privacy rule, said where the feed is: this list is only ever
@@ -234,21 +235,3 @@ function StudioLine({ s }: { s: HomeStudio }) {
   );
 }
 
-function ActivityLine({ a }: { a: HomeActivity }) {
-  return (
-    <Link className="hm-lrow" href={a.href}>
-      <span className="hm-sq hm-round" style={{ background: a.actorColor }}>
-        {a.actorPhoto ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={a.actorPhoto} alt="" />
-        ) : (
-          initialOf(a.actorName)
-        )}
-      </span>
-      <span className="hm-lrowtxt">
-        <span className="hm-lrownm">{a.title}</span>
-        <span className="hm-lrowsub">{a.sub}</span>
-      </span>
-    </Link>
-  );
-}

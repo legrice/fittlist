@@ -4951,3 +4951,9 @@ button.ps-card { cursor: pointer; }
 .distabs .pubtab { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .pubtab-cnt { font-size: 11.5px; font-weight: 700; letter-spacing: 0; color: var(--ol); opacity: .62; }
 .distabs .pubtab.sel .pubtab-cnt { color: var(--si); opacity: 1; }
+
+/* Activity as its own page. The rows are Home's, so only the heading is new. */
+.acthead {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 26px; letter-spacing: -.02em; margin: 4px 0 16px;
+}

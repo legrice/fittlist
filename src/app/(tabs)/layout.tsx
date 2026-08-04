@@ -62,6 +62,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // is always right here. No gear: the You tab is the door to the
           // account, and a second door in the corner said it twice.
           search
+          // Activity has no tab; the heartbeat in the corner is its only door.
+          activity
           nav={{ coach: isCoach, scheduleHref, home: showHome }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
