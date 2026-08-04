@@ -198,8 +198,10 @@ console.log("member profile ok (Schedule and Info tabs, nothing about who they f
 
   // The renamed rows, both of which a coach's settings say the same way.
   await p.locator(".setrow", { hasText: "Handle" }).first().waitFor();
-  if (await p.locator(".setrow", { hasText: "Your link" }).count())
-    fail("the handle row should not still say Your link");
+  if (await p.locator(".setrow", { hasText: "Your link" }).count()) {
+    const t = await p.locator(".setrow", { hasText: "Your link" }).allInnerTexts();
+    fail("the handle row should not still say Your link: " + JSON.stringify(t));
+  }
   await p.locator(".setrow", { hasText: "Account privacy" }).first().waitFor();
   if (await p.locator(".setrow", { hasText: "Approve followers" }).count())
     fail("the privacy row should not still say Approve followers");

@@ -35,6 +35,9 @@ export function ClassSheet({
   backLabel,
   claimVia,
 }: {
+  /** A coach's handle, or a gym class's page base ("s/ironbound"). Callers
+   *  hand over whatever their row uses to build an href, which for a gym is
+   *  the prefixed base; the lookup wants the bare key, so this derives it. */
   handle: string;
   classId: string;
   /** The occurrence that was tapped, so a weekly class opens on the right day. */
@@ -50,6 +53,13 @@ export function ClassSheet({
    *  to the coach whose link brought them here. */
   claimVia?: string | null;
 }) {
+  // The base is a URL segment and the key is what classDetail looks the owner
+  // up by, and they are not the same string for a gym: its classes live under
+  // /s/{slug} while the lookup takes the bare slug. Conflating them is how a
+  // link 404s, and it did: a gym class on a member's week handed "s/ironbound"
+  // straight through and the sheet said the class was gone.
+  const lookupKey = handle.startsWith("s/") ? handle.slice(2) : handle;
+
   const [c, setC] = useState<ClassDetail | null>(initial ?? null);
   const [missing, setMissing] = useState(false);
   const [added, setAdded] = useState(initial?.added ?? false);
@@ -81,7 +91,7 @@ export function ClassSheet({
       setLinkOpen(false);
       setLinkUrl("");
       toast("Booking link added");
-      const fresh = await classDetail(handle, classId, c.whenIso);
+      const fresh = await classDetail(lookupKey, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
     });
@@ -134,7 +144,7 @@ export function ClassSheet({
   useEffect(() => {
     if (initial) return;
     let live = true;
-    classDetail(handle, classId, iso).then((d) => {
+    classDetail(lookupKey, classId, iso).then((d) => {
       if (!live) return;
       if (!d) {
         setMissing(true);
@@ -147,7 +157,7 @@ export function ClassSheet({
     return () => {
       live = false;
     };
-  }, [handle, classId, iso, initial]);
+  }, [lookupKey, classId, iso, initial]);
 
   useEffect(() => {
     setCanShareFiles(typeof navigator !== "undefined" && typeof navigator.share === "function");
@@ -180,7 +190,7 @@ export function ClassSheet({
       }
       // Refresh the room: the server decides who this viewer may see, and a
       // fresh save changes the answer.
-      const fresh = await classDetail(handle, classId, iso);
+      const fresh = await classDetail(lookupKey, classId, iso);
       if (fresh) setC(fresh);
     });
   };
@@ -240,7 +250,7 @@ export function ClassSheet({
         return;
       }
       toast(res.pending ? (asked ?? "Asked the studio") : done);
-      const fresh = await classDetail(handle, classId, c.whenIso);
+      const fresh = await classDetail(lookupKey, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
     });
@@ -257,7 +267,7 @@ export function ClassSheet({
         return;
       }
       toast(res.pending ? `Asked the studio to send it to ${toName}` : `Transferred to ${toName}`);
-      const fresh = await classDetail(handle, classId, c.whenIso);
+      const fresh = await classDetail(lookupKey, classId, c.whenIso);
       if (fresh) setC(fresh);
       onChanged?.(added);
     });

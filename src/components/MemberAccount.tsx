@@ -156,7 +156,7 @@ export function MemberAccount({
             <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
             <span className="setrow-txt">
               <span className="t">Share profile</span>
-              <span className="s">Your link, a card, or a QR code</span>
+              <span className="s">A link, a card, or a QR code</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
           </button>

@@ -1048,7 +1048,14 @@ console.log("the coach is told ok");
 
     // And the sheet agrees with the row it was opened from.
     await mem.locator(".ps-event", { hasText: "Rota Naming" }).first().click();
-    await mem.locator(".classoverlay-nm", { hasText: "Rota Naming" }).waitFor();
+    await mem
+      .locator(".classoverlay-nm", { hasText: "Rota Naming" })
+      .waitFor()
+      .catch(async () => {
+        await mem.screenshot({ path: "/tmp/claude-0/-home-user-fittlist/f5c2d228-192a-574b-90ee-b3d90eac7295/scratchpad/shot-rota-naming.png", fullPage: true });
+        const rows = await mem.locator(".ps-erow").allInnerTexts();
+        fail("the row did not open its class: " + JSON.stringify(rows.slice(0, 6)));
+      });
     const coachRow = mem.locator(".classoverlay-coach");
     await coachRow.waitFor();
     if (!/Julia/.test(await coachRow.innerText()))
