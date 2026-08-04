@@ -160,13 +160,22 @@ await matt.locator(".staffbar .staffmore").click();
   const rows = (await matt.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
   for (const want of ["Shift counter", "Edit studio info", "Share this studio"])
     if (!rows.includes(want)) fail("the overflow is missing " + want + ": " + rows.join("|"));
-  // The two that became buttons must not also be rows: one door each.
-  for (const gone of ["All shifts", "Staff"])
+  // The two that became buttons must not also be rows: one door each. The
+  // second reads Staff now, not Coaches: it is everybody who works here.
+  for (const gone of ["All shifts", "Staff", "Coaches"])
     if (rows.includes(gone)) fail(gone + " is a button now, not an overflow row: " + rows.join("|"));
 }
 await matt.locator(".sheet .stat .n").waitFor();
 await matt.locator(".sheetclose").first().click();
 await matt.waitForFunction(() => !document.querySelector(".sheet"));
+// Staff, not Coaches: the list is everybody who works here.
+{
+  const words = (await matt.locator(".staffbar a").allInnerTexts()).map((t) => t.trim());
+  if (!words.some((w) => /Staff/.test(w)))
+    fail("the studio's second button should read Staff: " + words.join("|"));
+  if (words.some((w) => /Coaches/.test(w)))
+    fail("Coaches was the narrower word: " + words.join("|"));
+}
 await matt.locator(".staffbar a", { hasText: "All shifts" }).click();
 await matt.waitForURL("**/manage");
 await matt.locator(".admintop h1").waitFor();
@@ -780,9 +789,18 @@ console.log("the coach is told ok");
     const row = tom.locator(".setrow", { hasText: "HYROX" }).first();
     if (!(await row.count())) fail("Tom should still be on a HYROX date");
     await row.waitFor();
-    if (!(await row.getByRole("button", { name: "Give up" }).count()))
-      fail("a shift of your own keeps its give-up");
-    await row.getByRole("button", { name: "Transfer" }).click();
+    // One control on the row, and both verbs behind it: two words across from
+    // a class name is two things to read and a date that has to truncate.
+    for (const word of ["Give up", "Transfer"])
+      if (await row.getByRole("button", { name: word, exact: true }).count())
+        fail(word + " should be behind the row's overflow, not on it");
+    await row.locator(".staffmenu").click();
+    {
+      const rows = (await tom.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
+      if (rows.length !== 2 || !rows.includes("Transfer shift") || !rows.includes("Give up this shift"))
+        fail("the row's sheet should offer both verbs in full: " + rows.join("|"));
+    }
+    await tom.locator(".sheet .setrow", { hasText: "Transfer shift" }).click();
     await tom.getByRole("heading", { name: "Transfer shift" }).waitFor();
     // The gym's shift list and nobody else: Julia is on it, Matt coaches here
     // and is not, and Tom is never offered himself.

@@ -50,6 +50,8 @@ export function StudioShiftsView({
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
   const [confirm, setConfirm] = useState<{ classId: string; iso: string; name: string } | null>(null);
+  // The row's own dot: what you can do with a shift of yours, said in full.
+  const [manage, setManage] = useState<{ classId: string; iso: string; name: string } | null>(null);
   // Handing a date to a named coach. Two steps, like the class sheet's: the
   // list of names first, because eight names under one verb read as eight
   // options, then the confirm, because the notice goes out the moment it runs
@@ -120,7 +122,7 @@ export function StudioShiftsView({
             <Icon name="calendar_month" size={16} /> All shifts
           </Link>
           <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage/staff`}>
-            <Icon name="groups" size={16} /> Coaches
+            <Icon name="groups" size={16} /> Staff
           </Link>
           {/* Everything running a studio needs that isn't one of those two.
               It used to float on the studio's public page; this is the only
@@ -213,32 +215,21 @@ export function StudioShiftsView({
                 </span>
                 {s.pending && <span className="staffpend">{s.pending}</span>}
               </span>
-              {/* The actions that fit the row: your own shift can be handed to
-                  somebody or given up, an open one can be taken. Transfer
-                  only exists where the managers have named somebody it could
-                  go to; without a list it would be a button that opens an
-                  empty sheet. */}
+              {/* One control on the row, and the verbs behind it. Two words
+                  across from a class name is two things to read and a date
+                  that has to truncate to make room for them; a dot opens a
+                  sheet that can say each act in full. An open shift keeps its
+                  own button, because taking one is a single act rather than a
+                  choice between two. */}
               {s.mine ? (
-                <>
-                  {view.sendable.length > 0 && (
-                    <button
-                      className="tertiary staffx"
-                      disabled={pending}
-                      onClick={() =>
-                        setTransfer({ classId: s.classId, iso: s.iso, name: s.name })
-                      }
-                    >
-                      Transfer
-                    </button>
-                  )}
-                  <button
-                    className="tertiary staffx"
-                    disabled={pending}
-                    onClick={() => setConfirm({ classId: s.classId, iso: s.iso, name: s.name })}
-                  >
-                    Give up
-                  </button>
-                </>
+                <button
+                  className="iconbtn staffmenu"
+                  aria-label={`Manage ${s.name}, ${s.timeLabel}`}
+                  disabled={pending}
+                  onClick={() => setManage({ classId: s.classId, iso: s.iso, name: s.name })}
+                >
+                  <Icon name="more_horiz" size={18} />
+                </button>
               ) : s.open ? (
                 <button
                   className="btn si staffreq-yes"
@@ -256,6 +247,61 @@ export function StudioShiftsView({
       )}
 
       {/* Giving a date back opens it and tells the gym, so it asks first. */}
+      {/* What you can do with a shift of yours. Transfer only appears when the
+          managers have named somebody it could go to; without a list it would
+          be a row that opens an empty sheet. */}
+      {manage && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setManage(null);
+          }}
+        >
+          <div className="sheet">
+            <button
+              className="iconbtn sheetclose"
+              aria-label="Close"
+              onClick={() => setManage(null)}
+            >
+              <Icon name="close" size={16} />
+            </button>
+            <h2>{manage.name}</h2>
+            <div className="settingslist ownermenu">
+              {view.sendable.length > 0 && (
+                <button
+                  className="setrow"
+                  onClick={() => {
+                    setTransfer(manage);
+                    setManage(null);
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Transfer shift</span>
+                    <span className="s">Hand this date to another coach here</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </button>
+              )}
+              <button
+                className="setrow"
+                onClick={() => {
+                  setConfirm(manage);
+                  setManage(null);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Give up this shift</span>
+                  <span className="s">It opens up and everyone who could cover it hears</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Who takes it. The gym's shift list, not the directory's: anyone may
           say they coach here, and `sendShiftTo` refuses anybody not on it. */}
       {transfer && (

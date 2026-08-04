@@ -1104,6 +1104,14 @@ class sheet's, for its reasons: the names first, because eight names under one
 verb read as eight options, then a confirm, because the notice goes out the
 moment it runs.
 
+One control on the row, not two. Transfer and Give up sat side by side across
+from the class name for a build, which is two things to read and a date that
+truncates to make room for them; they are behind a dot (`.staffmenu`) that
+opens a sheet saying each act in full. An open shift keeps its own Pick up
+button, because taking one is a single act rather than a choice between two.
+The named buttons above the tabs read All shifts and Staff: "Coaches" was the
+narrower word for a list that is really everybody who works here.
+
 On the class itself, a coach's own shift puts Manage shift on the floating
 pill (the spot a member's Book and Add live, because the date is theirs to
 manage, not to book) and a sheet behind it holds two rows: Give up this
@@ -1698,26 +1706,26 @@ it without a start bound: eight weeks of "your Tuesday class ran on
 Tuesdays" is almost always true, and the honest alternative (bounding on
 `createdAt`) breaks the moment an edit reinserts the rows.
 
-**The calendar keeps two doors on screen: Today left, Add right.**
+**The calendar keeps two doors on screen: Today left, Share right.**
 `CalBottomBar` floats them over every view on both calendars, both
-strokeless pills whose edge is their shadow; Add is the orange one. Today matters more now that
+strokeless pills whose edge is their shadow; Share is the orange one, wearing
+the sparkle and its word, and it opens `/share`. Today matters more now that
 the list scrolls into the past: it lands on the first not-past day
 (`scrollToToday`, which knows the coach shell scrolls its `.stage` where
-the tabs layout scrolls the body). Share wears the sparkle in the brand
-orange and opens the handing-on: a coach's small sheet (the story image,
-the week as text, the link), or a member's `ShareMyWeekSheet` straight,
-because that sheet already is the options. Add and Share have traded
-places, by Matt's call, and the rule is the reason: the top right corner
-is the one part of a phone a thumb cannot reach, and adding is the thing
-somebody opens this screen to do. So Add floats bottom right in the brand
-orange (`.caladd`, beside Today's white pill), and Share went up to the
-header beside the view and filter buttons (`.calmenu`, `.calfilter`).
-The loud colour follows the primary action rather than staying where it
-was drawn.
-Share wears its word (`.calshare`, a pill rather than a third circle,
-keeping the orange sparkle): it is the one control in that cluster that
-does something rather than changes how you are looking, and the sparkle
-alone never said which. The row's gap is 10px and not 12px because of it,
+the tabs layout scrolls the body).
+
+The two have traded places twice. Add floated bottom right for a while and
+Share sat in the header, on the argument that the top right corner is the one
+part of a phone a thumb cannot reach and adding is what somebody opens this
+screen to do. They are the other way round again, by Matt's call, and the
+argument that beat it is that a plus is the one glyph nobody has to be taught:
+it needs no word and no reach, so it costs nothing as a 40px circle in the
+header's cluster (`.caladd`, filled brand orange beside the two white ones,
+matching `.calmenu` and `.calfilter` exactly). Share is the act this screen
+exists to end on, it needs its word, and it takes the pill under a thumb in
+the shape Add used to wear. The loud colour follows whichever of them is the
+point, which is now Share.
+The row's gap is 10px and not 12px,
 and that number is load-bearing: at twelve, "September" lost its last
 letters to the ellipsis by six pixels. The title is also the thing that
 yields (`.calhead` truncates, the controls never shrink), because a month
@@ -1935,14 +1943,16 @@ to a public page they cannot have and saying "add the classes you coach" to
 somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" is no longer a destination and the Following
-feed says `from=following`; the class page honours both. Following's day bands are quieter than the calendars': regular weight, two
-pixels up (`.ps-agenda.feedagenda .ps-dayname`). The uppercase tracked 800 is
-right for a working calendar, where a band has to win against a dense grid of
-its own rows; on a feed you are reading rather than working, and a heading that
-shouts competes with the class names under it. Scoped to `.feedagenda` on
-purpose, so the two calendars keep the band they were tuned for. The count on
-the right is untouched. The case and the tracking are untouched too, so the
-band still reads TOMORROW rather than Tomorrow; that is a separate call.
+feed says `from=following`; the class page honours both. The band's words are regular weight and two pixels up (`.ps-dayname`, 14px/400,
+everywhere a band is drawn: Following, both calendars, a profile, a studio). It
+was an uppercase tracked 800, which won its fight with the rows under it by
+shouting, and that is the mistake the band was built to avoid in the first
+place: a heading that competes on the axis its own contents own reads as
+another entry rather than a level above them. The tracking, the case, the count
+on the right and the full-width rule all stay, which is already four ways of
+saying "this is a heading"; the weight was a fifth. It landed on Following
+first and went everywhere in the next commit, because one schedule grammar
+across every list is the whole point of `Agenda`.
 
 The current tab
 marks itself in the brand colour and nothing else: `.navtab.on` sets

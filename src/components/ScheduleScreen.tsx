@@ -29,7 +29,7 @@ import {
   CalBottomBar,
   CalEmpty,
   CalHead,
-  CalShare,
+  CalAdd,
   CalSticky,
   DayGrid,
   DayStrip,
@@ -529,11 +529,22 @@ export function ScheduleScreen({
       <div className="pad" style={{ paddingTop: 14, paddingBottom: showFanView ? 150 : 110 }}>
         <AppHeader
           unread={updatesUnread}
-          // The gear only where there is no You tab to hold the account: the
-          // coaches-only mode has no tab bar, so the corner is the one door.
+          // The gear only where there is no member side at all: the
+          // coaches-only mode has no face in the corner, so it is the one door.
           settings={showFanView ? undefined : "/you"}
           home={showFanView ? landing : "/app"}
-          search={showFanView}
+          // Your face is the corner and the way to You. The magnifier left
+          // with the tab reorg, since Discover's tab wears that glyph again.
+          avatar={
+            showFanView
+              ? {
+                  photo,
+                  color: myAccent,
+                  initial: (name.trim().charAt(0) || "?").toUpperCase(),
+                  href: "/you",
+                }
+              : undefined
+          }
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}
@@ -556,7 +567,7 @@ export function ScheduleScreen({
           >
             {/* Share took the corner Add used to hold: a thumb can't
                 reach up here, and adding is what this screen is for. */}
-            <CalShare onShare={() => router.push("/share")} />
+            <CalAdd onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))} />
           </CalHead>
           {/* The weekday initials pin with the chrome while the months
               scroll beneath; the Day view pins its week strip in the same
@@ -1034,7 +1045,7 @@ export function ScheduleScreen({
           pickView("list");
           requestAnimationFrame(() => requestAnimationFrame(scrollToToday));
         }}
-        onAdd={() => (showFanView ? setAddMenu(true) : setAdder({ open: true }))}
+        onShare={() => router.push("/share")}
       />
       )}
 

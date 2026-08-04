@@ -178,11 +178,14 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     // approved: the schedule side opens up
     await pg.goto(BASE + "/app");
     await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
-    // the Schedule tab the modal promised is really there
+    // the Schedule tab the modal promised is really there, and the way to
+    // their own page is the face in the corner rather than a tab
     {
       const tabs = (await pg.locator(".navtab").allInnerTexts()).map((t) => t.trim());
-      // The You tab reads as their initial over the label, so match loosely.
-      if (!tabs.some((t) => t.includes("You"))) fail(`no You tab after converting: ${tabs.join(",")}`);
+      if (!tabs.some((t) => t.includes("Schedule")))
+        fail(`no Schedule tab after converting: ${tabs.join(",")}`);
+      if (!(await pg.locator(".brandbar-actions .usericon").count()))
+        fail("the header should carry their face as the way to You");
     }
     // and the page they already had is still theirs, now with a schedule on it
     const claimed = await pg.request.get(`${BASE}/memberperson`);

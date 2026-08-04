@@ -664,22 +664,19 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .calmenu, [data-mode="dark"] .calfilter {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
-/* Share in the header's cluster: the same drawing as the view and filter
-   buttons, keeping its orange sparkle, and wearing the word. A pill rather
-   than a third circle, because it is the one control up there that does
-   something rather than changes how you are looking, and the sparkle alone
-   never said which. */
-.calshare {
-  flex-shrink: 0; height: 40px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  background: var(--card); color: var(--ink); border: none; cursor: pointer;
+/* Add in the header's cluster: the same circle as the view and filter buttons
+   beside it, filled in brand orange, and the plus alone. It traded places with
+   Share, which took the floating pill under a thumb. A plus is the one glyph
+   nobody has to be taught, so it needs no word at this size; the colour is
+   what keeps the primary action loud when it is a third of what it was. */
+.caladd {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--si); border: none; color: #fff; cursor: pointer;
   box-shadow: 0 1px 4px rgba(25, 21, 2, .10);
-  padding: 0 14px 0 11px;
-  font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -.01em;
+  padding: 0;
 }
-[data-mode="dark"] .calshare { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10); }
-.calshare-ic { display: inline-flex; color: var(--si); }
-.calmenu:active, .calfilter:active, .calshare:active { transform: scale(.93); }
+.calmenu:active, .calfilter:active, .caladd:active { transform: scale(.93); }
 .calhead-spacer { flex: 1; }
 /* The month is the door to the mini calendar: the title alone, no chevron
    beside it. The glyph said what the tap already says. */
@@ -847,7 +844,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .ps-dayname {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+  /* Regular, two pixels up. It was an uppercase tracked 800, which won its
+     fight with the rows under it by shouting: a heading that competes on the
+     axis its own contents own reads as another entry rather than a level
+     above them. The band already has the tracking, the case and a full-width
+     rule to say what it is; the weight was one claim too many. Every list
+     that draws a band gets this, so a schedule reads the same wherever it
+     is. */
+  font-size: 14px; font-weight: 400; letter-spacing: .13em; text-transform: uppercase;
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis;
 }
@@ -859,14 +863,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
   flex-shrink: 0;
 }
-/* Following's bands are quieter than the calendars': regular weight, two
-   pixels up. The uppercase tracked 800 was the right call for a working
-   calendar, where a band has to win against a dense grid of its own rows; on
-   a feed you are reading rather than working, and a heading that shouts is a
-   heading competing with the class names under it. Scoped to `.feedagenda`
-   deliberately, so the calendars keep the band they were tuned for. The count
-   on the right is untouched. */
-.ps-agenda.feedagenda .ps-dayname { font-size: 14px; font-weight: 400; }
 /* Today is the only band that carries the brand, so it reads as the one you
    are standing in without a second mark. */
 .ps-daycol-today .ps-dayname { color: var(--si); }
@@ -983,11 +979,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-/* Add is the loud one, and it floats where a thumb already is. It traded
-   places with Share, which went up to the header's corner: the corner is
-   the one part of a phone a thumb cannot reach, and adding is the thing
-   somebody opens this screen to do. */
-.caladd {
+/* Share is the loud one, and it floats where a thumb already is. It traded
+   places with Add, which went up to the header's cluster as a plus: a plus
+   needs no word and no reach, and handing the week on is what this screen
+   exists to end on. The shape is the one Add wore, unchanged. */
+.calshare {
   position: fixed; right: 16px;
   bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 46px; padding: 0 22px 0 18px; border-radius: 999px;
@@ -997,8 +993,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 700; font-size: 14px; cursor: pointer;
   box-shadow: 0 6px 18px rgba(17, 17, 17, .14);
 }
-.todayfab:active, .caladd:active { transform: scale(.95); }
-.todayfab.calfabs-low, .caladd.calfabs-low {
+.todayfab:active, .calshare:active { transform: scale(.95); }
+.todayfab.calfabs-low, .calshare.calfabs-low {
   bottom: calc(20px + env(safe-area-inset-bottom));
 }
 /* Today lands the first not-past day under the sticky chrome, with real air
@@ -4946,11 +4942,11 @@ button.ps-card { cursor: pointer; }
   font-size: 11px; font-weight: 700; letter-spacing: .02em; vertical-align: 1px;
 }
 .staffx { flex-shrink: 0; }
-/* Your own shift carries two words now, Transfer and Give up, so they need a
-   gap between them and the room to sit on one line. The row's name column
-   yields first, because a class name can wrap and a pair of verbs cannot. */
+/* Your own shift is one dot, and the verbs are behind it. Two words across
+   from a class name is two things to read and a date that has to truncate to
+   make room for them. */
 .staffrow .setrow-txt { min-width: 0; }
-.staffrow .staffx + .staffx { margin-left: 14px; }
+.staffmenu { flex-shrink: 0; margin-left: 6px; }
 .staffadd { display: flex; gap: 8px; margin: 14px 0 26px; }
 .staffadd input {
   flex: 1; min-width: 0; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px;

@@ -5,12 +5,12 @@ import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
 // The same header on every screen of the app: wordmark left, notifications
-// and your avatar right. The avatar takes a handler inside the app shell
-// (where the account is an overlay) and a link everywhere else.
+// and your avatar right. The avatar is the way to You now that the tab has
+// come off the bar, so it carries an href wherever the member side is on; it
+// still takes a handler for the one shell where the account is an overlay.
 export function AppHeader({
   unread = 0,
   settings,
-  search = false,
   avatar,
   home = "/feed",
   nav,
@@ -21,10 +21,6 @@ export function AppHeader({
    *  the account. Everywhere the tabs render, You is the door and the
    *  corner stays clear. */
   settings?: string;
-  /** The magnifier, back in the corner now that the tab says Discover
-   *  again: a search that spans every half of the directory starts here,
-   *  and browsing is the tab. Only where the member side is on. */
-  search?: boolean;
   avatar?: {
     photo: string | null;
     color: string;
@@ -53,18 +49,11 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* The magnifier, the bell, and (coaches-only mode) the gear: the
-            corner is for what you reach for from anywhere. The shield left
-            long ago, because a corner of one-off icons fills up. */}
-        {search && (
-          <HeaderIconLink
-            className="searchbtn"
-            label="Search"
-            icon="search"
-            href="/search"
-            match="/search"
-          />
-        )}
+        {/* The bell, your face, and (coaches-only mode) the gear: the corner
+            is for what you reach for from anywhere. The magnifier left when
+            Discover's tab took that glyph back, and the shield left long
+            before it, because a corner of one-off icons fills up. `/search`
+            is still behind the directory's own search door. */}
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"

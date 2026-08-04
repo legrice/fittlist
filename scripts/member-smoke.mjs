@@ -109,9 +109,10 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
   // No plans ribbon, no gear, and no corner magnifier: Search is a tab.
   if (await p.locator(".plansbtn").count()) fail("the plans ribbon should be gone");
   if (await p.locator(".settingsbtn").count()) fail("the gear should be gone: You is the door");
-  // The magnifier is back in the corner now that the tab says Discover.
-  if (!(await p.locator(".searchbtn").count()))
-    fail("the header magnifier should be back beside the bell");
+  // The magnifier left the corner when Discover's tab took that glyph back:
+  // the same mark is never drawn twice on one screen.
+  if (await p.locator(".searchbtn").count())
+    fail("the header magnifier should be gone: Discover's tab wears it");
   await p.locator(".brandbar-actions .usericon").click();
   await p.waitForURL("**/you");
   if ((await p.locator(".navtab").count()) !== 3) fail("and to their account rows");
