@@ -473,7 +473,7 @@ export function ProfileSheet({
             on the public page. */}
         <div className="acctacts">
           <button className="btn ghost" onClick={goProfile}>
-            Preview page
+            Preview profile
           </button>
           <button className="btn si" onClick={() => setShareMenu(true)}>
             Share
@@ -484,24 +484,6 @@ export function ProfileSheet({
             saying where the setting stands so the top level answers most of
             it without a tap. It was five headed groups and eighteen rows on
             one scroll, and the calendar alone was in four different places. */}
-        {/* Prime space on somebody's own page, so it earns it by naming the
-            reason rather than asking a favour: the people you train with
-            being here is what makes the app work. It is the beta's card and
-            it should not become fixed ad space; when invites stop being the
-            priority it collapses to a row in the share sheet, which is
-            already where the same link lives. It carries no count yet: the
-            spec's "65 have joined from your link" is the line that does the
-            real work here, and a number nobody has counted is worse than
-            none. Wiring it is its own commit. */}
-        <div className="acctinvite">
-          <div className="acctinvite-txt">
-            <h3>Share the love</h3>
-            <p>Fittlist works better when the people you train with are on it.</p>
-          </div>
-          <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
-            Invite
-          </button>
-        </div>
 
         {/* A place you run is not a setting, so it sits above them with the
             other things that are yours. It was reachable only by navigating
@@ -570,6 +552,27 @@ export function ProfileSheet({
               <span className="s">Login, notifications, appearance</span>
             </span>
             <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          </button>
+        </div>
+
+        {/* It earns its place by naming the reason rather than asking a
+            favour: the people you train with being here is what makes the app
+            work. It led the page for a while, above everything somebody came
+            to this screen to do, which is where an ask reads as an ad. Down
+            here it is the last thing on the way out, after the work and
+            before the plain links. It is the beta's card and should not
+            become fixed ad space; when invites stop being the priority it
+            collapses to a row in the share sheet, which is already where the
+            same link lives. It carries no count yet: the spec's "65 have
+            joined from your link" is the line that does the real work, and a
+            number nobody has counted is worse than none. */}
+        <div className="acctinvite">
+          <div className="acctinvite-txt">
+            <h3>Share the love</h3>
+            <p>Fittlist works better when the people you train with are on it.</p>
+          </div>
+          <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
+            Invite
           </button>
         </div>
 

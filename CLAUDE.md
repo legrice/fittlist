@@ -837,6 +837,15 @@ the app is for. The dismissal is localStorage (`fl-follow-hint`), which is
 per-device and unlike the invites banner's column on the account; a column is
 the fix if that starts to matter.
 
+**The invite card is the last thing on the way out.** It led the You tab for a
+while, sitting above Your studios and the settings, which is where an ask reads
+as an ad: it was the first thing on a screen somebody opened to do something
+else. It sits under the settings and above the footer links now, so the work
+comes first and the favour is what you pass on the way out. The pair of buttons
+above it reads Preview profile and Share: "page" was the word when a coach's
+public page was the only thing behind it, and profile is what everybody calls
+the thing it opens.
+
 **The invites banner is announced once, then never again.**
 `invitesBannerCount()` returns 0 unless the beta gate is up, they're onboarded,
 they have invites left, and they haven't closed it. The dismissal is

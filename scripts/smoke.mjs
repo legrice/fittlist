@@ -446,7 +446,7 @@ if ((await page.locator(".acctstats button.acctstat").count()) !== 3)
   fail("all three stats should open a list");
 // Two buttons where five share tiles were.
 if (await page.locator(".acctcard").count()) fail("the five share tiles should be gone");
-await expect(page.locator(".acctacts .btn", { hasText: "Preview page" }).isVisible(), "preview page button");
+await expect(page.locator(".acctacts .btn", { hasText: "Preview profile" }).isVisible(), "preview profile button");
 await expect(page.locator(".acctacts .btn", { hasText: "Share" }).isVisible(), "share button");
 await page.screenshot({ path: SCRATCH + "/shot-account.png", fullPage: true });
 
