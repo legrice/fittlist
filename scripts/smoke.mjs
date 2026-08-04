@@ -1359,7 +1359,12 @@ console.log("discover ok (the row's pill agrees with the profile)");
     if (!faces.length) fail("a studio with no photo should still have a face");
     if (faces.some(([letter]) => !/^[A-Z0-9?]$/.test(letter)))
       fail("expected one initial per studio: " + JSON.stringify(faces));
-    if (new Set(faces.map(([, bg]) => bg)).size < 2)
+    // The colour is derived from the id, never the grey placeholder a pin used
+    // to be. Distinctness needs two samples to mean anything, and a search
+    // narrow enough to name one studio only ever returns one.
+    if (faces.some(([, bg]) => /rgba?\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg)))
+      fail("a studio with no photo should carry its own colour: " + JSON.stringify(faces));
+    if (faces.length > 1 && new Set(faces.map(([, bg]) => bg)).size < 2)
       fail("a directory of one colour is as unreadable as a directory of pins");
   }
   // Already on search, where the studio rows live: the address finds the town
