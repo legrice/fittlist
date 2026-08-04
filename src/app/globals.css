@@ -3716,7 +3716,13 @@ button.ps-card { cursor: pointer; }
   padding: 9px 0 10px; text-decoration: none; color: var(--ol);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
-.navtab.on { color: var(--ink); }
+/* The current tab is said in the brand colour and nothing else: the glyph and
+   the word both take it, the way Airbnb marks Explore. It was a light orange
+   wash behind the icon, which is a second shape to read on a row whose whole
+   job is five equals; colour alone says the same thing without drawing a
+   thing that isn't there. Every glyph is currentColor, so tinting the tab
+   tints its icon. */
+.navtab.on { color: var(--si); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -3731,14 +3737,12 @@ button.ps-card { cursor: pointer; }
 /* The Plans count, on the tab's glyph. It hung off the header's heart until
    Plans became a tab. A state, not an alert: nothing is wrong, you just have
    four classes coming. Green, the same yes the add gives. */
-/* The glyph's own box, so the current tab can shade it: a light brand-orange
-   wash behind the icon only, stroke and label untouched. It replaced the
-   white capsule behind the whole tab. */
+/* The glyph's own box. It carried a wash for the current tab once; the tab is
+   marked by colour now, so this is only the icon's hit area and alignment. */
 .navglyph {
   position: relative; display: flex; align-items: center; justify-content: center;
   width: 46px; height: 32px; border-radius: 11px;
 }
-.navtab.on .navglyph { background: rgba(221, 106, 53, .18); }
 .navdot {
   position: absolute; top: -5px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 999px; background: var(--go); color: #fff; font-size: 10px; font-weight: 800;
@@ -3854,8 +3858,9 @@ button.ps-card { cursor: pointer; }
     border-radius: 23px; padding: 8px 0 9px;
     transition: background .18s ease, opacity .18s ease;
   }
-  /* The glyph's orange wash marks the current tab here too; the white
-     capsule behind the whole tab said the same thing louder. */
+  /* The current tab is the brand colour here too, the same as in a browser:
+     the bar is a different shape in the installed app, not a different way of
+     saying where you are. */
   .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
   /* The FAB and the account view clear the pill, not the old full-width bar.
      A profile has no bar at all, so its own button stays low; this rule is

@@ -1906,10 +1906,14 @@ somebody who coaches none. The two redirects are one rule, and neither kind
 can arrive on the other's calendar. In `?from=`
 tokens and `backToFor`, "home" is no longer a destination and the Following
 feed says `from=following`; the class page honours both. The current tab
-marks itself with a light brand-orange wash behind the glyph alone
-(`.navtab.on .navglyph`, the icon's stroke and the label untouched); it
-replaced the white capsule behind the whole tab, in the browser bar and
-the installed app's glass pill alike. Every header icon
+marks itself in the brand colour and nothing else: `.navtab.on` sets
+`--si` and every glyph is `currentColor`, so the icon and the word both
+take it, the way Airbnb marks Explore. It was a light orange wash behind
+the glyph, which is a second shape to read on a row whose whole job is
+five equals; before that it was a white capsule behind the whole tab,
+which was louder still. The rule holds in the browser bar and the
+installed app's glass pill alike: the bar is a different shape there,
+not a different way of saying where you are. Every header icon
 fills in on its own screen (`HeaderIconLink`); the fill is CSS on the
 first SVG path only, because the bell's clapper is an open stroke and
 filling it paints shapes nobody drew. A hamburger is deliberately not
