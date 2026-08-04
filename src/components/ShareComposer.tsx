@@ -303,17 +303,17 @@ export function ShareComposer({
           </button>
         ) : (
           <>
+            {/* Share leads. It is the act this whole screen exists to end on,
+                and the two used to be one handler behind two words, so the
+                filled button said Save and opened the share sheet. Save is a
+                plain download link now: it never opens the share sheet, which
+                is the only thing that made it a second button worth having. */}
             <button className="btn" disabled={sharing || rows === null} onClick={shareStory}>
-              {sharing ? "Opening…" : "Save image"}
+              {sharing ? "Opening…" : "Share image"}
             </button>
-            <button
-              className="btn ghost"
-              style={{ marginTop: 8 }}
-              disabled={sharing || rows === null}
-              onClick={shareStory}
-            >
-              Share image
-            </button>
+            <a className="btn ghost" style={{ marginTop: 8 }} href={src} download={fileName}>
+              Save image
+            </a>
           </>
         )}
       </div>

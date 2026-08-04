@@ -19,7 +19,7 @@ const fail = (m) => { throw new Error("SHARE FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
 /** The Classes row reads "Loading" until the rows are in, and the primary
- *  button is Save image until they are in and empty, so anything reading
+ *  button is Share image until they are in and empty, so anything reading
  *  either has to wait for the count to settle.
  *
  *  It waits for a settled *value* rather than for "Loading" to be absent:
@@ -183,7 +183,7 @@ await coach.locator(".composer").waitFor();
   const cta = await coach.locator(".publishwrap .btn").first().innerText();
   if (!/Add something to your week/.test(cta)) fail("expected the offer, got " + cta);
   if (await coach.locator(".publishwrap .btn.ghost").count())
-    fail("Share image should not be offered for an empty picture");
+    fail("Save image should not be offered for an empty picture");
 }
 console.log("an empty week offers rather than draws nothing ok");
 

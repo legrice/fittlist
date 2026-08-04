@@ -130,19 +130,15 @@ export function ShareCardSheet({
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="cardimg" src={cardUrl} alt={alt} />
+        {/* Share leads, save is the quiet one. See ShareComposer: the filled
+            button used to say Save and open the share sheet. */}
         <div className="publishwrap">
-          {canShareFiles ? (
-            <button className="btn" disabled={sharing} onClick={shareCard}>
-              {sharing ? "Opening…" : "Save image"}
-            </button>
-          ) : (
-            <a className="btn" href={cardUrl} download={cardFileName}>
-              Save image
-            </a>
-          )}
-          <button className="btn ghost" style={{ marginTop: 8 }} disabled={sharing} onClick={shareCard}>
-            Share image
+          <button className="btn" disabled={sharing} onClick={shareCard}>
+            {sharing ? "Opening…" : "Share image"}
           </button>
+          <a className="btn ghost" style={{ marginTop: 8 }} href={cardUrl} download={cardFileName}>
+            Save image
+          </a>
         </div>
       </div>
     </div>

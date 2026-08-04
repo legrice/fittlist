@@ -1067,9 +1067,14 @@ await page.waitForFunction(() => {
 await page.locator(".seg").getByText("Today").click();
 const imgSrc = await page.locator(".storyimg").getAttribute("src");
 if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
-const dl = await page.locator("a", { hasText: "Save image" }).getAttribute("download");
+// Share leads and is the filled button; Save is the quiet link under it and
+// is a real download rather than a second door onto the share sheet.
+const dl = await page.locator("a.btn.ghost", { hasText: "Save image" }).getAttribute("download");
 if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
-await expect(page.locator(".btn.ghost", { hasText: "Share image" }).isVisible(), "share image button present");
+await expect(
+  page.locator(".publishwrap .btn", { hasText: "Share image" }).first().isVisible(),
+  "share image is the primary button",
+);
 
 // story style dropdown: 8 curated looks with swatches, selecting swaps the preview
 await page.locator("#stTheme").click();

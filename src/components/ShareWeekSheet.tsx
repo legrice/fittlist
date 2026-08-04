@@ -178,13 +178,11 @@ export function ShareWeekSheet({
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="storyimg" style={{ background: STORY_THEMES[themeId].bg }} src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />
+        {/* Share leads, save is the quiet one. See ShareComposer: the filled
+            button used to say Save and open the share sheet. */}
         <div className="publishwrap">
-          {canShareFiles ? (
-            <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Save image"}</button>
-          ) : (
-            <a className="btn" href={storyUrl} download={storyFileName}>Save image</a>
-          )}
-          <button className="btn ghost" style={{ marginTop: 8 }} disabled={sharing} onClick={shareStory}>Share image</button>
+          <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Share image"}</button>
+          <a className="btn ghost" style={{ marginTop: 8 }} href={storyUrl} download={storyFileName}>Save image</a>
         </div>
       </div>
     </div>
