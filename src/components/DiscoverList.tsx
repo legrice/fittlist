@@ -216,18 +216,19 @@ export function DiscoverList({
           top, so every filter is in sight rather than behind a floating
           pill. */}
       <div className="pubtabs distabs" aria-label="Discover sections">
-        {/* The count under each label is what the half holds *given the pick*,
-            not what it holds in total. With one selection running across all
-            three, that is the useful number: pick Yoga and the tabs say where
-            the yoga actually is, which is the "where is the supply" job the
-            counts are here to do. A total would only ever repeat itself. */}
+        {/* Three words and nothing else. Each carried a count of what its half
+            held for the pick in front of you, which answered "where is the
+            supply" at the cost of putting three numbers across the top of a
+            screen whose job is browsing: a directory that is honestly small
+            reads as small, and saying so three times in pills is the app
+            apologising for itself before anybody has looked. The number is
+            still one line of code away if it earns its place back. */}
         <button
           className={`pubtab${tab === "coaches" ? " sel" : ""}`}
           aria-current={tab === "coaches" ? "page" : undefined}
           onClick={() => pick("coaches")}
         >
           Coaches
-          <span className="pubtab-cnt">{shown.length}</span>
         </button>
         <button
           className={`pubtab${tab === "classes" ? " sel" : ""}`}
@@ -235,7 +236,6 @@ export function DiscoverList({
           onClick={() => pick("classes")}
         >
           Classes
-          <span className="pubtab-cnt">{shownClasses.length}</span>
         </button>
         <button
           className={`pubtab${tab === "studios" ? " sel" : ""}`}
@@ -243,7 +243,6 @@ export function DiscoverList({
           onClick={() => pick("studios")}
         >
           Studios
-          <span className="pubtab-cnt">{shownStudios.length}</span>
         </button>
       </div>
 

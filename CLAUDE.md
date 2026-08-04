@@ -555,15 +555,22 @@ off, from whichever half you are standing on. The cost is real and worth
 saying: a half can look empty because of a word picked on a different one,
 and the carried chip sitting there selected is the whole explanation.
 
-**Each half says how much it holds, for the pick in front of you.** The count
-beside a tab label (`.pubtab-cnt`, a brand pill with white text) is
-`shownClasses`/`shown`/`shownStudios`,
-never the total: with one selection running across all three, "6 coming up"
-against "0 listed" is what answers "is there any yoga on the other side"
-without switching to look. A total would only ever repeat itself. It lands in
-the tab's accessible name too ("Coaches, 12 listed"), which is deliberate, a
-screen reader should hear what the eye reads. Anything addressing those tabs
-has to stop matching the bare word: four suites did, in four different ways.
+**The halves are three words and nothing else.** Each carried a count of what
+it held for the pick in front of you (`.pubtab-cnt`, a brand pill with white
+text, reading `shown`/`shownClasses`/`shownStudios` and never the total), which
+answered "is there any yoga on the other side" without switching to look. They
+came off by Matt's call: three numbers across the top of a screen whose whole
+job is browsing is a directory that is honestly small saying so three times
+before anybody has looked, and the halves are a place to go rather than a
+scoreboard. The lists still compute those three numbers to render, so putting a
+count back is one span; it should have to earn it. `.pubtab-cnt` is still
+live on the studio's shifts screen, where My shifts, Open and Requests are a
+queue and the number is the point.
+
+Anything addressing these tabs still matches with `hasText` scoped to the tab
+row rather than an exact match on the bare word. That was forced when the
+counts made the accessible name "Coaches 12 listed", and it stays because it is
+right either way.
 
 **The rail is busiest first, and one size on every half.** `rankByUse` in
 `DiscoverList` counts what is behind each word on the screen in front of you

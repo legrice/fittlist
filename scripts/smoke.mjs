@@ -9,11 +9,11 @@ const SCRATCH = process.env.SMOKE_OUT ?? ".";
 const BASE = "http://localhost:3000";
 
 const fail = (msg) => { throw new Error("SMOKE FAIL: " + msg); };
-// The directory opens on Classes now, so anything asserting on the People or
-// Studios rows picks its half first.
-// Each tab carries its count under the label now, so its accessible name is
-// "Coaches 12 listed" and an exact match on the bare word finds nothing. The
-// tab row is the scope: one .pubtab per half, and only one contains the word.
+// The directory opens on Coaches, so anything asserting on the Classes or
+// Studios rows picks its half first. The tabs carried a count under the label
+// for a while, which made an exact match on the bare word find nothing; the
+// counts are gone but this stays a hasText match scoped to the tab row, since
+// that is right either way and the count may earn its place back.
 const discHalf = async (p, half = "Coaches") => {
   await p.goto(BASE + "/discover");
   await p.locator(".distabs .pubtab", { hasText: half }).click();
@@ -1278,14 +1278,12 @@ await fan.locator(".dischips").waitFor();
   );
   if (heads.join("|") !== "Coaches|Classes|Studios")
     fail("the directory's halves should be Coaches, Classes, Studios: " + heads.join("|"));
-  // Each half says what it holds, and it says it for the pick in front of you
-  // rather than in total: with one selection running across all three, that is
-  // what answers "is there any yoga on the other side" without switching.
-  {
-    const counts = (await fan.locator(".distabs .pubtab-cnt").allInnerTexts()).map((t) => t.trim());
-    if (counts.length !== 3 || !counts.every((c) => /^\d+$/.test(c)))
-      fail("each half should carry its own count pill: " + counts.join("|"));
-  }
+  // Three words and nothing else. The halves each carried a count of what they
+  // held for the pick in front of you; three numbers across the top of a
+  // browsing screen is the app apologising for its own size before anybody has
+  // looked.
+  if (await fan.locator(".distabs .pubtab-cnt").count())
+    fail("the halves should carry no count pills");
   if (await fan.locator(".clsfilters, .clspill").count())
     fail("the range and type dropdowns should be gone from the classes half");
   if (await fan.locator(".clscount-line").count())
