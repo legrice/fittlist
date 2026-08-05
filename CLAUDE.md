@@ -360,8 +360,8 @@ two, and it is one by Matt's call. Classes went first (a dated list of
 occurrences is a schedule, and it muddied what somebody is on this screen to
 do), then Studios (a place is not somebody you follow, so a directory of them
 answers a question nobody has yet). What is left is the act every other surface
-waits on: Following, Activity and a new member's week are all empty until a
-follow happens, so the screen that makes one is the whole screen. No tabs, no
+waits on: the circles tray, Activity and a new member's week are all empty
+until a follow happens, so the screen that makes one is the whole screen. No tabs, no
 counts, no page title.
 
 Nothing is hidden by that, which is what makes it safe: `/search` still answers
@@ -856,8 +856,12 @@ get their natural z-46 over the bar; the portal stays because it has to work
 in both skins.
 
 **Tapping Follow says what just happened, but only for a coach.** A follow shows
-`FollowHint`: a bar reading that their classes are on your Following week, a
-link straight to it, and a Don't show again that means it. Following a *member*
+`FollowHint`: a bar naming the circle it just put at the top of your schedule, a
+link straight to that screen, and a Don't show again that means it. The words
+changed when following stopped delivering classes: the bar used to promise the
+coach's classes were "on your Following week", which is now false twice over,
+and somebody who goes looking for classes that were never added concludes the
+follow failed. Following a *member*
 shows nothing, because the bar would be promising a week they don't have: what
 that follow buys is quiet and mutual, and until it can be said in a sentence it
 says nothing. It renders from the profile pill
@@ -1585,13 +1589,63 @@ sheet's own row, or Privacy and reach) before this can be called finished.
 
 **One class row, on every list of them.** `src/components/Agenda.tsx` is the
 day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
-Following and Your plans render it. They had drifted into two designs for one
-idea: a card with the coach's face and the time down the right on one tab, a
-flat sub-line with no face at all on the other, and a member flipping between
-them was reading two apps. What wraps a row still differs, which is why the
-caller passes a render function rather than a flag: Following wraps it in
-`SwipeGoing`, Your plans puts the remove X beside it. The X is a sibling and
-not a child because a button inside a link is not a thing.
+calendars render it. It was written when Following and Your plans had drifted
+into two designs for one idea: a card with the coach's face and the time down
+the right on one tab, a flat sub-line with no face at all on the other, and a
+member flipping between them was reading two apps. Following is gone and the
+lesson is not: what wraps a row still differs, which is why the caller passes a
+render function rather than a flag. `SwipeGoing` went with the merged week to
+the peek, where saving now happens; the member's week puts the remove X beside
+the row. The X is a sibling and not a child because a button inside a link is
+not a thing.
+
+**Following buys a face, and the face is the door.** `myCircles()`
+(`src/lib/circles.ts`) is the tray at the top of both calendars: everyone you
+follow, fresh-first then alphabetical, with `fresh` computed from
+`classes.createdAt > subscribers.peekedAt` and a null `peekedAt` counting as
+new, because somebody you just followed has by definition everything to show
+you. `coachPeek()` (`src/app/actions/peek.ts`) is one coach's fortnight behind
+that face, and saving from it is the only thing that puts their class on your
+calendar.
+
+That inversion is the whole of v4 and the reason the tray is load-bearing
+rather than decoration. Under the old model a follow poured a coach's week onto
+your schedule, so saving barely changed the screen, which is a terrible way to
+find out whether anybody saves.
+
+Five things about it are decisions, not details.
+
+*The peek asks `publicSchedules()`*, the same loader the coach's own page and
+both digests ask, so a coach's week can never say one thing in the peek and
+another on their page. A shift's base is `s/{slug}` because the gym owns the
+class; the header still names the coach whose circle was tapped, never whoever
+the rota has on the first row, because this sheet answers what Erin has on
+rather than who is working.
+
+*The ring goes out when the peek opens, not when it closes.* The ring promises
+there is something in here, and that is kept the moment somebody is looking.
+Firing on close loses it to a reload or a back swipe, and a ring lit over
+classes already read is one nobody believes twice.
+
+*The tray renders on an empty calendar*, outside the `bare` gate that strips
+the rest of the chrome, because a week with nothing on it and five circles
+above it is the exact state where the tray is the thing to tap. It renders not
+at all for an account that follows nobody: a rail with one plus and no faces
+reads as broken.
+
+*Both calendars wear it.* A coach follows coaches, and a coach who follows five
+people and sees no faces would conclude the button does nothing.
+
+*A peek row opens a sheet, not a page, and the swipe beats the sheet.* Every
+other list in the app opens a class over what you were reading; as bare links
+these rows threw the peek away, so you tapped one class out of a fortnight and
+landed somewhere with no way back to the other thirteen. `ClassOpener` sits
+**inside** `SwipeGoing` rather than around the list: both catch the click in
+the capture phase, so the outer one goes first, and with the opener around the
+list every completed swipe also opened the class it had just saved.
+
+`scripts/tray-smoke.mjs` walks the whole loop. If it goes red, following, the
+app's core action, does nothing visible.
 
 **One of your own can be opened, changed and handed on as a picture.** A
 personal class had no page behind it and so no way in at all: a row somebody
@@ -1956,11 +2010,32 @@ editor is better than anything here and people decorate there anyway, and the
 value is that the output is automatically correct and on brand. No custom colour
 picker, no custom fonts, and the logo does not come off.
 
-**The tabs are three: Following, Discover, Schedule.** Home was built and
-dark-launched behind `homeVisible()` for a while and is now parked: the route,
-the screen and `home.ts` are gone, and `landingHref()` answers `/feed` for
-everyone. It stays a function because the answer has already changed twice and
-every caller asks rather than assuming. The concept is kept, not lost:
+**The tabs are two: Discover and Schedule.** Following was the third and is
+gone. It was a merged week across every coach you followed, and a follow no
+longer delivers a week: it delivers a face at the top of Schedule, and the
+classes behind that face reach a calendar only when somebody saves them. A tab
+pointing at a screen whose whole content has moved into another tab is a second
+door onto one room, and it was worse than redundant here, because the merged
+week answered "what are my coaches up to" first and for free, which is exactly
+why saving used to change nothing you could see.
+
+`/feed` survives as a redirect rather than a 404. It was the front door for
+months: it is in old emails, in bookmarks, in `?from=following` links out in
+the world, and on the home screen of anybody who installed the app while it was
+the landing. `activeTab` maps it to Schedule so it lights the tab it lands on.
+The merged week's own renderer (`FeedAgenda`) is deleted; the screen is in git
+at the commit that replaced it, and if saves per member stay flat in the beta,
+`v4-brief-two.md` says the answer is a "New from your coaches" strip under the
+circles rather than bringing it back.
+
+`landingHref()` answers per kind now, `/app` for a coach and `/week` for a
+member, rather than leaning on the two calendars' redirects: that would put a
+hop on every sign-in and every OAuth callback for half the app.
+
+Home was built and dark-launched behind `homeVisible()` for a while and is also
+parked: the route, the screen and `home.ts` are gone. `landingHref()` stays a
+function because the answer has now changed three times and every caller asks
+rather than assuming. The concept is kept, not lost:
 `homescreenspec.md` and its wireframe are still here, and the one part of Home
 that outlived it (Activity) moved to `src/lib/activity.ts` and `/activity`.
 A client can't ask who is an admin, so `AuthFlow`
