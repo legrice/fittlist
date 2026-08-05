@@ -11,6 +11,8 @@ import {
   runsOn,
   timeToMinutes,
 } from "@/lib/format";
+import type { Circle } from "@/lib/circles";
+import { CircleTray } from "@/components/CircleTray";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay, WeekItem } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
@@ -87,6 +89,7 @@ export function ScheduleScreen({
   inboxUnread,
   notifUnread,
   plans,
+  circles,
   autoOpenAdder,
   handle,
   name,
@@ -111,6 +114,9 @@ export function ScheduleScreen({
    *  the member calendar uses: You is one calendar of everything now, and the
    *  rows wear Coaching, Going, Shift or Yours to say which hat. */
   plans: WeekDay[];
+  /** Everyone they follow, as faces above the calendar. Same tray a member
+   *  wears, because a coach follows coaches. */
+  circles: Circle[];
   autoOpenAdder: boolean;
   handle: string;
   /** For the You tab's face on the bottom bar, nothing else. */
@@ -551,6 +557,12 @@ export function ScheduleScreen({
         />
 
         {invitesLeft !== 0 && <InvitesBanner />}
+
+        {/* The faces, above everything and scrolling away with the page.
+            Outside the `bare` gate on purpose: a calendar with nothing on it
+            and five circles above it is the exact state where the tray is the
+            thing to tap. */}
+        <CircleTray circles={circles} />
 
         {/* The calendar's own header, pinned under the app's: the month at
             the gutter, the view and filter glyphs with the plus across from

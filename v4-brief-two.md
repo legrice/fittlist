@@ -477,3 +477,58 @@ Added to that list:
   keeping are that availability derives from the calendar rather than being maintained by
   hand, and that client sessions never enter Your week, so a client's name can never reach
   the share image.
+
+---
+
+## 19. Built: the tray and the peek
+
+The first two pieces of section 2 are in, on `calendar-merge`, with
+`scripts/tray-smoke.mjs` holding the whole loop: follow, circle, peek, save,
+and the class landing on the calendar.
+
+**The pieces.** `myCircles()` (`src/lib/circles.ts`) is the faces, sorted
+fresh-first then alphabetically, with `fresh` computed from
+`classes.createdAt > subscribers.peekedAt`. `coachPeek()`
+(`src/app/actions/peek.ts`) is one coach's fortnight, asked of
+`publicSchedules()` so the peek and the coach's own page can never disagree,
+with the viewer's marks resolved into a `saved` boolean per occurrence.
+`CircleTray` and `CoachPeek` are the two components, and both calendars render
+the tray: a coach follows coaches, and a coach who follows five people and sees
+no faces would conclude the button does nothing.
+
+**Decisions worth not relitigating.**
+
+*The ring goes out on open, not on close.* The ring promises there is something
+in here, and that promise is kept the moment somebody is looking. Firing on
+close loses it to a reload or a back swipe, and a ring lit over classes already
+read is a ring nobody believes twice.
+
+*The tray renders on an empty calendar.* It sits outside the `bare` gate that
+strips the rest of the chrome. A week with nothing on it and five circles above
+it is the exact state where the tray is the thing to tap, and hiding it there
+would show somebody who follows five coaches a screen that says they have
+nothing.
+
+*Fourteen days, not the calendar's nine weeks.* This is a glance at what
+somebody has on. A list you scroll for two months is a page, and the page
+already exists behind "See their page".
+
+*The peek's day headings are `fmtDayHeaderRel`.* They said "Wednesday - Aug 5"
+for one build while the calendar a tap underneath said "Today", which is one
+day named two ways on two screens. One function decides those words.
+
+*A shift's base is the studio, not the coach.* The gym owns the class, so a
+covered date opens under `s/{slug}`. The header still names the coach whose
+circle was tapped, never whoever the rota has on the first row: this sheet
+answers "what has Erin got on", not "who is working".
+
+*Nothing in the tray or the peek is underlined.* The app underlines a bare link
+by default, which is right in prose and wrong on a list: a column of underlined
+class names over underlined sub-lines reads as a page of hyperlinks rather than
+a week.
+
+**Not built yet, from the same section.** The card treatment from the Figma
+(white cards, the relationship colour as a thick left bar, the chip or the
+ribbon top-right) is still the old flat `.ps-event` row underneath, so a saved
+row wears the old green rather than `--rel-saved`. The Following tab has not
+collapsed into Schedule. Both are the next commits.

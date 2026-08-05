@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { CAL_PAST_DAYS, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import { myCircles } from "@/lib/circles";
 import { myWeek } from "@/lib/week";
 import { WeekScreen } from "@/components/WeekScreen";
 
@@ -31,9 +32,12 @@ export default async function WeekPage({
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
-  const [days, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
+  const [days, circles, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
     // The past window rides along so the list can scroll back in time.
     myWeek(userId, { pastDays: CAL_PAST_DAYS }),
+    // The faces across the top. A follow puts one here and nothing else, so
+    // this query is the whole visible consequence of following somebody.
+    myCircles(userId),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select()
@@ -79,6 +83,7 @@ export default async function WeekPage({
   return (
     <WeekScreen
       days={days}
+      circles={circles}
       todayIso={todayIso()}
       studios={studios}
       templates={templates}

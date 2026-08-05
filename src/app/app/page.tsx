@@ -9,6 +9,7 @@ import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { fansVisible, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { unreadNotifications } from "@/lib/notify";
+import { myCircles } from "@/lib/circles";
 import { myWeek } from "@/lib/week";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { ScheduleScreen } from "@/components/ScheduleScreen";
@@ -89,7 +90,7 @@ export default async function SchedulePage({
   if (user && user.kind === "fan") redirect(await landingHref());
   // All independent, so they load together: awaited one by one they stacked
   // nine round trips onto every open of the schedule.
-  const [fbHost, askFeedback, invitesLeft, customTypeRows, inboxRows, notifUnread, plans] =
+  const [fbHost, askFeedback, invitesLeft, customTypeRows, inboxRows, notifUnread, plans, circles] =
     await Promise.all([
       feedbackHost(),
       feedbackPromptDue(userId),
@@ -107,6 +108,11 @@ export default async function SchedulePage({
       // reads, so the schedule is one calendar of everything. The past
       // window rides along so the list can scroll back in time.
       myWeek(userId, { pastDays: CAL_PAST_DAYS }),
+      // A coach follows coaches. Their Schedule wears the same tray a
+      // member's does, for the same reason: it is the only thing a follow
+      // does now, and a coach who follows five people and sees no faces
+      // would conclude the button does nothing.
+      myCircles(userId),
     ]);
 
   const customTypes = customTypeRows.map((r) => r.name);
@@ -183,6 +189,7 @@ export default async function SchedulePage({
       inboxUnread={inboxUnread}
       notifUnread={notifUnread}
       plans={plans}
+      circles={circles}
       autoOpenAdder={add === "1"}
       handle={user?.handle ?? ""}
       name={user?.name ?? ""}

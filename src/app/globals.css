@@ -5194,3 +5194,93 @@ button.ps-card { cursor: pointer; }
    class mean two levels at once on one screen. Only drawn where the going
    half can actually be seen. */
 .profweeksw { margin: 6px 0 2px; }
+/* ---------------------------------------------------------------------------
+   The circles tray, and the peek behind a face.
+
+   The tray is the top of Schedule and the whole of what following buys: a
+   follow puts a face here, tapping it opens their fortnight, and saving from
+   there is what fills your calendar. It bleeds to both edges because a rail
+   that stops at the gutter reads as a finished row rather than one you can
+   push, and the last circle sitting half off the screen is what says swipe.
+   --------------------------------------------------------------------------- */
+.tray {
+  margin: 0 -18px; padding: 14px 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.tray-scroll {
+  display: flex; gap: 18px; overflow-x: auto; padding: 0 18px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.tray-scroll::-webkit-scrollbar { display: none; }
+.trayitem {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 78px; background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: none;
+}
+.trayav {
+  position: relative; display: block; width: 72px; height: 72px; border-radius: 999px;
+  overflow: hidden; background: var(--card);
+}
+.trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.trayav-ini {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  color: #fff; font-size: 28px; font-weight: 700;
+}
+/* Classes up since you last looked. The ring is the most important pixel on
+   the screen, because it is the only thing that says the tray is worth a tap
+   today rather than in general. */
+.trayav.fresh { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
+.trayav-add {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1.5px dashed var(--line); color: var(--ol);
+}
+.trayitem-nm {
+  font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none;
+  max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* The peek. A bottom sheet rather than the class overlay: this is a list you
+   skim and act on several times before closing, and the overlay's shape says
+   one thing, whole screen. */
+.peeksheet { padding-top: 18px; }
+.peekhead { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; }
+.peekhead-txt { flex: 1 1 auto; min-width: 0; }
+.peekclose { flex: 0 0 auto; position: static; }
+.peekav { display: block; width: 54px; height: 54px; border-radius: 999px; overflow: hidden; flex: 0 0 auto; }
+.peekav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.peekav-ini {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  color: #fff; font-size: 22px; font-weight: 700;
+}
+.peekhead-nm { font-size: 19px; font-weight: 700; margin: 0; }
+/* No underline on any of it. The app underlines a bare link by default, which
+   is right in prose and wrong on a list: a column of underlined class names
+   over underlined sub-lines reads as a page of hyperlinks rather than a week. */
+.peekhead-go {
+  display: inline-flex; align-items: center; gap: 2px; margin-top: 2px;
+  font-size: 13.5px; font-weight: 600; color: var(--si); text-decoration: none;
+}
+.peekempty { font-size: 14px; line-height: 1.5; color: var(--ol); margin: 8px 0 0; }
+
+.peekday { margin-top: 18px; }
+.peekday-h {
+  font-size: 15px; font-weight: 500; color: var(--ink); margin: 0 0 8px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+.peekrow { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.peekrow + .peekrow { border-top: 1px solid var(--line); }
+.peekrow-go { flex: 1 1 auto; min-width: 0; display: block; text-decoration: none; }
+.peekrow-nm { display: block; font-size: 16px; font-weight: 600; color: var(--ink); }
+.peekrow-sub { display: block; font-size: 13.5px; color: var(--ol); margin-top: 2px; }
+.peekrow-ap { font-size: 11px; margin-left: 1px; }
+/* The word rides the ribbon here for the reason it does on a calendar row:
+   nobody has learned the mark yet, and this is the one action the whole pull
+   model turns on. */
+.peekadd {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  height: 34px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card);
+  font-size: 13.5px; font-weight: 700; color: var(--ink); cursor: pointer;
+}
+.peekadd.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }

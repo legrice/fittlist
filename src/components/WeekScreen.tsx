@@ -37,9 +37,11 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { CAL_PAST_DAYS, fmtDayHeaderRel } from "@/lib/format";
+import { CircleTray } from "@/components/CircleTray";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
 import { PlanSheet } from "@/components/PlanSheet";
+import type { Circle } from "@/lib/circles";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import type { WeekDay } from "@/lib/week";
 import { Icon } from "@/components/Icon";
@@ -56,6 +58,7 @@ const WEEK_SHARE_KEY = "fl-week-share";
 // with the hats this viewer actually wears.
 export function WeekScreen({
   days,
+  circles,
   todayIso,
   studios,
   templates,
@@ -64,6 +67,10 @@ export function WeekScreen({
   autoOpenAdder = false,
 }: {
   days: WeekDay[];
+  /** Everyone they follow, as faces. Following no longer pours anybody's
+   *  classes onto this calendar; it puts a circle up there, and saving from
+   *  behind one is what fills the week. */
+  circles: Circle[];
   /** The app's today, from the app's clock, for the month header and grid. */
   todayIso: string;
   /** The adder's ingredients. Adding a class you go to is the same form as
@@ -325,6 +332,13 @@ export function WeekScreen({
     <>
       <HighlightOnLand />
       <div className="weekwrap">
+        {/* The faces, above everything and scrolling away with the page. It is
+            deliberately outside the `bare` gate that strips the rest of the
+            chrome: an empty calendar with circles on it is the exact state
+            where the tray is the thing to tap, and hiding it there would leave
+            somebody who follows five coaches looking at a screen that says
+            they have nothing. */}
+        <CircleTray circles={circles} />
         {/* The calendar's own header, pinned under the app's: the month with
             the view menu, Add across from them, and the kind checkmarks, with
             the divider underneath the lot. None of it on an empty calendar:
