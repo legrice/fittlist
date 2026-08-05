@@ -616,7 +616,21 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    (`STORY_THEMES[themeId].bg`), so the undrawn half is the page the rest of
    it is being drawn on. This is only the fallback for a caller that knows no
    theme. */
-.storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 16px; margin: 12px auto 4px; background: var(--card); }
+/* The wrapper holds the box and the ground; the image sits inside it and is
+   only revealed once it is whole. While a new one draws, this carries the
+   last good frame as its background, so changing a control redraws the
+   poster rather than dismantling it. */
+.storyimg-wrap {
+  display: block; position: relative; width: fit-content; margin: 12px auto 4px;
+  border-radius: 16px; overflow: hidden;
+  background-size: 100% 100%; background-repeat: no-repeat;
+}
+.storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 16px; transition: opacity .14s ease; }
+.storyimg-err {
+  position: absolute; inset: auto 0 12px; text-align: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px; font-weight: 600; color: #c0472b;
+}
 
 /* delete lives at the bottom of the edit sheet, behind a confirmation */
 .dangerzone { margin-top: var(--pad-b); padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { StoryPreview } from "@/components/StoryPreview";
 
 // The member's "come train with me" image: the week they're actually going to,
 // their own entries included. Same pipeline and themes as the coach's share
@@ -213,8 +214,11 @@ export function ShareMyWeekSheet({
             </button>
           )}
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" style={{ background: STORY_THEMES[themeId].bg }} src={storyUrl} alt="Story image of the classes in my week" />
+        <StoryPreview
+          src={storyUrl}
+          alt="Story image of the classes in my week"
+          bg={STORY_THEMES[themeId].bg}
+        />
         {err && <p className="err">{err}</p>}
         {/* Share leads, save is the quiet one. See ShareComposer: the filled
             button used to say Save and open the share sheet. */}

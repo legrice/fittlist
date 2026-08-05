@@ -10,6 +10,7 @@ import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
+import { StoryPreview } from "@/components/StoryPreview";
 import { Toast, useToast } from "@/components/Toast";
 
 // The Share tab's editor.
@@ -286,12 +287,7 @@ export function ShareComposer({
       </div>
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="storyimg"
-        style={{ background: STORY_THEMES[themeId].bg }}
-        src={src}
-        alt="Story image of your week"
-      />
+      <StoryPreview src={src} alt="Story image of your week" bg={STORY_THEMES[themeId].bg} />
 
       <div className="publishwrap">
         {bare ? (

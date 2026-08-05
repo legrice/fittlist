@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { StoryPreview } from "@/components/StoryPreview";
 
 // The "Share your week" bottom sheet: a story image of the coach's schedule
 // (week or today) in a pickable on-brand theme, saved or shared via the native
@@ -176,8 +177,11 @@ export function ShareWeekSheet({
             </button>
           )}
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" style={{ background: STORY_THEMES[themeId].bg }} src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />
+        <StoryPreview
+          src={storyUrl}
+          alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`}
+          bg={STORY_THEMES[themeId].bg}
+        />
         {/* Share leads, save is the quiet one. See ShareComposer: the filled
             button used to say Save and open the share sheet. */}
         <div className="publishwrap">

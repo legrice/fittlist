@@ -115,15 +115,46 @@ console.log("the calendar's Share button opens the editor ok");
 console.log("one scroll, and the range picker is gone ok");
 
 // ---- the preview is a real 1080x1920 story
+// `complete`, not just naturalWidth: a progressively decoding PNG reports its
+// dimensions long before it has all its rows, so naturalWidth alone said
+// "ready" in the middle of the very load this section is about.
 await coach.waitForFunction(() => {
   const i = document.querySelector(".storyimg");
-  return i && i.naturalWidth > 0;
+  return i && i.complete && i.naturalWidth > 0;
 }, null, { timeout: 30000 });
 {
   const [w, h] = await coach
     .locator(".storyimg")
     .evaluate((i) => [i.naturalWidth, i.naturalHeight]);
   if (w !== 1080 || h !== 1920) fail(`a story should be 1080x1920, got ${w}x${h}`);
+}
+// The poster is never shown half-drawn. Satori generates the PNG while the
+// body streams, which takes a few hundred milliseconds for a week, and Safari
+// paints the rows as they land: the preview was the top inch of a poster with
+// a line of text sliced through it for the whole of that. It is hidden until
+// it has loaded and the last good frame holds its place, so what is on screen
+// is always a whole picture.
+{
+  await coach.locator(".storyimg-wrap").waitFor();
+  // It fades in over .14s, so this waits for the value to settle rather than
+  // sampling it mid-transition.
+  await coach
+    .waitForFunction(
+      () => getComputedStyle(document.querySelector(".storyimg")).opacity === "1",
+      null,
+      { timeout: 5000 },
+    )
+    .catch(async () => {
+      const o = await coach.locator(".storyimg").evaluate((i) => getComputedStyle(i).opacity);
+      fail("a loaded poster should end up visible, got " + o);
+    });
+  // The ground under it is the poster's own paper, not a slab of some other
+  // colour: a half-drawn poster on black read as broken rather than pending.
+  const ground = await coach
+    .locator(".storyimg-wrap")
+    .evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (!ground || ground === "rgba(0, 0, 0, 0)")
+    fail("the preview should sit on the theme's paper, got " + ground);
 }
 // The square canvas is still drawn by the route, and nothing in the app asks
 // for one. Held here so the second format cannot rot while it waits for a
