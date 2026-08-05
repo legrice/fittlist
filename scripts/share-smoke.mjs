@@ -222,8 +222,8 @@ await coach.locator(".composer").waitFor();
   await settled(coach);
   const cta = await coach.locator(".publishwrap .btn").first().innerText();
   if (!/Add something to your week/.test(cta)) fail("expected the offer, got " + cta);
-  if (await coach.locator(".publishwrap .btn.ghost").count())
-    fail("Save image should not be offered for an empty picture");
+  if ((await coach.locator(".publishwrap .btn").count()) !== 1)
+    fail("an empty picture offers one button: the way to fill it");
 }
 console.log("an empty week offers rather than draws nothing ok");
 

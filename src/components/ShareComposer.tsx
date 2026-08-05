@@ -11,7 +11,7 @@ import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StoryPreview } from "@/components/StoryPreview";
-import { putImage, type PutMode } from "@/lib/shareimage";
+import { putImage } from "@/lib/shareimage";
 import { Toast, useToast } from "@/components/Toast";
 
 // The Share tab's editor.
@@ -89,7 +89,7 @@ export function ShareComposer({
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [picker, setPicker] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [busy, setBusy] = useState<PutMode | null>(null);
+  const [busy, setBusy] = useState(false);
   // Adding a class changes the week without changing a single control, so the
   // picture has no reason of its own to redraw. This is that reason.
   const [bust, setBust] = useState(0);
@@ -146,14 +146,13 @@ export function ShareComposer({
     await setStoryPrefs({ showPhoto: v });
   };
 
-  // Share and Save both go through the system sheet on a phone, because the
-  // camera roll has no other door. See src/lib/shareimage.ts.
-  const put = (mode: PutMode) => async () => {
+  // The system sheet, which is where Save Image lives too: one button,
+  // because a second one opening the same sheet was the same act twice.
+  const share = async () => {
     if (busy) return;
-    setBusy(mode);
-    const ok = await putImage(src, fileName, mode);
-    if (!ok) toast(mode === "share" ? "Couldn't share the image" : "Couldn't save the image");
-    setBusy(null);
+    setBusy(true);
+    if (!(await putImage(src, fileName))) toast("Couldn't share the image");
+    setBusy(false);
   };
 
   // An empty range is an offer, not a broken picture. A coach with an empty
@@ -260,7 +259,7 @@ export function ShareComposer({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <StoryPreview src={src} alt="Story image of your week" bg={STORY_THEMES[themeId].bg} />
 
-      <div className="publishwrap row">
+      <div className="publishwrap">
         {bare ? (
           <button
             className="btn compwarn"
@@ -270,20 +269,8 @@ export function ShareComposer({
           </button>
         ) : (
           <>
-            {/* Share leads. It is the act this whole screen exists to end on,
-                and the two used to be one handler behind two words, so the
-                filled button said Save and opened the share sheet. Save is a
-                plain download link now: it never opens the share sheet, which
-                is the only thing that made it a second button worth having. */}
-            <button className="btn" disabled={!!busy || rows === null} onClick={put("share")}>
-              {busy === "share" ? "Opening…" : "Share image"}
-            </button>
-            <button
-              className="btn ghost"
-              disabled={!!busy || rows === null}
-              onClick={put("save")}
-            >
-              {busy === "save" ? "Opening…" : "Save image"}
+            <button className="btn" disabled={busy || rows === null} onClick={share}>
+              {busy ? "Opening…" : "Share image"}
             </button>
           </>
         )}

@@ -1069,10 +1069,11 @@ const imgSrc = await page.locator(".storyimg").getAttribute("src");
 if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
 // Share leads and is the filled button; Save is the quiet link under it and
 // is a real download rather than a second door onto the share sheet.
-// Save is a button rather than a download link now: a link puts the file in
-// Files, and the camera roll is only reachable through the system share
-// sheet. Both buttons sit side by side.
-await page.locator(".publishwrap.row .btn", { hasText: "Save image" }).waitFor();
+// One button. Save had to open the same system sheet to reach Photos at all,
+// so it was one act wearing two buttons, and that sheet already offers saving
+// as one of its rows.
+if (await page.locator(".publishwrap .btn", { hasText: "Save image" }).count())
+  fail("Save image should be gone: the share sheet is where saving lives");
 await expect(
   page.locator(".publishwrap .btn", { hasText: "Share image" }).first().isVisible(),
   "share image is the primary button",

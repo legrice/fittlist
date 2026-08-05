@@ -578,11 +578,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    kept the negative margin, which put anything after it (the "Don't have an
    account?" link) outside the padded area and half off the sheet. */
 .publishwrap.nostick { position: static; margin-bottom: 0; }
-/* Share and Save are one decision with two answers, so they sit next to each
-   other at equal weight rather than stacked with one of them looking like an
-   afterthought. */
-.publishwrap.row { display: flex; gap: 10px; }
-.publishwrap.row .btn { flex: 1; margin-top: 0; }
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
@@ -632,8 +627,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      the width against the ratio and squaring the poster off. A definite
      height on a fit-content box is unambiguous, so the aspect ratio decides
      the width and nothing has to guess. */
-  display: block; position: relative; width: fit-content; margin: 12px auto 4px;
-  height: 444px; aspect-ratio: 9/16;
+  display: block; position: relative; width: 250px; aspect-ratio: 9/16;
+  margin: 12px auto 4px;
   border-radius: 16px; overflow: hidden;
   background-size: 100% 100%; background-repeat: no-repeat;
 }
@@ -5121,7 +5116,12 @@ button.ps-card { cursor: pointer; }
    what it has to fit inside is the room the controls and the sticky footer
    leave: at 250px wide the poster ran under the buttons and the last day of
    the week was something you had to scroll for. */
-.composer .storyimg-wrap { height: min(52vh, 460px); max-width: 62vw; }
+/* Its own proportions, and as much height as they need. Sizing it to fit the
+   viewport is what squashed it: the room the controls and the sticky footer
+   leave is not 9:16, so the poster came out a shape it is never going to be.
+   The footer is sticky, so the picture scrolls under it and you read the rest
+   of the week by scrolling, which is what a tall image is for. */
+.composer .storyimg-wrap { width: min(100%, 340px); }
 .composer .publishwrap { margin-top: auto; }
 
 /* What goes on the image, standing where My week / Today used to. A range was
