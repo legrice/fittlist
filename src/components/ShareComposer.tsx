@@ -168,7 +168,7 @@ export function ShareComposer({
         {/* Opened from the tab bar there is always something beneath, and
             `anywhere` pops to it; typed cold there is not, and the feed is
             the honest fallback rather than a dead button. */}
-        <BackLink className="iconbtn sheetclose adderclose" href="/feed" anywhere label="Close">
+        <BackLink className="iconbtn sheetclose adderclose" href="/week" anywhere label="Close">
           <Icon name="close" size={16} />
         </BackLink>
       </div>

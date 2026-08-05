@@ -12,7 +12,7 @@ export function AppHeader({
   unread = 0,
   settings,
   avatar,
-  home = "/feed",
+  home = "/week",
   nav,
 }: {
   unread?: number;

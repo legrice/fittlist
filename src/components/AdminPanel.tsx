@@ -240,7 +240,7 @@ export function AdminPanel({
             on the left: three pills beside "Admin" scrunched both, and the
             signed-in line wrapped letter by letter. */}
         <div className="admintop-links adminacts-row">
-          <Link className="adminback" href="/feed">
+          <Link className="adminback" href="/week">
             <Icon name="arrow_back" size={18} /> App
           </Link>
           <button className="adminback adminact" onClick={openActivity}>

@@ -13,7 +13,7 @@ export type NavItem = {
 };
 
 /**
- * Three tabs, for everyone.
+ * Two tabs, for everyone.
  *
  * It was five for a while: Share took the middle and You carried your face at
  * the end. Both have come off, by Matt's call. Share is an act rather than a
@@ -30,10 +30,13 @@ export type NavItem = {
  */
 export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
   return [
-    // Home leads where it's visible at all: a mixed scroll with something
-    // new on it whether or not your follow graph changed. Following only
-    // moves when the people you follow do, which made the app feel dead on
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // Two tabs. Following was the third and is gone: it was a merged week of
+    // the coaches you follow, and following no longer delivers a week. It
+    // delivers a face at the top of Schedule, and the classes behind that face
+    // reach your calendar only when you save them. A tab pointing at a screen
+    // whose whole content has moved into another tab is a second door onto one
+    // room.
+    //
     // Discover, wearing the magnifier again. It carried the compass while the
     // header's corner held a magnifier of its own, because the same glyph
     // must never be drawn twice on one screen; the corner is your face now,
@@ -51,7 +54,10 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
-  if (pathname.startsWith("/feed")) return "following";
+  // /feed redirects onto the calendar now, so it lights the tab it lands on.
+  // The route is kept rather than deleted because it was the app's front door
+  // for months and is in emails, bookmarks and at least one home screen.
+  if (pathname.startsWith("/feed")) return "schedule";
   // Both calendars are the Schedule tab: a coach's at /app, a member's at
   // /week. The person is /you.
   if (pathname.startsWith("/week") || pathname.startsWith("/app")) return "schedule";
@@ -77,9 +83,12 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   if (from === "search") return { href: "/search", label: "Back to search" };
   // The Home tab is parked, so its token answers like anything unknown:
   // the front door. Old links carrying ?from=home still land somewhere real.
-  if (from === "following") return { href: "/feed", label: "Back to Following" };
+  // Following is parked, so its token answers like anything unknown: the front
+  // door, which is the calendar now. Old links carrying ?from=following and
+  // ?from=home still land somewhere real, which is the whole reason this
+  // function never answers null.
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
-  // The cold-open fallback stays Following: it has to land somewhere every
-  // viewer can actually open.
-  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
+  // The cold-open fallback is the calendar: it has to land somewhere every
+  // signed-in viewer can actually open, and /week sends a coach to /app.
+  return signedIn ? { href: "/week", label: "Back to your schedule" } : { href: "/", label: "Back" };
 }

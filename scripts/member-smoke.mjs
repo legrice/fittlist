@@ -102,31 +102,27 @@ await p.locator("#wAbout").fill("Six mornings a week, mostly barbells.");
 await p.screenshot({ path: OUT + "/shot-member-wiz2.png" });
 await fillLocation(p);
 await p.getByRole("button", { name: "Finish setup" }).click();
-await p.waitForURL("**/feed");
-console.log("member setup ok (two steps, no studios, lands on Following)");
+await p.waitForURL("**/week");
+console.log("member setup ok (two steps, no studios, lands on their calendar)");
 
-// The same three tabs a coach gets. Only where Schedule points differs, and
+// The same two tabs a coach gets. Only where Schedule points differs, and
 // You is the header's face rather than a tab, because a person is not a
 // place.
 {
   const onFeed = (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (onFeed.length !== 3) fail(`a member should get three tabs, got ${onFeed.join(",")}`);
-  if (
-    !onFeed[0].includes("Following") ||
-    !onFeed[1].includes("Discover") ||
-    !onFeed[2].includes("Schedule")
-  )
-    fail(`a member's tabs should be Following, Discover, Schedule, got ${onFeed.join(",")}`);
+  if (onFeed.length !== 2) fail(`a member should get two tabs, got ${onFeed.join(",")}`);
+  if (!onFeed[0].includes("Discover") || !onFeed[1].includes("Schedule"))
+    fail(`a member's tabs should be Discover, Schedule, got ${onFeed.join(",")}`);
   if (!(await p.locator(".brandbar-actions .usericon").count()))
     fail("the header should carry the viewer's face as the way to You");
   if (await p.locator('.navtab[data-tab="home"]').count())
     fail("Home should be hidden from a member while it is admin-only");
   await p.locator(".navtab", { hasText: "Discover" }).click();
   await p.waitForURL(/\/discover/);
-  if ((await p.locator(".navtab").count()) !== 3) fail("the bar should follow them to Discover");
+  if ((await p.locator(".navtab").count()) !== 2) fail("the bar should follow them to Discover");
   await p.locator(".navtab", { hasText: "Schedule" }).click();
   await p.waitForURL("**/week");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their own calendar");
+  if ((await p.locator(".navtab").count()) !== 2) fail("and to their own calendar");
   if ((await p.locator(".navtab.on").innerText()).includes("Schedule") === false)
     fail("their calendar should light the Schedule tab");
   // No plans ribbon, no gear, and no corner magnifier: Search is a tab.
@@ -138,11 +134,11 @@ console.log("member setup ok (two steps, no studios, lands on Following)");
     fail("the header magnifier should be gone: Discover's tab wears it");
   await p.locator(".brandbar-actions .usericon").click();
   await p.waitForURL("**/you");
-  if ((await p.locator(".navtab").count()) !== 3) fail("and to their account rows");
-  await p.locator(".navtab", { hasText: "Following" }).click();
-  await p.waitForURL("**/feed");
+  if ((await p.locator(".navtab").count()) !== 2) fail("and to their account rows");
+  await p.locator(".navtab", { hasText: "Schedule" }).click();
+  await p.waitForURL("**/week");
 }
-console.log("member tabs ok (Following, Discover, Schedule, and You in the corner)");
+console.log("member tabs ok (Discover, Schedule, and You in the corner)");
 
 // The chrome lives in a layout above the loading boundary, so a tab that's
 // still loading keeps its header and its bar. Hold the response to see it.

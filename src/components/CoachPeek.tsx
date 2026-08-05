@@ -4,7 +4,9 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { coachPeek, type Peek } from "@/app/actions/peek";
 import { setGoing } from "@/app/actions/going";
+import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
+import { SwipeGoing } from "@/components/SwipeGoing";
 import { initialOf } from "@/lib/avatar";
 
 /**
@@ -110,8 +112,32 @@ export function CoachPeek({
               const key = `${it.classId}|${it.iso}`;
               const on = marks[key] ?? it.saved;
               return (
-                <div key={key} className="peekrow">
-                  <Link className="peekrow-go" href={`/${it.base}/${it.classId}?d=${it.iso}`}>
+                // The swipe came with the merged week it used to live on. It
+                // belongs here for the same reason the tray does: saving is
+                // the act this release turns on, and the cheapest version of
+                // it is one drag without aiming at a button.
+                <SwipeGoing key={key} going={on} onToggle={() => save(it.classId, it.iso, !on)}>
+                {/* A class opens as a sheet from a list and as a page from a
+                    link, and a peek is a list. Left as a bare href the row
+                    navigated, which threw the peek away: you tapped one class
+                    out of a fortnight and landed somewhere with no way back to
+                    the other thirteen.
+
+                    Inside the swipe, not around it. Both catch the click in
+                    the capture phase, so the outer one goes first: with
+                    ClassOpener around the list, every completed swipe also
+                    opened the class it had just saved. The gesture is the
+                    ancestor now, so its stopPropagation lands before this
+                    ever sees the event. */}
+                <ClassOpener handle="">
+                <div className="peekrow">
+                  <Link
+                    className="peekrow-go"
+                    href={`/${it.base}/${it.classId}?d=${it.iso}`}
+                    data-cid={it.classId}
+                    data-d={it.iso}
+                    data-base={it.base}
+                  >
                     <span className="peekrow-nm">{it.name}</span>
                     <span className="peekrow-sub">
                       {it.hm}
@@ -129,6 +155,8 @@ export function CoachPeek({
                     <span>{on ? "Added" : "Add"}</span>
                   </button>
                 </div>
+                </ClassOpener>
+                </SwipeGoing>
               );
             })}
           </div>

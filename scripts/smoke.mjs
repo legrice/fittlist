@@ -32,6 +32,19 @@ const closeLive = async (pg) => {
   await sheet.locator(".sheetclose").click();
   await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
 };
+// A followed coach's classes live behind their circle now, not on a merged
+// week. Open the peek and wait for it to have rows; close it the same way
+// everywhere so the screen underneath is never left scrimmed.
+const openPeek = async (pg, first) => {
+  await pg.locator(".tray").waitFor();
+  await pg.locator(".trayitem", { hasText: first }).click();
+  await pg.locator(".peeksheet").waitFor();
+  await pg.locator(".peekrow").first().waitFor();
+};
+const shutPeek = async (pg) => {
+  await pg.locator(".peekclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 const eventCount = (pg) => pg.locator(".ps-event").count();
 // The schedule is an infinite calendar: a class recurs across many weeks, so
 // count DISTINCT classes by their data-cid rather than rendered rows.
@@ -798,8 +811,10 @@ console.log("class sheet ok (opens over the list, the page is still shareable)")
   await up.getByRole("button", { name: "Create my account" }).click();
   // signed in, and the subscribe they just made already reads as a follow
   await up.locator(".profacts .followpill", { hasText: "Following" }).waitFor({ timeout: 20000 });
-  await up.goto(BASE + "/feed");
-  await up.locator(".feedagenda .ps-event").first().waitFor();
+  // ...and the follow put a face on their calendar, with the week behind it.
+  await up.goto(BASE + "/week");
+  await openPeek(up, "Matt");
+  await shutPeek(up);
   // leave the fixture as we found it — later assertions count Matt's followers
   await up.goto(BASE + "/matt");
   await up.locator(".profacts .followpill", { hasText: "Following" }).click();
@@ -1246,8 +1261,9 @@ await page.waitForURL(BASE + "/");
 await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
 await page.getByRole("heading", { name: "Sign in" }).waitFor();
 await page.getByRole("button", { name: "Use a passkey" }).click();
-// Every login lands on Following; /app stopped being anyone's front door.
-await page.waitForURL(BASE + "/feed");
+// Every login lands on the calendar. It was Following for months, and that
+// went with the merged week: a coach lands on /app, a member on /week.
+await page.waitForURL(BASE + "/app");
 console.log("passkey login ok");
 
 // ================= fan side (needs FANS_ENABLED=true on the server) =================
@@ -1272,18 +1288,28 @@ await fan.getByRole("heading", { name: "Add a photo." }).waitFor();
 if ((await fan.locator(".wizdot").count()) !== 2)
   fail("a member's setup is two steps: photo, then who they are");
 await skipSetup(fan);
-await fan.waitForURL("**/feed");
-await fan.getByText("You\u2019re not following anyone").waitFor();
+await fan.waitForURL("**/week");
+// A brand new member lands on their own empty calendar. It used to be the
+// Following feed's "You're not following anyone", which was a screen whose
+// emptiness was somebody else's fault; this one is theirs to fill, and it
+// offers both ways to do it. No tray either: a rail with no faces reads as
+// broken, so it is not drawn until there is a face for it.
+await fan.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
+if (await fan.locator(".tray").count())
+  fail("an account that follows nobody should have no tray");
+// Both ways out: add something yourself, or go and follow somebody.
+await fan.locator(".calempty-cta .btn.si").waitFor();
+await fan.locator(".calempty-cta a[href='/discover']").waitFor();
 // Home is parked. Nobody has the tab, and the concept is kept in
 // homescreenspec.md rather than in a route nobody can reach.
 if (await fan.locator('.navtab[data-tab="home"]').count())
   fail("the Home tab should be gone");
 
-// phase 3: the directory. Empty feed points at it; follow happens inline.
+// phase 3: the directory. The empty calendar points at it; follow happens inline.
 // It is one list now: Classes went first and Studios followed, both because a
 // directory you cannot follow anything from is not doing this screen's one
 // job. So there are no halves to pick and nothing to name.
-await fan.getByRole("link", { name: "Find coaches" }).click();
+await fan.locator(".calempty-cta a[href='/discover']").click();
 await fan.locator(".dislist").waitFor();
 if (await fan.locator(".distabs").count())
   fail("Discover is one list: there should be no halves to pick");
@@ -1506,7 +1532,7 @@ console.log("discover ok (the row's pill agrees with the profile)");
   // Discover's own box is the door to this screen. The header's magnifier
   // left when the tab took that glyph back: the same mark is never drawn
   // twice on one screen, and the corner is your face now.
-  await fan.goto(BASE + "/feed");
+  await fan.goto(BASE + "/week");
   if (await fan.locator(".searchbtn").count())
     fail("the header magnifier should be gone: Discover's tab wears it");
   await fan.goto(BASE + "/discover");
@@ -1628,77 +1654,56 @@ await fan.locator(".ownermenu .setrow", { hasText: "Report this studio" }).waitF
 await fan.locator(".sheetclose").click();
 await fan.locator(".ownermenu").waitFor({ state: "detached" });
 console.log("studio edits are coach-only ok (no edit row in a member's menu)");
-await fan.goto(BASE + "/feed");
-// phase 2: merged agenda — avatar strip on top, chronological class rows below
-await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
+await fan.goto(BASE + "/week");
+// What a follow buys: a face at the top of the calendar, and that coach's
+// fortnight behind it. The merged week this replaced put their classes
+// straight onto the schedule, which meant saving one changed nothing you
+// could see; now the save is the thing that moves a class onto your week.
+await fan.locator(".tray").waitFor();
+await fan.locator(".trayitem", { hasText: "Matt" }).waitFor();
 // The rail ends in the way to lengthen it: a door to Discover, never one of
-// the faces, so it keeps its full opacity when a face is picked.
+// the faces.
 {
-  const add = fan.locator(".feedav-add");
+  const add = fan.locator(".trayitem", { hasText: "Add" });
   await add.waitFor();
   if ((await add.getAttribute("href")) !== "/discover")
     fail("the rail's plus should open Discover: " + (await add.getAttribute("href")));
 }
-await fan.locator(".feedagenda .ps-event").first().waitFor();
-// A class somebody else teaches keeps its Add ribbon and never wears the
-// Coaching tag: that corner says which hat, and a member has one.
+// A coach nobody has peeked at yet is lit: the ring is what makes the tray a
+// tool rather than six circles.
+if (!(await fan.locator(".trayav.fresh").count()))
+  fail("a coach never peeked at should wear the ring");
+await openPeek(fan, "Matt");
 {
-  await fan.locator(".feedagenda .evcard-add").first().waitFor();
-  if (await fan.locator(".feedagenda .evcard-mine").count())
-    fail("a member is not coaching anything on their Following feed");
-  if (await fan.locator(".feedagenda .ps-youtag").count())
-    fail("the YOU tag moved to the corner and should be gone from the name");
+  const rows = await fan.locator(".peekrow").count();
+  if (rows < 1) fail("the peek has no class rows");
+  // Every row offers the save, and none of them claims the viewer coaches it:
+  // this is somebody else's week by construction.
+  if ((await fan.locator(".peekadd").count()) !== rows)
+    fail("every row in the peek should offer the save");
+  if (await fan.locator(".peeksheet .ps-youtag, .peeksheet .evcard-mine").count())
+    fail("a member coaches nothing, least of all in somebody else's peek");
+  // The sub-line reads time, length and where, with no pin competing.
+  const sub = fan.locator(".peekrow-sub").first();
+  const txt = (await sub.innerText()).trim();
+  if (await sub.locator(".icon svg").count()) fail("the peek row should have no place pin");
+  if (txt.split("\u00b7").length < 2) fail("the sub-line should read time then length: " + txt);
+  if (!/\d+ min/.test(txt)) fail("the sub-line should carry the length: " + txt);
 }
-const feedRows = await fan.locator(".feedagenda .ps-event").count();
-if (feedRows < 1) fail("feed agenda has no class rows");
-// A merged row already carries the coach's face; where it is rides the card's
-// one meta line as plain text, with no pin competing with it.
+// The peek names whose week it is, once, and offers the way to their page.
 {
-  const where = fan.locator(".feedagenda .ps-emeta").first();
-  await where.waitFor();
-  if (await where.locator(".icon svg").count()) fail("the merged week should have no place pin");
-  const txt = (await where.innerText()).trim();
-  if (!txt) fail("the merged week lost its meta line");
-  // Time and length always; the place only when the class names one, so the
-  // floor is two parts rather than three.
-  if (txt.split("\u00b7").length < 2) fail("the meta line should read time then length: " + txt);
-  if (!/\d+ min/.test(txt)) fail("the meta line should carry the length: " + txt);
+  const nm = (await fan.locator(".peekhead-nm").innerText()).trim();
+  if (!/Matt/.test(nm)) fail("the peek should name the coach: " + nm);
+  if ((await fan.locator(".peekhead-nm").count()) !== 1)
+    fail("the peek should say the name once, not in a title bar as well");
 }
-// tap the avatar to filter to that coach, then clear it
-await fan.locator(".feedav", { hasText: "Matt" }).click();
-await fan.locator(".feedfilterbar", { hasText: "Classes with Matt" }).waitFor();
-await fan.locator(".feedagenda .ps-event").first().waitFor();
-// the All circle clears the filter
-await fan.locator(".feedav", { hasText: "All" }).click();
-await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
-await fan.locator(".feedav.on", { hasText: "All" }).waitFor();
-// tapping a selected coach again also clears it
-await fan.locator(".feedav", { hasText: "Matt" }).click();
-await fan.locator(".feedfilterbar").waitFor();
-await fan.locator(".feedav", { hasText: "Matt" }).click();
-await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
-// the rail only carries coaches with something in the week — a chip that can
-// only ever empty the screen doesn't belong there
-{
-  const chips = (await fan.locator("button.feedav .feedav-nm").allInnerTexts())
-    .map((t) => t.trim())
-    .filter((t) => t !== "All");
-  const inWeek = await fan.locator(".feedagenda .ps-ewho").allInnerTexts();
-  for (const nm of chips)
-    if (!inWeek.some((c) => c.trim().startsWith(nm)))
-      fail(`${nm} is on the rail with no classes in the week`);
-}
-// each row reads coach, then class, then studio
-{
-  const order = await fan
-    .locator(".feedagenda .ps-event")
-    .first()
-    .locator(".ps-ebody > *")
-    .evaluateAll((els) => els.map((e) => e.className.split(" ")[0]));
-  if (order[0] !== "ps-ewho" || order[1] !== "ps-enm" || order[2] !== "ps-emeta")
-    fail("a card reads coach, class name, then the one meta line: " + order.join(","));
-}
-console.log("fan flow ok (signup -> follow -> merged feed + filter)");
+await shutPeek(fan);
+// ...and opening it puts the ring out, because they have looked.
+await fan.reload();
+await fan.locator(".tray").waitFor();
+if (await fan.locator(".trayav.fresh").count())
+  fail("the ring should clear once the peek has been opened");
+console.log("fan flow ok (signup -> follow -> a face, and their week behind it)");
 
 // The profile's schedule wears the same flat rows every schedule does now.
 // The ribbon is the row's one action, and only for somebody the class could
@@ -1746,18 +1751,15 @@ console.log(
     (avColors.length < 2 ? " — only one coach is listed, so this is a weak check" : ""),
 );
 
-// Adding a class + the member's share image — the mirror of the coach's story
-await fan.goto(BASE + "/feed");
-await fan.locator(".feedagenda .ps-event").first().waitFor();
-// marking happens on the class itself now, not on the crowded week row
-if (await fan.locator(".feedagenda .goingbtn").count())
-  fail("the week should not carry an inline add button");
-// The class opens from the bottom, so the week is still behind it and the add
-// reads as picking something up rather than going somewhere.
-await fan.locator(".feedagenda .ps-event").first().click();
+// Saving a class + the member's share image, the mirror of the coach's story.
+// The class is reached through the coach's circle now, which is the only door
+// there is: nothing they publish is on this calendar until it is saved.
+await fan.goto(BASE + "/week");
+await openPeek(fan, "Matt");
+// The class opens from the bottom, over the peek, so the list is still behind
+// it and the save reads as picking something up rather than going somewhere.
+await fan.locator(".peekrow-go").first().click();
 await fan.locator(".classoverlay-nm").waitFor();
-if (!(await fan.locator(".feedagenda .ps-event").count()))
-  fail("the week should stay behind the overlay");
 await fan.locator(".ovcta-save").click();
 // The note answers the tap and hands over to the week, pointed at the one
 // occurrence it means. The visibility choice came off it by Matt's call, so
@@ -1766,65 +1768,59 @@ await fan.locator(".favtoast.on .favtoast-link", { hasText: "See them" }).waitFo
 if (await fan.locator(".favtoast.on .favtoast-link", { hasText: "Make it private" }).count())
   fail("the note should no longer offer the private option");
 await fan.locator(".ovcta-save.on").waitFor();
-// Reopening it says the same thing: the save is on the server, not in the tab.
-await fan.locator(".ovcircle-back").click();
-await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
-await fan.reload();
-await fan.locator(".feedagenda .ps-event").first().click();
-await fan.locator(".ovcta-save.on").waitFor();
 // Share is here too, so a class can be passed on without leaving it.
 await fan.locator(".ovcircle-share").waitFor();
 await fan.locator(".ovcircle-back").click();
-// and the week reports it back
-await fan.goto(BASE + "/feed");
-// The filled ribbon in the card's corner is the whole report: no Added tag,
-// because a word beside the time was the state said twice.
-await fan.locator(".feedagenda .ps-erow").filter({ has: fan.locator(".ps-event.goingon") }).locator(".evcard-add.on").first().waitFor();
-if (await fan.locator(".feedagenda .ps-goingtag").count())
-  fail("Following should carry no Added tag; the ribbon says it");
-// Flat rows, not cards: no shadow, the coach's accent bar down the left,
-// the added ribbon filling brand orange above the time in the right
-// column, and no share circle beside it.
+await fan.waitForFunction(() => !document.querySelector(".classoverlay"));
+
+// ...and the save is on the server, not in the tab: the peek says so on a
+// fresh load, and the calendar underneath now carries the class.
+await fan.goto(BASE + "/week");
+await openPeek(fan, "Matt");
+await fan.locator(".peekadd.on").first().waitFor();
+await shutPeek(fan);
+await fan.locator(".callist .ps-event").first().waitFor();
+{
+  const saved = await fan.locator(".callist .ps-event.ev-added").count();
+  if (!saved) fail("the saved class should be on the member's calendar");
+}
+// Flat rows are gone: a card again, per the design, because the flat row could
+// not draw a boundary on a list that mixes a class you teach, a shift, one you
+// saved and a dentist. The saved bar is ink, the one relationship that is not
+// a hue of its own.
 {
   const card = await fan.evaluate(() => {
-    const ev = document.querySelector(".feedagenda .ps-event");
-    const bar = document.querySelector(".feedagenda .ps-accent");
-    const add = document.querySelector(".evcard-add.on");
+    const ev = document.querySelector(".callist .ps-event.ev-added");
+    const bar = ev.querySelector(".ps-accent");
     return {
       shadow: getComputedStyle(ev).boxShadow,
-      barW: bar ? bar.getBoundingClientRect().width : 0,
-      addInk: add ? getComputedStyle(add).color : null,
-      addBg: add ? getComputedStyle(add).backgroundColor : null,
-      addY: add?.getBoundingClientRect().y ?? null,
-      shares: document.querySelectorAll(".evcard-share").length,
       radius: getComputedStyle(ev).borderTopLeftRadius,
-      av: document.querySelectorAll(".feedagenda .ps-eav").length,
+      barW: bar ? bar.getBoundingClientRect().width : 0,
+      barBg: bar ? getComputedStyle(bar).backgroundColor : null,
+      av: ev.querySelectorAll(".ps-eav").length,
+      shares: document.querySelectorAll(".evcard-share").length,
     };
   });
-  // A card again, per the design: the flat row could not draw a boundary on a
-  // list that mixes a class you teach, a shift, one you saved and a dentist.
   if (card.shadow === "none") fail("a class row is a card again, and a card has a shadow");
   if (card.radius === "0px") fail("the card should carry its radius, got " + card.radius);
   if (!card.av) fail("the card leads with a face");
-  if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
-  // The circle came off the ribbon: the added state is the glyph itself
-  // filling in ink, on no background.
-  if (card.addInk !== "rgb(25, 21, 2)")
-    fail("the added ribbon glyph should fill in ink, got " + card.addInk);
-  if (card.addBg !== "rgba(0, 0, 0, 0)")
-    fail("the ribbon should carry no background, got " + card.addBg);
-  if (card.shares > 0) fail("the share circle should be gone from Following rows");
-  if (card.addY === null) fail("the ribbon should be on the row");
+  if (card.barW < 3) fail("the accent bar should be visible, got " + card.barW);
+  if (card.barBg !== "rgb(25, 21, 2)")
+    fail("a saved row's bar is ink, got " + card.barBg);
+  if (card.shares > 0) fail("the share circle should be gone from class rows");
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
 // ---- The member's Schedule tab: their calendar, whole screen. The tools
 // rail left it for the You tab, and the five tabs are the same for everyone.
 {
-  await fan.goto(BASE + "/feed");
+  await fan.goto(BASE + "/discover");
   if (await fan.locator('.navtab[data-tab="plans"]').count())
     fail("Plans should have left the tab bar");
-  if ((await fan.locator(".navtab").count()) !== 3) fail("expected 3 tabs");
+  // Two: Following went with the merged week it pointed at.
+  if ((await fan.locator(".navtab").count()) !== 2) fail("expected 2 tabs");
+  if (await fan.locator(".navtab", { hasText: "Following" }).count())
+    fail("Following should have left the tab bar with its screen");
   if (await fan.locator(".plansbtn").count())
     fail("the plans ribbon should have left the header");
   await fan.locator(".navtab", { hasText: "Schedule" }).click();
@@ -1858,9 +1854,9 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   await fan.getByRole("button", { name: "Remove it" }).click();
   await fan.getByText("Removed from your plans").waitFor();
   await fan.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
-  await fan.goto(BASE + "/feed");
-  // Put it back for the checks below.
-  await fan.locator(".feedagenda .ps-event").first().click();
+  // Put it back for the checks below, through the one door there is.
+  await openPeek(fan, "Matt");
+  await fan.locator(".peekrow-go").first().click();
   // Before the tap: an empty calendar and the word.
   {
     const off = (await fan.locator(".ovcta-save").innerText()).trim();
@@ -1890,7 +1886,7 @@ if (await fan.locator(".goingtoggle").count()) fail("the Show going filter shoul
   if ((await fan.locator(".classoverlay-coach").innerText()).toLowerCase().startsWith("with"))
     fail("the coach line should say coached by, then the name");
   await fan.locator(".ovcircle-back").click();
-  await fan.goto(BASE + "/feed");
+  await fan.goto(BASE + "/week");
 }
 console.log("your week ok (count ahead, rows leave, points at a real calendar)");
 
@@ -2075,8 +2071,8 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   }
   console.log("community schedule ok (built from what people added, never attributed)");
   // Back where the next block expects to find them.
-  await fan.goto(BASE + "/feed");
-  await fan.locator(".feedagenda .ps-event").first().waitFor();
+  await fan.goto(BASE + "/week");
+  await fan.locator(".callist .ps-event").first().waitFor();
 }
 
 // A coach adding to their calendar is asked which hat first, by the plus
@@ -2146,12 +2142,21 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   console.log("personal remove ok (the sheet asks, and the row goes)");
 }
 
-// swiping a row right-to-left flips the same mark, without opening the class
+// Swiping a row right-to-left flips the same mark, without opening the class.
+// The gesture came over with the week it used to live on: the peek is where
+// saving happens now, so it is where the cheapest way to save belongs.
 {
-  const row = fan.locator(".feedagenda .swiperow").nth(1);
-  await row.locator(".ps-event").waitFor();
-  const wasGoing = await row.locator(".ps-event.goingon").count();
-  if (wasGoing) fail("expected the second row to be unmarked before the swipe");
+  await fan.goto(BASE + "/week");
+  await openPeek(fan, "Matt");
+  const rows = fan.locator(".peeksheet .swiperow");
+  await rows.first().waitFor();
+  // Find one that is not already saved; the first is, from the block above.
+  const idx = await rows.evaluateAll((els) =>
+    els.findIndex((e) => !e.querySelector(".peekadd.on")),
+  );
+  if (idx < 0) fail("expected an unsaved row in the peek to swipe");
+  const row = rows.nth(idx);
+  const before = await fan.locator(".peekadd.on").count();
   const box = await row.boundingBox();
   const y = box.y + box.height / 2;
   const from = box.x + box.width - 20;
@@ -2160,15 +2165,17 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   // past the 78px commit point, in steps so the drag is decided as horizontal
   for (const step of [35, 70, 100, 120]) await fan.mouse.move(from - step, y, { steps: 3 });
   await fan.mouse.up();
-  await row.locator(".ps-event.goingon").waitFor();
-  // and it's on the server, not just in the tab
-  await fan.reload();
-  const marked = await fan.locator(".feedagenda .ps-event.goingon").count();
-  if (marked !== 2) fail(`swipe should have marked a second class, got ${marked} marked`);
+  await row.locator(".peekadd.on").waitFor();
   // a swipe must not also open the class
-  if (!fan.url().endsWith("/feed")) fail("swiping navigated: " + fan.url());
+  if (await fan.locator(".classoverlay").count()) fail("the swipe opened the class");
+  // ...and it is on the server, not just in the tab
+  await fan.reload();
+  await openPeek(fan, "Matt");
+  const marked = await fan.locator(".peekadd.on").count();
+  if (marked !== before + 1)
+    fail(`swipe should have saved one more, ${before} -> ${marked}`);
   // swipe the same row again to take it back
-  const row2 = fan.locator(".feedagenda .swiperow").nth(1);
+  const row2 = fan.locator(".peeksheet .swiperow").nth(idx);
   const b2 = await row2.boundingBox();
   const y2 = b2.y + b2.height / 2;
   const from2 = b2.x + b2.width - 20;
@@ -2176,12 +2183,14 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.mouse.down();
   for (const step of [35, 70, 100, 120]) await fan.mouse.move(from2 - step, y2, { steps: 3 });
   await fan.mouse.up();
-  await row2.locator(".ps-event.goingon").waitFor({ state: "detached" });
+  await row2.locator(".peekadd.on").waitFor({ state: "detached" });
   await fan.reload();
-  const after = await fan.locator(".feedagenda .ps-event.goingon").count();
-  if (after !== 1) fail(`swiping back should leave 1 marked, got ${after}`);
+  await openPeek(fan, "Matt");
+  const after = await fan.locator(".peekadd.on").count();
+  if (after !== before) fail(`swiping back should return to ${before}, got ${after}`);
+  await shutPeek(fan);
 }
-console.log("swipe to mark going ok (right-to-left, both ways, survives reload)");
+console.log("swipe to save ok (right-to-left on the peek, both ways, survives reload)");
 
 // the share image renders from their attendance, not a coach's schedule
 const myStory = await fan.request.get(`${BASE}/api/story/me?theme=paper`);
@@ -2207,7 +2216,7 @@ await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
 // the wordmark is the way back to the feed from anywhere
 await fan.locator(".brandbar-home").click();
-await fan.waitForURL("**/feed");
+await fan.waitForURL("**/week");
 console.log("going + share my week ok (1080x1920 png, from the account)");
 
 // ---- The member's tabs: the four they always were, with the directory
@@ -2216,17 +2225,15 @@ console.log("going + share my week ok (1080x1920 png, from the account)");
   // The You tab carries the viewer's initial inside it, so match by
   // inclusion rather than the joined string.
   const tabs = (await fan.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
-  if (
-    tabs.length !== 3 ||
-    !tabs[0].includes("Following") ||
-    !tabs[1].includes("Discover") ||
-    !tabs[2].includes("Schedule")
-  )
-    fail("a member's tabs should read Following, Discover, Schedule: " + tabs.join("|"));
+  // Two, since Following collapsed into Schedule: it was a merged week of the
+  // coaches you follow, and a follow delivers a face on the calendar now
+  // rather than a week of its own.
+  if (tabs.length !== 2 || !tabs[0].includes("Discover") || !tabs[1].includes("Schedule"))
+    fail("a member's tabs should read Discover, Schedule: " + tabs.join("|"));
   // You is the header's face now, not a tab: a person is not a place.
   if (!(await fan.locator(".brandbar-actions .usericon").count()))
     fail("the header should carry the viewer's face as the way to You");
-  console.log("member tabs ok (three, and You is the corner)");
+  console.log("member tabs ok (two, and You is the corner)");
 }
 
 // the merged weekly digest: one "Your week" email covering every coach they
@@ -2250,8 +2257,10 @@ const digestUnsub = (digestBlock.match(/\/u\/digest\/[A-Za-z0-9._-]+/) || [])[0]
 if (!digestUnsub) fail("merged digest has no unsubscribe link");
 await fan.goto(BASE + digestUnsub);
 await fan.getByText("No more weekly emails.").waitFor();
-await fan.goto(BASE + "/feed");
-await fan.locator(".feedagenda .ps-event").first().waitFor(); // still following
+// Still following: the face is still on their calendar, which is the whole
+// visible consequence of a follow now.
+await fan.goto(BASE + "/week");
+await fan.locator(".trayitem", { hasText: "Matt" }).waitFor();
 const afterOptOut = fanDigestCount();
 dcron = await fan.request.get(`${BASE}/api/cron/weekly?key=${CRON_KEY}`);
 if (!dcron.ok()) fail("weekly cron failed (post opt-out): " + dcron.status());
@@ -2279,62 +2288,43 @@ await fan.locator(".disrow", { hasText: "Matt" }).waitFor();
 await fanCtx.close();
 console.log("directory opt-out ok (delisted, page still public)");
 
-// a coach following another coach: two separate spaces. Their own schedule
-// stays what they teach; following lives on /feed and never leaks publicly.
+// A coach following another coach: two separate spaces. Their own schedule
+// stays what they teach, and who they follow is a face on it that never leaks
+// publicly.
 await page.goto(BASE + "/sam");
 await page.locator(".profacts .followpill", { hasText: "Follow" }).click();
 await page.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
-await page.goto(BASE + "/feed");
-// their own classes belong on Following too, beside the ones they follow
-if (!(await page.locator(".feedagenda .ps-event", { hasText: "Barbell Strength" }).count()))
-  fail("a coach's own classes should show on Following");
-await page.locator(".feedav", { hasText: "Matt" }).waitFor();
-await page.locator(".feedagenda .ps-event", { hasText: "Conditioning" }).first().click();
+await page.goto(BASE + "/app");
+// A coach's tray is a member's tray: following is one idea, not two.
+await openPeek(page, "Sam");
+await page.locator(".peekrow-go").first().click();
 await page.locator(".ovcta-save").click();
 await page.locator(".ovcta-save.on").waitFor();
-// it shows on the following page
-await page.goto(BASE + "/feed");
-await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
+await page.locator(".ovcircle-back").click();
+await page.waitForFunction(() => !document.querySelector(".classoverlay"));
+// ...and it lands on their own calendar, beside what they teach.
+await page.goto(BASE + "/app");
+await page.locator(".callist .ps-event.ev-added").first().waitFor();
 
-// but they can't attend what they teach — swiping their own row says so and
-// leaves the row unmarked
+// But they cannot attend what they teach, and the row says so by offering
+// nothing rather than an Add that setGoing would refuse. The swipe that used
+// to teach this lived on the merged week; it is on the peek now, which is
+// always somebody else's week, so there is no longer a way to aim the gesture
+// at your own class at all. The refusal in setGoing stands behind that.
 {
-  const mine = page
-    .locator(".feedagenda .swiperow")
+  const own = page
+    .locator(".callist .ps-erow")
     .filter({ hasText: "Barbell Strength" })
     .first();
-  await mine.locator(".ps-event").waitFor();
-  // The corner says which hat rather than offering an Add that setGoing
-  // would refuse. It replaced the YOU tag beside the name: a tag there and a
-  // button that cannot work was the row saying two things and meaning
-  // neither. The row still opens the class, and the swipe below still
-  // teaches, because a gesture explains itself where a dead button misleads.
-  {
-    const own = page
-      .locator(".feedagenda .ps-erow")
-      .filter({ hasText: "Barbell Strength" })
-      .first();
-    await own.locator(".evcard-mine").waitFor();
-    if (!/coaching/i.test(await own.locator(".evcard-mine").innerText()))
-      fail("your own class should say Coaching in the corner");
-    if (await own.locator("button.evcard-add").count())
-      fail("your own class should offer no Add: setGoing refuses it");
-  }
-  const box = await mine.boundingBox();
-  const y = box.y + box.height / 2;
-  const from = box.x + box.width - 20;
-  await page.mouse.move(from, y);
-  await page.mouse.down();
-  for (const s of [35, 70, 100, 120]) await page.mouse.move(from - s, y, { steps: 3 });
-  await page.mouse.up();
-  await page.locator(".toast.on", { hasText: "You aren’t able to attend your own class" }).waitFor();
-  if (await mine.locator(".ps-event.goingon").count())
-    fail("a coach's own class was marked Going");
-  await page.reload();
-  const marked = await page.locator(".feedagenda .ps-event.goingon").count();
-  if (marked !== 1) fail(`only the followed class should be marked, got ${marked}`);
+  await own.locator(".ps-event.ev-coaching").waitFor();
+  if (!/teaching/i.test(await own.locator(".ps-chip").innerText()))
+    fail("your own class should say Teaching in the corner");
+  if (await own.locator("button.evcard-add, .ps-eadd").count())
+    fail("your own class should offer no Add: setGoing refuses it");
+  const marked = await page.locator(".callist .ps-event.ev-added").count();
+  if (!marked) fail("the followed coach's class should be the marked one");
 }
-console.log("own classes on Following ok (visible, not attendable)");
+console.log("own classes ok (teaching offers no Add, the followed one saved)");
 
 // and the coach's calendar holds both hats now: the class they added rides
 // along with what they teach, wearing the Going green and the coach's face,
@@ -2474,83 +2464,23 @@ await page.locator(".ps-event").first().waitFor();
   const tabs = (await page.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/[ \t\n]+/g, " ").trim(),
   );
-  if (tabs.length !== 3 || tabs.some((t) => /Home/.test(t)))
-    fail("three tabs, none of them Home: " + tabs.join("|"));
-  console.log("home is gone ok (three tabs for everyone)");
+  if (tabs.length !== 2 || tabs.some((t) => /Home|Following/.test(t)))
+    fail("two tabs, neither of them Home nor Following: " + tabs.join("|"));
+  console.log("home is gone ok (two tabs for everyone)");
 }
 
 // with the bottom nav to cross between the two spaces
-await page.locator(".navtab", { hasText: "Following" }).click();
-await page.locator(".feedstrip").waitFor();
-await page.locator(".navtab.on", { hasText: "Following" }).waitFor();
-await page.locator(".navtab", { hasText: "Discover" }).click();
-await page.locator(".dissearchrow").waitFor();
-// Schedule is the coaching calendar, whole screen: the rail left it for You.
-await page.locator(".navtab", { hasText: "Schedule" }).click();
-await page.waitForURL(/\/app/);
-await page.locator(".caladd").waitFor();
-if (await page.locator(".schedtools").count())
-  fail("the tools rail should have left the calendar for the You tab");
-// No corner controls here, so no min-height holding air above the name: the
-// card is as tall as what it says. The budget allows one wrapped name line,
-// because the date rail took a slice of the card's width.
-{
-  const h = await page
-    .locator(".callist .ps-event")
-    .first()
-    .evaluate((e) => e.getBoundingClientRect().height);
-  if (h > 130) fail("the Schedule-tab row should hug its content, got " + h + "px tall");
-}
-// You is the person: the account screen as a page, cards for the shares.
-await page.locator(".brandbar-actions .usericon").click();
-await page.waitForURL(/\/you/);
-await page.locator(".acctwrap").waitFor();
-if (!(await page.locator(".navbar").count())) fail("the You tab keeps the bar");
-// One Share door with all five ways behind it, rather than four tiles of
-// the same act in different output formats across the first screen.
-await page.getByRole("button", { name: "Share", exact: true }).click();
-{
-  const ways = (await page.locator(".sheet .setrow .t").allInnerTexts()).map((t) => t.trim());
-  for (const want of ["Copy link", "Schedule story", "Profile card", "QR code", "Beta invite link"])
-    if (!ways.includes(want))
-      fail(`the share sheet should offer "${want}", got ` + ways.join("|"));
-}
-await page.locator(".sheet .setrow", { hasText: "QR code" }).click();
-await page.locator(".sheet .qrframe").waitFor();
-await page.locator(".sheet .sheetclose").click();
-await page.waitForFunction(() => !document.querySelector(".sheet .qrframe"));
-// All four calendar doors on one screen, which is the reason it exists.
-await page.locator(".settingslist .setrow", { hasText: "Calendar & sync" }).click();
-{
-  const body = await page.locator(".sheet").first().innerText();
-  for (const want of ["Apple or Outlook", "Your week as text"])
-    if (!body.includes(want)) fail(`Calendar & sync should hold "${want}"`);
-}
-await page.locator(".sheet .sheetclose, .sheet .sheetback").first().click();
-await page.waitForTimeout(400);
-// The who row is the way to the page itself.
-await page.locator(".acctwho-id").click();
-await page.waitForURL(/\/matt/);
-await page.locator(".profname").waitFor();
-if (!(await page.locator(".navbar").count()))
-  fail("your own profile keeps the bar");
-await page.locator(".navtab", { hasText: "Following" }).click();
-await page.locator(".feedstrip").waitFor();
 // No dead ends. A class opened from a list is a sheet, so closing it is the
 // whole way back: you never left.
-await page.locator(".navtab", { hasText: "Following" }).click();
-await page.locator(".feedagenda .ps-event").first().click();
+await page.goto(BASE + "/app");
+await openPeek(page, "Sam");
+await page.locator(".peekrow-go").first().click();
 await page.locator(".classoverlay-nm").waitFor();
 await page.locator(".ovcircle-back").click();
 await page.waitForFunction(() => !document.querySelector(".classoverlay"));
-await page.locator(".feedstrip").waitFor();
-if (!page.url().endsWith("/feed")) fail("opening a class shouldn't navigate: " + page.url());
-// The page behind it still exists for a link somebody was sent, and still
-// backs into where it came from.
-{
-  const href = await page.locator(".feedagenda .ps-event").first().getAttribute("href");
-  if (href) fail("a feed row opens a sheet, so it shouldn't be a link: " + href);
-}
+await page.locator(".peeksheet").waitFor();
+if (!page.url().endsWith("/app")) fail("opening a class shouldn't navigate: " + page.url());
+await shutPeek(page);
 await page.goto(BASE + "/sam/schedule");
 {
   const href = await page.locator(".ps-event").first().getAttribute("href");
@@ -2929,14 +2859,14 @@ if (await page.locator(".ownergear").count())
 }
 console.log("profile chrome ok (pinned row, no header or tabs, green Following)");
 
-// Three tabs, admin or not: the bar is Following, Discover and Schedule, and
-// Share and You have both left it. Back in the app, since a profile carries no
-// bar at all.
+// Two tabs, admin or not: the bar is Discover and Schedule. Share and You
+// have both left it, and Following went with the merged week it pointed at.
+// Back in the app, since a profile carries no bar at all.
 await page.goto(BASE + "/app");
 await page.locator(".caladd").waitFor();
 {
   const n = await page.locator(".navtab").count();
-  if (n !== 3) fail("expected 3 tabs, got " + n);
+  if (n !== 2) fail("expected 2 tabs, got " + n);
 }
 await openProfile(page);
 await closeProfile(page);
@@ -3088,8 +3018,8 @@ if (await page.locator(".setrow", { hasText: "attending" }).count())
 }
 // the member side is still one tab away, and still theirs
 await closeProfile(page);
-await page.locator(".navtab", { hasText: "Following" }).click();
-await page.locator(".feedstrip, .empty-block").first().waitFor();
+await page.locator(".navtab", { hasText: "Discover" }).click();
+await page.waitForURL(/\/discover/);
 await page.locator(".navtab", { hasText: "Schedule" }).click();
 await page.locator(".caladd").waitFor();
 console.log("coach settings ok (no duplicate doors, member side still one tab away)");

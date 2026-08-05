@@ -15,7 +15,7 @@ import { readPhoto } from "@/lib/photo";
 
 export function OnboardingWizard({
   kind = "coach",
-  landing = "/feed",
+  landing = "/week",
   name,
   photo,
   title,

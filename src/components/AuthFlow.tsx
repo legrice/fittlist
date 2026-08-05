@@ -47,7 +47,7 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
-  landing = "/feed",
+  landing = "/week",
 }: {
   startStage: "email" | "role" | "claim";
   via?: string | null;

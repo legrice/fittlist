@@ -87,12 +87,12 @@ await coach.locator(".sheetclose").first().click().catch(() => {});
 console.log("a coach put a week up ok");
 
 // ---- Share is the calendar's own button, not a tab
-await coach.goto(BASE + "/feed");
+await coach.goto(BASE + "/app");
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
-  if (tabs.length !== 3) fail("expected three tabs, got " + tabs.length + ": " + tabs.join("|"));
+  if (tabs.length !== 2) fail("expected two tabs, got " + tabs.length + ": " + tabs.join("|"));
   // Share took the middle of the bar for a build and came back out: it is an
   // act rather than a place, and it belongs on the screen it is about.
   if (tabs.some((t) => /Share/.test(t)))

@@ -30,9 +30,26 @@ export async function fansVisible(): Promise<boolean> {
   return !!(await currentAdmin());
 }
 
-// Where signing in lands, and where the wordmark goes. One answer since Home
-// was parked; it stays a function because the answer has changed twice and
-// every caller already asks rather than assuming.
+// Where signing in lands, and where the wordmark goes.
+//
+// The calendar, since Following collapsed into it: there is no merged week to
+// land on any more, because following delivers a circle rather than classes.
+// It answers per kind rather than leaning on the two calendars' redirects,
+// which would put a hop on every sign-in and every OAuth callback for the half
+// of the app that lands on /app.
+//
+// It stays a function because the answer has changed three times now (/app,
+// then /feed, then here) and every caller already asks rather than assuming.
 export async function landingHref(): Promise<string> {
-  return "/feed";
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return "/app";
+  const { getDb, schema } = await import("@/db");
+  const { eq } = await import("drizzle-orm");
+  const db = await getDb();
+  const [me] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  return me?.kind === "fan" ? "/week" : "/app";
 }

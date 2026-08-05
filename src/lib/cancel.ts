@@ -57,7 +57,7 @@ export async function notifyCancelled(
       type: "class_cancelled",
       title: `${coach} cancelled ${cls.className}`,
       body: `${day}, ${cls.time}. It was in your week.`,
-      href: "/feed",
+      href: "/week",
     }).catch(() => {});
     if (emailOff.has(p.userId)) continue;
     await sendMessage({

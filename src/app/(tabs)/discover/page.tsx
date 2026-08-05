@@ -130,7 +130,7 @@ export default async function DiscoverPage({
         people={people}
         cities={cities}
         myCity={me.location?.trim() || null}
-        backHref="/feed"
+        backHref="/week"
         hideBack
       />
     </>
