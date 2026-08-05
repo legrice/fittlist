@@ -1909,7 +1909,14 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.locator("#fDesc").fill("Slow flow and a long savasana.");
   await fan.locator("#fWith").fill("Erin Clyne");
   await fan.getByRole("button", { name: "We", exact: true }).click();
-  await fan.locator("#fStart").fill("12:00");
+  // Late, and this matters. Every public surface drops an occurrence once it
+  // has ended, so a fixture at midday on a fixed weekday is visible for half
+  // of that day and gone for the rest, with the next one seven days out and
+  // past the week a studio page draws. This suite then failed by the clock:
+  // green in the morning, red after lunch, on unchanged code. Ending a minute
+  // before midnight keeps it ahead on its own day whenever the suite runs.
+  await fan.locator("#fStart").fill("23:00");
+  await fan.locator("#fEnd").fill("23:59");
   await fan.locator(".publishwrap .btn").click({ force: true });
   await fan.getByText("Added to your plans").waitFor();
   await fan.waitForTimeout(800);

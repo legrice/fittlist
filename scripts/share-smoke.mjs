@@ -166,6 +166,15 @@ await coach.waitForFunction(() => {
     .evaluate((e) => getComputedStyle(e).backgroundColor);
   if (!ground || ground === "rgba(0, 0, 0, 0)")
     fail("the preview should sit on the theme's paper, got " + ground);
+
+  // And it is drawn at the poster's real proportions. The composer is a
+  // fixed-height flex column, so the preview is a flex item on the main axis
+  // and gets squashed to make the screen add up unless it refuses to shrink.
+  // Twice this shipped as a near-square that nothing about the box explained.
+  const box = await coach.locator(".storyimg-wrap").boundingBox();
+  const ratio = box.height / box.width;
+  if (Math.abs(ratio - 16 / 9) > 0.06)
+    fail(`the preview should be 9:16, got ${box.width}x${box.height} (${ratio.toFixed(2)})`);
 }
 // The square canvas is still drawn by the route, and nothing in the app asks
 // for one. Held here so the second format cannot rot while it waits for a
