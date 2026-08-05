@@ -2013,6 +2013,9 @@ button.ps-card { cursor: pointer; }
   font-size: 13px; line-height: 1.5; color: var(--ol); margin: 22px 0 0;
   padding-top: 16px; border-top: 1px solid var(--line);
 }
+/* The note above it already draws the rule that separates the foot of this
+   sheet from the class. A second one under it would be a box round one link. */
+.classoverlay-body .dangerzone { margin-top: 14px; padding-top: 0; border-top: 0; }
 
 /* A member's week on their profile: mutuals only, plus the owner. Rows echo
    the coach-list shape on the studio page, quieter than Your week's cards. */

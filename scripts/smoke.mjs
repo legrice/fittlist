@@ -2087,6 +2087,42 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await page.locator(".sheetclose, .adderclose").first().click();
   await page.waitForTimeout(300);
   console.log("coaching or going ok (the plus asks, and the form follows the answer)");
+
+  // One of a coach's own entries can be taken off again. It could not for a
+  // long time: the editor's delete bails on a class id and a personal row has
+  // an editId instead, and the member's X on /week was the only remove wired
+  // anywhere. The door is PlanSheet, which both calendars already open.
+  await page.locator(".caladd").click();
+  await page.locator(".sheet .setrow", { hasText: "Anything else" }).click();
+  await page.getByRole("heading", { name: "New event" }).waitFor();
+  await page.getByPlaceholder("e.g. PT session, physio, flight home").fill("Dentist");
+  await page.locator("#fLoc").fill("Elm Street");
+  await page.getByRole("button", { name: "Sa", exact: true }).click();
+  // Not late enough to wrap: the end time follows the start by an hour, and
+  // past midnight the duration goes negative and the button quietly disables.
+  await page.locator("#fStart").fill("18:30");
+  // No force: a disabled publish button swallows a forced click without a
+  // word, and the failure lands ten seconds later on a toast that never comes.
+  await page.locator(".publishwrap .btn").click();
+  await page.getByText("Added to your calendar").waitFor();
+  await page.waitForTimeout(800);
+  await page.goto(BASE + "/app");
+  await page.locator('.ps-event[data-plan="yours"]', { hasText: "Dentist" }).first().click();
+  await page.locator(".classoverlay-nm", { hasText: "Dentist" }).waitFor();
+  await page.locator(".classoverlay .deletelink").click();
+  await page.getByRole("heading", { name: "Remove Dentist?" }).waitFor();
+  // The way out of the question, first: it has to mean it.
+  await page.locator(".confirm-keep").click();
+  await page.waitForTimeout(300);
+  await page.locator(".classoverlay .deletelink").click();
+  await page.locator(".confirmsheet .btn.si").click();
+  await page.getByText("Removed from your calendar").waitFor();
+  await page.waitForTimeout(600);
+  await page.goto(BASE + "/app");
+  await page.locator(".callist .ps-event").first().waitFor();
+  if (await page.locator(".ps-erow", { hasText: "Dentist" }).count())
+    fail("a removed personal entry should be off the coach's calendar");
+  console.log("personal remove ok (the sheet asks, and the row goes)");
 }
 
 // swiping a row right-to-left flips the same mark, without opening the class

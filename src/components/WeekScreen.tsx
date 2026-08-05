@@ -225,7 +225,9 @@ export function WeekScreen({
         toast(res.error ?? "Couldn't remove that");
         return;
       }
-      toast("Removed from your plans");
+      // One of your own is off your calendar; a Going mark is off a list you
+      // can add back to. Same X, two different things gone.
+      toast(personalId ? "Removed from your calendar" : "Removed from your plans");
       router.refresh();
     });
   };
@@ -681,6 +683,11 @@ export function WeekScreen({
           id={plan}
           onClose={() => setPlan(null)}
           onToast={toast}
+          onRemoved={(msg) => {
+            setPlan(null);
+            toast(msg);
+            router.refresh();
+          }}
           onEdit={(p) => {
             setPlan(null);
             setEdit({
@@ -758,6 +765,11 @@ export function WeekScreen({
           share
           onClose={() => setShareId(null)}
           onToast={toast}
+          onRemoved={(msg) => {
+            setShareId(null);
+            toast(msg);
+            router.refresh();
+          }}
           onEdit={() => setShareId(null)}
         />
       )}
@@ -808,10 +820,19 @@ export function WeekScreen({
           }}
         >
           <div className="sheet confirmsheet">
-            <h2>Take it out of your plans?</h2>
+            <h2>{confirm.personalId ? "Remove it?" : "Take it out of your plans?"}</h2>
             <p className="lead">
-              {confirm.name} comes off your list. You can add it back from the coach&rsquo;s
-              schedule any time.
+              {confirm.personalId ? (
+                <>
+                  {confirm.name} comes off your calendar. You typed this one, so adding it back
+                  means typing it again.
+                </>
+              ) : (
+                <>
+                  {confirm.name} comes off your list. You can add it back from the coach&rsquo;s
+                  schedule any time.
+                </>
+              )}
             </p>
             <div className="publishwrap nostick">
               <button
