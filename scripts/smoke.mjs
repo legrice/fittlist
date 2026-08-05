@@ -1069,10 +1069,11 @@ const imgSrc = await page.locator(".storyimg").getAttribute("src");
 if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
 // Share leads and is the filled button; Save is the quiet link under it and
 // is a real download rather than a second door onto the share sheet.
-// Save is a button rather than a download link now: a link puts the file in
-// Files, and the camera roll is only reachable through the system share
-// sheet. Both buttons sit side by side.
-await page.locator(".publishwrap.row .btn", { hasText: "Save image" }).waitFor();
+// One button. Save had to open the same system sheet to reach Photos at all,
+// so it was one act wearing two buttons, and that sheet already offers saving
+// as one of its rows.
+if (await page.locator(".publishwrap .btn", { hasText: "Save image" }).count())
+  fail("Save image should be gone: the share sheet is where saving lives");
 await expect(
   page.locator(".publishwrap .btn", { hasText: "Share image" }).first().isVisible(),
   "share image is the primary button",
@@ -1908,7 +1909,14 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   await fan.locator("#fDesc").fill("Slow flow and a long savasana.");
   await fan.locator("#fWith").fill("Erin Clyne");
   await fan.getByRole("button", { name: "We", exact: true }).click();
-  await fan.locator("#fStart").fill("12:00");
+  // Late, and this matters. Every public surface drops an occurrence once it
+  // has ended, so a fixture at midday on a fixed weekday is visible for half
+  // of that day and gone for the rest, with the next one seven days out and
+  // past the week a studio page draws. This suite then failed by the clock:
+  // green in the morning, red after lunch, on unchanged code. Ending a minute
+  // before midnight keeps it ahead on its own day whenever the suite runs.
+  await fan.locator("#fStart").fill("23:00");
+  await fan.locator("#fEnd").fill("23:59");
   await fan.locator(".publishwrap .btn").click({ force: true });
   await fan.getByText("Added to your plans").waitFor();
   await fan.waitForTimeout(800);

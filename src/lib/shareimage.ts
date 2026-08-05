@@ -1,26 +1,24 @@
 /**
  * Handing a generated image to the phone.
  *
- * Three sheets draw a poster and every one of them offers the same two acts,
+ * Three sheets draw a poster and every one of them hands it on the same way,
  * so the awkward part lives here once rather than three times.
  *
  * The awkward part is this: a web page cannot write to the camera roll. There
  * is no API for it and there is not going to be one. On iOS the only way into
- * Photos is the system share sheet, where "Save Image" is one of the rows, so
- * Save has to open that sheet and let the person take the last step. A
- * download link, which is what Save used to be, lands the file in Files and
- * nowhere near the camera roll, which is not where anybody meant to put a
- * picture of their week.
+ * Photos is the system share sheet, where "Save Image" is one of the rows.
  *
- * So Share and Save open the same sheet on a phone and differ only in intent.
- * That reads like a duplicate and is not one: they are two different things to
- * want, the sheet is genuinely the way to do both, and offering only Share
- * would leave somebody who wants the picture in their camera roll with no
- * obvious road. Where the browser cannot hand over a file at all (desktop,
- * mostly) Save falls back to a download, which is the right answer there.
+ * There was a Save button next to Share for a build. It had to open that same
+ * sheet to reach Photos at all, so it was one act wearing two buttons, and the
+ * sheet already offers saving as one of its rows. One button now, and the
+ * choice of what to do with the picture belongs to the sheet.
  *
- * The day this is wrapped as a native app, a real save-to-Photos exists and
- * `save` should use it. That is the one line to change.
+ * Where the browser cannot hand over a file at all, which in practice means a
+ * desktop, this falls back to a download.
+ *
+ * The day this is wrapped as a native app, a real save-to-Photos exists. If a
+ * Save button ever comes back, that is what it should call, and this is the
+ * one place to add it.
  */
 
 /** Whether the browser can hand a real file to the operating system. */
@@ -47,17 +45,11 @@ function download(url: string, fileName: string): void {
   a.click();
 }
 
-export type PutMode = "share" | "save";
-
 /**
  * Returns false only when something actually went wrong, so a caller can say
  * so. A person dismissing the share sheet is not a failure and reports true.
  */
-export async function putImage(
-  url: string,
-  fileName: string,
-  mode: PutMode,
-): Promise<boolean> {
+export async function putImage(url: string, fileName: string): Promise<boolean> {
   try {
     if (canShareFiles()) {
       const file = await fetchImage(url, fileName);
@@ -66,8 +58,8 @@ export async function putImage(
         return true;
       }
     }
-    // No share sheet to open. For Share this is the only way to hand the
-    // picture on at all, and for Save it is exactly what was wanted.
+    // No share sheet to open, which is a desktop. A download is the only way
+    // to hand the picture on there, and it is the right one.
     download(url, fileName);
     return true;
   } catch (e) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
-import { putImage, type PutMode } from "@/lib/shareimage";
+import { putImage } from "@/lib/shareimage";
 import { StoryPreview } from "@/components/StoryPreview";
 
 // The member's "come train with me" image: the week they're actually going to,
@@ -29,7 +29,7 @@ export function ShareMyWeekSheet({
 }) {
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [styleOpen, setStyleOpen] = useState(false);
-  const [busy, setBusy] = useState<PutMode | null>(null);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [bust, setBust] = useState(0);
 
@@ -66,14 +66,13 @@ export function ShareMyWeekSheet({
   const storyUrl = `/api/story/me?theme=${themeId}&from=${from}&days=${span}&v=${bust}`;
   const storyFileName = `fittlist-my-week-${themeId}.png`;
 
-  // Share and Save both go through the system sheet on a phone: the camera
-  // roll has no other door. See src/lib/shareimage.ts.
-  const put = (mode: PutMode) => async () => {
+  // The system sheet, which is where Save Image lives too: one button,
+  // because a second one opening the same sheet was the same act twice.
+  const share = async () => {
     if (busy) return;
-    setBusy(mode);
-    const ok = await putImage(storyUrl, storyFileName, mode);
-    if (!ok) setErr(mode === "share" ? "Couldn't share the image" : "Couldn't save the image");
-    setBusy(null);
+    setBusy(true);
+    if (!(await putImage(storyUrl, storyFileName))) setErr("Couldn't share the image");
+    setBusy(false);
   };
 
   return (
@@ -197,14 +196,9 @@ export function ShareMyWeekSheet({
           bg={STORY_THEMES[themeId].bg}
         />
         {err && <p className="err">{err}</p>}
-        {/* Share leads, save is the quiet one. See ShareComposer: the filled
-            button used to say Save and open the share sheet. */}
-        <div className="publishwrap row">
-          <button className="btn" disabled={!!busy} onClick={put("share")}>
-            {busy === "share" ? "Opening…" : "Share image"}
-          </button>
-          <button className="btn ghost" disabled={!!busy} onClick={put("save")}>
-            {busy === "save" ? "Opening…" : "Save image"}
+        <div className="publishwrap">
+          <button className="btn" disabled={busy} onClick={share}>
+            {busy ? "Opening…" : "Share image"}
           </button>
         </div>
       </div>

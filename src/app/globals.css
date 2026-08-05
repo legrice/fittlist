@@ -578,11 +578,6 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    kept the negative margin, which put anything after it (the "Don't have an
    account?" link) outside the padded area and half off the sheet. */
 .publishwrap.nostick { position: static; margin-bottom: 0; }
-/* Share and Save are one decision with two answers, so they sit next to each
-   other at equal weight rather than stacked with one of them looking like an
-   afterthought. */
-.publishwrap.row { display: flex; gap: 10px; }
-.publishwrap.row .btn { flex: 1; margin-top: 0; }
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
@@ -632,8 +627,8 @@ body.sheet-open .appshell .stage { overflow: hidden; }
      the width against the ratio and squaring the poster off. A definite
      height on a fit-content box is unambiguous, so the aspect ratio decides
      the width and nothing has to guess. */
-  display: block; position: relative; width: fit-content; margin: 12px auto 4px;
-  height: 444px; aspect-ratio: 9/16;
+  display: block; position: relative; width: 250px; aspect-ratio: 9/16;
+  margin: 12px auto 4px;
   border-radius: 16px; overflow: hidden;
   background-size: 100% 100%; background-repeat: no-repeat;
 }
@@ -5116,13 +5111,20 @@ button.ps-card { cursor: pointer; }
   padding: calc(10px + env(safe-area-inset-top)) 20px var(--pad-b);
   display: flex; flex-direction: column;
 }
-/* The picture is the point, so it takes what a phone can give it rather than
-   the sheet's 250px thumbnail. Driven by height rather than width, because
-   what it has to fit inside is the room the controls and the sticky footer
-   leave: at 250px wide the poster ran under the buttons and the last day of
-   the week was something you had to scroll for. */
-.composer .storyimg-wrap { height: min(52vh, 460px); max-width: 62vw; }
-.composer .publishwrap { margin-top: auto; }
+/* Its own proportions, and as much height as they need.
+   `flex-shrink: 0` is the whole fix and it took three goes to find, because
+   the first two looked at the wrong layer. `.composer` is a fixed-height flex
+   column, so the poster is a flex item on the main axis and flexbox squashes
+   it to make the screen add up, whatever width or aspect ratio it is given.
+   Nothing about the box was wrong; it was being overruled.
+   The composer already scrolls and the footer is already sticky, so at its
+   real height the picture simply runs under the buttons and the rest of the
+   week is a scroll away, which is what a tall image is for. */
+.composer .storyimg-wrap { width: min(100%, 340px); flex-shrink: 0; }
+/* Not pushed to the bottom any more: with a poster taller than the screen
+   there is no free space to push into, and `auto` on an overflowing column
+   fights the sticky footer for where the bottom is. */
+.composer .publishwrap { margin-top: 18px; }
 
 /* What goes on the image, standing where My week / Today used to. A range was
    the wrong question: the answer is this coming week nearly every time, and
