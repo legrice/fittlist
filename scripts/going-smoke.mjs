@@ -70,17 +70,19 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 await m.goto(BASE + "/carina");
 await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);
 await m.locator(".profacts .followpill").click();
 await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
-await m.goto(BASE + "/feed");
-await m.locator(".feeditem, .ps-event").first().waitFor();
+// Marking happens in the peek: a follow puts a face on the calendar, and the
+// class is behind it until they save it.
+await m.goto(BASE + "/week");
+await m.locator(".trayitem", { hasText: "Carina" }).click();
 {
-  const row = m.locator(".feedagenda .swiperow").first();
-  await row.locator(".ps-event").waitFor();
+  const row = m.locator(".peeksheet .swiperow").first();
+  await row.waitFor();
   const box = await row.boundingBox();
   const y = box.y + box.height / 2;
   const from = box.x + box.width - 20;
@@ -88,7 +90,8 @@ await m.locator(".feeditem, .ps-event").first().waitFor();
   await m.mouse.down();
   for (const step of [35, 70, 100, 120]) await m.mouse.move(from - step, y, { steps: 3 });
   await m.mouse.up();
-  await row.locator(".ps-event.goingon").waitFor();
+  await row.locator(".peekadd.on").waitFor();
+  await m.locator(".peekclose").click();
   console.log("member marked going");
 }
 
@@ -101,10 +104,11 @@ await co.locator("#fDesc").fill("Bring a mat.");
 await co.locator(".publishwrap .btn").click();
 await co.getByText("Saved", { exact: true }).waitFor();
 await co.waitForTimeout(1200);
-await m.goto(BASE + "/feed");
+// The mark survives on their own calendar, which is where a saved class lives.
+await m.goto(BASE + "/week");
 await m.waitForTimeout(900);
-const stillGoing = await m.locator(".ps-event.goingon").count();
-if (stillGoing !== 1) fail(`editing the class dropped the Going mark (${stillGoing} left)`);
+const stillGoing = await m.locator(".callist .ps-event.ev-added").count();
+if (stillGoing < 1) fail(`editing the class dropped the Going mark (${stillGoing} left)`);
 console.log("an edit keeps the Going marks ok");
 
 // --- copy week as text, from Share on their own page

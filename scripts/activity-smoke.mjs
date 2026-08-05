@@ -59,10 +59,10 @@ console.log("a coach put a week up ok");
   await coach.locator(".caladd").waitFor();
   if (await coach.locator(".brandbar-actions .activitybtn").count())
     fail("the Activity heartbeat is back on the coach's schedule");
-  await coach.goto(BASE + "/feed");
+  await coach.goto(BASE + "/discover");
   await coach.locator(".brandbar-actions").waitFor();
   if (await coach.locator(".brandbar-actions .activitybtn").count())
-    fail("the Activity heartbeat is back on Following");
+    fail("the Activity heartbeat is back on Discover");
 }
 console.log("no heartbeat on either shell ok");
 
@@ -85,7 +85,7 @@ for (const who of ["erinclyne", "samgoer"]) {
 console.log("followed the coach and the member ok");
 
 // Activity is not a tab and no longer an icon: the URL is the only way in.
-await me.goto(BASE + "/feed");
+await me.goto(BASE + "/week");
 {
   const tabs = (await me.locator(".navtab").allInnerTexts()).map((t) => t.trim());
   if (tabs.some((t) => /activity/i.test(t)))

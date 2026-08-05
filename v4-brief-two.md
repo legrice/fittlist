@@ -532,3 +532,49 @@ a week.
 ribbon top-right) is still the old flat `.ps-event` row underneath, so a saved
 row wears the old green rather than `--rel-saved`. The Following tab has not
 collapsed into Schedule. Both are the next commits.
+
+
+---
+
+## 20. Built: Following collapses into Schedule
+
+Section 1 is in. Two tabs, Discover and Schedule, plus your face in the corner.
+
+**`/feed` redirects rather than 404s.** It was the front door for months, so it
+is in old emails, in bookmarks, in `?from=following` links out in the world,
+and on the home screen of anybody who installed the app while it was the
+landing. `activeTab` maps it to Schedule so it lights the tab it lands on. The
+merged week's renderer (`FeedAgenda`) is deleted; the screen is in git at the
+commit that replaced it.
+
+**`landingHref()` answers per kind**, `/app` for a coach and `/week` for a
+member, rather than leaning on the two calendars' redirects: that would put a
+hop on every sign-in and every OAuth callback for half the app.
+
+**The follow hint was lying twice over** and is rewritten. It promised a
+coach's classes were "on your Following week": there is no Following week, and
+a follow puts nothing on a calendar. Somebody who goes looking for classes that
+were never added concludes the follow failed.
+
+**The swipe moved rather than died.** It belonged to the merged week; it is on
+the peek's rows now, which is where saving happens. It sits outside
+`ClassOpener` on purpose: both catch the click in the capture phase, so the
+outer one goes first, and with the opener around the list every completed swipe
+also opened the class it had just saved.
+
+**Peek rows open a sheet rather than navigating**, the way every other list in
+the app does. As bare links they threw the peek away: you tapped one class out
+of a fortnight and landed somewhere with no way back to the other thirteen.
+
+### The known gap: no desktop arrows on the tray
+
+The feed's coach strip carried `.railarrow` buttons gated on
+`(hover: hover) and (pointer: fine)`, so a mouse could walk a rail it could not
+swipe. The circles tray scrolls but offers no such control, and the two blocks
+of `desktop-smoke` that covered those arrows are deleted rather than moved,
+because the component they tested is gone.
+
+This is written down rather than quietly dropped. The argument that produced
+those arrows still holds: "can't swipe" is a property of the pointer, and above
+940px the tray is a rail somebody has to drag with a trackpad. It wants the
+same treatment, and it is its own commit.

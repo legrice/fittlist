@@ -75,7 +75,7 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 await m.goto(BASE + "/carina");
 await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);
@@ -84,10 +84,11 @@ await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 console.log("member follows the coach ok");
 
 // --- the member adds a class, so the block has something to clean up
-await m.goto(BASE + "/feed");
-await m.locator(".feedagenda .swiperow").first().waitFor();
+await m.goto(BASE + "/week");
+await m.locator(".trayitem", { hasText: "Carina" }).click();
+await m.locator(".peeksheet .swiperow").first().waitFor();
 {
-  const row = m.locator(".feedagenda .swiperow").first();
+  const row = m.locator(".peeksheet .swiperow").first();
   const box = await row.boundingBox();
   const y = box.y + box.height / 2;
   const from = box.x + box.width - 20;
@@ -95,8 +96,9 @@ await m.locator(".feedagenda .swiperow").first().waitFor();
   await m.mouse.down();
   for (const step of [35, 70, 100, 120]) await m.mouse.move(from - step, y, { steps: 3 });
   await m.mouse.up();
-  await row.locator(".ps-event.goingon").waitFor();
+  await row.locator(".peekadd.on").waitFor();
 }
+await m.locator(".peekclose").click();
 console.log("member added a class ok");
 
 // --- BEFORE: Discover lists the coach, the page loads
@@ -138,11 +140,13 @@ if (await m.locator(".disrow", { hasText: "Carina" }).count())
   fail("Discover still lists a coach who blocked this member");
 console.log("Discover drops the coach ok");
 
-await m.goto(BASE + "/feed");
+// The face goes with the follow: a block clears the subscriber row, so the
+// circle it drew has nothing behind it.
+await m.goto(BASE + "/week");
 await m.waitForTimeout(900);
-if ((await m.locator(".ps-event").count()) !== 0)
-  fail("the blocked coach's classes are still in the merged week");
-console.log("the merged week loses their classes ok");
+if (await m.locator(".trayitem", { hasText: "Carina" }).count())
+  fail("the blocked coach is still a circle on the member's calendar");
+console.log("the tray loses their face ok");
 
 // The follow row went with the block, and so did the mark on their class.
 await m.goto(BASE + "/week");
@@ -152,7 +156,7 @@ if ((await m.locator(".ps-erow").count()) !== 0)
 console.log("their added class is cleared ok");
 
 // Nothing on the member's side names it. The word must not appear anywhere.
-for (const path of ["/feed", "/discover", "/you", "/week"]) {
+for (const path of ["/discover", "/you", "/week"]) {
   await m.goto(BASE + path);
   await m.waitForTimeout(500);
   const txt = (await m.locator("body").innerText()).toLowerCase();

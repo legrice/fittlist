@@ -159,12 +159,12 @@ console.log("member tabs ok (Discover, Schedule, and You in the corner)");
     avatar: !!document.querySelector(".brandbar-actions .usericon"),
     lit: document.querySelector(".navtab.on")?.textContent?.trim() ?? null,
   }));
-  if (mid.tabs !== 3) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
+  if (mid.tabs !== 2) fail(`the bar unmounted while loading: ${JSON.stringify(mid)}`);
   if (!mid.avatar) fail(`the avatar unmounted while loading: ${JSON.stringify(mid)}`);
   if (mid.lit !== "Discover") fail(`the tapped tab should light up at once: ${JSON.stringify(mid)}`);
   await p.waitForURL(/\/discover/);
-  await p.locator(".navtab", { hasText: "Following" }).click();
-  await p.waitForURL("**/feed");
+  await p.locator(".navtab", { hasText: "Schedule" }).click();
+  await p.waitForURL("**/week");
 }
 console.log("chrome survives the loading boundary ok");
 

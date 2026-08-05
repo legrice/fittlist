@@ -70,7 +70,7 @@ const memberCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
   await p.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(p);
   await p.getByRole("button", { name: "Finish setup" }).click();
-  await p.waitForURL("**/feed");
+  await p.waitForURL("**/week");
   await p.goto(BASE + "/loadcoach");
   await p.locator(".profacts .followpill").waitFor();
   await p.waitForTimeout(300);
@@ -86,7 +86,7 @@ console.log(`seeded; ${REQUESTS} requests at concurrency ${CONCURRENCY} per rout
 const routes = [
   { name: "landing        /", path: "/", auth: false },
   { name: "coach page     /loadcoach", path: "/loadcoach", auth: false },
-  { name: "feed           /feed", path: "/feed", auth: true },
+  { name: "coach calendar /app", path: "/app", auth: true },
   { name: "discover       /discover", path: "/discover", auth: true },
   { name: "your week      /week", path: "/week", auth: true },
   { name: "link preview   /api/og", path: "/api/og", auth: false },

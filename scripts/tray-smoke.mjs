@@ -57,7 +57,7 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Montclair, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 
 await m.goto(BASE + "/erinclyne");
 await m.getByRole("button", { name: "Follow", exact: true }).first().click();

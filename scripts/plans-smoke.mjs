@@ -56,14 +56,18 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 
 // follow and add one of the coach's classes, so Plans has a real row
 await m.goto(BASE + "/carinaclores");
 await m.getByRole("button", { name: "Follow", exact: true }).first().click();
 await m.waitForTimeout(500);
-await m.goto(BASE + "/feed");
-await m.locator(".ps-event").first().click();
+// Their week is behind their circle now: a follow puts a face on the calendar
+// and nothing else, so this is the only way to their classes.
+await m.goto(BASE + "/week");
+await m.locator(".trayitem", { hasText: "Carina" }).click();
+await m.locator(".peekrow").first().waitFor();
+await m.locator(".peekrow-go").first().click();
 await m.locator(".classoverlay-nm").waitFor();
 await m.locator(".ovcta-save").click();
 await m.waitForTimeout(500);

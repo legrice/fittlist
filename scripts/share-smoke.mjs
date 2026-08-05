@@ -61,7 +61,7 @@ const mk = async (email, name, member) => {
     await p.getByRole("button", { name: "Continue" }).click();
     await p.locator("#wLocation").fill("Jersey City, NJ");
     await p.getByRole("button", { name: "Finish setup" }).click();
-    await p.waitForURL("**/feed");
+    await p.waitForURL("**/week");
   } else {
     await skipSetup(p);
   }

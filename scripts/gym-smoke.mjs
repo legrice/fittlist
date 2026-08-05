@@ -1105,7 +1105,7 @@ console.log("the coach is told ok");
   await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(mem);
   await mem.getByRole("button", { name: "Finish setup" }).click();
-  await mem.waitForURL("**/feed");
+  await mem.waitForURL("**/week");
 
   await mem.goto(BASE + studioHref);
   await mem.locator(".ps-event", { hasText: "HYROX" }).click();
@@ -1315,7 +1315,7 @@ console.log("the coach is told ok");
   await mem.getByRole("heading", { name: "Tell people who you are." }).waitFor();
   await fillLocation(mem);
   await mem.getByRole("button", { name: "Finish setup" }).click();
-  await mem.waitForURL("**/feed");
+  await mem.waitForURL("**/week");
   await mem.goto(BASE + "/tom");
   await mem.locator(".ps-event", { hasText: "Warm Up" }).first().click();
   await mem.locator(".classoverlay-nm", { hasText: "Warm Up" }).waitFor();

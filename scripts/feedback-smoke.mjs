@@ -64,7 +64,7 @@ await p.getByRole("button", { name: "Continue" }).click();
 await p.getByRole("heading", { name: "Tell people who you are." }).waitFor();
 await fillLocation(p);
 await p.getByRole("button", { name: "Finish setup" }).click();
-await p.waitForURL("**/feed");
+await p.waitForURL("**/week");
 
 await p.goto(BASE + "/you");
 // This account is due the "how's it going?" prompt (the server reads
@@ -142,7 +142,7 @@ await q.getByRole("button", { name: "Continue" }).click();
 await q.getByRole("heading", { name: "Tell people who you are." }).waitFor();
 await fillLocation(q);
 await q.getByRole("button", { name: "Finish setup" }).click();
-await q.waitForURL("**/feed");
+await q.waitForURL("**/week");
 
 const modal = q.getByRole("dialog", { name: "Feedback" });
 await modal.waitFor();
@@ -163,7 +163,7 @@ if (await q.getByRole("dialog", { name: "Feedback" }).isVisible().catch(() => fa
 console.log("asked once ok");
 
 // And someone who already wrote in is never asked.
-await p.goto(BASE + "/feed");
+await p.goto(BASE + "/app");
 await p.waitForTimeout(900);
 if (await p.getByRole("dialog", { name: "Feedback" }).isVisible().catch(() => false))
   fail("someone who already sent feedback got the prompt");

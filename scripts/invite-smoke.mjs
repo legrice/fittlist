@@ -106,7 +106,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByPlaceholder("Password").fill("member-pass-123");
     await pg.getByRole("button", { name: "Create account" }).click();
     await pg.locator(".sheet .errorcopy", { hasText: /invite-only/i }).waitFor();
-    if (pg.url().includes("/feed")) fail("a non-invited member should not get an account");
+    if (/\/(week|app)/.test(pg.url())) fail("a non-invited member should not get an account");
     console.log("non-invited member signup blocked ok");
 
     // invite them (as admin), then the same signup goes through
@@ -141,7 +141,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByRole("button", { name: "Claim it" }).click();
     await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
     await skipSetup(pg);
-    await pg.waitForURL("**/feed");
+    await pg.waitForURL("**/week");
     await pg.getByText("You\u2019re not following anyone").waitFor();
     console.log("invited member signup ok");
 
@@ -387,7 +387,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await op.getByPlaceholder("you@example.com").fill("riley@example.com");
     await op.getByPlaceholder("Password").fill("invited-pass-123");
     await op.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
-    await op.waitForURL(/\/feed/);
+    await op.waitForURL(/\/app/);
     await op.waitForTimeout(900);
     if (await op.locator(".invbanner").count())
       fail("the dismissal stayed in the browser instead of on the account");

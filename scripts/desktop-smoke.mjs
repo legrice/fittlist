@@ -71,7 +71,7 @@ await m.getByRole("button", { name: "Continue" }).click();
 await m.getByRole("heading", { name: "Tell people who you are." }).waitFor();
 await fillLocation(m);
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 for (const n of names) {
   // Following moved off the list and onto the profile: the row gets you to a
   // person, and the pill by their name is where the follow happens.
@@ -92,103 +92,57 @@ for (const n of names) {
 }
 console.log("followed all eight ok");
 
-await m.goto(BASE + "/feed");
-await m.locator(".feedstrip").waitFor();
+await m.goto(BASE + "/week");
+await m.locator(".tray").waitFor();
 await m.waitForTimeout(500);
 
 // the tabs, as header links, with the bottom bar gone
 {
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
-  // The same three everyone gets; only where Schedule points differs. You is
-  // the face in the corner on every width, so it is not one of these.
-  if (labels.join("|") !== "Following|Discover|Schedule")
-    fail(`the header links should be Following, Discover and Schedule, got ${labels}`);
+  // Two, the same everyone gets; only where Schedule points differs. You is
+  // the face in the corner on every width, so it is not one of these, and
+  // Following went with the merged week it pointed at.
+  if (labels.join("|") !== "Discover|Schedule")
+    fail(`the header links should be Discover and Schedule, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();
-  if (on !== "Following") fail(`the lit link is "${on}", expected Following`);
+  if (on !== "Schedule") fail(`the lit link is "${on}", expected Schedule`);
   await m.locator(".headnav-l", { hasText: "Discover" }).click();
   await m.waitForURL(/\/discover/);
   await m.locator(".headnav-l.on", { hasText: "Discover" }).waitFor();
-  await m.locator(".headnav-l", { hasText: "Following" }).click();
-  await m.waitForURL(/\/feed/);
-  await m.locator(".headnav-l.on", { hasText: "Following" }).waitFor();
-  // Deliberately no assertion on the rail's contents here. This block is
-  // about the links: where they go and which one lights. What the page holds
-  // after a client-side navigation is Next's business, and the header's
-  // <Link> prefetches /feed early enough that the payload it serves can
-  // predate the follows below, which made this line fail about a third of
-  // the time for reasons that had nothing to do with the header.
+  await m.locator(".headnav-l", { hasText: "Schedule" }).click();
+  await m.waitForURL(/\/week/);
+  await m.locator(".headnav-l.on", { hasText: "Schedule" }).waitFor();
+  // Deliberately no assertion on what the page holds here. This block is
+  // about the links: where they go and which one lights. What arrives after a
+  // client-side navigation is Next's business, and the header's <Link>
+  // prefetches early enough that the payload can predate the follows below,
+  // which made this fail about a third of the time for reasons that had
+  // nothing to do with the header.
   console.log("header links navigate and light up ok");
 }
 
-// Nine avatars (All, plus the eight) is what makes the rail overflow, so a
-// missing arrow below should mean the arrow is broken, not the fixture.
+// The tray survives a desktop width, with every face on it.
 {
-  // A real load, not whatever the client router had cached: the arrows are
-  // what this section is testing, and they need the full rail to be there.
-  await m.goto(BASE + "/feed");
-  await m.locator(".feedstrip").waitFor();
-  await m.locator(".feedav").first().waitFor();
-  // Buttons only: the rail ends in a Find link, which is a door rather than
-  // one of the faces this count is about.
-  const n = await m.locator("button.feedav").count();
-  if (n !== names.length + 1)
-    fail(`expected ${names.length + 1} avatars in the rail, got ${n} at ${m.url()}`);
+  await m.goto(BASE + "/week");
+  await m.locator(".tray").waitFor();
+  const faces = await m.locator(".trayitem").count();
+  // Eight followed, plus the Add door at the end.
+  if (faces !== 9) fail(`expected eight faces and the Add door, got ${faces}`);
+  if (!(await m.locator(".trayitem", { hasText: "Add" }).count()))
+    fail("the rail should end in the way to lengthen it");
+  console.log("the tray carries every face on a desktop width ok");
 }
-const rightArrow = m.locator(".railarrow-r");
-// Waited for, not polled once. RailArrows measures after mount and again when
-// the webfont swaps in and reflows the labels, so on the frame the avatars
-// exist the arrow legitimately does not yet. A single isVisible() passed this
-// alone and lost the race under the battery's load, which is the worst kind of
-// assertion: green on a quiet machine and red on a busy one.
-await rightArrow.waitFor({ state: "visible" }).catch(() => {
-  fail("no right arrow with a rail that overflows");
-});
-if (await m.locator(".railarrow-l").isVisible().catch(() => false))
-  fail("left arrow showing at the start of the rail");
-await m.screenshot({ path: OUT + "/shot-rail-1-right.png" });
 
-const before = await m.locator(".feedstrip").evaluate((e) => e.scrollLeft);
-await rightArrow.click();
-await m.waitForTimeout(700);
-const after = await m.locator(".feedstrip").evaluate((e) => e.scrollLeft);
-if (after <= before) fail(`the arrow did not scroll (${before} -> ${after})`);
-console.log(`scrolled ${before} -> ${after} ok`);
-await m
-  .locator(".railarrow-l")
-  .waitFor({ state: "visible" })
-  .catch(() => fail("left arrow missing after scrolling"));
-await m.screenshot({ path: OUT + "/shot-rail-2-both.png" });
-
-// scroll to the end: the right arrow retires
-await m.locator(".feedstrip").evaluate((e) => e.scrollTo({ left: e.scrollWidth }));
-await m.waitForTimeout(600);
-if (await m.locator(".railarrow-r").isVisible().catch(() => false))
-  fail("right arrow still showing at the end of the rail");
-console.log("arrows retire at each end ok");
-await m.screenshot({ path: OUT + "/shot-rail-3-end.png" });
-
-// a phone gets none of this: it swipes. The gate is the pointer, not the
-// width, so this needs a context that actually reports a coarse one.
-const tc = await b.newContext({
-  viewport: { width: 390, height: 844 },
-  hasTouch: true,
-  isMobile: true,
-  storageState: await mc.storageState(),
-});
-const t = await tc.newPage();
-t.setDefaultTimeout(15000);
-await t.goto(BASE + "/feed");
-await t.locator(".feedstrip").waitFor();
-await t.waitForTimeout(500);
-if (!(await t.locator(".feedav").first().isVisible())) fail("the rail itself vanished on a phone");
-const shown = await t.locator(".railarrow").evaluateAll((els) =>
-  els.filter((e) => getComputedStyle(e).display !== "none").length,
-);
-if (shown !== 0) fail(`${shown} arrows rendered on a touch pointer`);
-console.log("no arrows on a touch pointer ok");
+// The rail's desktop arrows are gone with the rail that had them. The feed's
+// coach strip carried .railarrow buttons, gated on (hover: hover) and
+// (pointer: fine), so a mouse could walk a rail it could not swipe; the
+// circles tray that replaced it scrolls but offers no such control. That is a
+// real gap on a desktop width and it is written down in v4-brief-two.md
+// rather than quietly dropped: the argument that produced those arrows still
+// holds, the component they belonged to does not.
 
 await b.close();
 console.log("DESKTOP CHECKS PASSED");
