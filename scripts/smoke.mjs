@@ -248,44 +248,43 @@ if (!(await page.getByRole("button", { name: /^Just / }).count()))
 await page.getByRole("button", { name: "Keep it" }).click(); // cancel path
 
 // ---- one week off, without touching the weeks either side. The row is one
-// class recurring across the calendar, so the count of rendered Fridays drops
-// by exactly one while the class itself stays.
+// class recurring across the calendar, so exactly one of its dates goes and
+// the class itself stays.
 {
   const fridayRow = page.locator(".ps-daygroup", { hasText: "FRI" }).first().locator(".ps-event").first();
   const cid = await fridayRow.getAttribute("data-cid");
-  const rowsFor = () => page.locator(`.ps-event[data-cid="${cid}"]`).count();
-  const before = await rowsFor();
+  const iso = await fridayRow.getAttribute("data-d");
+  const at = (d) => page.locator(`.ps-event[data-cid="${cid}"][data-d="${d}"]`);
+  // The week after and the week before the one being cancelled, so the check
+  // is that exactly one date came off rather than that the class did.
+  const shift = (days) => {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+  const nextWeek = shift(7);
+  if (!(await at(iso).count())) fail("expected the Friday being cancelled to be on screen");
+  if (!(await at(nextWeek).count())) fail("expected the following Friday to be on screen");
   await page.getByRole("button", { name: "Delete this class" }).click();
   await page.getByRole("button", { name: /^Just / }).click();
   await page.getByText("cancelled", { exact: false }).waitFor();
-  await page.waitForFunction(
-    ([id, n]) => document.querySelectorAll(`.ps-event[data-cid="${id}"]`).length === n - 1,
-    [cid, before],
-    { timeout: 10000 },
-  );
-  // and it's gone from the public page too — one predicate, every surface
+  // The date, not a row count. Counting was only ever stable because the past
+  // anchored the top of the list: with the list starting at today, the forward
+  // window can grow a week between the two counts and the total holds while
+  // the right date has plainly gone. One occurrence off is a claim about a
+  // date, so the check is about that date.
+  await at(iso).waitFor({ state: "detached", timeout: 10000 }).catch(() => {
+    fail(`cancelling ${iso} left it on the calendar`);
+  });
+  if (!(await at(nextWeek).count()))
+    fail("cancelling one occurrence should leave the weeks either side alone");
+  // and it's gone from the public page too: one predicate, every surface
   const pub = await (await page.request.get(`${BASE}/matt/schedule`)).text();
   const pubFridays = (pub.match(/Barbell Strength/g) || []).length;
   await page.reload();
   await page.locator(".caladd").waitFor();
-  // The reload resets the past window, which renders in slices as the sentinel
-  // comes into view, so the row count climbs for a moment after the page is
-  // up. Waiting for the first slice is not waiting for the last one: a single
-  // count taken here lands mid-reveal often enough to fail about one run in
-  // ten. Poll for the settled number, the same way the check above the reload
-  // already does, and report what was actually there if it never arrives.
-  await page.locator(".ps-pastday").first().waitFor();
-  await page
-    .waitForFunction(
-      ([id, n]) => document.querySelectorAll(`.ps-event[data-cid="${id}"]`).length === n - 1,
-      [cid, before],
-      { timeout: 10000 },
-    )
-    .catch(async () => {
-      fail(
-        `the cancelled week came back after a reload: ${await rowsFor()} rows, expected ${before - 1}`,
-      );
-    });
+  await page.locator(`.ps-event[data-cid="${cid}"]`).first().waitFor();
+  if (await at(iso).count()) fail("the cancelled week came back after a reload");
   if (pubFridays === 0) fail("cancelling one week should not empty the public page");
   // the .ics tells subscribed calendars about it rather than silently differing
   const ics = await (await page.request.get(`${BASE}/api/cal/matt`)).text();
@@ -378,11 +377,9 @@ console.log("delete-all ok (whole repeating set goes)");
   await waitSchedule(page, before + 1, 20000);
   await page.waitForTimeout(700);
 
-  // it shows now, and stops after the end date — the schedule runs a year
-  // out. Future rows only: the scrolled-back past extrapolates a standing
-  // class onto earlier weeks, which is its own (dimmed) thing.
+  // it shows now, and stops after the end date: the schedule runs a year out.
   const rows = await page
-    .locator('.ps-daygroup:not(.ps-pastday) .ps-event:has-text("Six Week Block")')
+    .locator('.ps-daygroup .ps-event:has-text("Six Week Block")')
     .count();
   if (rows < 1) fail("a class with an end date should still show before it");
   if (rows > 3) fail(`a class ending in 2 weeks showed ${rows} times`);
@@ -501,12 +498,15 @@ await page.locator(".caladd").waitFor();
 if (await page.locator(".dashlinks").count()) fail("the pill strip should be gone from the schedule");
 if (await page.locator(".calbar-title", { hasText: "Your schedule" }).count())
   fail("the schedule title should be gone");
-// The studio line is words alone now: the pin came off every schedule listing.
+// Where it is rides the row's one meta sentence now (time, length, place),
+// words alone: the pin came off every schedule listing long before that.
 {
-  const where = page.locator(".ps-agenda .ps-estudio").first();
+  const where = page.locator(".ps-agenda .ps-emeta").first();
   await where.waitFor();
   if (await where.locator(".icon svg").count())
     fail("the map pin should be gone from schedule listings");
+  const txt = await where.innerText();
+  if (!/\d+ min/.test(txt)) fail("the meta line should carry the length: " + txt);
 }
 // The calendar's header is one sticky block: month, view, filter, Share. Add
 // is back under the thumb, where the thing you open this screen to do belongs,
@@ -521,12 +521,25 @@ if (!(await page.locator(".todayfab").count()))
   fail("Today should float bottom left, across from Add");
 if (!(await page.locator(".caladd").count()))
   fail("Add should float bottom right, in reach");
-// Scrolling up reveals what has been: the daily class has past occurrences,
-// and the first slice reveals itself from the top of the list.
-await page.locator(".ps-pastday .ps-event").first().waitFor();
-if (!((await page.locator(".ps-pastday").first().getAttribute("class")).includes("ps-pastday")))
-  fail("past days should render dimmed above today");
-console.log("sticky header + past scrollback ok");
+// ...and the List holds nothing but what is coming. It grew upward as the
+// scroll asked for it until the circles tray landed above it, and a list that
+// grows over the faces puts the one thing a follow buys a mile up a scroll
+// nobody makes. The past is still reachable, on the Month grid and in Day
+// view, and neither costs a scroll.
+await page.locator(".callist .ps-daygroup").first().waitFor();
+if (await page.locator(".ps-pastday").count())
+  fail("the List should start at today: the past belongs to Month and Day now");
+{
+  // Not "leads with today": it leads with the first day that still has
+  // something coming, and today's six o'clock class has already run by the
+  // time this suite gets here. The claim is only that nothing behind us is on
+  // it, which is what the check above says and this one dates.
+  const firstIso = await page.locator(".callist .ps-event[data-d]").first().getAttribute("data-d");
+  const today = new Date().toLocaleDateString("en-CA");
+  if (!firstIso || firstIso < today)
+    fail(`the List should start no earlier than today, got ${firstIso}`);
+}
+console.log("sticky header ok (the List starts at today, no walk backwards)");
 // The calendar's Share goes straight to the editor. It opened a sheet of three
 // rows once (the image, the week as text, the link); the editor is the one
 // generator now, and the other two still live on the profile's own Share.
@@ -1638,14 +1651,18 @@ await fan.locator(".feedagenda .ps-event").first().waitFor();
 }
 const feedRows = await fan.locator(".feedagenda .ps-event").count();
 if (feedRows < 1) fail("feed agenda has no class rows");
-// A merged row already carries the coach's face; the studio goes under the
-// class name as plain text, with no pin competing with it. The coach's own
-// schedule keeps its pin, checked on /app further down.
+// A merged row already carries the coach's face; where it is rides the card's
+// one meta line as plain text, with no pin competing with it.
 {
-  const where = fan.locator(".feedagenda .ps-ewhere").first();
+  const where = fan.locator(".feedagenda .ps-emeta").first();
   await where.waitFor();
   if (await where.locator(".icon svg").count()) fail("the merged week should have no place pin");
-  if (!(await where.innerText()).trim()) fail("the merged week lost the studio name");
+  const txt = (await where.innerText()).trim();
+  if (!txt) fail("the merged week lost its meta line");
+  // Time and length always; the place only when the class names one, so the
+  // floor is two parts rather than three.
+  if (txt.split("\u00b7").length < 2) fail("the meta line should read time then length: " + txt);
+  if (!/\d+ min/.test(txt)) fail("the meta line should carry the length: " + txt);
 }
 // tap the avatar to filter to that coach, then clear it
 await fan.locator(".feedav", { hasText: "Matt" }).click();
@@ -1666,7 +1683,7 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
   const chips = (await fan.locator("button.feedav .feedav-nm").allInnerTexts())
     .map((t) => t.trim())
     .filter((t) => t !== "All");
-  const inWeek = await fan.locator(".feedagenda .ps-ecoach-txt").allInnerTexts();
+  const inWeek = await fan.locator(".feedagenda .ps-ewho").allInnerTexts();
   for (const nm of chips)
     if (!inWeek.some((c) => c.trim().startsWith(nm)))
       fail(`${nm} is on the rail with no classes in the week`);
@@ -1678,8 +1695,8 @@ await fan.locator(".feedfilterbar").waitFor({ state: "detached" });
     .first()
     .locator(".ps-ebody > *")
     .evaluateAll((els) => els.map((e) => e.className.split(" ")[0]));
-  if (order[0] !== "ps-ecoach" || order[1] !== "ps-enm")
-    fail("agenda row should read coach, then class name: " + order.join(","));
+  if (order[0] !== "ps-ewho" || order[1] !== "ps-enm" || order[2] !== "ps-emeta")
+    fail("a card reads coach, class name, then the one meta line: " + order.join(","));
 }
 console.log("fan flow ok (signup -> follow -> merged feed + filter)");
 
@@ -1780,10 +1797,15 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
       addBg: add ? getComputedStyle(add).backgroundColor : null,
       addY: add?.getBoundingClientRect().y ?? null,
       shares: document.querySelectorAll(".evcard-share").length,
-      timeY: document.querySelector(".feedagenda .ps-etimecol")?.getBoundingClientRect().y ?? null,
+      radius: getComputedStyle(ev).borderTopLeftRadius,
+      av: document.querySelectorAll(".feedagenda .ps-eav").length,
     };
   });
-  if (card.shadow !== "none") fail("a Following row is flat, not a card: " + card.shadow);
+  // A card again, per the design: the flat row could not draw a boundary on a
+  // list that mixes a class you teach, a shift, one you saved and a dentist.
+  if (card.shadow === "none") fail("a class row is a card again, and a card has a shadow");
+  if (card.radius === "0px") fail("the card should carry its radius, got " + card.radius);
+  if (!card.av) fail("the card leads with a face");
   if (card.barW < 3) fail("the coach's accent bar should be visible, got " + card.barW);
   // The circle came off the ribbon: the added state is the glyph itself
   // filling in ink, on no background.
@@ -1792,8 +1814,7 @@ if (await fan.locator(".feedagenda .ps-goingtag").count())
   if (card.addBg !== "rgba(0, 0, 0, 0)")
     fail("the ribbon should carry no background, got " + card.addBg);
   if (card.shares > 0) fail("the share circle should be gone from Following rows");
-  if (card.addY === null || card.timeY === null || card.addY >= card.timeY)
-    fail("the ribbon should sit above the time");
+  if (card.addY === null) fail("the ribbon should be on the row");
 }
 if (await fan.locator(".goingtoggle").count()) fail("the Show going filter should be gone");
 
@@ -2323,7 +2344,7 @@ await page.locator(".ps-event").first().waitFor();
 {
   const going = page.locator(".ps-event.ev-added", { hasText: "Conditioning" }).first();
   await going.waitFor();
-  if (!(await going.locator(".ps-ecoach").count()))
+  if (!(await going.locator(".ps-eav").count()))
     fail("a Going row should carry the coach's face");
   await going.click();
   await page.locator(".classoverlay-nm", { hasText: "Conditioning" }).waitFor();

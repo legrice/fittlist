@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
-  CAL_PAST_DAYS,
   clockParts,
   fmtDayHeader,
   fmtDayHeaderRel,
@@ -49,7 +48,6 @@ import {
   saveCalView,
   scrollCalTop,
   scrollToToday,
-  usePastReveal,
   type CalKind,
   type CalView,
   type MonthCellItem,
@@ -67,7 +65,6 @@ import { Toast, useToast } from "@/components/Toast";
 const INITIAL_WEEKS = 9;
 const MAX_WEEKS = 52;
 // And backwards: scrolling up reveals what has been, to the loaded window.
-const MAX_PAST_WEEKS = CAL_PAST_DAYS / 7;
 
 type CalDay = {
   iso: string;
@@ -185,7 +182,6 @@ export function ScheduleScreen({
   };
   const [weeks, setWeeks] = useState(INITIAL_WEEKS);
   // Scrolling up reveals the past, a couple of weeks at a time.
-  const { pastWeeks, sentinel } = usePastReveal(MAX_PAST_WEEKS);
   // The Share pill at the bottom: the menu of ways, then the story sheet.
   // A Going row just removed by its ribbon, held while the undo is offered.
   const [removed, setRemoved] = useState<{ classId: string; iso: string; name: string } | null>(
@@ -382,34 +378,18 @@ export function ScheduleScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes, plans, todayIso, weeks, offKinds]);
 
-  // The days already run, revealed by scrolling up: calendar days this time
-  // (the past has a fixed shape), no ended-filter (been-and-gone is the
-  // point), dimmed by the CSS the way the month grid dims them.
-  const pastDays = useMemo(() => {
-    if (!pastWeeks) return [] as CalDay[];
-    const plansByIso = new Map(plans.map((d) => [d.iso, d.items]));
-    const start = new Date(`${todayIso}T00:00:00Z`);
-    const out: CalDay[] = [];
-    for (let i = 1; i <= pastWeeks * 7; i++) {
-      const d = new Date(start);
-      d.setUTCDate(start.getUTCDate() - i);
-      const iso = d.toISOString().slice(0, 10);
-      const dow = (d.getUTCDay() + 6) % 7;
-      const items = kindOn("coaching")
-        ? classes
-            .filter((c) => runsOn(c, iso, dow))
-            .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-        : [];
-      const extras = (plansByIso.get(iso) ?? []).filter((p) =>
-        kindOn(p.personal ? "private" : "added"),
-      );
-      if (items.length || extras.length) {
-        out.push({ iso, label: fmtDayHeader(iso), items, extras, past: true });
-      }
-    }
-    return out.reverse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, plans, todayIso, pastWeeks, offKinds]);
+  // The days already run, and the List no longer holds any of them: it starts
+  // at today and stops there. It used to grow upward as the scroll asked for
+  // it, and that stopped paying the moment the tray arrived. The faces are the
+  // top of this screen and the whole of what a follow buys, so a list that
+  // grows above them puts them a mile up a scroll nobody wants to make, which
+  // makes the walk back not worth taking either.
+  //
+  // The record is not lost and this is why the trade is fair: the Month grid
+  // still dims past days rather than dropping them, and Day view shows any
+  // date at all, so both reach what has been without a scroll. The past will
+  // get a home of its own; this is deleting the wrong door, not the room.
+  const pastDays: CalDay[] = [];
 
   // The title follows the List's scroll the same way it follows the
   // months': whichever day is under the header names the month.
@@ -627,9 +607,6 @@ export function ScheduleScreen({
           </>
         ) : (
           <>
-            {/* The way back in time: while this is on screen the list grows
-                upward, so scrolling up walks into what has been. */}
-            {sentinel}
             {days.length === 0 && pastDays.length === 0 ? (
               <p className="ps-none">Nothing coming up. Add a class to fill your calendar.</p>
             ) : (
@@ -671,37 +648,37 @@ export function ScheduleScreen({
                                 : setGoingOpen({ base: p.handle, classId: p.classId, iso: p.iso })
                             }
                           >
-                            {/* The bar the kind colours; without it the grid's
-                                first column swallowed the body. */}
+                            {/* The bar the kind colours; without it the card
+                                has no edge to say what this row is to you. */}
                             <span className="ps-accent" aria-hidden="true" />
+                            {/* One of your own has no face and wears its
+                                colour as a plain disc; a saved class wears
+                                the coach's, which is how you place it. */}
+                            {p.personal ? (
+                              <span className="ps-eav ps-eav-private" aria-hidden="true" />
+                            ) : (
+                              <AgendaAvatar
+                                photo={p.coachPhoto}
+                                name={p.coachName || "?"}
+                                color={p.coachColor}
+                                cls="ps-eav"
+                              />
+                            )}
                             <span className="ps-ebody">
-                              {/* Your own entry says so, the way a shift
-                                  does: whose it is, above what it is. */}
-                              {p.personal && (
-                                <span className="ps-private ps-shifttop ps-tag-added">
-                                  Added by you
-                                </span>
-                              )}
-                              {!p.personal && p.coachName.trim() && (
-                                <span className="ps-ecoach">
-                                  <AgendaAvatar
-                                    photo={p.coachPhoto}
-                                    name={p.coachName}
-                                    color={p.coachColor}
-                                  />
-                                  <span className="ps-ecoach-txt">{p.coachName}</span>
-                                </span>
-                              )}
-                              <span className="ps-enm">{p.name}</span>
-                              {p.where && <span className="ps-estudio">{p.where}</span>}
-                            </span>
-                            <span className="ps-etimecol">
-                              <span className="ps-etime">
-                                {p.hm}
-                                <span className="ps-ap">{p.ap}</span>
+                              <span className="ps-ewho">
+                                {p.personal ? "You added this" : p.coachName}
                               </span>
-                              <span className="ps-edur">{p.durationMin} min</span>
+                              <span className="ps-enm">{p.name}</span>
+                              <span className="ps-emeta">
+                                {[`${p.hm}${p.ap.toLowerCase()}`, `${p.durationMin} min`, p.where]
+                                  .filter(Boolean)
+                                  .join(" \u00b7 ")}
+                              </span>
                             </span>
+                            {/* Personal takes the corner, because a row you
+                                typed is not one you can save. A saved class
+                                leaves it for the ribbon. */}
+                            {p.personal && <span className="ps-chip ps-chip-private">Personal</span>}
                           </button>
                           {/* The filled ribbon: this class is in your
                               schedule, and tapping it takes it out, with the
@@ -728,6 +705,12 @@ export function ScheduleScreen({
                         <button
                           className={`ps-event ev-coaching${c.isPublic ? "" : " ps-event-private"}`}
                           data-cid={c.id}
+                          // The pair, the same way the plan rows carry it: the
+                          // id alone says which class and not which of its
+                          // dates, so anything addressing an occurrence (the
+                          // add highlight, a suite checking one week came off)
+                          // was left counting rows and hoping.
+                          data-d={d.iso}
                           onClick={() =>
                             c.shift
                               ? c.shiftBase &&
@@ -740,13 +723,18 @@ export function ScheduleScreen({
                           {/* The kind colours the bar (CSS by ev-class); an
                               inline colour here would override it. */}
                           <span className="ps-accent" aria-hidden="true" />
+                          {/* Your own face on your own teaching rows, and a
+                              shift's is yours too: a gym's class is the gym's,
+                              but the person on the rota looking at their own
+                              calendar is looking at their own day. */}
+                          <AgendaAvatar photo={photo} name={name} color={myAccent} cls="ps-eav" />
                           <span className="ps-ebody">
-                            {/* Shift rides its own line above the name, the
-                                spot the coach chip takes on a Going row: it
-                                says whose hat this is before what it is. */}
-                            {c.shift && (
-                              <span className="ps-private ps-shifttop ps-tag-shift">Shift</span>
-                            )}
+                            <span className="ps-ewho">
+                              {/* Shift says so where the coach's name goes on
+                                  a saved row: whose hat this is, before what
+                                  it is. */}
+                              {c.shift ? "Covering a shift" : name}
+                            </span>
                             <span className="ps-enm">
                               {c.name}
                               {/* The name line keeps the facts about the class
@@ -754,14 +742,17 @@ export function ScheduleScreen({
                               {!c.isPublic && <span className="ps-private">Private</span>}
                               {c.duplicateOf && <span className="ps-dupe">Duplicate</span>}
                             </span>
-                            {where && <span className="ps-estudio">{where}</span>}
-                          </span>
-                          <span className="ps-etimecol">
-                            <span className="ps-etime">
-                              {start.hm}
-                              <span className="ps-ap">{start.ap}</span>
+                            <span className="ps-emeta">
+                              {[`${start.hm}${start.ap.toLowerCase()}`, `${c.durationMin} min`, where]
+                                .filter(Boolean)
+                                .join(" \u00b7 ")}
                             </span>
-                            <span className="ps-edur">{c.durationMin} min</span>
+                          </span>
+                          {/* Teaching, in the corner the ribbon takes on a row
+                              you can save. You cannot save your own class, so
+                              the slot is free to say what it is instead. */}
+                          <span className="ps-chip ps-chip-coaching">
+                            {c.shift ? "Shift" : "Teaching"}
                           </span>
                         </button>
                         </div>

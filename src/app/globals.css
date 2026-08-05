@@ -876,9 +876,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    Teaching, Going or Personal in the same colours the filter chips wear.
    The chips stay the legend. (A full colour fill shipped for a night and
    read as a poster wall, which is the same lesson the photo cards taught.) */
-.callist .ps-event.ev-coaching .ps-accent { background: var(--si); }
-.callist .ps-event.ev-added .ps-accent { background: var(--go); }
-.callist .ps-event.ev-private .ps-accent { background: #3b82cc; }
+/* One token per relationship, and nothing draws these colours by hand. Saved
+   is ink: it is the one you chose and the commonest row on the calendar, and a
+   fourth hue competing with the three that carry meaning made a week read as a
+   paint chart. */
+.ps-agenda .ps-event.ev-coaching .ps-accent { background: var(--rel-coaching); }
+.ps-agenda .ps-event.ev-added .ps-accent { background: var(--rel-saved); }
+.ps-agenda .ps-event.ev-private .ps-accent { background: var(--rel-personal); }
 /* A rule under each date heading, so a day reads as a section wherever the
    list has grown long: the calendars, the profiles, and Following alike.
    The heading carries real weight now: it is the section's name, and at the
@@ -1475,24 +1479,81 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-daycol {
   font-weight: 500; font-size: 17px; color: var(--ink); letter-spacing: -.01em;
 }
-.ps-agenda .ps-daycards { display: block; gap: 0; }
+/* The card, on every list of classes there is. See ClassRow for why it is a
+   card again rather than the flat row it replaces: the short version is that
+   this one is quiet (no photo, plain white, the relationship a bar down the
+   left rather than a fill), and that a list now mixing a class you teach, a
+   shift, one you saved and a dentist appointment needs a boundary a hairline
+   could not draw. */
+.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; }
 .ps-agenda .ps-event {
-  grid-template-columns: 3px 1fr auto; gap: 0 13px; align-items: center;
-  background: transparent; border-radius: 0; box-shadow: none; padding: 18px 2px;
-  border-bottom: 1px solid var(--line);
+  position: relative; display: flex; align-items: center; gap: 12px;
+  grid-template-columns: none; border: 0;
+  background: var(--card); border-radius: 14px;
+  padding: 13px 14px 13px 22px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .05), 0 4px 14px rgba(17, 17, 17, .06);
+  /* So the bar takes the card's rounded left edge instead of poking past it. */
+  overflow: hidden;
 }
-.ps-agenda .ps-event:hover { box-shadow: none; }
-.ps-agenda .ps-event:active { background: #f3ecdf; }
-.ps-agenda .ps-accent { align-self: stretch; width: 3px; border-radius: 2px; background: var(--si); }
+.ps-agenda .ps-event:hover { box-shadow: 0 1px 3px rgba(17, 17, 17, .07), 0 8px 20px rgba(17, 17, 17, .09); }
+.ps-agenda .ps-event:active { background: #faf7f0; }
+/* Full height and flush left: it is the card's edge, not a rule beside it. */
+.ps-agenda .ps-accent {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  border-radius: 0; align-self: auto; background: var(--si);
+}
+/* The face is a column of its own rather than a chip inside the name line: at
+   card size it is what the eye lands on first, and inline it was a decoration
+   on a line of grey text. */
+.ps-eav { width: 46px; height: 46px; border-radius: 999px; object-fit: cover; flex: 0 0 auto; display: block; }
+.ps-eav-empty {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px; font-weight: 700;
+}
+/* One of your own has no face to show and wears its colour as a plain disc.
+   That is what tells the two kinds apart before a word is read. */
+.ps-eav-private { background: var(--rel-personal); }
+.ps-agenda .ps-ebody { flex: 1 1 auto; min-width: 0; gap: 2px; }
+/* Whose it is, above what it is: grey, so the name stays the loudest thing. */
+.ps-ewho {
+  font-size: 13px; font-weight: 500; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* This class, at this time, for this long, here: one sentence on one line.
+   The clock had a column of its own down the right, which is a second axis to
+   read on a row whose whole job is that sentence. */
+.ps-emeta {
+  font-size: 13px; font-weight: 500; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* The corner chip: what this row is to you, where the row is not something you
+   can save. Its colour is the kind's, the same four tokens as the bar. */
+.ps-chip {
+  position: absolute; top: 12px; right: 12px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  border-radius: 999px; padding: 4px 9px; white-space: nowrap;
+}
+.ps-chip-coaching { background: var(--si-tint); color: var(--si-ink); }
+.ps-chip-private { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
+.ps-chip-added, .ps-chip-plain { background: var(--cl); color: var(--ol); }
+/* A card with a chip needs the name clear of it. */
+.ps-agenda .ps-event:has(.ps-chip) .ps-ewho,
+.ps-agenda .ps-event:has(.ps-chip) .ps-ebody > .ps-enm:first-child { padding-right: 96px; }
+.ps-erow:has(.evcard-add) .ps-ewho,
+.ps-erow:has(.evcard-add) .ps-ebody > .ps-enm:first-child { padding-right: 86px; }
 /* The name and the studio are one thing, so they sit close; the air belongs
    between rows, which is what the padding above is for. */
 .ps-agenda .ps-ebody { gap: 3px; }
 /* A touch of positive tracking, against the base rule's negative: the name reads
    better open than tight. That's the only change here that stuck; the weight and
    the size both went a step away and came back. */
+/* The name is what the card is, so it takes the size and the weight and the
+   two grey lines step back. At 18/500 against 14 either side it was one of
+   three things on the card rather than the thing. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-size: 18px; line-height: 1.2; letter-spacing: .004em;
+  font-weight: 700; font-size: 20px; line-height: 1.15; letter-spacing: -.018em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
@@ -4480,39 +4541,18 @@ button.ps-card { cursor: pointer; }
 /* The booking hand-off: fittlist points the way, the studio takes the money. */
 .bookout-links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 
-/* ---- Class rows as white cards on the profile overlay's soft shadow ---- */
-
-.ps-agenda .ps-daycards { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
-/* The event listing's poster manners, carried to classes: a white card per
-   row lifted on the same soft shadow the profile photo overlay wears, scaled
-   to a list. The day header names the date, so the card doesn't. */
-.ps-agenda .ps-event {
-  grid-template-columns: 1fr auto; gap: 0 13px; align-items: center;
-  background: var(--card);
-  border-radius: 16px; padding: 14px 16px; border-bottom: none;
-  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
-}
-.ps-agenda .ps-event:hover {
-  box-shadow: 0 8px 26px rgba(23, 26, 31, .10), 0 1px 3px rgba(23, 26, 31, .05);
-}
-.ps-agenda .ps-event:active { background: var(--cl); }
-.ps-agenda .ps-accent { display: none; }
-
-.ps-agenda .ps-enm {
-  display: flex; align-items: center; gap: 8px;
-  font-weight: 700; font-size: 19px; line-height: 1.15; letter-spacing: -.005em;
-}
+/* The card that used to live here is the one rule above now, on .ps-agenda,
+   so every list draws the same one. This block was an older card attempt that
+   sat after it and quietly won: a two-column grid with the accent set to
+   display:none, which is the bar the whole colour doctrine rests on. Two card
+   designs for one row is how the coach's calendar and the member's came to
+   look like different apps. What survives of it is only what is still true. */
 
 /* Private sessions keep reading as drafts: muted fill, dashed edge. */
 .ps-agenda .ps-event-private {
   background: var(--cl); border: 1.5px dashed #c7bf9f;
 }
 .ps-agenda .ps-event-private:active { background: var(--cl); }
-
-/* The marked card wears a quiet green ring, the same yes the tag gives. */
-.ps-agenda .ps-event.goingon {
-  box-shadow: inset 0 0 0 1.5px var(--go), 0 8px 26px rgba(23, 26, 31, .10);
-}
 
 /* Studio page sections: a hairline seam between each, and room to breathe.
    The first (About) opens the page, so it carries no rule. */
@@ -4749,22 +4789,9 @@ button.ps-card { cursor: pointer; }
    the coach's own colour (the ring their picked avatar wears), and a wall
    of white boxes hid it. The share and Add pair sits above the time in the
    right column, smaller; the time column starts lower to make the room. */
-.feedagenda .ps-event {
-  /* Bottom-aligned: the location's last line sits on the duration's, so the
-     row reads as one shelf however many lines each side carries. */
-  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-end;
-  background: transparent; border-radius: 0; box-shadow: none;
-  padding: 16px 10px 16px 2px; border-bottom: 1px solid var(--line);
-}
-.feedagenda .ps-event:hover { box-shadow: none; }
-.feedagenda .ps-event:active { background: #f3ecdf; }
-.feedagenda .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
-.feedagenda .ps-event.goingon .ps-accent { width: 6px; }
-/* On the flat lists the mark is the filled ribbon and the thicker bar; the
-   card's green ring belongs to the card skin it came from. */
-.feedagenda .ps-event.goingon, .callist .ps-event.goingon { box-shadow: none; }
-.feedagenda .ps-erow { position: relative; gap: 0; }
-.feedagenda .evcard-add { top: 13px; bottom: auto; height: 32px; right: 6px; padding: 0 6px; }
+/* Following and the calendars are the same card; what differs is only which
+   colour the bar carries, and that is the kind's, from the four tokens. */
+.feedagenda .ps-erow, .callist .ps-erow { position: relative; gap: 0; }
 /* Your own class: the corner says which hat rather than offering a control
    that setGoing would refuse. The brand wash, because teaching is the brand
    colour on every other surface. Not a button, so nothing about it invites a
@@ -4776,37 +4803,22 @@ button.ps-card { cursor: pointer; }
   font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   pointer-events: none;
 }
-.feedagenda .evcard-mine { top: 16px; height: auto; }
-.feedagenda .ps-etimecol { margin-top: 36px; }
-/* The calendars wear the same flat rows (.callist), with the kind's colour
-   on the bar. The share circle rides top-right above the time; the member's
-   remove X takes the same corner on their week. */
-.callist .ps-event {
-  /* Bottom-aligned, same as Following: name and location sit on the
-     duration's shelf. */
-  grid-template-columns: 4px 1fr auto; gap: 0 13px; align-items: flex-end;
-  background: transparent; border-radius: 0; box-shadow: none;
-  padding: 14px 10px 14px 2px; border-bottom: 1px solid var(--line);
+/* The corner is one slot on the card and holds one thing: the ribbon where
+   the row is something you can save, the chip where it is not. */
+.feedagenda .evcard-add, .callist .evcard-add {
+  position: absolute; top: 12px; bottom: auto; right: 12px;
+  height: 30px; padding: 0 6px;
 }
-.callist .ps-event:hover { box-shadow: none; }
-.callist .ps-event:active { background: #f3ecdf; }
-.callist .ps-accent { display: block; align-self: stretch; width: 4px; border-radius: 2px; }
-.callist .ps-erow { position: relative; gap: 0; }
-/* The corner ribbon, same as Following's. */
-.callist .evcard-add { top: 11px; bottom: auto; height: 32px; right: 6px; padding: 0 6px; }
-.callist .weekrow-x { position: absolute; top: 10px; right: 6px; z-index: 2; }
-.callist .ps-etimecol { margin-top: 34px; }
-/* A shift says so above the name, the spot the coach chip takes on a Going
-   row, and your own entries say Added by you in the same spot: whose it
-   is first, then what. Each tag wears its kind's wash: the brand orange
-   for a shift (a Teaching row), the personal slate for your own, both
-   quiet enough that the name stays the loudest thing on the row. */
+.callist .weekrow-x { position: absolute; top: 10px; right: 8px; z-index: 2; }
+.feedagenda .evcard-mine, .callist .evcard-mine { top: 12px; height: auto; }
+/* The old above-the-name tags. Kept because a shift still says so there:
+   which kind of yours a row is comes before what it is, and the chip in the
+   corner is taken by the ribbon on any row you can save. */
 .ps-shifttop { align-self: flex-start; margin: 0 0 4px; }
 .ps-tag-shift { background: var(--si-tint); border-color: transparent; color: var(--si-ink); }
-.ps-tag-added { background: rgba(59, 130, 204, .16); border-color: transparent; color: var(--ink); }
-/* Private stays a fact on the name line, not a dashed box: the flat row has
-   no box to dash. */
-.callist .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
+.ps-tag-added {
+  background: var(--rel-personal-bg); border-color: transparent; color: var(--rel-personal-ink);
+}
 .evcards .weekrow-x { position: absolute; top: 10px; right: 10px; z-index: 2; }
 
 /* ---------- Home ---------- */

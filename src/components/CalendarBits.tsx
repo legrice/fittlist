@@ -680,58 +680,6 @@ export function DayGrid({
   );
 }
 
-/** Scrolling up reveals what has been. The list starts at today as ever; a
- *  sentinel above it watches for the top of the page, and each time it comes
- *  into view another slice of past days renders above, with the scroll
- *  position compensated so the screen doesn't jump. Capped so the walk back
- *  ends where the loaded window does. */
-export function usePastReveal(maxWeeks: number, step = 2) {
-  const [pastWeeks, setPastWeeks] = useState(0);
-  const [node, setNode] = useState<HTMLElement | null>(null);
-  const prevH = useRef<number | null>(null);
-  const scrollerRef = useRef<HTMLElement | null>(null);
-  // The page's scroller differs by shell: the tabs layout scrolls the body,
-  // the coach shell scrolls its .stage. Walk up from the sentinel so both
-  // get their height read and their position compensated in the right place.
-  const scrollerOf = (el: HTMLElement): HTMLElement => {
-    let n = el.parentElement;
-    while (n) {
-      const o = getComputedStyle(n).overflowY;
-      if (o === "auto" || o === "scroll") return n;
-      n = n.parentElement;
-    }
-    return (document.scrollingElement as HTMLElement) || document.documentElement;
-  };
-  useEffect(() => {
-    if (!node) return;
-    scrollerRef.current = scrollerOf(node);
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        setPastWeeks((w) => {
-          if (w >= maxWeeks) return w;
-          prevH.current = scrollerRef.current?.scrollHeight ?? 0;
-          return Math.min(maxWeeks, w + step);
-        });
-      },
-      { rootMargin: "200px 0px 0px 0px" },
-    );
-    io.observe(node);
-    return () => io.disconnect();
-  }, [node, maxWeeks, step]);
-  // Prepending content above the viewport would shove today down the screen;
-  // scroll by exactly what was added and the view stays put.
-  useLayoutEffect(() => {
-    const sc = scrollerRef.current;
-    if (prevH.current == null || !sc) return;
-    const delta = sc.scrollHeight - prevH.current;
-    prevH.current = null;
-    if (delta > 0) sc.scrollTop += delta;
-  }, [pastWeeks]);
-  const sentinel = pastWeeks < maxWeeks ? <div ref={setNode} aria-hidden="true" /> : null;
-  return { pastWeeks, sentinel };
-}
-
 /** The List's answer to the month scroll's title-following: watch the day
  *  groups, and report the month of whichever crosses the band under the
  *  header, so the title stays true while the list scrolls across a month

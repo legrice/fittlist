@@ -72,21 +72,18 @@ async function shapes() {
   await p.goto(BASE + "/app");
   await p.locator(".ps-event").first().waitFor();
   await p.waitForTimeout(400);
-  const rows = await p.locator(".ps-event").allInnerTexts();
-  // The rows wear hat chips now (Coaching, Shift); they are furniture here,
-  // not part of the class's shape.
-  return [
-    ...new Set(
-      rows.map((r) =>
-        r
-          .split("\n")
-          .map((line) => line.trim())
-          .filter((line) => !/^(COACHING|TEACHING|SHIFT|GOING|YOURS|PRIVATE)$/i.test(line))
-          .slice(0, 3)
-          .join(" @ "),
-      ),
-    ),
-  ].sort();
+  // The name and the one meta line (time, length, place), read as elements
+  // rather than sliced out of the row's text. Splitting innerText broke the
+  // moment the card put a face in front of the words: the avatar's initial is
+  // a text node too, so it took a slot and pushed the studio out of the key,
+  // and two Stretch+ classes at two studios collapsed into one shape.
+  const rows = await p.locator(".ps-event").evaluateAll((els) =>
+    els.map((e) => [
+      e.querySelector(".ps-enm")?.textContent?.trim() ?? "",
+      e.querySelector(".ps-emeta")?.textContent?.trim() ?? "",
+    ].join(" @ ")),
+  );
+  return [...new Set(rows)].sort();
 }
 
 await addClass({ name: "Stretch+", days: ["Mo", "We"], time: "06:00", studio: "Verona Stretch", first: true });

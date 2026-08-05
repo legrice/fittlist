@@ -700,7 +700,7 @@ console.log("the coach is told ok");
     // The coach chip, not the whole week's text. `.includes("Tom")` over the
     // page matched the "Tomorrow" day band the moment a fixture put a class
     // on tomorrow, which is a three-letter name colliding with the calendar.
-    const named = await anon.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    const named = await anon.locator(".ps-week .ps-ewho").allInnerTexts();
     if (named.some((t) => /Tom/.test(t)))
       fail("a coach's own switch named them on the gym's schedule: " + named.join("|"));
     await anonCtx.close();
@@ -1058,7 +1058,7 @@ console.log("the coach is told ok");
   // Under the gym's name and nobody else's: this is what lets Tom teach here
   // without a public profile, and stops a schedule becoming a leaderboard.
   {
-    const named = await anon.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    const named = await anon.locator(".ps-week .ps-ewho").allInnerTexts();
     if (named.some((t) => /Tom/.test(t)))
       fail("the gym's public week named the coach: " + named.join("|"));
   }
@@ -1149,7 +1149,7 @@ console.log("the coach is told ok");
     await mem.locator(".favtoast.on").waitFor();
 
     const chip = () =>
-      mem.locator(".ps-erow", { hasText: "Rota Naming" }).first().locator(".ps-ecoach-txt");
+      mem.locator(".ps-erow", { hasText: "Rota Naming" }).first().locator(".ps-ewho");
     await mem.goto(BASE + "/week");
     await mem.locator(".ps-enm", { hasText: "Rota Naming" }).first().waitFor();
     if (await chip().count()) {
@@ -1440,7 +1440,7 @@ console.log("the rota is closed to everyone else ok");
   // Same shape, same reason: ask the chip whether anybody is named rather
   // than searching a week of prose for a first name.
   {
-    const named = await julia.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    const named = await julia.locator(".ps-week .ps-ewho").allInnerTexts();
     if (named.some((t) => /Julia/.test(t)))
       fail("a pending ask reached the studio's public page: " + named.join("|"));
   }

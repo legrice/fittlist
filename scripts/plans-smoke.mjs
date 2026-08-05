@@ -104,7 +104,7 @@ await m.goto(BASE + "/week");
 await m.locator(".ps-agenda .ps-event").first().waitFor();
 const rows = await m.locator(".ps-erow").count();
 if (rows < 2) fail("expected the coach's class and the personal one, got " + rows);
-if (!(await m.locator(".ps-ecoachav").count())) fail("the coach's row should carry their face");
+if (!(await m.locator(".ps-eav").count())) fail("the coach's row should carry their face");
 // The colour is the badge now: green for added, slate for your own.
 if (!(await m.locator(".ps-event.ev-added").count()))
   fail("an added row should wear the Going colour");

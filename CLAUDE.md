@@ -208,9 +208,11 @@ an old shared link has to land somewhere real, and the bare URL falls
 forward to the next date it runs. The share images deliberately keep the
 whole range they were asked to draw: a poster of the week is a record, not
 a schedule. The one deliberate exception is your own calendar looking
-back: the Month grid dims past days rather than dropping them, and the
-List scrolls up into them (see the calendar's views below), because a
-record of what you did is a thing a calendar owes its owner. Every public
+back: the Month grid dims past days rather than dropping them, and Day
+view shows any date at all (see the calendar's views below), because a
+record of what you did is a thing a calendar owes its owner. The List used
+to scroll up into them too and no longer does; that is a decision about
+where the past lives rather than whether it survives. Every public
 surface keeps the rule.
 
 **The story image has three levels of detail, and the sums have to match the
@@ -1636,7 +1638,7 @@ order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
 recurring entry that only showed its next date read as a class that
 stopped); `mySchedule()` is the coaching half. The calendar pages pass
 `myWeek` a `pastDays` window (`CAL_PAST_DAYS` in `format.ts`, eight weeks)
-so the scroll back in time has data under it; every other caller takes the
+so the Month grid's dimmed days have data under them; every other caller takes the
 default of none, which is why the share poster's starting day stays a
 future one. Every row wears its
 relationship as its colour (see the colour doctrine below), and tapping
@@ -1729,21 +1731,30 @@ The two nearest days head their sections as words, Today and Tomorrow
 (`fmtDayHeaderRel`), the same words Following already used; the dates
 resume from there.
 
-**The calendar's header sticks, and the List scrolls back in time.**
+**The calendar's header sticks, and the List starts at today.**
 `CalSticky` pins the month row under the app header (it measures the
 brandbar, which is itself sticky, for its offset), plus whatever the view
 adds beneath it, the Month grid's weekday initials or the Day view's week
-strip; the list slides beneath the chrome. `usePastReveal` is the way back: the list
-still starts at today, and a sentinel above it prepends a slice of past
-days each time the top comes into view, compensating the scroll so the
-screen doesn't jump. It finds the real scroller by walking up from the
-sentinel, because the tabs layout scrolls the body and the coach shell
-scrolls its `.stage`, and reading the wrong one put the compensation on a
-container that never moves. Past days render dimmed (`.ps-pastday`), the
-window is `CAL_PAST_DAYS`, and a standing weekly class extrapolates into
-it without a start bound: eight weeks of "your Tuesday class ran on
-Tuesdays" is almost always true, and the honest alternative (bounding on
-`createdAt`) breaks the moment an edit reinserts the rows.
+strip; the list slides beneath the chrome.
+
+The List used to walk backwards: `usePastReveal` put a sentinel above it and
+prepended a slice of past days each time the top came into view, compensating
+the scroll so the screen didn't jump. It is gone, by Matt's call, and the
+reason is the circles tray that now sits above the list. The faces are the top
+of Schedule and the whole of what a follow buys, so a list that grows over them
+puts them a mile up a scroll nobody wants to make, which makes the walk back
+not worth taking either. Deleting it is deleting the wrong door, not the room:
+the Month grid still dims past days rather than dropping them and Day view
+still shows any date, so both reach what has been without a scroll at all, and
+the past will get a home of its own when one is designed.
+
+The loaders are untouched on purpose. `myWeek` still takes its `pastDays`
+window (`CAL_PAST_DAYS`, eight weeks) because the Month grid draws its dimmed
+days from exactly that data; only the List stopped rendering it. A standing
+weekly class still extrapolates into that window without a start bound: eight
+weeks of "your Tuesday class ran on Tuesdays" is almost always true, and the
+honest alternative (bounding on `createdAt`) breaks the moment an edit
+reinserts the rows.
 
 **The calendar keeps two doors on screen: Today left, Share right.**
 `CalBottomBar` floats them over every view on both calendars, both

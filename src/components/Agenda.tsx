@@ -118,7 +118,26 @@ export function DayBand({
   );
 }
 
-/** The row itself: a link when something is behind it, a button otherwise. */
+/**
+ * The row itself: a link when something is behind it, a button otherwise.
+ *
+ * It is a card again, per Matt's design, and that is a deliberate reversal of
+ * the flat row it replaces, so the reason is worth writing down. The flat row
+ * came in because the card before it was a poster wall: a photograph per row,
+ * the whole list shouting. What is different here is that the card is quiet.
+ * There is no photo, the ground is plain white, and the relationship is a bar
+ * down the left rather than a fill, which is the one thing the flat row got
+ * right and this keeps. What the card buys back is a boundary: on a list that
+ * now mixes a class you teach, a shift, one you saved and a dentist
+ * appointment, a hairline between rows was not enough to say where one thing
+ * ended and the next began.
+ *
+ * The clock moved into the sub-line with it. It had a column of its own down
+ * the right, which is a second axis to read on a row whose whole job is one
+ * sentence: this class, at this time, for this long, here. Folded in, the
+ * name gets the full width and the corner is free for the one control that
+ * matters.
+ */
 export function ClassRow({
   item,
   onClick,
@@ -129,6 +148,15 @@ export function ClassRow({
   /** Anything the row says under the class name, like who else is going. */
   children?: ReactNode;
 }) {
+  // Who the row is about, in the grey line above the name. A personal entry
+  // has no coach, so it says whose it is instead; a gym's shift names nobody,
+  // because whether a coach is listed is the gym's call.
+  const who = item.kind === "private" ? "You added this" : item.coachName?.trim() || "";
+  const meta = [
+    `${item.hm}${item.ap.toLowerCase()}`,
+    `${item.durationMin} min`,
+    item.where || "",
+  ].filter(Boolean);
   const inner = (
     <>
       {/* The coach's colour on merged lists; on your own calendar the kind
@@ -138,36 +166,29 @@ export function ClassRow({
         style={item.kind ? undefined : { background: item.coachColor }}
         aria-hidden="true"
       />
-      {/* Who first, then what, then where: on a list drawn from more than one
-          coach, the coach is how you place the class. A personal entry has
-          no coach to show, so its line above the name says whose it is. */}
+      {/* The face is a column of its own now rather than a chip inside the
+          name line: at card size it is the thing the eye lands on first, and
+          inline it was a decoration on a line of grey text. A personal entry
+          has no face to show and wears its colour as a plain disc, which is
+          what tells the two kinds apart at a glance. */}
+      {item.kind === "private" ? (
+        <span className="ps-eav ps-eav-private" aria-hidden="true" />
+      ) : (
+        who && (
+          <AgendaAvatar photo={item.coachPhoto} name={who} color={item.coachColor} cls="ps-eav" />
+        )
+      )}
       <span className="ps-ebody">
-        {item.kind === "private" && (
-          <span className="ps-private ps-shifttop ps-tag-added">Added by you</span>
-        )}
-        {item.coachName?.trim() && (
-          <span className="ps-ecoach">
-            <AgendaAvatar photo={item.coachPhoto} name={item.coachName} color={item.coachColor} />
-            <span className="ps-ecoach-txt">{item.coachName}</span>
-
-          </span>
-        )}
+        {who && <span className="ps-ewho">{who}</span>}
         <span className="ps-enm">{item.name}</span>
-        {item.where && <span className="ps-estudio ps-ewhere">{item.where}</span>}
+        {meta.length > 0 && <span className="ps-emeta">{meta.join(" \u00b7 ")}</span>}
         {children}
       </span>
-      {/* The corner, not the time row: leading the clock shoved the time
-          sideways on tagged cards, so tagged and untagged rows stopped lining
-          up. Bottom right is the Add button's spot, and a personal card has
-          no Add button, so the two never meet. */}
-      {item.tag && <span className="ps-goingtag">{item.tag}</span>}
-      <span className="ps-etimecol">
-        <span className="ps-etime">
-          {item.hm}
-          <span className="ps-ap">{item.ap}</span>
-        </span>
-        <span className="ps-edur">{item.durationMin} min</span>
-      </span>
+      {/* The corner is one slot and holds one thing. A chip says what this row
+          is to you where the row is not something you can save; where it is,
+          the caller puts the ribbon there instead, as a sibling, because a
+          button inside a link is not a thing. */}
+      {item.tag && <span className={`ps-chip ps-chip-${item.kind ?? "plain"}`}>{item.tag}</span>}
     </>
   );
   const cls = `ps-event${item.kind ? ` ev-${item.kind}` : ""}${item.on ? " goingon" : ""}`;

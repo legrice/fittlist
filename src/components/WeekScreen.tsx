@@ -31,12 +31,11 @@ import {
   saveCalView,
   scrollCalTop,
   scrollToToday,
-  usePastReveal,
   type CalKind,
   type CalView,
   type MonthCellItem,
 } from "@/components/CalendarBits";
-import { CAL_PAST_DAYS, fmtDayHeaderRel } from "@/lib/format";
+import { fmtDayHeaderRel } from "@/lib/format";
 import { CircleTray } from "@/components/CircleTray";
 import { ClassOpener } from "@/components/ClassOpener";
 import { InviteSheet } from "@/components/InviteFriends";
@@ -143,8 +142,6 @@ export function WeekScreen({
   useEffect(() => setView(loadCalView()), []);
   const [viewSheet, setViewSheet] = useState(false);
   const [ym, setYm] = useState(todayIso.slice(0, 7));
-  // Scrolling up reveals the past, a couple of weeks at a time.
-  const { pastWeeks, sentinel } = usePastReveal(CAL_PAST_DAYS / 7);
   // Arriving here from an add, which is the moment the week became worth
   // showing somebody. A coach's publish ends on the share moment for exactly
   // this reason; a member's add ended on nothing, and the poster sat behind a
@@ -263,15 +260,13 @@ export function WeekScreen({
         .filter((i) => kindOn(i.personal ? "private" : "added")),
     }))
     .filter((d) => d.items.length > 0);
-  // The list leads with today; the past renders above only as far as the
-  // scroll has asked for it.
-  const pastFloor = (() => {
-    const d = new Date(`${todayIso}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() - pastWeeks * 7);
-    return d.toISOString().slice(0, 10);
-  })();
+  // The List starts at today and stops there; see the same note on the coach's
+  // ScheduleScreen. It grew upward as the scroll asked for it until the tray
+  // arrived above it, and a list that grows over the faces puts them a mile up
+  // a scroll nobody wants to make. The Month grid and Day view still reach the
+  // past, and reach it without scrolling at all.
   const shown = allShown.filter((d) => d.iso >= todayIso);
-  const pastShown = allShown.filter((d) => d.iso < todayIso && d.iso >= pastFloor);
+  const pastShown: typeof allShown = [];
   // The title follows the List's scroll the same way it follows the
   // months': whichever day is under the header names the month.
   useListMonthSpy(view === "list", setYm, `${pastShown.length}|${shown.length}`);
@@ -427,9 +422,6 @@ export function WeekScreen({
           </ClassOpener>
         ) : (
           <>
-            {/* The way back in time: while this is on screen the list grows
-                upward, so scrolling up walks into what has been. */}
-            {sentinel}
             {/* The same rows Following draws. A member flipping between the two
                 tabs is looking at one list of one kind of thing, and it used to
                 be two designs. ClassOpener catches the tap on a real class; a
