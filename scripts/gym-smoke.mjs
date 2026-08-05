@@ -274,9 +274,20 @@ console.log("the coach is told ok");
   if ((await matt.locator("#fName").inputValue()) !== "Warm Up")
     fail("pulling one in should fill the name");
 
-  // Everything a coach's class carries, on a gym's too.
+  // Everything a coach's class carries, on a gym's too, the photograph
+  // included. It was accepted by the form and dropped by every gym write, so
+  // a manager filling a rota picked a picture and lost it on save.
   await matt.locator("#fType").selectOption({ label: "Strength" });
   await matt.locator("#fDesc").fill("Bring shoes you can lift in.");
+  await matt.locator(".classpho input[type=file]").setInputFiles({
+    name: "class.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  });
+  await matt.getByRole("button", { name: "Change photo" }).waitFor();
   await matt.getByRole("button", { name: "+ Add link" }).click();
   const linkBox = matt.locator('input[aria-label="Link"]').last();
   await linkBox.fill("https://ironbound.example/book");
@@ -298,8 +309,23 @@ console.log("the coach is told ok");
     .evaluateAll((els) => els.map((e) => e.value));
   if (!urls.includes("https://ironbound.example/book"))
     fail("the booking link didn't survive a save: " + urls.join(","));
+  if (!(await matt.locator(".classpho .classpho-img:not(.classpho-empty)").count()))
+    fail("the photo didn't survive a save");
   await matt.locator(".sheetclose").click();
   console.log("the details come back on an edit ok");
+
+  // And the next slot pulled in from the catalogue arrives wearing it. This is
+  // the whole point of adding a class once: a manager filling a week should
+  // pick the name and be done.
+  await matt.locator(".rotaday", { hasText: "Saturday" }).getByRole("button", { name: "Add" }).click();
+  await matt.locator("#fName").click();
+  await matt.locator(".namesug button", { hasText: "Warm Up" }).first().click();
+  await matt.waitForTimeout(300);
+  if (!(await matt.locator(".classpho .classpho-img:not(.classpho-empty)").count()))
+    fail("pulling a class in should bring its photo");
+  await matt.locator(".sheetclose").click();
+  await matt.waitForTimeout(400);
+  console.log("a class pulled in from the catalogue brings its photo ok");
 }
 
 // And they reach the class a member actually opens.

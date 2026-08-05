@@ -138,6 +138,7 @@ export function GymRota({
           name: cls.name,
           classType: cls.classType,
           description: cls.description,
+          image: cls.image,
           startTime: cls.startTime,
           durationMin: cls.durationMin,
           studioId,

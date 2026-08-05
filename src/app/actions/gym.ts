@@ -291,6 +291,12 @@ export type GymCatalogItem = {
   name: string;
   classType: string | null;
   description: string | null;
+  /** The picture belongs to the class rather than to whoever wrote it down
+   *  first, so pulling one in brings it. The coach path has always carried
+   *  this; the gym path dropped it in every direction, which meant a manager
+   *  filling a rota re-picked a photo the studio already had, and lost it on
+   *  save. */
+  image: string | null;
   links: { label: string; url: string }[];
 };
 
@@ -322,6 +328,7 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       name: c.name,
       classType: c.classType,
       description: c.description,
+      image: c.image,
       links: [],
     });
   // Real classes fill the gaps the catalogue doesn't hold, links above all.
@@ -332,10 +339,12 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       name: c.name,
       classType: c.classType,
       description: c.description,
+      image: c.image,
       links: [],
     };
     if (!cur.classType && c.classType) cur.classType = c.classType;
     if (!cur.description && c.description) cur.description = c.description;
+    if (!cur.image && c.image) cur.image = c.image;
     if (!cur.links.length && c.links.length) cur.links = c.links.map((l) => ({ ...l }));
     byKey.set(key, cur);
   }
@@ -352,6 +361,7 @@ async function catalogue(
   const name = input.name.trim();
   const classType = input.classType?.trim() || null;
   const description = input.description?.trim() || null;
+  const image = input.image?.trim() || null;
   try {
     await db
       .insert(schema.studioClasses)
@@ -361,6 +371,7 @@ async function catalogue(
         nameKey: name.toLowerCase(),
         classType,
         description,
+        image,
         createdByUserId: userId,
       })
       .onConflictDoUpdate({
@@ -369,6 +380,7 @@ async function catalogue(
           name,
           ...(classType ? { classType } : {}),
           ...(description ? { description } : {}),
+          ...(image ? { image } : {}),
           updatedAt: new Date(),
         },
       });
@@ -470,6 +482,7 @@ export async function addGymClass(
       name,
       classType: input.classType?.trim() || null,
       description: input.description?.trim() || null,
+      image: input.image?.trim() || null,
       links: cleanLinks(input.links),
       isPublic: true,
     })),
@@ -584,6 +597,7 @@ export async function updateGymClass(
       name,
       classType: input.classType?.trim() || null,
       description: input.description?.trim() || null,
+      image: input.image?.trim() || null,
       links: cleanLinks(input.links),
     })
     .where(eq(schema.classes.id, classId))
