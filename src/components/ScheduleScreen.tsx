@@ -666,7 +666,12 @@ export function ScheduleScreen({
                             )}
                             <span className="ps-ebody">
                               <span className="ps-ewho">
-                                {p.personal ? "You added this" : p.coachName}
+                                {/* A personal row can name who it is with;
+                                    the corner chip already says it is yours,
+                                    so the line carries the name when there is
+                                    one. */}
+                                {p.coachName?.trim() ||
+                                  (p.personal ? "You added this" : "")}
                               </span>
                               <span className="ps-enm">{p.name}</span>
                               <span className="ps-emeta">

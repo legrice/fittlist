@@ -148,10 +148,18 @@ export function ClassRow({
   /** Anything the row says under the class name, like who else is going. */
   children?: ReactNode;
 }) {
-  // Who the row is about, in the grey line above the name. A personal entry
-  // has no coach, so it says whose it is instead; a gym's shift names nobody,
-  // because whether a coach is listed is the gym's call.
-  const who = item.kind === "private" ? "You added this" : item.coachName?.trim() || "";
+  // Who the row is about, in the grey line above the name.
+  //
+  // A personal entry usually has nobody, and says so. But it can name somebody
+  // (`withWho`, "Training with Kia"), which is the whole reason that column
+  // exists, and a row that swallowed the name to say "You added this" told the
+  // owner the one thing they already knew and lost the one thing they wrote
+  // down. The chip in the corner says Personal either way, so the line is free
+  // to carry the name when there is one.
+  const who =
+    item.kind === "private"
+      ? item.coachName?.trim() || "You added this"
+      : item.coachName?.trim() || "";
   const meta = [
     `${item.hm}${item.ap.toLowerCase()}`,
     `${item.durationMin} min`,
