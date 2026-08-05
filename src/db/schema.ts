@@ -730,6 +730,18 @@ export const subscribers = pgTable(
     userId: uuid("user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
+    /** When this follower last opened this coach's peek.
+     *
+     *  The ring on the circle is what makes the tray a tool rather than a row
+     *  of decoration: it says this coach has put classes up since you last
+     *  looked. Following stopped delivering classes to your week, so the ring
+     *  is the only thing left that tells you there is anything to pull, and a
+     *  tray of identical circles asks people to check six coaches one at a
+     *  time to find out.
+     *
+     *  Null means never opened, which is a ring: somebody you just followed
+     *  and have not looked at has, by definition, everything new. */
+    peekedAt: timestamp("peeked_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email),
