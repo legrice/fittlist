@@ -330,19 +330,30 @@ export function fmtDayHeader(iso: string): string {
 export function dayBandLabel(iso: string, today?: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-  let day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+  // Abbreviated, per the design: three letters carry the day as well as nine
+  // do at this size, and a band that runs to "Wednesday" pushes its own date
+  // toward the edge on a 390px screen.
+  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  let lead = wd;
+  let rest = md;
   if (today) {
     const t = new Date(`${today}T00:00:00Z`);
     t.setUTCDate(t.getUTCDate() + 1);
-    if (iso === today) day = "Today";
-    else if (iso === t.toISOString().slice(0, 10)) day = "Tomorrow";
+    // A relative word leads, and the weekday it displaced joins the date, or
+    // "Today" would be the only band on the list not saying which day it is.
+    if (iso === today) {
+      lead = "Today";
+      rest = `${wd}, ${md}`;
+    } else if (iso === t.toISOString().slice(0, 10)) {
+      lead = "Tomorrow";
+      rest = `${wd}, ${md}`;
+    }
   }
   // The date label's own dash, the same one fmtDayHeader carries and for the
   // same reason: a date is a label rather than a sentence, and this is the
-  // shape it is wanted in. Today and Tomorrow keep their date rather than
-  // replacing it, so a relative word still says which day it means.
+  // shape it is wanted in.
   // check-copy-ignore
-  return `${day} — ${md}`;
+  return `${lead} — ${rest}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

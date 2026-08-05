@@ -136,13 +136,65 @@ await m.waitForTimeout(500);
   console.log("the tray carries every face on a desktop width ok");
 }
 
-// The rail's desktop arrows are gone with the rail that had them. The feed's
-// coach strip carried .railarrow buttons, gated on (hover: hover) and
-// (pointer: fine), so a mouse could walk a rail it could not swipe; the
-// circles tray that replaced it scrolls but offers no such control. That is a
-// real gap on a desktop width and it is written down in v4-brief-two.md
-// rather than quietly dropped: the argument that produced those arrows still
-// holds, the component they belonged to does not.
+// The rail's arrows, on the tray that replaced the feed's coach strip. Eight
+// faces plus the Add door is what makes it overflow, so a missing arrow here
+// means the arrow is broken rather than the fixture being too short.
+{
+  await m.goto(BASE + "/week");
+  await m.locator(".tray").waitFor();
+  await m.locator(".trayitem").first().waitFor();
+  await m.waitForTimeout(600);
+  // Right only, at rest: there is nothing to the left of the first face.
+  await m.locator(".railarrow-r").waitFor();
+  if (await m.locator(".railarrow-l").count())
+    fail("nothing is scrolled off to the left yet, so there should be no left arrow");
+  // It has to be the topmost thing at its own centre. The scroller is its
+  // sibling and comes after it in the DOM, so without a layer of its own an
+  // avatar paints straight over a button that is in the tree and visible.
+  const onTop = await m.locator(".railarrow-r").evaluate((a) => {
+    const r = a.getBoundingClientRect();
+    const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    return el ? el.className : null;
+  });
+  if (!/railarrow/.test(String(onTop)))
+    fail("something paints over the arrow: " + onTop);
+  const before = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  await m.locator(".railarrow-r").click();
+  await m.waitForTimeout(700);
+  const after = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  if (after <= before) fail(`the right arrow did not page the rail: ${before} -> ${after}`);
+  // ...and the left one turns up once there is something behind you.
+  await m.locator(".railarrow-l").click();
+  await m.waitForTimeout(700);
+  const back = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  if (back >= after) fail(`the left arrow did not page back: ${after} -> ${back}`);
+  console.log("tray arrows page the rail both ways ok");
+}
+
+// ...and never on a touch pointer, because a finger already swipes. The gate
+// is (hover: hover) and (pointer: fine): "can't swipe" is a property of the
+// pointer, and a width breakpoint would put arrows on a tablet.
+{
+  const tc = await b.newContext({
+    viewport: { width: 1024, height: 1200 },
+    hasTouch: true,
+    isMobile: true,
+    storageState: await mc.storageState(),
+  });
+  const t = await tc.newPage();
+  t.setDefaultTimeout(15000);
+  await t.goto(BASE + "/week");
+  await t.locator(".tray").waitFor();
+  await t.waitForTimeout(600);
+  if (!(await t.locator(".trayitem").first().isVisible()))
+    fail("the tray itself vanished on a touch pointer");
+  const shown = await t.locator(".railarrow").evaluateAll((els) =>
+    els.filter((e) => getComputedStyle(e).display !== "none").length,
+  );
+  if (shown !== 0) fail(`${shown} arrows rendered on a touch pointer`);
+  await tc.close();
+  console.log("no arrows on a touch pointer ok");
+}
 
 await b.close();
 console.log("DESKTOP CHECKS PASSED");

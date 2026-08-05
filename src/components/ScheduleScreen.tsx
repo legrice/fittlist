@@ -618,7 +618,7 @@ export function ScheduleScreen({
                   className={`ps-daygroup${d.past ? " ps-pastday" : ""}`}
                 >
                   {/* Both hats counted, because both are drawn under it. */}
-                  <DayBand iso={d.iso} today={todayIso} count={d.items.length + d.extras.length} />
+                  <DayBand iso={d.iso} today={todayIso} />
                   <div className="ps-daycards">
                     {/* Every row here carries its occurrence's two keys
                         (data-cid, data-d), so "See it" can find the one it

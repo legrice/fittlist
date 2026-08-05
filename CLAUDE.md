@@ -1535,14 +1535,28 @@ and deliberately not by the page gutter: the list's wrapper keeps its 18px
 at the desktop breakpoint while `.pad` widens to 38, so bleeding by the
 gutter ran the band 20px past the column on each side.
 
-The band says the day and its date on the left and how many classes on the
-right: "TODAY — AUG 5" against "2 classes". The relative words lead their
-date rather than replacing it (`dayBandLabel`, which `fmtDayHeaderRel` now
-just calls, so a heading and a band can't word one day differently); "Today"
-alone made somebody work out which date they were looking at while every
-other heading in the app was already saying one. That dash is the date
-label's own, the same exemption `fmtDayHeader` carries, and it needs the
-`check-copy-ignore` pragma or the build fails.
+The band is the day and its date, and today wears a dot. It carried a count of
+the day's classes across from the name for a while, and that came off by Matt's
+call: it answered a question nobody opens this screen to ask, because the rows
+underneath are the answer and they are right there, so a number beside every
+heading down a long scroll is arithmetic the list is doing at you.
+`.ps-daycount` renders nowhere now and `DayBand` takes no `count`.
+
+What replaced it is a 6px brand-orange dot before today's label, and nothing
+else on the list has one. Today is the heading somebody is looking for when
+they open the app, and the word alone meant reading headings to find the place
+you already meant to be. It cannot be read as one of the relationship colours,
+because nothing else in a band is coloured at all.
+
+The weekday abbreviates ("Wed — Aug 6"): three letters carry the day as well as
+nine at this size, and a band running to "Wednesday" pushes its own date toward
+the edge at 390px. The relative words lead their date rather than replacing it,
+and the weekday they displace joins the date ("Today — Wed, Aug 5"), or Today is
+the one band not saying which day it is. `dayBandLabel` is the single definition
+and `fmtDayHeaderRel` just calls it, so a heading and a band can't word one day
+differently. That dash is the date label's own, the same exemption
+`fmtDayHeader` carries, and it needs the `check-copy-ignore` pragma or the build
+fails.
 
 `AgendaDay.label` is the casualty and is now written everywhere and read
 nowhere. Removing it touches eight files and is its own commit; until then,

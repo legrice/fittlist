@@ -102,5 +102,53 @@ await m.waitForTimeout(500);
 await m.screenshot({ path: OUT + "/shot-tray-full.png" });
 console.log("saved from the peek, and it is on the week");
 
+// The band: today wears a dot and nothing else does, and no band counts its
+// classes at you. Both are Matt's design and both reverse what was there.
+{
+  const band = m.locator(".callist .ps-daycol").first();
+  await band.waitFor();
+  const label = (await band.locator(".ps-dayname").innerText()).trim();
+  // "Today — Wed, Aug 5": the relative word leads and the weekday it displaced
+  // joins the date, or Today is the one band not saying which day it is.
+  if (!/^Today .+ \w{3}, \w{3} \d+$/.test(label))
+    fail("today's band should read Today, then the weekday and date: " + label);
+  if (!(await band.locator(".ps-daydot").count()))
+    fail("today's band should wear the dot");
+  if (await m.locator(".ps-daycount").count())
+    fail("the class count came off the bands");
+  // ...and only today has one.
+  const dots = await m.locator(".callist .ps-daydot").count();
+  if (dots !== 1) fail(`only today wears the dot, found ${dots}`);
+  const other = m.locator(".callist .ps-daycol").nth(1);
+  if (await other.count()) {
+    const l2 = (await other.locator(".ps-dayname").innerText()).trim();
+    if (/^Today/.test(l2)) fail("two bands both claim to be today: " + l2);
+  }
+}
+console.log("day band ok (a dot on today, no counts)");
+
+// The rail's arrows, back. A finger swipes; a mouse cannot, so above a
+// hovering pointer the tray simply ended and the faces past the edge may as
+// well not have existed. They need a layer of their own: the scroller is
+// their sibling and comes after them, so an avatar paints straight over a
+// button that is in the tree and not display:none.
+{
+  const wide = await b.newContext({
+    viewport: { width: 1280, height: 900 },
+    storageState: await c2.storageState(),
+  });
+  const d = await wide.newPage();
+  d.setDefaultTimeout(20000);
+  await d.goto(BASE + "/week");
+  await d.locator(".tray").waitFor();
+  await d.waitForTimeout(600);
+  // Only one coach in this fixture, so the rail does not overflow and neither
+  // arrow should be offered: an arrow with nothing to scroll to is furniture.
+  if (await d.locator(".railarrow").count())
+    fail("a rail that fits should offer no arrows");
+  await wide.close();
+}
+console.log("no arrows on a rail that fits ok");
+
 await b.close();
 console.log("ALL TRAY CHECKS PASSED");

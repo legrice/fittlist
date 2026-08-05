@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { markPeeked } from "@/app/actions/circles";
 import { CoachPeek } from "@/components/CoachPeek";
 import { Icon } from "@/components/Icon";
+import { RailArrows } from "@/components/RailArrows";
 import { initialOf } from "@/lib/avatar";
 import type { Circle } from "@/lib/circles";
 
@@ -23,6 +24,7 @@ import type { Circle } from "@/lib/circles";
  * the plus is the only thing on it that says where they come from.
  */
 export function CircleTray({ circles }: { circles: Circle[] }) {
+  const railRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<Circle | null>(null);
   // The ring goes out here rather than waiting for the server to agree, so the
   // face they just looked at stops shouting the moment they look away.
@@ -43,7 +45,15 @@ export function CircleTray({ circles }: { circles: Circle[] }) {
   return (
     <>
       <div className="tray">
-        <div className="tray-scroll">
+        {/* A finger swipes this; a mouse has no such move, so above a hovering
+            pointer the rail simply ended and the faces past the edge may as
+            well not have existed. These are the feed strip's own arrows: that
+            rail is gone and the argument that produced them is not, because
+            "can't swipe" is a property of the pointer rather than of a width.
+            RailArrows takes any scroller, which is why there is nothing to
+            rewrite here. */}
+        <RailArrows railRef={railRef} />
+        <div className="tray-scroll" ref={railRef}>
           {circles.map((c) => (
             <button
               key={c.id}

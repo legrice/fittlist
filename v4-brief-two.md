@@ -566,15 +566,50 @@ also opened the class it had just saved.
 the app does. As bare links they threw the peek away: you tapped one class out
 of a fortnight and landed somewhere with no way back to the other thirteen.
 
-### The known gap: no desktop arrows on the tray
+### Closed: the tray has its arrows
 
-The feed's coach strip carried `.railarrow` buttons gated on
-`(hover: hover) and (pointer: fine)`, so a mouse could walk a rail it could not
-swipe. The circles tray scrolls but offers no such control, and the two blocks
-of `desktop-smoke` that covered those arrows are deleted rather than moved,
-because the component they tested is gone.
+The gap lasted one commit. `RailArrows` had survived the feed's deletion
+untouched, because it takes any scroller ref rather than knowing anything about
+what it scrolls, so wiring it to the tray was two lines and no rewrite. The
+gate is still `(hover: hover) and (pointer: fine)`: "can't swipe" is a property
+of the pointer, and a width breakpoint would put arrows on a tablet.
 
-This is written down rather than quietly dropped. The argument that produced
-those arrows still holds: "can't swipe" is a property of the pointer, and above
-940px the tray is a rail somebody has to drag with a trackpad. It wants the
-same treatment, and it is its own commit.
+One thing was not free. The arrows need a layer of their own (`z-index: 2`),
+because the scroller is their sibling and comes after them in the DOM: at
+`z-index: auto` an avatar paints straight over a button that is in the tree,
+is not `display: none`, and reports a sensible box. `elementFromPoint` at the
+arrow's own centre returned the circle behind it. The feed rail never hit this
+because its arrows were the last thing in the box.
+
+`desktop-smoke` covers both directions and the touch-pointer gate, and asserts
+the arrow is the topmost element at its own centre rather than merely present.
+
+
+---
+
+## 21. Built: the day band
+
+Per the Figma. Two changes, both reversing something written down, so both are
+worth the paragraph.
+
+**The count came off.** Every band read how many classes the day held, across
+from its name. It answered a question nobody opens this screen to ask: the rows
+underneath are the answer and they are right there, so a number beside every
+heading down a long scroll is arithmetic the list is doing at you. `DayBand`
+no longer takes a `count` prop and `.ps-daycount` renders nowhere.
+
+**Today wears a dot, and nothing else does.** It is the one heading somebody is
+looking for when they open the app, and the word "Today" alone meant reading
+headings to find the place you already meant to be. Brand orange, which is the
+list's one spot of it. It cannot be confused with the relationship bars down
+the left because nothing else in a band is coloured at all.
+
+**The label is `Today - Wed, Aug 5` and `Wed - Aug 6`.** The weekday
+abbreviates: three letters carry the day as well as nine do at this size, and a
+band that runs to "Wednesday" pushes its own date toward the edge on a 390px
+screen. When a relative word leads, the weekday it displaced joins the date,
+or Today would be the only band on the list not saying which day it is. The
+dash is the date label's own, the same exemption `fmtDayHeader` carries.
+
+`dayBandLabel` is still the single definition, so the calendars, a profile, a
+studio page and the peek cannot word one day differently.

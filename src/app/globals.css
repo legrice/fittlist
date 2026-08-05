@@ -903,7 +903,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    personal, and a band tinted any of them would be a fourth claim on a
    meaning that is already taken. Today's name is the one spot of brand. */
 .ps-agenda.callist .ps-daycol, .ps-agenda.feedagenda .ps-daycol {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  /* Left, not spread. It was `space-between` to hold the count out at the
+     right edge; with the count gone that would have shoved the new dot to
+     one end of the screen and the day to the other. Centred rather than on
+     the baseline, because a 6px dot has no baseline worth aligning to. */
+  display: flex; align-items: center; justify-content: flex-start; gap: 7px;
   /* No ground and no top rule. The band was a white strip with a line above
      and below, which on a near-white page reads as a box drawn around a
      heading rather than a heading: three edges for one idea. The bottom
@@ -941,12 +945,21 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis;
 }
-/* How many, across from which day. The day name carries its own date now
-   (the label's dash, the same one every date label here wears), so the right
-   of the band is free for the count. */
-.ps-daycount {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ol);
+/* The count came off, by Matt's call and per the design. It read the number of
+   classes across from each day, which answered a question nobody had opened
+   this screen to ask: the rows underneath are the answer, and they are right
+   there. A number beside every heading down a long scroll is arithmetic the
+   list is doing at you. `.ps-daycount` is gone with it; nothing renders it.
+
+   Today wears a dot instead, and it is the only band that does. It is the one
+   heading somebody is looking for when they open the app, and until now the
+   word "Today" was the only thing marking it, which meant reading headings to
+   find the place you already meant to be. Brand orange, because this is the
+   list's one spot of it and the colour means "here" rather than teaching:
+   nothing else in a band is coloured, so it cannot be mistaken for the
+   relationship bars down the left. */
+.ps-daydot {
+  width: 6px; height: 6px; border-radius: 999px; background: var(--si);
   flex-shrink: 0;
 }
 /* The band pins under the calendar's own chrome, which is itself pinned
@@ -5216,10 +5229,23 @@ button.ps-card { cursor: pointer; }
    push, and the last circle sitting half off the screen is what says swipe.
    --------------------------------------------------------------------------- */
 .tray {
+  /* Positioned, because the arrows sit over its edges. */
+  position: relative;
   margin: 0 -18px; padding: 14px 0 12px;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
+/* The arrows hang level with the circles rather than the labels under them,
+   so they read as controls on the faces. `.railarrow` puts its own top at
+   42px, which was the feed strip's avatar centre; a tray circle is 72px tall
+   under 14px of padding, so its centre is 50.
+
+   And a layer, or they do not appear at all. The scroller is their sibling and
+   comes after them in the DOM, so at `z-index: auto` an avatar paints straight
+   over the button: it was in the tree, it was not `display: none`, and
+   elementFromPoint at its centre returned the circle behind it. The feed rail
+   never hit this because its arrows were the last thing in the box. */
+.tray .railarrow { top: 50px; z-index: 2; }
 .tray-scroll {
   display: flex; gap: 18px; overflow-x: auto; padding: 0 18px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;

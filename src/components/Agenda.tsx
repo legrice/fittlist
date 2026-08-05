@@ -99,21 +99,18 @@ export function AgendaAvatar({
 export function DayBand({
   iso,
   today,
-  count,
 }: {
   iso: string;
   today?: string;
-  /** How many classes the day holds, across from its name. */
-  count?: number;
 }) {
+  const isToday = !!today && iso === today;
   return (
-    <div className={`ps-daycol${today && iso === today ? " ps-daycol-today" : ""}`}>
+    <div className={`ps-daycol${isToday ? " ps-daycol-today" : ""}`}>
+      {/* Today wears a dot, and nothing else on the list does. It is the one
+          band somebody is looking for when they open the app, and the word
+          alone made them read every heading to find it. */}
+      {isToday && <span className="ps-daydot" aria-hidden="true" />}
       <span className="ps-dayname">{dayBandLabel(iso, today)}</span>
-      {count != null && (
-        <span className="ps-daycount">
-          {count} {count === 1 ? "class" : "classes"}
-        </span>
-      )}
     </div>
   );
 }
@@ -252,7 +249,7 @@ export function Agenda({
           id={`day-${d.iso}`}
           className={`ps-daygroup${dimBefore && d.iso < dimBefore ? " ps-pastday" : ""}`}
         >
-          <DayBand iso={d.iso} today={today} count={d.items.length} />
+          <DayBand iso={d.iso} today={today} />
           <div className="ps-daycards">
             {d.items.map((i) => (
               <div key={i.key} className="ps-erow">
