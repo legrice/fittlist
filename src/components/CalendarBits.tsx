@@ -50,15 +50,17 @@ export function monthLabel(ym: string, todayIso: string) {
   return y === thisYear ? MONTHS[m - 1] : `${MONTHS[m - 1]} ${y}`;
 }
 
-/** The two persistent doors under every calendar view: Today bottom left
- *  (back to now, in the list, which matters more now that the list scrolls
- *  into the past), and Add bottom right, in the brand orange.
+/** The two persistent doors under every calendar view: Today bottom left (back
+ *  to now, in the list) and Add bottom right, in the brand orange.
  *
- *  Add and Share traded places. Adding is the thing somebody opens this
- *  screen to do, and it was in the top right corner, which is the one part
- *  of a phone a thumb cannot reach; sharing is a thing you do occasionally
- *  and deliberately, so it took the corner instead. The loud colour follows
- *  the primary action rather than staying where it was drawn. */
+ *  Share is not here. It is up in the header's cluster beside the view and
+ *  filter buttons (`CalShare`), and these two have traded places three times
+ *  before settling that way. Adding is the thing somebody opens this screen to
+ *  do, so it takes the reachable corner and the loud colour; the top right is
+ *  the one part of a phone a thumb cannot reach, which is the wrong place for
+ *  a primary action and the right one for something occasional and deliberate.
+ *  The loud colour follows the primary action rather than staying where it was
+ *  drawn. */
 export function CalBottomBar({
   raised = true,
   onToday,

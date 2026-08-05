@@ -106,7 +106,8 @@ export default async function SchedulePage({
       unreadNotifications(userId),
       // A coach goes to classes too: the same loader the member calendar
       // reads, so the schedule is one calendar of everything. The past
-      // window rides along so the list can scroll back in time.
+      // window rides along because the Month grid draws its dimmed past days
+      // from it; the List itself starts at today and stops there.
       myWeek(userId, { pastDays: CAL_PAST_DAYS }),
       // A coach follows coaches. Their Schedule wears the same tray a
       // member's does, for the same reason: it is the only thing a follow

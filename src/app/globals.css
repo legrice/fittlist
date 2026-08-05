@@ -1062,11 +1062,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
 [data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
 [data-mode="dark"] .monthpill.ev-private { color: #85b8e8; }
-/* The two persistent doors: Today bottom left (back to now, which matters
-   more now that the list scrolls into the past), Share bottom right. Both
-   strokeless: the shadow is the pill's edge, and the orange sparkle is
-   Share's one moment of colour. `.calfabs-low` drops them to the screen
-   edge where no bar renders (the coaches-only mode). */
+/* The two persistent doors: Today bottom left (back to now) and Add bottom
+   right, in the brand orange. Share is not down here; it sits in the header's
+   cluster beside the view and filter buttons, because adding is the thing
+   somebody opens this screen to do and the reachable corner belongs to the
+   primary action. Both strokeless: the shadow is the pill's edge.
+   `.calfabs-low` drops them to the screen edge where no bar renders (the
+   coaches-only mode). */
 .todayfab {
   position: fixed; left: 16px; bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 46px; padding: 0 20px; border-radius: 999px;

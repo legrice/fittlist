@@ -1824,29 +1824,33 @@ weeks of "your Tuesday class ran on Tuesdays" is almost always true, and the
 honest alternative (bounding on `createdAt`) breaks the moment an edit
 reinserts the rows.
 
-**The calendar keeps two doors on screen: Today left, Share right.**
-`CalBottomBar` floats them over every view on both calendars, both
-strokeless pills whose edge is their shadow; Share is the orange one, wearing
-the sparkle and its word, and it opens `/share`. Today matters more now that
-the list scrolls into the past: it lands on the first not-past day
-(`scrollToToday`, which knows the coach shell scrolls its `.stage` where
-the tabs layout scrolls the body).
+**Share is in the header's cluster; Add and Today float at the bottom.**
+The top right of the calendar carries three controls of one drawing
+(`.calmenu`, `.calfilter`, `.calshare`, all 40px, white, their edge a shadow
+rather than a stroke): the view button wearing the current view's own glyph,
+the filter's tune slider, and Share. Share is the one of the three that does
+something rather than changing how you are looking, which is why it is the
+only one wearing a word; its sparkle carries the brand colour
+(`.calshare-ic`) while the pill stays white, so it reads as part of the
+cluster rather than a fourth kind of thing.
 
-The two have traded places three times, and they are back where they started:
-Add under the thumb, Share up beside the filter. A plus that needs no word is a
-good argument for a small circle, but adding is still the thing somebody opens
-this screen to do, and the corner is the one part of a phone a thumb cannot
-reach. Take this as settled unless the screen's job changes. Add floated bottom right for a while and
-Share sat in the header, on the argument that the top right corner is the one
-part of a phone a thumb cannot reach and adding is what somebody opens this
-screen to do. They are the other way round again, by Matt's call, and the
-argument that beat it is that a plus is the one glyph nobody has to be taught:
-it needs no word and no reach, so it costs nothing as a 40px circle in the
-header's cluster (`.caladd`, filled brand orange beside the two white ones,
-matching `.calmenu` and `.calfilter` exactly). Share is the act this screen
-exists to end on, it needs its word, and it takes the pill under a thumb in
-the shape Add used to wear. The loud colour follows whichever of them is the
-point, which is now Share.
+`CalBottomBar` floats the other two over every view on both calendars, also
+strokeless pills whose edge is their shadow: Today bottom left, and Add bottom
+right in the brand orange, wearing the plus and its word. Today lands on the
+first not-past day (`scrollToToday`, which knows the coach shell scrolls its
+`.stage` where the tabs layout scrolls the body).
+
+These two have traded places three times and this is where they have settled,
+so the argument is worth keeping rather than relitigating. Add is under the
+thumb because adding is the thing somebody opens this screen to do, and the top
+right corner is the one part of a phone a thumb cannot reach. Share went the
+other way for a build on the argument that a plus needs no word and no reach,
+so it costs nothing as a small circle up there; that lost, because the loud
+colour should follow the primary action and the primary action here is putting
+something on the calendar. Share is occasional and deliberate, it needs its
+word, and the header is where a thing you do once a week belongs. Take it as
+settled unless the screen's job changes.
+
 The row's gap is 10px and not 12px,
 and that number is load-bearing: at twelve, "September" lost its last
 letters to the ellipsis by six pixels. The title is also the thing that

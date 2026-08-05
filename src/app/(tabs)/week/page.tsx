@@ -33,7 +33,8 @@ export default async function WeekPage({
   if (!userId) redirect("/");
   const db = await getDb();
   const [days, circles, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
-    // The past window rides along so the list can scroll back in time.
+    // The past window rides along because the Month grid draws its dimmed
+    // past days from it; the List itself starts at today and stops there.
     myWeek(userId, { pastDays: CAL_PAST_DAYS }),
     // The faces across the top. A follow puts one here and nothing else, so
     // this query is the whole visible consequence of following somebody.
