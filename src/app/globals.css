@@ -21,9 +21,27 @@
   --ol: #6b6555;           /* warm muted secondary text */
   --line: #e6dfcd;         /* warm cream dividers / input borders */
   --rule: #191502;         /* charcoal hairline rules */
-  --si: #dd6a35;           /* pleasant warm-orange accent + CTA */
-  --si-tint: #fbe4d2;      /* pale brand wash: tinted CTAs, selected tabs */
-  --si-ink: #b9531f;       /* brand text/icons sitting on the wash */
+  --si: #C2410C;           /* the brand orange, everywhere it appears */
+  --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
+  --si-ink: #C2410C;       /* brand text/icons sitting on the wash */
+
+  /* What a row is to you, said as the colour of the bar down its left. One
+     token per relationship and nothing else in the app introduces another:
+     the filter chips, the card bars, the month pills and the You pills all
+     read from these four, so a colour cannot come to mean two things.
+
+     Saved is ink rather than a hue of its own, deliberately. It is the one
+     you chose, it is the commonest row on the calendar, and a fourth colour
+     competing with the three that carry meaning made the week read as a
+     paint chart. */
+  --rel-saved: var(--ink);
+  --rel-coaching: #C2410C;
+  --rel-personal: #0C8BC2;
+  --rel-personal-bg: #D1F3FF;
+  --rel-personal-ink: #0B3B4F;
+  /* A class somebody added that nobody has claimed: grey, because it is a
+     record without an owner and the colour should not promise otherwise. */
+  --rel-added: #ACACAC;
   --go: #3d8b53;           /* "on" green for switches */
   --si-soft: #f7e6d6;
   --sa: #d6d1b3;
@@ -1294,8 +1312,8 @@ button.bl-band { cursor: pointer; }
    peach info bar. Opt-in per trainer via [data-theme="poster"].
    ============================================================ */
 [data-theme="poster"] {
-  --pg-ground: #191502; --pg-cream: #f4efe1; --pg-day: #dd6a35;
-  --pg-green: #dd6a35; --pg-peach: #edddc0;
+  --pg-ground: #191502; --pg-cream: #f4efe1; --pg-day: #C2410C;
+  --pg-green: #C2410C; --pg-peach: #edddc0;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
 [data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--paper); }

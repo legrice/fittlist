@@ -12,7 +12,7 @@ import { Toast, useToast } from "@/components/Toast";
 type Swatch = { name: string; token: string; hex: string; note: string; onDark?: boolean };
 
 const CORE: Swatch[] = [
-  { name: "Orange", token: "--si", hex: "#dd6a35", note: "The accent, and every primary action", onDark: true },
+  { name: "Orange", token: "--si", hex: "#C2410C", note: "The accent, and every primary action", onDark: true },
   { name: "Ink", token: "--ink", hex: "#191502", note: "Text, and dark surfaces", onDark: true },
   { name: "Paper", token: "--paper", hex: "#faf8f2", note: "The ground everything scrolls on" },
   { name: "Card", token: "--card", hex: "#ffffff", note: "What floats on the paper" },

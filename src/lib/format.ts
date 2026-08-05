@@ -120,10 +120,10 @@ export type StoryTheme = {
   lockupAccent?: string; // swap the lockup's Sienna row when it would vanish on bg
 };
 export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
-  paper: { label: "Cream", bg: "#f4efe1", fg: "#191502", accent: "#dd6a35", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
-  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#dd6a35", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
+  paper: { label: "Cream", bg: "#f4efe1", fg: "#191502", accent: "#C2410C", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
+  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
-  pop: { label: "Pop", bg: "#dd6a35", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
+  pop: { label: "Pop", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
   midnight: { label: "Midnight", bg: "#161e33", fg: "#f2efe4", accent: "#e5b558", muted: "#9aa3ba", faint: "#77809a", time: "#d5d9e6", lockup: "cloud", lockupAccent: "#e5b558" },
   sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
   blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },

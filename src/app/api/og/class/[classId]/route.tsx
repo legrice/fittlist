@@ -35,7 +35,7 @@ const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"
 const PAPER = "#faf8f2";
 const INK = "#191502";
 const MUTED = "#6b6555";
-const SI = "#dd6a35";
+const SI = "#C2410C";
 
 export async function GET(
   req: Request,

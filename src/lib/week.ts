@@ -1,9 +1,8 @@
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { hiddenFrom } from "@/lib/blocks";
-import { publicSchedules, shiftCoach, shiftNaming } from "@/lib/coachweek";
-import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
+import { shiftCoach, shiftNaming } from "@/lib/coachweek";
+import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
 
 // The classes someone has added, from today forward.
 //
@@ -35,10 +34,6 @@ export type WeekItem = {
 };
 
 export type WeekDay = { iso: string; label: string; items: WeekItem[] };
-
-/** How far forward the merged calendar draws, matching the nine weeks myWeek
- *  expands personal entries across so both halves agree. */
-const HORIZON_DAYS = 9 * 7;
 
 /** The next date on or after today falling on this weekday (0 = Monday). */
 function nextOccurrence(dayOfWeek: number): string {
@@ -510,128 +505,6 @@ export async function myWeek(
         // when there is no photo, and sand under white text was unreadable.
         coachColor: "#77705a",
         personal: true,
-      });
-      byDay.set(iso, list);
-    }
-  }
-
-  return [...byDay.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([iso, items]) => ({
-      iso,
-      label: fmtDayHeader(iso),
-      items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
-    }));
-}
-
-/**
- * The classes coaches you follow are running, that you have not saved.
- *
- * The one loader behind collapsing Following into Schedule. Saving a class on
- * one calendar and watching it appear on a different one was the thing that
- * made the two views feel like two apps, so there is one calendar now and a
- * class's relationship to you is a property of the row rather than a question
- * of which screen you are standing on.
- *
- * Deliberately separate from `myWeek` rather than an option on it. `myWeek` is
- * what goes on the share poster, feeds the digests and answers "your week",
- * and none of those mean a class somebody else is teaching that you have not
- * said you are going to. Folding it in behind a flag would put a stranger's
- * Tuesday on a coach's poster the first time a caller forgot to pass false.
- *
- * Marked occurrences are left out, because those are already `saved` and a row
- * cannot be two things. So are your own, which are `coaching` and arrive from
- * `mySchedule`.
- */
-export async function followingWeek(
-  userId: string,
-  opts?: { pastDays?: number },
-): Promise<WeekDay[]> {
-  const db = await getDb();
-  const pastDays = opts?.pastDays ?? 0;
-  const start = new Date(`${todayIso()}T00:00:00Z`);
-  start.setUTCDate(start.getUTCDate() - pastDays);
-  const sinceIso = start.toISOString().slice(0, 10);
-
-  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return [];
-
-  // Followed by email, the way every other follow lookup does it: somebody who
-  // followed before signing in still counts once the address has an account.
-  const followRows = await db
-    .select({ trainerUserId: schema.subscribers.trainerUserId })
-    .from(schema.subscribers)
-    .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)));
-  const hidden = await hiddenFrom(userId);
-  const followed = [
-    ...new Set(followRows.map((r) => r.trainerUserId).filter((id) => id !== userId && !hidden.has(id))),
-  ];
-  if (!followed.length) return [];
-
-  // Their public week, shifts folded in where they show them: the same loader
-  // the public page and the digests ask, so a coach's calendar cannot say one
-  // thing here and another there.
-  const who = await db
-    .select({ id: schema.users.id, shiftsPublic: schema.users.shiftsPublic })
-    .from(schema.users)
-    .where(inArray(schema.users.id, followed));
-  const rows = await publicSchedules(who);
-  if (!rows.length) return [];
-
-  const marked = new Set(
-    (
-      await db
-        .select({
-          classId: schema.attendances.classId,
-          occurrenceDate: schema.attendances.occurrenceDate,
-        })
-        .from(schema.attendances)
-        .where(eq(schema.attendances.userId, userId))
-    ).map((m) => `${m.classId}|${m.occurrenceDate}`),
-  );
-
-  const ownerIds = [...new Set(rows.map((r) => r.ownerUserId))];
-  const owners = await db.select().from(schema.users).where(inArray(schema.users.id, ownerIds));
-  const ownerById = new Map(owners.map((u) => [u.id, u]));
-  const studioIds = [...new Set(rows.map((r) => r.studioId).filter((s): s is string => !!s))];
-  const studios = studioIds.length
-    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
-    : [];
-  const studioById = new Map(studios.map((s) => [s.id, s]));
-  const naming = await shiftNaming(rows.filter((r) => r.shift).map((r) => r.id));
-
-  const byDay = new Map<string, WeekItem[]>();
-  const day = new Date(`${sinceIso}T00:00:00Z`);
-  for (let i = 0; i < pastDays + HORIZON_DAYS; i++) {
-    const iso = day.toISOString().slice(0, 10);
-    const dow = (day.getUTCDay() + 6) % 7;
-    day.setUTCDate(day.getUTCDate() + 1);
-    for (const c of rows) {
-      if (!runsOn(c, iso, dow)) continue;
-      if (marked.has(`${c.id}|${iso}`)) continue;
-      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
-      const owner = ownerById.get(c.ownerUserId);
-      const st = c.studioId ? studioById.get(c.studioId) : null;
-      // The base its page lives under: a coach's handle, a gym's studio slug.
-      const base = owner?.handle ?? (st?.slug ? `s/${st.slug}` : null);
-      if (!owner || !base) continue;
-      const who = shiftCoach(naming, c.id, iso) ?? owner;
-      const t = clockParts(c.startTime);
-      const list = byDay.get(iso) ?? [];
-      list.push({
-        id: `${c.id}|${iso}`,
-        classId: c.id,
-        iso,
-        dayLabel: fmtDayHeader(iso),
-        name: c.name,
-        hm: t.hm,
-        ap: t.ap,
-        durationMin: c.durationMin,
-        where: st?.name ?? c.location,
-        handle: base,
-        coachName: who.name,
-        coachPhoto: who.photo,
-        coachColor: avatarColor(who),
       });
       byDay.set(iso, list);
     }

@@ -16,7 +16,7 @@ const esc = (s: string) =>
     .replace(/"/g, "&quot;");
 
 const INK = "#191502";
-const ACCENT = "#dd6a35";
+const ACCENT = "#C2410C";
 const MUTED = "#6b6555";
 const CREAM = "#f4efe1";
 

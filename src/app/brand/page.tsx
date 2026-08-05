@@ -52,7 +52,7 @@ export default async function BrandPage() {
             <p className="adminsub">The mark, the colour, the type and the words</p>
           </div>
         </div>
-        <BrandGuide mark={brandIcon("#dd6a35")} />
+        <BrandGuide mark={brandIcon("#C2410C")} />
       </div>
     </section>
   );
