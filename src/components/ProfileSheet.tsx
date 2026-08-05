@@ -16,6 +16,7 @@ import { updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ShiftsPublicToggle } from "@/components/ShiftsPublicToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
@@ -586,6 +587,9 @@ export function ProfileSheet({
               Send feedback
             </a>
           )}
+          <a className="acctfoot-l" href="/privacy">
+            Privacy
+          </a>
           {isAdmin && (
             <>
               <a className="acctfoot-l" href="/admin">
@@ -604,6 +608,12 @@ export function ProfileSheet({
               Log out
             </button>
           </form>
+        </div>
+
+        {/* The last thing on the way out, under the footer links. A coach has
+            more to lose than a member, so the sheet names the page too. */}
+        <div className="settingslist acctdel">
+          <DeleteAccount isCoach />
         </div>
       </div>
 

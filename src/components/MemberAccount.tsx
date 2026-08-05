@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { logout } from "@/app/actions/auth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { ChangeHandle } from "@/components/ChangeHandle";
@@ -228,6 +229,18 @@ export function MemberAccount({
         <button className="acctinvite-btn" onClick={() => setInviteOpen(true)}>
           Invite
         </button>
+      </div>
+
+      <div className="acctfoot">
+        <a className="acctfoot-l" href="/privacy">
+          Privacy
+        </a>
+      </div>
+
+      {/* Under the settings and under the invite, because leaving is the last
+          thing on the way out and should never sit above the work. */}
+      <div className="settingslist">
+        <DeleteAccount />
       </div>
 
       <form action={logout}>

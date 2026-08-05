@@ -210,6 +210,41 @@ console.log("member profile ok (Schedule and Info tabs, nothing about who they f
   console.log("a member can hand their page on, and the wording matches a coach's ok");
 }
 
+// ---- the way out
+//
+// Both app stores require an account this app let somebody create to be
+// deletable from inside it, and it is the one action here with no undo. Two
+// steps, and the second asks for the word.
+{
+  await p.goto(BASE + "/you");
+  await p.locator(".setrow", { hasText: "Delete account" }).click();
+  await p.getByRole("heading", { name: "Delete your account" }).waitFor();
+  const go = p.getByRole("button", { name: "Delete my account" });
+  if (await go.isEnabled()) fail("the delete button should wait for the typed word");
+  await p.locator("#delWord").fill("delete");
+  if (!(await go.isEnabled())) fail("the typed word should arm the delete");
+  // Not actually deleting: the rest of this suite needs the account. The gate
+  // is what is being tested, and going through with it is covered where the
+  // account is disposable.
+  await p.getByRole("button", { name: "Keep my account" }).click();
+  await p.waitForTimeout(400);
+  console.log("delete account is offered, and asks twice ok");
+}
+
+// And the policy behind it is a real page, reachable without an account,
+// because a privacy policy you have to sign in to read is not one.
+{
+  const anonCtx = await p.context().browser().newContext({ viewport: { width: 390, height: 844 } });
+  const anon = await anonCtx.newPage();
+  await anon.goto(BASE + "/privacy");
+  await anon.getByRole("heading", { name: "Privacy", exact: true }).waitFor();
+  const txt = await anon.locator(".pad").innerText();
+  for (const must of ["What we hold", "Who can see what", "Delete it"])
+    if (!txt.includes(must)) fail("the policy is missing a section: " + must);
+  await anonCtx.close();
+  console.log("the privacy policy is public ok");
+}
+
 // and it's editable from the account
 await p.goto(BASE + "/you");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();

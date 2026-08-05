@@ -17,7 +17,9 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { getDb, schema } from "@/db";
+import { adminEmails } from "@/lib/admin";
 import { nextAvatarColor } from "@/lib/avatar-server";
+import { purgeUser } from "@/lib/purge";
 import { sendMessage } from "@/lib/mailer";
 import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
@@ -529,6 +531,42 @@ export async function claimProfile(
 export async function logout() {
   await destroySession();
   redirect("/");
+}
+
+/**
+ * Delete your own account, and everything it owns.
+ *
+ * Session-derived and takes no id, deliberately: this is exported from a
+ * `"use server"` file, so an id parameter would be an endpoint anybody could
+ * post somebody else's account to. The same reasoning `myStaffStudios`
+ * carries, with a great deal more at stake.
+ *
+ * Both app stores require an account this app let somebody create to be
+ * deletable from inside it, which is why this exists rather than a note
+ * asking people to write in. It runs the same teardown the admin panel does,
+ * because the ordering of those deletes is load-bearing and a second copy
+ * would rot.
+ *
+ * A gym's account has no login and so cannot arrive here, and the admin is
+ * refused: this account is how a locked-out studio gets fixed, and deleting
+ * it from a phone is not a thing to make one tap away.
+ */
+export async function deleteMyAccount(): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in first." };
+  const db = await getDb();
+  const [me] = await db
+    .select({ email: schema.users.email, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "That account is already gone." };
+  if (adminEmails().includes(me.email.toLowerCase()))
+    return { ok: false, error: "An admin account can't be deleted from here." };
+  if (me.kind === "gym")
+    return { ok: false, error: "That's a studio's account. Remove the studio instead." };
+  await purgeUser(db, userId);
+  await destroySession();
+  return { ok: true };
 }
 
 // SimpleWebAuthn's transport union; kept local so callers stay untyped-JSON.

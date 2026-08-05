@@ -1739,7 +1739,18 @@ button.ps-card { cursor: pointer; }
    picking something up rather than going somewhere. */
 /* An ask, not a screen: it sits low and stays small, so the list it's about is
    still visible behind it. */
+.acctdel { margin-top: 18px; }
 .confirmsheet { max-width: 460px; }
+/* What leaves, before the question is asked. A list of consequences after the
+   fact is a list nobody read. */
+.dellist { margin: 10px 0 14px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.dellist li {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; line-height: 1.45; color: var(--ol);
+}
+/* The base the wizard and the onboarding sheet already override. It had none,
+   so the same class rendered as plain body text anywhere else. */
+.errorcopy { font-size: 13px; color: #c0472b; margin-top: 12px; }
 /* Removing a follower. Quiet in the interface too: a small x, not a red button
    with a warning label. */
 .disblock {

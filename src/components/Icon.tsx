@@ -54,6 +54,7 @@ import {
   Flag,
   Palette,
   Pencil,
+  Trash2,
   Settings, ShieldCheck, Zap } from "lucide-react";
 
 /**
@@ -153,6 +154,7 @@ function SparklesOutline({ size = 24, strokeWidth = 1.75 }: { size?: number; str
 const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   account_circle: CircleUserRound,
   add: Plus,
+  delete: Trash2,
   shield: ShieldCheck,
   bolt: Zap,
   admin_panel_settings: ShieldUser,

@@ -3,6 +3,7 @@
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { purgeUser } from "@/lib/purge";
 import { PLACEHOLDER_KIND } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { detectProvider } from "@/lib/format";
@@ -473,114 +474,7 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
     return { ok: false, error: "That's a roster placeholder. Remove it from the studio's roster." };
   }
 
-  // Rows the account owns — delete outright, children before parents.
-  //
-  // Order matters: attendances point at both the account and its classes, and
-  // inquiry messages point at its threads, so those go first or the foreign
-  // keys refuse the delete. Every table with a users FK has to appear here —
-  // miss one and the whole delete fails with a constraint error.
-  const ownClasses = await db
-    .select({ id: schema.classes.id })
-    .from(schema.classes)
-    .where(eq(schema.classes.userId, id));
-  const ownClassIds = ownClasses.map((c) => c.id);
-  // Blocks in both directions: they blocked someone, someone blocked them.
-  await db.delete(schema.blocks).where(eq(schema.blocks.blockerUserId, id));
-  await db.delete(schema.blocks).where(eq(schema.blocks.blockedUserId, id));
-  // Class reports in both directions too: ones they filed, ones about their classes.
-  await db.delete(schema.classReports).where(eq(schema.classReports.reporterUserId, id));
-  await db.delete(schema.classReports).where(eq(schema.classReports.coachUserId, id));
-  await db.delete(schema.studioReports).where(eq(schema.studioReports.reporterUserId, id));
-  await db.delete(schema.followRequests).where(eq(schema.followRequests.trainerUserId, id));
-  await db.delete(schema.followRequests).where(eq(schema.followRequests.requesterUserId, id));
-  // Their own private week entries, and any ask to coach.
-  await db.delete(schema.personalClasses).where(eq(schema.personalClasses.userId, id));
-  await db.delete(schema.coachRequests).where(eq(schema.coachRequests.userId, id));
-  // "Going" marks: theirs, and anyone else's on the classes they taught.
-  await db.delete(schema.attendances).where(eq(schema.attendances.userId, id));
-  if (ownClassIds.length) {
-    await db.delete(schema.attendances).where(inArray(schema.attendances.classId, ownClassIds));
-  }
-  const ownThreads = await db
-    .select({ id: schema.inquiryThreads.id })
-    .from(schema.inquiryThreads)
-    .where(eq(schema.inquiryThreads.coachUserId, id));
-  const ownThreadIds = ownThreads.map((t) => t.id);
-  if (ownThreadIds.length) {
-    await db
-      .delete(schema.inquiryMessages)
-      .where(inArray(schema.inquiryMessages.threadId, ownThreadIds));
-  }
-  await db.delete(schema.inquiryThreads).where(eq(schema.inquiryThreads.coachUserId, id));
-  await db.delete(schema.notifications).where(eq(schema.notifications.userId, id));
-  // Notifications ABOUT them, on someone else's feed. De-attributed rather than
-  // deleted: "someone followed your schedule" is still true, it just loses the
-  // face and falls back to the icon.
-  await db
-    .update(schema.notifications)
-    .set({ actorUserId: null })
-    .where(eq(schema.notifications.actorUserId, id));
-  await db.delete(schema.classes).where(eq(schema.classes.userId, id));
-  await db.delete(schema.classTemplates).where(eq(schema.classTemplates.userId, id));
-  // Their followers, and the coaches they themselves followed.
-  await db.delete(schema.subscribers).where(eq(schema.subscribers.trainerUserId, id));
-  await db.delete(schema.subscribers).where(eq(schema.subscribers.userId, id));
-  await db.delete(schema.pageVisits).where(eq(schema.pageVisits.trainerUserId, id));
-  await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, id));
-  await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));
-  await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
-  await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
-  await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.userId, id));
-  await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
-
-  // Shared records they created — keep, just drop the attribution FK.
-  // Their shifts come off the rota rather than going with them: the gym owns
-  // those classes, and a coach leaving turns their slots back into open ones
-  // for somebody else to pick up.
-  await db
-    .update(schema.classes)
-    .set({ coachUserId: null })
-    .where(eq(schema.classes.coachUserId, id));
-  await db
-    .update(schema.shiftCovers)
-    .set({ coachUserId: null })
-    .where(eq(schema.shiftCovers.coachUserId, id));
-  await db
-    .update(schema.shiftCovers)
-    .set({ createdByUserId: null })
-    .where(eq(schema.shiftCovers.createdByUserId, id));
-  // Their keys go with them; a page they ran alone returns to the commons
-  // rather than being left locked with nobody holding it. Their place on any
-  // gym's shift list goes too: a list naming somebody who left is a hand-off
-  // to nobody.
-  await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.userId, id));
-  // Any shift change they were part of goes with them. A request naming
-  // somebody who left is an ask nobody can answer and a hand-off to nobody,
-  // so both directions are deleted rather than de-attributed; the decider is
-  // only cleared, because an answered request is a fact about the studio.
-  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.toUserId, id));
-  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.fromUserId, id));
-  await db
-    .update(schema.shiftRequests)
-    .set({ decidedByUserId: null })
-    .where(eq(schema.shiftRequests.decidedByUserId, id));
-  await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
-  await db
-    .update(schema.studioManagers)
-    .set({ addedByUserId: null })
-    .where(eq(schema.studioManagers.addedByUserId, id));
-  await db.update(schema.studios).set({ createdByUserId: null }).where(eq(schema.studios.createdByUserId, id));
-  // Their studio edits stay: the edit is a fact about the studio, it just
-  // loses its author.
-  await db.update(schema.studioEdits).set({ editorUserId: null }).where(eq(schema.studioEdits.editorUserId, id));
-  // Events they posted stay too: the expo is still happening.
-  await db.update(schema.events).set({ createdByUserId: null }).where(eq(schema.events.createdByUserId, id));
-  await db.update(schema.studioClasses).set({ createdByUserId: null }).where(eq(schema.studioClasses.createdByUserId, id));
-  await db.update(schema.customClassTypes).set({ createdByUserId: null }).where(eq(schema.customClassTypes.createdByUserId, id));
-  await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));
-  await db.update(schema.invites).set({ acceptedUserId: null, acceptedAt: null }).where(eq(schema.invites.acceptedUserId, id));
-
-  await db.delete(schema.users).where(eq(schema.users.id, id));
+  await purgeUser(db, id);
   revalidatePath("/admin");
   return { ok: true };
 }
