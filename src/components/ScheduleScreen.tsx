@@ -899,6 +899,11 @@ export function ScheduleScreen({
           id={plan}
           onClose={() => setPlan(null)}
           onToast={toast}
+          onRemoved={(msg) => {
+            setPlan(null);
+            toast(msg);
+            router.refresh();
+          }}
           onEdit={(p) => {
             setPlan(null);
             setPlanEdit({

@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { personalDetail, type PersonalDetail } from "@/app/actions/personal";
+import { useEffect, useState, useTransition } from "react";
+import {
+  personalDetail,
+  removePersonalClass,
+  type PersonalDetail,
+} from "@/app/actions/personal";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { fmtDateLong } from "@/lib/format";
@@ -18,11 +22,18 @@ import { fmtDateLong } from "@/lib/format";
 // change it, and hand it on as a picture. The picture is the only thing that
 // can leave, and it leaves as a file rather than a link: there is no page for
 // this and there is not going to be one.
+//
+// And a third thing, at the foot: taking it off. This is the only door to that
+// on a coach's calendar, and it belongs here rather than in the editor for the
+// reason the sheet exists at all: both calendars already open it for a personal
+// row, so one remove here is a remove on both. The member's X on their own week
+// is a shortcut to the same act, not the only way to it.
 export function PlanSheet({
   id,
   share = false,
   onClose,
   onEdit,
+  onRemoved,
   onToast,
 }: {
   id: string;
@@ -32,11 +43,15 @@ export function PlanSheet({
   onClose: () => void;
   /** Opens the adder on this entry. The list owns the form, so it owns this. */
   onEdit: (p: PersonalDetail) => void;
+  /** The row is gone. The list owns the refresh, the same way it does an edit. */
+  onRemoved: (msg: string) => void;
   onToast: (msg: string) => void;
 }) {
   const [p, setP] = useState<PersonalDetail | null>(null);
   const [missing, setMissing] = useState(false);
   const [cardOpen, setCardOpen] = useState(share);
+  const [confirm, setConfirm] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     let live = true;
@@ -51,6 +66,17 @@ export function PlanSheet({
   }, [id]);
 
   const where = p?.studioName || p?.location || "";
+
+  const doRemove = () => {
+    startTransition(async () => {
+      const res = await removePersonalClass(id);
+      if (!res.ok) {
+        onToast(res.error ?? "Couldn't remove that");
+        return;
+      }
+      onRemoved("Removed from your calendar");
+    });
+  };
 
   return (
     <div className="classoverlay">
@@ -138,6 +164,16 @@ export function PlanSheet({
           <p className="plansheet-note">
             Yours alone. Nothing here is on a public page, and nobody else can see it.
           </p>
+
+          {/* The small orange link the class editor's own delete wears. A
+              Going mark comes back from the coach's page, so that one takes
+              Undo in a toast; this row was typed by hand and nothing brings it
+              back, which is what earns the question. */}
+          <div className="dangerzone">
+            <button className="deletelink" onClick={() => setConfirm(true)}>
+              Remove from your calendar
+            </button>
+          </div>
         </div>
       )}
       </div>
@@ -151,6 +187,33 @@ export function PlanSheet({
           <button className="ovcta-btn" onClick={() => setCardOpen(true)}>
             <Icon name="auto_awesome" size={17} /> Share
           </button>
+        </div>
+      )}
+
+      {confirm && p && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !pending) setConfirm(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h3>Remove {p.name}?</h3>
+            <p className="lead">
+              {p.specificDate
+                ? "It comes off your calendar."
+                : "It comes off your calendar, every week it runs."}{" "}
+              You typed this one, so adding it back means typing it again.
+            </p>
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pending} onClick={doRemove}>
+                {pending ? "Removing…" : "Remove it"}
+              </button>
+            </div>
+            <button className="confirm-keep" disabled={pending} onClick={() => setConfirm(false)}>
+              Keep it
+            </button>
+          </div>
         </div>
       )}
 

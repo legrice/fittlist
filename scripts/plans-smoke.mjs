@@ -153,5 +153,20 @@ if (allSwag !== renamed)
   fail(`an edit should move the entry, not fork it: ${allSwag} rows, ${renamed} renamed`);
 console.log("edit ok (one entry, every occurrence moved with it)");
 
+// ...and taken off again, from the same sheet. Every occurrence of a weekly
+// entry goes with it, because there is one row behind all of them.
+await m.locator(".ps-erow", { hasText: "Swag by LWL II" }).locator(".ps-event").first().click();
+await m.locator(".classoverlay-nm", { hasText: "Swag by LWL II" }).waitFor();
+await m.locator(".classoverlay .deletelink").click();
+await m.getByRole("heading", { name: "Remove Swag by LWL II?" }).waitFor();
+await m.locator(".confirmsheet .btn.si").click();
+await m.getByText("Removed from your calendar").waitFor();
+await m.waitForTimeout(1200);
+await m.goto(BASE + "/week");
+await m.locator(".ps-erow").first().waitFor();
+if (await m.locator(".ps-erow", { hasText: "Swag by LWL" }).count())
+  fail("removing one of your own should take every occurrence of it");
+console.log("remove ok (one row behind the week, and it goes)");
+
 await b.close();
 console.log("ALL PLANS CHECKS PASSED");

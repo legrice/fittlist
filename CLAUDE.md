@@ -1609,6 +1609,24 @@ takes the first day picked and the pills go single-select, the same way a gym's
 rota slot behaves and for the same reason. Nothing points at a personal row the
 way a Going mark points at a class, so there is no delete-and-reinsert here.
 
+**And taking one off is `PlanSheet`'s job too, for the reason it is that
+sheet's job to open one.** For months there was no way at all on a coach's
+calendar: the editor's delete link renders on `isEdit`, which is
+`prefill?.classId`, and a personal row is edited with `personal.editId`, so the
+link never drew and `doDelete` would have bailed on its first line anyway. The
+only remove wired anywhere was the member's X on `/week`. Both calendars
+already open `PlanSheet` for a personal row, so one remove there is a remove on
+both, and the X is a shortcut to the same act rather than the only door. It
+takes a confirm where a Going mark takes an Undo in the toast: a mark comes
+back from the coach's page, and a row somebody typed comes back only by typing
+it again. `removePersonalClass` revalidates `/app` as well as `/week`, or the
+coach's own screen keeps the row it just deleted.
+
+This is the fourth bug of one shape: a capability built on the member side and
+never wired on the coach side, invisible because the two screens look alike.
+Anything a personal row can do has to be checked from `/app` as well as
+`/week`.
+
 **Schedule is everybody's calendar, and the rows say which hat.** A coach's
 is `/app` and a member's is `/week`, and both hold everything the person is
 actually doing: the classes they teach, the shifts a gym has them on, the

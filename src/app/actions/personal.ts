@@ -463,6 +463,9 @@ export async function removePersonalClass(id: string): Promise<{ ok: boolean; er
   await db
     .delete(schema.personalClasses)
     .where(and(eq(schema.personalClasses.id, id), eq(schema.personalClasses.userId, userId)));
+  // Both calendars carry these rows, so both have to be told. A coach's own
+  // entries lived only on /app and survived every removal for want of this.
   revalidatePath("/week");
+  revalidatePath("/app");
   return { ok: true };
 }
