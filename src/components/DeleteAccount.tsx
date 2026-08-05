@@ -44,17 +44,14 @@ export function DeleteAccount({ isCoach = false }: { isCoach?: boolean }) {
 
   return (
     <>
-      <button className="setrow" onClick={() => setOpen(true)}>
-        <span className="setrow-ic">
-          <Icon name="delete" size={22} />
-        </span>
-        <span className="setrow-txt">
-          <span className="t">Delete account</span>
-          <span className="s">Your account and everything on it, for good</span>
-        </span>
-        <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
-        </span>
+      {/* A small link under the account settings rather than a row of its own.
+          A full-width row with an icon and a chevron gives leaving the same
+          weight as changing your password, and this is a door most people
+          should never notice. It is still one tap from the section it
+          belongs to, and the sheet behind it is where the seriousness
+          lives. */}
+      <button className="dellink" onClick={() => setOpen(true)}>
+        Delete account
       </button>
 
       {open && (

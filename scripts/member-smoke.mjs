@@ -9,6 +9,29 @@ import { fillLocation, skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("MEMBER FAIL: " + m); };
+
+/** Shut every open sheet, innermost first. Sheets stack here (the share sheet
+ *  opens the QR sheet over it), and a row behind one is not a row you can
+ *  tap, so a single close is not enough to get back to the page. */
+const openSetting = async (pg, label) => {
+  // By the row's own title, not by text anywhere in it: "Become a coach"
+  // explains itself with a subtitle mentioning your page, so a substring
+  // match on the list finds two rows and refuses to click either.
+  await pg
+    .locator(".settingslist .setrow")
+    .filter({ has: pg.locator(`.t:text-is("${label}")`) })
+    .first()
+    .click();
+  await pg.locator(".sheet h2").first().waitFor();
+};
+
+const shutSheets = async (pg) => {
+  for (let i = 0; i < 4; i++) {
+    if (!(await pg.locator(".sheet").count())) break;
+    await pg.locator(".sheet .sheetclose").last().click().catch(() => {});
+    await pg.waitForTimeout(350);
+  }
+};
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
 // a coach to follow, so the profile has something on it
@@ -187,27 +210,44 @@ console.log("member profile ok (Schedule and Info tabs, nothing about who they f
 // too: the three ways there are, and the invite card a coach gets.
 {
   await p.goto(BASE + "/you");
-  await p.locator(".setrow", { hasText: "Share profile" }).click();
+  // The same shape a coach's account wears: the tile, the Preview/Share
+  // pair, then one Settings list of four rows that each open a sub-screen.
+  await p.locator(".acctwho .acctwho-url").waitFor();
+  await p.getByRole("button", { name: "Preview profile" }).waitFor();
+  {
+    const rows = await p.locator(".settingslist .setrow .t").allInnerTexts();
+    for (const must of ["Your page", "Calendar & sync", "Privacy & reach", "Account"])
+      if (!rows.map((t) => t.trim()).includes(must))
+        fail("the settings should be the coach's four: " + rows.join("|"));
+  }
+
+  await p.getByRole("button", { name: "Share", exact: true }).click();
   await p.locator(".sheet h2", { hasText: "Share" }).waitFor();
-  for (const row of ["Copy link", "Profile card", "QR code"])
+  for (const row of ["Copy link", "Schedule story", "Profile card", "QR code"])
     await p.locator(".sheet .setrow", { hasText: row }).waitFor();
   await p.locator(".sheet .setrow", { hasText: "QR code" }).click();
   await p.locator(".qrimg").waitFor();
-  await p.locator(".sheet .sheetclose").first().click();
-  await p.waitForTimeout(400);
+  // Close every sheet before touching the page under them: the QR sheet is a
+  // second layer over the share sheet's scrim, and a row that is merely
+  // behind one is not a row you can tap.
+  await shutSheets(p);
 
-  // The renamed rows, both of which a coach's settings say the same way.
-  await p.locator(".setrow", { hasText: "Handle" }).first().waitFor();
-  if (await p.locator(".setrow", { hasText: "Your link" }).count()) {
-    const t = await p.locator(".setrow", { hasText: "Your link" }).allInnerTexts();
-    fail("the handle row should not still say Your link: " + JSON.stringify(t));
-  }
-  await p.locator(".setrow", { hasText: "Account privacy" }).first().waitFor();
-  if (await p.locator(".setrow", { hasText: "Approve followers" }).count())
+  // The renamed rows, both of which a coach's settings say the same way, and
+  // both now behind the sub-screen they belong to.
+  await openSetting(p, "Your page");
+  await p.locator(".sheet .setrow", { hasText: "Handle" }).first().waitFor();
+  if (await p.locator(".sheet .setrow", { hasText: "Your link" }).count())
+    fail("the handle row should not still say Your link");
+  await shutSheets(p);
+
+  await openSetting(p, "Privacy & reach");
+  await p.locator(".sheet .setrow", { hasText: "Account privacy" }).first().waitFor();
+  if (await p.locator(".sheet .setrow", { hasText: "Approve followers" }).count())
     fail("the privacy row should not still say Approve followers");
+  await shutSheets(p);
 
   await p.locator(".acctinvite", { hasText: "Share the love" }).waitFor();
-  console.log("a member can hand their page on, and the wording matches a coach's ok");
+  console.log("a member's account is the coach's layout ok");
 }
 
 // ---- the way out
@@ -217,7 +257,8 @@ console.log("member profile ok (Schedule and Info tabs, nothing about who they f
 // steps, and the second asks for the word.
 {
   await p.goto(BASE + "/you");
-  await p.locator(".setrow", { hasText: "Delete account" }).click();
+  await openSetting(p, "Account");
+  await p.locator(".dellink", { hasText: "Delete account" }).click();
   await p.getByRole("heading", { name: "Delete your account" }).waitFor();
   const go = p.getByRole("button", { name: "Delete my account" });
   if (await go.isEnabled()) fail("the delete button should wait for the typed word");
@@ -247,6 +288,7 @@ console.log("member profile ok (Schedule and Info tabs, nothing about who they f
 
 // and it's editable from the account
 await p.goto(BASE + "/you");
+await openSetting(p, "Your page");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
 await p.getByRole("heading", { name: "Your profile" }).waitFor();
 // nothing to match against yet, so a bare city is refused rather than
@@ -284,6 +326,7 @@ try {
   console.log("goto /you straggled; retrying once");
   await p.goto(BASE + "/you");
 }
+await openSetting(p, "Your page");
 await p.locator(".setrow", { hasText: "Edit your profile" }).click();
 await p.getByRole("heading", { name: "Your profile" }).waitFor();
 {

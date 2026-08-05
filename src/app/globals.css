@@ -1739,7 +1739,16 @@ button.ps-card { cursor: pointer; }
    picking something up rather than going somewhere. */
 /* An ask, not a screen: it sits low and stays small, so the list it's about is
    still visible behind it. */
-.acctdel { margin-top: 18px; }
+/* Leaving, as a link rather than a row. Orange because it is the one colour
+   this app raises its voice in, and small because a door most people should
+   never take does not deserve the weight of a setting they use. */
+.dellink {
+  display: block; margin: 12px 2px 0; padding: 6px 0;
+  background: none; border: none; cursor: pointer; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--si);
+}
+.dellink:active { opacity: .6; }
 .confirmsheet { max-width: 460px; }
 /* What leaves, before the question is asked. A list of consequences after the
    fact is a list nobody read. */
@@ -3733,12 +3742,6 @@ button.ps-card { cursor: pointer; }
 }
 /* Your own classes sit in the same merged week as the coaches you follow — the
    tag is how you tell at a glance which ones you teach. */
-.ps-youtag {
-  flex-shrink: 0; padding: 2px 7px; border-radius: 999px;
-  background: var(--cl-d); color: var(--ol);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700;
-  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
-}
 .ps-agenda .ps-ewhere { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 /* Swipe a row to flip "I'm going". pan-y hands vertical scrolling straight to
    the browser; only sideways movement reaches the component. */
@@ -3986,27 +3989,6 @@ button.ps-card { cursor: pointer; }
 /* "I'm going" lives on the class page; the week only reports it. */
 /* A member's account: who you are, then the switches. No public page, no QR,
    no stats — those are a coach's. */
-.memberid {
-  display: flex; align-items: center; gap: 14px; margin: 18px 0 22px;
-}
-.memberid-av {
-  width: 58px; height: 58px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
-  background: #eae3d2;
-}
-.memberid-av-empty {
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
-  color: #fff;
-}
-.memberid-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.memberid-txt .t {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 19px;
-  letter-spacing: -.02em; color: var(--ink);
-}
-.memberid-txt .s {
-  font-size: 13px; color: var(--ol);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
 
 
 /* ---- discover (the directory) ---- */
@@ -4735,6 +4717,18 @@ button.ps-card { cursor: pointer; }
 .feedagenda .ps-event.goingon, .callist .ps-event.goingon { box-shadow: none; }
 .feedagenda .ps-erow { position: relative; gap: 0; }
 .feedagenda .evcard-add { top: 13px; bottom: auto; height: 32px; right: 6px; padding: 0 6px; }
+/* Your own class: the corner says which hat rather than offering a control
+   that setGoing would refuse. The brand wash, because teaching is the brand
+   colour on every other surface. Not a button, so nothing about it invites a
+   tap; the row underneath still opens the class. */
+.evcard-mine {
+  height: auto; padding: 4px 9px; align-self: flex-start;
+  background: var(--si-tint); color: var(--si-ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  pointer-events: none;
+}
+.feedagenda .evcard-mine { top: 16px; height: auto; }
 .feedagenda .ps-etimecol { margin-top: 36px; }
 /* The calendars wear the same flat rows (.callist), with the kind's colour
    on the bar. The share circle rides top-right above the time; the member's

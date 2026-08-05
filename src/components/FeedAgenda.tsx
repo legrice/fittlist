@@ -248,6 +248,11 @@ export function FeedAgenda({
           }))}
           row={(item, d) => (
             <>
+              {/* The swipe stays on your own rows, and its refusal with it.
+                  A visible button that cannot work is worse than none, which
+                  is why the corner stops offering Add below; a gesture is
+                  invisible until somebody tries it and then says why, which
+                  teaches rather than misleads. */}
               <SwipeGoing
                 going={!!item.on}
                 onToggle={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
@@ -265,15 +270,25 @@ export function FeedAgenda({
                   because a button inside a button is not a thing. The share
                   circle came off every row; sharing lives on the class
                   sheet, where one class has the whole screen. */}
-              <button
-                className={`evcard-add${item.on ? " on" : ""}`}
-                aria-label={item.on ? "Added to your plans" : "Add to your plans"}
-                aria-pressed={!!item.on}
-                onClick={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
-              >
-                <Icon name={item.on ? "bookmark_added" : "bookmark"} size={20} />
-                <span className="evcard-add-t">{item.on ? "Added" : "Add"}</span>
-              </button>
+              {/* Which hat, where the control was. Teaching it isn't attending
+                  it and setGoing refuses it, so the corner says what the row
+                  is instead of offering an Add that fails. It replaces the
+                  YOU tag that sat beside the name: a tag next to your own
+                  name and a button that cannot work was the row saying two
+                  things and meaning neither. */}
+              {item.you ? (
+                <span className="evcard-add evcard-mine">Coaching</span>
+              ) : (
+                <button
+                  className={`evcard-add${item.on ? " on" : ""}`}
+                  aria-label={item.on ? "Added to your plans" : "Add to your plans"}
+                  aria-pressed={!!item.on}
+                  onClick={() => toggleGoing(item.classId!, d.iso, !item.on, item.name)}
+                >
+                  <Icon name={item.on ? "bookmark_added" : "bookmark"} size={20} />
+                  <span className="evcard-add-t">{item.on ? "Added" : "Add"}</span>
+                </button>
+              )}
             </>
           )}
         />

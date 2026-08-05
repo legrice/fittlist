@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { logout } from "@/app/actions/auth";
+import { MyCalendar } from "@/components/MyCalendar";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
@@ -17,6 +19,15 @@ import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
 import { StartCoaching } from "@/components/StartCoaching";
 import { Toast, useToast } from "@/components/Toast";
+
+type MView = "profile" | "calendar" | "reach" | "account";
+
+const VIEW_TITLE: Record<MView, string> = {
+  profile: "Your page",
+  calendar: "Calendar & sync",
+  reach: "Privacy & reach",
+  account: "Account",
+};
 
 // A member's account. Smaller than a coach's by design: no stats, no studio
 // page, no rota. It is not smaller in the ways that matter to a person,
@@ -66,6 +77,12 @@ export function MemberAccount({
   approveFollowers?: boolean;
   messagesOpen?: boolean;
 }) {
+  const router = useRouter();
+  // The same four sub-screens the coach's account opens, one level deep.
+  // Each is a bottom sheet over this page, and the rows inside them are the
+  // very same components: two layouts for one idea is how they drift, and
+  // the leaves were already shared.
+  const [view, setView] = useState<MView | null>(null);
   const [share, setShare] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
@@ -91,24 +108,49 @@ export function MemberAccount({
 
   return (
     <>
-      <div className="memberid">
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="memberid-av" src={photo} alt="" />
-        ) : (
-          <span
-            className="memberid-av memberid-av-empty"
-            style={{ background: color }}
-            aria-hidden="true"
-          >
-            {initial}
+      {/* Who this is, then the two things you do with it. The same tile,
+          the same pair and the same weights the coach's account wears: a
+          member's settings were a different screen doing the same job, and
+          two layouts for one idea is how they drift. */}
+      <div className="acctwho">
+        <button
+          className="acctwho-id"
+          onClick={() => handle && router.push(`/${handle}`)}
+          aria-label="Open your profile"
+        >
+          {photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="acctwho-av" src={photo} alt="" />
+          ) : (
+            <span
+              className="acctwho-av acctwho-av-empty"
+              style={{ background: color }}
+              aria-hidden="true"
+            >
+              {initial}
+            </span>
+          )}
+          <span className="acctwho-txt">
+            <span className="acctwho-nm">{shownName}</span>
+            {title ? <span className="acctwho-sub">{title}</span> : null}
+            <span className="acctwho-url">{handle ? `fittlist.co/${handle}` : email}</span>
           </span>
-        )}
-        <span className="memberid-txt">
-          <span className="t">{shownName}</span>
-          <span className="s">{handle ? `fittlist.co/${handle}` : email}</span>
-        </span>
+        </button>
+        <button className="tertiary acctedit" onClick={() => setView("profile")}>
+          Edit
+        </button>
       </div>
+
+      {handle && (
+        <div className="acctacts">
+          <button className="btn ghost" onClick={() => router.push(`/${handle}`)}>
+            Preview profile
+          </button>
+          <button className="btn si" onClick={() => setShareMenu(true)}>
+            Share
+          </button>
+        </div>
+      )}
 
       {/* Grouped like the coach side: your profile first, then the things you
           do, then account plumbing, then the beta. */}
@@ -130,90 +172,55 @@ export function MemberAccount({
         </>
       )}
 
-      <h3 className="setgroup-h">Profile</h3>
+      {/* One list of four rows, each opening a sub-screen, each subtitle
+          saying where the setting stands so the top level answers most of it
+          without a tap. It was two headed groups and nine rows on one
+          scroll, with sharing and privacy in the same block as your name. */}
+      <h3 className="setgroup-h">Settings</h3>
       <div className="settingslist">
-        <MemberProfileEditor
-          name={name}
-          handle={handle}
-          title={title}
-          about={about}
-          location={location}
-          photo={photo}
-          color={color}
-          openOnMount={openEditor}
-        />
-        {handle && (
-          <a className="setrow" href={`/${handle}`}>
-            <span className="setrow-ic"><Icon name="north_east" size={22} /></span>
-            <span className="setrow-txt">
-              <span className="t">View your profile</span>
-              <span className="s">How it looks to everyone else</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </a>
-        )}
-        {handle && (
-          <button className="setrow" onClick={() => setShareMenu(true)}>
-            <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
-            <span className="setrow-txt">
-              <span className="t">Share profile</span>
-              <span className="s">A link, a card, or a QR code</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-          </button>
-        )}
-        <ChangeHandle />
-        <DiscoverableToggle initialOn={discoverable} />
-        <ApproveFollowersToggle initialOn={approveFollowers} />
-        <MessagesToggle initialOn={messagesOpen} />
-      </div>
-
-      <div className="settingslist">
-        {/* The other half of adding: once your week has classes in it, this is
-            where you post them. */}
-        <button className="setrow" onClick={() => setShare(true)}>
-          <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+        <button className="setrow" onClick={() => setView("profile")}>
+          <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
           <span className="setrow-txt">
-            <span className="t">Share classes you&rsquo;re attending</span>
+            <span className="t">Your page</span>
+            <span className="s">Your name, photo, handle and where you are</span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        </button>
+        <button className="setrow" onClick={() => setView("calendar")}>
+          <span className="setrow-ic"><Icon name="event" size={22} /></span>
+          <span className="setrow-txt">
+            <span className="t">Calendar &amp; sync</span>
+            <span className="s">Your week in Apple, Google or Outlook</span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        </button>
+        <button className="setrow" onClick={() => setView("reach")}>
+          <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+          <span className="setrow-txt">
+            <span className="t">Privacy &amp; reach</span>
             <span className="s">
-              {goingCount > 0
-                ? `A story image of the ${goingCount} class${goingCount === 1 ? "" : "es"} in your week`
-                : "Add a class to your week and it lands here"}
+              {`Messages ${messagesOpen ? "on" : "off"}`}
+              {` · ${discoverable ? "Listed" : "Not listed"}`}
+              {` · Approvals ${approveFollowers ? "on" : "off"}`}
             </span>
+          </span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        </button>
+        <button className="setrow" onClick={() => setView("account")}>
+          <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+          <span className="setrow-txt">
+            <span className="t">Account</span>
+            <span className="s">Notifications, appearance</span>
           </span>
           <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
         </button>
       </div>
 
-      {/* The member side is the front door; coaching is a door off it. */}
+      {/* The member side is the front door; coaching is a door off it. Not a
+          setting, so it sits outside them the way Your studios does. */}
       <div className="settingslist">
         <StartCoaching handle={handle} />
       </div>
-
-      <h3 className="setgroup-h">Account &amp; app</h3>
-      <div className="settingslist">
-        <NotificationPrefs />
-        <DarkModeToggle initialOn={look === "dark"} />
-      </div>
-
-      {/* The invite row moved out to the card below, so this group is one
-          conditional row. Drawn unconditionally it was a heading over an
-          empty white box for anybody with no feedback door. */}
-      {canSendFeedback && (
-        <>
-          <h3 className="setgroup-h">The beta</h3>
-          <div className="settingslist">
-            <a className="setrow setrow-hi" href="/feedback">
-              <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
-              <span className="setrow-txt">
-                <span className="t">Send feedback</span>
-                <span className="s">Tell us what&rsquo;s broken or missing</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-            </a>
-          </div>
-        </>
-      )}
 
       {/* The same card a coach gets, in the same place and for the same
           reason: the people you train with being here is what makes the app
@@ -231,23 +238,101 @@ export function MemberAccount({
         </button>
       </div>
 
+      {/* Plain links and the way out, in one block, the way a coach's are.
+          Send feedback was a headed group of one row on its own. */}
       <div className="acctfoot">
+        {canSendFeedback && (
+          <a className="acctfoot-l" href="/feedback">
+            Send feedback
+          </a>
+        )}
         <a className="acctfoot-l" href="/privacy">
           Privacy
         </a>
+        <form action={logout}>
+          <button type="submit" className="acctfoot-l acctfoot-out">
+            Log out
+          </button>
+        </form>
       </div>
 
-      {/* Under the settings and under the invite, because leaving is the last
-          thing on the way out and should never sit above the work. */}
-      <div className="settingslist">
-        <DeleteAccount />
-      </div>
+      {/* The four sub-screens. Each holds the rows that used to sit under a
+          heading on the main scroll, and every one of them is a component the
+          coach's account renders too, so a switch means the same thing and
+          looks the same on both. */}
+      {view && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setView(null);
+          }}
+        >
+          <div className="sheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setView(null)}>
+              <Icon name="close" size={16} />
+            </button>
+            <h2>{VIEW_TITLE[view]}</h2>
 
-      <form action={logout}>
-        <button type="submit" className="logoutbtn">
-          Log out
-        </button>
-      </form>
+            {view === "profile" && (
+              <div className="settingslist">
+                <MemberProfileEditor
+                  name={name}
+                  handle={handle}
+                  title={title}
+                  about={about}
+                  location={location}
+                  photo={photo}
+                  color={color}
+                  openOnMount={openEditor}
+                />
+                <ChangeHandle />
+                {handle && (
+                  <a className="setrow" href={`/${handle}`}>
+                    <span className="setrow-ic"><Icon name="north_east" size={22} /></span>
+                    <span className="setrow-txt">
+                      <span className="t">View your profile</span>
+                      <span className="s">How it looks to everyone else</span>
+                    </span>
+                    <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  </a>
+                )}
+              </div>
+            )}
+
+            {view === "calendar" && (
+              <div className="settingslist">
+                <MyCalendar />
+              </div>
+            )}
+
+            {view === "reach" && (
+              <div className="settingslist">
+                <MessagesToggle initialOn={messagesOpen} />
+                <DiscoverableToggle initialOn={discoverable} />
+                <ApproveFollowersToggle initialOn={approveFollowers} />
+                <a className="setrow" href="/blocked">
+                  <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Removed people</span>
+                    <span className="s">Who can&rsquo;t see your page</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                </a>
+              </div>
+            )}
+
+            {view === "account" && (
+              <>
+                <div className="settingslist">
+                  <NotificationPrefs />
+                  <DarkModeToggle initialOn={look === "dark"} />
+                </div>
+                <DeleteAccount />
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Handing your page on, in the three ways there are. Same rows and same
           words as a coach's, because it is the same act. */}
@@ -281,6 +366,24 @@ export function MemberAccount({
                   <span className="t">Copy link</span>
                   <span className="s">Paste it anywhere</span>
                 </span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setShare(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Schedule story</span>
+                  <span className="s">
+                    {goingCount > 0
+                      ? `A tall image of the ${goingCount} class${goingCount === 1 ? "" : "es"} in your week`
+                      : "Add a class to your week and it lands here"}
+                  </span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
               </button>
               <button
                 className="setrow"

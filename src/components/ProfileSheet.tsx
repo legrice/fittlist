@@ -610,11 +610,6 @@ export function ProfileSheet({
           </form>
         </div>
 
-        {/* The last thing on the way out, under the footer links. A coach has
-            more to lose than a member, so the sheet names the page too. */}
-        <div className="settingslist acctdel">
-          <DeleteAccount isCoach />
-        </div>
       </div>
 
       {/* Every settings section opens the same way: a bottom sheet over the
@@ -731,6 +726,9 @@ export function ProfileSheet({
               <NotificationPrefs />
               <DarkModeToggle initialOn={look === "dark"} />
             </div>
+          )}
+          {view === "account" && (
+            <DeleteAccount isCoach />
           )}
 
           {view === "security" && (

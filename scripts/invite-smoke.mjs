@@ -148,7 +148,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     // 5) Becoming a coach is an ask now, answered in admin: the self-serve
     // switch was how ghost inventory got into the directory.
     await pg.goto(BASE + "/you");
-    await pg.locator(".memberid").waitFor();
+    await pg.locator(".acctwho").waitFor();
     await pg.locator(".setrow", { hasText: "Become a coach" }).click();
     await pg.getByRole("heading", { name: "Become a coach" }).waitFor();
     await pg.locator("#crNote").fill("Kettlebells at Ironbound");

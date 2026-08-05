@@ -25,7 +25,10 @@ export type AgendaItem = {
   coachName?: string | null;
   coachPhoto?: string | null;
   coachColor: string;
-  /** The viewer teaches this one. */
+  /** The viewer teaches this one. Read by the caller rather than drawn here:
+   *  Following turns it into a Coaching tag in the row's corner and drops
+   *  both the add control and the swipe, because setGoing refuses a class
+   *  you teach. */
   you?: boolean;
   /** A word in the time column: Added, Shift, Mine. */
   tag?: string | null;
@@ -146,7 +149,7 @@ export function ClassRow({
           <span className="ps-ecoach">
             <AgendaAvatar photo={item.coachPhoto} name={item.coachName} color={item.coachColor} />
             <span className="ps-ecoach-txt">{item.coachName}</span>
-            {item.you && <span className="ps-youtag">You</span>}
+
           </span>
         )}
         <span className="ps-enm">{item.name}</span>

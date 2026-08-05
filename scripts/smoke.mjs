@@ -1624,6 +1624,15 @@ await fan.locator(".feedav", { hasText: "Matt" }).waitFor();
     fail("the rail's plus should open Discover: " + (await add.getAttribute("href")));
 }
 await fan.locator(".feedagenda .ps-event").first().waitFor();
+// A class somebody else teaches keeps its Add ribbon and never wears the
+// Coaching tag: that corner says which hat, and a member has one.
+{
+  await fan.locator(".feedagenda .evcard-add").first().waitFor();
+  if (await fan.locator(".feedagenda .evcard-mine").count())
+    fail("a member is not coaching anything on their Following feed");
+  if (await fan.locator(".feedagenda .ps-youtag").count())
+    fail("the YOU tag moved to the corner and should be gone from the name");
+}
 const feedRows = await fan.locator(".feedagenda .ps-event").count();
 if (feedRows < 1) fail("feed agenda has no class rows");
 // A merged row already carries the coach's face; the studio goes under the
@@ -1990,7 +1999,8 @@ console.log("your week ok (count ahead, rows leave, points at a real calendar)")
   if (await fan.locator(".weekshare").count())
     fail("the floating share pill should have made way for the You tab's row");
   await fan.goto(BASE + "/you");
-  await fan.locator(".setrow", { hasText: "Share classes you" }).click();
+  await fan.getByRole("button", { name: "Share", exact: true }).click();
+  await fan.locator(".sheet .setrow", { hasText: "Schedule story" }).click();
   await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
   {
     const from = await fan.locator("#myFrom").inputValue();
@@ -2122,8 +2132,9 @@ if (await fan.locator(".settingsbtn").count())
   fail("the gear should have left the corner: the You tab is the door");
 await fan.locator(".brandbar-actions .usericon").click();
 await fan.waitForURL("**/you");
-await fan.locator(".memberid").waitFor();
-await fan.locator(".setrow", { hasText: "Share classes you’re attending" }).click();
+await fan.locator(".acctwho").waitFor();
+await fan.getByRole("button", { name: "Share", exact: true }).click();
+await fan.locator(".sheet .setrow", { hasText: "Schedule story" }).click();
 await fan.getByRole("heading", { name: "Share your plans" }).waitFor();
 await fan.locator(".storyimg").waitFor();
 await fan.locator(".adderclose").click();
@@ -2226,6 +2237,22 @@ await page.locator(".feedagenda .ps-event.goingon").first().waitFor();
     .filter({ hasText: "Barbell Strength" })
     .first();
   await mine.locator(".ps-event").waitFor();
+  // The corner says which hat rather than offering an Add that setGoing
+  // would refuse. It replaced the YOU tag beside the name: a tag there and a
+  // button that cannot work was the row saying two things and meaning
+  // neither. The row still opens the class, and the swipe below still
+  // teaches, because a gesture explains itself where a dead button misleads.
+  {
+    const own = page
+      .locator(".feedagenda .ps-erow")
+      .filter({ hasText: "Barbell Strength" })
+      .first();
+    await own.locator(".evcard-mine").waitFor();
+    if (!/coaching/i.test(await own.locator(".evcard-mine").innerText()))
+      fail("your own class should say Coaching in the corner");
+    if (await own.locator("button.evcard-add").count())
+      fail("your own class should offer no Add: setGoing refuses it");
+  }
   const box = await mine.boundingBox();
   const y = box.y + box.height / 2;
   const from = box.x + box.width - 20;
