@@ -280,6 +280,12 @@ export type GymClassInput = {
   /** Weekly only: the last date it runs. */
   endsOn?: string | null;
   startTime: string;
+  /** Every time this class runs on the days picked, `startTime` included.
+   *  A gym's week is a grid: Guns, Buns and Lungs runs Mon/Wed/Fri at five
+   *  times and Tue/Thu at four, which is 23 slots of one class. Days times
+   *  times is how that gets typed once instead of 23 times. Omitted or empty
+   *  means just `startTime`, which is what every existing caller passes. */
+  times?: string[];
   durationMin: number;
   /** Where a member books it. A gym usually has one, on every class. */
   links?: { label: string; url: string }[];
@@ -297,6 +303,10 @@ export type GymCatalogItem = {
    *  filling a rota re-picked a photo the studio already had, and lost it on
    *  save. */
   image: string | null;
+  /** How long it runs. A gym filling a week types the same 60 over and over
+   *  otherwise, and the length is a fact about the class rather than about
+   *  one slot. Null where nothing has recorded one yet. */
+  durationMin: number | null;
   links: { label: string; url: string }[];
 };
 
@@ -329,6 +339,7 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       classType: c.classType,
       description: c.description,
       image: c.image,
+      durationMin: c.durationMin,
       links: [],
     });
   // Real classes fill the gaps the catalogue doesn't hold, links above all.
@@ -340,11 +351,13 @@ export async function gymCatalog(studioId: string): Promise<GymCatalogItem[]> {
       classType: c.classType,
       description: c.description,
       image: c.image,
+      durationMin: c.durationMin,
       links: [],
     };
     if (!cur.classType && c.classType) cur.classType = c.classType;
     if (!cur.description && c.description) cur.description = c.description;
     if (!cur.image && c.image) cur.image = c.image;
+    if (!cur.durationMin && c.durationMin) cur.durationMin = c.durationMin;
     if (!cur.links.length && c.links.length) cur.links = c.links.map((l) => ({ ...l }));
     byKey.set(key, cur);
   }
@@ -362,6 +375,7 @@ async function catalogue(
   const classType = input.classType?.trim() || null;
   const description = input.description?.trim() || null;
   const image = input.image?.trim() || null;
+  const durationMin = input.durationMin > 0 ? input.durationMin : null;
   try {
     await db
       .insert(schema.studioClasses)
@@ -372,6 +386,7 @@ async function catalogue(
         classType,
         description,
         image,
+        durationMin,
         createdByUserId: userId,
       })
       .onConflictDoUpdate({
@@ -381,6 +396,7 @@ async function catalogue(
           ...(classType ? { classType } : {}),
           ...(description ? { description } : {}),
           ...(image ? { image } : {}),
+          ...(durationMin ? { durationMin } : {}),
           updatedAt: new Date(),
         },
       });
@@ -395,6 +411,21 @@ function cleanLinks(raw: GymClassInput["links"]): { label: string; url: string }
     .map((l) => ({ label: (l.label || "Book").trim().slice(0, 30), url: l.url.trim() }))
     .filter((l) => /^https?:\/\//i.test(l.url))
     .slice(0, 6);
+}
+
+/**
+ * Every start time this add covers, deduped and in order.
+ *
+ * `startTime` is always one of them, so a caller that knows nothing about
+ * `times` behaves exactly as it did. This is the only place that decides,
+ * because the validator, the insert and the notification all have to agree on
+ * how many slots are being made.
+ */
+function timesOf(input: GymClassInput): string[] {
+  const all = [input.startTime, ...(input.times ?? [])]
+    .map((t) => (t ?? "").trim())
+    .filter((t) => /^\d{2}:\d{2}$/.test(t));
+  return [...new Set(all)].sort();
 }
 
 /** A one-off is authoritative on its date; a weekly runs on the days picked. */
@@ -413,6 +444,13 @@ function validate(input: GymClassInput): string | null {
   const { days, endsOn } = shape(input);
   if (!days.length) return oneOff ? "Pick a date." : "Pick at least one day.";
   if (!/^\d{2}:\d{2}$/.test(input.startTime)) return "Pick a start time.";
+  for (const t of input.times ?? [])
+    if (!/^\d{2}:\d{2}$/.test((t ?? "").trim())) return "One of those times doesn't look right.";
+  // The grid is days times times, so it grows quickly and a slip is expensive
+  // to undo. A ceiling well above any real week is cheaper than a manager
+  // discovering they made four hundred classes.
+  if (shape(input).days.length * timesOf(input).length > 100)
+    return "That's more than 100 classes at once. Split it into a few adds.";
   if (!Number.isInteger(input.durationMin) || input.durationMin < 5 || input.durationMin > 600)
     return "That length doesn't look right.";
   if (endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return "That end date doesn't look right.";
@@ -420,12 +458,13 @@ function validate(input: GymClassInput): string | null {
   return null;
 }
 
-/** "Mon, Wed & Fri 6:00am", or the date itself when it only runs once. */
+/** "Mon, Wed & Fri 6:00am", or the date itself when it only runs once. Every
+ *  time it runs, because a coach put on a class at five of them should be
+ *  told about five of them rather than the earliest. */
 function whenOf(input: GymClassInput): string {
   const { oneOff, days } = shape(input);
-  return oneOff
-    ? `${fmtDateLong(oneOff)}, ${fmtTime(input.startTime)}`
-    : `${fmtDays(days)} ${fmtTime(input.startTime)}`;
+  const when = timesOf(input).map(fmtTime).join(", ");
+  return oneOff ? `${fmtDateLong(oneOff)}, ${when}` : `${fmtDays(days)} ${when}`;
 }
 
 /** Tell a coach they are on, or that they are off. Silence is how a shift gets
@@ -464,41 +503,71 @@ export async function addGymClass(
   const coachUserId = input.coachUserId || null;
   const name = input.name.trim();
   const { oneOff, days, endsOn } = shape(input);
-  // One row per day, sharing a series so they read as one class where that
-  // matters. Each row is still its own slot: the rota assigns Monday and
-  // Wednesday separately, which is exactly what the spreadsheet's cells did.
-  const seriesId = randomUUID();
-  await db.insert(schema.classes).values(
-    days.map((dayOfWeek) => ({
-      userId: gymId,
-      coachUserId,
-      studioId,
-      seriesId,
-      dayOfWeek,
-      specificDate: oneOff,
-      endsOn,
-      startTime: input.startTime,
-      durationMin: input.durationMin,
-      name,
-      classType: input.classType?.trim() || null,
-      description: input.description?.trim() || null,
-      image: input.image?.trim() || null,
-      links: cleanLinks(input.links),
-      isPublic: true,
-    })),
-  );
+  const times = timesOf(input);
+
+  // What this studio already runs under this name, so a second pass over the
+  // same class doesn't double the week. A manager will re-open a class to add
+  // the times they forgot, and the honest answer to "Monday 6am again" is to
+  // leave the slot that is already there alone: it may carry a coach, a swap
+  // and a room full of members' plans.
+  const existing = await db
+    .select({ dayOfWeek: schema.classes.dayOfWeek, startTime: schema.classes.startTime })
+    .from(schema.classes)
+    .where(and(eq(schema.classes.userId, gymId), eq(schema.classes.name, name)));
+  const taken = new Set(existing.map((r) => `${r.dayOfWeek}|${r.startTime.slice(0, 5)}`));
+
+  // One row per day per time. Each row is still its own slot: the rota assigns
+  // Monday and Wednesday separately, which is exactly what the spreadsheet's
+  // cells did.
+  //
+  // A series per time rather than one for the whole grid, which keeps the rule
+  // the rest of the app already follows (name, time, place and visibility
+  // match). So "delete the whole thing" on the 6am removes the 6am on every
+  // day it runs, and leaves the 7am standing. One series across all 23 slots
+  // would make deleting a single time impossible to offer.
+  const rows = [];
+  for (const startTime of times) {
+    const seriesId = randomUUID();
+    for (const dayOfWeek of days) {
+      if (!oneOff && taken.has(`${dayOfWeek}|${startTime}`)) continue;
+      rows.push({
+        userId: gymId,
+        coachUserId,
+        studioId,
+        seriesId,
+        dayOfWeek,
+        specificDate: oneOff,
+        endsOn,
+        startTime,
+        durationMin: input.durationMin,
+        name,
+        classType: input.classType?.trim() || null,
+        description: input.description?.trim() || null,
+        image: input.image?.trim() || null,
+        links: cleanLinks(input.links),
+        isPublic: true,
+      });
+    }
+  }
+  if (!rows.length) return { ok: false, error: "Those already run at this studio." };
+  await db.insert(schema.classes).values(rows);
   await catalogue(db, studioId, ctx.userId, input);
   if (coachUserId) {
     await tellCoach(coachUserId, studio.name, name, whenOf(input), true);
-    for (const dayOfWeek of days)
+    // Once per slot actually made, not once per day: the overlap notice is
+    // keyed on its own body, so a class at two times is two real things to
+    // hear about and the same time twice is one.
+    for (const r of rows)
       await tellAboutDuplicate(db, coachUserId, studio, {
         name,
-        dayOfWeek,
-        startTime: input.startTime,
+        dayOfWeek: r.dayOfWeek,
+        startTime: r.startTime,
       });
   }
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
-  return { ok: true, count: days.length };
+  // What was made, not what was asked for: the sheet says "15 added" and the
+  // grid may have skipped slots that already ran.
+  return { ok: true, count: rows.length };
 }
 
 /**

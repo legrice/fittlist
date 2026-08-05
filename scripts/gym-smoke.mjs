@@ -326,6 +326,72 @@ console.log("the coach is told ok");
   await matt.locator(".sheetclose").click();
   await matt.waitForTimeout(400);
   console.log("a class pulled in from the catalogue brings its photo ok");
+
+  // ---- days times times
+  //
+  // A gym's week is a grid. The same class runs at several times on the same
+  // days, which is one slot per cell and was one add per cell. Adding the
+  // days and the times together is how a manager fills a week in two passes
+  // instead of twenty-three.
+  {
+    await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
+    await matt.locator("#fName").fill("Grid Class");
+    await matt.locator("#fStart").fill("06:00");
+    // Two more days on top of the one the row opened.
+    await matt.getByRole("button", { name: "We", exact: true }).click();
+    await matt.getByRole("button", { name: "Fr", exact: true }).click();
+    await matt.getByRole("button", { name: "+ Also at another time" }).click();
+    await matt.locator('input[aria-label="Also at, time 2"]').fill("07:00");
+    await matt.getByRole("button", { name: "+ Also at another time" }).click();
+    await matt.locator('input[aria-label="Also at, time 3"]').fill("17:00");
+
+    // The count before committing: a cross product grows fast and a manager
+    // should see the number rather than discover it.
+    const n = await matt.locator(".alsoat-n").innerText();
+    if (!/Adds 9 classes/.test(n)) fail("the grid should say what it will make: " + n);
+
+    await matt.getByRole("button", { name: "Add to the schedule" }).click();
+    // The toast names what was actually made. It counted days for a long
+    // time, which was right while one add was one slot per day.
+    await matt
+      .getByText("Added 9 classes")
+      .waitFor()
+      .catch(async () => {
+        const t = await matt.locator(".toast, .favtoast, .errorcopy").allInnerTexts();
+        fail("the grid should have made nine: " + JSON.stringify(t));
+      });
+    await matt.waitForTimeout(900);
+
+    for (const [day, count] of [["Sunday", 3], ["Wednesday", 3], ["Friday", 3]]) {
+      const got = await matt.locator(".rotaday", { hasText: day }).locator(".ps-event", { hasText: "Grid Class" }).count();
+      if (got !== count) fail(`${day} should hold ${count} Grid Class slots, got ${got}`);
+    }
+    console.log("days times times ok (one add, nine slots)");
+
+    // A second pass over the same class leaves what already runs alone: those
+    // slots may carry a coach, a swap and a room full of members' plans.
+    await matt.locator(".rotaday", { hasText: "Sunday" }).getByRole("button", { name: "Add" }).click();
+    await matt.locator("#fName").fill("Grid Class");
+    await matt.locator("#fStart").fill("06:00");
+    await matt.getByRole("button", { name: "+ Also at another time" }).click();
+    await matt.locator('input[aria-label="Also at, time 2"]').fill("19:00");
+    await matt.getByRole("button", { name: "Add to the schedule" }).click();
+    await matt.getByText("Added to the week").waitFor();
+    await matt.waitForTimeout(900);
+    const after = await matt.locator(".rotaday", { hasText: "Sunday" }).locator(".ps-event", { hasText: "Grid Class" }).count();
+    if (after !== 4) fail("re-adding should add only the new time, got " + after + " slots");
+    console.log("a second pass adds only what is new ok");
+
+    // And editing one of them never fans out: one row is one slot, which is
+    // what keeps a swap on it safe.
+    await matt.locator(".rotaday", { hasText: "Sunday" }).locator(".ps-event", { hasText: "Grid Class" }).first().click();
+    await matt.locator("#fName").waitFor();
+    if (await matt.getByRole("button", { name: "+ Also at another time" }).count())
+      fail("an edit must not offer the grid: it moves one slot rather than fanning out");
+    await matt.locator(".sheetclose").click();
+    await matt.waitForTimeout(400);
+    console.log("an edit stays one slot ok");
+  }
 }
 
 // And they reach the class a member actually opens.
@@ -631,8 +697,12 @@ console.log("the coach is told ok");
     anon.setDefaultTimeout(15000);
     await anon.goto(BASE + studioHref);
     await anon.locator(".ps-event", { hasText: "HYROX" }).first().waitFor();
-    if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
-      fail("a coach's own switch named them on the gym's schedule");
+    // The coach chip, not the whole week's text. `.includes("Tom")` over the
+    // page matched the "Tomorrow" day band the moment a fixture put a class
+    // on tomorrow, which is a three-letter name colliding with the calendar.
+    const named = await anon.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    if (named.some((t) => /Tom/.test(t)))
+      fail("a coach's own switch named them on the gym's schedule: " + named.join("|"));
     await anonCtx.close();
   }
   console.log("the gym's schedule still names nobody ok");
@@ -987,8 +1057,11 @@ console.log("the coach is told ok");
   await anon.locator(".ps-event", { hasText: "HYROX" }).waitFor();
   // Under the gym's name and nobody else's: this is what lets Tom teach here
   // without a public profile, and stops a schedule becoming a leaderboard.
-  if ((await anon.locator(".ps-week").innerText()).includes("Tom"))
-    fail("the gym's public week named the coach");
+  {
+    const named = await anon.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    if (named.some((t) => /Tom/.test(t)))
+      fail("the gym's public week named the coach: " + named.join("|"));
+  }
   await anon.locator(".pubtabs .pubtab", { hasText: "Info" }).click();
   await anon.waitForURL("**/about");
   await anon.getByRole("heading", { name: "Where it is" }).waitFor();
@@ -1364,8 +1437,13 @@ console.log("the rota is closed to everyone else ok");
   // Nothing has moved: the gym's public page does not carry her name.
   await julia.goto(BASE + studioHref);
   await julia.waitForTimeout(500);
-  if (/Julia/.test(await julia.locator(".ps-week").innerText()))
-    fail("a pending ask reached the studio's public page");
+  // Same shape, same reason: ask the chip whether anybody is named rather
+  // than searching a week of prose for a first name.
+  {
+    const named = await julia.locator(".ps-week .ps-ecoach-txt").allInnerTexts();
+    if (named.some((t) => /Julia/.test(t)))
+      fail("a pending ask reached the studio's public page: " + named.join("|"));
+  }
 
   // The manager answers, and that is the moment it becomes true.
   await matt.goto(BASE + studioHref + "/shifts");

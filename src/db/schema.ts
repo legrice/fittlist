@@ -515,6 +515,11 @@ export const studioClasses = pgTable(
     // Shared with the description: a picture belongs to the class rather than
     // to whichever coach wrote it down first.
     image: text("image"),
+    /** How long it runs, so pulling a class in fills the length too. A gym
+     *  filling a week types the same 60 over and over otherwise, and the
+     *  number is a fact about the class rather than about one slot. Nullable
+     *  because every row written before this column existed has none. */
+    durationMin: integer("duration_min"),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

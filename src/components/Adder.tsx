@@ -55,6 +55,9 @@ type CatalogItem = {
   classType: string | null;
   description: string | null;
   image?: string | null;
+  /** How long it runs. A gym filling a week types the same 60 over and over
+   *  otherwise, and the length belongs to the class rather than the slot. */
+  durationMin?: number | null;
   links?: BookingLink[];
 };
 
@@ -192,6 +195,13 @@ export function Adder({
   const [classType, setClassType] = useState<string | null>(prefill?.classType ?? null);
   const [description, setDescription] = useState(prefill?.description ?? "");
   const [image, setImage] = useState<string | null>(prefill?.image ?? null);
+  // Extra start times, gym-only and add-only. A gym's week is a grid: the same
+  // class runs at five times on Mon/Wed/Fri and four on Tue/Thu, which is 23
+  // slots to type one at a time. Days times times is how that becomes two
+  // passes. Never on an edit: one row is one slot, editing moves that slot,
+  // and fanning an edit out would delete and recreate rows that carry swaps
+  // and members' plans.
+  const [extraTimes, setExtraTimes] = useState<string[]>([]);
   const imgRef = useRef<HTMLInputElement>(null);
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
   const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
@@ -253,6 +263,8 @@ export function Adder({
     // The photograph comes with the description: it belongs to the class, not
     // to whoever happened to write it down first.
     if (c.image) setImage(c.image);
+    // So does the length, which moves the end time with it.
+    if (c.durationMin && c.durationMin > 0) setEnd(minutesToTime(timeToMinutes(time) + c.durationMin));
     // The studio catalog is shared across coaches and deliberately carries no
     // booking links: another coach's booking page isn't yours. But if this
     // coach has run the class before, their own links come back with it. A gym
@@ -359,6 +371,10 @@ export function Adder({
   const oneTime = mode === "date";
   const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const whenChosen = oneTime ? dateValid : n > 0;
+  // Days times times, deduped, the way the server counts it. Shown before the
+  // add so a manager knows they are about to make fifteen classes.
+  const allTimeCount = new Set([time, ...extraTimes].filter(Boolean)).size;
+  const slotCount = (oneTime ? 1 : days.size) * allTimeCount;
   // Public classes need a studio; private ones don't, and neither does one
   // that's only ever going to sit in your own plans.
   const needsStudio = !gym && !mineOnly && isPublic && !selectedStudio;
@@ -445,6 +461,7 @@ export function Adder({
         specificDate: oneTime ? date : null,
         endsOn: oneTime ? null : endsOn || null,
         startTime: time,
+        times: extraTimes,
         durationMin,
         studioId,
         location,
@@ -473,6 +490,11 @@ export function Adder({
         onToast(res.error ?? "Something went wrong");
         return;
       }
+      // What the server actually made, not how many days were picked: the grid
+      // is days times times, and a second pass over a class skips the slots
+      // that already run. `n` counted days, which was right while one add was
+      // one slot per day and is a lie now.
+      const made: number = "count" in res && typeof res.count === "number" ? res.count : n;
       onPublished(
         // Published from the plans screen, where it will not appear: it is a
         // class you teach now, and those live on your schedule. Say where it
@@ -482,8 +504,8 @@ export function Adder({
           : isEdit
           ? "Saved"
           : gym
-            ? n > 1
-              ? `Added ${n} classes`
+            ? made > 1
+              ? `Added ${made} classes`
               : "Added to the week"
             : firstPublish
               ? "Your page is live"
@@ -1030,6 +1052,49 @@ export function Adder({
             <div className="durnote">
               {durValid ? `${durationMin} min` : "End time must be after start"}
             </div>
+
+            {/* Also at. Gym-only, and never on an edit: adding fans out into a
+                slot per day per time, while editing moves the one slot it was
+                opened on. Fanning an edit out would mean deleting and
+                recreating rows that carry swaps and members' plans. */}
+            {gym && !isEdit && (
+              <div className="alsoat">
+                {extraTimes.map((t, i) => (
+                  <div className="alsoat-row" key={i}>
+                    <input
+                      type="time"
+                      className="timeinput"
+                      value={t}
+                      aria-label={`Also at, time ${i + 2}`}
+                      onChange={(e) =>
+                        setExtraTimes(extraTimes.map((x, j) => (j === i ? e.target.value : x)))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="tertiary"
+                      onClick={() => setExtraTimes(extraTimes.filter((_, j) => j !== i))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="tertiary alsoat-add"
+                  onClick={() => setExtraTimes([...extraTimes, time])}
+                >
+                  + Also at another time
+                </button>
+                {/* The number before you commit. A cross product grows fast,
+                    and seeing it is what keeps this from feeling reckless. */}
+                {slotCount > 1 && (
+                  <p className="durnote alsoat-n">
+                    Adds {slotCount} classes: {fmtDays([...days])} at {allTimeCount} times.
+                  </p>
+                )}
+              </div>
+            )}
             </div>
 
             <div className="adder-card">

@@ -1895,6 +1895,13 @@ button.ps-card { cursor: pointer; }
 
 /* The class photo, in the adder: the picture beside the two controls that set
    it, so what you picked is what you see rather than a filename. */
+/* Also at: the extra start times a gym's class runs on the days picked. Sits
+   under the start/end row because it is the same question asked again, and
+   the count under it is the whole point of the control. */
+.alsoat { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 8px; }
+.alsoat-row { display: flex; align-items: center; gap: 8px; }
+.alsoat-add { align-self: flex-start; }
+.alsoat-n { margin-top: 2px; }
 .classpho { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .classpho-img {
   width: 88px; height: 66px; border-radius: 12px; object-fit: cover;
