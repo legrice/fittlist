@@ -148,7 +148,10 @@ await p.waitForTimeout(1400);
 const left = await shapes();
 console.log("after delete:", JSON.stringify(left));
 if (left.some((s) => s.includes("Montclair Move"))) fail("the deleted series is still there");
-if (!left.some((s) => s.includes("Stretch+ @ Verona Stretch")))
+// Name and studio checked as parts, not as one string: the key is
+// "name @ time, length, place" and gluing the two ends together in an
+// assertion couples it to a format that has already changed once.
+if (!left.some((s) => s.startsWith("Stretch+ @") && s.includes("Verona Stretch")))
   fail("deleting one series took the same-named class at the other studio with it");
 if (!left.some((s) => s.includes("Move Fast"))) fail("deleting a series took an unrelated class");
 console.log("deleting a series takes that series only ok");
