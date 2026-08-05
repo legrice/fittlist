@@ -1069,8 +1069,10 @@ const imgSrc = await page.locator(".storyimg").getAttribute("src");
 if (!imgSrc.includes("span=day")) fail("Today toggle didn't switch span: " + imgSrc);
 // Share leads and is the filled button; Save is the quiet link under it and
 // is a real download rather than a second door onto the share sheet.
-const dl = await page.locator("a.btn.ghost", { hasText: "Save image" }).getAttribute("download");
-if (!dl || !dl.endsWith(".png")) fail("save link missing download attr");
+// Save is a button rather than a download link now: a link puts the file in
+// Files, and the camera roll is only reachable through the system share
+// sheet. Both buttons sit side by side.
+await page.locator(".publishwrap.row .btn", { hasText: "Save image" }).waitFor();
 await expect(
   page.locator(".publishwrap .btn", { hasText: "Share image" }).first().isVisible(),
   "share image is the primary button",

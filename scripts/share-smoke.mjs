@@ -18,6 +18,17 @@ const BASE = "http://localhost:3000";
 const fail = (m) => { throw new Error("SHARE FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 
+/** Pick a hat. The Coaching/Going segment moved inside the Classes sheet,
+ *  which is the list it decides, so choosing one means opening that sheet. */
+const pickHat = async (pg, hat) => {
+  await pg.locator(".comprow").click();
+  await pg.locator(".sheet h2", { hasText: "Classes on your image" }).waitFor();
+  await pg.locator(".sheet .share-toggles .seg button", { hasText: hat }).click();
+  await pg.waitForTimeout(400);
+  await pg.locator(".sheet .sheetclose").first().click();
+  await pg.waitForTimeout(400);
+};
+
 /** The Classes row reads "Loading" until the rows are in, and the primary
  *  button is Share image until they are in and empty, so anything reading
  *  either has to wait for the count to settle.
@@ -174,12 +185,10 @@ console.log("one canvas offered, and the square still renders at the route ok");
   const story = () => coach.locator(".storyimg").getAttribute("src");
   if (!/headline=Come\+train\+with\+me/.test(await story()))
     fail("Coaching should draw its own headline: " + (await story()));
-  await coach.locator(".share-toggles .seg button", { hasText: "Going" }).click();
-  await coach.waitForTimeout(500);
+  await pickHat(coach, "Going");
   if (!/headline=My\+week/.test(await story()))
     fail("Going should draw its own headline: " + (await story()));
-  await coach.locator(".share-toggles .seg button", { hasText: "Coaching" }).click();
-  await coach.waitForTimeout(400);
+  await pickHat(coach, "Coaching");
   await settled(coach);
 }
 console.log("the headline maps from the hat and offers no edit ok");
@@ -209,7 +218,7 @@ console.log("the picker hides from the image only ok");
 await coach.goto(BASE + "/share");
 await coach.locator(".composer").waitFor();
 {
-  await coach.locator(".share-toggles .seg button", { hasText: "Going" }).click();
+  await pickHat(coach, "Going");
   await settled(coach);
   const cta = await coach.locator(".publishwrap .btn").first().innerText();
   if (!/Add something to your week/.test(cta)) fail("expected the offer, got " + cta);
@@ -284,6 +293,15 @@ await member.locator(".composer").waitFor();
 await settled(member);
 if (await member.locator(".share-toggles").count())
   fail("a member should not get a segment with one option in it");
+{
+  // Nor inside the sheet it moved to.
+  await member.locator(".comprow").click();
+  await member.locator(".sheet h2", { hasText: "Classes on your image" }).waitFor();
+  if (await member.locator(".sheet .share-toggles").count())
+    fail("a member should get no hat inside the classes sheet either");
+  await member.locator(".sheet .sheetclose").first().click();
+  await member.waitForTimeout(400);
+}
 if (!/headline=My\+week/.test(await member.locator(".storyimg").getAttribute("src")))
   fail("a member's picture should say My week");
 {

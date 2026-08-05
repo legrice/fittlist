@@ -11,6 +11,7 @@ import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StoryPreview } from "@/components/StoryPreview";
+import { putImage, type PutMode } from "@/lib/shareimage";
 import { Toast, useToast } from "@/components/Toast";
 
 // The Share tab's editor.
@@ -88,8 +89,7 @@ export function ShareComposer({
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [picker, setPicker] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [canShareFiles, setCanShareFiles] = useState(false);
+  const [busy, setBusy] = useState<PutMode | null>(null);
   // Adding a class changes the week without changing a single control, so the
   // picture has no reason of its own to redraw. This is that reason.
   const [bust, setBust] = useState(0);
@@ -98,11 +98,6 @@ export function ShareComposer({
   const headline = HEADLINE[kind];
 
   useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
     getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
   }, []);
 
@@ -151,29 +146,14 @@ export function ShareComposer({
     await setStoryPrefs({ showPhoto: v });
   };
 
-  const shareStory = async () => {
-    if (sharing) return;
-    setSharing(true);
-    try {
-      if (canShareFiles) {
-        const res = await fetch(src);
-        if (res.ok) {
-          const file = new File([await res.blob()], fileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      }
-      const a = document.createElement("a");
-      a.href = src;
-      a.download = fileName;
-      a.click();
-    } catch (e) {
-      if ((e as Error)?.name !== "AbortError") toast("Couldn't share the image");
-    } finally {
-      setSharing(false);
-    }
+  // Share and Save both go through the system sheet on a phone, because the
+  // camera roll has no other door. See src/lib/shareimage.ts.
+  const put = (mode: PutMode) => async () => {
+    if (busy) return;
+    setBusy(mode);
+    const ok = await putImage(src, fileName, mode);
+    if (!ok) toast(mode === "share" ? "Couldn't share the image" : "Couldn't save the image");
+    setBusy(null);
   };
 
   // An empty range is an offer, not a broken picture. A coach with an empty
@@ -194,22 +174,6 @@ export function ShareComposer({
         </BackLink>
       </div>
 
-      {canCoach && (
-        <div className="share-toggles">
-          <div className="seg">
-            <button
-              className={kind === "coaching" ? "sel" : ""}
-              onClick={() => pickKind("coaching")}
-            >
-              Coaching
-            </button>
-            <button className={kind === "going" ? "sel" : ""} onClick={() => pickKind("going")}>
-              Going
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="storycustom">
         {/* What is on the picture, and the way to put something new on it.
             This is where My week / Today used to be: a range was the wrong
@@ -226,7 +190,14 @@ export function ShareComposer({
                 : shown.length === rows.length
                   ? `All ${rows.length} showing`
                   : `${shown.length} of ${rows.length} showing`}
-            <small>{rangeWords(from)}</small>
+            {/* Which hat, now that the segment lives inside the sheet: the
+                summary has to say what it is summarising, or a coach whose
+                picture went from teaching to going has no way of telling
+                without opening it. Only for somebody with two. */}
+            <small>
+              {canCoach ? `${kind === "coaching" ? "Coaching" : "Going"} · ` : ""}
+              {rangeWords(from)}
+            </small>
           </span>
           <span className="comprow-a">Edit ›</span>
         </button>
@@ -289,7 +260,7 @@ export function ShareComposer({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <StoryPreview src={src} alt="Story image of your week" bg={STORY_THEMES[themeId].bg} />
 
-      <div className="publishwrap">
+      <div className="publishwrap row">
         {bare ? (
           <button
             className="btn compwarn"
@@ -304,12 +275,16 @@ export function ShareComposer({
                 filled button said Save and opened the share sheet. Save is a
                 plain download link now: it never opens the share sheet, which
                 is the only thing that made it a second button worth having. */}
-            <button className="btn" disabled={sharing || rows === null} onClick={shareStory}>
-              {sharing ? "Opening…" : "Share image"}
+            <button className="btn" disabled={!!busy || rows === null} onClick={put("share")}>
+              {busy === "share" ? "Opening…" : "Share image"}
             </button>
-            <a className="btn ghost" style={{ marginTop: 8 }} href={src} download={fileName}>
-              Save image
-            </a>
+            <button
+              className="btn ghost"
+              disabled={!!busy || rows === null}
+              onClick={put("save")}
+            >
+              {busy === "save" ? "Opening…" : "Save image"}
+            </button>
           </>
         )}
       </div>
@@ -331,6 +306,29 @@ export function ShareComposer({
             </button>
             <h2>Classes on your image</h2>
             <p className="lead">{rangeWords(from)}</p>
+            {/* Which week this is a picture of, standing above the list it
+                decides. It was the first control on the screen, which put the
+                question before anybody had seen what the answer changes; here
+                it is the first thing in the sheet that is about exactly that,
+                and picking a hat reloads the rows under it. */}
+            {canCoach && (
+              <div className="share-toggles">
+                <div className="seg">
+                  <button
+                    className={kind === "coaching" ? "sel" : ""}
+                    onClick={() => pickKind("coaching")}
+                  >
+                    Coaching
+                  </button>
+                  <button
+                    className={kind === "going" ? "sel" : ""}
+                    onClick={() => pickKind("going")}
+                  >
+                    Going
+                  </button>
+                </div>
+              </div>
+            )}
             {rows && rows.length > 0 ? (
               <div className="settingslist">
                 {rows.map((r) => {

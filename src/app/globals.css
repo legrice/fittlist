@@ -578,6 +578,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    kept the negative margin, which put anything after it (the "Don't have an
    account?" link) outside the padded area and half off the sheet. */
 .publishwrap.nostick { position: static; margin-bottom: 0; }
+/* Share and Save are one decision with two answers, so they sit next to each
+   other at equal weight rather than stacked with one of them looking like an
+   afterthought. */
+.publishwrap.row { display: flex; gap: 10px; }
+.publishwrap.row .btn { flex: 1; margin-top: 0; }
 
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
@@ -621,11 +626,24 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    last good frame as its background, so changing a control redraws the
    poster rather than dismantling it. */
 .storyimg-wrap {
+  /* The box lives here and the image fills it. It was the other way round for
+     one build, with the wrapper shrink-to-fit and the image `width: auto`
+     inside it: two levels of indeterminacy, which Safari settles by resolving
+     the width against the ratio and squaring the poster off. A definite
+     height on a fit-content box is unambiguous, so the aspect ratio decides
+     the width and nothing has to guess. */
   display: block; position: relative; width: fit-content; margin: 12px auto 4px;
+  height: 444px; aspect-ratio: 9/16;
   border-radius: 16px; overflow: hidden;
   background-size: 100% 100%; background-repeat: no-repeat;
 }
-.storyimg { display: block; width: 250px; aspect-ratio: 9/16; border-radius: 16px; transition: opacity .14s ease; }
+.storyimg {
+  display: block; width: 100%; height: 100%;
+  /* Letterboxed onto the theme's paper rather than stretched, for the one
+     case where a max-width squeezes the box off the ratio. */
+  object-fit: contain;
+  transition: opacity .14s ease;
+}
 .storyimg-err {
   position: absolute; inset: auto 0 12px; text-align: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -5103,7 +5121,7 @@ button.ps-card { cursor: pointer; }
    what it has to fit inside is the room the controls and the sticky footer
    leave: at 250px wide the poster ran under the buttons and the last day of
    the week was something you had to scroll for. */
-.composer .storyimg { height: min(44vh, 420px); width: auto; max-width: 62vw; }
+.composer .storyimg-wrap { height: min(52vh, 460px); max-width: 62vw; }
 .composer .publishwrap { margin-top: auto; }
 
 /* What goes on the image, standing where My week / Today used to. A range was

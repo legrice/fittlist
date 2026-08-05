@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { putImage, type PutMode } from "@/lib/shareimage";
 import { StoryPreview } from "@/components/StoryPreview";
 
 // The "Share your week" bottom sheet: a story image of the coach's schedule
@@ -23,8 +24,7 @@ export function ShareWeekSheet({
   const [span, setSpan] = useState<"week" | "day">("week");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [styleOpen, setStyleOpen] = useState(false);
-  const [canShareFiles, setCanShareFiles] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [busy, setBusy] = useState<PutMode | null>(null);
   // A fresh cache-buster per open: CDNs and phones hold story PNGs cached
   // under the old year-long header, so the bare URL can serve a stale image.
   // A new query param gives every open a clean cache key.
@@ -57,42 +57,19 @@ export function ShareWeekSheet({
     setBust(Date.now());
   };
 
-  useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
-  }, []);
-
   if (!open) return null;
 
   const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}&v=${bust}`;
   const storyFileName = `fittlist-${handle}-${span}-${themeId}.png`;
 
-  const shareStory = async () => {
-    if (sharing) return;
-    setSharing(true);
-    try {
-      if (canShareFiles) {
-        const res = await fetch(storyUrl);
-        if (res.ok) {
-          const file = new File([await res.blob()], storyFileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      }
-      const a = document.createElement("a");
-      a.href = storyUrl;
-      a.download = storyFileName;
-      a.click();
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the image");
-    } finally {
-      setSharing(false);
-    }
+  // Share and Save both go through the system sheet on a phone: the camera
+  // roll has no other door. See src/lib/shareimage.ts.
+  const put = (mode: PutMode) => async () => {
+    if (busy) return;
+    setBusy(mode);
+    const ok = await putImage(storyUrl, storyFileName, mode);
+    if (!ok) onToast(mode === "share" ? "Couldn't share the image" : "Couldn't save the image");
+    setBusy(null);
   };
 
   return (
@@ -184,9 +161,13 @@ export function ShareWeekSheet({
         />
         {/* Share leads, save is the quiet one. See ShareComposer: the filled
             button used to say Save and open the share sheet. */}
-        <div className="publishwrap">
-          <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Share image"}</button>
-          <a className="btn ghost" style={{ marginTop: 8 }} href={storyUrl} download={storyFileName}>Save image</a>
+        <div className="publishwrap row">
+          <button className="btn" disabled={!!busy} onClick={put("share")}>
+            {busy === "share" ? "Opening…" : "Share image"}
+          </button>
+          <button className="btn ghost" disabled={!!busy} onClick={put("save")}>
+            {busy === "save" ? "Opening…" : "Save image"}
+          </button>
         </div>
       </div>
     </div>
