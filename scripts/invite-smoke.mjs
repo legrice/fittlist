@@ -142,7 +142,10 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
     await skipSetup(pg);
     await pg.waitForURL("**/week");
-    await pg.getByText("You\u2019re not following anyone").waitFor();
+    // Their own empty calendar. It was the Following feed's "You're not
+// following anyone" until that screen went: this one is theirs to fill, and
+// it offers both ways to do it.
+await pg.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
     console.log("invited member signup ok");
 
     // 5) Becoming a coach is an ask now, answered in admin: the self-serve

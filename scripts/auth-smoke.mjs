@@ -138,7 +138,10 @@ await c3.close();
   await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
   await skipSetup(fp);
   await fp.waitForURL("**/week");
-  await fp.getByText("You\u2019re not following anyone").waitFor();
+  // Their own empty calendar. It was the Following feed's "You're not
+// following anyone" until that screen went: this one is theirs to fill, and
+// it offers both ways to do it.
+await fp.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
   // and it stuck: going back to / sends them to their feed, not a claim step
   await fp.goto(BASE + "/");
   await fp.waitForURL("**/week");
