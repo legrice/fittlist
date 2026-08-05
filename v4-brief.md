@@ -339,3 +339,75 @@ The whole point of this release is a test.
 Save without share means you've built a private planner, which is a fine product but a
 different one. Save plus share means the social layer has something to stand on, and
 saved-by counts can come back.
+
+---
+
+## 15. Resolved before building
+
+The brief's open questions, and the ones reading it against the existing code
+raised. Answered by Matt; written here because a decision that lives only in a
+conversation is a decision the next person has to make again.
+
+**One catalog, and editing is a suggestion.** A member-added class and a
+coach-added class are the same record with a different creator. The precedent
+is the studio directory, which has worked this way since it shipped: a place is
+the commons until somebody claims it, corrections come from anyone, and one
+`studio_managers` row flips it to owned.
+
+Three bounds on that, or the commons costs more than it earns:
+
+* Direct edit belongs to the creator, the coach on the class, and the studio's
+  managers. Everybody else suggests, through the same pipe `studio_edits`
+  already uses. Anyone editing anything means one bad actor moves a coach's
+  Tuesday to Wednesday and every follower's calendar is quietly wrong.
+* A coach's own class is never in the commons. If `coachUserId` names a real
+  account, that account owns it outright and there is nothing to claim.
+  Claiming exists for records naming a coach who isn't here, or naming nobody.
+* A member-added class carries the **venue** as its byline, never a person.
+  Naming a coach who has not joined publishes their whereabouts on their
+  behalf, and "naming your coach is not putting them on the platform" is a line
+  this app already holds.
+
+**Dedupe is the product, not a detail.** The brief's rule (attach on venue and
+start time within 20 minutes) is not safe on its own: two rooms at six o'clock
+pairs the yoga with the spin, and a wrong attach is worse than a duplicate
+because it takes a real class off somebody's calendar. The gym's own pairing
+learned this and matches on name as well. Attach on a strong name match with
+venue and time; anything weaker suggests rather than merges.
+
+**The past survives.** It is also already built, which makes keeping it free and
+removing it the work: `usePastReveal` prepends past days as the list scrolls up,
+`CAL_PAST_DAYS` is eight weeks, and the Month grid dims past days rather than
+dropping them. A coach asked "when did you coach last week" needs it, and the
+gym side already depends on looking back: `gymCounts()` counts dates worked for
+a pay run and `freezePast()` exists so that history stays honest.
+
+Day pills still start at today. They and a list that scrolls backwards are two
+controls that can disagree, so the pills follow the scroll: they say where you
+are rather than where you started. Today moves into the sticky block beside the
+title, because the floating row is now Share and Add.
+
+**One Schedule route.** `/app` and `/week` collapse into one calendar for both
+kinds. The other two redirect, and `/app` stays the installed app's `start_url`.
+
+**No Coaching/Going segment, and relationship chips instead.** The segment is
+the two-hat model leaking into a screen that no longer thinks that way, and it
+can only say two of the five things. The Classes sheet gets the same
+relationship chips the Schedule filter uses, bulk-selecting: one tap for a
+teaching-only picture, individual checkboxes underneath for the fine work. A
+member is never offered a Coaching chip, by the rule Discover already follows:
+a filter is only drawn where it can narrow something.
+
+The headline is derived from what is on the picture rather than from a mode. All
+Coaching, and it reads "Come train with me"; anything else, "My week". That
+answers the brief's second open question without putting an editor back. The
+first answers itself: the range control was removed deliberately and `SPAN_DAYS`
+is 7.
+
+**Studio admin is untouched.** The rota, the shifts screen, swaps, requests and
+the shift counter all stay exactly as they are, reached from Your studios on the
+You tab. Shifts keep landing on a coach's calendar.
+
+**Settings move behind a gear on You.** This reverses "there is no gear anywhere
+the tab bar renders", which was right when the You tab was the only door and is
+wrong now that the tab is a person rather than a settings list.
