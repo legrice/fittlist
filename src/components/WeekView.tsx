@@ -63,12 +63,13 @@ export type WeekDayRows = {
  *  job is one date. The list said this once before, about the same count on
  *  the same kind of band, and it is worth only saying once more. */
 export function DayBand({ label, today }: { label: string; today?: boolean }) {
+  // No dot on today, by Matt's call: every band is the date and nothing
+  // else. The prop stays so a marker can come back as one line if the flat
+  // list turns out to need one.
+  void today;
   return (
     <div className="dayband">
-      <span className="dayband-d">
-        {label}
-        {today && <span className="dayband-dot" aria-hidden="true" />}
-      </span>
+      <span className="dayband-d">{label}</span>
     </div>
   );
 }

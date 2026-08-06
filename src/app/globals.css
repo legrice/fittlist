@@ -5942,10 +5942,8 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px; font-weight: 500; color: var(--ink);
 }
-/* Today, and nothing else on the list, wears it. The word "Today" is already
-   in the label; the dot is what makes the band findable in a scroll without
-   reading any of them. */
-.dayband-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--si); }
+/* The today dot is gone, by Matt's call: every band is the date and nothing
+   else, on every list. */
 /* The scroll landing for a day tapped in the month grid: under the pinned
    chrome rather than behind it. */
 /* The band is the block's own first child, so a landing only needs a breath:

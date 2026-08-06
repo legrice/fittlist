@@ -325,10 +325,7 @@ export async function PublicProfileView({
             const renderDay = (d: (typeof days)[number]) => (
               <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
                 <div className="dayband">
-                  <span className="dayband-d">
-                    {fmtDayHeaderRel(d.iso, today)}
-                    {d.iso === today && <span className="dayband-dot" aria-hidden="true" />}
-                  </span>
+                  <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
                 </div>
                 <div className="dayrows">
                   {d.items.map((c) => {

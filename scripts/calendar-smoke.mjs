@@ -172,10 +172,9 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
   // date, which is arithmetic done at somebody who can see the rows directly
   // underneath it.
   if (/class/i.test(bands[0])) fail("a band is the date, not a count: " + bands[0]);
-  const dots = await p.locator(".dayband-dot").count();
-  if (dots > 1) fail("only today wears a dot, got " + dots);
-  // Every band reads the same way, and the dot is what marks today: the words
-  // used to, which made two bands in a fortnight the odd ones out.
+  if (await p.locator(".dayband-dot").count()) fail("the today dot should be gone");
+  // Every band reads the same way: the relative words went first, then the
+  // dot, so nothing marks today and no band is the odd one out.
   for (const band of bands)
     if (!/^[A-Z][a-z]{2} \u2014 [A-Z][a-z]{2} \d{1,2}/.test(band))
       fail("every band reads the same way, got " + band);
