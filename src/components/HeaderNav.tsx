@@ -30,9 +30,9 @@ export function HeaderNav({
   return (
     <nav className="headnav" aria-label="Main">
       {navTabs(coach, scheduleHref, profileHref)
-        // No Search link up here: the header's own magnifier is beside these
-        // links at this width, and the same act twice in one bar is noise.
-        .filter((t) => t.id !== "find")
+        // Share is a real link up here (/share, the picture editor) where the
+        // bar below opens it as a hub: a desktop has no thumb to hold a sheet
+        // under, and the editor is where the rows in it mostly lead.
         .map((t) => {
         const cls = `headnav-l${here === t.id ? " on" : ""}`;
         const current = here === t.id ? "page" : undefined;

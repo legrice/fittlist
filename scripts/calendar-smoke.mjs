@@ -41,7 +41,6 @@ await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 }
 await p.goto(BASE + "/calendar");
 await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
 if (await p.locator(".calbar-add").count()) fail("no plus on an empty calendar");
-if (await p.locator(".wkshare").count()) fail("no Share on an empty calendar");
 console.log("an empty calendar is its own CTA, and carries no other control");
 
 // The adder walks in steps now: the studio first, then the studio's class
@@ -85,9 +84,9 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// Add rides the title row beside the view toggle, sized to it; Share floats
-// alone at the bottom, glass with the sparkle carrying the colour, wearing
-// its word because a sparkle on its own is a decoration.
+// Add rides the title row beside the view toggle, sized to it. The floating
+// Share pill is gone: Share is a tab in the bar now, so nothing floats over
+// the calendar at all.
 {
   if (await p.locator(".wkfab").count()) fail("the floating plus should be gone from the calendar");
   const addBtn = p.locator(".calbar-add");
@@ -98,31 +97,8 @@ await p.locator(".clline").first().waitFor();
   if (Math.abs(abox.height - seg.height) > 2)
     fail(`Add matches the toggle's height: ${abox.height} vs ${seg.height}`);
   if (Math.abs(abox.y - seg.y) > 2) fail("Add and the toggle sit on one line");
-  const share = p.locator(".wkshare");
-  if (!(await share.count())) fail("Share should float at the bottom");
-  const word = (await share.innerText()).trim();
-  const href = await share.getAttribute("href");
-  console.log("share pill:", word, "->", href, "| add beside toggle:", Math.round(abox.x));
-  if (word !== "Share") fail("the Share pill wears its word: " + word);
-  if (href !== "/share") fail("Share opens the composer, got " + href);
-  const box = await share.boundingBox();
-  // The right corner, under the thumb: it is the one floating control left
-  // on this screen now that Add rides the title row.
-  const vw = p.viewportSize().width;
-  if (!(box.x > vw / 2)) fail("Share should sit in the right corner, at x " + box.x);
-  // Glass, not a solid slab: it floats over a list somebody is reading, and a
-  // solid one there is a hole punched in the page.
-  const blur = await share.evaluate(
-    (e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter,
-  );
-  if (!/blur/.test(blur ?? "")) fail("the Share pill should be glass, got " + blur);
-  // No stroke: the pill wears the bar's own glass exactly, so the floating
-  // controls and the bar read as one family.
-  const bw = await share.evaluate((e) => getComputedStyle(e).borderTopWidth);
-  if (parseFloat(bw) > 0) fail("the Share pill's stroke should be gone, got " + bw);
-  // And clear air above the bar, not touching it.
-  const bar = await p.locator(".navbar").boundingBox();
-  if (!(box.y + box.height < bar.y - 8)) fail("Share should clear the bar");
+  if (await p.locator(".wkshare").count()) fail("the floating Share pill should be gone");
+  console.log("add beside toggle:", Math.round(abox.x), "| no floating share");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -387,21 +363,39 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// The Search tab opens the directory sheet from any screen with the bar,
-// the calendar included: one act, one drawing of it, wherever you are
-// standing. The header's magnifier yields to it below 940px, or the same
-// glyph would be drawn twice on one screen.
+// The Share tab opens the hub over any screen with the bar, the calendar
+// included: the link, the QR code, the card and the picture editor, one
+// sheet, no navigation. Search went back to the header's magnifier.
 await p.goto(BASE + "/calendar");
-if (await p.locator(".navfind").count())
-  fail("the dock's search circle should be gone");
-if (await p.locator(".findbtn:visible").count())
-  fail("the header magnifier should yield to the Search tab on a phone");
-await p.locator('.navtab[data-tab="find"]').click();
+if (await p.locator('.navtab[data-tab="find"]').count())
+  fail("the Search tab should be gone from the bar");
+if (!(await p.locator(".findbtn:visible").count()))
+  fail("the header magnifier should be back on a phone");
+await p.locator('.navtab[data-tab="share"]').click();
+await p.locator(".sharehub").waitFor();
+if (!p.url().endsWith("/calendar")) fail("the Share tab should not navigate");
+for (const row of ["Share your schedule", "Copy your link", "Your QR code", "Your profile card", "Copy your week"]) {
+  if (!(await p.locator(".sharehub .setrow", { hasText: row }).count()))
+    fail("the hub should offer " + row);
+}
+// The QR row opens its sheet and closing it lands back on the hub: a hub you
+// fall out of after every act is a menu, not a place.
+await p.locator(".sharehub .setrow", { hasText: "Your QR code" }).click();
+await p.locator(".sheet", { hasText: "QR code" }).waitFor();
+await p.locator(".sheet .sheetclose").click();
+await p.locator(".sharehub").waitFor();
+// And the schedule row is the door to the picture editor.
+await p.locator(".sharehub .setrow", { hasText: "Share your schedule" }).click();
+await p.waitForURL("**/share");
+console.log("the Share tab opens the hub, and the hub reaches the editor");
+await p.goBack();
+// The magnifier still opens the directory, from the corner it went back to.
+await p.goto(BASE + "/calendar");
+await p.locator(".findbtn:visible").click();
 await p.locator(".dissheet").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the Search tab should not navigate");
 await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the Search tab opens the directory over the calendar");
+console.log("the header magnifier opens the directory over the calendar");
 
 // The card slides up over the header, and the calendar's title row is the
 // one piece of chrome that pins with the bands: without it, Month view has

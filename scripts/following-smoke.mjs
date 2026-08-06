@@ -206,19 +206,25 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
-// Search is a tab in the bar now, on every screen the bar shows, so the
-// floating circle that hovered over this one list is gone: the same act was
-// drawn twice on one screen.
+// Search went back to its floating circle over this list when Share took
+// the bar's spot: brand fill, white glyph, .wkfab's own dress with no
+// overrides.
 {
-  if (await m.locator(".navdock, .navfind, .wkfab-find").count())
-    fail("the older search doors should all be gone");
-  if (!(await m.locator('.navtab[data-tab="find"]').count()))
-    fail("Search should be a tab in the bar");
+  if (await m.locator(".navdock, .navfind").count())
+    fail("the dock-era search doors should stay gone");
+  if (await m.locator('.navtab[data-tab="find"]').count())
+    fail("the Search tab should be gone from the bar");
+  if (!(await m.locator('.navtab[data-tab="share"]').count()))
+    fail("Share should be a tab in the bar");
+  const fab = m.locator(".wkfab-find");
+  if (!(await fab.count())) fail("the floating search circle should be back");
+  const bg = await fab.evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (bg !== "rgb(194, 65, 12)") fail("the circle wears the brand fill, got " + bg);
 }
 
-// The tab pulls the directory up over the week rather than navigating to
+// The circle pulls the directory up over the week rather than navigating to
 // it, and comes back down onto the list you were reading.
-await m.locator('.navtab[data-tab="find"]').click();
+await m.locator(".wkfab-find").click();
 await m.locator(".dissheet").waitFor();
 await m.waitForTimeout(900);
 {

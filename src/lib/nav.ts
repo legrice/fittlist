@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "share" | "schedule" | "you" | "find" | "none";
+export type NavTab = "following" | "discover" | "share" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -17,8 +17,8 @@ export type NavItem = {
  *
  * | Account   | Tabs                                    |
  * | --------- | --------------------------------------- |
- * | Follows   | Following, Search, Profile              |
- * | Teaches   | Following, Calendar, Search, Profile    |
+ * | Follows   | Following, Share, Profile               |
+ * | Teaches   | Following, Calendar, Share, Profile     |
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -58,13 +58,15 @@ export function navTabs(
           },
         ]
       : []),
-    // Finding a coach, as a tab in the pill this time (the separate dock
-    // circle read as crammed; a floating button over Following was a door
-    // only one screen had). It opens the directory sheet over wherever you
-    // are standing rather than navigating: the bar renders it as a button,
-    // and the desktop header links skip it because the corner's magnifier
-    // already does this job up there.
-    { id: "find" as const, href: "", icon: "search", label: "Search" },
+    // Share, as a tab, by Matt's call: it was the calendar's floating pill,
+    // and it is the half of "build a calendar, share a calendar" the whole
+    // build is for, so it earns a place in the bar you always have. The bar
+    // renders it as a button opening the share hub (QR code, your link, the
+    // picture editor) over wherever you are standing; the desktop header
+    // links render it as the link to the editor itself. Search hands the
+    // tab back and returns to the header's magnifier and Following's
+    // floating circle, where it lived before.
+    { id: "share" as const, href: "/share", icon: "share", label: "Share" },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab

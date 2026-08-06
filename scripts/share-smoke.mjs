@@ -96,25 +96,29 @@ await coach.waitForTimeout(1300);
 await coach.locator(".sheetclose").first().click().catch(() => {});
 console.log("a coach put a week up ok");
 
-// ---- Share is the calendar's own pill, not a tab
+// ---- Share is a tab in the bar, and the hub behind it reaches the editor
 await coach.goto(BASE + "/calendar");
 await coach.locator(".clline").first().waitFor();
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
-  // Share took the middle of the bar for a build and came back out: it is an
-  // act rather than a place, and it belongs on the screen it is about.
-  if (tabs.some((t) => /Share/.test(t))) fail("Share should not be a tab: " + tabs.join("|"));
+  // Share is a tab now, by Matt's call: it is the half of "build a calendar,
+  // share a calendar" the app is for, and the tab opens the hub of every way
+  // to do it rather than navigating.
+  if (!tabs.some((t) => /Share/.test(t))) fail("Share should be a tab: " + tabs.join("|"));
+  if (await coach.locator(".wkshare").count()) fail("the floating Share pill should be gone");
 }
-await coach.locator(".wkshare").click();
+await coach.locator('.navtab[data-tab="share"]').click();
+await coach.locator(".sharehub").waitFor();
+await coach.locator(".sharehub .setrow", { hasText: "Share your schedule" }).click();
 await coach.waitForURL(/\/share/);
 await coach.locator(".composer").waitFor();
 await coach.locator(".adderhead h2", { hasText: "Share your schedule" }).waitFor();
 // It opens over the app: no bar underneath competing with it.
 if (await coach.locator(".navbar:visible").count())
   fail("the editor should cover the tab bar, not sit above it");
-console.log("the calendar's Share pill opens the editor ok");
+console.log("the Share tab's hub opens the editor ok");
 
 // ---- three questions, in one scroll, each saying where it stands
 await settled(coach);

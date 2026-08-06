@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { BodyPortal } from "@/components/BodyPortal";
-import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
+import { ShareHub } from "@/components/ShareHub";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
 
 export type { NavTab };
@@ -15,18 +15,19 @@ export type { NavTab };
  *  tab, but the shape is still what a shell hands around. */
 export type NavFace = { photo: string | null; color: string; initial: string };
 
-// The whole app in thumb reach: the three screens you move between. Share and
-// You both came off, because one is an act and the other is a person, and
-// neither is a place. Search rode here for a build, in its own circle beside
-// the pill the way Photos does it, and came back off: three tabs and a circle
-// in one dock read as crammed, so search lives on Following's own floating
-// circle again until a better home turns up. Above 940px this hides and
-// HeaderNav takes over, off the same list.
+// The whole app in thumb reach: the three screens you move between, and one
+// act. Share rides the bar as a tab now, by Matt's call: it opens the hub of
+// every way to hand your page on rather than navigating, because sharing is
+// what the app is for and it should not take a trip to your profile to
+// start. Search went back where it came from, the header's magnifier and
+// Following's floating circle. Above 940px this hides and HeaderNav takes
+// over, off the same list.
 export function NavBar({
   active,
   coach = true,
   scheduleHref,
   profileHref,
+  handle,
   face,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
@@ -38,6 +39,9 @@ export function NavBar({
   scheduleHref?: string;
   /** Where Profile goes: your own page. Defaults to /you, which redirects. */
   profileHref?: string;
+  /** Your handle, for the share hub's link, QR and card. Without one (an
+   *  account still mid-signup) the Share tab links to the editor instead. */
+  handle?: string | null;
   /** The viewer's own face, for the Profile tab. A glyph there is the only
    *  tab in the bar naming a thing rather than a place, and a person is not a
    *  thing: your own picture is what every app you already use puts on that
@@ -45,28 +49,22 @@ export function NavBar({
   face?: NavFace;
 }) {
   const here = activeTab(usePathname(), active);
-  const router = useRouter();
-  // Search rides the pill as a tab now, by Matt's call, third time asked and
-  // the first as part of the pill itself: it opens the directory sheet over
-  // wherever you are standing rather than navigating. The week behind the
-  // sheet is a server render, so closing is where it catches up.
-  const [find, setFind] = useState(false);
-  const closeFind = () => {
-    setFind(false);
-    router.refresh();
-  };
+  // Share opens the hub over wherever you are standing rather than
+  // navigating: it is an act with several endings (the link, the QR, the
+  // picture), and the hub is where they all live.
+  const [share, setShare] = useState(false);
 
   return (
     <nav className="navbar" aria-label="Main">
       {navTabs(coach, scheduleHref, profileHref).map((t) => {
-        if (t.id === "find") {
+        if (t.id === "share" && handle) {
           return (
             <button
               key={t.id}
-              className={`navtab${find ? " on" : ""}`}
+              className={`navtab${share ? " on" : ""}`}
               data-tab={t.id}
-              aria-expanded={find}
-              onClick={() => setFind(true)}
+              aria-expanded={share}
+              onClick={() => setShare(true)}
             >
               <span className="navglyph">
                 <Icon name={t.icon} size={26} />
@@ -106,9 +104,9 @@ export function NavBar({
           </Link>
         );
       })}
-      {find && (
+      {share && handle && (
         <BodyPortal>
-          <DiscoverSheet onClose={closeFind} />
+          <ShareHub coach={coach} handle={handle} onClose={() => setShare(false)} />
         </BodyPortal>
       )}
     </nav>

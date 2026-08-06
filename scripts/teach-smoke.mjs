@@ -34,12 +34,28 @@ const tabs = async () =>
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
 if (t.length !== 3) fail("a member gets three tabs, got " + t.join());
-if (!t[1].includes("Search")) fail("Search sits in the middle of a member's bar: " + t.join());
+if (!t[1].includes("Share")) fail("Share sits in the middle of a member's bar: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
+
+// The Share tab opens the hub without navigating, and a member's hub holds
+// no week rows: their page has no schedule to draw a picture of.
+await p.locator('.navtab[data-tab="share"]').click();
+await p.locator(".sharehub").waitFor();
+{
+  const rows = (await p.locator(".sharehub .setrow .t").allInnerTexts()).map((s) => s.trim());
+  console.log("member hub rows:", rows.join(" | "));
+  if (rows.some((s) => /schedule|week/i.test(s)))
+    fail("a member has no week to share: " + rows.join());
+  if (!rows.includes("Copy your link") || !rows.includes("Your QR code"))
+    fail("the hub should offer the link and the code: " + rows.join());
+  if (!p.url().includes("/feed")) fail("the Share tab should not navigate");
+}
+await p.locator(".sharehub .sheetclose").click();
+await p.locator(".sharehub").waitFor({ state: "detached", timeout: 10000 });
 
 // The Profile tab opens your page, not a list of switches. Settings are the
 // gear on it, which is the only door to them there is.
@@ -97,8 +113,8 @@ if (!(await row.locator(".switch.on").count())) fail("the switch should read on"
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 4 || !t[0].includes("Following") || !t[1].includes("Calendar") || !t[2].includes("Search"))
-  fail("expected Following, Calendar, Search, got " + t.join());
+if (t.length !== 4 || !t[0].includes("Following") || !t[1].includes("Calendar") || !t[2].includes("Share"))
+  fail("expected Following, Calendar, Share, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.

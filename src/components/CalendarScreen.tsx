@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { CalSticky, MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
@@ -217,17 +216,9 @@ export function CalendarScreen({
       )}
       </div>
 
-      {/* Share floats alone at the bottom now: Add moved up beside the view
-          toggle, because two floating controls and the bar made the bottom
-          of the screen crowded. Only once there is a week behind it: a
-          poster of nothing is the app talking to itself. */}
-      {!bare && (
-        <Link className="wkshare" href="/share">
-          <Icon name="auto_awesome" size={22} className="wkshare-ic" />
-          Share
-        </Link>
-      )}
-
+      {/* No floating Share pill any more: Share is a tab in the bar, on
+          every screen the bar shows, so a pill hovering over this one list
+          was the same act drawn twice. */}
       {addOpen && (
         <Adder
           studios={studios}
