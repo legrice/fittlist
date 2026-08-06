@@ -5187,9 +5187,10 @@ button.ps-card { cursor: pointer; }
    fights the sticky footer for where the bottom is. */
 .composer .publishwrap { margin-top: 18px; }
 
-/* What goes on the image, standing where My week / Today used to. A range was
-   the wrong question: the answer is this coming week nearly every time, and
-   what people want to change is which classes are on the picture. */
+/* The three questions the composer asks, each a row that says where it stands
+   and opens a sheet: Dates, Classes, Style. Three open pickers above a picture
+   is a form with a thumbnail; this is a picture with three questions under it,
+   and the top level answers most of them without a tap. */
 .comprow {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 13px;
   background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
@@ -5198,6 +5199,85 @@ button.ps-card { cursor: pointer; }
 .comprow-t { flex: 1; font-size: 15px; font-weight: 700; }
 .comprow-t small { display: block; font-size: 12.5px; font-weight: 600; color: var(--ol); margin-top: 2px; }
 .comprow-a { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; color: var(--si); }
+/* The Style row carries the colour it is currently set to, because that is
+   the one of the three whose answer is a thing to look at rather than read. */
+.comprow-sw { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.comprow-sw .swd { width: 22px; height: 22px; border-radius: 999px; border: 2px solid; }
+
+/* ---------------------------------------------------------------------------
+   The style picker: how loud, then which of three.
+
+   Two small decisions in order rather than two axes to hold in your head at
+   once. Colour belongs to the style rather than sitting beside it as a free
+   second row: ten styles times eight palettes is eighty posters and most of
+   them are wrong, because the loud styles depend on specific pairings a global
+   picker would happily break. Three per style is thirty that are all good,
+   which is the better number even though it is smaller.
+   --------------------------------------------------------------------------- */
+.stylegrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 10px; margin: 4px 0 6px;
+}
+.stylecard {
+  display: flex; flex-direction: column; gap: 6px; padding: 0;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--ink); text-align: center;
+}
+/* A tiny drawing of the poster rather than a swatch: what changes between
+   these is the arrangement, so a row of ten identical circles in three colours
+   would be telling somebody nothing about the choice they are making. */
+.stylecard-sw {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 5px; aspect-ratio: 3/4; border-radius: 12px; border: 2px solid transparent;
+  padding: 12px 10px; overflow: hidden;
+}
+.stylecard-bar { width: 60%; height: 7px; border-radius: 2px; }
+.stylecard-line { width: 85%; height: 4px; border-radius: 2px; opacity: .9; }
+.stylecard-line.short { width: 55%; }
+.stylecard.sel .stylecard-sw { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--si); }
+.stylecard-lbl { font-size: 12.5px; font-weight: 700; color: var(--ol); }
+.stylecard.sel .stylecard-lbl { color: var(--ink); font-weight: 800; }
+
+.palrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.palchip {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px;
+  border-radius: 999px; border: 1.5px solid var(--line); background: var(--card);
+  font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer;
+}
+.palchip .swd { width: 18px; height: 18px; border-radius: 999px; border: 2px solid; }
+.palchip.sel { border-color: var(--ink); border-width: 2px; }
+
+/* The range, as two rails. A date field is the same question asked in a way
+   somebody has to type, and the answer is nearly always one of the next few
+   days. Seven is the ceiling because the canvas is fixed and planStory has to
+   fit it; one is the floor because "I'm at this tonight" is a real post. */
+.dayrail {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 6px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.dayrail::-webkit-scrollbar { display: none; }
+.daychip {
+  flex: 0 0 auto; width: 52px; padding: 8px 0; border-radius: 14px;
+  border: 1.5px solid var(--line); background: var(--card); cursor: pointer;
+  font-family: inherit; color: var(--ink);
+}
+.daychip-dow {
+  display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ol);
+}
+.daychip-n {
+  display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 900; line-height: 1.2;
+}
+.daychip.sel { background: var(--si); border-color: var(--si); color: #fff; }
+.daychip.sel .daychip-dow { color: rgba(255, 255, 255, .82); }
+.lenchip {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--card); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 900; color: var(--ink);
+}
+.lenchip.sel { background: var(--si); border-color: var(--si); color: #fff; }
 /* An empty week is an offer rather than a broken picture, and the offer is
    loud enough to read as the next thing to do. */
 .compwarn { background: var(--si); }
@@ -5392,20 +5472,34 @@ button.ps-card { cursor: pointer; }
   display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 24px; font-weight: 900; line-height: 1.1; color: var(--ink);
 }
-.wkday-rows { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* No gap: the rows are divided by their own hairline now, and a gap as well
+   would be the break said twice. */
+.wkday-rows { display: flex; flex-direction: column; min-width: 0; }
 
-/* The card. White on the cream, its edge a shadow, and no colour bar: with
-   personal entries and going marks gone there is only one kind of row on a
-   calendar, so a legend for it would be a legend of one. */
+/* No card. The rows sit straight on the ground, divided by a hairline.
+
+   They were white blocks with a soft shadow, and down a long week that reads
+   as a wall of tiles: every row drawn as an object competing with the one
+   under it, and the cream ground only visible as the gaps between them. The
+   text is the content, so the text is what should be on the page. What
+   separates one class from the next is the line and the space, which is what
+   every other list in the app already uses.
+
+   No colour bar either: with personal entries and going marks gone there is
+   only one kind of row on a calendar, so a legend for it would be a legend of
+   one. */
 .wkrow {
   /* A button, so it needs telling: a control centres its text and this is a
      row of prose. Width too, or a button shrink-wraps its content. */
   display: block; width: 100%; text-align: left; font: inherit;
   text-decoration: none; color: var(--ink); cursor: pointer;
-  background: var(--card); border: none; border-radius: 26px; padding: 16px 18px;
-  box-shadow: 0 1px 3px rgba(25, 21, 2, .08);
+  background: none; border: none; border-radius: 0; padding: 13px 0;
+  border-bottom: 1px solid var(--line);
 }
-a.wkrow:active { transform: scale(.995); }
+/* The last row in a day owns no line: the gap to the next day heading is the
+   break, and a rule hanging under the last class is a line to nothing. */
+.wkday-rows .wkrow:last-child { border-bottom: none; }
+.wkrow:active { opacity: .6; }
 .wkrow-body { display: flex; align-items: flex-start; gap: 12px; }
 .wkrow-txt { flex: 1; min-width: 0; }
 .wkrow-nm {
@@ -5653,4 +5747,5 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The rows sit under their heading rather than beside a date gutter: the
    heading already said the day, and a gutter repeating it is the date twice. */
-.upday .wkday-rows { gap: 8px; }
+/* Nothing to override: Following's rows are the calendar's rows, hairline and
+   all. Two lists of classes drawn two ways is what this build exists to undo. */

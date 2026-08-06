@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { todayIso } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
-import { myWeek } from "@/lib/week";
+import { shareWeek } from "@/lib/shareweek";
 import { ShareComposer } from "@/components/ShareComposer";
 
 export const dynamic = "force-dynamic";
@@ -24,11 +24,7 @@ export default async function SharePage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
-  const [week, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
-    // The range starts on the first day their week actually holds something.
-    // Opening on an empty picture somebody then has to debug is the failure
-    // the member's sheet already learned once.
-    myWeek(userId),
+  const [studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
       .select()
@@ -40,6 +36,10 @@ export default async function SharePage() {
   ]);
   if (!me) redirect("/");
   if (me.handle && !me.onboardedAt) redirect("/welcome");
+  // A member has no week of their own to draw. The composer was theirs too
+  // while a going week existed; it does not, so the screen is a coach's and
+  // the image route holds the same wall.
+  if (me.kind === "fan") redirect("/feed");
 
   const studios: StudioDto[] = studioRows.map((s) => ({
     id: s.id,
@@ -70,11 +70,14 @@ export default async function SharePage() {
     : { startTime: "18:00", durationMin: 60, studioId: null };
 
   const today = todayIso();
-  const first = week.find((d) => d.items.length > 0)?.iso;
+  // Open on the first day the week actually holds something. Opening on an
+  // empty picture somebody then has to debug is a failure this screen has
+  // already learned once. It reads the same loader the picture does, so the
+  // day it lands on is a day with rows on it.
+  const first = (await shareWeek(userId, today, 7)).find((d) => d.items.length > 0)?.iso;
 
   return (
     <ShareComposer
-      canCoach={me.kind !== "fan"}
       hasPhoto={!!me.photo}
       today={today}
       firstIso={first && first > today ? first : today}

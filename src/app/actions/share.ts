@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
-import { shareWeek, type ShareKind } from "@/lib/shareweek";
+import { shareWeek } from "@/lib/shareweek";
 
 // The composer's data door. The picture is drawn by an image route, but the
 // screen still needs the same rows in words: the Classes sheet lists them, and
@@ -28,7 +28,6 @@ export type ShareRow = {
  * reading anybody's week.
  */
 export async function shareRows(input: {
-  kind: ShareKind;
   from: string;
   days: number;
 }): Promise<ShareRow[]> {
@@ -37,14 +36,10 @@ export async function shareRows(input: {
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return [];
-  // A member has one hat. Asking for the other gets the one they have, the
-  // same answer the image route gives, or the sheet would list a week the
-  // picture refuses to draw.
-  const kind: ShareKind = me.kind === "fan" ? "going" : input.kind;
   const days = Math.min(7, Math.max(1, Math.round(input.days) || 7));
   // The hide set is the screen's own state and never reaches here: this is
   // the whole range, and the sheet ticks its own boxes over the top.
-  const week = await shareWeek(userId, kind, input.from, days);
+  const week = await shareWeek(userId, input.from, days);
   return week.flatMap((d) =>
     d.items.map((i) => ({
       key: i.key,

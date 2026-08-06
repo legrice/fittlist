@@ -12,13 +12,11 @@ import { DAYS, fmtTime, runsOn, timeToMinutes, todayIso as todayIsoNow } from "@
 // asked for it, so "share the state" means "share the loader" rather than
 // "pass the rows along".
 //
-// The two hats are deliberately not one merged list. A coach promoting the
-// classes they teach and a coach showing where they train are two different
-// posts with two different asks, and a picture that mixes them makes neither.
-
-/** Coaching is what you teach; going is what you attend, your own entries
- *  included. A member only ever has the second. */
-export type ShareKind = "coaching" | "going";
+// There was a second hat here: a week of the classes you were going to,
+// deliberately never merged with the week you teach, because promoting your
+// own classes and showing where you train are two different posts. Going marks
+// are gone from the app, so there is one hat and the segment that picked
+// between them came off the composer with it.
 
 export type ShareItem = {
   /** Stable across a reload, and what the hide list is keyed on: a class row
@@ -68,7 +66,6 @@ const dowOf = (iso: string) => (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 
  */
 export async function shareWeek(
   userId: string,
-  kind: ShareKind,
   from: string,
   days: number,
   hide: Set<string> = new Set(),
@@ -94,91 +91,31 @@ export async function shareWeek(
     return new Map(rows.map((s) => [s.id, s.name]));
   };
 
-  if (kind === "coaching") {
-    // The same rows the coach's public page draws, so the picture and the page
-    // it points at can't disagree. Shifts ride along exactly when the coach
-    // has said they may.
-    const rows = (await publicSchedule(me)).filter((c) => c.isPublic);
-    const names = await studioNames(rows.map((c) => c.studioId));
-    for (const iso of dates) {
-      const dow = dowOf(iso);
-      for (const c of rows) {
-        if (!runsOn(c, iso, dow)) continue;
-        put(
-          iso,
-          {
-            time: fmtTime(c.startTime),
-            startTime: c.startTime,
-            name: c.name,
-            where: (c.studioId && names.get(c.studioId)) || c.location || "",
-            who: "",
-          },
-          c.id,
-        );
-      }
-    }
-  } else {
-    // Both halves of a week: the classes marked at a coach, and the entries
-    // they keep themselves. A picture that quietly dropped half of somebody's
-    // week is worse than no picture, and their own entries are exactly the
-    // ones whose coach isn't here yet.
-    const [going, own] = await Promise.all([
-      db
-        .select({
-          classId: schema.attendances.classId,
-          occurrenceDate: schema.attendances.occurrenceDate,
-        })
-        .from(schema.attendances)
-        .where(eq(schema.attendances.userId, userId)),
-      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
-    ]);
-    const classIds = [...new Set(going.map((g) => g.classId))];
-    const classRows = classIds.length
-      ? (await db.select().from(schema.classes).where(inArray(schema.classes.id, classIds))).filter(
-          (c) => c.isPublic,
-        )
-      : [];
-    const coachIds = [...new Set(classRows.map((c) => c.userId))];
-    const coaches = coachIds.length
-      ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
-      : [];
-    const coachById = new Map(coaches.map((c) => [c.id, c]));
-    const names = await studioNames([
-      ...classRows.map((c) => c.studioId),
-      ...own.map((p) => p.studioId),
-    ]);
-    const classById = new Map(classRows.map((c) => [c.id, c]));
-
-    for (const g of going) {
-      const c = classById.get(g.classId);
-      if (!c || !inRange.has(g.occurrenceDate)) continue;
+  // The same rows the coach's public page draws, so the picture and the page
+  // it points at can't disagree. Shifts ride along exactly when the coach has
+  // said they may.
+  //
+  // There was a second branch here, for a week of classes you were going to.
+  // It is gone with the going marks and the personal entries that fed it: a
+  // member has no calendar of their own now, so there is no second week to
+  // draw and nothing on this path forks by kind any more.
+  const rows = (await publicSchedule(me)).filter((c) => c.isPublic);
+  const names = await studioNames(rows.map((c) => c.studioId));
+  for (const iso of dates) {
+    const dow = dowOf(iso);
+    for (const c of rows) {
+      if (!runsOn(c, iso, dow)) continue;
       put(
-        g.occurrenceDate,
+        iso,
         {
           time: fmtTime(c.startTime),
           startTime: c.startTime,
           name: c.name,
           where: (c.studioId && names.get(c.studioId)) || c.location || "",
-          who: coachById.get(c.userId)?.name?.trim().split(/\s+/)[0] ?? "",
+          who: "",
         },
         c.id,
       );
-    }
-    for (const p of own) {
-      for (const iso of dates) {
-        if (!runsOn(p, iso, dowOf(iso))) continue;
-        put(
-          iso,
-          {
-            time: fmtTime(p.startTime),
-            startTime: p.startTime,
-            name: p.name,
-            where: (p.studioId && names.get(p.studioId)) || p.location || "",
-            who: p.withWho.trim().split(/\s+/)[0] ?? "",
-          },
-          p.id,
-        );
-      }
     }
   }
 

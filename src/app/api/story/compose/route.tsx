@@ -4,7 +4,7 @@ import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
-import { shareKicker, shareRange, shareWeek, type ShareKind } from "@/lib/shareweek";
+import { shareKicker, shareRange, shareWeek } from "@/lib/shareweek";
 
 // The composer's picture. One route for both hats and both canvases, because
 // the composer is one screen: a second route per combination is four routes
@@ -17,12 +17,9 @@ import { shareKicker, shareRange, shareWeek, type ShareKind } from "@/lib/sharew
 
 export const dynamic = "force-dynamic";
 
-/** Defaults per hat. Never a blank field: the headline is derived from the
- *  segment and only overwritten when its owner types something. */
-const FALLBACK: Record<ShareKind, [string, string]> = {
-  coaching: ["Come train", "with me."],
-  going: ["My", "week."],
-};
+/** Never a blank field. It was a record keyed on the hat, back when a picture
+ *  could be of the classes you were going to; there is one week to draw now. */
+const FALLBACK: [string, string] = ["Come train", "with me."];
 
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -33,10 +30,9 @@ export async function GET(req: Request) {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return new Response("Not found", { status: 404 });
 
-  // A member has one hat, so asking for the other gets the one they have
-  // rather than an empty picture: the URL is not a way around the wall.
-  const asked = qs.get("kind") === "coaching" ? "coaching" : "going";
-  const kind: ShareKind = me.kind === "fan" ? "going" : asked;
+  // A member has no week of their own to draw, so there is nothing here for
+  // them: the composer is a coach's screen and this is the same wall.
+  if (me.kind === "fan") return new Response("Not found", { status: 404 });
   // Style first, then one of the three colourways that style is offered in.
   // Colour belongs to the style rather than sitting beside it, so a diner
   // sign is never asked to wear Midnight.
@@ -45,13 +41,13 @@ export async function GET(req: Request) {
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
   const hide = new Set((qs.get("hide") ?? "").split(",").filter(Boolean));
 
-  const byDay = await shareWeek(userId, kind, from, days, hide);
+  const byDay = await shareWeek(userId, from, days, hide);
 
   const prefs = me.storyPrefs ?? {};
   // The headline rides the URL so the preview redraws without a round trip;
   // the saved one is the fallback for anything that isn't the composer.
   const typed = qs.get("headline") ?? prefs.headline ?? "";
-  const { line1, line2, size } = headlineOf(typed, FALLBACK[kind]);
+  const { line1, line2, size } = headlineOf(typed, FALLBACK);
 
   const showPhoto = qs.get("photo") !== "0" && prefs.showPhoto !== false && !!me.photo;
   const showStudio = qs.get("studios") !== "0";
@@ -86,8 +82,7 @@ export async function GET(req: Request) {
     plan,
     empty: byDay.length === 0,
     emptyLine: "Nothing on the calendar for these days yet.",
-    // A coach's picture sends people to a schedule; a member's asks them along.
-    verb: kind === "coaching" ? "Full schedule at" : "Join me",
+    verb: "Full schedule at",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
   });
 }

@@ -1,11 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { shareRows, type ShareRow } from "@/app/actions/share";
-import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
-import type { ShareKind } from "@/lib/shareweek";
+import { STORY_STYLES, type StoryStyleId } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
@@ -14,43 +12,29 @@ import { StoryPreview } from "@/components/StoryPreview";
 import { putImage } from "@/lib/shareimage";
 import { Toast, useToast } from "@/components/Toast";
 
-// The Share tab's editor.
+// The composer: a picture of your week, and the three decisions that make it.
 //
-// This is the coach's old "Share your schedule" sheet, promoted to the tab and
-// given the one control it never had. It replaced a full-screen composer with
-// a collapsing drawer, which was more screen than the job needs: everything
-// here fits in one scroll, so nothing is behind a pull and the picture is the
-// thing you scroll to rather than the thing you uncover. Two edits came with
-// the move, both Matt's call:
+// Dates, Classes, Style. That is the whole screen, and each one is a row that
+// opens a sheet rather than a control sitting open on the page: three open
+// pickers above a picture is a form with a thumbnail, and this is a picture
+// with three questions under it.
 //
-//   * My week / Today is gone, and the Classes picker stands in its place. A
-//     range was the wrong question: the answer is "the coming week" nearly
-//     every time, and what people actually want to change is which classes are
-//     on the picture. That control also adds, which is what makes this screen
-//     the place calendars and the studio catalog get filled in.
-//   * The headline field is gone. It maps from the hat and nothing else can
-//     set it here.
+// The Coaching/Going segment is gone. It was two hats, deliberately never
+// merged, and going marks are gone from the app, so there is one week to draw
+// and a control with one option is a control that teaches somebody the screen
+// is more complicated than it is.
 
-/**
- * What the picture says at the top, and the whole of what it can say.
- *
- * The composer sends it explicitly rather than letting the route fall back to
- * `storyPrefs`: a coach who typed one into the old sheet still has it stored,
- * and inheriting it would put their Coaching words over a Going picture.
- */
-const HEADLINE: Record<ShareKind, string> = {
-  coaching: "Come train with me",
-  going: "My week",
-};
+/** What the picture says at the top. It maps from nothing now: there is one
+ *  kind of picture. The composer still sends it explicitly rather than letting
+ *  the route fall back to `storyPrefs`, because a coach who typed one into the
+ *  old sheet still has it stored and would get it back without asking. */
+const HEADLINE = "Come train with me";
 
-/** The window the picture draws. There is no control for it: a start date and
- *  a length were two questions whose answer was "this coming week" almost
- *  every time, and the Classes picker is the honest version of the one thing
- *  people wanted them for. */
-const SPAN_DAYS = 7;
+/** How far ahead the start-day rail offers. Two weeks: past that you are
+ *  making a picture of a week you have not finished planning. */
+const START_DAYS = 14;
 
 export function ShareComposer({
-  canCoach,
   hasPhoto,
   today,
   firstIso,
@@ -59,10 +43,6 @@ export function ShareComposer({
   customTypes,
   lastUsed,
 }: {
-  /** A member has one hat, so the segment would be a control with one option.
-   *  It is removed rather than disabled, and their model stays as simple as it
-   *  should be. */
-  canCoach: boolean;
   hasPhoto: boolean;
   today: string;
   /** The first day their week holds something, so the picture opens on a week
@@ -77,25 +57,32 @@ export function ShareComposer({
   customTypes: string[];
   lastUsed: LastUsed;
 }) {
-  const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
 
-  const [kind, setKind] = useState<ShareKind>(canCoach ? "coaching" : "going");
-  const [themeId, setThemeId] = useState<StoryThemeId>("paper");
-  const [styleOpen, setStyleOpen] = useState(false);
+  const [styleId, setStyleId] = useState<StoryStyleId>("plain");
+  // The colourway, by label rather than by index: the route resolves it that
+  // way so an old ?theme= link still lands, and a style that reorders its
+  // three should not silently repaint everybody's saved pick.
+  const [palette, setPalette] = useState<string>(STORY_STYLES.plain.palettes[0].label);
   const [showPhoto, setShowPhoto] = useState(true);
+
+  const [from, setFrom] = useState(firstIso > today ? firstIso : today);
+  const [days, setDays] = useState(7);
 
   const [rows, setRows] = useState<ShareRow[] | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [picker, setPicker] = useState(false);
+  const [sheet, setSheet] = useState<"dates" | "classes" | "style" | null>(null);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   // Adding a class changes the week without changing a single control, so the
   // picture has no reason of its own to redraw. This is that reason.
   const [bust, setBust] = useState(0);
 
-  const from = firstIso > today ? firstIso : today;
-  const headline = HEADLINE[kind];
+  const style = STORY_STYLES[styleId];
+  // Self-healing the way the route does: a colourway that does not belong to
+  // the style in front of you falls back to that style's first, so switching
+  // style never leaves the swatch row pointing at nothing.
+  const look = style.palettes.find((p) => p.label === palette) ?? style.palettes[0];
 
   useEffect(() => {
     getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
@@ -107,36 +94,38 @@ export function ShareComposer({
   const load = useCallback(() => {
     let live = true;
     setRows(null);
-    shareRows({ kind, from, days: SPAN_DAYS }).then((r) => {
+    shareRows({ from, days }).then((r) => {
       if (live) setRows(r);
     });
     return () => {
       live = false;
     };
-  }, [kind, from, bust]);
+  }, [from, days, bust]);
   useEffect(load, [load]);
 
   const shown = (rows ?? []).filter((r) => !hidden.has(r.key));
   const bare = rows !== null && shown.length === 0;
 
   const q = new URLSearchParams({
-    kind,
-    theme: themeId,
+    style: styleId,
+    palette: look.label,
     from,
-    days: String(SPAN_DAYS),
-    headline,
+    days: String(days),
+    headline: HEADLINE,
     photo: showPhoto ? "1" : "0",
   });
   const hideList = [...hidden].join(",");
   if (hideList) q.set("hide", hideList);
   if (bust) q.set("v", String(bust));
   const src = `/api/story/compose?${q.toString()}`;
-  const fileName = `fittlist-${kind}-${themeId}.png`;
+  const fileName = `fittlist-${styleId}-${look.label.toLowerCase()}.png`;
 
-  const pickKind = (k: ShareKind) => {
-    setKind(k);
-    // A hidden class belongs to the list it was hidden from; carrying the
-    // keys across would silently drop rows from a week nobody had looked at.
+  // Changing the range changes which keys exist, and a key hidden out of one
+  // range means nothing in another: carrying them across would silently drop
+  // rows from a week nobody had looked at.
+  const pickRange = (nextFrom: string, nextDays: number) => {
+    setFrom(nextFrom);
+    setDays(nextDays);
     setHidden(new Set());
   };
 
@@ -155,96 +144,69 @@ export function ShareComposer({
     setBusy(false);
   };
 
-  // An empty range is an offer, not a broken picture. A coach with an empty
-  // week almost never has an empty week; they have a stale calendar, so the
-  // ask is to add one. A member's calendar does not depend on coaches, so
-  // theirs leads with their own.
-  const emptyCta = kind === "coaching" ? "Add a class you coach" : "Add something to your week";
+  const starts = Array.from({ length: START_DAYS }, (_, i) =>
+    new Date(Date.parse(`${today}T00:00:00Z`) + i * 864e5).toISOString().slice(0, 10),
+  );
 
   return (
     <div className="composer">
       <div className="adderhead">
         <h2>Share your schedule</h2>
-        {/* Opened from the tab bar there is always something beneath, and
-            `anywhere` pops to it; typed cold there is not, and the feed is
+        {/* Opened from the calendar there is always something beneath, and
+            `anywhere` pops to it; typed cold there is not, and the calendar is
             the honest fallback rather than a dead button. */}
-        <BackLink className="iconbtn sheetclose adderclose" href="/week" anywhere label="Close">
+        <BackLink className="iconbtn sheetclose adderclose" href="/calendar" anywhere label="Close">
           <Icon name="close" size={16} />
         </BackLink>
       </div>
 
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <StoryPreview src={src} alt="Story image of your week" bg={look.bg} />
+
+      {/* The three questions, under the thing they are about. Each is a row
+          that says where it stands, so the screen answers most of itself
+          without a tap. */}
       <div className="storycustom">
-        {/* What is on the picture, and the way to put something new on it.
-            This is where My week / Today used to be: a range was the wrong
-            question, and this is the one people were really asking. */}
-        <label className="flabel">
-          Classes <span>· what goes on your image</span>
-        </label>
-        <button className="comprow" onClick={() => setPicker(true)}>
+        <button className="comprow" onClick={() => setSheet("dates")}>
           <span className="comprow-t">
-            {rows === null
-              ? "Loading"
-              : rows.length === 0
-                ? "Nothing this week"
-                : shown.length === rows.length
-                  ? `All ${rows.length} showing`
-                  : `${shown.length} of ${rows.length} showing`}
-            {/* Which hat, now that the segment lives inside the sheet: the
-                summary has to say what it is summarising, or a coach whose
-                picture went from teaching to going has no way of telling
-                without opening it. Only for somebody with two. */}
+            Dates
+            <small>{rangeWords(from, days)}</small>
+          </span>
+          <span className="comprow-a">Edit ›</span>
+        </button>
+
+        <button className="comprow" onClick={() => setSheet("classes")}>
+          <span className="comprow-t">
+            Classes
             <small>
-              {canCoach ? `${kind === "coaching" ? "Coaching" : "Going"} · ` : ""}
-              {rangeWords(from)}
+              {rows === null
+                ? "Loading"
+                : rows.length === 0
+                  ? "Nothing in these days"
+                  : shown.length === rows.length
+                    ? `All ${rows.length} showing`
+                    : `${shown.length} of ${rows.length} showing`}
             </small>
           </span>
           <span className="comprow-a">Edit ›</span>
         </button>
 
-        <label className="flabel" htmlFor="stTheme">
-          Style <span>· colours for your image</span>
-        </label>
-        <div className="stylepick">
-          <button
-            id="stTheme"
-            className="stylepick-btn"
-            aria-haspopup="listbox"
-            aria-expanded={styleOpen}
-            onClick={() => setStyleOpen((v) => !v)}
-          >
+        <button className="comprow" onClick={() => setSheet("style")}>
+          <span className="comprow-t">
+            Style
+            <small>
+              {style.label} · {look.label}
+            </small>
+          </span>
+          <span className="comprow-sw">
             <span
               className="swd"
-              style={{
-                background: STORY_THEMES[themeId].bg,
-                borderColor: STORY_THEMES[themeId].accent,
-              }}
+              style={{ background: look.bg, borderColor: look.accent }}
+              aria-hidden="true"
             />
-            <span className="stylepick-lbl">{STORY_THEMES[themeId].label}</span>
-            <Icon name="expand_more" size={18} />
-          </button>
-          {styleOpen && (
-            <div className="stylepick-menu" role="listbox" aria-label="Style">
-              {(
-                Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]
-              ).map(([id, t]) => (
-                <button
-                  key={id}
-                  role="option"
-                  aria-selected={id === themeId}
-                  className={`stylepick-row${id === themeId ? " sel" : ""}`}
-                  onClick={() => {
-                    setThemeId(id);
-                    setStyleOpen(false);
-                  }}
-                >
-                  <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
-                  <span className="stylepick-lbl">{t.label}</span>
-                  {id === themeId && <Icon name="check" size={16} />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            <span className="comprow-a">Edit ›</span>
+          </span>
+        </button>
 
         {hasPhoto && (
           <button className="storyphoto" onClick={togglePhoto} aria-pressed={showPhoto}>
@@ -256,120 +218,196 @@ export function ShareComposer({
         )}
       </div>
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <StoryPreview src={src} alt="Story image of your week" bg={STORY_THEMES[themeId].bg} />
-
       <div className="publishwrap">
         {bare ? (
-          <button
-            className="btn compwarn"
-            onClick={() => router.push(kind === "coaching" ? "/app?add=1" : "/week?add=1")}
-          >
-            {emptyCta}
+          <button className="btn compwarn" onClick={() => setAdding(true)}>
+            Add a class you coach
           </button>
         ) : (
-          <>
-            <button className="btn" disabled={busy || rows === null} onClick={share}>
-              {busy ? "Opening…" : "Share image"}
-            </button>
-          </>
+          <button className="btn" disabled={busy || rows === null} onClick={share}>
+            {busy ? "Opening…" : "Share image"}
+          </button>
         )}
       </div>
 
-      {picker && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPicker(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setPicker(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Classes on your image</h2>
-            <p className="lead">{rangeWords(from)}</p>
-            {/* Which week this is a picture of, standing above the list it
-                decides. It was the first control on the screen, which put the
-                question before anybody had seen what the answer changes; here
-                it is the first thing in the sheet that is about exactly that,
-                and picking a hat reloads the rows under it. */}
-            {canCoach && (
-              <div className="share-toggles">
-                <div className="seg">
-                  <button
-                    className={kind === "coaching" ? "sel" : ""}
-                    onClick={() => pickKind("coaching")}
-                  >
-                    Coaching
-                  </button>
-                  <button
-                    className={kind === "going" ? "sel" : ""}
-                    onClick={() => pickKind("going")}
-                  >
-                    Going
-                  </button>
-                </div>
-              </div>
-            )}
-            {rows && rows.length > 0 ? (
-              <div className="settingslist">
-                {rows.map((r) => {
-                  const on = !hidden.has(r.key);
-                  return (
-                    <button
-                      key={r.key}
-                      className="setrow"
-                      aria-pressed={on}
-                      onClick={() =>
-                        setHidden((h) => {
-                          const n = new Set(h);
-                          if (n.has(r.key)) n.delete(r.key);
-                          else n.add(r.key);
-                          return n;
-                        })
-                      }
-                    >
-                      <span className="setrow-txt">
-                        <span className="t">
-                          {r.when} · {r.name}
-                        </span>
-                        {r.sub && <span className="s">{r.sub}</span>}
-                      </span>
-                      <span className={`compcheck${on ? " on" : ""}`} aria-hidden="true">
-                        {on && <Icon name="check" size={14} />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="lead">Nothing on your calendar this week yet.</p>
-            )}
-            {/* The point of the whole screen. Picking what goes on the image
-                and keeping your calendar are the same list, so doing one does
-                the other: a class typed here lands on the calendar, and when a
-                studio was named it lands in that studio's catalog too, which is
-                how a studio that isn't here yet arrives with a real class
-                already on it. */}
-            <button className="compadd" onClick={() => setAdding(true)}>
-              + Add a class
-            </button>
-            <p className="compnote">
-              Unchecking hides a class from the image. It stays on your calendar.
-              Anything you add here is added to your calendar too.
-            </p>
-            <div className="publishwrap">
-              <button className="btn" onClick={() => setPicker(false)}>
-                Done
-              </button>
-            </div>
+      {sheet === "dates" && (
+        <Sheet title="Dates" lead={rangeWords(from, days)} onClose={() => setSheet(null)}>
+          {/* Which day it starts on, as a rail of the next fortnight. A date
+              field would be the same question asked in a way somebody has to
+              type, and the answer is nearly always one of the next few days. */}
+          <label className="flabel">Starting</label>
+          <div className="dayrail">
+            {starts.map((iso) => {
+              const d = new Date(`${iso}T00:00:00Z`);
+              const on = iso === from;
+              return (
+                <button
+                  key={iso}
+                  className={`daychip${on ? " sel" : ""}`}
+                  aria-pressed={on}
+                  onClick={() => pickRange(iso, days)}
+                >
+                  <span className="daychip-dow">
+                    {d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}
+                  </span>
+                  <span className="daychip-n">{d.getUTCDate()}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
+
+          {/* One to seven. Seven is the ceiling because the canvas is fixed
+              and `planStory` has to fit it; one is the floor because "I'm at
+              this tonight" is a real thing to post. */}
+          <label className="flabel">How many days</label>
+          <div className="dayrail">
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <button
+                key={n}
+                className={`lenchip${n === days ? " sel" : ""}`}
+                aria-pressed={n === days}
+                onClick={() => pickRange(from, n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="compnote">
+            The picture covers these days whatever is on them. A day with nothing on it is left
+            off rather than drawn empty.
+          </p>
+        </Sheet>
+      )}
+
+      {sheet === "classes" && (
+        <Sheet
+          title="Classes on your image"
+          lead={rangeWords(from, days)}
+          onClose={() => setSheet(null)}
+        >
+          {rows && rows.length > 0 ? (
+            <div className="settingslist">
+              {rows.map((r) => {
+                const on = !hidden.has(r.key);
+                return (
+                  <button
+                    key={r.key}
+                    className="setrow"
+                    aria-pressed={on}
+                    onClick={() =>
+                      setHidden((h) => {
+                        const n = new Set(h);
+                        if (n.has(r.key)) n.delete(r.key);
+                        else n.add(r.key);
+                        return n;
+                      })
+                    }
+                  >
+                    <span className="setrow-txt">
+                      <span className="t">
+                        {r.when} · {r.name}
+                      </span>
+                      {r.sub && <span className="s">{r.sub}</span>}
+                    </span>
+                    <span className={`compcheck${on ? " on" : ""}`} aria-hidden="true">
+                      {on && <Icon name="check" size={14} />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="lead">Nothing on your calendar in these days yet.</p>
+          )}
+          {/* The point of the whole screen. Picking what goes on the image and
+              keeping your calendar are the same list, so doing one does the
+              other: a class typed here lands on the calendar, and when a
+              studio was named it lands in that studio's catalog too, which is
+              how a studio that isn't here yet arrives with a real class
+              already on it. */}
+          <button className="compadd" onClick={() => setAdding(true)}>
+            + Add a class
+          </button>
+          <p className="compnote">
+            Unchecking hides a class from the image. It stays on your calendar. Anything you add
+            here is added to your calendar too.
+          </p>
+        </Sheet>
+      )}
+
+      {sheet === "style" && (
+        <Sheet
+          title="Style"
+          lead="How loud the picture is, then which of its three colours."
+          onClose={() => setSheet(null)}
+        >
+          {/* Loud to quiet, because that is the order somebody scans them in
+              and the quiet ones are what most people settle on. */}
+          <div className="stylegrid">
+            {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
+              ([id, s]) => {
+                const on = id === styleId;
+                const sw = s.palettes.find((p) => p.label === palette) ?? s.palettes[0];
+                return (
+                  <button
+                    key={id}
+                    className={`stylecard${on ? " sel" : ""}`}
+                    aria-pressed={on}
+                    onClick={() => {
+                      setStyleId(id);
+                      // Keep the colourway if this style is offered in it,
+                      // otherwise take its first. Somebody who has found their
+                      // colour should be able to try every style without
+                      // losing it, and a style that cannot wear it should not
+                      // pretend to.
+                      setPalette(
+                        (s.palettes.find((p) => p.label === palette) ?? s.palettes[0]).label,
+                      );
+                    }}
+                  >
+                    <span
+                      className="stylecard-sw"
+                      style={{ background: sw.bg, color: sw.fg, borderColor: sw.accent }}
+                      aria-hidden="true"
+                    >
+                      <span className="stylecard-bar" style={{ background: sw.accent }} />
+                      <span className="stylecard-line" style={{ background: sw.fg }} />
+                      <span className="stylecard-line short" style={{ background: sw.faint }} />
+                    </span>
+                    <span className="stylecard-lbl">{s.label}</span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+
+          {/* Three, not eight. Colour belongs to the style rather than sitting
+              beside it as a free second axis: ten styles times eight palettes
+              is eighty posters and most of them are wrong, because the loud
+              ones depend on specific pairings a global picker would happily
+              break. */}
+          <label className="flabel">Colour</label>
+          <div className="palrow">
+            {style.palettes.map((p) => {
+              const on = p.label === look.label;
+              return (
+                <button
+                  key={p.label}
+                  className={`palchip${on ? " sel" : ""}`}
+                  aria-pressed={on}
+                  onClick={() => setPalette(p.label)}
+                >
+                  <span
+                    className="swd"
+                    style={{ background: p.bg, borderColor: p.accent }}
+                    aria-hidden="true"
+                  />
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </Sheet>
       )}
 
       {adding && (
@@ -380,11 +418,6 @@ export function ShareComposer({
           lastUsed={lastUsed}
           subsCount={0}
           firstPublish={false}
-          // Which hat you are wearing decides which form you get: the
-          // Coaching picture is made of classes you publish, the Going one of
-          // classes you attend. Asking again here would be asking a question
-          // the segment above has already answered.
-          personal={kind === "going" ? { canCoach: false } : undefined}
           onClose={() => setAdding(false)}
           onToast={toast}
           onPublished={(msg) => {
@@ -407,10 +440,46 @@ export function ShareComposer({
   );
 }
 
-/** The week the picture covers, said the way a person would: "Aug 4 to Aug
- *  10". There is no control for it, so this is a statement rather than a
- *  confirmation of something that was picked. */
-function rangeWords(from: string): string {
+/** The one sheet shape all three questions wear. Three sheets that differed by
+ *  a heading is three chances for them to stop matching. */
+function Sheet({
+  title,
+  lead,
+  onClose,
+  children,
+}: {
+  title: string;
+  lead: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="sheet-scrim"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="sheet">
+        <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={16} />
+        </button>
+        <h2>{title}</h2>
+        <p className="lead">{lead}</p>
+        {children}
+        <div className="publishwrap">
+          <button className="btn" onClick={onClose}>
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The days the picture covers, said the way a person would. One day names
+ *  itself; anything longer names both ends. */
+function rangeWords(from: string, days: number): string {
   const fmt = (iso: string) =>
     new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
       weekday: "short",
@@ -418,7 +487,8 @@ function rangeWords(from: string): string {
       day: "numeric",
       timeZone: "UTC",
     });
-  const last = new Date(Date.parse(`${from}T00:00:00Z`) + (SPAN_DAYS - 1) * 864e5)
+  if (days === 1) return fmt(from);
+  const last = new Date(Date.parse(`${from}T00:00:00Z`) + (days - 1) * 864e5)
     .toISOString()
     .slice(0, 10);
   return `${fmt(from)} to ${fmt(last)}`;

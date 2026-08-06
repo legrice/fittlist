@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   if (!me) return new Response("Not found", { status: 404 });
 
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
-  const byDay = await shareWeek(userId, "going", from, days);
+  const byDay = await shareWeek(userId, from, days);
 
   // The kicker this sheet has always drawn: a range that starts today is still
   // "my week", and anything else names both of its ends.
