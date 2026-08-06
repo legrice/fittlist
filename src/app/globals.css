@@ -5629,8 +5629,9 @@ button.ps-card { cursor: pointer; }
    over the button: it was in the tree, it was not `display: none`, and
    elementFromPoint at its centre returned the circle behind it. The feed rail
    never hit this because its arrows were the last thing in the box. */
-/* Level with the bigger circles' centre: 6px of ring room plus half of 86. */
-.tray .railarrow { top: 57px; z-index: 2; }
+/* Level with the circles' centre: the tray's 8px top, 6px of ring room,
+   half of 80. */
+.tray .railarrow { top: 54px; z-index: 2; }
 .tray-scroll {
   /* The vertical padding is the selected ring's room. `overflow-x: auto`
      computes overflow-y to auto as well, so the scroller clips on both axes
@@ -5643,14 +5644,14 @@ button.ps-card { cursor: pointer; }
 .tray-scroll::-webkit-scrollbar { display: none; }
 .trayitem {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  width: 92px; background: none; border: 0; padding: 0; cursor: pointer;
+  width: 86px; background: none; border: 0; padding: 0; cursor: pointer;
   text-decoration: none;
 }
-/* 86, up from 72, by Matt's call: the app is minimal enough that the faces
-   can carry more of the screen, and at the old size four of them fit 390px
-   exactly, which read as a row that could not scroll. */
+/* 80: up from 72 by Matt's call (the faces can carry more of the screen),
+   back down a step from 86 by the same voice. Three and a half fit 390px,
+   which still says the row scrolls. */
 .trayav {
-  position: relative; display: block; width: 86px; height: 86px; border-radius: 999px;
+  position: relative; display: block; width: 80px; height: 80px; border-radius: 999px;
   overflow: hidden; background: var(--card);
 }
 .trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -6220,6 +6221,16 @@ a.clspeek-by:active { opacity: .6; }
 /* The last row of a day owns no line: the band under it is the break, and a
    rule immediately above a rule is one of them drawn twice. */
 .dayrows .clline:last-child { border-bottom: none; }
+/* Two classes at one hour say the hour once. The row above a continuation
+   trades its full rule for one that starts at the class column, so the time
+   column stays open down the pair and the hour reads as one entry with two
+   things in it. The 96px is the grid's own arithmetic: the 84px time column
+   plus its 12px gap. */
+.dayrows .clline:has(+ .clline-cont) { border-bottom: none; position: relative; }
+.dayrows .clline:has(+ .clline-cont)::after {
+  content: ""; position: absolute; left: 96px; right: 0; bottom: 0;
+  height: var(--divw); background: var(--div);
+}
 .clline:active { opacity: .6; }
 /* The time is a caption on the name, not a heading of its own: it sat at the
    display weight and competed with the class beside it. */

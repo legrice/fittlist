@@ -84,9 +84,15 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
         <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
           <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
-            {d.rows.map((r) => (
-              <ClassLine key={r.key} row={r} />
-            ))}
+            {d.rows.map((r, i) => {
+              // Two classes at the same hour say the hour once: the second
+              // row leaves the time column open, and the divider between
+              // them runs under the classes only, so the column reads as
+              // one six o'clock with two things in it.
+              const prev = d.rows[i - 1];
+              const cont = !!prev && prev.hm === r.hm && prev.ap === r.ap;
+              return <ClassLine key={r.key} row={r} cont={cont} />;
+            })}
           </div>
         </section>
       ))}
@@ -94,21 +100,27 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
   );
 }
 
-export function ClassLine({ row }: { row: WeekRow }) {
+export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean }) {
   const inner = (
     <>
       {/* The time, in its own column, top-aligned with whatever the row leads
           with. A column of times is scannable in a way a time tucked at the
           end of each line never is: you can find six o'clock without reading
-          a single class name.
+          a single class name. A continuation row (same time as the one
+          above) keeps the column and leaves it empty, so the grid's edge
+          holds while the hour reads once.
 
           The studio under the name carried a pin for a build. It came off: the
           class name above it and the time beside it already say what each line
           is, so the glyph was a mark explaining a thing that was not
           ambiguous, repeated down every row of a long scroll. */}
       <span className="clline-t">
-        {row.hm}
-        <span className="clline-ap">{row.ap.toUpperCase()}</span>
+        {!cont && (
+          <>
+            {row.hm}
+            <span className="clline-ap">{row.ap.toUpperCase()}</span>
+          </>
+        )}
       </span>
       <span className="clline-main">
         {row.coach && (
@@ -131,9 +143,10 @@ export function ClassLine({ row }: { row: WeekRow }) {
       </span>
     </>
   );
-  if (!row.onTap) return <div className="clline">{inner}</div>;
+  const cls = `clline${cont ? " clline-cont" : ""}`;
+  if (!row.onTap) return <div className={cls}>{inner}</div>;
   return (
-    <button className="clline" onClick={row.onTap}>
+    <button className={cls} onClick={row.onTap}>
       {inner}
     </button>
   );

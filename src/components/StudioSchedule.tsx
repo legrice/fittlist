@@ -87,13 +87,22 @@ export function StudioSchedule({
               <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
             </div>
             <div className="dayrows">
-              {d.items.map((c) => {
+              {d.items.map((c, i) => {
                 const start = clockParts(c.startTime);
+                // Same-hour rows say the hour once, the list grammar's rule:
+                // the second row leaves the column open and the divider
+                // above it runs under the classes only.
+                const cont = i > 0 && d.items[i - 1].startTime === c.startTime;
+                const rowCls = `clline${cont ? " clline-cont" : ""}`;
                 const inner = (
                   <>
                     <span className="clline-t">
-                      {start.hm}
-                      <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                      {!cont && (
+                        <>
+                          {start.hm}
+                          <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                        </>
+                      )}
                     </span>
                     <span className="clline-main">
                       {c.coachName && (
@@ -119,7 +128,7 @@ export function StudioSchedule({
                 );
                 if (c.plain) {
                   return (
-                    <div key={`${d.iso}-${c.id}`} className="clline">
+                    <div key={`${d.iso}-${c.id}`} className={rowCls}>
                       {inner}
                     </div>
                   );
@@ -130,7 +139,7 @@ export function StudioSchedule({
                 return (
                   <a
                     key={`${d.iso}-${c.id}`}
-                    className="clline"
+                    className={rowCls}
                     href={href}
                     data-cid={c.id}
                     data-d={d.iso}
