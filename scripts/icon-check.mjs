@@ -1,20 +1,10 @@
 // The icon map, checked against the package, without a browser.
 //
-// `Icon.tsx` maps ~65 Material-era names onto Phosphor components and gives
-// each one a weight. Three things can rot here and none of them is visible in
-// a diff: a name pointing at a component that was renamed out of the package,
-// a weight exception for a glyph that no longer exists, and two names claiming
-// the same key. All three fail silently, because an unknown name renders a
-// plain circle by design.
-//
-// What this deliberately does NOT check is whether a glyph should be filled.
-// That was tried as a geometry test (Phosphor draws a mark with no inside as a
-// solid rounded rectangle with the mark knocked out, which is a button drawn
-// inside a button) and it cannot work: a calendar and a padlock are rounded
-// rectangles too, and filled is exactly what they should be. "Does this shape
-// have an inside" is a question about meaning, not about path data. The
-// WEIGHT table in Icon.tsx is that judgement written down, and the only way to
-// check it is to look.
+// `Icon.tsx` maps ~65 Material-era names onto Lucide components. Two things
+// can rot here and neither is visible in a diff: a name pointing at a
+// component that was renamed out of the package, and two names claiming the
+// same key. Both fail silently, because an unknown name renders a plain
+// circle by design.
 //
 //   node scripts/icon-check.mjs
 import { readFileSync, readdirSync } from "node:fs";
@@ -28,12 +18,26 @@ const grab = (start) => {
   if (i < 0) fail("could not find " + start);
   return src.slice(i, src.indexOf("\n};", i));
 };
+
+// What the file imports from lucide-react, and what it draws by hand. A map
+// entry has to point at one or the other; a component that is neither is a
+// typo that ships as a blank circle.
+const importBlock = src.match(/import \{([\s\S]*?)\} from "lucide-react";/);
+if (!importBlock) fail("could not find the lucide-react import");
+const imported = new Set(importBlock[1].split(",").map((s) => s.trim()).filter(Boolean));
+const handDrawn = new Set([...src.matchAll(/^function ([A-Za-z]+)\(/gm)].map(([, n]) => n));
+
+// And the imports have to be real: lucide-react re-exports every icon from
+// its ESM index, so a component missing from there was renamed out of the
+// package and would fail the build anyway, but this says which name did it.
+const lucideIndex = readFileSync("node_modules/lucide-react/dist/lucide-react.d.ts", "utf8");
+for (const comp of imported)
+  if (!new RegExp(`\\b${comp}\\b`).test(lucideIndex))
+    fail(`${comp} is imported but not in lucide-react`);
+
 const icons = [
-  ...grab("const ICONS: Record<string, Glyph> = {").matchAll(/^\s{2}([a-z_0-9]+):\s*([A-Za-z]+),/gm),
+  ...grab("const ICONS: Record<string,").matchAll(/^\s{2}([a-z_0-9]+):\s*([A-Za-z][A-Za-z0-9]*),/gm),
 ].map(([, name, comp]) => ({ name, comp }));
-const bold = [
-  ...grab("const WEIGHT: Record<string, Weight> = {").matchAll(/^\s{2}([a-z_0-9]+):/gm),
-].map(([, n]) => n);
 
 if (icons.length < 50) fail("expected the whole map, parsed " + icons.length);
 
@@ -41,22 +45,9 @@ const seen = new Set();
 for (const { name, comp } of icons) {
   if (seen.has(name)) fail("two entries claim the name " + name);
   seen.add(name);
-  let defs;
-  try {
-    defs = readFileSync(`node_modules/@phosphor-icons/react/dist/defs/${comp}.es.js`, "utf8");
-  } catch {
-    fail(`${name} maps to ${comp}, which is not in the package`);
-  }
-  // Both weights, because the table picks between them per name and a glyph
-  // missing one would fall back to whatever Phosphor's default is.
-  for (const w of ['"bold"', '"fill"'])
-    if (!defs.includes(w)) fail(`${comp} has no ${w} weight, so ${name} cannot use it`);
+  if (!imported.has(comp) && !handDrawn.has(comp))
+    fail(`${name} maps to ${comp}, which is neither imported nor drawn here`);
 }
-
-const dupes = bold.filter((n, i) => bold.indexOf(n) !== i);
-if (dupes.length) fail("the weight table repeats " + dupes.join(", "));
-for (const n of bold)
-  if (!seen.has(n)) fail(`the weight table names ${n}, which is not a glyph any more`);
 
 // Every call site that names a glyph as a literal, so an `<Icon name="..." />`
 // that was never mapped is caught here rather than shipping as a blank circle.
@@ -79,5 +70,5 @@ for (const f of walk("src").filter((f) => /\.tsx?$/.test(f))) {
 }
 if (missing.size) fail("these names render a blank circle: " + [...missing].join(", "));
 
-console.log(`${icons.length} glyphs, ${bold.length} drawn bold, all present in the package`);
+console.log(`${icons.length} glyphs, all present in the package`);
 console.log("ICONS OK");
