@@ -5311,35 +5311,29 @@ button.ps-card { cursor: pointer; }
    this shipped as a square twice. */
 .stylepeek .storyimg-wrap { width: auto; height: min(30vh, 250px); margin: 0; flex-shrink: 0; }
 
-/* The sixteen colourways, as whole swatches rather than dots. A colourway is
-   a ground, an ink and an accent, and a dot only shows you the ground: two of
-   the sixteen would look identical at that size. The bars are the poster's own
-   three roles, in miniature.
+/* The sixteen colorways, as one rail of circles under the live poster.
 
-   This replaced a ten-card style grid, each drawing an arrangement of the
-   poster. The arrangements came out because they were not different enough to
-   be worth a decision; colour is what actually makes two posters look like two
-   posters, so it got the grid. */
-.palgrid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 12px; margin: 4px 0 6px;
+   They were a grid of mini-poster cards two screens deep, which meant picking
+   scrolled the preview out of view: choosing blind again, the exact failure
+   the in-sheet preview exists to fix. The circles are small enough that the
+   poster stays on screen the whole time, and the accent ring on each is what
+   tells apart the two grounds that genuinely look alike at this size. */
+.palrail {
+  display: flex; gap: 14px; overflow-x: auto; padding: 8px 18px 4px;
+  margin: 0 -20px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
-.palcard {
-  display: flex; flex-direction: column; gap: 7px; padding: 0;
-  background: none; border: none; cursor: pointer; font-family: inherit;
-  color: var(--ink); text-align: center;
+.palrail::-webkit-scrollbar { display: none; }
+.paldot {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0; cursor: pointer; font-family: inherit;
 }
-.palcard-sw {
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
-  gap: 5px; aspect-ratio: 4/5; border-radius: 12px;
-  padding: 13px 11px; overflow: hidden;
+.paldot-c {
+  width: 40px; height: 40px; border-radius: 999px;
+  border: 2.5px solid; display: block;
 }
-.palcard-bar { width: 62%; height: 8px; border-radius: 2px; }
-.palcard-line { width: 88%; height: 4px; border-radius: 2px; opacity: .92; }
-.palcard-line.short { width: 56%; }
-.palcard.sel .palcard-sw { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--si); }
-.palcard-lbl { font-size: 13px; font-weight: 600; color: var(--ol); }
-.palcard.sel .palcard-lbl { color: var(--ink); }
+.paldot.sel .paldot-c { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--ink); }
+.paldot-lbl { font-size: 11px; font-weight: 600; color: var(--ol); }
+.paldot.sel .paldot-lbl { color: var(--ink); }
 
 
 /* The range, as two rails. A date field is the same question asked in a way

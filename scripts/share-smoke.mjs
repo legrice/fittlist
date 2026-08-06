@@ -175,9 +175,23 @@ console.log("one canvas offered, and the square still renders at the route ok");
 // ---- sixteen colorways, and color is the whole of the look
 {
   await openSheet(coach, "Color", "Color");
-  const cards = await coach.locator(".palcard").count();
+  const cards = await coach.locator(".paldot").count();
   console.log("colorways:", cards);
   if (cards !== 16) fail("expected sixteen colors, got " + cards);
+  // A rail, not a grid: the whole point is that the poster stays on screen
+  // while you swipe through, so the sixteen have to fit one scrolling row.
+  const rail = coach.locator(".palrail");
+  const over = await rail.evaluate((e) => e.scrollWidth - e.clientWidth);
+  const tops = await coach
+    .locator(".paldot")
+    .evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
+  if (tops !== 1) fail("the colors should sit on one row, got " + tops + " rows");
+  if (over <= 0) fail("sixteen on one row should scroll sideways");
+  // ...and the poster is still in view with the rail on screen.
+  const peekBox = await coach.locator(".stylepeek").boundingBox();
+  const railBox = await rail.boundingBox();
+  if (peekBox.y + peekBox.height > railBox.y + 4)
+    fail("the preview should sit whole above the rail");
   // The style axis is gone. Ten arrangements were not different enough to be
   // worth a decision, and a picker asking about a difference nobody can see is
   // a sheet and a grid spent on nothing.
@@ -187,7 +201,7 @@ console.log("one canvas offered, and the square still renders at the route ok");
   // Every swatch is a different ground: two that looked the same would be two
   // rows in a picker doing one row's work.
   const grounds = await coach
-    .locator(".palcard-sw")
+    .locator(".paldot-c")
     .evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundImage + getComputedStyle(e).backgroundColor));
   if (new Set(grounds).size !== 16)
     fail(`the sixteen collapse to ${new Set(grounds).size} grounds`);
@@ -204,7 +218,7 @@ console.log("one canvas offered, and the square still renders at the route ok");
       fail(`the sheet's preview should be 9:16, got ${ratio.toFixed(2)}`);
   }
   const before = await peek.getAttribute("src");
-  await coach.locator(".palcard", { hasText: "Cobalt" }).click();
+  await coach.locator(".paldot", { hasText: "Cobalt" }).click();
   await coach.waitForTimeout(400);
   if ((await peek.getAttribute("src")) === before)
     fail("picking a color should redraw the poster in the sheet");
@@ -215,8 +229,8 @@ console.log("one canvas offered, and the square still renders at the route ok");
   // lockup choice, and a bad hex in any of them is a 500 from Satori that the
   // swatch grid cannot show you: the swatch is CSS and the poster is not.
   {
-    const ids = await coach.locator(".palcard").evaluateAll((els) =>
-      els.map((e) => e.querySelector(".palcard-lbl").textContent.trim().toLowerCase()),
+    const ids = await coach.locator(".paldot").evaluateAll((els) =>
+      els.map((e) => e.querySelector(".paldot-lbl").textContent.trim().toLowerCase()),
     );
     for (const label of ids) {
       const r = await coach.request.get(

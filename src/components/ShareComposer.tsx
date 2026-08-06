@@ -339,36 +339,38 @@ export function ShareComposer({
           {/* The real poster, in the sheet, redrawing as you pick. It used to
               live behind the scrim: the preview is on the screen underneath,
               so choosing meant picking blind, closing, looking, and opening
-              again. Small, because the grid is what you are working in and
-              this is the answer beside it. */}
+              again. */}
           <div className="stylepeek">
             <StoryPreview src={src} alt="Your picture in this color" bg={look.bg} />
           </div>
 
-          {/* Whole swatches rather than dots: a colourway is a ground, an ink
-              and an accent, and a dot only shows you the ground. Two of the
-              sixteen would look identical as dots. */}
-          <div className="palgrid">
+          {/* One rail of small circles, scrolling sideways under the poster.
+              They were a grid of mini-poster cards, which was sixteen little
+              answers competing with the real one: the grid ran two screens
+              deep, so picking meant scrolling the preview out of view and
+              choosing blind again, which is the exact failure the in-sheet
+              preview exists to fix. A dot cannot say much on its own (two
+              grounds of the sixteen genuinely look alike at this size) and no
+              longer has to: the poster above answers, and the accent ring on
+              each dot is what tells the twins apart. */}
+          <div className="palrail" role="listbox" aria-label="Color">
             {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
               ([id, t]) => {
                 const on = id === themeId;
                 return (
                   <button
                     key={id}
-                    className={`palcard${on ? " sel" : ""}`}
-                    aria-pressed={on}
+                    role="option"
+                    aria-selected={on}
+                    className={`paldot${on ? " sel" : ""}`}
                     onClick={() => setThemeId(id)}
                   >
                     <span
-                      className="palcard-sw"
-                      style={{ background: t.bg, color: t.fg }}
+                      className="paldot-c"
+                      style={{ background: t.bg, borderColor: t.accent }}
                       aria-hidden="true"
-                    >
-                      <span className="palcard-bar" style={{ background: t.accent }} />
-                      <span className="palcard-line" style={{ background: t.fg }} />
-                      <span className="palcard-line short" style={{ background: t.faint }} />
-                    </span>
-                    <span className="palcard-lbl">{t.label}</span>
+                    />
+                    <span className="paldot-lbl">{t.label}</span>
                   </button>
                 );
               },
