@@ -79,16 +79,18 @@ const mk = async (email, name, member) => {
 const coach = await mk("carina@example.com", "Carina Clores", false);
 await coach.goto(BASE + "/calendar");
 await coach.locator(".wkempty-cta, .calbar-add").first().click();
-await coach.getByPlaceholder("e.g. Barbell Strength").fill("Guns, Buns, and Lungs");
-for (const d of ["Mo", "We", "Fr"])
-  await coach.getByRole("button", { name: d, exact: true }).click();
-await coach.getByRole("button", { name: "Select or start typing a studio" }).click();
+// The stepped adder: studio first (a brand-new one lands straight on the
+// form), then the class details and the times.
+await coach.locator("h2", { hasText: "Choose a studio" }).waitFor();
 await coach.getByRole("button", { name: "+ New studio" }).click();
 await coach.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound Performance Athletics");
 await coach
   .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
   .fill("424 Eagle Rock Ave, West Orange NJ");
 await coach.getByRole("button", { name: "Add studio" }).click();
+await coach.getByPlaceholder("e.g. Barbell Strength").fill("Guns, Buns, and Lungs");
+for (const d of ["Mo", "We", "Fr"])
+  await coach.getByRole("button", { name: d, exact: true }).click();
 await coach.locator(".publishwrap .btn").click();
 await coach.waitForTimeout(1300);
 await coach.locator(".sheetclose").first().click().catch(() => {});
@@ -311,18 +313,18 @@ await settled(coach);
   if (!/added to your calendar too/i.test(await coach.locator(".compnote").innerText()))
     fail("the sheet has to say an add reaches the calendar, not just the picture");
   await coach.locator(".compadd").click();
-  await coach.locator("#fName").waitFor();
-  await coach.locator("#fName").fill("Reformer Pilates");
-  for (const d of ["Tu", "Th"])
-    await coach.getByRole("button", { name: d, exact: true }).click();
-  await coach.getByRole("button", { name: "Select or start typing a studio" }).click();
+  // The composer's coaching add walks the same steps.
+  await coach.locator("h2", { hasText: "Choose a studio" }).waitFor();
   await coach.getByRole("button", { name: "+ New studio" }).click();
   await coach.getByPlaceholder("e.g. Palisade Barbell").fill("Asana Soul Practice");
   await coach
     .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
     .fill("124 1st St, Jersey City, NJ");
   await coach.getByRole("button", { name: "Add studio" }).click();
-  await coach.locator(".studio-sel .nm").waitFor();
+  await coach.locator("#fName").waitFor();
+  await coach.locator("#fName").fill("Reformer Pilates");
+  for (const d of ["Tu", "Th"])
+    await coach.getByRole("button", { name: d, exact: true }).click();
   await coach.locator(".publishwrap .btn").last().click();
   await coach.waitForTimeout(1400);
   await coach.locator(".sheetclose").first().click().catch(() => {});

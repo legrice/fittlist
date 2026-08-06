@@ -29,20 +29,21 @@ const mkCoach = async (email, name, studio, classes) => {
   for (const [nm, day, t] of classes) {
     await p.goto(BASE + "/calendar");
     await p.locator(".wkempty-cta, .calbar-add").first().click();
+    // The stepped adder: studio, then the class list, then the form.
+    await p.locator("h2", { hasText: "Choose a studio" }).waitFor();
+    const existing = p.locator(".studio-row", { hasText: studio });
+    if (await existing.count()) {
+      await existing.first().click();
+      await p.getByRole("button", { name: "+ New class" }).click();
+    } else {
+      await p.getByRole("button", { name: "+ New studio" }).click();
+      await p.getByPlaceholder("e.g. Palisade Barbell").fill(studio);
+      await p.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("9 Bloomfield Ave, Montclair NJ");
+      await p.getByRole("button", { name: "Add studio" }).click();
+    }
     await p.getByPlaceholder("e.g. Barbell Strength").fill(nm);
     await p.getByRole("button", { name: day, exact: true }).click();
     await p.locator("#fStart").fill(t);
-    if (await p.getByRole("button", { name: "Select or start typing a studio" }).count()) {
-      await p.getByRole("button", { name: "Select or start typing a studio" }).click();
-      const existing = p.locator(".studio-row", { hasText: studio });
-      if (await existing.count()) await existing.first().click();
-      else {
-        await p.getByRole("button", { name: "+ New studio" }).click();
-        await p.getByPlaceholder("e.g. Palisade Barbell").fill(studio);
-        await p.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("9 Bloomfield Ave, Montclair NJ");
-        await p.getByRole("button", { name: "Add studio" }).click();
-      }
-    }
     await p.locator(".publishwrap .btn").click();
     await p.waitForTimeout(1300);
     const live = p.locator(".sheet", { hasText: "Your class is live" });

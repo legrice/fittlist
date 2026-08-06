@@ -103,7 +103,7 @@ export type AdderPersonal = {
   event?: boolean;
 };
 
-type Stage = "start" | "form" | "pick" | "new";
+type Stage = "start" | "form" | "pick" | "class" | "new";
 
 export function Adder({
   studios: studiosProp,
@@ -161,9 +161,14 @@ export function Adder({
   // Coaching it makes it a real class again, all the way down to the wording.
   const mineOnly = isPersonal && role === "going";
   const [studios, setStudios] = useState(studiosProp);
-  // Add always opens straight to the new-class form; saved classes are reused
-  // via the class-name field's autocomplete rather than a separate stage.
-  const [stage, setStage] = useState<Stage>("form");
+  // A brand-new coach class walks in steps, by Matt's call: the studio, then
+  // the studio's own class list, then the form with the times. One long sheet
+  // asked for a lot of scrolling before the one decision that scopes the rest
+  // (where), and the catalog was hidden inside a name field's autocomplete.
+  // Everything else (an edit, a duplicate, a gym's slot, a personal entry)
+  // keeps the single form: their answers are already mostly filled.
+  const stepped = !isGym && !isPersonal && !isEdit && !prefill?.name;
+  const [stage, setStage] = useState<Stage>(stepped ? "pick" : "form");
   // A prefill with no name is a starting point, not a copy: the rota opens the
   // form on the day that was tapped, and that is still a new class.
   const [heading, setHeading] = useState<{ title: string; lead: string }>(
@@ -238,6 +243,7 @@ export function Adder({
   // Studio-first: the class list is scoped to the chosen studio's catalog. A
   // gym is handed its own, links and all, because it is the studio.
   const [fetched, setFetched] = useState<CatalogItem[]>([]);
+  const [catLoading, setCatLoading] = useState(false);
   const catalog = gym ? gym.catalog : fetched;
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
   const selectedStudio = studioId ? studioById.get(studioId) : undefined;
@@ -249,8 +255,12 @@ export function Adder({
       return;
     }
     let live = true;
+    setCatLoading(true);
     getStudioCatalog(studioId).then((rows) => {
-      if (live) setFetched(rows);
+      if (live) {
+        setFetched(rows);
+        setCatLoading(false);
+      }
     });
     return () => {
       live = false;
@@ -400,8 +410,8 @@ export function Adder({
                 ? "Add to your calendar"
                 : "Add to your plans"
               : isPublic
-                ? "Publish event"
-                : "Save event";
+                ? "Publish class"
+                : "Save class";
 
   // Your own plans. `force` is the second pass, after they've seen that the
   // class is already here under a coach and said theirs anyway.
@@ -584,6 +594,8 @@ export function Adder({
       }
       setStudios((prev) => [...prev, res.studio!]);
       setStudioId(res.studio.id);
+      // A studio you just added has no classes to offer, so the class step
+      // would be an empty room with one door; straight to the form.
       setStage("form");
       onToast("Added to the studio directory");
     });
@@ -595,6 +607,174 @@ export function Adder({
       (s) => !q || s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q),
     );
   }, [studios, search]);
+
+  // The When card, defined once and rendered in one of two spots: stepped, it
+  // leads the form (the studio and class are already answered); otherwise it
+  // keeps its old place under the details.
+  const whenCard = (
+    <div className="adder-card">
+            <label className="flabel">When</label>
+            <div className="modetoggle">
+              <button
+                className={!oneTime ? "sel" : ""}
+                onClick={() => setMode("weekly")}
+                type="button"
+              >
+                Repeats weekly
+              </button>
+              <button
+                className={oneTime ? "sel" : ""}
+                onClick={() => setMode("date")}
+                type="button"
+              >
+                One-time
+              </button>
+            </div>
+
+            {oneTime ? (
+              <>
+                <label className="flabel">Date</label>
+                <div className="timegrid">
+                  <input
+                    type="date"
+                    className="timeinput"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    aria-label="Class date"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="flabel">
+                  {isGym && isEdit ? (
+                    <>
+                      Day <span>· the day this slot runs</span>
+                    </>
+                  ) : (
+                    <>
+                      Days <span>· tap all that apply</span>
+                    </>
+                  )}
+                </label>
+                <div className="daypick">
+                  {DAYS.map((d, i) => (
+                    <button
+                      key={d}
+                      className={days.has(i) ? "sel" : ""}
+                      onClick={() => toggleDay(i)}
+                    >
+                      {d[0]}
+                      {d[1].toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+                {/* Most weekly classes run indefinitely, so this stays out of
+                    the way until it's wanted — a term, a block, a cover. */}
+                {endsOn === null ? (
+                  <button className="tertiary endson-add" onClick={() => setEndsOn("")}>
+                    + Add an end date
+                  </button>
+                ) : (
+                  <>
+                    <label className="flabel" htmlFor="fEndsOn">
+                      Ends on <span>· last day it runs</span>
+                    </label>
+                    <div className="timegrid endson-row">
+                      <input
+                        id="fEndsOn"
+                        type="date"
+                        className="timeinput"
+                        min={todayIso()}
+                        value={endsOn}
+                        onChange={(e) => setEndsOn(e.target.value)}
+                        aria-label="Last day this class runs"
+                      />
+                      <button
+                        className="tertiary"
+                        onClick={() => setEndsOn(null)}
+                        aria-label="Remove the end date"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            <div className="timegrid two">
+              <div>
+                <label className="flabel" htmlFor="fStart">Start</label>
+                <input
+                  id="fStart"
+                  type="time"
+                  className="timeinput"
+                  value={time}
+                  onChange={(e) => changeStart(e.target.value)}
+                  aria-label="Start time"
+                />
+              </div>
+              <div>
+                <label className="flabel" htmlFor="fEnd">End</label>
+                <input
+                  id="fEnd"
+                  type="time"
+                  className={`timeinput${durValid ? "" : " invalid"}`}
+                  value={end}
+                  onChange={(e) => e.target.value && setEnd(e.target.value)}
+                  aria-label="End time"
+                />
+              </div>
+            </div>
+            <div className="durnote">
+              {durValid ? `${durationMin} min` : "End time must be after start"}
+            </div>
+
+            {/* Also at. Gym-only, and never on an edit: adding fans out into a
+                slot per day per time, while editing moves the one slot it was
+                opened on. Fanning an edit out would mean deleting and
+                recreating rows that carry swaps and members' plans. */}
+            {gym && !isEdit && (
+              <div className="alsoat">
+                {extraTimes.map((t, i) => (
+                  <div className="alsoat-row" key={i}>
+                    <input
+                      type="time"
+                      className="timeinput"
+                      value={t}
+                      aria-label={`Also at, time ${i + 2}`}
+                      onChange={(e) =>
+                        setExtraTimes(extraTimes.map((x, j) => (j === i ? e.target.value : x)))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="tertiary"
+                      onClick={() => setExtraTimes(extraTimes.filter((_, j) => j !== i))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="tertiary alsoat-add"
+                  onClick={() => setExtraTimes([...extraTimes, time])}
+                >
+                  + Also at another time
+                </button>
+                {/* The number before you commit. A cross product grows fast,
+                    and seeing it is what keeps this from feeling reckless. */}
+                {slotCount > 1 && (
+                  <p className="durnote alsoat-n">
+                    Adds {slotCount} classes: {fmtDays([...days])} at {allTimeCount} times.
+                  </p>
+                )}
+              </div>
+            )}
+            </div>
+  );
 
   return (
     <div
@@ -763,6 +943,11 @@ export function Adder({
             </div>
             )}
 
+            {/* Stepped, the times lead: the studio and the class are already
+                answered, so what is left to fill comes first and the details
+                sit below for anyone who wants to touch them. */}
+            {stepped && whenCard}
+
             <div className="adder-card">
             <label className="flabel" htmlFor="fName">
               {isEvent ? "What is it" : "Class name"}
@@ -920,168 +1105,9 @@ export function Adder({
             )}
             </div>
 
-            <div className="adder-card">
-            <label className="flabel">When</label>
-            <div className="modetoggle">
-              <button
-                className={!oneTime ? "sel" : ""}
-                onClick={() => setMode("weekly")}
-                type="button"
-              >
-                Repeats weekly
-              </button>
-              <button
-                className={oneTime ? "sel" : ""}
-                onClick={() => setMode("date")}
-                type="button"
-              >
-                One-time
-              </button>
-            </div>
 
-            {oneTime ? (
-              <>
-                <label className="flabel">Date</label>
-                <div className="timegrid">
-                  <input
-                    type="date"
-                    className="timeinput"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    aria-label="Class date"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <label className="flabel">
-                  {isGym && isEdit ? (
-                    <>
-                      Day <span>· the day this slot runs</span>
-                    </>
-                  ) : (
-                    <>
-                      Days <span>· tap all that apply</span>
-                    </>
-                  )}
-                </label>
-                <div className="daypick">
-                  {DAYS.map((d, i) => (
-                    <button
-                      key={d}
-                      className={days.has(i) ? "sel" : ""}
-                      onClick={() => toggleDay(i)}
-                    >
-                      {d[0]}
-                      {d[1].toLowerCase()}
-                    </button>
-                  ))}
-                </div>
-                {/* Most weekly classes run indefinitely, so this stays out of
-                    the way until it's wanted — a term, a block, a cover. */}
-                {endsOn === null ? (
-                  <button className="tertiary endson-add" onClick={() => setEndsOn("")}>
-                    + Add an end date
-                  </button>
-                ) : (
-                  <>
-                    <label className="flabel" htmlFor="fEndsOn">
-                      Ends on <span>· last day it runs</span>
-                    </label>
-                    <div className="timegrid endson-row">
-                      <input
-                        id="fEndsOn"
-                        type="date"
-                        className="timeinput"
-                        min={todayIso()}
-                        value={endsOn}
-                        onChange={(e) => setEndsOn(e.target.value)}
-                        aria-label="Last day this class runs"
-                      />
-                      <button
-                        className="tertiary"
-                        onClick={() => setEndsOn(null)}
-                        aria-label="Remove the end date"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
 
-            <div className="timegrid two">
-              <div>
-                <label className="flabel" htmlFor="fStart">Start</label>
-                <input
-                  id="fStart"
-                  type="time"
-                  className="timeinput"
-                  value={time}
-                  onChange={(e) => changeStart(e.target.value)}
-                  aria-label="Start time"
-                />
-              </div>
-              <div>
-                <label className="flabel" htmlFor="fEnd">End</label>
-                <input
-                  id="fEnd"
-                  type="time"
-                  className={`timeinput${durValid ? "" : " invalid"}`}
-                  value={end}
-                  onChange={(e) => e.target.value && setEnd(e.target.value)}
-                  aria-label="End time"
-                />
-              </div>
-            </div>
-            <div className="durnote">
-              {durValid ? `${durationMin} min` : "End time must be after start"}
-            </div>
-
-            {/* Also at. Gym-only, and never on an edit: adding fans out into a
-                slot per day per time, while editing moves the one slot it was
-                opened on. Fanning an edit out would mean deleting and
-                recreating rows that carry swaps and members' plans. */}
-            {gym && !isEdit && (
-              <div className="alsoat">
-                {extraTimes.map((t, i) => (
-                  <div className="alsoat-row" key={i}>
-                    <input
-                      type="time"
-                      className="timeinput"
-                      value={t}
-                      aria-label={`Also at, time ${i + 2}`}
-                      onChange={(e) =>
-                        setExtraTimes(extraTimes.map((x, j) => (j === i ? e.target.value : x)))
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="tertiary"
-                      onClick={() => setExtraTimes(extraTimes.filter((_, j) => j !== i))}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  className="tertiary alsoat-add"
-                  onClick={() => setExtraTimes([...extraTimes, time])}
-                >
-                  + Also at another time
-                </button>
-                {/* The number before you commit. A cross product grows fast,
-                    and seeing it is what keeps this from feeling reckless. */}
-                {slotCount > 1 && (
-                  <p className="durnote alsoat-n">
-                    Adds {slotCount} classes: {fmtDays([...days])} at {allTimeCount} times.
-                  </p>
-                )}
-              </div>
-            )}
-            </div>
+            {!stepped && whenCard}
 
             <div className="adder-card">
             <label className="flabel">
@@ -1149,9 +1175,16 @@ export function Adder({
 
         {stage === "pick" && (
           <div>
-            <button className="backbtn" onClick={() => setStage("form")}>
-              &larr; Back
-            </button>
+            {/* The first step of a stepped add has nothing behind it: the X
+                is the way out. Reopened from the form, Back returns there. */}
+            {(!stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
+              <button
+                className="backbtn"
+                onClick={() => setStage(stepped && !name.trim() ? "class" : "form")}
+              >
+                &larr; Back
+              </button>
+            )}
             <h2>Choose a studio</h2>
             <div className="searchbox noicon">
               <input
@@ -1171,7 +1204,10 @@ export function Adder({
                     className="studio-row"
                     onClick={() => {
                       setStudioId(s.id);
-                      setStage("form");
+                      // Stepped, the studio's class list is the next question;
+                      // re-picking from the form goes through it again, because
+                      // a different studio has a different list.
+                      setStage(stepped ? "class" : "form");
                     }}
                   >
                     <span>
@@ -1192,6 +1228,53 @@ export function Adder({
               + New studio
             </button>
             <div className="dirnote">Studios are shared. Add one once and every trainer can use it.</div>
+          </div>
+        )}
+
+        {/* Step two of a stepped add: the studio's own class list, whole,
+            rather than hidden inside a name field's autocomplete. Picking one
+            fills the details and lands on the form with only the times left
+            to answer; New class lands on the same form blank. */}
+        {stage === "class" && (
+          <div>
+            <button className="backbtn" onClick={() => setStage("pick")}>
+              &larr; Back
+            </button>
+            <h2>{selectedStudio?.name ?? "Pick a class"}</h2>
+            <p className="lead">
+              {catLoading || catalog.length > 0
+                ? "Start from a class already on this studio's list, or from scratch. Yours to adjust either way."
+                : "Nothing listed at this studio yet. Your class will be the first."}
+            </p>
+            {catLoading ? (
+              <p className="empty">Looking at this studio&rsquo;s list…</p>
+            ) : (
+              <div className="studio-list">
+                {catalog.map((c) => (
+                  <button
+                    key={c.name}
+                    className="studio-row"
+                    onClick={() => {
+                      fillFromCatalog(c);
+                      setStage("form");
+                    }}
+                  >
+                    <span>
+                      <span className="nm">{c.name}</span>
+                      <br />
+                      <span className="ad">
+                        {[c.classType, c.durationMin ? `${c.durationMin} min` : null]
+                          .filter(Boolean)
+                          .join(" · ") || "Class"}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <button className="addnew" onClick={() => setStage("form")}>
+              + New class
+            </button>
           </div>
         )}
 

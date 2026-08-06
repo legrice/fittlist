@@ -44,25 +44,29 @@ if (await p.locator(".calbar-add").count()) fail("no plus on an empty calendar")
 if (await p.locator(".wkshare").count()) fail("no Share on an empty calendar");
 console.log("an empty calendar is its own CTA, and carries no other control");
 
+// The adder walks in steps now: the studio first, then the studio's class
+// list (skipped straight to the form for a brand-new studio), then the form
+// with the times.
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .calbar-add").first().click();
+  await p.locator("h2", { hasText: "Choose a studio" }).waitFor();
+  const existing = p.locator(".studio-row", { hasText: studio });
+  if (await existing.count()) {
+    await existing.first().click();
+    // Step two: this studio's list. The suite's classes are all new.
+    await p.getByRole("button", { name: "+ New class" }).click();
+  } else {
+    await p.getByRole("button", { name: "+ New studio" }).click();
+    await p.getByPlaceholder("e.g. Palisade Barbell").fill(studio);
+    await p
+      .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
+      .fill("9 Bloomfield Ave, Montclair NJ");
+    await p.getByRole("button", { name: "Add studio" }).click();
+  }
   await p.getByPlaceholder("e.g. Barbell Strength").fill(nm);
   await p.getByRole("button", { name: day, exact: true }).click();
   await p.locator("#fStart").fill(t);
-  if (studio && (await p.getByRole("button", { name: "Select or start typing a studio" }).count())) {
-    await p.getByRole("button", { name: "Select or start typing a studio" }).click();
-    const existing = p.locator(".studio-row", { hasText: studio });
-    if (await existing.count()) await existing.first().click();
-    else {
-      await p.getByRole("button", { name: "+ New studio" }).click();
-      await p.getByPlaceholder("e.g. Palisade Barbell").fill(studio);
-      await p
-        .getByPlaceholder("e.g. 501 Palisade Ave, Jersey City")
-        .fill("9 Bloomfield Ave, Montclair NJ");
-      await p.getByRole("button", { name: "Add studio" }).click();
-    }
-  }
   await p.locator(".publishwrap .btn").click();
   await p.waitForTimeout(1300);
   const live = p.locator(".sheet", { hasText: "Your class is live" });
