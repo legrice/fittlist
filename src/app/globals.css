@@ -5224,28 +5224,44 @@ button.ps-card { cursor: pointer; }
    picker would happily break. Three per style is thirty that are all good,
    which is the better number even though it is smaller.
    --------------------------------------------------------------------------- */
+/* The live poster inside the Style sheet. Height-bounded rather than
+   width-bounded, for the reason the composer's own preview is: what it has to
+   fit inside is the room the grid and the sticky footer leave. */
+.stylepeek { display: flex; justify-content: center; margin: 2px 0 14px; }
+/* Height first, width from the ratio. The wrapper's own rule sets a definite
+   width and lets `aspect-ratio` find the height, which is right on the
+   composer where width is the constraint; in here the constraint is the room
+   the grid and the footer leave, so it is set the other way round. Both are
+   definite, which is the part that matters: two levels of indeterminacy is how
+   this shipped as a square twice. */
+.stylepeek .storyimg-wrap { width: auto; height: min(30vh, 250px); margin: 0; flex-shrink: 0; }
+
+/* Two across, not three. The card has to carry a legible miniature of the
+   poster (a day label, two class names, a time), and at a third of a phone
+   there is no size at which "Barbell" is a word rather than a smudge. Five
+   rows of scrolling in a sheet is the cost and it is the right one: the whole
+   complaint about the old picker was that it told you nothing. */
 .stylegrid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 10px; margin: 4px 0 6px;
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 14px; margin: 4px 0 8px;
 }
 .stylecard {
-  display: flex; flex-direction: column; gap: 6px; padding: 0;
+  display: flex; flex-direction: column; gap: 7px; padding: 0;
   background: none; border: none; cursor: pointer; font-family: inherit;
   color: var(--ink); text-align: center;
 }
-/* A tiny drawing of the poster rather than a swatch: what changes between
-   these is the arrangement, so a row of ten identical circles in three colours
-   would be telling somebody nothing about the choice they are making. */
-.stylecard-sw {
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
-  gap: 5px; aspect-ratio: 3/4; border-radius: 12px; border: 2px solid transparent;
-  padding: 12px 10px; overflow: hidden;
+/* The miniature. `StyleThumb` fills it from the style's own knobs, so the only
+   thing set here is the box and the type size everything inside is em of. */
+.stylethumb {
+  display: flex; flex-direction: column; justify-content: center;
+  aspect-ratio: 4/5; border-radius: 14px; overflow: hidden;
+  padding: 13px 12px; font-size: 11px; line-height: 1.15; text-align: left;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
 }
-.stylecard-bar { width: 60%; height: 7px; border-radius: 2px; }
-.stylecard-line { width: 85%; height: 4px; border-radius: 2px; opacity: .9; }
-.stylecard-line.short { width: 55%; }
-.stylecard.sel .stylecard-sw { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--si); }
-.stylecard-lbl { font-size: 12.5px; font-weight: 700; color: var(--ol); }
+.stylethumb-h { display: block; width: 62%; border-radius: 2px; margin-bottom: .9em; }
+.stylethumb-day { display: block; font-size: .78em; font-weight: 800; text-transform: uppercase; margin-bottom: .55em; }
+.stylecard.sel .stylethumb { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--si); }
+.stylecard-lbl { font-size: 13.5px; font-weight: 700; color: var(--ol); }
 .stylecard.sel .stylecard-lbl { color: var(--ink); font-weight: 800; }
 
 .palrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }

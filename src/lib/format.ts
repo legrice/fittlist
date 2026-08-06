@@ -215,17 +215,29 @@ export type StoryStyle = {
 const P = STORY_THEMES;
 
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
-  poster:    { label: "Poster",    headline: 1.18, name: 1.16, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.18, rowScale: 1.2,  palettes: [P.pop, P.iron, P.midnight] },
-  stack:     { label: "Stack",     headline: 1.22, name: 1.10, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.14, rowScale: 1.55, palettes: [P.iron, P.pop, P.moss] },
-  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: true,  radius: 28,  stackTime: false, dayTrack: 0.12, rowScale: 1.3,  palettes: [P.midnight, P.paper, P.slate] },
-  marquee:   { label: "Marquee",   headline: 1.14, name: 1.08, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.22, rowScale: 1.6,  palettes: [P.pop, P.sunset, P.iron] },
-  chips:     { label: "Chips",     headline: 1.0,  name: 0.98, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.1,  rowScale: 1.22, palettes: [P.blush, P.paper, P.moss] },
-  editorial: { label: "Editorial", headline: 1.08, name: 1.02, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.14, rowScale: 1.06, palettes: [P.paper, P.iron, P.slate] },
-  grid:      { label: "Grid",      headline: 0.96, name: 0.96, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.1,  rowScale: 1.0,  palettes: [P.paper, P.slate, P.iron] },
-  receipt:   { label: "Receipt",   headline: 0.92, name: 0.92, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.24, rowScale: 1.0,  palettes: [P.paper, P.iron, P.blush] },
+  // Ten arrangements, not ten colourways. They were ten sets of small numeric
+  // nudges (headline 1.0 against 0.96, rowScale 1.0 against 0.98) over the
+  // same left-aligned cream layout, and in a picker they were indeed one style
+  // wearing ten labels. What actually differs between two posters is
+  // structural: where the block sits, whether the names shout, whether a row
+  // is ruled or boxed or neither, and whether the time holds its own gutter or
+  // drops under the name. So each of these picks a different point in that
+  // vocabulary, and the numbers follow the arrangement rather than standing in
+  // for one.
+  //
+  // Loud to quiet, because that is the order somebody scans them in.
+  poster:    { label: "Poster",    headline: 1.25, name: 1.30, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.18, rowScale: 1.45, palettes: [P.pop, P.iron, P.midnight] },
+  stack:     { label: "Stack",     headline: 1.30, name: 1.20, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.30, rowScale: 1.75, palettes: [P.iron, P.pop, P.moss] },
+  marquee:   { label: "Marquee",   headline: 1.20, name: 1.14, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.34, rowScale: 1.80, palettes: [P.sunset, P.pop, P.iron] },
+  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.02, upper: false, align: "left",   rule: "none", chip: true,  radius: 26,  stackTime: false, dayTrack: 0.10, rowScale: 1.40, palettes: [P.midnight, P.paper, P.slate] },
+  chips:     { label: "Chips",     headline: 1.0,  name: 0.95, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.08, rowScale: 1.30, palettes: [P.blush, P.moss, P.paper] },
+  receipt:   { label: "Receipt",   headline: 0.90, name: 0.90, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.40, rowScale: 1.05, palettes: [P.paper, P.iron, P.blush] },
+  editorial: { label: "Editorial", headline: 1.10, name: 1.08, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.12, rowScale: 1.18, palettes: [P.paper, P.iron, P.slate] },
+  grid:      { label: "Grid",      headline: 0.92, name: 0.95, upper: false, align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.06, rowScale: 1.10, palettes: [P.slate, P.paper, P.midnight] },
   plain:     { label: "Plain",     headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0.12, rowScale: 1.0,  palettes: [P.paper, P.iron, P.moss] },
-  bare:      { label: "Bare",      headline: 0.88, name: 0.94, upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0.08, rowScale: 0.98, palettes: [P.paper, P.slate, P.midnight] },
+  bare:      { label: "Bare",      headline: 0.80, name: 0.86, upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0,    rowScale: 0.95, palettes: [P.paper, P.slate, P.midnight] },
 };
+
 
 /**
  * A style and one of its three colourways, from whatever the URL said.

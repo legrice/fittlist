@@ -45,7 +45,7 @@ const settled = (p) =>
 
 const drawn = (p) =>
   p.waitForFunction(() => {
-    const i = document.querySelector(".storyimg");
+    const i = document.querySelector(".composer > .storyimg-wrap .storyimg");
     return i && i.complete && i.naturalWidth > 0;
   }, null, { timeout: 30000 });
 
@@ -141,13 +141,13 @@ console.log("one scroll, three rows, no hat ok");
 await drawn(coach);
 {
   const [w, h] = await coach
-    .locator(".storyimg")
+    .locator(".composer > .storyimg-wrap .storyimg")
     .evaluate((i) => [i.naturalWidth, i.naturalHeight]);
   if (w !== 1080 || h !== 1920) fail(`a story should be 1080x1920, got ${w}x${h}`);
   // The composer is a fixed-height flex column, so the preview is a flex item
   // on the main axis and gets squashed to make the screen add up unless it
   // refuses to shrink. Twice this shipped as a near-square nothing explained.
-  const box = await coach.locator(".storyimg-wrap").boundingBox();
+  const box = await coach.locator(".composer > .storyimg-wrap").boundingBox();
   const ratio = box.height / box.width;
   if (Math.abs(ratio - 16 / 9) > 0.06)
     fail(`the preview should be 9:16, got ${box.width}x${box.height} (${ratio.toFixed(2)})`);
@@ -170,6 +170,49 @@ console.log("one canvas offered, and the square still renders at the route ok");
   await openSheet(coach, "Style", "Style");
   const cards = await coach.locator(".stylecard").count();
   if (cards !== 10) fail("expected ten styles, got " + cards);
+
+  // Each card draws the real arrangement, not a swatch: the whole complaint
+  // about the old picker was that ten cards differed only in hue above a
+  // question about layout. So the miniatures have to be ten different
+  // miniatures, and this measures the four things that actually vary: whether
+  // the names are uppercase, whether the block is centred, whether a row is
+  // ruled or boxed, and how big the class name is. Ten styles cannot all be
+  // unique on four axes, but they must not collapse to a handful.
+  const shapes = await coach.locator(".stylethumb").evaluateAll((els) =>
+    els.map((e) => {
+      const nm = e.querySelector("span span span");
+      const row = nm?.parentElement?.parentElement;
+      const cs = (n) => getComputedStyle(n);
+      return [
+        cs(nm).textTransform,
+        cs(e).alignItems,
+        cs(row).borderBottomWidth,
+        cs(row).borderTopLeftRadius,
+        Math.round(parseFloat(cs(nm).fontSize) * 10),
+        cs(row).flexDirection,
+      ].join("/");
+    }),
+  );
+  console.log("thumb shapes:", shapes.join("  "));
+  const distinct = new Set(shapes).size;
+  if (distinct < 7) fail(`the miniatures collapse to ${distinct} shapes: ${shapes.join(" ")}`);
+  // And they carry words, because a bar chart of three lines is what they
+  // replaced.
+  if (!(await coach.locator(".stylethumb", { hasText: "Barbell" }).count()))
+    fail("a miniature should show a real class name");
+
+  // The real poster is in the sheet, at the poster's own proportions, and it
+  // redraws as you pick. It used to live behind the scrim, which meant
+  // choosing a style blind, closing, looking, and opening again.
+  const peek = coach.locator(".stylepeek .storyimg");
+  await peek.waitFor();
+  {
+    const box = await coach.locator(".stylepeek .storyimg-wrap").boundingBox();
+    const ratio = box.height / box.width;
+    if (Math.abs(ratio - 16 / 9) > 0.08)
+      fail(`the sheet's preview should be 9:16, got ${ratio.toFixed(2)}`);
+  }
+  const before = await peek.getAttribute("src");
   const first = (await coach.locator(".palchip").allInnerTexts()).map((t) => t.trim());
   console.log("plain's colours:", first.join(" | "));
   if (first.length !== 3) fail("a style is offered in three colours, got " + first.length);
@@ -178,6 +221,8 @@ console.log("one canvas offered, and the square still renders at the route ok");
   // colours: a diner sign is never asked to wear Midnight.
   await coach.locator(".stylecard", { hasText: "Poster" }).click();
   await coach.waitForTimeout(400);
+  if ((await peek.getAttribute("src")) === before)
+    fail("picking a style should redraw the poster in the sheet");
   const loud = (await coach.locator(".palchip").allInnerTexts()).map((t) => t.trim());
   console.log("poster's colours:", loud.join(" | "));
   if (loud.join() === first.join()) fail("each style carries its own three colours");
@@ -186,7 +231,7 @@ console.log("one canvas offered, and the square still renders at the route ok");
   // The second colour of that style, and the URL says both halves.
   await coach.locator(".palchip").nth(1).click();
   await coach.waitForTimeout(400);
-  const src = await coach.locator(".storyimg").getAttribute("src");
+  const src = await coach.locator(".composer > .storyimg-wrap .storyimg").getAttribute("src");
   console.log("picture:", src.replace(/^.*compose\?/, ""));
   if (!/style=poster/.test(src)) fail("the picture should carry the style: " + src);
   if (!new RegExp(`palette=${encodeURIComponent(loud[1])}`, "i").test(src))
@@ -213,7 +258,7 @@ console.log("style first, then one of its three colours ok");
   await coach.waitForTimeout(400);
   await closeSheet(coach);
   await settled(coach);
-  const src = await coach.locator(".storyimg").getAttribute("src");
+  const src = await coach.locator(".composer > .storyimg-wrap .storyimg").getAttribute("src");
   if (!/days=1/.test(src)) fail("the picture should draw the range asked for: " + src);
   const dates = await rowWords(coach, "Dates");
   console.log("one day:", dates);

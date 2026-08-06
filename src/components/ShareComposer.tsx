@@ -9,6 +9,7 @@ import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StoryPreview } from "@/components/StoryPreview";
+import { StyleThumb } from "@/components/StyleThumb";
 import { putImage } from "@/lib/shareimage";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -341,8 +342,26 @@ export function ShareComposer({
           lead="How loud the picture is, then which of its three colours."
           onClose={() => setSheet(null)}
         >
+          {/* The real poster, in the sheet, redrawing as you pick.
+              The miniatures below say what the arrangement is; this says what
+              you will actually post, which is the thing a picker is for. It
+              was behind the scrim: the preview lives on the screen underneath,
+              so choosing a style meant picking blind, closing, looking, and
+              opening again. Small, because the grid is what you are working
+              in and this is the answer beside it. */}
+          <div className="stylepeek">
+            <StoryPreview src={src} alt="Your picture in this style" bg={look.bg} />
+          </div>
           {/* Loud to quiet, because that is the order somebody scans them in
-              and the quiet ones are what most people settle on. */}
+              and the quiet ones are what most people settle on.
+
+              Each card draws the real arrangement rather than a swatch. It
+              was three coloured bars per style, which said the colours and
+              nothing else: ten cards differing only in hue, above a question
+              about layout. What actually differs is where the block sits,
+              whether the names shout, whether a row is ruled or boxed, and
+              whether the time holds a gutter, so that is what the card shows,
+              off the same style object the image route reads. */}
           <div className="stylegrid">
             {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
               ([id, s]) => {
@@ -365,15 +384,7 @@ export function ShareComposer({
                       );
                     }}
                   >
-                    <span
-                      className="stylecard-sw"
-                      style={{ background: sw.bg, color: sw.fg, borderColor: sw.accent }}
-                      aria-hidden="true"
-                    >
-                      <span className="stylecard-bar" style={{ background: sw.accent }} />
-                      <span className="stylecard-line" style={{ background: sw.fg }} />
-                      <span className="stylecard-line short" style={{ background: sw.faint }} />
-                    </span>
+                    <StyleThumb style={s} theme={sw} />
                     <span className="stylecard-lbl">{s.label}</span>
                   </button>
                 );
