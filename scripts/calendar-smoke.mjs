@@ -166,30 +166,35 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
       fail("every band reads the same way, got " + band);
 }
 
-// The header and the bands both pin. This is the whole reason the calendar is
-// a scroll rather than a stepper: the day you are looking at has to stay
-// named, and the title and the view switch have to stay reachable.
+// The day band is the ONLY thing that pins, by Matt's call: the header and
+// the calendar's own title row scroll away with the page, and opening the
+// calendar with everything moving as one piece is the cleaner read. The day
+// you are looking at stays named because the band sticks to the very top.
 {
   const stick = (sel) => p.locator(sel).first().evaluate((e) => getComputedStyle(e).position);
-  if ((await stick(".calsticky")) !== "sticky") fail("the calendar header should pin");
   if ((await stick(".dayband")) !== "sticky") fail("the day bands should pin");
-  // And they pin under the app header rather than at a guessed offset:
-  // `--dayband-top` has one writer and a screen that forgets to call it pins
-  // its bands halfway down the phone.
-  const top = await p.evaluate(() =>
-    getComputedStyle(document.documentElement).getPropertyValue("--dayband-top").trim(),
-  );
-  console.log("bands pin at", top);
-  if (!/^\d+px$/.test(top) || parseInt(top) < 40) fail("the band offset looks unmeasured: " + top);
-  // Scroll a long way and the first band on screen is still a band, not a row.
+  if ((await stick(".calsticky")) === "sticky") fail("the title row should scroll away");
+  if ((await stick(".brandbar")) === "sticky") fail("the app header should scroll away");
+  // A pinned band still needs a ground of its own: with nothing behind it the
+  // rows scroll through its words, and "no background" is one word away from
+  // exactly that bug.
+  const bg = await p.locator(".dayband").first().evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (/transparent|rgba\(0, 0, 0, 0\)/.test(bg)) fail("a pinned band needs a ground, got " + bg);
+  // Scroll a long way: the header is gone, and the thing at the very top of
+  // the viewport is a band.
   await p.evaluate(() => window.scrollTo(0, 600));
   await p.waitForTimeout(400);
-  const bandTop = parseInt(top);
-  const stuck = await p.evaluate((t) => {
-    const el = document.elementFromPoint(200, t + 10);
+  const headerGone = await p.evaluate(() => {
+    const bb = document.querySelector(".brandbar");
+    return bb ? bb.getBoundingClientRect().bottom <= 0 : true;
+  });
+  if (!headerGone) fail("the header should have scrolled away");
+  const stuck = await p.evaluate(() => {
+    const el = document.elementFromPoint(200, 8);
     return el?.closest(".dayband") ? "band" : (el?.className ?? "nothing");
-  }, bandTop);
-  if (stuck !== "band") fail("a band should be pinned under the header, found " + stuck);
+  });
+  if (stuck !== "band") fail("a band should be pinned at the top, found " + stuck);
+  console.log("scrolled: header gone, a band pinned at the top");
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(300);
 }

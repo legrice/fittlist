@@ -1162,10 +1162,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    two lines were the same break drawn twice, a few pixels apart.
 
    It carries the card's own top radius: it is the first thing inside the
-   card, so at rest the two curves coincide, and pinned it keeps reading as
-   the card's top edge sliding along under the header. */
+   card, so the two curves coincide. Not sticky any more, despite the name:
+   the title and the view switch scroll away with the header, and the day
+   band is the one thing that pins. The class name survives because the
+   measuring machinery it carries (publishBandTop) still has callers. */
 .calsticky {
-  position: sticky; top: 0; z-index: 7;
+  position: relative; z-index: 7;
   background: var(--paper);
   margin: -10px -18px 0; padding: 16px 18px 0;
   border-radius: 28px 28px 0 0;
@@ -1413,7 +1415,11 @@ button.bl-band { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   background: var(--shell);
   margin: -14px -18px 0; padding: 16px 18px 12px;
-  position: sticky; top: 0; z-index: 8;
+  /* Not sticky, by Matt's call: the only thing that pins on a scroll is the
+     day band. A header that rides along is chrome spending screen the whole
+     way down a list, and opening the calendar with everything scrolling as
+     one piece is the cleaner read. */
+  position: relative; z-index: 8;
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
@@ -2773,8 +2779,12 @@ button.ps-card { cursor: pointer; }
    copy of the name so the schedule keeps its owner. Full bleed lives here so
    the paper covers whatever scrolls beneath, edge to edge. */
 .pubstick {
-  position: sticky; top: 0; z-index: 7;
-  background: var(--shell);
+  /* Static, by the same call: only the day bands pin. The .stuck machinery
+     (the marker, the observer, the small name copy) is disarmed by the row
+     below staying display:none rather than removed, because the observer
+     still runs and toggles the class. */
+  position: static;
+  background: none;
   margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
 }
@@ -2783,7 +2793,7 @@ button.ps-card { cursor: pointer; }
   align-items: center; justify-content: space-between; gap: 12px;
   padding-top: 10px; margin-bottom: -6px;
 }
-.pubstick.stuck .pubstick-row { display: flex; }
+.pubstick.stuck .pubstick-row { display: none; }
 .pubstick-name {
   min-width: 0;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -5856,7 +5866,8 @@ a.clspeek-by:active { opacity: .6; }
    (`publishBandTop`), which is why a screen that draws bands without calling
    `useBandTop` pins them at a guessed offset halfway down the phone. */
 .dayband {
-  position: sticky; top: var(--dayband-top, 56px); z-index: 6;
+  /* Top of the viewport: nothing else pins, so there is nothing to sit under. */
+  position: sticky; top: 0; z-index: 6;
   display: flex; align-items: baseline; gap: 12px;
   margin: 0 -18px; padding: 7px 18px;
   background: var(--band);
@@ -5883,13 +5894,11 @@ a.clspeek-by:active { opacity: .6; }
    in the label; the dot is what makes the band findable in a scroll without
    reading any of them. */
 .dayband-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--si); }
-/* A profile has its own pinned name-and-tabs row and its own stacking, and it
-   is a page somebody reads once rather than a working list they scroll for a
-   month. Its bands sit where they fall. */
-.pub .dayband { position: static; }
 /* The scroll landing for a day tapped in the month grid: under the pinned
    chrome rather than behind it. */
-.dayblock { scroll-margin-top: calc(var(--dayband-top, 150px) + 8px); }
+/* The band is the block's own first child, so a landing only needs a breath:
+   the band sticks to the top the moment the block arrives. */
+.dayblock { scroll-margin-top: 8px; }
 
 .dayrows { display: flex; flex-direction: column; }
 
