@@ -75,6 +75,7 @@ export default async function CalendarPage() {
   const studios: StudioDto[] = studioRows.map((s) => ({
     id: s.id,
     seq: s.seq,
+    slug: s.slug,
     name: s.name,
     address: s.address,
   }));

@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { initialOf } from "@/lib/avatar";
 import { fmtDayHeaderRel } from "@/lib/format";
@@ -27,6 +28,8 @@ export type FeedItem = {
   coachId: string;
   name: string;
   where: string | null;
+  /** The studio's page, when the class names a studio rather than a room. */
+  whereHref: string | null;
   hm: string;
   ap: string;
   /** For sorting inside a day, since "6:00" sorts badly as a string. */
@@ -57,6 +60,18 @@ export function FollowingScreen({
 }) {
   const [focus, setFocus] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
+  const [find, setFind] = useState(false);
+  const router = useRouter();
+
+  // Following somebody in the sheet is the whole reason the sheet exists, and
+  // the week behind it is a server render: closing is where it catches up. The
+  // action revalidates /feed, but nothing re-renders a page that is already on
+  // screen, so without this you would follow three people, close, and find the
+  // same empty rail you opened.
+  const closeFind = () => {
+    setFind(false);
+    router.refresh();
+  };
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
 
@@ -117,22 +132,6 @@ export function FollowingScreen({
       });
   }, [shown, coachById, todayIso]);
 
-  // "12 classes from 3 coaches", or their name when the rail is narrowed. It
-  // says what is on screen rather than what exists, so it agrees with the list
-  // underneath it whichever way the rail is set.
-  const summary = (() => {
-    if (!rail.length) return null;
-    const n = shown.length;
-    const cls = `${n} ${n === 1 ? "class" : "classes"}`;
-    if (focus) {
-      const c = coachById.get(focus);
-      return c ? `${cls} from ${c.name}` : cls;
-    }
-    const people = new Set(shown.map((i) => i.coachId)).size;
-    if (!people) return cls;
-    return `${cls} from ${people} ${people === 1 ? "coach" : "coaches"}`;
-  })();
-
   // Nobody followed at all is a different screen from a quiet week, and it is
   // the one that matters: this tab is empty until a follow happens, so the
   // empty state is the whole screen and it points at the one way out.
@@ -153,10 +152,11 @@ export function FollowingScreen({
               ? "The people you follow have not put any classes up. This fills in as they do."
               : "Follow a coach and their week shows up here, beside everyone else you follow."}
           </p>
-          <Link className="btn si wkempty-cta" href="/discover">
+          <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
             Find coaches
-          </Link>
+          </button>
         </div>
+        {find && <DiscoverSheet onClose={closeFind} />}
       </>
     );
   }
@@ -200,26 +200,26 @@ export function FollowingScreen({
           })}
           {/* The way to lengthen the rail, at the end of it, never one of the
               faces: it keeps its full opacity when a face is picked. */}
-          <Link className="trayitem" href="/discover">
+          <button className="trayitem" onClick={() => setFind(true)}>
             <span className="trayav trayav-add">
               <Icon name="add" size={26} />
             </span>
             <span className="trayitem-nm">Find</span>
-          </Link>
+          </button>
         </div>
       </div>
 
       {/* No week stepper here, on purpose. Your calendar is a week you flip
           through, because you are working on it; this is a list of what is
           coming, because you are reading it and "when can I train next" is not
-          a question any week boundary answers. */}
-      <div className="wkhead">
-        <div className="wkhead-row">
-          <h1 className="wkhead-range">Coming up</h1>
-        </div>
-        {summary && <p className="wkhead-sum">{summary}</p>}
-      </div>
+          a question any week boundary answers.
 
+          No heading either. "Coming up" was a 32px title saying what the date
+          headings underneath it already say, and the line under it counted
+          the classes and the coaches, which is arithmetic the list is doing
+          at you: the rows are the answer and they are right there. Both came
+          off, so the faces are followed by the first day rather than by two
+          lines about the faces. */}
       {days.length === 0 ? (
         <WeekEmpty
           first
@@ -235,11 +235,16 @@ export function FollowingScreen({
       )}
 
       {/* Discovery is this button and the plus on the rail, and they open the
-          same place. It is not a tab: a directory is somewhere you go
-          occasionally, and a tab is somewhere you live. */}
-      <Link className="wkfab wkfab-find" aria-label="Find coaches" href="/discover">
+          same sheet. It is not a tab: a directory is somewhere you go
+          occasionally, and a tab is somewhere you live. It is not a page
+          either, any more: finding somebody is a thing you do to the week in
+          front of you, exactly the way adding a class is on the calendar, so
+          it slides up over the list and comes back down onto it. */}
+      <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
         <Icon name="search" size={24} strokeWidth={2.75} />
-      </Link>
+      </button>
+
+      {find && <DiscoverSheet onClose={closeFind} />}
 
       {peek && (
         <ClassPeek
@@ -268,7 +273,10 @@ function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
     when: `${dow}, ${md}`,
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
-    coach: coach ? { name: coach.name, handle: coach.handle } : null,
+    studioHref: i.whereHref,
+    coach: coach
+      ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color }
+      : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
     // class, which is why the row carries it rather than the coach doing.
     base: i.base,

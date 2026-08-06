@@ -1,6 +1,10 @@
 import type { BookingLink } from "@/db/schema";
 
-export type StudioDto = { id: string; seq: number; name: string; address: string };
+// `slug` is optional because a studio just created through the adder has no
+// slug in hand yet. Where a page loaded it, a class row can point at the
+// studio's own page without a second lookup: the peek sheet's studio line
+// is a door now.
+export type StudioDto = { id: string; seq: number; slug?: string | null; name: string; address: string };
 
 export type ClassDto = {
   id: string;

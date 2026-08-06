@@ -93,6 +93,9 @@ export default async function FollowingPage() {
           coachId: coach.id,
           name: c.name,
           where: st?.name ?? c.location ?? null,
+          // A studio has a page; a class's own free-text location names a
+          // room, which has nothing to open.
+          whereHref: st ? `/s/${st.slug}` : null,
           hm: t.hm,
           ap: t.ap,
           mins: timeToMinutes(c.startTime),

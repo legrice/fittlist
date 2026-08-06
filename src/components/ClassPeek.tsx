@@ -33,8 +33,14 @@ export type PeekClass = {
   when: string;
   time: string;
   studio: string | null;
-  /** Absent on your own class: the sheet you are looking at is yours. */
-  coach?: { name: string; handle: string | null } | null;
+  /** The studio's page, when it has one. The name is a door rather than a
+   *  fact: somebody checking where a class is is one tap from wanting to know
+   *  what the place is. */
+  studioHref?: string | null;
+  /** Absent on your own class: the sheet you are looking at is yours. It
+   *  carries a face because it is a by-line now rather than a row in the
+   *  facts, and a by-line without a face is a name in a list. */
+  coach?: { name: string; handle: string | null; photo?: string | null; color?: string } | null;
   /** Where the fuller detail is loaded from: a handle, or `s/{slug}` for a
    *  gym's class. Without it the sheet stays a summary, which is all a row
    *  built from a calendar the viewer already owns needs. */
@@ -52,6 +58,32 @@ export type PeekClass = {
   shift?: boolean;
   mine: boolean;
 };
+
+/** The by-line: their face and their name, and a door to their week when they
+ *  have a page. A coach with no handle is a gym's account, which is a place
+ *  rather than a person and has nothing to open. */
+function CoachBy({ coach }: { coach: NonNullable<PeekClass["coach"]> }) {
+  const face = (
+    <>
+      <span className="clspeek-by-av" style={{ background: coach.color ?? "var(--cl)" }}>
+        {coach.photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coach.photo} alt="" />
+        ) : (
+          (coach.name.trim().charAt(0) || "?").toUpperCase()
+        )}
+      </span>
+      <span className="clspeek-by-nm">{coach.name}</span>
+    </>
+  );
+  if (!coach.handle) return <span className="clspeek-by">{face}</span>;
+  return (
+    <a className="clspeek-by" href={`/${coach.handle}`}>
+      {face}
+      <Icon name="chevron_right" size={16} />
+    </a>
+  );
+}
 
 export function ClassPeek({
   cls,
@@ -143,8 +175,6 @@ export function ClassPeek({
       router.refresh();
     });
 
-  const firstName = cls.coach?.name.trim().split(/\s+/)[0] ?? "";
-
   return (
     <div
       className="sheet-scrim"
@@ -157,6 +187,14 @@ export function ClassPeek({
         <div className="clspeek-head">
           <div className="clspeek-titles">
             <h2 className="clspeek-nm">{cls.name}</h2>
+            {/* Whose class it is, as a by-line under the name rather than a
+                row down in the facts. A person is not the same kind of answer
+                as a time or a date: the other three are properties of the
+                occurrence, and this one is somebody you can go and look at.
+                Putting it in the list made it read as a fourth field and
+                spent a whole row on it; here it wears their face, sits where
+                a by-line sits, and is the door to their week. */}
+            {cls.coach && <CoachBy coach={cls.coach} />}
           </div>
           <button className="clspeek-x" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
@@ -173,12 +211,6 @@ export function ClassPeek({
             <dt>Date</dt>
             <dd>{cls.when}</dd>
           </div>
-          {cls.coach && (
-            <div className="clspeek-fact">
-              <dt>Coach</dt>
-              <dd>{cls.coach.name}</dd>
-            </div>
-          )}
           <div className="clspeek-fact">
             <dt>Time</dt>
             <dd>{cls.time}</dd>
@@ -186,7 +218,19 @@ export function ClassPeek({
           {cls.studio && (
             <div className="clspeek-fact">
               <dt>Studio</dt>
-              <dd>{cls.studio}</dd>
+              {/* A door where there is a page behind it, plain text where
+                  there isn't: a class's own free-text location names a room
+                  rather than a place with a page. */}
+              <dd>
+                {cls.studioHref ? (
+                  <a className="clspeek-door" href={cls.studioHref}>
+                    {cls.studio}
+                    <Icon name="chevron_right" size={17} />
+                  </a>
+                ) : (
+                  cls.studio
+                )}
+              </dd>
             </div>
           )}
           {cls.mine && cls.repeats && (
@@ -264,20 +308,23 @@ export function ClassPeek({
                 <Icon name="north_east" size={17} />
               </a>
             ))}
-            <div className="clspeek-outs">
-              {full.coachHandle && (
-                <a className="clspeek-out" href={`/${full.coachHandle}`}>
-                  See {firstName}&rsquo;s week
-                  <Icon name="chevron_right" size={18} />
-                </a>
-              )}
-              {full.studioHref && full.studioName && (
-                <a className="clspeek-out" href={full.studioHref}>
-                  {full.studioName}
-                  <Icon name="chevron_right" size={18} />
-                </a>
-              )}
-            </div>
+            {/* The two ways out of here used to be rows at the bottom of the
+                depth: the coach's week, and the studio's page. Both moved up
+                to the things they are about, the by-line under the name and
+                the studio in the facts, which is where somebody reading
+                either one is already looking. A door at the end of a
+                photograph and a paragraph is a door behind a scroll.
+
+                Which leaves this able to open onto nothing, for a class with
+                no picture, no words and no booking link. It says so rather
+                than expanding to an empty gap: a button that appears to do
+                nothing is worse than one that tells you there is nothing. */}
+            {!full.image && !full.description && full.links.length === 0 && (
+              <p className="clspeek-none">
+                Nothing else on this one. The coach hasn&rsquo;t added a description or a booking
+                link.
+              </p>
+            )}
           </div>
         )}
       </div>

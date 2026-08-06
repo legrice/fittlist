@@ -87,7 +87,20 @@ await m.locator(".wkempty-t", { hasText: "not following anyone" }).waitFor();
 if (await m.locator(".tray").count()) fail("no rail until there is somebody on it");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-empty.png" });
 
-for (const h of ["nadiahaq", "theolang", "quinnreyes"]) {
+// The first follow happens in the sheet, which is the sheet's whole reason
+// for existing: the empty state's own button opens it, you follow somebody in
+// it, and closing brings the week behind it up to date. A page that stayed
+// empty after three follows would read as a follow that did nothing.
+await m.locator(".wkempty-cta", { hasText: "Find coaches" }).click();
+await m.locator(".dissheet").waitFor();
+await m.waitForTimeout(900);
+await m.locator(".dissheet .disrow", { hasText: "Nadia Haq" }).getByRole("button").first().click();
+await m.waitForTimeout(700);
+await m.locator(".dissheet .sheetclose").click();
+await m.locator(".tray").waitFor({ timeout: 15000 });
+console.log("followed from the sheet, and the week behind it caught up on close");
+
+for (const h of ["theolang", "quinnreyes"]) {
   await m.goto(BASE + "/" + h);
   await m.getByRole("button", { name: "Follow", exact: true }).first().click();
   await m.waitForTimeout(500);
@@ -96,38 +109,36 @@ for (const h of ["nadiahaq", "theolang", "quinnreyes"]) {
 await m.goto(BASE + "/feed");
 await m.locator(".tray").waitFor();
 await m.waitForTimeout(600);
-console.log("this week:", (await m.locator(".wkhead-sum").innerText()).trim());
 {
   const faces = (await m.locator(".trayitem-nm").allInnerTexts()).map((t) => t.trim());
   console.log("rail:", faces.join(" | "));
   if (faces.includes("Quinn")) fail("a coach with nothing up should not be on the rail");
   if (!faces.includes("Nadia") || !faces.includes("Theo"))
     fail("both coaches with classes should be on the rail: " + faces.join());
-  // Search and the rail's plus are the same act and land in the same place.
-  const fab = await m.locator(".wkfab-find").getAttribute("href");
-  if (fab !== "/discover") fail("search should open Discover, got " + fab);
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
 // One list of what is coming, under date headings, rather than a week you flip
 // through. All four classes are in it: this week's remainder plus next week's.
 await m.locator(".wkrow").first().waitFor();
-const sum = (await m.locator(".wkhead-sum").innerText()).trim();
+const rowsAll = await m.locator(".wkrow").count();
 const heads = (await m.locator(".upday-h").allInnerTexts()).map((t) => t.trim());
-console.log("coming up:", sum, "| rows:", await m.locator(".wkrow").count());
+console.log("coming up rows:", rowsAll);
 console.log("headings:", heads.join(" | "));
-if (!/from 2 coaches/.test(sum)) fail("expected two coaches: " + sum);
 if (heads.length < 2) fail("expected a heading per day, got " + heads.join());
 if (await m.locator(".wkarrow").count()) fail("Following is a list, so it has no week arrows");
-if (!(await m.locator(".wkhead-range", { hasText: "Coming up" }).count()))
-  fail("the list should say what it is");
+// No title and no count. "Coming up" said what the date headings say, and the
+// line under it counted the classes the rows are already showing: arithmetic
+// the list was doing at somebody who can see the list.
+if (await m.locator(".wkhead").count()) fail("Following carries no header block");
+if (await m.locator(".wkhead-sum").count()) fail("no count of classes and coaches");
 
-// The rail filters, single select, and says so.
+// The rail filters, single select, and the list gets shorter.
 await m.locator(".trayitem", { hasText: "Nadia" }).click();
 await m.waitForTimeout(400);
-const sum2 = (await m.locator(".wkhead-sum").innerText()).trim();
-console.log("filtered:", sum2, "| rows:", await m.locator(".wkrow").count());
-if (!/from Nadia Haq/.test(sum2)) fail("the summary should name the picked coach: " + sum2);
+const rowsOne = await m.locator(".wkrow").count();
+console.log("filtered rows:", rowsOne, "of", rowsAll);
+if (!(rowsOne > 0 && rowsOne < rowsAll)) fail("picking a face should narrow the list");
 if (!(await m.locator(".trayav.sel").count())) fail("the picked face should wear the ring");
 if (!(await m.locator(".trayitem.dim").count())) fail("the others should step back");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-filtered.png" });
@@ -135,8 +146,24 @@ await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-filtered.
 // Tapping again gives everyone back.
 await m.locator(".trayitem", { hasText: "Nadia" }).click();
 await m.waitForTimeout(400);
-if (!/from 2 coaches/.test((await m.locator(".wkhead-sum").innerText()).trim()))
+if ((await m.locator(".wkrow").count()) !== rowsAll)
   fail("tapping the picked coach again should clear the filter");
+
+// Search pulls the directory up over the week rather than navigating to it,
+// the way the plus pulls up the adder on the calendar, and comes back down
+// onto the list you were reading.
+await m.locator(".wkfab-find").click();
+await m.locator(".dissheet").waitFor();
+await m.waitForTimeout(900);
+{
+  const names = (await m.locator(".dissheet .disrow .nm").allInnerTexts()).map((t) => t.trim());
+  console.log("discover sheet:", names.join(" | ") || "(empty)");
+  if (!names.includes("Nadia Haq")) fail("the directory should list the coaches: " + names.join());
+  if (!m.url().endsWith("/feed")) fail("the sheet should not navigate, at " + m.url());
+}
+await m.locator(".dissheet .sheetclose").click();
+await m.waitForTimeout(300);
+if (await m.locator(".dissheet").count()) fail("the close should put it away");
 
 // A class opens to say when, where and whose, and offers no way to add it.
 await m.locator(".wkrow").first().click();
@@ -147,7 +174,20 @@ console.log("sheet:", (await m.locator(".clspeek-nm").innerText()).trim(), "|", 
 // The date is a row now, not an eyebrow over the title, and it leads the
 // facts because which day is the first thing anybody checks.
 if (!/^DATE/i.test(facts)) fail("the date should be the first fact: " + facts);
-if (!/COACH/i.test(facts)) fail("somebody else's class should name the coach");
+// Date, time, studio, and nothing else. The coach came out of the list and
+// is the by-line under the name: a person is not the same kind of answer as
+// a time, and in the list they read as a fourth field.
+if (/COACH/i.test(facts)) fail("the coach is a by-line, not a fact: " + facts);
+{
+  const by = (await m.locator(".clspeek-by").innerText()).trim();
+  const href = await m.locator("a.clspeek-by").getAttribute("href");
+  console.log("by-line:", by, "->", href);
+  if (!href || href === "/") fail("the by-line should open their week, got " + href);
+  // The studio is a door too, and the two are the ways out of this sheet.
+  const st = await m.locator(".clspeek-door").getAttribute("href");
+  console.log("studio door:", st);
+  if (!/^\/s\//.test(st ?? "")) fail("the studio should open its page, got " + st);
+}
 if (await m.locator(".clspeek-del").count()) fail("no delete on a class that is not yours");
 if (!(await m.locator(".clspeek-btn", { hasText: "Share class" }).count()))
   fail("expected Share class");
@@ -162,12 +202,12 @@ await m.locator(".clspeek-btn", { hasText: "Full details" }).click();
 await m.locator(".clspeek-full").waitFor();
 await m.waitForTimeout(400);
 {
-  const outs = (await m.locator(".clspeek-out").allInnerTexts()).map((t) => t.trim());
-  console.log("full details:", outs.join(" | ") || "(no outs)");
-  if (!outs.some((o) => /week/.test(o))) fail("the depth should offer the coach's week");
-  // ...and it replaced the button it came from rather than stacking beside it.
+  // The depth replaced the button it came from rather than stacking beside it.
   if (await m.locator(".clspeek-btn", { hasText: "Full details" }).count())
     fail("Full details should give way to what it opened");
+  // The two ways out are still up at the top, on the things they are about.
+  if (!(await m.locator("a.clspeek-by").count())) fail("the by-line should survive the expand");
+  console.log("full details opened, doors still on the by-line and the studio");
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-sheet.png" });
 

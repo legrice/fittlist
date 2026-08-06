@@ -5443,6 +5443,24 @@ a.wkrow:active { transform: scale(.995); }
   box-shadow: 0 12px 32px rgba(25, 21, 2, .22);
 }
 .wkfab:active { transform: scale(.95); }
+/* The other corner: handing the week on. White rather than brand, because the
+   loud colour follows the primary action and the primary action here is
+   putting something on the calendar; the sparkle carries the colour instead,
+   so the pair reads as one family with one of them leading. It wears its word
+   where the plus does not, for the reason Share has always worn one: a plus is
+   a mark everybody already knows and a sparkle on its own is a decoration. */
+.wkshare {
+  position: fixed; left: 18px; bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 44; height: 56px; padding: 0 24px 0 20px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--card); color: var(--ink); border: none; cursor: pointer;
+  text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 900;
+  box-shadow: 0 12px 32px rgba(25, 21, 2, .18);
+}
+.wkshare:active { transform: scale(.96); }
+.wkshare-ic { color: var(--si); }
 
 /* ---------------------------------------------------------------------------
    A class, tapped: one sheet, two readings.
@@ -5472,6 +5490,31 @@ a.wkrow:active { transform: scale(.995); }
   font-size: 34px; font-weight: 900; line-height: 1.02; letter-spacing: -.02em;
   color: var(--ink);
 }
+/* Whose class it is, under the name. A by-line, not a field: the date, the
+   time and the studio are properties of the occurrence, and this is a person
+   you can go and look at, so it wears their face and a chevron rather than
+   sitting in the definition list looking like a fourth fact. */
+.clspeek-by {
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 12px;
+  color: var(--ink); text-decoration: none;
+  font-size: 15px; font-weight: 700;
+}
+a.clspeek-by:active { opacity: .6; }
+.clspeek-by-av {
+  width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 800;
+}
+.clspeek-by-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clspeek-by-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A fact that is also a door. It stays the answer's own weight and alignment,
+   so the column of values still reads as a column: the chevron is the only
+   thing saying this one opens. */
+.clspeek-door {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--ink); text-decoration: none;
+}
+.clspeek-door:active { opacity: .6; }
 .clspeek-x {
   flex-shrink: 0; width: 46px; height: 46px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
@@ -5566,6 +5609,9 @@ a.wkrow:active { transform: scale(.995); }
   border-radius: 22px; margin-bottom: 18px;
 }
 .clspeek-desc { margin: 0 0 18px; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+/* A class with no picture, no words and no link. The depth still opens; it
+   just says what is in it, which is nothing, rather than expanding to a gap. */
+.clspeek-none { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ol); }
 /* Booking leaves the app, so it looks like a door rather than a button. */
 .clspeek-link {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -5574,14 +5620,13 @@ a.wkrow:active { transform: scale(.995); }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px; font-weight: 900;
 }
-.clspeek-outs { margin-top: 4px; }
-.clspeek-out {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 15px 0; border-top: 1px solid var(--line);
-  color: var(--ink); text-decoration: none;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px; font-weight: 900;
-}
+/* Discover, as a sheet over Following. It wears the adder's full-height
+   shape and the adder's head, because it is the same kind of act on the other
+   tab: a thing you do to the week in front of you, which comes back down onto
+   it rather than navigating away and back. */
+.dissheet { padding-left: 18px; padding-right: 18px; }
+.dissheet .dissearchrow { margin-top: 4px; }
+.dissheet-wait { margin: 30px 0; font-size: 15px; color: var(--ol); }
 
 /* Following is a list, not a week. Your calendar is a week you flip through
    because you are working on it; this is what is coming up, because you are
@@ -5589,10 +5634,12 @@ a.wkrow:active { transform: scale(.995); }
    answers. Date headings do the sectioning, which is also what stops the two
    screens looking identical. */
 .upcoming { display: flex; flex-direction: column; gap: 26px; padding-top: 14px; }
+/* No rule under it. The gap above each heading is already the section break,
+   and a line as well made every day read as a boxed-off block on a screen
+   that is meant to scroll as one list. */
 .upday-h {
   margin: 0 0 10px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15px; font-weight: 500; color: var(--ink);
-  padding-bottom: 8px; border-bottom: 1px solid var(--line);
 }
 /* The rows sit under their heading rather than beside a date gutter: the
    heading already said the day, and a gutter repeating it is the date twice. */

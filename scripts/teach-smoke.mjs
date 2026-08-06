@@ -59,6 +59,9 @@ if (shareRows.some((s) => /story|week/i.test(s)))
 if (!shareRows.includes("Profile card") || !shareRows.includes("QR code"))
   fail("the page's own picture and code stay: " + shareRows.join());
 await p.locator(".sheetclose").click();
+// Wait for the scrim to actually go: the next click is on a row underneath it,
+// and a tap that lands on a closing sheet does nothing at all.
+await p.locator(".sheet-scrim").waitFor({ state: "detached", timeout: 10000 });
 
 // Turn teaching on: the Calendar tab arrives without a reload.
 const row = p.locator(".setrow", { hasText: "I teach too" });

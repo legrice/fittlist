@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -68,7 +69,10 @@ export function CalendarScreen({
               where: st?.name ?? c.location ?? null,
               hm: t.hm,
               ap: t.ap,
-              onTap: () => setPeek(peekOf(c, iso, st?.name ?? c.location ?? null)),
+              onTap: () =>
+                setPeek(
+                  peekOf(c, iso, st?.name ?? c.location ?? null, st ? `/s/${st.slug}` : null),
+                ),
             };
           });
         return {
@@ -103,13 +107,28 @@ export function CalendarScreen({
         <WeekDays days={days} />
       )}
 
-      {/* The plus only once there is a week to add to: an empty calendar
-          carries the CTA in its own block, and two buttons saying the same
-          thing is one of them explaining the other. */}
+      {/* The two things you do with a calendar, floating in the two bottom
+          corners: make it, and hand it on. Both only once there is a week
+          behind them. An empty calendar carries its own CTA, so a plus beside
+          it is one button explaining the other, and a poster of nothing is
+          the app talking to itself.
+
+          The pair is deliberately weighted. Add is the loud one, in the brand
+          colour, under the thumb, because it is what somebody opens this
+          screen to do. Share is white with the sparkle carrying the colour:
+          it wears its word because it is occasional and needs saying, and it
+          takes the left corner because the right one belongs to the act you
+          repeat. */}
       {days.length > 0 && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-          <Icon name="add" size={26} strokeWidth={2.6} />
-        </button>
+        <>
+          <Link className="wkshare" href="/share">
+            <Icon name="auto_awesome" size={20} className="wkshare-ic" />
+            Share
+          </Link>
+          <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+            <Icon name="add" size={26} strokeWidth={2.6} />
+          </button>
+        </>
       )}
 
       {addOpen && (
@@ -179,7 +198,12 @@ export function CalendarScreen({
 /** The tapped occurrence, as the sheet wants it. `MON · AUG 3` is the date
  *  said the way the design says it, and it lives here rather than in the sheet
  *  because only the caller knows which date was tapped. */
-function peekOf(c: ClassDto, iso: string, where: string | null): PeekClass {
+function peekOf(
+  c: ClassDto,
+  iso: string,
+  where: string | null,
+  whereHref: string | null,
+): PeekClass {
   const d = new Date(`${iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside
   // "6:00 pm" and "Ironbound Performance Athletics", not above them.
@@ -193,6 +217,7 @@ function peekOf(c: ClassDto, iso: string, where: string | null): PeekClass {
     when: `${dow}, ${md}`,
     time: `${t.hm} ${t.ap.toLowerCase()}`,
     studio: where,
+    studioHref: whereHref,
     repeats: c.specificDate ? "Once" : "Weekly",
     // A gym's class you are on the rota for. It is on this calendar and it is
     // not yours to edit, cancel or delete: the studio owns it, and what a
