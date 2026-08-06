@@ -2600,12 +2600,15 @@ button.ps-card { cursor: pointer; }
    photo instead, so the padding steps back down. */
 .pubhead {
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-  padding-top: 78px; padding-bottom: 10px; position: relative;
-  /* Opaque, in the shell it sits on: the head is positioned (for its corner
-     slots) and so paints above the pinned header, and on a transparent
-     ground the name slid over the wordmark as a double exposure. The header
-     content starts at the same 18px gutter this box does, so no bleed is
-     needed to cover it. */
+  padding-top: 78px; padding-bottom: 10px;
+  /* Pinned with the header above it, by Matt's call: face, name, meta and
+     the pills are chrome, and the card slides up over the lot. The top is
+     the header's measured height (`--head-top`, written by ProfileTabs),
+     zero on a stranger's page where there is no app header. Sticky is still
+     positioned, which is all the corner slots needed. */
+  position: sticky; top: var(--head-top, 0px);
+  /* Opaque, in the shell it sits on, so nothing shows through while the
+     card's rounded corners pass over it. */
   background: var(--shell);
 }
 /* On your own page there is no back arrow, so the photo can start level with
@@ -2838,33 +2841,23 @@ button.ps-card { cursor: pointer; }
    it would poke out of the rounded corners. */
 .pubcard .pubtabs { margin: 0 -18px; padding: 14px 18px 0; }
 .pubtabs {
-  display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
-  /* The rule sits under the tabs as an inset shadow rather than a border:
-     children paint above an inset shadow, so the selected tab's underline
-     sits in front of the line instead of being clipped behind it by the
-     row's own horizontal scroll. */
-  box-shadow: inset 0 calc(-1 * var(--divw)) 0 var(--div);
-  /* Full bleed again inside the sticky shell, so a tab can still slide half
-     off the screen rather than stopping at the column edge. */
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  /* No rule under the row, by Matt's call: the tabs are pills now (the nav's
+     own grammar, ink words with the light-orange wash as the one selection
+     mark), and a line under a row of pills boxed the card's top in. */
+  /* Full bleed inside the card, so a tab can still slide half off the
+     screen rather than stopping at the column edge. */
   margin: 0 calc(50% - 50vw);
   padding: 14px calc(50vw - 50%) 0;
 }
 .pubtabs::-webkit-scrollbar { display: none; }
 .pubtab {
-  flex: 0 0 auto; padding: 11px 20px; border-radius: 999px; text-decoration: none;
+  flex: 0 0 auto; padding: 11px 18px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 18px; color: var(--ol); background: transparent; white-space: nowrap;
+  font-size: 17px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-/* Underlines, not pills. They were pills for a moment, and under the two
-   action pills and over the card list it was pills on pills on pills: the
-   selected tab is ink with a rule beneath, the rest sit quiet, and the row's
-   inset line is the divider the head used to carry. */
-.pubtab {
-  border-radius: 0; padding: 11px 6px; background: transparent; font-size: 17px;
-  border-bottom: 3px solid transparent;
-}
-.pubtab.sel { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
+.pubtab.sel { color: var(--ink); background: color-mix(in srgb, var(--si) 12%, transparent); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -4113,8 +4106,11 @@ button.ps-card { cursor: pointer; }
    glyph and word stay the same colour, and the current one sits on a quiet
    pill of its own, the way Photos marks the pane you are in. It was the brand
    colour on the current tab's ink for a long time, and before that a wash
-   behind the glyph alone; one indicator, and it is the ground. */
-.navtab.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+   behind the glyph alone; one indicator, and it is the ground. The wash is
+   the light orange (the brand at a whisper), also by Matt's call, and it is
+   the same wash the calendar's view toggle and a profile's tabs wear: one
+   colour for "you are here", wherever the ground is saying it. */
+.navtab.on { background: color-mix(in srgb, var(--si) 12%, transparent); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -4418,21 +4414,26 @@ button.ps-card { cursor: pointer; }
   color: var(--ol);
 }
 .srchhead span { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ol); opacity: .7; }
+/* Flipped, by Matt's call: the quiet one is the offer and the loud one is
+   the state. Follow sits on the step-down cream (an invitation, not a
+   demand), and Following inks in, so a list of people you already follow
+   reads as settled rather than as a column of asks. */
 .disfollow {
   flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
-  background: var(--ink); color: var(--paper);
+  background: var(--cl-d); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
 }
-.disfollow.on { background: var(--cl); color: var(--ink); }
+.disfollow.on { background: var(--ink); color: var(--paper); }
 .disfollow[disabled] { opacity: .55; }
-[data-mode="dark"] .disfollow.on { color: var(--ink); }
 [data-mode="dark"] .discity.on { background: var(--ink); border-color: var(--ink); color: #191502; }
 
 /* ===========================================================
    A member's public profile. Same link shape as a coach's, far less behind
    it: who they are and who they train with, and nothing to book.
    =========================================================== */
-.memberpub { background: var(--paper); min-height: 100dvh; }
+/* The shell, like every profile: the head is chrome and the white starts at
+   the card, or a member's page is the one profile whose corners go missing. */
+.memberpub { background: var(--shell); min-height: 100dvh; }
 .memberpub .profwrap {
   max-width: 660px; margin: 0 auto;
   padding: calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
@@ -6005,8 +6006,8 @@ a.clspeek-by:active { opacity: .6; }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. Light all over, by
    Matt's call: the edge is the input border rather than ink, and the current
-   view sits on the step-down cream with its glyph unchanged, the same
-   grammar the nav tabs use now (the ground is the mark, never the ink). */
+   view sits on the nav's own light-orange wash with its glyph unchanged, the
+   same grammar the nav tabs use (the ground is the mark, never the ink). */
 .calseg {
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
   border: var(--divw) solid var(--line);
@@ -6018,7 +6019,7 @@ a.clspeek-by:active { opacity: .6; }
   background: none; cursor: pointer; color: var(--ol);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.calseg button.on { background: var(--cl-d); }
+.calseg button.on { background: color-mix(in srgb, var(--si) 12%, transparent); }
 /* Add, moved up beside the toggle and sized to it: the bottom corners were
    getting crowded, and adding is the screen's own act, so it rides the title
    row. The one loud colour stays its own. */

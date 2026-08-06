@@ -338,6 +338,24 @@ await p.goto(BASE + "/raebell/about");
   if (top < 18) fail("sections need room between them, got " + top);
 }
 await p.goto(BASE + "/raebell");
+// The head is chrome: face, name, meta and the pills pin at the header's
+// measured height, and the card slides up over the lot. The tabs on the
+// card are pills wearing the light-orange wash, with no rule under the row.
+{
+  const pos = await p.locator(".pubhead").evaluate((e) => getComputedStyle(e).position);
+  if (pos !== "sticky") fail("the profile head should pin, got " + pos);
+  const barH = await p.locator(".brandbar").evaluate((e) => e.offsetHeight);
+  const top = await p.locator(".pubhead").evaluate((e) => parseFloat(getComputedStyle(e).top));
+  if (Math.abs(top - barH) > 2) fail(`the head pins at the header's height: ${top} vs ${barH}`);
+  const sel = await p.locator(".pubtab.sel").evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (/rgba\(0, 0, 0, 0\)|transparent/.test(sel)) fail("the current tab wears the wash, got " + sel);
+  const row = await p.locator(".pubtabs").evaluate((e) => {
+    const cs = getComputedStyle(e);
+    return cs.boxShadow + " | " + cs.borderBottomWidth;
+  });
+  if (/inset/.test(row)) fail("no rule under the tab row, got " + row);
+  console.log("profile head pins at " + top + ", tabs are wash pills");
+}
 await p.locator(".profgear").click();
 await p.waitForURL(/\/settings/);
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();

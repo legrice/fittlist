@@ -86,6 +86,23 @@ export function ProfileTabs({
   const tracked = useRef(false);
   const stickRef = useRef<HTMLDivElement>(null);
   const sentRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+
+  // The head is chrome, pinned like the header above it: face, name, meta and
+  // the two pills all stay put, and the card slides up over the lot. Its
+  // sticky top is the header's measured height, zero for a stranger whose
+  // page has no app header; measured, because the safe area moves it.
+  useEffect(() => {
+    const el = headRef.current;
+    if (!el) return;
+    const bar = document.querySelector<HTMLElement>(".brandbar");
+    const set = () => el.style.setProperty("--head-top", `${bar ? bar.offsetHeight : 0}px`);
+    set();
+    if (!bar) return;
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
 
   // The tab row pins under the app header as the page scrolls, and once the
   // big header is gone it grows a small copy of the name, so a long schedule
@@ -140,7 +157,7 @@ export function ProfileTabs({
       {/* Who this is, top to bottom and centred: face, name, what and where,
           then the two things you can do about it. A profile is the one screen
           about a person rather than a list, so it gets the symmetry. */}
-      <div className="pubhead">
+      <div className="pubhead" ref={headRef}>
         {avatar}
         {/* The corner slots come after the picture on purpose: neither owns a
             z-index (see the stacking note in the CSS), so DOM order is what
