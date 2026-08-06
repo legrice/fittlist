@@ -5506,3 +5506,30 @@ a.wkrow:active { transform: scale(.995); }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 900; color: var(--si);
 }
+
+/* The rail as a filter. Same circles the tray drew, different job: tapping a
+   face narrows the week to that coach rather than opening a sheet. Single
+   select, because "what has Nadia got on" has one subject; a multi-select rail
+   is a set of checkboxes wearing photographs. */
+.trayav-all {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cl); color: var(--ink);
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 900;
+}
+/* The ring is the whole selected state, and it sits outside the circle so the
+   face is never cropped by its own highlight. */
+.trayav.sel { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
+/* Everyone else steps back when one is picked, rather than disappearing: the
+   rail has to stay the same length or the one you want moves under your
+   thumb between taps. */
+.trayitem.dim { opacity: .42; }
+.trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 800; }
+/* Search wears the same floating circle Add does, in the same corner, because
+   it is the same kind of thing: the one act this screen offers. White rather
+   than brand, since finding somebody is a way of looking and the loud colour
+   belongs to making something. */
+.wkfab-find {
+  background: var(--card); color: var(--ink);
+  box-shadow: 0 12px 32px rgba(25, 21, 2, .18);
+}
