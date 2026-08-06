@@ -108,7 +108,7 @@ export function StudioShiftsView({
             manager somewhere they never came from, with no route back to the
             screen they were working on. BackLink pops when You is genuinely
             beneath and pushes for a shifts URL opened cold. */}
-        <BackLink className="iconbtn acctclose" href="/you" label="Back to You">
+        <BackLink className="iconbtn acctclose" href="/settings" label="Back to settings">
           <Icon name="close" size={18} />
         </BackLink>
       </div>

@@ -50,11 +50,16 @@ export async function AppChrome({
 
   const isCoach = me.kind !== "fan" && !!me.handle;
   const fans = await fansVisible();
-  // Home is dark-launched: an admin sees the tab, everyone else doesn't.
   const unread = await unreadNotifications(userId);
-  // The Schedule tab is the working calendar: a coach's at /app, a member's
-  // at /week. You is the person, at /you for everyone.
-  const scheduleHref = isCoach ? "/app" : "/week";
+  // One calendar, at one address. This forked by kind for months, back when a
+  // coach's was /app and a member had their own at /week; a member has no
+  // calendar at all now, and the tab is not drawn for them. Left as it was, it
+  // quietly overrode the Calendar tab's href on every screen outside the tabs
+  // layout, which is most of them.
+  const scheduleHref = "/calendar";
+  // Profile is your own page. It falls back to /you (a redirect) for an
+  // account still mid-signup, which has no handle to point at yet.
+  const profileHref = me.handle ? `/${me.handle}` : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -72,18 +77,24 @@ export async function AppChrome({
       // Your face is the corner and the way to You wherever the tabs render:
       // it came off the bar because a person is not a place. The magnifier
       // came off with it, since Discover's tab wears that glyph again.
-      avatar={fans ? { ...face, href: "/you" } : undefined}
+      avatar={fans ? { ...face, href: profileHref } : undefined}
       // The gear only where there is no member side at all: the coaches-only
       // mode has no tab bar and no face in the corner, so it is the one door.
-      settings={fans ? undefined : "/you"}
-      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, active } : undefined}
+      settings={fans ? undefined : "/settings"}
+      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />
   );
   if (!bar) return header;
   return (
     <>
       {header}
-      <NavBar coach={isCoach} scheduleHref={scheduleHref} active={active} />
+      <NavBar
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        active={active}
+        face={face}
+      />
     </>
   );
 }

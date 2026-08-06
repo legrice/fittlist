@@ -141,7 +141,9 @@ const before = await p.locator(".wkrow").count();
 await p.locator(".clspeek-btn", { hasText: "Cancel class" }).click();
 await p.locator(".confirmsheet").waitFor();
 await p.locator(".confirmsheet .btn.si").click();
-await p.waitForTimeout(1600);
+// The sheet closes, then the week catches up on a refresh: wait for the row
+// to actually go rather than for a stopwatch.
+await p.locator(".wkrow").nth(before - 1).waitFor({ state: "detached", timeout: 15000 });
 {
   const after = await p.locator(".wkrow").count();
   console.log("cancelled one date:", before, "->", after);
@@ -156,12 +158,23 @@ const name = (await p.locator(".clspeek-nm").innerText()).trim();
 await p.locator(".clspeek-del").click();
 await p.locator(".confirmsheet").waitFor();
 await p.locator(".confirmsheet .btn.si").click();
-await p.waitForTimeout(1600);
+await p.locator(".wkrow-nm", { hasText: name }).waitFor({ state: "detached", timeout: 15000 });
 {
   const left = (await p.locator(".wkrow-nm").allInnerTexts()).map((t) => t.trim());
   console.log("deleted", name, "| left:", [...new Set(left)].join(" | ") || "(nothing)");
   if (left.includes(name)) fail(name + " should be off every week");
 }
+
+// A coach's Profile tab opens their page too, with the same gear on it, and
+// the page keeps the tab bar so the tab is not a one-way door.
+await p.locator(".navtab[data-tab='you']").click();
+await p.waitForURL(/\/raebell/);
+await p.locator(".profname", { hasText: "Rae Bell" }).waitFor();
+if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
+await p.locator(".profgear").click();
+await p.waitForURL(/\/settings/);
+await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
+console.log("Profile opens your page, and the gear on it opens settings");
 
 await b.close();
 console.log("ALL CALENDAR CHECKS PASSED");

@@ -34,7 +34,7 @@ export function AppHeader({
   /** The tabs, as links in the middle of the header, on a screen too wide for
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
-  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string };
+  nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; profileHref?: string };
 }) {
   return (
     <div className="brandbar">
@@ -46,6 +46,7 @@ export function AppHeader({
           coach={nav.coach}
           active={nav.active}
           scheduleHref={nav.scheduleHref}
+          profileHref={nav.profileHref}
         />
       )}
       <div className="brandbar-actions">
@@ -67,7 +68,7 @@ export function AppHeader({
             label="Settings"
             icon="settings"
             href={settings}
-            match="/you"
+            match="/settings"
           />
         )}
         {avatar &&

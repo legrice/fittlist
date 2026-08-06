@@ -12,6 +12,14 @@ export async function skipSetup(page, city = "Jersey City, NJ") {
     await loc.fill(city);
     await skip.click();
   }
+  // Wait for the wizard to actually be done, not just for the last click to
+  // land. Finishing saves the profile, writes onboardedAt and then navigates,
+  // all inside one transition; a suite that carried straight on to its own
+  // page.goto() was racing that write and sometimes winning, which left an
+  // account that looked set up everywhere except the two screens that check
+  // the column. It cost an afternoon: the coach's settings screen kept
+  // bouncing to /welcome for no reason anybody could see on the calendar.
+  await page.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
 }
 
 /** On the step that asks who you are, fill the one field that isn't optional. */

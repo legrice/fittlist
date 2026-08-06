@@ -555,9 +555,18 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // No gear here any more: settings live behind the app header's
-          // gear, so the profile stops carrying a door to somewhere else.
-          ownerTop={null}
+          // The gear is back, and this time it is the only door there is.
+          // Profile is the tab and this page is what it opens, so settings
+          // have to be reachable from here or they are reachable from
+          // nowhere; a corner glyph on your own page is where every app
+          // anybody already uses puts them. A visitor sees nothing here.
+          ownerTop={
+            isOwner ? (
+              <Link className="profgear" href="/settings" aria-label="Settings">
+                <Icon name="settings" size={20} />
+              </Link>
+            ) : null
+          }
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

@@ -3054,6 +3054,16 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
 .ownermore:active, .ownergear:active { background: var(--cl); }
+/* The gear on your own profile, and the one door to settings there is now
+   that Profile is the tab and this page is what it opens. Same circle as the
+   studio's dots, because it sits in the same corner slot and doing the same
+   job; an anchor rather than a button, so it says so on its own. */
+.profgear {
+  width: 38px; height: 38px; border-radius: 999px; background: var(--card);
+  border: 1.5px solid var(--line); color: var(--ink); text-decoration: none;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.profgear:active { background: var(--cl); }
 /* Edit carries its word, so it is a pill in the same white as the dots. */
 .owneredit {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;

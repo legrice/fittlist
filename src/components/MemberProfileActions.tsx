@@ -32,7 +32,7 @@ export function MemberProfileActions({ handle }: { handle: string }) {
         <button className="actpill actpill-primary" onClick={() => setMenu(true)}>
           Share profile
         </button>
-        <button className="actpill" onClick={() => router.push("/you?edit=1")}>
+        <button className="actpill" onClick={() => router.push("/settings?edit=1")}>
           Edit profile
         </button>
       </div>

@@ -27,7 +27,7 @@ export default async function SchedulePage({
   // The account left this screen for the You tab; old ?acct=1 links (the
   // gear's href for months) land there.
   const { add, setpw, acct } = await searchParams;
-  if (acct) redirect("/you");
+  if (acct) redirect("/settings");
   const db = await getDb();
 
   const [classRows, studioRows, templateRows, subRows, [user]] = await Promise.all([

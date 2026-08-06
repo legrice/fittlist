@@ -38,7 +38,7 @@ export default async function RequestsPage() {
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   // A member has no public page to be asked through, so no room to show them.
-  if (me?.kind === "fan") redirect("/you");
+  if (me?.kind === "fan") redirect("/settings");
 
   // kind, not just the coach id: the admin is a coach too, and their feedback
   // threads live in this same table. Those are not requests.
@@ -71,7 +71,7 @@ export default async function RequestsPage() {
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/you" label="Back to your account">
+          <BackLink className="evback" href="/settings" label="Back to settings">
             <Icon name="arrow_back" size={21} />
           </BackLink>
         </div>

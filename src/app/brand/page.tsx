@@ -41,7 +41,7 @@ export default async function BrandPage() {
         {userId && <AppChrome userId={userId} bar />}
         {userId && (
           <div className="folback">
-            <BackLink className="evback" href="/you" label="Back to your account">
+            <BackLink className="evback" href="/settings" label="Back to settings">
               <Icon name="arrow_back" size={21} />
             </BackLink>
           </div>

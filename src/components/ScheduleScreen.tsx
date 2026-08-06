@@ -517,7 +517,7 @@ export function ScheduleScreen({
           unread={updatesUnread}
           // The gear only where there is no member side at all: the
           // coaches-only mode has no face in the corner, so it is the one door.
-          settings={showFanView ? undefined : "/you"}
+          settings={showFanView ? undefined : "/settings"}
           home={showFanView ? landing : "/app"}
           // Your face is the corner and the way to You. The magnifier left
           // with the tab reorg, since Discover's tab wears that glyph again.
@@ -527,7 +527,7 @@ export function ScheduleScreen({
                   photo,
                   color: myAccent,
                   initial: (name.trim().charAt(0) || "?").toUpperCase(),
-                  href: "/you",
+                  href: "/settings",
                 }
               : undefined
           }

@@ -20,6 +20,7 @@ export function NavBar({
   active,
   coach = true,
   scheduleHref,
+  profileHref,
   face,
 }: {
   /** Omit inside the tabs layout: the pathname already says where you are.
@@ -29,6 +30,8 @@ export function NavBar({
   coach?: boolean;
   /** Where Schedule goes; defaults by role. */
   scheduleHref?: string;
+  /** Where Profile goes: your own page. Defaults to /you, which redirects. */
+  profileHref?: string;
   /** The viewer's own face, for the Profile tab. A glyph there is the only
    *  tab in the bar naming a thing rather than a place, and a person is not a
    *  thing: your own picture is what every app you already use puts on that
@@ -39,7 +42,7 @@ export function NavBar({
 
   return (
     <nav className="navbar" aria-label="Main">
-      {navTabs(coach, scheduleHref).map((t) => {
+      {navTabs(coach, scheduleHref, profileHref).map((t) => {
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;
         const isMe = t.id === "you" && !!face;

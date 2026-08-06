@@ -34,7 +34,14 @@ export type NavItem = {
  * profile, no second signup, which is what makes the upgrade a decision rather
  * than a migration.
  */
-export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
+export function navTabs(
+  coach: boolean,
+  scheduleHref?: string,
+  /** Your own profile. It is your public page, so it is your handle; the tab
+   *  falls back to /you, which redirects there, for a shell that has not been
+   *  handed the handle. */
+  profileHref?: string,
+): NavItem[] {
   return [
     // Only for somebody who teaches, and first, because it is the thing they
     // opened the app to do.
@@ -52,9 +59,12 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
     // following delivered a face instead of a week; it delivers the week
     // again, and this is the only screen a member has.
     { id: "following", href: "/feed", icon: "groups", label: "Following" },
-    // Who you are, and where everything you manage lives: settings, your
-    // studios, the rota. One level down from the tabs on purpose.
-    { id: "you", href: "/you", icon: "account_circle", label: "Profile" },
+    // Who you are, which is your page: the tab opens the profile everybody
+    // else sees rather than a settings screen wearing your name. Settings are
+    // the gear on it, and the studios and the rota are rows in there. A tab
+    // called Profile that opened a list of switches was the one place in the
+    // app where the word and the screen disagreed.
+    { id: "you", href: profileHref ?? "/you", icon: "account_circle", label: "Profile" },
   ];
 }
 
@@ -71,7 +81,11 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // and is now a redirect onto Following, because a member has no calendar of
   // their own: they read the week of the people they follow.
   if (pathname.startsWith("/calendar") || pathname.startsWith("/app")) return "schedule";
-  if (pathname.startsWith("/you")) return "you";
+  // /you is the old settings screen and is a redirect onto your profile now;
+  // /settings is where those rows moved. Both belong to the Profile tab, and
+  // the profile itself passes `active` explicitly, because a handle is not a
+  // pathname anything here can recognise.
+  if (pathname.startsWith("/you") || pathname.startsWith("/settings")) return "you";
   if (pathname.startsWith("/share")) return "share";
   return "none";
 }

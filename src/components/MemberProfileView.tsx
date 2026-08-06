@@ -120,9 +120,25 @@ export async function MemberProfileView({
       ));
 
   return (
-    <div className={`pub memberpub${viewerId ? " hasnav" : ""}`} data-mode={await viewerLook()}>
+    <div
+      className={`pub memberpub${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}`}
+      data-mode={await viewerLook()}
+    >
       <div className="profwrap">
-        {viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />}
+        {/* Your own page keeps the tab bar, exactly as a coach's does: it is
+            what the Profile tab opens now, so without the bar the tab is a
+            one-way door. Somebody else's still has none, and its arrow is the
+            way off. */}
+        {viewerId ? (
+          <AppChrome
+            userId={viewerId}
+            bar={isOwner}
+            headerNav={false}
+            active={isOwner ? "you" : undefined}
+          />
+        ) : (
+          <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />
+        )}
         {/* The same header a coach and a studio wear. A member's page was the
             odd one out: a small circle, a centred name, and none of the shape
             that makes the other two read as the same app. */}
@@ -149,6 +165,15 @@ export async function MemberProfileView({
           backTo={backTo}
           // Nothing above the name; see PublicProfileView.
           badges={null}
+          // The one door to settings, for the same reason a coach's page
+          // carries it: Profile is the tab and this page is what it opens.
+          ownerTop={
+            isOwner ? (
+              <Link className="profgear" href="/settings" aria-label="Settings">
+                <Icon name="settings" size={20} />
+              </Link>
+            ) : null
+          }
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

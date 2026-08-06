@@ -49,7 +49,7 @@ export function MemberProfileEditor({
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
-    if (openOnMount) window.history.replaceState(null, "", "/you");
+    if (openOnMount) window.history.replaceState(null, "", "/settings");
   }, [openOnMount]);
 
   // Not `readPhoto`: this one centre-crops to a square, because a member's

@@ -89,7 +89,7 @@ export default async function FollowersPage() {
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/you" label="Back to your profile">
+          <BackLink className="evback" href="/settings" label="Back to settings">
             <Icon name="arrow_back" size={21} />
           </BackLink>
         </div>

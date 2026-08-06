@@ -31,7 +31,7 @@ export default async function FeedbackPage() {
   if (!host || host.email.toLowerCase() === me.email.toLowerCase()) redirect("/updates?tab=messages");
 
   const thread = await myFeedback();
-  const back = "/you";
+  const back = "/settings";
 
   return (
     <section className="screen chatscreen" data-mode={lookMode(me.look)}>

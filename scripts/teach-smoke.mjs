@@ -40,17 +40,33 @@ await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
+// The Profile tab opens your page, not a list of switches. Settings are the
+// gear on it, which is the only door to them there is.
+await p.locator(".navtab[data-tab='you']").click();
+await p.waitForURL(/\/kiabright/);
+await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
+if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
+await p.locator(".profgear").click();
+await p.waitForURL(/\/settings/);
+await p.locator(".setrow", { hasText: "I teach too" }).waitFor();
+console.log("Profile opens your page, and the gear on it opens settings");
+// The old address still lands on the profile: it was the settings screen for
+// months and is in old links, in /app?acct=1 and in the OAuth callback.
+await p.goto(BASE + "/you");
+await p.waitForURL(/\/kiabright/);
+console.log("/you still lands somewhere real");
+
 // The Profile tab, for somebody who doesn't teach. Two counts rather than
 // three, both opening the list they count, and nothing anywhere offering a
 // picture of a week they haven't got.
-await p.goto(BASE + "/you");
+await p.goto(BASE + "/settings");
 const stats = p.locator(".acctstats .acctstat");
 if ((await stats.count()) !== 2) fail("a member gets two counts, got " + (await stats.count()));
 await p.locator(".acctstat", { hasText: "Followers" }).click();
 await p.waitForURL(/\/followers/);
 await p.getByText("No followers yet").waitFor();
 console.log("Followers opens the list it counts, and it can empty");
-await p.goto(BASE + "/you");
+await p.goto(BASE + "/settings");
 await p.locator(".acctacts .btn.si", { hasText: "Share" }).click();
 const shareRows = (await p.locator(".ownermenu .setrow .t").allInnerTexts()).map((s) => s.trim());
 console.log("member share rows:", shareRows.join(" | "));
@@ -88,7 +104,7 @@ await p.locator(".wkempty-t", { hasText: "Your week is empty" }).waitFor();
 console.log("the Calendar tab opens a real, empty week");
 
 // Turn it off again: the tab goes, and nothing else is harmed.
-await p.goto(BASE + "/you");
+await p.goto(BASE + "/settings");
 await p.locator(".setrow", { hasText: "I teach too" }).click();
 await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();

@@ -139,7 +139,13 @@ export function OnboardingWizard({
       await completeOnboarding();
       // Back to whatever they were part way through, if signing in was in the
       // middle of something. Set on the way in by AuthFlow.
-      router.push(takeAfterAuth() ?? (fan ? landing : "/app"));
+      //
+      // `landing` for both kinds. It forked here for months, back when a
+      // coach's calendar was /app and only a member's landing was worth
+      // computing; a coach finishing setup was still being sent to /app, which
+      // is not the calendar any more. The server already answers this per
+      // kind, so there is nothing to fork on.
+      router.push(takeAfterAuth() ?? landing);
       router.refresh();
     });
   };

@@ -46,6 +46,9 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // a member has no calendar at all, so there is nothing to fork on and the
   // tab is not drawn for them in the first place.
   const scheduleHref = "/calendar";
+  // Profile opens your page, which is your handle. /you redirects there and is
+  // the fallback for an account still mid-signup with no handle to point at.
+  const profileHref = me.handle ? `/${me.handle}` : "/you";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -62,8 +65,8 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // came off the bar, because a person is not a place. The magnifier
           // came off with it, since Discover's tab wears that glyph again and
           // the same mark is never drawn twice on one screen.
-          avatar={{ ...face, href: "/you" }}
-          nav={{ coach: isCoach, scheduleHref }}
+          avatar={{ ...face, href: profileHref }}
+          nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
@@ -72,7 +75,12 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           is the only tab naming a person rather than a place, and a picture is
           both the fastest thing in the bar to recognise and what every app
           anybody already uses puts on that door. */}
-      <NavBar coach={isCoach} scheduleHref={scheduleHref} face={face} />
+      <NavBar
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        face={face}
+      />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );
