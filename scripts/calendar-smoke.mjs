@@ -104,6 +104,13 @@ await p.locator(".clline").first().waitFor();
     (e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter,
   );
   if (!/blur/.test(blur ?? "")) fail("the Share pill should be glass, got " + blur);
+  // No stroke: the pill wears the dock's own glass exactly, so the floating
+  // controls and the dock read as one family.
+  const bw = await share.evaluate((e) => getComputedStyle(e).borderTopWidth);
+  if (parseFloat(bw) > 0) fail("the Share pill's stroke should be gone, got " + bw);
+  // And clear air above the dock, not touching it.
+  const dock = await p.locator(".navdock").boundingBox();
+  if (!(box.y + box.height < dock.y - 8)) fail("Share should clear the dock");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -330,15 +337,19 @@ await p.waitForURL(/\/settings/);
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 console.log("Profile opens your page, and the gear on it opens settings");
 
-// The magnifier in the header opens the same directory sheet Following's
-// button does: one act, one drawing of it, wherever you are standing.
+// The dock's search circle opens the directory sheet from any screen the dock
+// shows, the calendar included: one act, one drawing of it, wherever you are
+// standing. The header's magnifier yields to it below 940px, or the same
+// glyph would be drawn twice on one screen.
 await p.goto(BASE + "/calendar");
-await p.locator(".brandbar-actions .iconbtn").first().click();
+if (await p.locator(".findbtn:visible").count())
+  fail("the header magnifier should yield to the dock on a phone");
+await p.locator(".navfind").click();
 await p.locator(".dissheet").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the header's find should not navigate");
+if (!p.url().endsWith("/calendar")) fail("the dock's find should not navigate");
 await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the header's magnifier opens the directory over the calendar");
+console.log("the dock's search opens the directory over the calendar");
 
 await b.close();
 console.log("ALL CALENDAR CHECKS PASSED");

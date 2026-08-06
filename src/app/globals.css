@@ -4051,20 +4051,23 @@ button.ps-card { cursor: pointer; }
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
-.navbar {
+/* The dock: the tab pill on the left and search in its own circle on the
+   right, laid out the way Photos lays its bottom bar. Search is separated
+   because finding somebody is an act rather than a place, and the pill is for
+   the screens you move between; giving the act its own circle is what keeps
+   the pill honest. */
+.navdock {
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
   position: fixed; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 45;
-  /* The installed app's glass pill, in the browser too, by Matt's call: the
-     content scrolls on under it, the blur says so, and the rounded rectangle
-     matches the card's corners and the phone's. It was edge-to-edge in a
-     browser on the argument that a pill above Safari's toolbar reads as two
-     competing bars; the card layout re-decides that, because a full-width
-     slab now reads as the shell swallowing the card. */
-  display: flex; padding: 5px;
+  display: flex; gap: 12px; align-items: stretch;
   max-width: 632px; margin: 0 auto;
-  border-radius: 28px;
+}
+/* One glass for the whole dock, and it is the family every floating control
+   belongs to now: the Share pill matches it, and only Add keeps a colour of
+   its own, because making something is the one loud act. */
+.navbar, .navfind {
   background: var(--paper);
   background: color-mix(in srgb, var(--paper) 72%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -4075,9 +4078,21 @@ button.ps-card { cursor: pointer; }
     0 6px 24px rgba(30, 24, 12, .13),
     0 1px 3px rgba(30, 24, 12, .07);
 }
+.navbar {
+  flex: 1; min-width: 0;
+  display: flex; padding: 5px;
+  /* A full pill, not a rounded rectangle: the radius is the height. */
+  border-radius: 999px;
+}
+.navfind {
+  flex: 0 0 auto; width: 62px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer; color: var(--si);
+}
+.navfind:active { transform: scale(.94); }
 .navtab {
   flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 9px; border-radius: 23px; text-decoration: none; color: var(--ol);
+  padding: 8px 0 9px; border-radius: 999px; text-decoration: none; color: var(--ol);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
 /* The current tab is said in the brand colour and nothing else: the glyph and
@@ -4159,7 +4174,7 @@ button.ps-card { cursor: pointer; }
   padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
-.navbar { display: none; }
+.navdock { display: none; }
 .headnav { display: flex; align-items: center; gap: 26px; }
 
 /* Desktop header: the window's width, not the column's.
@@ -4188,7 +4203,17 @@ button.ps-card { cursor: pointer; }
    block is the two rules that were about behaviour rather than dress. */
 .navtab { transition: background .18s ease, opacity .18s ease; }
 .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-[data-mode="dark"] .navbar {
+/* The current tab sits on a wash of its own colour, the way Photos marks the
+   pane you are in: the ink alone said it, and the pill under it says it at a
+   glance without reading. */
+.navtab.on { background: color-mix(in srgb, var(--si) 11%, transparent); }
+/* The header's magnifier yields to the dock's circle wherever the dock is on
+   screen: the same glyph is never drawn twice on one screen, and below 940px
+   the dock is the search. Above it the dock hides and the header takes the
+   job back. */
+.screen.hasnav .findbtn { display: none; }
+@media (min-width: 940px) { .screen.hasnav .findbtn { display: flex; } }
+[data-mode="dark"] .navbar, [data-mode="dark"] .navfind {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, .1),
     inset 0 1px 0 0 rgba(255, 255, 255, .08),
@@ -5599,7 +5624,7 @@ button.ps-card { cursor: pointer; }
    right, where a thumb already is, and it is the only thing on this screen
    wearing the brand colour. */
 .wkfab {
-  position: fixed; right: 18px; bottom: calc(88px + env(safe-area-inset-bottom));
+  position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; width: 64px; height: 64px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--si); color: #fff; border: none; cursor: pointer;
@@ -5618,25 +5643,28 @@ button.ps-card { cursor: pointer; }
    carries on underneath it and the control reads as sitting above rather than
    cut into. The same reasoning Discover's filter pill has always used. */
 .wkshare {
-  position: fixed; left: 18px; bottom: calc(88px + env(safe-area-inset-bottom));
+  position: fixed; left: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; height: 56px; padding: 0 24px 0 20px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 8px;
-  /* An edge on the glass. Blur alone defines the pill only where the list
-     under it happens to give contrast, and over a quiet stretch of paper the
-     control dissolved; the hairline is what says where it stops, whatever is
-     scrolling underneath. */
-  background: rgba(255, 255, 255, .72); color: var(--ink);
-  border: 1px solid var(--div);
+  color: var(--ink); border: none;
   cursor: pointer; text-decoration: none;
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  /* The dock's own glass, exactly: the stroke came off and the ground and
+     shadow are the bar's, so the floating controls and the dock read as one
+     family of glass over the page. */
+  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 600;
-  box-shadow: 0 10px 28px rgba(25, 21, 2, .14);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    inset 0 1px 0 0 rgba(255, 255, 255, .45),
+    0 6px 24px rgba(30, 24, 12, .13),
+    0 1px 3px rgba(30, 24, 12, .07);
 }
 .wkshare:active { transform: scale(.96); }
 .wkshare-ic { color: var(--si); }
-[data-mode="dark"] .wkshare { background: rgba(33, 28, 19, .72); }
 
 /* ---------------------------------------------------------------------------
    A class, tapped: one sheet, two readings.
@@ -5751,24 +5779,8 @@ a.clspeek-by:active { opacity: .6; }
    thumb between taps. */
 .trayitem.dim { opacity: .42; }
 .trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 600; }
-/* Search wears the same floating circle Add does, in the same corner, because
-   it is the same kind of thing: the one act this screen offers.
-
-   The same glass the Share pill wears, and for the same reason: it floats over
-   a list somebody is reading. The glyph takes the brand colour rather than the
-   ground doing, which is how both of these work now: on a screen with nothing
-   else to make, finding a coach is the act, and the colour marks the act
-   without the control shouting over the week behind it. */
-.wkfab-find {
-  background: rgba(255, 255, 255, .72); color: var(--si);
-  /* The same edge the Share pill wears, for the same reason: the two are one
-     family of control on two screens. */
-  border: 1px solid var(--div);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow: 0 10px 28px rgba(25, 21, 2, .14);
-}
-[data-mode="dark"] .wkfab-find { background: rgba(33, 28, 19, .72); }
+/* Following's floating search circle is gone: search lives in the dock, in
+   its own circle beside the tab pill, on every screen the dock shows. */
 /* The Profile tab's face. Sized to the glyph beside it rather than to a
    header avatar, so the three tabs sit on one line: a picture that is even two
    pixels taller drags its label down and the row stops being a row. */
