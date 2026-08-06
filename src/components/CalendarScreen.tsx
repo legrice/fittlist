@@ -194,6 +194,12 @@ function peekOf(c: ClassDto, iso: string, where: string | null): PeekClass {
     time: `${t.hm} ${t.ap.toLowerCase()}`,
     studio: where,
     repeats: c.specificDate ? "Once" : "Weekly",
+    // A gym's class you are on the rota for. It is on this calendar and it is
+    // not yours to edit, cancel or delete: the studio owns it, and what a
+    // coach can do with a date they are on is give it up or hand it over.
+    shift: c.shift,
+    // A shift's page lives under the studio, because that is who owns it.
+    base: c.shift ? (c.shiftBase ? `s/${c.shiftBase}` : undefined) : undefined,
     mine: true,
   };
 }

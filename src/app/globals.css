@@ -5574,3 +5574,18 @@ a.wkrow:active { transform: scale(.995); }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px; font-weight: 900;
 }
+
+/* Following is a list, not a week. Your calendar is a week you flip through
+   because you are working on it; this is what is coming up, because you are
+   reading it and "when can I train next" is not a question a week boundary
+   answers. Date headings do the sectioning, which is also what stops the two
+   screens looking identical. */
+.upcoming { display: flex; flex-direction: column; gap: 26px; padding-top: 14px; }
+.upday-h {
+  margin: 0 0 10px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px; font-weight: 500; color: var(--ink);
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+/* The rows sit under their heading rather than beside a date gutter: the
+   heading already said the day, and a gutter repeating it is the date twice. */
+.upday .wkday-rows { gap: 8px; }

@@ -109,17 +109,18 @@ console.log("this week:", (await m.locator(".wkhead-sum").innerText()).trim());
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
-// Next week, where nothing has run yet, so both coaches and all four classes
-// are still ahead. This week is deliberately partial: a class that has been
-// and gone is not an answer to "when can I train next", so on a Wednesday the
-// first two days of the week are correctly missing.
-await m.locator(".wkarrow").nth(1).click();
-await m.waitForTimeout(500);
+// One list of what is coming, under date headings, rather than a week you flip
+// through. All four classes are in it: this week's remainder plus next week's.
 await m.locator(".wkrow").first().waitFor();
 const sum = (await m.locator(".wkhead-sum").innerText()).trim();
-console.log("next week:", sum, "| rows:", await m.locator(".wkrow").count());
-if (!/from 2 coaches/.test(sum)) fail("expected two coaches next week: " + sum);
-if ((await m.locator(".wkrow").count()) !== 4) fail("expected four classes next week");
+const heads = (await m.locator(".upday-h").allInnerTexts()).map((t) => t.trim());
+console.log("coming up:", sum, "| rows:", await m.locator(".wkrow").count());
+console.log("headings:", heads.join(" | "));
+if (!/from 2 coaches/.test(sum)) fail("expected two coaches: " + sum);
+if (heads.length < 2) fail("expected a heading per day, got " + heads.join());
+if (await m.locator(".wkarrow").count()) fail("Following is a list, so it has no week arrows");
+if (!(await m.locator(".wkhead-range", { hasText: "Coming up" }).count()))
+  fail("the list should say what it is");
 
 // The rail filters, single select, and says so.
 await m.locator(".trayitem", { hasText: "Nadia" }).click();
@@ -170,14 +171,8 @@ await m.waitForTimeout(400);
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-sheet.png" });
 
-// The range has an end, and the arrow greys rather than vanishing.
 await m.locator(".clspeek-x").click();
 await m.waitForTimeout(300);
-await m.locator(".wkarrow").nth(1).click();
-await m.waitForTimeout(400);
-if (!(await m.locator(".wkarrow").nth(1).isDisabled())) fail("the range should end at three weeks");
-if (await m.locator(".wkarrow").first().isDisabled()) fail("back should still be live at the end");
-console.log("range ends:", (await m.locator(".wkhead-range").innerText()).trim());
 
 await b.close();
 console.log("ALL FOLLOWING CHECKS PASSED");

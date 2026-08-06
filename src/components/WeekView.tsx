@@ -34,7 +34,15 @@ export type WeekRow = {
   onTap?: () => void;
 };
 
-export type WeekDayRows = { iso: string; dow: string; date: string; rows: WeekRow[] };
+export type WeekDayRows = {
+  iso: string;
+  dow: string;
+  date: string;
+  /** The full heading a flat list uses ("Today", "Thu, Aug 6"). The week
+   *  stepper ignores it: inside a week the gutter's day and date are enough. */
+  label?: string;
+  rows: WeekRow[];
+};
 
 /** The sticky header: the range, and the two arrows. Greyed at the ends of
  *  the range rather than hidden, so the control never moves under a thumb. */
@@ -130,6 +138,33 @@ function WeekClassRow({ row }: { row: WeekRow }) {
     <button className="wkrow" onClick={row.onTap}>
       {inner}
     </button>
+  );
+}
+
+/**
+ * A flat list of what is coming, under date headings.
+ *
+ * Following takes this shape rather than the week stepper, and the difference
+ * is the point: your calendar is a week you flip through, because you are
+ * working on it and a week is the unit you think in. Following is a list of
+ * what is coming up, because you are reading it and the question is "when can
+ * I train next", which no week boundary answers. Two screens that looked
+ * identical made somebody check the header to know which one they were on.
+ */
+export function UpcomingDays({ days }: { days: WeekDayRows[] }) {
+  return (
+    <div className="upcoming">
+      {days.map((d) => (
+        <div key={d.iso} className="upday">
+          <h2 className="upday-h">{d.label ?? d.dow}</h2>
+          <div className="wkday-rows">
+            {d.rows.map((r) => (
+              <WeekClassRow key={r.key} row={r} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

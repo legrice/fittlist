@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { initialOf } from "@/lib/avatar";
-import { WeekDays, WeekEmpty, WeekStepper, type WeekDayRows } from "@/components/WeekView";
+import { fmtDayHeaderRel } from "@/lib/format";
+import { UpcomingDays, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -54,7 +55,6 @@ export function FollowingScreen({
   coaches: FeedCoach[];
   todayIso: string;
 }) {
-  const [week, setWeek] = useState(0);
   const [focus, setFocus] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
 
@@ -75,8 +75,8 @@ export function FollowingScreen({
   }, [coaches, items]);
 
   const shown = useMemo(
-    () => items.filter((i) => i.week === week && (!focus || i.coachId === focus)),
-    [items, week, focus],
+    () => items.filter((i) => !focus || i.coachId === focus),
+    [items, focus],
   );
 
   const days: WeekDayRows[] = useMemo(() => {
@@ -94,6 +94,9 @@ export function FollowingScreen({
           iso,
           dow: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase(),
           date: String(d.getUTCDate()),
+          // "Today", "Tomorrow", then the date. The same words the rest of the
+          // app uses for a day, so one day is never named two ways.
+          label: fmtDayHeaderRel(iso, todayIso),
           rows: list
             .sort((a, b) => a.mins - b.mins)
             .map((i) => {
@@ -112,7 +115,7 @@ export function FollowingScreen({
             }),
         };
       });
-  }, [shown, coachById]);
+  }, [shown, coachById, todayIso]);
 
   // "12 classes from 3 coaches", or their name when the rail is narrowed. It
   // says what is on screen rather than what exists, so it agrees with the list
@@ -136,7 +139,6 @@ export function FollowingScreen({
   if (!rail.length) {
     return (
       <>
-        <WeekStepper week={week} onWeek={setWeek} />
         {/* Two different nothings, and they want different words. Following
             nobody is a screen with one thing to do; following people who have
             not put anything up is a screen where the app is fine and the week
@@ -207,22 +209,29 @@ export function FollowingScreen({
         </div>
       </div>
 
-      <WeekStepper week={week} onWeek={setWeek}>
+      {/* No week stepper here, on purpose. Your calendar is a week you flip
+          through, because you are working on it; this is a list of what is
+          coming, because you are reading it and "when can I train next" is not
+          a question any week boundary answers. */}
+      <div className="wkhead">
+        <div className="wkhead-row">
+          <h1 className="wkhead-range">Coming up</h1>
+        </div>
         {summary && <p className="wkhead-sum">{summary}</p>}
-      </WeekStepper>
+      </div>
 
       {days.length === 0 ? (
         <WeekEmpty
           first
-          title={focus ? "Nothing from them this week" : "Nothing on this week"}
+          title={focus ? "Nothing from them coming up" : "Nothing coming up"}
           body={
             focus
-              ? "Try the arrow, or tap Everyone to see the rest."
-              : "The people you follow have not put anything up for these days yet."
+              ? "Tap Everyone to see the rest."
+              : "The people you follow have not put anything up yet."
           }
         />
       ) : (
-        <WeekDays days={days} />
+        <UpcomingDays days={days} />
       )}
 
       {/* Discovery is this button and the plus on the rail, and they open the

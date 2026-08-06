@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
+import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { Icon } from "@/components/Icon";
 
 /**
@@ -40,6 +41,15 @@ export type PeekClass = {
   base?: string;
   /** Your own class only. */
   repeats?: string | null;
+  /**
+   * A gym's class that you are on the rota for.
+   *
+   * It is on your calendar and it is not yours: the studio owns it, so Edit,
+   * Cancel and Delete are all wrong here and two of them would have failed
+   * loudly. What a coach can do with a date they are on is give it up or hand
+   * it to somebody, which is what Manage offers.
+   */
+  shift?: boolean;
   mine: boolean;
 };
 
@@ -68,6 +78,48 @@ export function ClassPeek({
   // that; this way the sheet is instant and the detail is one tap behind it.
   const [full, setFull] = useState<ClassDetail | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // The rota's own controls, loaded from the same place the depth is: whether
+  // this date can be given up, and who it can be handed to, are the gym's
+  // answers rather than anything a calendar row knows.
+  const [manage, setManage] = useState<ClassDetail["shift"] | null>(null);
+  const [sending, setSending] = useState(false);
+  const [shiftErr, setShiftErr] = useState("");
+
+  const openManage = () => {
+    if (loading || !cls.base) return;
+    setLoading(true);
+    classDetail(cls.base, cls.id, cls.iso)
+      // A shift with no rota block back means the gym has nothing to offer on
+      // this date; the sheet still opens, with give-up as the one thing left.
+      .then((d) => setManage(d?.shift ?? { onName: "", canGiveUp: true, canClaim: false, sendable: [] }))
+      .finally(() => setLoading(false));
+  };
+
+  const runShift = (what: "give" | "send", toUserId?: string) =>
+    start(async () => {
+      setShiftErr("");
+      const res =
+        what === "give"
+          ? await giveUpShift(cls.id, cls.iso)
+          : await sendShiftTo(cls.id, cls.iso, toUserId!);
+      if (!res.ok) {
+        setShiftErr(res.error ?? "Something went wrong");
+        return;
+      }
+      onToast(
+        what === "give"
+          ? "Given up. The gym knows, and so does everyone who coaches there."
+          : "pending" in res && res.pending
+            ? "Sent. The studio has to approve it."
+            : "Handed on. They have been told.",
+      );
+      setSending(false);
+      setManage(null);
+      onClose();
+      onChanged();
+      router.refresh();
+    });
 
   const openFull = () => {
     if (full || loading || !cls.base) return;
@@ -145,7 +197,18 @@ export function ClassPeek({
           )}
         </dl>
 
-        {cls.mine ? (
+        {cls.mine && cls.shift ? (
+          <>
+            <div className="clspeek-cta">
+              <button className="clspeek-btn si" onClick={onShare}>
+                Share class
+              </button>
+              <button className="clspeek-btn ghost" onClick={openManage}>
+                {loading ? "Opening…" : "Manage shift"}
+              </button>
+            </div>
+          </>
+        ) : cls.mine ? (
           <>
             <div className="clspeek-cta">
               <button className="clspeek-btn ghost" onClick={onEdit}>
@@ -218,6 +281,80 @@ export function ClassPeek({
           </div>
         )}
       </div>
+
+      {manage && (
+        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet clspeek">
+            <span className="clspeek-grab" aria-hidden="true" />
+            <div className="clspeek-head">
+              <div className="clspeek-titles">
+                <h2 className="clspeek-nm">Manage shift</h2>
+              </div>
+              <button className="clspeek-x" aria-label="Close" onClick={() => setManage(null)}>
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            {/* Giving up opens the slot and tells the gym; handing it on writes
+                it straight onto somebody. Both are notices that go out the
+                moment they run, so both confirm first. */}
+            <div className="settingslist" style={{ marginTop: 22 }}>
+              <button className="setrow" disabled={pending} onClick={() => runShift("give")}>
+                <span className="setrow-txt">
+                  <span className="t">Give up this shift</span>
+                  <span className="s">
+                    The date opens up and everyone who coaches here is told.
+                  </span>
+                </span>
+              </button>
+              {manage.sendable.length > 0 && (
+                <button className="setrow" disabled={pending} onClick={() => setSending(true)}>
+                  <span className="setrow-txt">
+                    <span className="t">Transfer shift</span>
+                    <span className="s">Hand this date to somebody on the gym&rsquo;s list.</span>
+                  </span>
+                  <span className="setrow-chev">
+                    <Icon name="chevron_right" size={20} />
+                  </span>
+                </button>
+              )}
+            </div>
+            {shiftErr && <p className="err">{shiftErr}</p>}
+          </div>
+        </div>
+      )}
+
+      {sending && manage && (
+        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet clspeek">
+            <span className="clspeek-grab" aria-hidden="true" />
+            <div className="clspeek-head">
+              <div className="clspeek-titles">
+                <h2 className="clspeek-nm">Hand it to</h2>
+              </div>
+              <button className="clspeek-x" aria-label="Close" onClick={() => setSending(false)}>
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            {/* The names first, then a confirm: eight names under one verb read
+                as eight options rather than one decision. */}
+            <div className="settingslist" style={{ marginTop: 22 }}>
+              {manage.sendable.map((s2) => (
+                <button
+                  key={s2.id}
+                  className="setrow"
+                  disabled={pending}
+                  onClick={() => runShift("send", s2.id)}
+                >
+                  <span className="setrow-txt">
+                    <span className="t">{s2.name}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {shiftErr && <p className="err">{shiftErr}</p>}
+          </div>
+        </div>
+      )}
 
       {confirm && (
         <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
