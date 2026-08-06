@@ -81,7 +81,7 @@ await coach.goto(BASE + "/calendar");
 await coach.locator(".wkempty-cta, .calbar-add").first().click();
 // The stepped adder: studio first (a brand-new one lands straight on the
 // form), then the class details and the times.
-await coach.locator("h2", { hasText: "Choose a studio" }).waitFor();
+await coach.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
 await coach.getByRole("button", { name: "+ New studio" }).click();
 await coach.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound Performance Athletics");
 await coach
@@ -318,7 +318,7 @@ await settled(coach);
     fail("the sheet has to say an add reaches the calendar, not just the picture");
   await coach.locator(".compadd").click();
   // The composer's coaching add walks the same steps.
-  await coach.locator("h2", { hasText: "Choose a studio" }).waitFor();
+  await coach.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   await coach.getByRole("button", { name: "+ New studio" }).click();
   await coach.getByPlaceholder("e.g. Palisade Barbell").fill("Asana Soul Practice");
   await coach

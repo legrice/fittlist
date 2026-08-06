@@ -49,7 +49,7 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .calbar-add").first().click();
-  await p.locator("h2", { hasText: "Choose a studio" }).waitFor();
+  await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);
   const existing = p.locator(".studio-row", { hasText: studio });

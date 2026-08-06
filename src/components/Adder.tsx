@@ -810,11 +810,12 @@ export function Adder({
                   <Icon name="arrow_back" size={20} />
                 </button>
               )}
-              <h2>{heading.title}</h2>
+              <h2>{stepped ? "Add a class" : heading.title}</h2>
               <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
                 <Icon name="close" size={18} />
               </button>
             </div>
+            {stepped && <p className="stepline">Step 3 of 3 &middot; The details</p>}
 
             {/* The rota. Who's on this one date is what a manager opens the
                 week to change, so it leads; who normally has it is underneath,
@@ -1191,25 +1192,33 @@ export function Adder({
 
         {stage === "pick" && (
           <div>
-            {/* The first step of a stepped add has nothing behind it: the X
-                is the way out. Reopened from the form, Back returns there. */}
-            {(!stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
-              <button
-                className="backbtn"
-                onClick={() => setStage(stepped && !name.trim() ? "class" : "form")}
-              >
-                &larr; Back
-              </button>
-            )}
-            <h2>Choose a studio</h2>
+            {/* One flow with a name and numbered steps: the sheet says what
+                it is for, and the step line says where you are in it. The
+                back is the profile pages' circled arrow, beside the title;
+                the first step of a fresh add has nothing behind it, so the X
+                is the way out. Reopened from the form, back returns there. */}
+            <div className="stephead">
+              {(!stepped || name.trim() !== "" || Boolean(selectedStudio)) && (
+                <button
+                  className="iconbtn sheetclose stepback"
+                  aria-label="Back"
+                  onClick={() => setStage(stepped && !name.trim() ? "class" : "form")}
+                >
+                  <Icon name="arrow_back" size={20} />
+                </button>
+              )}
+              <h2>{stepped ? "Add a class" : "Choose a studio"}</h2>
+            </div>
+            {stepped && <p className="stepline">Step 1 of 3 &middot; Choose the studio</p>}
             {/* The box leads and the list waits for typing: with five hundred
                 studios in the directory a dumped list is a wall, and the ask
-                here is three words long. Type it, tap it, move on. */}
+                here is three words long. Type it, tap it, move on. No
+                autofocus: focusing an input the moment a sheet mounts is what
+                made iOS scroll the whole page behind it to chase the caret. */}
             <div className="searchbox noicon">
               <input
                 type="text"
                 autoComplete="off"
-                autoFocus
                 placeholder="Start typing a studio…"
                 aria-label="Search studios"
                 value={search}
@@ -1259,10 +1268,19 @@ export function Adder({
             to answer; New class lands on the same form blank. */}
         {stage === "class" && (
           <div>
-            <button className="backbtn" onClick={() => setStage("pick")}>
-              &larr; Back
-            </button>
-            <h2>{selectedStudio?.name ?? "Pick a class"}</h2>
+            <div className="stephead">
+              <button
+                className="iconbtn sheetclose stepback"
+                aria-label="Back"
+                onClick={() => setStage("pick")}
+              >
+                <Icon name="arrow_back" size={20} />
+              </button>
+              <h2>Add a class</h2>
+            </div>
+            <p className="stepline">
+              Step 2 of 3 &middot; Pick a class{selectedStudio ? ` at ${selectedStudio.name}` : ""}
+            </p>
             <p className="lead">
               {catLoading || catalog.length > 0
                 ? "Start from a class already on this studio's list, or from scratch. Yours to adjust either way."
@@ -1302,10 +1320,16 @@ export function Adder({
 
         {stage === "new" && (
           <div>
-            <button className="backbtn" onClick={() => setStage("pick")}>
-              &larr; Back
-            </button>
-            <h2>New studio</h2>
+            <div className="stephead">
+              <button
+                className="iconbtn sheetclose stepback"
+                aria-label="Back"
+                onClick={() => setStage("pick")}
+              >
+                <Icon name="arrow_back" size={20} />
+              </button>
+              <h2>New studio</h2>
+            </div>
             <p className="lead">Name and address. That&rsquo;s the whole listing.</p>
             <label className="flabel" htmlFor="nsName">
               Studio name
@@ -1315,7 +1339,6 @@ export function Adder({
               id="nsName"
               placeholder="e.g. Palisade Barbell"
               autoComplete="off"
-              autoFocus
               value={nsName}
               onChange={(e) => setNsName(e.target.value)}
             />

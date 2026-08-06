@@ -3940,6 +3940,15 @@ button.ps-card { cursor: pointer; }
   border-radius: 22px 22px 0 0; padding-top: 16px;
 }
 .adder-step .studio-list { height: auto; max-height: 40vh; }
+/* The step header: the profile pages' circled back arrow beside the title,
+   instead of a small text link floating above it. The circle borrows the
+   sheet close's own dress and just sits in flow on the left. */
+.stephead { display: flex; align-items: center; gap: 12px; }
+.stephead .stepback { position: static; flex-shrink: 0; }
+.stephead h2 { margin-bottom: 0; }
+/* Where you are in the flow, under the one name it all shares. */
+.stepline { margin: 6px 0 12px; font-size: 14.5px; font-weight: 500; color: var(--ol); }
+.adderhead + .stepline { margin-top: -4px; }
 /* The form's way back up the steps, sitting left of the sticky title. */
 .adderhead .adderback { position: static; flex-shrink: 0; margin-right: -2px; }
 .adderhead h2 { flex: 1; min-width: 0; }
