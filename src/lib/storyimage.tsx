@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { ImageResponse } from "next/og";
 import { brandIcon } from "@/lib/brand";
-import type { StoryTheme } from "@/lib/format";
+import type { StoryStyle, StoryTheme } from "@/lib/format";
 import { storyPadding, type StoryFormat, type StoryPlan } from "@/lib/storyplan";
 
 // One paint for every share image.
@@ -42,6 +42,10 @@ export function iconUri(color: string) {
 
 export type StoryModel = {
   theme: StoryTheme;
+  /** How it is drawn, as opposed to what colour it is. Two axes, because
+   *  eight palettes times ten styles is eighty posters from two small rows of
+   *  controls, where one merged picker would be eighty swatches to scan. */
+  style: StoryStyle;
   format: StoryFormat;
   /** The range it actually drew, never the day it was made. */
   kicker: string;
@@ -65,6 +69,7 @@ export type StoryModel = {
 export function renderStory(model: StoryModel) {
   const {
     theme: t,
+    style: y,
     format,
     kicker,
     line1,
@@ -86,10 +91,19 @@ export function renderStory(model: StoryModel) {
   const s = square ? 0.82 : 1;
   const px = (n: number) => Math.round(n * s);
 
-  const m =
+  const base =
     plan.tier === 1
       ? { dayFs: 34, dayMt: 34, dayMb: 17, timeFs: 43, timeW: 172, gap: 34, nameFs: 48, subFs: 41, rowMb: 22, colW: 702 }
       : { dayFs: 30, dayMt: 26, dayMb: 13, timeFs: 38, timeW: 150, gap: 30, nameFs: 42, subFs: 36, rowMb: 18, colW: 728 };
+  // The style scales the row, and the route has already divided the planner's
+  // budget by `rowScale` so the taller ones still fit. Stacking the time frees
+  // its column, so the name gets that width back.
+  const m = {
+    ...base,
+    nameFs: Math.round(base.nameFs * y.name),
+    subFs: Math.round(base.subFs * y.name),
+    colW: y.stackTime ? base.colW + base.timeW + base.gap : base.colW,
+  };
 
   return new ImageResponse(
     (
@@ -248,9 +262,10 @@ export function renderStory(model: StoryModel) {
                     display: "flex",
                     fontWeight: 600,
                     fontSize: m.dayFs,
-                    letterSpacing: 4,
+                    letterSpacing: `${y.dayTrack}em`,
                     textTransform: "uppercase",
                     color: t.faint,
+                    alignSelf: y.align === "center" ? "center" : "flex-start",
                     margin: `${m.dayMt}px 0 ${m.dayMb}px`,
                   }}
                 >
@@ -259,29 +274,79 @@ export function renderStory(model: StoryModel) {
                 {rows.map((r, i) => (
                   <div
                     key={`${day}-${i}`}
-                    style={{ display: "flex", gap: m.gap, marginBottom: m.rowMb }}
+                    style={{
+                      display: "flex",
+                      // Stacked, the time drops under the name and the row
+                      // becomes a column; otherwise it holds its own gutter.
+                      flexDirection: y.stackTime ? "column" : "row",
+                      alignItems: y.align === "center" ? "center" : "flex-start",
+                      gap: y.stackTime ? 4 : m.gap,
+                      marginBottom: m.rowMb,
+                      ...(y.chip
+                        ? {
+                            background: t.faint + "22",
+                            borderRadius: y.radius,
+                            padding: `${Math.round(m.rowMb * 0.7)}px ${Math.round(m.gap * 0.7)}px`,
+                          }
+                        : null),
+                      ...(y.rule !== "none" && !y.chip
+                        ? {
+                            borderBottom: `${y.rule === "bold" ? 4 : 2}px solid ${t.faint}55`,
+                            paddingBottom: Math.round(m.rowMb * 0.6),
+                          }
+                        : null),
+                    }}
                   >
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        fontSize: m.timeFs,
-                        color: t.time,
-                        width: m.timeW,
-                        flexShrink: 0,
-                        display: "flex",
-                      }}
-                    >
-                      {r.time}
-                    </span>
+                    {!y.stackTime && (
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: m.timeFs,
+                          color: t.time,
+                          width: m.timeW,
+                          flexShrink: 0,
+                          display: "flex",
+                        }}
+                      >
+                        {r.time}
+                      </span>
+                    )}
                     {/* Bounded, so a long class name wraps instead of running
                         off the right edge. Satori won't wrap a flex child
                         that has no width to wrap inside. */}
-                    <div style={{ display: "flex", flexDirection: "column", width: m.colW }}>
-                      <span style={{ fontSize: m.nameFs, fontWeight: 700, lineHeight: 1.15 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: m.colW,
+                        alignItems: y.align === "center" ? "center" : "flex-start",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: m.nameFs,
+                          fontWeight: 700,
+                          lineHeight: 1.15,
+                          textAlign: y.align,
+                          ...(y.upper ? { textTransform: "uppercase" as const } : null),
+                        }}
+                      >
                         {r.name}
                       </span>
+                      {y.stackTime && (
+                        <span style={{ fontSize: m.timeFs, fontWeight: 700, color: t.time }}>
+                          {r.time}
+                        </span>
+                      )}
                       {r.sub && (
-                        <span style={{ fontSize: m.subFs, color: t.faint, lineHeight: 1.2 }}>
+                        <span
+                          style={{
+                            fontSize: m.subFs,
+                            color: t.faint,
+                            lineHeight: 1.2,
+                            textAlign: y.align,
+                          }}
+                        >
                           {r.sub}
                         </span>
                       )}

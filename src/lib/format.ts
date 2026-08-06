@@ -129,6 +129,89 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
   slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
 };
+/**
+ * The second axis: how the picture is drawn, as opposed to what colour it is.
+ *
+ * Colour and style are separate on purpose. Eight palettes times ten styles is
+ * eighty posters from two small rows of controls, where one merged picker
+ * would have been eighty swatches nobody could scan. It also keeps the two
+ * decisions honest: a coach who has found their colour can change how loud the
+ * poster is without losing it.
+ *
+ * Every style is data rather than a branch. `renderStory` stays the one paint
+ * function, the way it has been since the third copy of it drifted from the
+ * other two; a style that needed its own code path would be a fourth copy
+ * wearing a different name.
+ *
+ * They run loud to quiet, because that is the order somebody scans them in and
+ * the quiet ones are what most people settle on.
+ */
+export type StoryStyleId =
+  | "poster"
+  | "stack"
+  | "ticket"
+  | "marquee"
+  | "chips"
+  | "editorial"
+  | "grid"
+  | "receipt"
+  | "plain"
+  | "bare";
+
+export type StoryStyle = {
+  label: string;
+  /** Multiplies the headline. The loud ones shout, the quiet ones do not. */
+  headline: number;
+  /** Multiplies the class name on each row. */
+  name: number;
+  /** UPPERCASE the class names. */
+  upper: boolean;
+  /** Where the block sits, and where each row reads from. */
+  align: "left" | "center";
+  /** A line under each row: none, a hairline, or a full rule. */
+  rule: "none" | "hair" | "bold";
+  /** A filled block behind each row, in the theme's own faint tone. */
+  chip: boolean;
+  /** Corner radius on that block. */
+  radius: number;
+  /** The time on its own line under the name rather than out to the right. */
+  stackTime: boolean;
+  /** Letter-spacing on the day label, in em. */
+  dayTrack: number;
+  /**
+   * How much taller a row draws than the plain one, as a multiplier.
+   *
+   * This is the contract that keeps a style from clipping the canvas.
+   * `planStory` fits a week to a fixed budget using one set of constants, and
+   * `check:story` holds 6,000 synthetic weeks to it; a style that quietly grew
+   * its rows would pass the planner and overflow the paint, which is the exact
+   * failure the planner exists to prevent. Rather than teach the planner ten
+   * styles, the routes divide the budget by this: fitting scaled rows into B
+   * is the same as fitting plain rows into B/k. Err high. A style that draws
+   * shorter than it claims wastes a little canvas; one that draws taller loses
+   * somebody's Thursday.
+   */
+  rowScale: number;
+};
+
+export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
+  poster:    { label: "Poster",    headline: 1.18, name: 1.16, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,  stackTime: false, dayTrack: 0.18, rowScale: 1.2 },
+  stack:     { label: "Stack",     headline: 1.22, name: 1.10, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,  stackTime: true,  dayTrack: 0.14, rowScale: 1.55 },
+  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: true,  radius: 28, stackTime: false, dayTrack: 0.12, rowScale: 1.3 },
+  marquee:   { label: "Marquee",   headline: 1.14, name: 1.08, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,  stackTime: true,  dayTrack: 0.22, rowScale: 1.6 },
+  chips:     { label: "Chips",     headline: 1.0,  name: 0.98, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.1, rowScale: 1.22 },
+  editorial: { label: "Editorial", headline: 1.08, name: 1.02, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.14, rowScale: 1.06 },
+  grid:      { label: "Grid",      headline: 0.96, name: 0.96, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.1, rowScale: 1.0 },
+  receipt:   { label: "Receipt",   headline: 0.92, name: 0.92, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.24, rowScale: 1.0 },
+  plain:     { label: "Plain",     headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: false, radius: 0,  stackTime: false, dayTrack: 0.12, rowScale: 1.0 },
+  bare:      { label: "Bare",      headline: 0.88, name: 0.94, upper: false, align: "left",   rule: "none", chip: false, radius: 0,  stackTime: false, dayTrack: 0.08, rowScale: 0.98 },
+};
+
+export function storyStyle(id: string | null): [StoryStyleId, StoryStyle] {
+  const key = (id && id in STORY_STYLES ? id : "plain") as StoryStyleId;
+  return [key, STORY_STYLES[key]];
+}
+
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
   const key = (id && id in STORY_THEMES ? id : "paper") as StoryThemeId;
   return [key, STORY_THEMES[key]];

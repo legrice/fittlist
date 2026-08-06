@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { publicSchedule } from "@/lib/coachweek";
-import { DAYS, fmtTime, runsOn, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
+import { DAYS, fmtTime, runsOn, storyStyle, storyTheme, timeToMinutes, todayIso as todayIsoNow } from "@/lib/format";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory } from "@/lib/storyplan";
 
@@ -19,6 +19,8 @@ export async function GET(
   const params2 = new URL(req.url).searchParams;
   const span = params2.get("span") === "day" ? "day" : "week";
   const [, t] = storyTheme(params2.get("theme"));
+  // Two axes: what colour, and how it is drawn.
+  const [, y] = storyStyle(params2.get("style"));
 
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -71,11 +73,12 @@ export async function GET(
         where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city) / y.rowScale,
   );
 
   return renderStory({
     theme: t,
+    style: y,
     format: "story",
     kicker:
       span === "week"

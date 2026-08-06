@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { storyTheme, todayIso as todayIsoNow } from "@/lib/format";
+import { storyStyle, storyTheme, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory } from "@/lib/storyplan";
@@ -21,6 +21,8 @@ export async function GET(req: Request) {
   if (!userId) return new Response("Not found", { status: 404 });
   const qs = new URL(req.url).searchParams;
   const [, t] = storyTheme(qs.get("theme"));
+  // Two axes: what colour, and how it is drawn.
+  const [, y] = storyStyle(qs.get("style"));
 
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
@@ -58,11 +60,12 @@ export async function GET(req: Request) {
       day,
       items: items.map((c) => ({ time: c.time, name: c.name, where: c.where, who: c.who })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city),
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city) / y.rowScale,
   );
 
   return renderStory({
     theme: t,
+    style: y,
     format: "story",
     kicker,
     line1,

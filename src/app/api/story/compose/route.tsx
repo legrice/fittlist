@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { storyTheme } from "@/lib/format";
+import { storyStyle, storyTheme } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
@@ -38,6 +38,8 @@ export async function GET(req: Request) {
   const asked = qs.get("kind") === "coaching" ? "coaching" : "going";
   const kind: ShareKind = me.kind === "fan" ? "going" : asked;
   const [, t] = storyTheme(qs.get("theme"));
+  // Two axes: what colour, and how it is drawn.
+  const [, y] = storyStyle(qs.get("style"));
   const format: StoryFormat = qs.get("fmt") === "square" ? "square" : "story";
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
   const hide = new Set((qs.get("hide") ?? "").split(",").filter(Boolean));
@@ -67,11 +69,12 @@ export async function GET(req: Request) {
         who: c.who,
       })),
     })),
-    listBudget(size * 0.98 * (line2 ? 2 : 1) + 78, !!city, format),
+    listBudget(size * 0.98 * (line2 ? 2 : 1) + 78, !!city, format) / y.rowScale,
   );
 
   return renderStory({
     theme: t,
+    style: y,
     format,
     kicker: shareKicker(from, days),
     line1,
