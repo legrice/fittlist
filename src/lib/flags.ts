@@ -32,18 +32,18 @@ export async function fansVisible(): Promise<boolean> {
 
 // Where signing in lands, and where the wordmark goes.
 //
-// The calendar, since Following collapsed into it: there is no merged week to
-// land on any more, because following delivers a circle rather than classes.
-// It answers per kind rather than leaning on the two calendars' redirects,
-// which would put a hop on every sign-in and every OAuth callback for the half
-// of the app that lands on /app.
+// A coach lands on their Calendar, because publishing their week is what they
+// are here for. Everybody else lands on Following, which is the only screen
+// they have: a member has no calendar of their own, they read the week of the
+// people they follow.
 //
-// It stays a function because the answer has changed three times now (/app,
-// then /feed, then here) and every caller already asks rather than assuming.
+// It stays a function because the answer has now changed four times (/app,
+// /feed, the two calendars, and back to this) and every caller asks rather
+// than assuming.
 export async function landingHref(): Promise<string> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return "/app";
+  if (!userId) return "/feed";
   const { getDb, schema } = await import("@/db");
   const { eq } = await import("drizzle-orm");
   const db = await getDb();
@@ -51,5 +51,5 @@ export async function landingHref(): Promise<string> {
     .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  return me?.kind === "fan" ? "/week" : "/app";
+  return me && me.kind !== "fan" ? "/app" : "/feed";
 }

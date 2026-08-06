@@ -13,39 +13,48 @@ export type NavItem = {
 };
 
 /**
- * Two tabs, for everyone.
+ * Three tabs at most, and the third only for somebody who teaches.
  *
- * It was five for a while: Share took the middle and You carried your face at
- * the end. Both have come off, by Matt's call. Share is an act rather than a
- * place and it now opens from the one screen it is about, the calendar's own
- * Share button; You is a person rather than a place either, and your face
- * sits in the header's top right where a profile door usually lives. What is
- * left is the three screens you actually move between, which is what a bottom
- * bar is for.
+ * | Account   | Tabs                            |
+ * | --------- | ------------------------------- |
+ * | Follows   | Following, Profile              |
+ * | Teaches   | Calendar, Following, Profile    |
  *
- * A member used to get two and a coach three, which meant the app rearranged
- * itself the moment somebody started coaching, and every screen had to know
- * which shell it was in. Both sides have a page of their own now, so both get
- * the tab; only where it points differs.
+ * This is the simplification the whole build is named for. The app had grown
+ * a screen for every idea anybody had, and the answer is not a better bottom
+ * bar, it is fewer things: build a calendar, share a calendar, follow a
+ * calendar. Discovery is not a tab (it is the search button on Following),
+ * settings are not a tab (they are the gear on Profile), and adding a class is
+ * not a tab (it is the plus on Calendar). A tab is a place you live, not every
+ * door in the building.
+ *
+ * A coach is not a different account, only a `users.kind` that carries a
+ * calendar. Turning "I teach too" on in settings adds the Calendar tab and
+ * lists them in Discover; turning it off takes both away. Same account, same
+ * profile, no second signup, which is what makes the upgrade a decision rather
+ * than a migration.
  */
 export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
   return [
-    // Two tabs. Following was the third and is gone: it was a merged week of
-    // the coaches you follow, and following no longer delivers a week. It
-    // delivers a face at the top of Schedule, and the classes behind that face
-    // reach your calendar only when you save them. A tab pointing at a screen
-    // whose whole content has moved into another tab is a second door onto one
-    // room.
-    //
-    // Discover, wearing the magnifier again. It carried the compass while the
-    // header's corner held a magnifier of its own, because the same glyph
-    // must never be drawn twice on one screen; the corner is your face now,
-    // so the mark comes back to the tab that means finding something.
-    { id: "discover", href: "/discover", icon: "search", label: "Discover" },
-    // The working calendar, one tap from anywhere and behind nothing: the
-    // one time it sat behind another screen it got buried, and that was bad
-    // enough to reverse. A coach's is /app, a member's /week.
-    { id: "schedule", href: scheduleHref ?? (coach ? "/app" : "/week"), icon: "calendar_today", label: "Schedule" },
+    // Only for somebody who teaches, and first, because it is the thing they
+    // opened the app to do.
+    ...(coach
+      ? [
+          {
+            id: "schedule" as const,
+            href: scheduleHref ?? "/app",
+            icon: "calendar_today",
+            label: "Calendar",
+          },
+        ]
+      : []),
+    // Everyone you follow, as one week. It was deleted for a build while
+    // following delivered a face instead of a week; it delivers the week
+    // again, and this is the only screen a member has.
+    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // Who you are, and where everything you manage lives: settings, your
+    // studios, the rota. One level down from the tabs on purpose.
+    { id: "you", href: "/you", icon: "account_circle", label: "Profile" },
   ];
 }
 
@@ -53,14 +62,15 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
  *  still belongs to one (your own profile) passes `active` explicitly. */
 export function activeTab(pathname: string, active?: NavTab): NavTab {
   if (active) return active;
-  if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "discover";
-  // /feed redirects onto the calendar now, so it lights the tab it lands on.
-  // The route is kept rather than deleted because it was the app's front door
-  // for months and is in emails, bookmarks and at least one home screen.
-  if (pathname.startsWith("/feed")) return "schedule";
-  // Both calendars are the Schedule tab: a coach's at /app, a member's at
-  // /week. The person is /you.
-  if (pathname.startsWith("/week") || pathname.startsWith("/app")) return "schedule";
+  // Discover is not a tab any more: it is the search button on Following and
+  // the plus at the end of the rail, both opening the same sheet. The routes
+  // stay reachable, and light Following, because that is where they open from.
+  if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "following";
+  if (pathname.startsWith("/feed")) return "following";
+  // The Calendar tab is a coach's own classes. /week was a member's calendar
+  // and is now a redirect onto Following, because a member has no calendar of
+  // their own: they read the week of the people they follow.
+  if (pathname.startsWith("/app")) return "schedule";
   if (pathname.startsWith("/you")) return "you";
   if (pathname.startsWith("/share")) return "share";
   return "none";

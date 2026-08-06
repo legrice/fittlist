@@ -265,6 +265,51 @@ export function mondayOfCurrentWeek(now = new Date()): string {
   return m.toISOString().slice(0, 10);
 }
 
+/**
+ * The three weeks the app flips through, Sunday to Saturday.
+ *
+ * Both Calendar and Following are a week at a time with an arrow either side,
+ * and this is where "which week" is decided so the two cannot disagree. Three
+ * is the whole range: this one, next, and the one after. A schedule that runs
+ * a year out is a thing to scroll, and a week you step through is a thing to
+ * read, which is the difference the simplification is about.
+ *
+ * Sunday-led, like every other week this app draws. `mondayOfCurrentWeek` is
+ * still here for the digests, which think in working weeks.
+ */
+export const WEEKS_AHEAD = 2;
+
+export function sundayOfWeek(offset = 0, today = todayIso()): string {
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - d.getUTCDay() + offset * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+/** The seven ISO dates of that week, in order. */
+export function weekDates(offset = 0, today = todayIso()): string[] {
+  const start = new Date(`${sundayOfWeek(offset, today)}T00:00:00Z`);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+/** "Aug 3 - 9", or "Aug 31 - Sep 6" when it straddles a month. The dash is a
+ *  range's own, the same label exemption a date header carries. */
+export function weekRangeLabel(offset = 0, today = todayIso()): string {
+  const days = weekDates(offset, today);
+  const a = new Date(`${days[0]}T00:00:00Z`);
+  const b = new Date(`${days[6]}T00:00:00Z`);
+  const mon = (d: Date) => d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+  const num = (d: Date) => d.getUTCDate();
+  const right = mon(a) === mon(b) ? `${num(b)}` : `${mon(b)} ${num(b)}`;
+  // The range's own dash, the same exemption a date header carries: this is a
+  // label rather than a sentence.
+  // check-copy-ignore
+  return `${mon(a)} ${num(a)} — ${right}`;
+}
+
 export function timeToMinutes(v: string): number {
   const [h, m] = v.split(":").map(Number);
   return h * 60 + m;
