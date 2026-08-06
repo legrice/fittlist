@@ -59,6 +59,7 @@ export function DiscoverList({
   myCity = null,
   backHref,
   hideBack = false,
+  hideSearch = false,
 }: {
   people: DirPerson[];
   cities: string[];
@@ -66,6 +67,9 @@ export function DiscoverList({
   myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
+  /** The sheet carries a live search box of its own above this list, so the
+   *  door here would be a second box saying the same thing. */
+  hideSearch?: boolean;
   /** Which half to open on, for a link that means one of them. */
 }) {
   // No useBandTop here, deliberately: this list draws no day bands any more
@@ -122,6 +126,7 @@ export function DiscoverList({
           Two search behaviours behind one drawing of a box was the confusing
           part; the magnifier left the header for this tab, so this is the one
           place searching starts. */}
+      {!hideSearch && (
       <div className="dissearchrow">
         <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
           <Icon name="search" size={21} className="dissearch-ic" />
@@ -130,6 +135,7 @@ export function DiscoverList({
           <span className="dissearch-ph">Search coaches by name</span>
         </Link>
       </div>
+      )}
 
       {/* One rail, all three halves. All leads it, filled in by default: the
           one selected chip is the hint that the rest can be selected. The
