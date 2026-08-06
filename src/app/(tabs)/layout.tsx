@@ -41,9 +41,11 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
-  // The Schedule tab is the working calendar: a coach's at /app, a member's
-  // at /week. You is the person, at /you for everyone.
-  const scheduleHref = isCoach ? "/app" : "/week";
+  // The Calendar tab points at one place now. It used to differ by kind,
+  // because a coach's calendar was /app and a member had their own at /week;
+  // a member has no calendar at all, so there is nothing to fork on and the
+  // tab is not drawn for them in the first place.
+  const scheduleHref = "/calendar";
   const face = {
     photo: me.photo,
     color: avatarColor(me),
@@ -66,7 +68,11 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         {invitesLeft !== 0 && <InvitesBanner />}
         {children}
       </div>
-      <NavBar coach={isCoach} scheduleHref={scheduleHref} />
+      {/* The Profile tab wears the viewer's own face rather than a glyph: it
+          is the only tab naming a person rather than a place, and a picture is
+          both the fastest thing in the bar to recognise and what every app
+          anybody already uses puts on that door. */}
+      <NavBar coach={isCoach} scheduleHref={scheduleHref} face={face} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -420,6 +421,54 @@ export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
 // switch is how ghost inventory got in: anyone could flip it and publish.
 // Becoming a coach is an approval now; this files the ask and tells the admin,
 // and adminSetKind is the only thing that flips the flag.
+/**
+ * "I teach too", the switch.
+ *
+ * Turning it on adds the Calendar tab and lists you in Discover. Turning it
+ * off takes both away. Same account, same profile, no second signup: a coach
+ * is not a different kind of person here, only somebody whose account carries
+ * a calendar, and that is what makes this a decision rather than a migration.
+ *
+ * It used to be an ask. `requestCoaching` filed it and an admin answered on
+ * the People tab, because public classes were coach-only and the wall was
+ * holding back a real leak: beta members were recreating their gym's whole
+ * schedule under their own name, since publishing was the only way to get a
+ * week into the app at all. That motivation is gone with the member calendar,
+ * and Matt's call is that converting should be one tap.
+ *
+ * The tradeoff is real and worth naming rather than discovering: anybody can
+ * now declare themselves a coach and publish public classes, so the leak is
+ * possible again. What catches it is the admin's Reports tab, which lists the
+ * same studio and time under two accounts, and that is a cleanup rather than a
+ * gate. `requestCoaching` and `adminAnswerCoachRequest` stay for the requests
+ * already in flight.
+ *
+ * Turning it off is deliberately gentle: it never deletes a class. The tab
+ * goes, the listing goes, and the week is still there if they turn it back on,
+ * because a switch that quietly threw away somebody's work would be a switch
+ * nobody could risk touching.
+ */
+export async function setTeaching(on: boolean): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
+  // A gym account is not a person and must never be flipped by one.
+  if (me.kind === "gym") return { ok: false, error: "That is a studio account." };
+  if (on && !me.handle) {
+    return { ok: false, error: "Pick your link first, so your page has somewhere to live." };
+  }
+  await db
+    .update(schema.users)
+    .set({ kind: on ? "coach" : "fan", discoverable: on ? true : me.discoverable })
+    .where(eq(schema.users.id, userId));
+  revalidatePath("/you");
+  revalidatePath("/calendar");
+  revalidatePath("/feed");
+  return { ok: true };
+}
+
 export async function requestCoaching(
   noteRaw = "",
 ): Promise<{ ok: boolean; pending?: boolean; error?: string }> {

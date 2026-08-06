@@ -100,5 +100,7 @@ export function backToFor(from: string | undefined, signedIn: boolean): { href: 
   if (from === "schedule") return { href: "/app", label: "Back to your schedule" };
   // The cold-open fallback is the calendar: it has to land somewhere every
   // signed-in viewer can actually open, and /week sends a coach to /app.
-  return signedIn ? { href: "/week", label: "Back to your schedule" } : { href: "/", label: "Back" };
+  // Following for a signed-in viewer: it is the one screen everybody has, and
+  // a member has no calendar to be sent back to.
+  return signedIn ? { href: "/feed", label: "Back to Following" } : { href: "/", label: "Back" };
 }

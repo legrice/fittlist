@@ -10,6 +10,7 @@ import { DiscoverableToggle } from "@/components/DiscoverableToggle";
 import { ApproveFollowersToggle } from "@/components/ApproveFollowersToggle";
 import { ChangeHandle } from "@/components/ChangeHandle";
 import { Icon } from "@/components/Icon";
+import { TeachToggle } from "@/components/TeachToggle";
 import { InviteSheet } from "@/components/InviteFriends";
 import { NotificationPrefs } from "@/components/NotificationPrefs";
 import { MemberProfileEditor } from "@/components/MemberProfileEditor";
@@ -178,6 +179,11 @@ export function MemberAccount({
           scroll, with sharing and privacy in the same block as your name. */}
       <h3 className="setgroup-h">Settings</h3>
       <div className="settingslist">
+        {/* The one control the account model rests on, and it leads the group:
+            teaching is a thing this account can carry rather than a different
+            signup, so it belongs in settings beside the rest of what you are
+            rather than behind an upgrade prompt. */}
+        <TeachToggle on={false} canTurnOn={!!handle} />
         <button className="setrow" onClick={() => setView("profile")}>
           <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
           <span className="setrow-txt">

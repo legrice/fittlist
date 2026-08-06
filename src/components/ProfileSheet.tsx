@@ -15,6 +15,7 @@ import {
 import { updateProfile } from "@/app/actions/profile";
 import { disconnectGoogleAction } from "@/app/actions/google";
 import { Icon } from "@/components/Icon";
+import { TeachToggle } from "@/components/TeachToggle";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { DiscoverableToggle } from "@/components/DiscoverableToggle";
@@ -515,6 +516,11 @@ export function ProfileSheet({
 
         <h3 className="setgroup-h">Settings</h3>
         <div className="settingslist">
+          {/* On for anybody looking at this screen, because a coach is exactly
+              somebody with it on. Turning it off drops the Calendar tab and
+              the listing without touching a class, so a week is never lost to
+              a switch. */}
+          <TeachToggle on canTurnOn />
           <button className="setrow" onClick={() => openView("page")}>
             <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
             <span className="setrow-txt">

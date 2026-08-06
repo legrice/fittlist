@@ -5532,3 +5532,19 @@ a.wkrow:active { transform: scale(.995); }
   background: var(--card); color: var(--ink);
   box-shadow: 0 12px 32px rgba(25, 21, 2, .18);
 }
+/* The Profile tab's face. Sized to the glyph beside it rather than to a
+   header avatar, so the three tabs sit on one line: a picture that is even two
+   pixels taller drags its label down and the row stops being a row. */
+.navglyph-face { display: inline-flex; align-items: center; justify-content: center; }
+.navface-photo,
+.navface-initial {
+  width: 26px; height: 26px; border-radius: 999px; display: block; object-fit: cover;
+}
+.navface-initial {
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 800;
+}
+/* The current tab inks in; a photograph cannot, so its ring does instead. */
+.navtab.on .navface-photo, .navtab.on .navface-initial {
+  box-shadow: 0 0 0 2px var(--si);
+}
