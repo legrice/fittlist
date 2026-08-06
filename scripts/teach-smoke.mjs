@@ -40,13 +40,35 @@ await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
-// Turn teaching on: the Calendar tab arrives without a reload.
+// The Profile tab, for somebody who doesn't teach. Two counts rather than
+// three, both opening the list they count, and nothing anywhere offering a
+// picture of a week they haven't got.
 await p.goto(BASE + "/you");
+const stats = p.locator(".acctstats .acctstat");
+if ((await stats.count()) !== 2) fail("a member gets two counts, got " + (await stats.count()));
+await p.locator(".acctstat", { hasText: "Followers" }).click();
+await p.waitForURL(/\/followers/);
+await p.getByText("No followers yet").waitFor();
+console.log("Followers opens the list it counts, and it can empty");
+await p.goto(BASE + "/you");
+await p.locator(".acctacts .btn.si", { hasText: "Share" }).click();
+const shareRows = (await p.locator(".ownermenu .setrow .t").allInnerTexts()).map((s) => s.trim());
+console.log("member share rows:", shareRows.join(" | "));
+if (shareRows.some((s) => /story|week/i.test(s)))
+  fail("a member has no week to draw: " + shareRows.join());
+if (!shareRows.includes("Profile card") || !shareRows.includes("QR code"))
+  fail("the page's own picture and code stay: " + shareRows.join());
+await p.locator(".sheetclose").click();
+
+// Turn teaching on: the Calendar tab arrives without a reload.
 const row = p.locator(".setrow", { hasText: "I teach too" });
 await row.waitFor();
 if (await row.locator(".switch.on").count()) fail("a member starts with it off");
 await row.click();
-await p.waitForTimeout(1600);
+// Wait for the tab, not for a stopwatch. The switch flips optimistically and
+// the bar redraws on router.refresh(), which is a round trip: a fixed sleep
+// passes on a warm server and fails on a cold one, and it did.
+await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ timeout: 15000 });
 if (!(await row.locator(".switch.on").count())) fail("the switch should read on");
 // No reload. The bar is rendered by the layout above this screen, so a switch
 // that adds a tab and leaves the bar alone until the next navigation has
@@ -65,7 +87,7 @@ console.log("the Calendar tab opens a real, empty week");
 // Turn it off again: the tab goes, and nothing else is harmed.
 await p.goto(BASE + "/you");
 await p.locator(".setrow", { hasText: "I teach too" }).click();
-await p.waitForTimeout(1400);
+await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
 if (t.length !== 2) fail("turning it off should take the tab away, got " + t.join());

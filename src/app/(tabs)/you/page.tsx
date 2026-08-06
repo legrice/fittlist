@@ -8,7 +8,6 @@ import { fansVisible } from "@/lib/flags";
 import { googleConfigured, isGoogleConnected } from "@/lib/gcal";
 import { getSessionUserId } from "@/lib/session";
 import { myStaffStudios } from "@/app/actions/gym";
-import { myWeek } from "@/lib/week";
 import { MemberAccount } from "@/components/MemberAccount";
 import { ProfileSheet } from "@/components/ProfileSheet";
 
@@ -37,14 +36,25 @@ export default async function YouPage({
 
   if (me.kind === "fan") {
     if (!(await fansVisible())) redirect("/");
-    const [going, week, fanRuns] = await Promise.all([
+    // The two relationships, and the studios they run. No week: a member has
+    // no calendar of their own in this build, so there is nothing here to
+    // count classes from or to draw a poster of.
+    const [fanFollowing, fanFollowers, fanRuns] = await Promise.all([
       db
-        .select({ id: schema.attendances.id })
-        .from(schema.attendances)
-        .where(eq(schema.attendances.userId, userId)),
-      // For the share poster's starting day: the first day their week holds
-      // something, not an empty today.
-      myWeek(userId),
+        .select({ id: schema.subscribers.id })
+        .from(schema.subscribers)
+        .where(
+          and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt)),
+        ),
+      db
+        .select({ id: schema.subscribers.id })
+        .from(schema.subscribers)
+        .where(
+          and(
+            eq(schema.subscribers.trainerUserId, userId),
+            isNull(schema.subscribers.optedOutAt),
+          ),
+        ),
       // A member can be staff at a studio too, and had the same dead end.
       myStaffStudios(),
     ]);
@@ -61,8 +71,8 @@ export default async function YouPage({
         photo={me.photo}
         color={avatarColor(me)}
         look={me.look}
-        goingCount={going.length}
-        firstIso={week[0]?.iso}
+        followingCount={fanFollowing.length}
+        followerCount={fanFollowers.length}
         openEditor={edit === "1"}
         canSendFeedback={canSendFeedback}
         discoverable={me.discoverable}

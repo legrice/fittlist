@@ -2895,6 +2895,9 @@ button.ps-card { cursor: pointer; }
   margin-top: 12px; background: var(--line); border-radius: 16px; overflow: hidden;
   box-shadow: var(--soft-shadow);
 }
+/* A member has two of them rather than three: Requests are a coach's, so a
+   third empty column would be a slot held open for a thing they cannot get. */
+.acctstats-grid.acctstats-two { grid-template-columns: repeat(2, 1fr); }
 .acctstats-grid .acctstat { background: #fff; padding: 15px 12px; align-items: center; text-align: center; }
 .acctstats-grid .acctstat + .acctstat { border-top: none; }
 .acctstats-grid .acctstat .l { color: var(--ol); font-size: 12px; }
@@ -5233,7 +5236,7 @@ button.ps-card { cursor: pointer; }
 .tray {
   /* Positioned, because the arrows sit over its edges. */
   position: relative;
-  margin: 0 -18px; padding: 14px 0 12px;
+  margin: 0 -18px; padding: 8px 0 12px;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
@@ -5249,7 +5252,12 @@ button.ps-card { cursor: pointer; }
    never hit this because its arrows were the last thing in the box. */
 .tray .railarrow { top: 50px; z-index: 2; }
 .tray-scroll {
-  display: flex; gap: 18px; overflow-x: auto; padding: 0 18px;
+  /* The vertical padding is the selected ring's room. `overflow-x: auto`
+     computes overflow-y to auto as well, so the scroller clips on both axes
+     and a 6px box-shadow ring on the first circle was being cut off at the top
+     and along the left edge. Six for the ring, and the horizontal 18 already
+     clears it at the start of the rail. */
+  display: flex; gap: 18px; overflow-x: auto; padding: 6px 18px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .tray-scroll::-webkit-scrollbar { display: none; }

@@ -17,8 +17,6 @@ import { MemberProfileEditor } from "@/components/MemberProfileEditor";
 import { MessagesToggle } from "@/components/MessagesToggle";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
-import { ShareMyWeekSheet } from "@/components/ShareMyWeekSheet";
-import { StartCoaching } from "@/components/StartCoaching";
 import { Toast, useToast } from "@/components/Toast";
 
 type MView = "profile" | "calendar" | "reach" | "account";
@@ -30,11 +28,12 @@ const VIEW_TITLE: Record<MView, string> = {
   account: "Account",
 };
 
-// A member's account. Smaller than a coach's by design: no stats, no studio
-// page, no rota. It is not smaller in the ways that matter to a person,
-// though: a member claims a handle and has a page at it, so the link, the
-// card and the QR code are theirs too. Withholding them was the
-// handle-as-coach-badge mistake wearing a different coat.
+// A member's account. Smaller than a coach's by design: no studio page, no
+// rota, and no schedule story, because a member has no week of their own to
+// draw. It is not smaller in the ways that matter to a person, though: a
+// member claims a handle and has a page at it, so the link, the card and the
+// QR code are theirs too. Withholding them was the handle-as-coach-badge
+// mistake wearing a different coat.
 export function MemberAccount({
   runs = [],
   name,
@@ -46,8 +45,8 @@ export function MemberAccount({
   photo,
   color,
   look,
-  goingCount,
-  firstIso,
+  followingCount,
+  followerCount,
   openEditor = false,
   canSendFeedback = false,
   discoverable = true,
@@ -66,10 +65,9 @@ export function MemberAccount({
   photo: string | null;
   color: string;
   look: string | null;
-  goingCount: number;
-  /** The first day their week holds something, so the share poster starts
-   *  where the plans do rather than on an empty today. */
-  firstIso?: string;
+  /** The two relationships, each opening the list it counts. */
+  followingCount: number;
+  followerCount: number;
   openEditor?: boolean;
   /** False when nobody's behind the door: no admin account to write to, or
    *  you are the admin. */
@@ -84,7 +82,6 @@ export function MemberAccount({
   // very same components: two layouts for one idea is how they drift, and
   // the leaves were already shared.
   const [view, setView] = useState<MView | null>(null);
-  const [share, setShare] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -141,6 +138,29 @@ export function MemberAccount({
           Edit
         </button>
       </div>
+
+      {/* The same counts a coach's screen carries, minus Requests, and each
+          opens the list it counts. Two rather than three, because they are
+          the two relationships that exist for somebody who does not teach.
+          Followers is where they come off: a person who followed you and
+          shouldn't have is removed from that list, and it is the only place
+          in the app that can do it. */}
+      {handle && (
+        <div className="acctstats acctstats-grid acctstats-two">
+          <button className="acctstat" onClick={() => router.push("/following")}>
+            <span className="n">{followingCount}</span>
+            <span className="l">
+              Following <Icon name="chevron_right" size={13} />
+            </span>
+          </button>
+          <button className="acctstat" onClick={() => router.push("/followers")}>
+            <span className="n">{followerCount}</span>
+            <span className="l">
+              Followers <Icon name="chevron_right" size={13} />
+            </span>
+          </button>
+        </div>
+      )}
 
       {handle && (
         <div className="acctacts">
@@ -222,11 +242,14 @@ export function MemberAccount({
         </button>
       </div>
 
-      {/* The member side is the front door; coaching is a door off it. Not a
-          setting, so it sits outside them the way Your studios does. */}
-      <div className="settingslist">
-        <StartCoaching handle={handle} />
-      </div>
+      {/* "Start coaching" used to sit here: an ask, filed for an admin to
+          answer, because a self-served switch was how ghost inventory got
+          into the directory. It is the toggle in the group above now. The
+          gate that ask existed to hold is still there, one step later: a
+          class is only public once a handle exists and the account says it
+          teaches, and turning the switch off takes the listing away again
+          without touching a week. Two doors onto one idea is one too many,
+          and the one behind an approval queue was the slower one. */}
 
       {/* The same card a coach gets, in the same place and for the same
           reason: the people you train with being here is what makes the app
@@ -373,24 +396,11 @@ export function MemberAccount({
                   <span className="s">Paste it anywhere</span>
                 </span>
               </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setShareMenu(false);
-                  setShare(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
-                <span className="setrow-txt">
-                  <span className="t">Schedule story</span>
-                  <span className="s">
-                    {goingCount > 0
-                      ? `A tall image of the ${goingCount} class${goingCount === 1 ? "" : "es"} in your week`
-                      : "Add a class to your week and it lands here"}
-                  </span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
-              </button>
+              {/* No schedule story here. A member has no week of their own
+                  to draw: the classes on this app belong to the people who
+                  teach them, and a poster of somebody else's is theirs to
+                  make. The card and the QR code stay, because those are a
+                  picture of this page, which is a thing a member has. */}
               <button
                 className="setrow"
                 onClick={() => {
@@ -446,7 +456,6 @@ export function MemberAccount({
           onCopied={() => toast("Link copied, ready to paste")}
         />
       )}
-      {share && <ShareMyWeekSheet onClose={() => setShare(false)} firstIso={firstIso} />}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
