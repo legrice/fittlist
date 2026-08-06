@@ -2848,7 +2848,7 @@ button.ps-card { cursor: pointer; }
 .pubtabs {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
   /* No rule under the row, by Matt's call: the tabs are pills now (the nav's
-     own grammar, ink words with the light-orange wash as the one selection
+     own grammar, ink words with the quiet gray wash as the one selection
      mark), and a line under a row of pills boxed the card's top in. */
   /* Full bleed inside the card, so a tab can still slide half off the
      screen rather than stopping at the column edge. */
@@ -2862,7 +2862,7 @@ button.ps-card { cursor: pointer; }
   font-size: 17px; color: var(--ol); background: transparent; white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-.pubtab.sel { color: var(--ink); background: color-mix(in srgb, var(--si) 12%, transparent); }
+.pubtab.sel { color: var(--ink); background: color-mix(in srgb, var(--ink) 7%, transparent); }
 .pubpanel { padding-top: 24px; }
 .pubpanel .ps-week { margin-top: 2px; }
 /* A section header that follows content rather than starting the page. It had
@@ -4112,10 +4112,10 @@ button.ps-card { cursor: pointer; }
    pill of its own, the way Photos marks the pane you are in. It was the brand
    colour on the current tab's ink for a long time, and before that a wash
    behind the glyph alone; one indicator, and it is the ground. The wash is
-   the light orange (the brand at a whisper), also by Matt's call, and it is
-   the same wash the calendar's view toggle and a profile's tabs wear: one
-   colour for "you are here", wherever the ground is saying it. */
-.navtab.on { background: color-mix(in srgb, var(--si) 12%, transparent); }
+   the quiet gray (ink at a whisper), by Matt's call after a day as the light
+   orange, and it is the same wash the calendar's view toggle and a profile's
+   tabs wear: one colour for "you are here", wherever the ground says it. */
+.navtab.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -6011,7 +6011,7 @@ a.clspeek-by:active { opacity: .6; }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. Light all over, by
    Matt's call: the edge is the input border rather than ink, and the current
-   view sits on the nav's own light-orange wash with its glyph unchanged, the
+   view sits on the nav's own quiet gray wash with its glyph unchanged, the
    same grammar the nav tabs use (the ground is the mark, never the ink). */
 .calseg {
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
@@ -6024,7 +6024,7 @@ a.clspeek-by:active { opacity: .6; }
   background: none; cursor: pointer; color: var(--ol);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.calseg button.on { background: color-mix(in srgb, var(--si) 12%, transparent); }
+.calseg button.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
 /* Add, moved up beside the toggle and sized to it: the bottom corners were
    getting crowded, and adding is the screen's own act, so it rides the title
    row. The one loud colour stays its own. */
