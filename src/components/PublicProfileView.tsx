@@ -13,7 +13,6 @@ import { classAddress, publicSchedule } from "@/lib/coachweek";
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { Icon } from "@/components/Icon";
-import { SettingsGear } from "@/components/SettingsGear";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -406,7 +405,13 @@ export async function PublicProfileView({
           // tab, so landing on it must not take the tabs away. Somebody
           // else's profile is a page you visited, and the arrow is its way
           // off.
-          <AppChrome userId={viewerId} bar={isOwner} headerNav={false} active={isOwner ? "you" : undefined} />
+          <AppChrome
+            userId={viewerId}
+            bar={isOwner}
+            headerNav={false}
+            active={isOwner ? "you" : undefined}
+            gear={isOwner}
+          />
         ) : (
           <PublicTopBar handle={handle} next={`/${handle}`} />
         )}
@@ -495,16 +500,11 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // The gear is back, and this time it is the only door there is.
-          // Profile is the tab and this page is what it opens, so settings
-          // have to be reachable from here or they are reachable from
-          // nowhere; a corner glyph on your own page is where every app
-          // anybody already uses puts them. A visitor sees nothing here.
-          ownerTop={
-            isOwner ? (
-              <SettingsGear />
-            ) : null
-          }
+          // The gear moved up into the app header (AppChrome's `gear`), by
+          // Matt's call: floating on the photo it read as loose furniture,
+          // and the header's corner is both where every app keeps settings
+          // and easier to reach. The slot stays for a studio's dots.
+          ownerTop={null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.

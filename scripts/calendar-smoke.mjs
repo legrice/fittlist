@@ -371,7 +371,7 @@ await p.goto(BASE + "/raebell");
 }
 // The gear slides settings up over the profile, the same move Edit profile
 // makes, and closing lands you back where you were: no navigation at all.
-await p.locator(".profgear").click();
+await p.locator('.brandbar-actions [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 if (!/\/raebell$/.test(new URL(p.url()).pathname)) fail("the gear should not navigate, at " + p.url());

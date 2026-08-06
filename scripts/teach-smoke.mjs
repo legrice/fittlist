@@ -46,7 +46,7 @@ await p.locator(".navtab[data-tab='you']").click();
 await p.waitForURL(/\/kiabright/);
 await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
-await p.locator(".profgear").click();
+await p.locator('.brandbar-actions [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".setrow", { hasText: "I teach too" }).waitFor();
 console.log("Profile opens your page, and the gear slides settings up over it");

@@ -20,9 +20,12 @@ export async function AppChrome({
   bar = false,
   headerNav,
   active,
+  gear = false,
 }: {
   userId: string;
   bar?: boolean;
+  /** The settings gear in the header's corner, on your own profile only. */
+  gear?: boolean;
   /** The tabs as header links too, for the width where the bottom bar hides.
    *  Follows `bar` by default, because a screen with tabs has to keep them at
    *  every width: above 940px the bottom bar is gone and without these there
@@ -80,6 +83,7 @@ export async function AppChrome({
       // The gear only where there is no member side at all: the coaches-only
       // mode has no tab bar, so it is the one door to the account.
       settings={fans ? undefined : "/settings"}
+      gear={gear}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />
   );

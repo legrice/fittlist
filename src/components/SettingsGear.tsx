@@ -22,7 +22,11 @@ import { ProfileSheet } from "@/components/ProfileSheet";
  * the pinned head and sticky is a stacking context on mobile: rendered in
  * place, the overlay would paint under the card that slides over the chrome.
  */
-export function SettingsGear() {
+export function SettingsGear({ header = false }: {
+  /** Drawn as one of the header's icon buttons rather than the profile
+   *  head's floating circle: the corner is where the gear lives now. */
+  header?: boolean;
+}) {
   const [data, setData] = useState<SettingsSheetData | null>(null);
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -44,7 +48,11 @@ export function SettingsGear() {
 
   return (
     <>
-      <button className="profgear" aria-label="Settings" onClick={openSheet}>
+      <button
+        className={header ? "iconbtn inboxbtn" : "profgear"}
+        aria-label="Settings"
+        onClick={openSheet}
+      >
         <Icon name="settings" size={26} />
       </button>
       {open && data && (

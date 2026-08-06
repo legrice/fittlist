@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HeaderFind } from "@/components/HeaderFind";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
 import { HeaderNav } from "@/components/HeaderNav";
+import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
@@ -14,16 +15,19 @@ import type { NavTab } from "@/lib/nav";
 export function AppHeader({
   unread = 0,
   settings,
+  gear = false,
   find = false,
   home = "/week",
   nav,
 }: {
   unread?: number;
-  /** Settings, as a gear. Only for a shell with no You tab to hold them:
-   *  the coaches-only mode has no tab bar, so the gear is the one door to
-   *  the account. Everywhere the tabs render, You is the door and the
-   *  corner stays clear. */
+  /** Settings, as a gear that navigates. Only for the coaches-only shell,
+   *  which has no tab bar: the gear is its one door to the account. */
   settings?: string;
+  /** Settings, as the slide-up sheet, on your own profile: it floated on
+   *  the photo for a build and read as loose furniture, and the header's
+   *  corner is both where every app keeps it and easier to reach. */
+  gear?: boolean;
   /** The magnifier, opening the directory as a sheet. Off in the shell with
    *  no member side at all, where there is nobody to find. */
   find?: boolean;
@@ -70,6 +74,7 @@ export function AppHeader({
             match="/settings"
           />
         )}
+        {gear && <SettingsGear header />}
       </div>
     </div>
   );

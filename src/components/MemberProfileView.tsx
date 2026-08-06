@@ -12,7 +12,6 @@ import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
-import { SettingsGear } from "@/components/SettingsGear";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -140,6 +139,7 @@ export async function MemberProfileView({
             bar={isOwner}
             headerNav={false}
             active={isOwner ? "you" : undefined}
+            gear={isOwner}
           />
         ) : (
           <PublicTopBar handle={user.handle ?? ""} next={`/${user.handle ?? ""}`} />
@@ -170,13 +170,9 @@ export async function MemberProfileView({
           backTo={backTo}
           // Nothing above the name; see PublicProfileView.
           badges={null}
-          // The one door to settings, for the same reason a coach's page
-          // carries it: Profile is the tab and this page is what it opens.
-          ownerTop={
-            isOwner ? (
-              <SettingsGear />
-            ) : null
-          }
+          // The gear lives in the app header now (AppChrome's `gear`), same
+          // as a coach's page: floating here it read as loose furniture.
+          ownerTop={null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

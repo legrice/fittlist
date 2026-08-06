@@ -3232,8 +3232,8 @@ button.ps-card { cursor: pointer; }
 }
 .pubhead-hero .actpill-primary { background: #fff; color: var(--ink); border-color: #fff; }
 .pubhead-hero .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
-/* The corner controls ride the picture in white too. */
-.pubhead-hero .profgear { color: #fff; }
+/* No gear on the picture any more: it moved to the header's corner, whose
+   icons already go white on the hero. */
 /* The back circle keeps its ordinary drawing over the photo, by Matt's
    call: a white circle with the arrow in ink. It went white-glyph with
    everything else for a build and was a blank white disc. */
