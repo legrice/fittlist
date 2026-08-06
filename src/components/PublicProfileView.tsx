@@ -410,7 +410,6 @@ export async function PublicProfileView({
             bar={isOwner}
             headerNav={false}
             active={isOwner ? "you" : undefined}
-            gear={isOwner}
           />
         ) : (
           <PublicTopBar handle={handle} next={`/${handle}`} />

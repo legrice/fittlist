@@ -1881,7 +1881,36 @@ button.ps-card { cursor: pointer; }
 
 /* Chip editor (profile form) */
 .chipsfield { margin-top: 2px; }
-.chipsfield-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+/* Tags sit under their field now, so the air moved from below to above. */
+.chipsfield-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* The vocabulary as a dropdown (TypeMultiSelect): a field that opens a
+   scrolling list, with the picks as tags under it. Forty chips in a grid
+   was a wall in the middle of the profile editor. */
+.msel { position: relative; }
+.msel-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 13px 14px; border-radius: 14px; border: 1.5px solid var(--line);
+  background: var(--card); color: var(--ink); cursor: pointer;
+  font-size: 16px; text-align: left;
+}
+.msel-ph { color: var(--ol); }
+/* Click-away, under the menu and over everything else in the sheet. */
+.msel-away { position: fixed; inset: 0; z-index: 5; background: none; border: none; cursor: default; }
+.msel-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 6;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(17, 17, 17, .12); max-height: 264px; overflow-y: auto;
+}
+.msel-opt {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border: none; background: none; cursor: pointer;
+  font-size: 15px; color: var(--ink); text-align: left;
+}
+.msel-opt + .msel-opt { border-top: 1px solid var(--cl); }
+.msel-opt.on { font-weight: 600; }
+.msel-opt[disabled] { opacity: .4; cursor: default; }
+[data-mode="dark"] .msel-menu { background: var(--card); }
 .chipsfield-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
   border-radius: 999px; background: var(--cl); border: 1px solid var(--line);
@@ -2948,7 +2977,10 @@ button.ps-card { cursor: pointer; }
 
 /* ---- account page (full-screen, reached from the header avatar) ---- */
 .acctwrap {
-  position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: var(--paper);
+  /* Above the tab bar (45), by Matt's call: settings is a takeover now, the
+     same move Edit profile makes, and a bar floating over it read as chrome
+     that forgot to leave. Sub-sheets portal to the body and stay above. */
+  position: fixed; inset: 0; z-index: 46; overflow-y: auto; background: var(--paper);
   padding: calc(10px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
   animation: slideUpIn .32s cubic-bezier(.22, .8, .28, 1);
 }
@@ -5893,7 +5925,8 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The ring is the whole selected state, and it sits outside the circle so the
    face is never cropped by its own highlight. */
-.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
+/* Ink, same call as the times: selection is a state, not a call to action. */
+.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--ink); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
    thumb between taps. */
@@ -6068,7 +6101,10 @@ a.clspeek-by:active { opacity: .6; }
 .clline-t {
   display: flex; align-items: baseline; gap: 2px; padding-top: 5px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16.5px; font-weight: 500; color: var(--si); white-space: nowrap;
+  /* Ink, not the brand orange, by Matt's call: orange is for the loudest
+     calls to action only, and a column of orange clocks was the loudest
+     thing on every list. */
+  font-size: 16.5px; font-weight: 500; color: var(--ink); white-space: nowrap;
 }
 .clline-ap { font-size: 11.5px; font-weight: 500; }
 .clline-main { min-width: 0; display: flex; flex-direction: column; }

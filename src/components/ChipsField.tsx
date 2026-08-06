@@ -30,18 +30,9 @@ export function ChipsField({
 
   return (
     <div className="chipsfield">
-      {value.length > 0 && (
-        <div className="chipsfield-list">
-          {value.map((c, i) => (
-            <span key={`${c}-${i}`} className="chipsfield-chip">
-              {c}
-              <button type="button" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((_, idx) => idx !== i))}>
-                <Icon name="close" size={15} />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+      {/* The field first and the tags under it, by Matt's call: the input
+          stays where the finger left it, and what you have added reads as a
+          result rather than a wall in front of the box. */}
       {value.length < max && (
         <div className="chipsfield-row">
           <input
@@ -60,6 +51,18 @@ export function ChipsField({
           <button type="button" className="chipsfield-add" onClick={add} disabled={!draft.trim()}>
             Add
           </button>
+        </div>
+      )}
+      {value.length > 0 && (
+        <div className="chipsfield-list">
+          {value.map((c, i) => (
+            <span key={`${c}-${i}`} className="chipsfield-chip">
+              {c}
+              <button type="button" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((_, idx) => idx !== i))}>
+                <Icon name="close" size={15} />
+              </button>
+            </span>
+          ))}
         </div>
       )}
     </div>

@@ -20,11 +20,12 @@ export async function AppChrome({
   bar = false,
   headerNav,
   active,
-  gear = false,
+  gear = true,
 }: {
   userId: string;
   bar?: boolean;
-  /** The settings gear in the header's corner, on your own profile only. */
+  /** The settings gear in the header's corner. On by default: the header is
+   *  the same on every signed-in screen, or the corner reads as unreliable. */
   gear?: boolean;
   /** The tabs as header links too, for the width where the bottom bar hides.
    *  Follows `bar` by default, because a screen with tabs has to keep them at

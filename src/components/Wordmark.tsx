@@ -1,11 +1,9 @@
 import { brandIcon } from "@/lib/brand";
 
-// The lockup: the block mark + "FittList". The mark wears the brand orange
-// (the app icon's own colour, and the same accent the search glyph and the
-// Share sparkle carry) while the text stays in the surface's ink; it was
-// monochrome for a long time, and the F in ink was the one place the brand
-// never showed on its own header. The cloud variant stays monochrome: on a
-// dark hero the off-white lockup is the point.
+// The lockup: the block mark + "FittList", monochrome again: the F wore the
+// brand orange for a day and came back to ink, because orange is for the
+// loudest calls to action only. The cloud variant stays a fixed off-white on
+// dark heroes.
 export function Wordmark({
   variant = "ink",
   className = "wordmark",
@@ -36,8 +34,10 @@ export function Wordmark({
         dangerouslySetInnerHTML={{
           // --wm-mark is the same escape hatch --wm-ink is, for the F: a
           // surface floating over a photograph turns the whole lockup white
-          // by setting both on an ancestor.
-          __html: brandIcon(variant === "ink" ? "var(--wm-mark, var(--si))" : "currentColor"),
+          // by setting both on an ancestor. The default is the text's own
+          // ink again, by Matt's call: the F wore the brand orange for a
+          // day, and orange is for the loudest calls to action only.
+          __html: brandIcon(variant === "ink" ? "var(--wm-mark, currentColor)" : "currentColor"),
         }}
       />
       <span className="wm-text">FittList</span>

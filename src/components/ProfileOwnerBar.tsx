@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { myWeekText } from "@/app/actions/weektext";
 import { ChipsField } from "@/components/ChipsField";
-import { TypePicker } from "@/components/TypePicker";
+import { TypeMultiSelect } from "@/components/TypePicker";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
@@ -419,14 +419,21 @@ export function ProfileOwnerBar({
                 flip when your books change, not something you edit alongside
                 your bio, and it was the only control in here that changed what
                 a visitor could do rather than what they read. */}
-            <label className="flabel">
-              Certifications <span>· optional</span>
-            </label>
+            {/* Each section is its label, its field, then its tags below the
+                field. The Certifications label sat stranded above this block
+                for a while, two headings deep from its own input. */}
             <label className="flabel">
               What you teach <span>· up to four, and it&rsquo;s how people find you</span>
             </label>
-            <TypePicker value={pDisciplines} onChange={setPDisciplines} max={4} />
-
+            <TypeMultiSelect
+              value={pDisciplines}
+              onChange={setPDisciplines}
+              max={4}
+              placeholder="Pick up to four"
+            />
+            <label className="flabel">
+              Certifications <span>· optional</span>
+            </label>
             <ChipsField value={pCerts} onChange={setPCerts} placeholder="e.g. NASM CPT" maxLen={40} max={12} />
             <label className="flabel">
               Coaching focus <span>· a few short descriptors</span>

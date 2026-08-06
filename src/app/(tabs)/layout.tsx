@@ -65,6 +65,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // which opens the same page the corner used to, and a second door
           // to somewhere that already has one is a door too many.
           find
+          gear
           nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}
