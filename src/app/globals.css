@@ -1180,7 +1180,13 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--paper);
   margin: -10px -18px 0; padding: 16px 18px 0;
   border-radius: 28px 28px 0 0;
+  transition: border-radius .18s ease;
 }
+/* Pinned at the very top the corners square off (useStuck writes the
+   class): kept round, the rows scroll up visibly behind the notches. The
+   same pair of rules covers the profile's pinned tab row. */
+.calsticky.stuck, .pubstick.stuck { border-radius: 0; }
+.pubstick { transition: border-radius .18s ease; }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
 .calsticky .calhead-row { margin-top: 0; padding-bottom: 14px; }
@@ -5710,6 +5716,10 @@ button.ps-card { cursor: pointer; }
   margin-top: 22px; padding: 26px 22px; border-radius: 26px;
   border: 1.5px dashed var(--line); text-align: left;
 }
+/* The figure, back on the first-run empty states: it was Following's and
+   then nobody's when the old screens went. Centred over left-set words is
+   deliberate, a drawing is not a paragraph. */
+.wkempty-fig { display: block; margin: 4px auto 22px; height: 190px; width: auto; }
 .wkempty-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 25px; font-weight: 600; letter-spacing: -.006em; color: var(--ink);

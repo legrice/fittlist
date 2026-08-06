@@ -229,9 +229,40 @@ export function useBandTop(ref?: { current: HTMLElement | null }) {
   }, [ref]);
 }
 
+/** Square the corners the moment a pinned block reaches the top of the
+ *  window. The card's radius is right while the block rides the card, and
+ *  wrong the moment it pins: rows scroll up behind the corner notches, which
+ *  reads as content leaking. A scroll listener rather than an
+ *  IntersectionObserver threshold trick, because a block that starts below
+ *  the fold is partially clipped at rest and the ratio can't tell that apart
+ *  from pinned. */
+export function useStuck(ref: { current: HTMLElement | null }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      el.classList.toggle("stuck", el.getBoundingClientRect().top <= 1);
+    };
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [ref]);
+}
+
 export function CalSticky({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useBandTop(ref);
+  useStuck(ref);
   return (
     <div ref={ref} className="calsticky">
       {children}

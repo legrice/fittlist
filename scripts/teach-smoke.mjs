@@ -47,9 +47,11 @@ await p.waitForURL(/\/kiabright/);
 await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
 await p.locator(".profgear").click();
-await p.waitForURL(/\/settings/);
+await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".setrow", { hasText: "I teach too" }).waitFor();
-console.log("Profile opens your page, and the gear on it opens settings");
+console.log("Profile opens your page, and the gear slides settings up over it");
+await p.locator(".acctclose").click();
+await p.locator('.acctwrap[role="dialog"]').waitFor({ state: "detached" });
 // The old address still lands on the profile: it was the settings screen for
 // months and is in old links, in /app?acct=1 and in the OAuth callback.
 await p.goto(BASE + "/you");

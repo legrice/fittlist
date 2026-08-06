@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Fragment, useEffect, useRef, type ReactNode } from "react";
-import { useBandTop } from "@/components/CalendarBits";
+import { useBandTop, useStuck } from "@/components/CalendarBits";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -98,6 +98,9 @@ export function ProfileTabs({
   // bands in the schedule pin right under it. One writer, one reader chain,
   // same as everywhere bands pin under chrome.
   useBandTop(stickRef);
+  // Pinned at the very top, the row squares its corners: kept round, the
+  // rows scroll up visibly behind the corner notches.
+  useStuck(stickRef);
 
   // The head is chrome, pinned like the header above it: face, name, meta and
   // the two pills all stay put, and the card slides up over the lot. Its

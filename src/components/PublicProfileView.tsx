@@ -13,6 +13,7 @@ import { classAddress, publicSchedule } from "@/lib/coachweek";
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { Icon } from "@/components/Icon";
+import { SettingsGear } from "@/components/SettingsGear";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
@@ -501,9 +502,7 @@ export async function PublicProfileView({
           // anybody already uses puts them. A visitor sees nothing here.
           ownerTop={
             isOwner ? (
-              <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={26} />
-              </Link>
+              <SettingsGear />
             ) : null
           }
           badges={null}

@@ -12,6 +12,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { Icon } from "@/components/Icon";
+import { SettingsGear } from "@/components/SettingsGear";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -173,9 +174,7 @@ export async function MemberProfileView({
           // carries it: Profile is the tab and this page is what it opens.
           ownerTop={
             isOwner ? (
-              <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={26} />
-              </Link>
+              <SettingsGear />
             ) : null
           }
           actions={

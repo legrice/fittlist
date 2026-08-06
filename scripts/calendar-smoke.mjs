@@ -369,10 +369,18 @@ await p.goto(BASE + "/raebell");
     fail(`the bands should pin under the tab row: ${varTop} vs ${stickH}`);
   console.log("profile head pins at " + top + ", tab row pins at " + stickH + ", tabs are wash pills");
 }
+// The gear slides settings up over the profile, the same move Edit profile
+// makes, and closing lands you back where you were: no navigation at all.
 await p.locator(".profgear").click();
-await p.waitForURL(/\/settings/);
+await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
-console.log("Profile opens your page, and the gear on it opens settings");
+if (!/\/raebell$/.test(new URL(p.url()).pathname)) fail("the gear should not navigate, at " + p.url());
+await p.locator(".acctclose").click();
+await p.locator('.acctwrap[role="dialog"]').waitFor({ state: "detached" });
+console.log("Profile opens your page, and the gear slides settings up over it");
+// The route survives for old links and the OAuth callback.
+await p.goto(BASE + "/settings");
+await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
 // The header's magnifier opens the directory sheet from any tabbed screen,
 // the calendar included: one act, one drawing of it, wherever you are
@@ -419,7 +427,19 @@ console.log("the header's magnifier opens the directory over the calendar");
   console.log("pinned row:", stick.y, "+", stick.height, "| landed band:", band.y);
   if (band.y < stick.y + stick.height - 4)
     fail("the landed band should sit below the pinned title row, got " + band.y);
+  // Pinned at the very top the corners square off; kept round, the rows
+  // scroll up visibly behind the notches.
+  await p.waitForTimeout(300);
+  const radPinned = await p
+    .locator(".calsticky")
+    .evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius));
+  if (radPinned > 1) fail("pinned, the corners should square off, got " + radPinned);
   await p.evaluate(() => window.scrollTo(0, 0));
+  await p.waitForTimeout(400);
+  const radRest = await p
+    .locator(".calsticky")
+    .evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius));
+  if (radRest < 20) fail("at rest, the corners come back, got " + radRest);
   console.log("the card slides over the header, and the title row pins with the bands");
 }
 
