@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
-import { initialOf } from "@/lib/avatar";
 import { fmtDayHeaderRel } from "@/lib/format";
-import { UpcomingDays, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
+import { DayList, WeekEmpty, initials, type WeekDayRows } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -63,6 +63,13 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const router = useRouter();
 
+  // The bands pin under the app header and nothing else: the coach rail above
+  // them scrolls away. `--dayband-top` lives on documentElement, so a screen
+  // that draws bands and forgets this inherits whatever the last screen set
+  // and pins them halfway down the phone, through the middle of a row. That
+  // has shipped once already, on Discover.
+  useBandTop();
+
   // Following somebody in the sheet is the whole reason the sheet exists, and
   // the week behind it is a server render: closing is where it catches up. The
   // action revalidates /feed, but nothing re-renders a page that is already on
@@ -104,14 +111,12 @@ export function FollowingScreen({
     return [...byIso.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([iso, list]) => {
-        const d = new Date(`${iso}T00:00:00Z`);
         return {
           iso,
-          dow: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase(),
-          date: String(d.getUTCDate()),
           // "Today", "Tomorrow", then the date. The same words the rest of the
           // app uses for a day, so one day is never named two ways.
           label: fmtDayHeaderRel(iso, todayIso),
+          today: iso === todayIso,
           rows: list
             .sort((a, b) => a.mins - b.mins)
             .map((i) => {
@@ -190,7 +195,7 @@ export function FollowingScreen({
                     <img src={c.photo} alt="" />
                   ) : (
                     <span className="trayav-ini" style={{ background: c.color }}>
-                      {initialOf(c.name)}
+                      {initials(c.name)}
                     </span>
                   )}
                 </span>
@@ -231,7 +236,7 @@ export function FollowingScreen({
           }
         />
       ) : (
-        <UpcomingDays days={days} />
+        <DayList days={days} />
       )}
 
       {/* Discovery is this button and the plus on the rail, and they open the

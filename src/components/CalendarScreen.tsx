@@ -1,30 +1,41 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
+import { CalSticky, MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { WeekDays, WeekEmpty, WeekStepper, type WeekDayRows } from "@/components/WeekView";
-import { clockParts, runsOn, timeToMinutes, weekDates } from "@/lib/format";
+import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
+import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 
 /**
- * A coach's own week: the classes they teach, and nothing else.
+ * A coach's own calendar: the classes they teach, and nothing else.
  *
  * This screen used to be everybody's calendar. It held what you teach, the
  * shifts a gym had you on, the classes you had saved off somebody else's page
  * and your own private entries, four relationships deep, each with its own
  * colour and its own tap behaviour, and a legend in a sheet to explain them.
- * It is one thing now: what you teach. A member has no calendar at all, and
- * the going marks and personal entries that filled this one are gone from
- * every screen.
+ * It is one thing now: what you teach.
  *
- * That is the whole simplification said in one screen. Build a calendar, share
- * a calendar, follow a calendar.
+ * The shape it wears is the last argument that was still open. It was a week
+ * you stepped through with an arrow either side, which capped the calendar at
+ * three weeks for no reason the data had and asked somebody to page through a
+ * thing they can scroll. It is a continuous list under a title now, with the
+ * day bands pinning as you go, and Month is the other way of looking at the
+ * same rows rather than a third screen.
  */
+
+/** How far the list runs. Long enough that scrolling is the way to next month
+ *  and short enough that a coach with a standing Tuesday is not handed two
+ *  hundred identical rows; Month is the view for anything further out. */
+const LIST_DAYS = 56;
+
+type View = "list" | "month";
+
 export function CalendarScreen({
   classes,
   todayIso,
@@ -43,7 +54,7 @@ export function CalendarScreen({
   subsCount: number;
 }) {
   const router = useRouter();
-  const [week, setWeek] = useState(0);
+  const [view, setView] = useState<View>("list");
   const [addOpen, setAddOpen] = useState(false);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
@@ -52,74 +63,142 @@ export function CalendarScreen({
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
 
+  /** Every date from today that holds something, with its rows in time order.
+   *  Days with nothing on them never make a block, so a light week reads as a
+   *  light week rather than as a wall of empty headings. */
   const days: WeekDayRows[] = useMemo(() => {
-    return weekDates(week, todayIso)
-      .map((iso) => {
-        const d = new Date(`${iso}T00:00:00Z`);
-        const dow = (d.getUTCDay() + 6) % 7;
-        const rows = classes
-          .filter((c) => runsOn(c, iso, dow))
-          .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-          .map((c) => {
-            const t = clockParts(c.startTime);
-            const st = c.studioId ? studioById.get(c.studioId) : null;
-            return {
-              key: `${c.id}|${iso}`,
-              name: c.name,
-              where: st?.name ?? c.location ?? null,
-              hm: t.hm,
-              ap: t.ap,
-              onTap: () =>
-                setPeek(
-                  peekOf(c, iso, st?.name ?? c.location ?? null, st ? `/s/${st.slug}` : null),
-                ),
-            };
-          });
-        return {
-          iso,
-          dow: d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase(),
-          date: String(d.getUTCDate()),
-          rows,
-        };
-      })
-      .filter((d) => d.rows.length > 0);
-  }, [classes, week, todayIso, studioById]);
+    const out: WeekDayRows[] = [];
+    const start = Date.parse(`${todayIso}T00:00:00Z`);
+    for (let i = 0; i < LIST_DAYS; i++) {
+      const d = new Date(start + i * 864e5);
+      const iso = d.toISOString().slice(0, 10);
+      const dow = (d.getUTCDay() + 6) % 7;
+      const rows = classes
+        .filter((c) => runsOn(c, iso, dow))
+        // Been and gone is not on a schedule. Today keeps the ones still to
+        // come and drops the six o'clock you already taught.
+        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
+        .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+        .map((c) => {
+          const t = clockParts(c.startTime);
+          const st = c.studioId ? studioById.get(c.studioId) : null;
+          const where = st?.name ?? c.location ?? null;
+          return {
+            key: `${c.id}|${iso}`,
+            name: c.name,
+            where,
+            hm: t.hm,
+            ap: t.ap,
+            onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null)),
+          };
+        });
+      if (rows.length)
+        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
+    }
+    return out;
+  }, [classes, todayIso, studioById]);
 
-  // Whether this account has anything at all, not whether this week does: the
-  // first week's empty state offers the thing to do, and a later one only says
-  // there is nothing there, because "add your first class" is wrong advice on
-  // a week somebody flipped forward to.
+  /** The month grid reads the same rows, over its own longer range: it is a
+   *  different way of looking at the calendar, not a different calendar. */
+  const monthItems = useMemo(() => {
+    const m = new Map<string, MonthCellItem[]>();
+    const start = Date.parse(`${todayIso}T00:00:00Z`) - 62 * 864e5;
+    for (let i = 0; i < 62 + 380; i++) {
+      const d = new Date(start + i * 864e5);
+      const iso = d.toISOString().slice(0, 10);
+      const dow = (d.getUTCDay() + 6) % 7;
+      const rows = classes
+        .filter((c) => runsOn(c, iso, dow))
+        .map((c) => ({
+          kind: "coaching" as const,
+          name: c.name,
+          at: timeToMinutes(c.startTime),
+        }))
+        .sort((a, b) => a.at - b.at);
+      if (rows.length) m.set(iso, rows);
+    }
+    return m;
+  }, [classes, todayIso]);
+
+  // Tapping a day in the grid goes back to the list and lands on it. The grid
+  // answers "what does the month look like"; a day is a list of classes, and
+  // that is a thing the list already draws well.
+  const openDay = useCallback((iso: string) => {
+    setView("list");
+    requestAnimationFrame(() => {
+      document.getElementById(`day-${iso}`)?.scrollIntoView({ block: "start" });
+    });
+  }, []);
+
+  // Whether this account has anything at all, not whether the next eight weeks
+  // do: the empty state offers the thing to do only when there is nothing.
   const bare = classes.length === 0;
 
   return (
     <>
-      <WeekStepper week={week} onWeek={setWeek} />
+      {/* The title and the two ways of looking, pinned under the app header.
+          `CalSticky` publishes its own height as `--dayband-top`, which is
+          where every day band underneath pins: one writer for that number,
+          because two screens working it out separately is how they end up
+          disagreeing by a few pixels nobody can explain. */}
+      <CalSticky>
+        <div className="calbar">
+          <h1 className="calbar-t">Calendar</h1>
+          {!bare && (
+            <div className="calseg" role="tablist" aria-label="Calendar view">
+              <button
+                role="tab"
+                aria-selected={view === "list"}
+                className={view === "list" ? "on" : ""}
+                onClick={() => setView("list")}
+              >
+                List
+              </button>
+              <button
+                role="tab"
+                aria-selected={view === "month"}
+                className={view === "month" ? "on" : ""}
+                onClick={() => setView("month")}
+              >
+                Month
+              </button>
+            </div>
+          )}
+        </div>
+        {view === "month" && <MonthHeadRow />}
+      </CalSticky>
 
-      {days.length === 0 ? (
+      {bare ? (
         <WeekEmpty
-          first={week === 0 || bare}
-          title="Your week is empty"
+          first
+          title="Your calendar is empty"
           body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
           cta="Add your first class"
           onCta={() => setAddOpen(true)}
         />
+      ) : view === "month" ? (
+        <MonthScroll
+          todayIso={todayIso}
+          items={monthItems}
+          onDay={openDay}
+          onMonthInView={() => {}}
+        />
+      ) : days.length === 0 ? (
+        <WeekEmpty first={false} title="" body="" />
       ) : (
-        <WeekDays days={days} />
+        <DayList days={days} />
       )}
 
-      {/* The two things you do with a calendar, floating in the two bottom
-          corners: make it, and hand it on. Both only once there is a week
-          behind them. An empty calendar carries its own CTA, so a plus beside
-          it is one button explaining the other, and a poster of nothing is
-          the app talking to itself.
+      {/* The two things you do with a calendar, in the two bottom corners:
+          make it, and hand it on. Both only once there is a week behind them.
+          An empty calendar carries its own CTA, so a plus beside it is one
+          button explaining the other, and a poster of nothing is the app
+          talking to itself.
 
-          The pair is deliberately weighted. Add is the loud one, in the brand
-          colour, under the thumb, because it is what somebody opens this
-          screen to do. Share is white with the sparkle carrying the colour:
-          it wears its word because it is occasional and needs saying, and it
-          takes the left corner because the right one belongs to the act you
-          repeat. */}
-      {days.length > 0 && (
+          Add is the loud one, under the thumb, because it is what somebody
+          opens this screen to do. Share is white with the sparkle carrying the
+          colour, wearing its word because it is occasional and needs saying. */}
+      {!bare && (
         <>
           <Link className="wkshare" href="/share">
             <Icon name="auto_awesome" size={22} className="wkshare-ic" />
@@ -195,9 +274,8 @@ export function CalendarScreen({
   );
 }
 
-/** The tapped occurrence, as the sheet wants it. `MON · AUG 3` is the date
- *  said the way the design says it, and it lives here rather than in the sheet
- *  because only the caller knows which date was tapped. */
+/** The tapped occurrence, as the sheet wants it. It lives here rather than in
+ *  the sheet because only the caller knows which date was tapped. */
 function peekOf(
   c: ClassDto,
   iso: string,
@@ -205,7 +283,7 @@ function peekOf(
   whereHref: string | null,
 ): PeekClass {
   const d = new Date(`${iso}T00:00:00Z`);
-  // Title case, because it is a value in the facts list now and reads beside
+  // Title case, because it is a value in the facts list and reads beside
   // "6:00 pm" and "Ironbound Performance Athletics", not above them.
   const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
   const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });

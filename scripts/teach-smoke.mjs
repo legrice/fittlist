@@ -100,7 +100,7 @@ await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png"
 // ...and the calendar is real: it loads, and offers the first class.
 await p.locator(".navtab", { hasText: "Calendar" }).click();
 await p.waitForURL(/\/calendar/);
-await p.locator(".wkempty-t", { hasText: "Your week is empty" }).waitFor();
+await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
 console.log("the Calendar tab opens a real, empty week");
 
 // Turn it off again: the tab goes, and nothing else is harmed.

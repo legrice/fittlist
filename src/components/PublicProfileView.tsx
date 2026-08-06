@@ -320,12 +320,20 @@ export async function PublicProfileView({
             The ribbon went with them. It put a class in your plans, and plans
             are gone: a member reads the week of the people they follow, and
             there is nothing to add it to. */}
-        <div className="upcoming">
+        <div className="daylist">
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
-              <div key={d.iso} className="upday">
-                <h2 className="upday-h">{fmtDayHeaderRel(d.iso, today)}</h2>
-                <div className="wkday-rows">
+              <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
+                <div className="dayband">
+                  <span className="dayband-d">
+                    {fmtDayHeaderRel(d.iso, today)}
+                    {d.iso === today && <span className="dayband-dot" aria-hidden="true" />}
+                  </span>
+                  <span className="dayband-n">
+                    {d.items.length} {d.items.length === 1 ? "class" : "classes"}
+                  </span>
+                </div>
+                <div className="dayrows">
                   {d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;
                     const where = s ? s.name : c.location;
@@ -338,27 +346,30 @@ export async function PublicProfileView({
                     return (
                       <a
                         key={`${d.iso}-${c.id}`}
-                        className="wkrow"
+                        className="clline"
                         href={href}
                         data-cid={c.id}
                         data-d={d.iso}
                         data-base={at?.key}
                       >
-                        <span className="wkrow-body">
-                          <span className="wkrow-txt">
-                            <span className="wkrow-nm">{c.name}</span>
-                            {where && <span className="wkrow-where">{where}</span>}
-                          </span>
-                          <span className="wkrow-time">
-                            {start.hm}
-                            <span className="wkrow-ap">{start.ap.toLowerCase()}</span>
-                          </span>
+                        <span className="clline-t">
+                          {start.hm}
+                          <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                        </span>
+                        <span className="clline-main">
+                          <span className="clline-nm">{c.name}</span>
+                          {where && (
+                            <span className="clline-w">
+                              <Icon name="place" size={17} />
+                              {where}
+                            </span>
+                          )}
                         </span>
                       </a>
                     );
                   })}
                 </div>
-              </div>
+              </section>
             );
             // One week at a time: the first non-empty week renders now, and
             // the rest wait behind View more, revealed a week per tap. Empty

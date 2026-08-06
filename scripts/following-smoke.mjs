@@ -119,8 +119,13 @@ await m.waitForTimeout(600);
   // first few faces are seen without a swipe, so the one in front is whoever
   // is teaching next. Checked against the list rather than a fixed order,
   // because which coach that is depends on the day the suite runs.
-  await m.locator(".wkrow").first().waitFor();
-  const next = (await m.locator(".wkrow-coach").first().innerText()).trim().split(/\s+/)[0];
+  await m.locator(".clline").first().waitFor();
+  // The name is the by-line's last text node: the avatar's initials are a
+  // text node too, so `innerText` reads "TL Theo Lang" and splitting it hands
+  // back the initials. `series-smoke` learned this exact lesson once already.
+  const next = (
+    await m.locator(".clline-by").first().evaluate((e) => e.lastChild.textContent)
+  ).trim().split(/\s+/)[0];
   console.log("next class is", next, "| rail leads with", faces[1]);
   if (faces[1] !== next) fail(`the rail should lead with ${next}, led with ${faces[1]}`);
 }
@@ -128,9 +133,9 @@ await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png"
 
 // One list of what is coming, under date headings, rather than a week you flip
 // through. All four classes are in it: this week's remainder plus next week's.
-await m.locator(".wkrow").first().waitFor();
-const rowsAll = await m.locator(".wkrow").count();
-const heads = (await m.locator(".upday-h").allInnerTexts()).map((t) => t.trim());
+await m.locator(".clline").first().waitFor();
+const rowsAll = await m.locator(".clline").count();
+const heads = (await m.locator(".dayband-d").allInnerTexts()).map((t) => t.trim());
 console.log("coming up rows:", rowsAll);
 console.log("headings:", heads.join(" | "));
 if (heads.length < 2) fail("expected a heading per day, got " + heads.join());
@@ -144,7 +149,7 @@ if (await m.locator(".wkhead-sum").count()) fail("no count of classes and coache
 // The rail filters, single select, and the list gets shorter.
 await m.locator(".trayitem", { hasText: "Nadia" }).click();
 await m.waitForTimeout(400);
-const rowsOne = await m.locator(".wkrow").count();
+const rowsOne = await m.locator(".clline").count();
 console.log("filtered rows:", rowsOne, "of", rowsAll);
 if (!(rowsOne > 0 && rowsOne < rowsAll)) fail("picking a face should narrow the list");
 if (!(await m.locator(".trayav.sel").count())) fail("the picked face should wear the ring");
@@ -154,7 +159,7 @@ await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-filtered.
 // Tapping again gives everyone back.
 await m.locator(".trayitem", { hasText: "Nadia" }).click();
 await m.waitForTimeout(400);
-if ((await m.locator(".wkrow").count()) !== rowsAll)
+if ((await m.locator(".clline").count()) !== rowsAll)
   fail("tapping the picked coach again should clear the filter");
 
 // Search pulls the directory up over the week rather than navigating to it,
@@ -183,7 +188,7 @@ await m.waitForTimeout(300);
 if (await m.locator(".dissheet").count()) fail("the close should put it away");
 
 // A class opens to say when, where and whose, and offers no way to add it.
-await m.locator(".wkrow").first().click();
+await m.locator(".clline").first().click();
 await m.locator(".clspeek").waitFor();
 await m.waitForTimeout(500);
 const facts = (await m.locator(".clspeek-facts").innerText()).replace(/\s+/g, " ");

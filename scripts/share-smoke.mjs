@@ -96,7 +96,7 @@ console.log("a coach put a week up ok");
 
 // ---- Share is the calendar's own pill, not a tab
 await coach.goto(BASE + "/calendar");
-await coach.locator(".wkrow").first().waitFor();
+await coach.locator(".clline").first().waitFor();
 {
   const tabs = (await coach.locator(".navtab").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
@@ -287,8 +287,8 @@ console.log("the range picker covers a day to a week ok");
     fail("hiding one should count: " + (await rowWords(coach, "Classes")));
   // And the class is still on the calendar it was hidden from.
   await coach.goto(BASE + "/calendar");
-  await coach.locator(".wkrow").first().waitFor();
-  if (!(await coach.locator(".wkrow-nm", { hasText: "Guns, Buns, and Lungs" }).count()))
+  await coach.locator(".clline").first().waitFor();
+  if (!(await coach.locator(".clline-nm", { hasText: "Guns, Buns, and Lungs" }).count()))
     fail("hiding a class from the image removed it from the calendar");
 }
 console.log("the picker hides from the image only ok");
@@ -323,8 +323,8 @@ await settled(coach);
   await coach.locator(".sheetclose").first().click().catch(() => {});
   // It is on the calendar, not only on the image.
   await coach.goto(BASE + "/calendar");
-  await coach.locator(".wkrow").first().waitFor();
-  if (!(await coach.locator(".wkrow-nm", { hasText: "Reformer Pilates" }).count()))
+  await coach.locator(".clline").first().waitFor();
+  if (!(await coach.locator(".clline-nm", { hasText: "Reformer Pilates" }).count()))
     fail("a class added from the editor should be on the calendar");
   // And the studio it named is findable, which is the inventory filling
   // itself in behind somebody making a picture.
@@ -349,9 +349,9 @@ await settled(coach);
   // instead, which is the honest empty and the state a new coach is in.
   await closeSheet(coach);
   await coach.goto(BASE + "/calendar");
-  await coach.locator(".wkrow").first().waitFor();
+  await coach.locator(".clline").first().waitFor();
   for (const nm of ["Guns, Buns, and Lungs", "Reformer Pilates"]) {
-    await coach.locator(".wkrow", { hasText: nm }).first().click();
+    await coach.locator(".clline", { hasText: nm }).first().click();
     await coach.locator(".clspeek").waitFor();
     await coach.locator(".clspeek-del").click();
     await coach.locator(".confirmsheet").waitFor();
@@ -359,7 +359,7 @@ await settled(coach);
     // Every date of it goes, so wait for the count to reach nought rather than
     // for one node: a weekly class is three rows in a week.
     await coach.waitForFunction(
-      (t) => ![...document.querySelectorAll(".wkrow-nm")].some((e) => e.textContent === t),
+      (t) => ![...document.querySelectorAll(".clline-nm")].some((e) => e.textContent === t),
       nm,
       { timeout: 15000 },
     );

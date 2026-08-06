@@ -1,5 +1,5 @@
-// A coach's own calendar: the week stepper, the two floating controls, and the
-// sheet a class opens into. This is the screen the whole build is named after
+// A coach's own calendar: the title and its two views, the banded list, the
+// two floating controls, and the sheet a class opens into. This is the screen the whole build is named after
 // (build a calendar, share a calendar, follow a calendar), and it had no suite
 // at all: every check on it was riding along inside following-smoke's fixture
 // setup, which only ever proved a class could be published.
@@ -31,7 +31,7 @@ await skipSetup(p);
 // control is drawn: a plus beside the CTA is one button explaining the other,
 // and a poster of an empty week is the app talking to itself.
 await p.goto(BASE + "/calendar");
-await p.locator(".wkempty-t", { hasText: "Your week is empty" }).waitFor();
+await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
 if (await p.locator(".wkfab").count()) fail("no plus on an empty calendar");
 if (await p.locator(".wkshare").count()) fail("no Share on an empty calendar");
 console.log("an empty calendar is its own CTA, and carries neither floating control");
@@ -71,7 +71,7 @@ await add("Evening Flow", "We", "18:30", "Rae's Room");
 await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 
 await p.goto(BASE + "/calendar");
-await p.locator(".wkrow").first().waitFor();
+await p.locator(".clline").first().waitFor();
 
 // The two floating controls, in the two bottom corners. Add is the loud one
 // in the brand colour; Share is white with the sparkle carrying the colour,
@@ -93,28 +93,75 @@ await p.locator(".wkrow").first().waitFor();
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
-// The stepper walks three weeks and stops, greyed at both ends rather than
-// disappearing: a control that vanishes moves the one beside it under a thumb.
+// The title and the two views. The week stepper is gone: three weeks with an
+// arrow either side capped the calendar for no reason the data had, and asked
+// somebody to page through a thing they can scroll.
 {
-  const back = p.locator(".wkarrow").first();
-  const fwd = p.locator(".wkarrow").last();
-  if (!(await back.isDisabled())) fail("there is no week before this one");
-  const first = (await p.locator(".wkhead-range").innerText()).trim();
-  await fwd.click();
-  await fwd.click();
-  const third = (await p.locator(".wkhead-range").innerText()).trim();
-  console.log("stepper:", first, "->", third);
-  if (first === third) fail("the arrow should move the week");
-  if (!(await fwd.isDisabled())) fail("three weeks is the whole range");
-  await back.click();
-  await back.click();
-  if ((await p.locator(".wkhead-range").innerText()).trim() !== first)
-    fail("walking back should land where it started");
+  if (await p.locator(".wkarrow").count()) fail("the week stepper should be gone");
+  await p.locator(".calbar-t", { hasText: "Calendar" }).waitFor();
+  const seg = (await p.locator(".calseg button").allInnerTexts()).map((t) => t.trim());
+  console.log("views:", seg.join(" | "));
+  if (seg.join() !== "List,Month") fail("expected List and Month, got " + seg.join());
+  if ((await p.locator(".calseg button.on").innerText()).trim() !== "List")
+    fail("the list leads");
+}
+
+// Every day is banded, with its date and its count, and today wears a dot.
+{
+  const bands = (await p.locator(".dayband").allInnerTexts()).map((t) =>
+    t.replace(/\s+/g, " ").trim(),
+  );
+  console.log("bands:", bands.slice(0, 3).join(" | "));
+  if (!bands.length) fail("the list should band its days");
+  if (!/\d+ CLASS(ES)?$/i.test(bands[0])) fail("a band counts its day: " + bands[0]);
+  const dots = await p.locator(".dayband-dot").count();
+  if (dots > 1) fail("only today wears a dot, got " + dots);
+}
+
+// The header and the bands both pin. This is the whole reason the calendar is
+// a scroll rather than a stepper: the day you are looking at has to stay
+// named, and the title and the view switch have to stay reachable.
+{
+  const stick = (sel) => p.locator(sel).first().evaluate((e) => getComputedStyle(e).position);
+  if ((await stick(".calsticky")) !== "sticky") fail("the calendar header should pin");
+  if ((await stick(".dayband")) !== "sticky") fail("the day bands should pin");
+  // And they pin under the app header rather than at a guessed offset:
+  // `--dayband-top` has one writer and a screen that forgets to call it pins
+  // its bands halfway down the phone.
+  const top = await p.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue("--dayband-top").trim(),
+  );
+  console.log("bands pin at", top);
+  if (!/^\d+px$/.test(top) || parseInt(top) < 40) fail("the band offset looks unmeasured: " + top);
+  // Scroll a long way and the first band on screen is still a band, not a row.
+  await p.evaluate(() => window.scrollTo(0, 600));
+  await p.waitForTimeout(400);
+  const bandTop = parseInt(top);
+  const stuck = await p.evaluate((t) => {
+    const el = document.elementFromPoint(200, t + 10);
+    return el?.closest(".dayband") ? "band" : (el?.className ?? "nothing");
+  }, bandTop);
+  if (stuck !== "band") fail("a band should be pinned under the header, found " + stuck);
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await p.waitForTimeout(300);
+}
+
+// Month is the same rows, looked at differently, and a day in it comes back
+// to the list and lands on that day.
+{
+  await p.locator(".calseg button", { hasText: "Month" }).click();
+  await p.locator(".monthgrid").first().waitFor();
+  if (await p.locator(".clline").count()) fail("Month replaces the list rather than joining it");
+  if (!(await p.locator(".monthpill").count())) fail("the grid should carry the classes");
+  await p.locator(".monthday:not([disabled])").first().click();
+  await p.locator(".clline").first().waitFor();
+  if ((await p.locator(".calseg button.on").innerText()).trim() !== "List")
+    fail("tapping a day comes back to the list");
 }
 
 // Your own class: date, time and studio, no by-line (this sheet is yours), and
 // the three things you can do with it.
-await p.locator(".wkrow").first().click();
+await p.locator(".clline").first().click();
 await p.locator(".clspeek").waitFor();
 await p.waitForTimeout(400);
 {
@@ -137,30 +184,36 @@ await p.waitForTimeout(400);
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-sheet.png" });
 
 // Cancelling one date takes that row off and leaves the rest of the class.
-const before = await p.locator(".wkrow").count();
+const before = await p.locator(".clline").count();
 await p.locator(".clspeek-btn", { hasText: "Cancel class" }).click();
 await p.locator(".confirmsheet").waitFor();
 await p.locator(".confirmsheet .btn.si").click();
 // The sheet closes, then the week catches up on a refresh: wait for the row
 // to actually go rather than for a stopwatch.
-await p.locator(".wkrow").nth(before - 1).waitFor({ state: "detached", timeout: 15000 });
+await p.locator(".clline").nth(before - 1).waitFor({ state: "detached", timeout: 15000 });
 {
-  const after = await p.locator(".wkrow").count();
+  const after = await p.locator(".clline").count();
   console.log("cancelled one date:", before, "->", after);
   if (after !== before - 1) fail("one date off, not " + (before - after));
 }
 
 // Deleting the whole thing takes every date of it.
-await p.locator(".wkrow").first().click();
+await p.locator(".clline").first().click();
 await p.locator(".clspeek").waitFor();
 await p.waitForTimeout(400);
 const name = (await p.locator(".clspeek-nm").innerText()).trim();
 await p.locator(".clspeek-del").click();
 await p.locator(".confirmsheet").waitFor();
 await p.locator(".confirmsheet .btn.si").click();
-await p.locator(".wkrow-nm", { hasText: name }).waitFor({ state: "detached", timeout: 15000 });
+// Every date of it goes, and the list runs eight weeks, so a standing weekly
+// is eight rows: wait for the count to reach nought rather than for one node.
+await p.waitForFunction(
+  (t) => ![...document.querySelectorAll(".clline-nm")].some((e) => e.textContent === t),
+  name,
+  { timeout: 15000 },
+);
 {
-  const left = (await p.locator(".wkrow-nm").allInnerTexts()).map((t) => t.trim());
+  const left = (await p.locator(".clline-nm").allInnerTexts()).map((t) => t.trim());
   console.log("deleted", name, "| left:", [...new Set(left)].join(" | ") || "(nothing)");
   if (left.includes(name)) fail(name + " should be off every week");
 }
@@ -187,7 +240,7 @@ if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab 
   // other half can only ever be empty.
   if (await p.locator(".seg", { hasText: "Teaching" }).count())
     fail("the Teaching/Going segment should be gone");
-  const names = (await p.locator(".pub .wkrow-nm").allInnerTexts()).map((t) => t.trim());
+  const names = (await p.locator(".pub .clline-nm").allInnerTexts()).map((t) => t.trim());
   console.log("profile rows:", [...new Set(names)].join(" | "));
   if (!names.length) fail("the profile should draw the calendar's rows");
   if (await p.locator(".pub .ps-event").count()) fail("the old card row should be gone");

@@ -1122,8 +1122,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .calsticky {
   position: sticky; top: 0; z-index: 7;
   background: var(--paper);
-  margin: 0 -18px 12px; padding: 10px 18px 0;
-  border-bottom: 1px solid var(--line);
+  margin: 0 -18px; padding: 10px 18px 0;
 }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
@@ -5459,49 +5458,23 @@ button.ps-card { cursor: pointer; }
    size. Our ground and our orange, not the handoff's sand: the deeper contrast
    is the one thing of ours that beat it.
    --------------------------------------------------------------------------- */
-.wkhead {
-  position: sticky; top: var(--brandbar-h, 0px); z-index: 7;
-  background: var(--paper);
-  margin: 0 -18px; padding: 10px 18px 12px;
-}
-.wkhead-row { display: flex; align-items: center; gap: 12px; }
-.wkhead-range {
-  flex: 1; min-width: 0; margin: 0;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 34px; font-weight: 900; line-height: 1.02; letter-spacing: -.02em;
-  color: var(--ink);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.wkhead-arrows { display: flex; gap: 8px; flex-shrink: 0; }
+
+
+
+
 /* Transparent with a hairline, not filled: they are a way of looking rather
    than a thing to do, and the one filled control on this screen is the plus. */
-.wkarrow {
-  width: 42px; height: 42px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: transparent; border: 1px solid var(--line); color: var(--ink);
-  cursor: pointer;
-}
-.wkarrow:active { transform: scale(.93); }
+
 /* Greyed at the ends rather than hidden. A control that disappears moves the
    one beside it under a thumb that was already reaching for it. */
-.wkarrow[disabled] { color: var(--ol); opacity: .45; cursor: default; }
-.wkhead-sum { margin: 6px 0 0; font-size: 14px; color: var(--ol); }
 
-.wkdays { display: flex; flex-direction: column; gap: 26px; padding-top: 14px; }
-.wkday { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
-.wkday-when { padding-top: 2px; }
-.wkday-dow {
-  display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--ol);
-}
-.wkday-date {
-  display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 27px; font-weight: 900; line-height: 1.1; letter-spacing: -.02em;
-  color: var(--ink);
-}
+
+
+
+
+
 /* No gap: the rows are divided by their own hairline now, and a gap as well
    would be the break said twice. */
-.wkday-rows { display: flex; flex-direction: column; min-width: 0; }
 
 /* No card. The rows sit straight on the ground, divided by a hairline.
 
@@ -5515,49 +5488,24 @@ button.ps-card { cursor: pointer; }
    No colour bar either: with personal entries and going marks gone there is
    only one kind of row on a calendar, so a legend for it would be a legend of
    one. */
-.wkrow {
-  /* A button, so it needs telling: a control centres its text and this is a
-     row of prose. Width too, or a button shrink-wraps its content. */
-  display: block; width: 100%; text-align: left; font: inherit;
-  text-decoration: none; color: var(--ink); cursor: pointer;
-  background: none; border: none; border-radius: 0; padding: 13px 0;
-  border-bottom: var(--divw) solid var(--div);
-}
+
 /* The last row in a day owns no line: the gap to the next day heading is the
    break, and a rule hanging under the last class is a line to nothing. */
-.wkday-rows .wkrow:last-child { border-bottom: none; }
-.wkrow:active { opacity: .6; }
-.wkrow-body { display: flex; align-items: flex-start; gap: 12px; }
-.wkrow-txt { flex: 1; min-width: 0; }
+
+
 /* The class name is the biggest thing in a list, on purpose.
    This is a calendar app: what somebody is reading down a week is the names
    of classes, and everything else on the row (where, when, whose) is a caption
    on that. At 18px the name was one step above the sub-line and read as a
    label; at 22 it is the row and the rest arranges itself underneath. Typing
    is most of what this app has to be good at, so it commits. */
-.wkrow-nm {
-  display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 22px; font-weight: 900; line-height: 1.2; letter-spacing: -.015em;
-  color: var(--ink);
-}
-.wkrow-where { display: block; font-size: 14.5px; color: var(--ol); margin-top: 3px; }
-.wkrow-time {
-  flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 17px; font-weight: 800; color: var(--si);
-  white-space: nowrap; padding-top: 3px;
-}
-.wkrow-ap { font-size: 12.5px; margin-left: 1px; }
+
+
+
 /* Following leads with whose class it is: the dot carries their colour, which
    is the same colour their circle wears on the rail above. */
-.wkrow-coach {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-  font-size: 15px; font-weight: 700; color: var(--ink);
-}
-.wkrow-dot {
-  width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0;
-  overflow: hidden; display: block;
-}
-.wkrow-dot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+
 
 /* A week with nothing in it, as a screen rather than an apology. Dashed,
    because a solid card would look like something that failed to load. */
@@ -5786,15 +5734,129 @@ a.clspeek-by:active { opacity: .6; }
    reading it and "when can I train next" is not a question a week boundary
    answers. Date headings do the sectioning, which is also what stops the two
    screens looking identical. */
-.upcoming { display: flex; flex-direction: column; gap: 26px; padding-top: 14px; }
+
 /* No rule under it. The gap above each heading is already the section break,
    and a line as well made every day read as a boxed-off block on a screen
    that is meant to scroll as one list. */
-.upday-h {
-  margin: 0 0 8px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 17px; font-weight: 600; color: var(--ol);
-}
+
 /* The rows sit under their heading rather than beside a date gutter: the
    heading already said the day, and a gutter repeating it is the date twice. */
 /* Nothing to override: Following's rows are the calendar's rows, hairline and
    all. Two lists of classes drawn two ways is what this build exists to undo. */
+
+
+/* ---------------------------------------------------------------------------
+   One list of classes, everywhere there is one.
+
+   The calendar, Following and a coach's public page draw the same thing, so
+   they draw it the same way. What differs is one line: a Following row names
+   its coach.
+
+   The shape is built for reading down a long scroll rather than for looking
+   at a week. A band per day that pins, so the day you are on is always named;
+   a time gutter, so the times are a column you can run an eye down without
+   reading a class name; and the class name as the loudest thing on the page,
+   because a calendar is a list of class names and everything else on the row
+   is a caption on one.
+   --------------------------------------------------------------------------- */
+.daylist { display: flex; flex-direction: column; }
+
+/* The band. Full bleed and in the cream, so it reads as a break in the scroll
+   rather than a heading floating over some rows, and pinned under whatever
+   chrome the screen has above it. `--dayband-top` has one writer
+   (`publishBandTop`), which is why a screen that draws bands without calling
+   `useBandTop` pins them at a guessed offset halfway down the phone. */
+.dayband {
+  position: sticky; top: var(--dayband-top, 56px); z-index: 6;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 0 -18px; padding: 11px 18px;
+  background: var(--cl);
+  border-top: var(--divw) solid var(--div); border-bottom: var(--divw) solid var(--div);
+}
+.dayband-d {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 18px; font-weight: 800; color: var(--ink); letter-spacing: -.01em;
+}
+/* Today, and nothing else on the list, wears it. The word "Today" is already
+   in the label; the dot is what makes the band findable in a scroll without
+   reading any of them. */
+.dayband-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--si); }
+.dayband-n {
+  flex-shrink: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ol); white-space: nowrap;
+}
+
+/* A profile has its own pinned name-and-tabs row and its own stacking, and it
+   is a page somebody reads once rather than a working list they scroll for a
+   month. Its bands sit where they fall. */
+.pub .dayband { position: static; }
+/* The scroll landing for a day tapped in the month grid: under the pinned
+   chrome rather than behind it. */
+.dayblock { scroll-margin-top: calc(var(--dayband-top, 150px) + 8px); }
+
+.dayrows { display: flex; flex-direction: column; }
+
+/* One row. A grid rather than a flex row, so every time in the list shares one
+   column edge however long the class names beside them run. */
+.clline {
+  display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: start;
+  width: 100%; text-align: left; font: inherit; color: var(--ink);
+  background: none; border: none; border-radius: 0; cursor: pointer;
+  padding: 16px 0; text-decoration: none;
+  border-bottom: var(--divw) solid var(--div);
+}
+/* The last row of a day owns no line: the band under it is the break, and a
+   rule immediately above a rule is one of them drawn twice. */
+.dayrows .clline:last-child { border-bottom: none; }
+.clline:active { opacity: .6; }
+.clline-t {
+  display: flex; align-items: baseline; gap: 2px; padding-top: 2px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 800; color: var(--si); white-space: nowrap;
+}
+.clline-ap { font-size: 11.5px; font-weight: 800; }
+.clline-main { min-width: 0; display: flex; flex-direction: column; }
+/* Whose class it is, above the name: which kind of row this is comes before
+   what the row says. Following only. */
+.clline-by {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+  font-size: 14.5px; font-weight: 700; color: var(--ink);
+}
+.clline-av {
+  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink); font-size: 10.5px; font-weight: 800; letter-spacing: .02em;
+}
+.clline-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clline-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 25px; font-weight: 900; line-height: 1.08; letter-spacing: -.025em;
+  color: var(--ink);
+}
+/* The studio, with a pin. The glyph is what stops it reading as a second line
+   of the class name at a glance. */
+.clline-w {
+  display: flex; align-items: center; gap: 5px; margin-top: 5px;
+  font-size: 15px; color: var(--ol); min-width: 0;
+}
+.clline-w .icon { flex-shrink: 0; color: var(--ol); }
+
+/* The title and the two ways of looking, at the top of the calendar. */
+.calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+.calbar-t {
+  margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 34px; font-weight: 900; letter-spacing: -.03em; color: var(--ink);
+}
+/* List and Month, as one control rather than two buttons: they are two ways of
+   looking at one thing, and a segment is what says so. */
+.calseg {
+  display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
+  border: var(--divw) solid var(--ink);
+}
+.calseg button {
+  padding: 7px 17px; border-radius: 999px; border: none; background: none; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15.5px; font-weight: 800; color: var(--ink);
+}
+.calseg button.on { background: var(--ink); color: var(--paper); }
