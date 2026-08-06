@@ -42,7 +42,7 @@ export function emailHtml({
     .join("");
   const button = cta
     ? `<p style="margin:24px 0 10px">
-         <a href="${esc(cta.url)}" style="display:inline-block;background:${INK};color:${CREAM};text-decoration:none;font-weight:700;font-size:15px;padding:13px 26px;border-radius:999px">${esc(cta.label)}</a>
+         <a href="${esc(cta.url)}" style="display:inline-block;background:${INK};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px">${esc(cta.label)}</a>
        </p>
        <p style="margin:0 0 4px;font-size:12px;color:${MUTED}">Or paste this into your browser:</p>
        <p style="margin:0 0 8px;font-size:12px;line-height:1.5;word-break:break-all"><a href="${esc(cta.url)}" style="color:${MUTED}">${esc(cta.url)}</a></p>`
@@ -54,10 +54,10 @@ export function emailHtml({
     <tr><td align="center" style="padding:28px 16px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:18px;border:1px solid #e6dfcd">
         <tr><td style="padding:26px 26px 22px;font-family:Helvetica,Arial,sans-serif">
-          <p style="margin:0 0 18px;font-size:17px;font-weight:700;letter-spacing:-.02em;color:${INK}">
+          <p style="margin:0 0 18px;font-size:17px;font-weight:600;letter-spacing:-.02em;color:${INK}">
             <a href="${origin}" style="color:${INK};text-decoration:none">fittlist<span style="color:${ACCENT}">.</span></a>
           </p>
-          <h1 style="margin:0 0 12px;font-size:21px;line-height:1.2;font-weight:700;letter-spacing:-.02em;color:${INK}">${esc(heading)}</h1>
+          <h1 style="margin:0 0 12px;font-size:21px;line-height:1.2;font-weight:600;letter-spacing:-.02em;color:${INK}">${esc(heading)}</h1>
           ${paras}
           ${button}
         </td></tr>

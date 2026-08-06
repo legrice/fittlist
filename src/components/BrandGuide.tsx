@@ -28,12 +28,17 @@ const SUPPORTING: Swatch[] = [
   { name: "Go", token: "--go", hex: "#3d8b53", note: "On, added, confirmed", onDark: true },
 ];
 
+// 600 is the ceiling. The scale went to 800 (and to 900 in the sheet, which
+// the family does not ship, so it rendered as 800), and a screen of class
+// names at that weight read as a shout. What works is the pairing the profile
+// head has always had: a 600 name over a 400 line of what and where, which is
+// the two middle rows here.
 const TYPE = [
-  { label: "Hero", size: 44, weight: 800, sample: "Find your fit" },
+  { label: "Hero", size: 44, weight: 600, sample: "Find your fit" },
   { label: "Heading", size: 26, weight: 600, sample: "Your week, one link" },
   { label: "Section", size: 18, weight: 600, sample: "What to expect" },
   { label: "Body", size: 15, weight: 400, sample: "Follow coaches and their whole week comes with them." },
-  { label: "Label", size: 13, weight: 600, sample: "Wednesday" },
+  { label: "Label", size: 13, weight: 500, sample: "Wednesday" },
   { label: "Caption", size: 12, weight: 400, sample: "6:00am · 45 min · Ironbound" },
 ];
 

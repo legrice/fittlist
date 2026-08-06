@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Delight is self-hosted (see globals.css); Google Fonts only serves the icon font now. */}
         <link rel="preload" href="/fonts/delight-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/delight-700.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/delight-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* Next emits the modern `mobile-web-app-capable`. iOS before 17 only
             reads the prefixed one, and without it an install opens in Safari
             with the address bar rather than standalone. */}
