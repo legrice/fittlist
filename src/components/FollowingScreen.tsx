@@ -195,7 +195,11 @@ export function FollowingScreen({
             onClick={() => setFocus(null)}
             aria-pressed={focus === null}
           >
-            <span className={`trayav trayav-all${focus === null ? " sel" : ""}`}>All</span>
+            {/* The Following tab's own glyph, not the word: the circle means
+                "everyone on this rail", which is what the tab means too. */}
+            <span className={`trayav trayav-all${focus === null ? " sel" : ""}`}>
+              <Icon name="groups" size={34} />
+            </span>
             <span className="trayitem-nm">All coaches</span>
           </button>
           {rail.map((c) => {

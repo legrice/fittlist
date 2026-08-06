@@ -5612,7 +5612,8 @@ button.ps-card { cursor: pointer; }
    over the button: it was in the tree, it was not `display: none`, and
    elementFromPoint at its centre returned the circle behind it. The feed rail
    never hit this because its arrows were the last thing in the box. */
-.tray .railarrow { top: 50px; z-index: 2; }
+/* Level with the bigger circles' centre: 6px of ring room plus half of 86. */
+.tray .railarrow { top: 57px; z-index: 2; }
 .tray-scroll {
   /* The vertical padding is the selected ring's room. `overflow-x: auto`
      computes overflow-y to auto as well, so the scroller clips on both axes
@@ -5625,17 +5626,20 @@ button.ps-card { cursor: pointer; }
 .tray-scroll::-webkit-scrollbar { display: none; }
 .trayitem {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  width: 78px; background: none; border: 0; padding: 0; cursor: pointer;
+  width: 92px; background: none; border: 0; padding: 0; cursor: pointer;
   text-decoration: none;
 }
+/* 86, up from 72, by Matt's call: the app is minimal enough that the faces
+   can carry more of the screen, and at the old size four of them fit 390px
+   exactly, which read as a row that could not scroll. */
 .trayav {
-  position: relative; display: block; width: 72px; height: 72px; border-radius: 999px;
+  position: relative; display: block; width: 86px; height: 86px; border-radius: 999px;
   overflow: hidden; background: var(--card);
 }
 .trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trayav-ini {
   display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
-  color: #fff; font-size: 28px; font-weight: 600;
+  color: #fff; font-size: 32px; font-weight: 600;
 }
 /* Classes up since you last looked. The ring is the most important pixel on
    the screen, because it is the only thing that says the tray is worth a tap
