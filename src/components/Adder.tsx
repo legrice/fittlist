@@ -783,7 +783,11 @@ export function Adder({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="sheet adder">
+      {/* The stepped stages are a bottom sheet sized to what they ask: type a
+          studio, tap a class. Only the form takes the screen, because the
+          form is the work; a picker that takes over first reads like a
+          heavier decision than it is. */}
+      <div className={`sheet adder${stage !== "form" ? " adder-step" : ""}`}>
         {stage !== "form" && (
           <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
@@ -794,6 +798,18 @@ export function Adder({
           <div>
             {/* Sticky title bar: heading + close stay pinned while the form scrolls. */}
             <div className="adderhead">
+              {/* The way back up the steps: the studio and the class were
+                  answered on the screens behind this one, and changing that
+                  answer should not mean starting over. */}
+              {stepped && (
+                <button
+                  className="iconbtn adderback"
+                  aria-label="Back"
+                  onClick={() => setStage("class")}
+                >
+                  <Icon name="arrow_back" size={20} />
+                </button>
+              )}
               <h2>{heading.title}</h2>
               <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
                 <Icon name="close" size={18} />
@@ -1186,44 +1202,50 @@ export function Adder({
               </button>
             )}
             <h2>Choose a studio</h2>
+            {/* The box leads and the list waits for typing: with five hundred
+                studios in the directory a dumped list is a wall, and the ask
+                here is three words long. Type it, tap it, move on. */}
             <div className="searchbox noicon">
               <input
                 type="text"
                 autoComplete="off"
                 autoFocus
+                placeholder="Start typing a studio…"
                 aria-label="Search studios"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="studio-list">
-              {filteredStudios.length ? (
-                filteredStudios.map((s) => (
-                  <button
-                    key={s.id}
-                    className="studio-row"
-                    onClick={() => {
-                      setStudioId(s.id);
-                      // Stepped, the studio's class list is the next question;
-                      // re-picking from the form goes through it again, because
-                      // a different studio has a different list.
-                      setStage(stepped ? "class" : "form");
-                    }}
-                  >
-                    <span>
-                      <span className="nm">{s.name}</span>
-                      <br />
-                      <span className="ad">{s.address}</span>
-                    </span>
-                    {studioId === s.id && <span className="tick"><Icon name="check" size={18} /></span>}
-                  </button>
-                ))
-              ) : (
-                <p className="empty">
-                  Nothing named &ldquo;{search.trim()}&rdquo; yet. Add it below. Takes ten seconds.
-                </p>
-              )}
-            </div>
+            {search.trim() !== "" && (
+              <div className="studio-list">
+                {filteredStudios.length ? (
+                  filteredStudios.map((s) => (
+                    <button
+                      key={s.id}
+                      className="studio-row"
+                      onClick={() => {
+                        setStudioId(s.id);
+                        // Stepped, the studio's class list is the next question;
+                        // re-picking from the form goes through it again, because
+                        // a different studio has a different list.
+                        setStage(stepped ? "class" : "form");
+                      }}
+                    >
+                      <span>
+                        <span className="nm">{s.name}</span>
+                        <br />
+                        <span className="ad">{s.address}</span>
+                      </span>
+                      {studioId === s.id && <span className="tick"><Icon name="check" size={18} /></span>}
+                    </button>
+                  ))
+                ) : (
+                  <p className="empty">
+                    Nothing named &ldquo;{search.trim()}&rdquo; yet. Add it below. Takes ten seconds.
+                  </p>
+                )}
+              </div>
+            )}
             <button className="addnew" onClick={() => setStage("new")}>
               + New studio
             </button>

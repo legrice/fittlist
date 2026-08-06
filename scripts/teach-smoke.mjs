@@ -41,21 +41,24 @@ await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
-// The Share tab opens the hub without navigating, and a member's hub holds
-// no week rows: their page has no schedule to draw a picture of.
+// The Share tab lands on the hub screen, and a member's holds no week
+// tile and no week row: their page has no schedule to draw a picture of.
 await p.locator('.navtab[data-tab="share"]').click();
-await p.locator(".sharehub").waitFor();
+await p.waitForURL(/\/sharehub/);
+await p.locator(".shtile").first().waitFor();
 {
-  const rows = (await p.locator(".sharehub .setrow .t").allInnerTexts()).map((s) => s.trim());
-  console.log("member hub rows:", rows.join(" | "));
-  if (rows.some((s) => /schedule|week/i.test(s)))
-    fail("a member has no week to share: " + rows.join());
-  if (!rows.includes("Copy your link") || !rows.includes("Your QR code"))
-    fail("the hub should offer the link and the code: " + rows.join());
-  if (!p.url().includes("/feed")) fail("the Share tab should not navigate");
+  const tiles = (await p.locator(".shtile .shtile-t").allInnerTexts()).map((s) => s.trim());
+  console.log("member hub tiles:", tiles.join(" | "));
+  if (await p.locator(".shtile-lead").count())
+    fail("a member has no week to share: " + tiles.join());
+  if (!tiles.includes("Profile card") || !tiles.includes("QR code"))
+    fail("the hub should offer the card and the code: " + tiles.join());
+  if (await p.locator(".shrows .setrow", { hasText: "week" }).count())
+    fail("no week-as-text row for a member");
+  if (!(await p.locator(".shrows .setrow", { hasText: "Copy your link" }).count()))
+    fail("the hub should offer the link");
 }
-await p.locator(".sharehub .sheetclose").click();
-await p.locator(".sharehub").waitFor({ state: "detached", timeout: 10000 });
+await p.goto(BASE + "/feed");
 
 // The Profile tab opens your page, not a list of switches. Settings are the
 // gear on it, which is the only door to them there is.

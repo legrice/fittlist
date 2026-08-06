@@ -3918,6 +3918,17 @@ button.ps-card { cursor: pointer; }
 /* The New class sheet takes the whole screen; a sticky title bar keeps the
    heading + close in reach while the form scrolls. */
 .sheet.adder, .sheet.sheet-full { height: 100%; max-height: 100%; border-radius: 0; padding-top: 0; }
+/* The stepped stages (studio, class list, new studio) are a bottom sheet
+   sized to the ask, not a takeover: type it, tap it, and the page is still
+   there behind you. Only the form takes the screen. */
+.sheet.adder.adder-step {
+  height: auto; max-height: 88%;
+  border-radius: 22px 22px 0 0; padding-top: 16px;
+}
+.adder-step .studio-list { height: auto; max-height: 40vh; }
+/* The form's way back up the steps, sitting left of the sticky title. */
+.adderhead .adderback { position: static; flex-shrink: 0; margin-right: -2px; }
+.adderhead h2 { flex: 1; min-width: 0; }
 /* Short-content takeovers (share, QR) pin their buttons to the bottom edge. */
 .sheet.sheet-full { display: flex; flex-direction: column; }
 .sheet-full .publishwrap { margin-top: auto; }
@@ -5989,6 +6000,44 @@ a.clspeek-by:active { opacity: .6; }
    thumb between taps. */
 .trayitem.dim { opacity: .42; }
 .trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 600; }
+/* ---------------------------------------------------------------------------
+   The Share screen: the hub behind the bar's Share tab.
+
+   Tiles, not rows: each act makes a visibly different thing, so each tile
+   shows the thing it makes. The week tile wears the brand fill because a
+   picture of your week is the act the whole app is for; the card and QR
+   tiles carry the real images, small. The copies stay rows, because an
+   instant act has nothing to show.
+   --------------------------------------------------------------------------- */
+.shgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+.shtile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 16px; border-radius: 20px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); text-align: left;
+  cursor: pointer; text-decoration: none;
+}
+.shtile:active { transform: scale(.98); }
+.shtile-lead {
+  grid-column: 1 / -1; background: var(--si); border-color: var(--si); color: #fff;
+  padding: 20px 18px;
+}
+.shtile-ic { display: inline-flex; margin-bottom: 8px; }
+.shtile-t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 18px; font-weight: 600; letter-spacing: -.006em;
+}
+.shtile-s { font-size: 13.5px; line-height: 1.35; }
+.shtile .shtile-s { color: var(--ol); }
+.shtile-lead .shtile-s { color: rgba(255, 255, 255, .85); }
+.shtile-img {
+  width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px;
+  background: var(--cl); margin-bottom: 10px;
+}
+/* The QR comes back on white with its own quiet zone; boxing it again would
+   double the frame. */
+.shtile-qr { object-fit: contain; background: #fff; padding: 6px; }
+.shrows { margin-top: 18px; }
+
 /* Search wears the same floating circle Add does, in the same corner, and
    the same dress too, by Matt's call: .wkfab's own brand fill with a white
    glyph, no overrides. Finding a coach is this screen's one act, exactly as

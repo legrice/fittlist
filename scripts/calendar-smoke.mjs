@@ -50,6 +50,8 @@ const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .calbar-add").first().click();
   await p.locator("h2", { hasText: "Choose a studio" }).waitFor();
+  // The list waits for typing: type it, tap it.
+  await p.getByLabel("Search studios").fill(studio);
   const existing = p.locator(".studio-row", { hasText: studio });
   if (await existing.count()) {
     await existing.first().click();
@@ -363,31 +365,34 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// The Share tab opens the hub over any screen with the bar, the calendar
-// included: the link, the QR code, the card and the picture editor, one
-// sheet, no navigation. Search went back to the header's magnifier.
+// The Share tab is a place now: it lands on the hub screen of big tiles,
+// with the bar still underneath. Search stays on the header's magnifier.
 await p.goto(BASE + "/calendar");
 if (await p.locator('.navtab[data-tab="find"]').count())
   fail("the Search tab should be gone from the bar");
 if (!(await p.locator(".findbtn:visible").count()))
   fail("the header magnifier should be back on a phone");
 await p.locator('.navtab[data-tab="share"]').click();
-await p.locator(".sharehub").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the Share tab should not navigate");
-for (const row of ["Share your schedule", "Copy your link", "Your QR code", "Your profile card", "Copy your week"]) {
-  if (!(await p.locator(".sharehub .setrow", { hasText: row }).count()))
+await p.waitForURL(/\/sharehub/);
+if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
+// A coach's hub: the week tile leading in brand, the card and QR tiles
+// wearing their real previews, and the two copy rows underneath.
+await p.locator(".shtile-lead", { hasText: "Your week" }).waitFor();
+if ((await p.locator(".shtile").count()) !== 3) fail("a coach gets three tiles");
+for (const row of ["Copy your link", "Copy your week as text"]) {
+  if (!(await p.locator(".shrows .setrow", { hasText: row }).count()))
     fail("the hub should offer " + row);
 }
-// The QR row opens its sheet and closing it lands back on the hub: a hub you
-// fall out of after every act is a menu, not a place.
-await p.locator(".sharehub .setrow", { hasText: "Your QR code" }).click();
+// The QR tile opens its sheet and closing it lands back on the hub.
+await p.locator(".shtile", { hasText: "QR code" }).click();
 await p.locator(".sheet", { hasText: "QR code" }).waitFor();
 await p.locator(".sheet .sheetclose").click();
-await p.locator(".sharehub").waitFor();
-// And the schedule row is the door to the picture editor.
-await p.locator(".sharehub .setrow", { hasText: "Share your schedule" }).click();
-await p.waitForURL("**/share");
-console.log("the Share tab opens the hub, and the hub reaches the editor");
+await p.locator(".sheet-scrim").waitFor({ state: "detached", timeout: 10000 });
+if (!p.url().includes("/sharehub")) fail("closing the QR should land back on the hub");
+// And the week tile is the door to the picture editor.
+await p.locator(".shtile-lead").click();
+await p.waitForURL(/\/share$/);
+console.log("the Share tab lands on the hub, and the week tile reaches the editor");
 await p.goBack();
 // The magnifier still opens the directory, from the corner it went back to.
 await p.goto(BASE + "/calendar");

@@ -96,7 +96,6 @@ export async function AppChrome({
         coach={isCoach}
         scheduleHref={scheduleHref}
         profileHref={profileHref}
-        handle={me.handle}
         active={active}
         face={face}
       />

@@ -110,9 +110,9 @@ await coach.locator(".clline").first().waitFor();
   if (await coach.locator(".wkshare").count()) fail("the floating Share pill should be gone");
 }
 await coach.locator('.navtab[data-tab="share"]').click();
-await coach.locator(".sharehub").waitFor();
-await coach.locator(".sharehub .setrow", { hasText: "Share your schedule" }).click();
-await coach.waitForURL(/\/share/);
+await coach.waitForURL(/\/sharehub/);
+await coach.locator(".shtile-lead", { hasText: "Your week" }).click();
+await coach.waitForURL(/\/share$/);
 await coach.locator(".composer").waitFor();
 await coach.locator(".adderhead h2", { hasText: "Share your schedule" }).waitFor();
 // It opens over the app: no bar underneath competing with it.

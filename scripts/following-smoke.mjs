@@ -29,8 +29,10 @@ const mkCoach = async (email, name, studio, classes) => {
   for (const [nm, day, t] of classes) {
     await p.goto(BASE + "/calendar");
     await p.locator(".wkempty-cta, .calbar-add").first().click();
-    // The stepped adder: studio, then the class list, then the form.
+    // The stepped adder: studio, then the class list, then the form. The
+    // list waits for typing now, so the name goes in first.
     await p.locator("h2", { hasText: "Choose a studio" }).waitFor();
+    await p.getByLabel("Search studios").fill(studio);
     const existing = p.locator(".studio-row", { hasText: studio });
     if (await existing.count()) {
       await existing.first().click();

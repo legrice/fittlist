@@ -58,15 +58,13 @@ export function navTabs(
           },
         ]
       : []),
-    // Share, as a tab, by Matt's call: it was the calendar's floating pill,
-    // and it is the half of "build a calendar, share a calendar" the whole
-    // build is for, so it earns a place in the bar you always have. The bar
-    // renders it as a button opening the share hub (QR code, your link, the
-    // picture editor) over wherever you are standing; the desktop header
-    // links render it as the link to the editor itself. Search hands the
-    // tab back and returns to the header's magnifier and Following's
-    // floating circle, where it lived before.
-    { id: "share" as const, href: "/share", icon: "share", label: "Share" },
+    // Share, as a tab, by Matt's call: it is the half of "build a calendar,
+    // share a calendar" the whole build is for, so it earns a place in the
+    // bar you always have. It is a real screen now rather than a sheet (the
+    // hub of big tiles: the week picture, the profile card, the QR code,
+    // the copy rows), because a tab is a place you go. Search stays on the
+    // header's magnifier and Following's floating circle.
+    { id: "share" as const, href: "/sharehub", icon: "share", label: "Share" },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab

@@ -79,7 +79,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         coach={isCoach}
         scheduleHref={scheduleHref}
         profileHref={profileHref}
-        handle={me.handle}
         face={face}
       />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
