@@ -61,6 +61,7 @@ export default async function SettingsPage({
     ]);
 
     return (
+      <div className="cardwrap">
       <MemberAccount
         runs={fanRuns}
         name={me.name}
@@ -80,6 +81,7 @@ export default async function SettingsPage({
         approveFollowers={me.approveFollowers}
         messagesOpen={me.messagesOpen}
       />
+      </div>
     );
   }
 
@@ -125,6 +127,7 @@ export default async function SettingsPage({
   const requestCount = inboxRows.filter((r) => r.kind === "inquiry").length;
 
   return (
+    <div className="cardwrap">
     <ProfileSheet
       page
       anim="none"
@@ -160,5 +163,6 @@ export default async function SettingsPage({
       messagesOpen={me.messagesOpen}
       look={me.look}
     />
+    </div>
   );
 }

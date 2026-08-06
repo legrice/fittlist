@@ -182,6 +182,10 @@ export function ProfileTabs({
       {/* Zero-height marker: when it slides under the header, the bar below
           is stuck and the small name switches on. */}
       <div ref={sentRef} aria-hidden="true" />
+      {/* The card. The head above sits on the shell gray; the tabs row is
+          the first thing on the paper, and the panel rides it to the bottom
+          of the page. */}
+      <div className="pubcard">
       <div ref={stickRef} className={`pubstick${tabs.length ? "" : " pubstick-bare"}`}>
         <div className="pubstick-row">
           {/* A duplicate for the eyes only; the real name is the h1 above. */}
@@ -197,6 +201,7 @@ export function ProfileTabs({
         )}
       </div>
       <div className="pubpanel">{children}</div>
+      </div>
     </>
   );
 }

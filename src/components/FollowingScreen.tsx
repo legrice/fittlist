@@ -148,18 +148,20 @@ export function FollowingScreen({
             not put anything up is a screen where the app is fine and the week
             is just quiet, and telling somebody to find coaches there would be
             answering a question they did not ask. */}
-        <div className="wkempty">
-          <h2 className="wkempty-t">
-            {coaches.length ? "Nothing up yet" : "You\u2019re not following anyone"}
-          </h2>
-          <p className="wkempty-b">
-            {coaches.length
-              ? "The people you follow have not put any classes up. This fills in as they do."
-              : "Follow a coach and their week shows up here, beside everyone else you follow."}
-          </p>
-          <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-            Find coaches
-          </button>
+        <div className="cardwrap">
+          <div className="wkempty">
+            <h2 className="wkempty-t">
+              {coaches.length ? "Nothing up yet" : "You\u2019re not following anyone"}
+            </h2>
+            <p className="wkempty-b">
+              {coaches.length
+                ? "The people you follow have not put any classes up. This fills in as they do."
+                : "Follow a coach and their week shows up here, beside everyone else you follow."}
+            </p>
+            <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
+              Find coaches
+            </button>
+          </div>
         </div>
         {find && <DiscoverSheet onClose={closeFind} />}
       </>
@@ -214,6 +216,9 @@ export function FollowingScreen({
         </div>
       </div>
 
+      {/* The card starts under the faces: the rail is chrome, the week is
+          content, and the card edge is what says so. */}
+      <div className="cardwrap">
       {/* Who the rail has narrowed to, and the way to them.
           A filtered list looks exactly like a quiet week: five faces, one of
           them ringed, and a shorter list underneath. This says which coach in
@@ -260,6 +265,7 @@ export function FollowingScreen({
       ) : (
         <DayList days={days} />
       )}
+      </div>
 
       {/* Discovery is this button and the plus on the rail, and they open the
           same sheet. It is not a tab: a directory is somewhere you go

@@ -140,6 +140,9 @@ export function CalendarScreen({
 
   return (
     <>
+      {/* The card starts right under the app header, and the title and the
+          view switch are the first things inside it. */}
+      <div className="cardwrap">
       {/* The title and the two ways of looking, pinned under the app header.
           `CalSticky` publishes its own height as `--dayband-top`, which is
           where every day band underneath pins: one writer for that number,
@@ -200,6 +203,7 @@ export function CalendarScreen({
       ) : (
         <DayList days={days} />
       )}
+      </div>
 
       {/* The two things you do with a calendar, in the two bottom corners:
           make it, and hand it on. Both only once there is a week behind them.

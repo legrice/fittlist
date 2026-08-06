@@ -34,7 +34,12 @@
      grey, which is the other way to lose the brand. */
   --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
   --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
-  --paper: #fdfcf7;        /* the ground for the main scroll, a breath off white */
+  --paper: #fdfcf7;        /* the content card: a breath off white */
+  /* The screen behind the card. The app reads as two layers now: the header
+     (and whatever else is chrome) sits on this quiet warm gray, and the
+     content rides a near-white card with rounded top corners over it. One
+     step of contrast is the whole effect; the card edge does the rest. */
+  --shell: #f0eee8;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
@@ -96,7 +101,7 @@
 html, body { height: 100%; }
 body {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  background: var(--paper);
+  background: var(--shell);
   color: var(--ink);
   min-height: 100dvh;
   overflow-x: hidden; /* clip the page-slide transition, no horizontal scrollbar */
@@ -105,7 +110,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outline-offset: 2px; border-radius: 6px; }
 a { color: inherit; }
 
-.screen { display: flex; flex-direction: column; min-height: 100dvh; }
+.screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
 .pad { padding: 20px 18px; }
 
 .appbar {
@@ -444,7 +449,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .logoutbtn:active { background: #f6f1e5; }
 
 /* public */
-.pub { background: var(--paper); min-height: 100dvh; }
+.pub { background: var(--shell); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
 .pub .pubhero .big { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; line-height: 1; }
@@ -1154,11 +1159,16 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* No edge. It had one for a build, on the argument that with the chrome and
    the first band both grounded in the paper nothing said where one stopped;
    the first band's own rule is directly under it and does that job, so the
-   two lines were the same break drawn twice, a few pixels apart. */
+   two lines were the same break drawn twice, a few pixels apart.
+
+   It carries the card's own top radius: it is the first thing inside the
+   card, so at rest the two curves coincide, and pinned it keeps reading as
+   the card's top edge sliding along under the header. */
 .calsticky {
   position: sticky; top: 0; z-index: 7;
   background: var(--paper);
-  margin: 0 -18px; padding: 10px 18px 0;
+  margin: -10px -18px 0; padding: 16px 18px 0;
+  border-radius: 28px 28px 0 0;
 }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
@@ -1401,9 +1411,9 @@ button.bl-band { cursor: pointer; }
    surface, not three. --paper flips with dark mode, so this follows. */
 .brandbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--paper);
+  background: var(--shell);
   margin: -14px -18px 0; padding: 16px 18px 12px;
-  position: sticky; top: 0; z-index: 8; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 8;
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
@@ -2764,7 +2774,7 @@ button.ps-card { cursor: pointer; }
    the paper covers whatever scrolls beneath, edge to edge. */
 .pubstick {
   position: sticky; top: 0; z-index: 7;
-  background: var(--paper);
+  background: var(--shell);
   margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
 }
@@ -2782,6 +2792,18 @@ button.ps-card { cursor: pointer; }
 }
 /* The sticky bar's Follow, sized to ride beside the small name. */
 .followpill.mini { padding: 8px 16px; font-size: 14px; gap: 6px; }
+/* The card starts just above the tabs: the head (face, name, pills) sits on
+   the shell, and the tabs row is the first thing on the paper. */
+.pubcard {
+  background: var(--paper);
+  border-radius: 28px 28px 0 0;
+  margin: 10px -18px 0;
+  padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
+}
+/* Inside the card the tabs bleed to the card's edge, not the window's: the
+   50vw trick below is for the row on the bare page, and past the card edge
+   it would poke out of the rounded corners. */
+.pubcard .pubtabs { margin: 0 -18px; padding: 14px 18px 0; }
 .pubtabs {
   display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
   /* The rule sits under the tabs as an inset shadow rather than a border:
@@ -3612,6 +3634,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
+  --shell: #0c0b07;
   --si-tint: #3f2413;
   --si-ink: #f0a071;
   --card: #211c13;
@@ -3989,17 +4012,62 @@ button.ps-card { cursor: pointer; }
   padding: 14px 18px calc(110px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
+/* A screen that draws the card manages its own bottom clearance: the card has
+   to run under the floating bar to the end of the page, so the room the last
+   row needs lives inside it, or the shell shows through as a gray band. */
+.screen.hasnav .pad:has(> .cardwrap) {
+  padding-bottom: 0;
+  display: flex; flex-direction: column;
+}
+
+/* ---------------------------------------------------------------------------
+   The content card.
+
+   The screen is two layers: chrome on the shell gray, content on a near-white
+   card with rounded top corners. Each screen decides where its card starts
+   (the calendar right under the header, Following under the coach rail, a
+   profile just above its tabs), which is why this is a wrapper the screen
+   places rather than anything the layout imposes.
+   --------------------------------------------------------------------------- */
+.cardwrap {
+  flex: 1 0 auto;
+  background: var(--paper);
+  border-radius: 28px 28px 0 0;
+  margin: 6px -18px 0;
+  padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
+}
+/* The settings screen brings its own bottom clearance from its overlay days;
+   inside the card that room is the card's own, or the two stack into a
+   quarter-screen of empty paper. */
+.cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
 .navbar {
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
-  display: flex; background: var(--paper); border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
+  position: fixed; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
+  z-index: 45;
+  /* The installed app's glass pill, in the browser too, by Matt's call: the
+     content scrolls on under it, the blur says so, and the rounded rectangle
+     matches the card's corners and the phone's. It was edge-to-edge in a
+     browser on the argument that a pill above Safari's toolbar reads as two
+     competing bars; the card layout re-decides that, because a full-width
+     slab now reads as the shell swallowing the card. */
+  display: flex; padding: 5px;
+  max-width: 632px; margin: 0 auto;
+  border-radius: 28px;
+  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    inset 0 1px 0 0 rgba(255, 255, 255, .45),
+    0 6px 24px rgba(30, 24, 12, .13),
+    0 1px 3px rgba(30, 24, 12, .07);
 }
 .navtab {
   flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 9px 0 10px; text-decoration: none; color: var(--ol);
+  padding: 8px 0 9px; border-radius: 23px; text-decoration: none; color: var(--ol);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
 /* The current tab is said in the brand colour and nothing else: the glyph and
@@ -4104,64 +4172,17 @@ button.ps-card { cursor: pointer; }
 }
 .brandbar .headnav { position: absolute; left: 50%; transform: translateX(-50%); } }
 
-/* ----------------------------------------------------------------------------
-   Installed only: the tab bar as a floating glass pill.
-   ----------------------------------------------------------------------------
-   `display-mode: standalone` matches when the app was launched from a home
-   screen and not when it's a tab in a browser, so this is the one place the
-   installed app is allowed to look different. In a browser the bar stays
-   edge-to-edge, which is right there: it sits directly above the browser's own
-   toolbar and a floating pill would read as a second, competing one.
-
-   The blur needs something behind it. It gets it for free: the bar is fixed
-   over a scrolling list, so rows pass underneath it the whole way down, and
-   the bottom padding on .pad only guarantees the LAST row can clear it.
-
-   color-mix keeps one rule for both themes. --paper flips under
-   [data-mode="dark"] on the screen above, so the glass follows it rather than
-   needing a second block. The flat declaration above each one is the fallback
-   for anything that doesn't parse color-mix. */
-@media (display-mode: standalone) {
-  .navbar {
-    left: 14px; right: 14px;
-    bottom: calc(9px + env(safe-area-inset-bottom));
-    padding: 5px; padding-bottom: 5px;
-    border: none;
-    border-radius: 28px;
-    background: var(--paper);
-    background: color-mix(in srgb, var(--paper) 70%, transparent);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    backdrop-filter: blur(20px) saturate(180%);
-    /* A hairline inside the edge rather than a border, so it reads as the lit
-       rim of a piece of glass and not as a drawn box. */
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-      inset 0 1px 0 0 rgba(255, 255, 255, .45),
-      0 6px 24px rgba(30, 24, 12, .13),
-      0 1px 3px rgba(30, 24, 12, .07);
-  }
-  .navtab {
-    border-radius: 23px; padding: 8px 0 9px;
-    transition: background .18s ease, opacity .18s ease;
-  }
-  /* The current tab is the brand colour here too, the same as in a browser:
-     the bar is a different shape in the installed app, not a different way of
-     saying where you are. */
-  .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-  /* The FAB and the account view clear the pill, not the old full-width bar.
-     A profile has no bar at all, so its own button stays low; this rule is
-     later in the file than the one that says so, and would otherwise win. */
-  .hasnav .fab { bottom: calc(86px + env(safe-area-inset-bottom)); }
-  .pub .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
-  .pub.ownbar .fab { bottom: calc(100px + env(safe-area-inset-bottom)); }
-.pub.ownbar .profwrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
-.pub.ownbar .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
-  [data-mode="dark"] .navbar {
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, .1),
-      inset 0 1px 0 0 rgba(255, 255, 255, .08),
-      0 6px 24px rgba(0, 0, 0, .4);
-  }
+/* The glass pill is the bar everywhere now (see .navbar), so the installed
+   app no longer needs a look of its own: the browser adopted it, by Matt's
+   call, when the card layout landed. What survives of the old standalone
+   block is the two rules that were about behaviour rather than dress. */
+.navtab { transition: background .18s ease, opacity .18s ease; }
+.navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+[data-mode="dark"] .navbar {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .1),
+    inset 0 1px 0 0 rgba(255, 255, 255, .08),
+    0 6px 24px rgba(0, 0, 0, .4);
 }
 
 /* Avatar colour picker: sixty swatches, so a photo-less coach is still
@@ -5398,12 +5419,13 @@ button.ps-card { cursor: pointer; }
    push, and the last circle sitting half off the screen is what says swipe.
    --------------------------------------------------------------------------- */
 /* No edge here either, and for the same reason: the first day band's rule is
-   the next line down the page. The rail is separated by its own air. */
+   the next line down the page. The rail is separated by its own air.
+   No ground of its own: it sits on the shell, above the card, which is what
+   makes the card read as starting under the faces. */
 .tray {
   /* Positioned, because the arrows sit over its edges. */
   position: relative;
   margin: 0 -18px; padding: 8px 0 12px;
-  background: var(--paper);
 }
 /* The arrows hang level with the circles rather than the labels under them,
    so they read as controls on the faces. `.railarrow` puts its own top at
@@ -5719,7 +5741,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The ring is the whole selected state, and it sits outside the circle so the
    face is never cropped by its own highlight. */
-.trayav.sel { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
+.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
    thumb between taps. */
