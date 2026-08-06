@@ -127,7 +127,7 @@ export function DiscoverList({
           place searching starts. */}
       <div className="dissearchrow">
         <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
-          <Icon name="search" size={19} className="dissearch-ic" />
+          <Icon name="search" size={21} className="dissearch-ic" />
           {/* The door says what the field behind it says: it is drawn as that
               field, and a door whose words change on opening is two doors. */}
           <span className="dissearch-ph">Search coaches by name</span>

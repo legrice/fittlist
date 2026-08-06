@@ -73,7 +73,7 @@ export default async function InboxThreadPage({
           aria-label={from === "requests" ? "Back to requests" : "Back to messages"}
           href={from === "requests" ? "/requests" : "/updates?tab=messages"}
         >
-          <Icon name="arrow_back" size={18} />
+          <Icon name="arrow_back" size={20} />
         </Link>
         {isCoach ? (
           <div className="chattop-txt">

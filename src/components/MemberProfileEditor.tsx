@@ -120,7 +120,7 @@ export function MemberProfileEditor({
     <>
       <button className="setrow" onClick={() => setOpen(true)}>
         <span className="setrow-ic">
-          <Icon name="account_circle" size={22} />
+          <Icon name="account_circle" size={24} />
         </span>
         <span className="setrow-txt">
           <span className="t">{handle ? "Edit your profile" : "Set up your profile"}</span>
@@ -129,7 +129,7 @@ export function MemberProfileEditor({
           </span>
         </span>
         <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
+          <Icon name="chevron_right" size={22} />
         </span>
       </button>
 
@@ -143,7 +143,7 @@ export function MemberProfileEditor({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Your profile</h2>
             <p className="lead">

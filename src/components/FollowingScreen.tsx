@@ -202,7 +202,7 @@ export function FollowingScreen({
               faces: it keeps its full opacity when a face is picked. */}
           <button className="trayitem" onClick={() => setFind(true)}>
             <span className="trayav trayav-add">
-              <Icon name="add" size={26} />
+              <Icon name="add" size={28} />
             </span>
             <span className="trayitem-nm">Find</span>
           </button>
@@ -241,7 +241,7 @@ export function FollowingScreen({
           front of you, exactly the way adding a class is on the calendar, so
           it slides up over the list and comes back down onto it. */}
       <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
-        <Icon name="search" size={24} strokeWidth={2.75} />
+        <Icon name="search" size={26} />
       </button>
 
       {find && <DiscoverSheet onClose={closeFind} />}

@@ -150,13 +150,13 @@ export function MemberAccount({
           <button className="acctstat" onClick={() => router.push("/following")}>
             <span className="n">{followingCount}</span>
             <span className="l">
-              Following <Icon name="chevron_right" size={13} />
+              Following <Icon name="chevron_right" size={15} />
             </span>
           </button>
           <button className="acctstat" onClick={() => router.push("/followers")}>
             <span className="n">{followerCount}</span>
             <span className="l">
-              Followers <Icon name="chevron_right" size={13} />
+              Followers <Icon name="chevron_right" size={15} />
             </span>
           </button>
         </div>
@@ -181,12 +181,12 @@ export function MemberAccount({
           <div className="settingslist">
             {runs.map((st) => (
               <a key={st.slug} className="setrow" href={`/s/${st.slug}/shifts`}>
-                <span className="setrow-ic"><Icon name="storefront" size={22} /></span>
+                <span className="setrow-ic"><Icon name="storefront" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">{st.name}</span>
                   <span className="s">Its shifts, its schedule, and who works there</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </a>
             ))}
           </div>
@@ -205,23 +205,23 @@ export function MemberAccount({
             rather than behind an upgrade prompt. */}
         <TeachToggle on={false} canTurnOn={!!handle} />
         <button className="setrow" onClick={() => setView("profile")}>
-          <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
+          <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Your page</span>
             <span className="s">Your name, photo, handle and where you are</span>
           </span>
-          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
         <button className="setrow" onClick={() => setView("calendar")}>
-          <span className="setrow-ic"><Icon name="event" size={22} /></span>
+          <span className="setrow-ic"><Icon name="event" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Calendar &amp; sync</span>
             <span className="s">Your week in Apple, Google or Outlook</span>
           </span>
-          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
         <button className="setrow" onClick={() => setView("reach")}>
-          <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+          <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Privacy &amp; reach</span>
             <span className="s">
@@ -230,15 +230,15 @@ export function MemberAccount({
               {` · Approvals ${approveFollowers ? "on" : "off"}`}
             </span>
           </span>
-          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
         <button className="setrow" onClick={() => setView("account")}>
-          <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+          <span className="setrow-ic"><Icon name="lock" size={24} /></span>
           <span className="setrow-txt">
             <span className="t">Account</span>
             <span className="s">Notifications, appearance</span>
           </span>
-          <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+          <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
         </button>
       </div>
 
@@ -298,7 +298,7 @@ export function MemberAccount({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setView(null)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>{VIEW_TITLE[view]}</h2>
 
@@ -317,12 +317,12 @@ export function MemberAccount({
                 <ChangeHandle />
                 {handle && (
                   <a className="setrow" href={`/${handle}`}>
-                    <span className="setrow-ic"><Icon name="north_east" size={22} /></span>
+                    <span className="setrow-ic"><Icon name="north_east" size={24} /></span>
                     <span className="setrow-txt">
                       <span className="t">View your profile</span>
                       <span className="s">How it looks to everyone else</span>
                     </span>
-                    <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                    <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                   </a>
                 )}
               </div>
@@ -340,12 +340,12 @@ export function MemberAccount({
                 <DiscoverableToggle initialOn={discoverable} />
                 <ApproveFollowersToggle initialOn={approveFollowers} />
                 <a className="setrow" href="/blocked">
-                  <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Removed people</span>
                     <span className="s">Who can&rsquo;t see your page</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </a>
               </div>
             )}
@@ -378,7 +378,7 @@ export function MemberAccount({
               aria-label="Close"
               onClick={() => setShareMenu(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Share</h2>
             <p className="lead">fittlist.co/{handle}</p>
@@ -390,7 +390,7 @@ export function MemberAccount({
                   copyLink();
                 }}
               >
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-ic"><Icon name="link" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy link</span>
                   <span className="s">Paste it anywhere</span>
@@ -408,12 +408,12 @@ export function MemberAccount({
                   setCardOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="account_circle" size={22} /></span>
+                <span className="setrow-ic"><Icon name="account_circle" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Profile card</span>
                   <span className="s">A square image for a post</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button
                 className="setrow"
@@ -422,12 +422,12 @@ export function MemberAccount({
                   setQrOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-ic"><Icon name="qr_code_2" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">QR code</span>
                   <span className="s">Scans straight to your page</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>

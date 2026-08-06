@@ -117,7 +117,7 @@ export function GymRota({
             <p className="adminsub">The schedule</p>
           </div>
           <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
-            <Icon name="close" size={18} />
+            <Icon name="close" size={20} />
           </BackLink>
         </div>
         <p className="adminempty" style={{ marginTop: 24 }}>
@@ -174,7 +174,7 @@ export function GymRota({
           </p>
         </div>
         <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </BackLink>
       </div>
 
@@ -186,11 +186,11 @@ export function GymRota({
           href={`${manageBase}?w=${Math.max(0, (week?.offset ?? 0) - 1)}`}
           aria-disabled={!week || week.offset === 0}
         >
-          <Icon name="chevron_left" size={18} />
+          <Icon name="chevron_left" size={20} />
         </Link>
         <span className="rotaweek-lbl">{week?.label ?? ""}</span>
         <Link className="rotanav" href={`${manageBase}?w=${(week?.offset ?? 0) + 1}`}>
-          <Icon name="chevron_right" size={18} />
+          <Icon name="chevron_right" size={20} />
         </Link>
       </div>
 
@@ -200,7 +200,7 @@ export function GymRota({
             <div className="rotaday-h">
               <span>{day.label}</span>
               <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
-                <Icon name="add" size={16} /> Add
+                <Icon name="add" size={18} /> Add
               </button>
             </div>
             {day.items.length === 0 ? (
@@ -221,7 +221,7 @@ export function GymRota({
                     {/* Where a class card says the place, the rota says the
                         person: on a gym's own page the place is a given. */}
                     <span className="ps-estudio">
-                      <Icon name="person_add" size={13} className="ps-estudio-ic" />
+                      <Icon name="person_add" size={15} className="ps-estudio-ic" />
                       {c.onName || "Nobody on it yet"}
                     </span>
                   </span>

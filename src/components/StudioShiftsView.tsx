@@ -109,7 +109,7 @@ export function StudioShiftsView({
             screen they were working on. BackLink pops when You is genuinely
             beneath and pushes for a shifts URL opened cold. */}
         <BackLink className="iconbtn acctclose" href="/settings" label="Back to settings">
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </BackLink>
       </div>
 
@@ -120,10 +120,10 @@ export function StudioShiftsView({
       {view.isManager && (
         <div className="staffbar">
           <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage`}>
-            <Icon name="calendar_month" size={16} /> All shifts
+            <Icon name="calendar_month" size={18} /> All shifts
           </Link>
           <Link className="btn ghost staffbar-b" href={`/s/${view.slug}/manage/staff`}>
-            <Icon name="groups" size={16} /> Staff
+            <Icon name="groups" size={18} /> Staff
           </Link>
           {/* Everything running a studio needs that isn't one of those two.
               It used to float on the studio's public page; this is the only
@@ -229,7 +229,7 @@ export function StudioShiftsView({
                   disabled={pending}
                   onClick={() => setManage({ classId: s.classId, iso: s.iso, name: s.name })}
                 >
-                  <Icon name="more_horiz" size={18} />
+                  <Icon name="more_horiz" size={20} />
                 </button>
               ) : s.open ? (
                 <button
@@ -264,7 +264,7 @@ export function StudioShiftsView({
               aria-label="Close"
               onClick={() => setManage(null)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>{manage.name}</h2>
             <div className="settingslist ownermenu">
@@ -276,12 +276,12 @@ export function StudioShiftsView({
                     setManage(null);
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="person_add" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Transfer shift</span>
                     <span className="s">Hand this date to another coach here</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
               <button
@@ -291,12 +291,12 @@ export function StudioShiftsView({
                   setManage(null);
                 }}
               >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Give up this shift</span>
                   <span className="s">It opens up and everyone who could cover it hears</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>
@@ -318,7 +318,7 @@ export function StudioShiftsView({
               aria-label="Close"
               onClick={() => setTransfer(null)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Transfer shift</h2>
             <p className="lead">
@@ -346,7 +346,7 @@ export function StudioShiftsView({
                   <span className="setrow-txt">
                     <span className="t">{p.name}</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               ))}
             </div>

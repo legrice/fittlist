@@ -96,7 +96,7 @@ export function StudioStaffView({
           <p className="adminsub">{studioName}</p>
         </div>
         <BackLink className="iconbtn acctclose" href={backHref} label="Back to the schedule">
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </BackLink>
       </div>
 

@@ -42,7 +42,7 @@ export default async function BrandPage() {
         {userId && (
           <div className="folback">
             <BackLink className="evback" href="/settings" label="Back to settings">
-              <Icon name="arrow_back" size={21} />
+              <Icon name="arrow_back" size={23} />
             </BackLink>
           </div>
         )}

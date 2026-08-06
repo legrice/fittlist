@@ -87,12 +87,12 @@ export function CoachPeek({
             {peek?.handle && (
               <Link className="peekhead-go" href={`/${peek.handle}`}>
                 See their page
-                <Icon name="chevron_right" size={16} />
+                <Icon name="chevron_right" size={18} />
               </Link>
             )}
           </div>
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
 
@@ -151,7 +151,7 @@ export function CoachPeek({
                     onClick={() => save(it.classId, it.iso, !on)}
                     aria-label={on ? `Added to your plans: ${it.name}` : `Add ${it.name}`}
                   >
-                    <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
+                    <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
                     <span>{on ? "Added" : "Add"}</span>
                   </button>
                 </div>

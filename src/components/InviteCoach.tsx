@@ -61,7 +61,7 @@ export function InviteCoach({ studioName }: { studioName: string }) {
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Invite a coach</h2>
             <p className="lead">
@@ -70,20 +70,20 @@ export function InviteCoach({ studioName }: { studioName: string }) {
             </p>
             <div className="settingslist ownermenu">
               <button className="setrow" disabled={!url} onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
+                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share the invite</span>
                   <span className="s">Send it anywhere you message</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button className="setrow" disabled={!url} onClick={copy}>
-                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-ic"><Icon name="content_copy" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy the invite</span>
                   <span className="s">The line and your link, ready to paste</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>

@@ -59,7 +59,7 @@ export function NavBar({
                   </span>
                 )
               ) : (
-                <Icon name={t.icon} size={26} />
+                <Icon name={t.icon} size={28} />
               )}
             </span>
             <span>{t.label}</span>

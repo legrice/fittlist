@@ -80,7 +80,7 @@ function CoachBy({ coach }: { coach: NonNullable<PeekClass["coach"]> }) {
   return (
     <a className="clspeek-by" href={`/${coach.handle}`}>
       {face}
-      <Icon name="chevron_right" size={16} />
+      <Icon name="chevron_right" size={18} />
     </a>
   );
 }
@@ -197,7 +197,7 @@ export function ClassPeek({
             {cls.coach && <CoachBy coach={cls.coach} />}
           </div>
           <button className="clspeek-x" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -225,7 +225,7 @@ export function ClassPeek({
                 {cls.studioHref ? (
                   <a className="clspeek-door" href={cls.studioHref}>
                     {cls.studio}
-                    <Icon name="chevron_right" size={17} />
+                    <Icon name="chevron_right" size={19} />
                   </a>
                 ) : (
                   cls.studio
@@ -305,7 +305,7 @@ export function ClassPeek({
                 rel="noopener nofollow"
               >
                 Book via {l.label}
-                <Icon name="north_east" size={17} />
+                <Icon name="north_east" size={19} />
               </a>
             ))}
             {/* The two ways out of here used to be rows at the bottom of the
@@ -338,7 +338,7 @@ export function ClassPeek({
                 <h2 className="clspeek-nm">Manage shift</h2>
               </div>
               <button className="clspeek-x" aria-label="Close" onClick={() => setManage(null)}>
-                <Icon name="close" size={18} />
+                <Icon name="close" size={20} />
               </button>
             </div>
             {/* Giving up opens the slot and tells the gym; handing it on writes
@@ -360,7 +360,7 @@ export function ClassPeek({
                     <span className="s">Hand this date to somebody on the gym&rsquo;s list.</span>
                   </span>
                   <span className="setrow-chev">
-                    <Icon name="chevron_right" size={20} />
+                    <Icon name="chevron_right" size={22} />
                   </span>
                 </button>
               )}
@@ -379,7 +379,7 @@ export function ClassPeek({
                 <h2 className="clspeek-nm">Hand it to</h2>
               </div>
               <button className="clspeek-x" aria-label="Close" onClick={() => setSending(false)}>
-                <Icon name="close" size={18} />
+                <Icon name="close" size={20} />
               </button>
             </div>
             {/* The names first, then a confirm: eight names under one verb read

@@ -41,7 +41,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
         <div className="adderhead">
           <h2>Discover</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
         {/* Nothing dramatic while it loads: the sheet is already up and the

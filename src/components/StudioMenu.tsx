@@ -52,11 +52,11 @@ export function StudioMenu({
           A claimed studio keeps editing behind its managers' own doors. */}
       {canEdit && !claimed && (
         <button className="owneredit" onClick={() => setMindfulOpen(true)}>
-          <Icon name="edit" size={15} /> Edit
+          <Icon name="edit" size={17} /> Edit
         </button>
       )}
       <button className="ownermore" aria-label="More" onClick={() => setMenuOpen(true)}>
-        <Icon name="more_horiz" size={20} />
+        <Icon name="more_horiz" size={22} />
       </button>
 
       {menuOpen && (
@@ -68,7 +68,7 @@ export function StudioMenu({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMenuOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2 style={{ marginTop: 10 }}>{studio.name}</h2>
             {/* settingslist, not a bare list: it is what carries the dividers
@@ -76,12 +76,12 @@ export function StudioMenu({
                 under the studio's name like every other button sheet. */}
             <div className="settingslist ownermenu">
               <button className="setrow" onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
+                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share this studio</span>
                   <span className="s">Hand its page to someone</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {/* Only a claimed studio keeps the pencil in here (its
                   managers' row); on the commons the Edit button beside the
@@ -95,12 +95,12 @@ export function StudioMenu({
                     setMindfulOpen(true);
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="edit" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="edit" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Edit studio</span>
                     <span className="s">Fix or fill in its details</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
               {!claimed && (
@@ -111,12 +111,12 @@ export function StudioMenu({
                     setFeedback("claim");
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="verified" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="verified" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Claim this studio</span>
                     <span className="s">Run it? Take the keys to this page</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
               <button
@@ -126,7 +126,7 @@ export function StudioMenu({
                   setFeedback("suggest");
                 }}
               >
-                <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
+                <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Suggest an edit</span>
                   <span className="s">
@@ -135,7 +135,7 @@ export function StudioMenu({
                       : "Tell us what’s wrong or missing"}
                   </span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {signedIn && (
                 <button
@@ -145,12 +145,12 @@ export function StudioMenu({
                     setFeedback("report");
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="flag" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="flag" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Report this studio</span>
                     <span className="s">Closed, wrong, or not real</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
               {/* The way out, for the people who run the place. A coach adding
@@ -163,12 +163,12 @@ export function StudioMenu({
                   setFeedback("optout");
                 }}
               >
-                <span className="setrow-ic"><Icon name="public_off" size={22} /></span>
+                <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Take this page down</span>
                   <span className="s">Run this studio and don&rsquo;t want it listed?</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>

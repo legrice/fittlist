@@ -37,7 +37,7 @@ export default async function FeedbackPage() {
     <section className="screen chatscreen" data-mode={lookMode(me.look)}>
       <div className="chattop">
         <Link className="iconbtn chatback" aria-label="Back" href={back}>
-          <Icon name="arrow_back" size={18} />
+          <Icon name="arrow_back" size={20} />
         </Link>
         <div className="chattop-txt">
           <span className="chattop-nm">Send feedback</span>

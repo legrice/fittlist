@@ -603,7 +603,7 @@ export function Adder({
       <div className="sheet adder">
         {stage !== "form" && (
           <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         )}
 
@@ -613,7 +613,7 @@ export function Adder({
             <div className="adderhead">
               <h2>{heading.title}</h2>
               <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
             </div>
 
@@ -734,7 +734,7 @@ export function Adder({
               ) : (
                 <span className="nm placeholder">Select or start typing a studio</span>
               )}
-              <span className="chev"><Icon name="chevron_right" size={18} /></span>
+              <span className="chev"><Icon name="chevron_right" size={20} /></span>
             </button>
             {(!isPublic || mineOnly) && !selectedStudio && (
               <>
@@ -905,7 +905,7 @@ export function Adder({
                 <img className="classpho-img" src={image} alt="" />
               ) : (
                 <div className="classpho-img classpho-empty" aria-hidden="true">
-                  <Icon name="image" size={22} />
+                  <Icon name="image" size={24} />
                 </div>
               )}
               <div className="classpho-acts">
@@ -1123,7 +1123,7 @@ export function Adder({
                     />
                     {l.url.trim() && (
                       <span className="linktag">
-                        <Icon name="check" size={13} /> {detectProvider(l.url)}
+                        <Icon name="check" size={15} /> {detectProvider(l.url)}
                       </span>
                     )}
                   </div>
@@ -1132,7 +1132,7 @@ export function Adder({
                     aria-label="Remove link"
                     onClick={() => setLinks((prev) => prev.filter((_, xi) => xi !== i))}
                   >
-                    <Icon name="close" size={14} />
+                    <Icon name="close" size={16} />
                   </button>
                 </div>
               ))}
@@ -1193,7 +1193,7 @@ export function Adder({
                       <br />
                       <span className="ad">{s.address}</span>
                     </span>
-                    {studioId === s.id && <span className="tick"><Icon name="check" size={16} /></span>}
+                    {studioId === s.id && <span className="tick"><Icon name="check" size={18} /></span>}
                   </button>
                 ))
               ) : (

@@ -66,12 +66,12 @@ export function InstallApp() {
   return (
     <>
       <button className="setrow" onClick={() => (deferred ? install() : setHowTo(!howTo))}>
-        <span className="setrow-ic"><Icon name="phone_iphone" size={22} /></span>
+        <span className="setrow-ic"><Icon name="phone_iphone" size={24} /></span>
         <span className="setrow-txt">
           <span className="t">Add to home screen</span>
           <span className="s">Open it like an app, no address bar</span>
         </span>
-        <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
       </button>
       {howTo && (
         <div className="installhow">

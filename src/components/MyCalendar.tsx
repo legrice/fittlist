@@ -47,7 +47,7 @@ export function MyCalendar({ hasShifts = false }: { hasShifts?: boolean }) {
   return (
     <>
       <button className="setrow" onClick={() => setOpen(!open)}>
-        <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
+        <span className="setrow-ic"><Icon name="calendar_month" size={24} /></span>
         <span className="setrow-txt">
           <span className="t">Your week in your calendar</span>
           <span className="s">
@@ -56,7 +56,7 @@ export function MyCalendar({ hasShifts = false }: { hasShifts?: boolean }) {
               : "The classes you added, kept up to date"}
           </span>
         </span>
-        <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
       </button>
       {open && (
         <div className="installhow">

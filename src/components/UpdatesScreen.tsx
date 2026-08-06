@@ -99,7 +99,7 @@ export function UpdatesScreen({
           <p className="adminsub">Follows, requests, and messages</p>
         </div>
         <Link className="iconbtn acctclose" aria-label="Close" href="/week">
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </Link>
       </div>
 
@@ -137,7 +137,7 @@ export function UpdatesScreen({
                     )
                   ) : (
                     <span className="notifrow-ic" aria-hidden="true">
-                      <Icon name={ICON[n.type] ?? "notifications"} size={20} />
+                      <Icon name={ICON[n.type] ?? "notifications"} size={22} />
                     </span>
                   )}
                   <span className="notifrow-main">

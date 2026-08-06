@@ -97,7 +97,7 @@ export function SwipeGoing({
       >
         {/* The same calendar the class pill wears, so a swipe and a tap are
             plainly the same thing done two ways. */}
-        <Icon name={going ? "close" : "bookmark"} size={19} />
+        <Icon name={going ? "close" : "bookmark"} size={21} />
         <span>{going ? "Remove" : "Add"}</span>
       </div>
       <div

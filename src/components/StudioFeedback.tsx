@@ -117,7 +117,7 @@ export function StudioFeedback({
         >
           <div className="sheet confirmsheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Report this studio</h2>
             <p className="lead">
@@ -133,7 +133,7 @@ export function StudioFeedback({
                   <span className="availopt-txt">
                     <span className="t">{r}</span>
                   </span>
-                  {reason === r && <Icon name="check" size={18} />}
+                  {reason === r && <Icon name="check" size={20} />}
                 </button>
               ))}
             </div>
@@ -164,7 +164,7 @@ export function StudioFeedback({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Suggest an edit</h2>
             <p className="lead">
@@ -236,7 +236,7 @@ export function StudioFeedback({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Own this page</h2>
             <p className="lead">
@@ -311,7 +311,7 @@ export function StudioFeedback({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Take this page down</h2>
             <p className="lead">

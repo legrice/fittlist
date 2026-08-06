@@ -279,11 +279,11 @@ export function ClassSheet({
   return (
     <div className="classoverlay">
       <button className="ovcircle ovcircle-back" aria-label={backLabel ?? "Back"} onClick={onClose}>
-        <Icon name="arrow_back" size={19} />
+        <Icon name="arrow_back" size={21} />
       </button>
       {c && (
         <button className="ovcircle ovcircle-share" aria-label="Share this class" onClick={share}>
-          <Icon name="ios_share" size={18} />
+          <Icon name="ios_share" size={20} />
         </button>
       )}
       {/* The overflow: everything you might do with a class that isn't the
@@ -296,7 +296,7 @@ export function ClassSheet({
             aria-expanded={moreOpen}
             onClick={() => setMoreOpen((o) => !o)}
           >
-            <Icon name="more_horiz" size={18} />
+            <Icon name="more_horiz" size={20} />
           </button>
           {moreOpen && (
             <div className="ovmenu" role="menu">
@@ -308,7 +308,7 @@ export function ClassSheet({
                 rel="noopener nofollow"
                 onClick={() => setMoreOpen(false)}
               >
-                <Icon name="calendar_month" size={17} /> Add to Google Calendar
+                <Icon name="calendar_month" size={19} /> Add to Google Calendar
               </a>
               <a
                 className="ovmenu-item"
@@ -316,7 +316,7 @@ export function ClassSheet({
                 href={c.icsHref}
                 onClick={() => setMoreOpen(false)}
               >
-                <Icon name="calendar_today" size={17} /> Add to Apple or Outlook
+                <Icon name="calendar_today" size={19} /> Add to Apple or Outlook
               </a>
               {/* The share circle above hands over a link. This hands over a
                   picture, which is what a story wants. Same sheet the profile
@@ -329,7 +329,7 @@ export function ClassSheet({
                   setCardOpen(true);
                 }}
               >
-                <Icon name="auto_awesome" size={17} /> Share as an image
+                <Icon name="auto_awesome" size={19} /> Share as an image
               </button>
               {c.canAdd && !reported && (
                 <button
@@ -340,7 +340,7 @@ export function ClassSheet({
                     setReportOpen(true);
                   }}
                 >
-                  <Icon name="flag" size={17} /> Report this class
+                  <Icon name="flag" size={19} /> Report this class
                 </button>
               )}
               {/* Admin only, and only the picture: most classes were typed in
@@ -355,7 +355,7 @@ export function ClassSheet({
                     photoRef.current?.click();
                   }}
                 >
-                  <Icon name="palette" size={17} /> {c.image ? "Change the photo" : "Add a photo"}
+                  <Icon name="palette" size={19} /> {c.image ? "Change the photo" : "Add a photo"}
                 </button>
               )}
               {/* Same beta power as the photo, for the booking door: only
@@ -370,7 +370,7 @@ export function ClassSheet({
                     setLinkOpen(true);
                   }}
                 >
-                  <Icon name="link" size={17} /> Add a booking link
+                  <Icon name="link" size={19} /> Add a booking link
                 </button>
               )}
               {c.adminPhoto && c.image && (
@@ -391,7 +391,7 @@ export function ClassSheet({
                     });
                   }}
                 >
-                  <Icon name="close" size={17} /> Remove the photo
+                  <Icon name="close" size={19} /> Remove the photo
                 </button>
               )}
             </div>
@@ -408,7 +408,7 @@ export function ClassSheet({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setLinkOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Add a booking link</h2>
             <p className="lead">
@@ -478,7 +478,7 @@ export function ClassSheet({
               it is a fact about the date and not a warning. */}
           {c.past && !added && (
             <p className="classsheet-gone">
-              <Icon name="schedule" size={16} />
+              <Icon name="schedule" size={18} />
               This one has already run.
             </p>
           )}
@@ -516,13 +516,13 @@ export function ClassSheet({
             <span className="classoverlay-coach-txt">
               <span className="k">Coached by</span> {c.coachName}
             </span>
-            <Icon name="chevron_right" size={16} />
+            <Icon name="chevron_right" size={18} />
           </Link>
           )}
 
           <div className="evfacts classoverlay-facts">
             <div className="evfact">
-              <Icon name="event" size={20} />
+              <Icon name="event" size={22} />
               <span className="evfact-txt">
                 <span className="t">{c.dateLong}</span>
                 <span className="s">
@@ -533,7 +533,7 @@ export function ClassSheet({
             {where &&
               (c.studioHref ? (
                 <Link className="evfact" href={c.studioHref}>
-                  <Icon name="place" size={20} />
+                  <Icon name="place" size={22} />
                   <span className="evfact-txt">
                     <span className="t">{c.studioName}</span>
                     {c.studioAddress && <span className="s">{c.studioAddress}</span>}
@@ -541,7 +541,7 @@ export function ClassSheet({
                 </Link>
               ) : (
                 <div className="evfact">
-                  <Icon name="place" size={20} />
+                  <Icon name="place" size={22} />
                   <span className="evfact-txt">
                     <span className="t">{where}</span>
                   </span>
@@ -584,7 +584,7 @@ export function ClassSheet({
               }}
             >
               <span className="setrow-ic">
-                <Icon name={markPublic ? "visibility" : "lock"} size={22} />
+                <Icon name={markPublic ? "visibility" : "lock"} size={24} />
               </span>
               <span className="setrow-txt">
                 <span className="t">Show on your activity</span>
@@ -645,11 +645,11 @@ export function ClassSheet({
           <div className="classoverlay-cta">
             {isOwner ? (
               <Link className="ovcta-btn" href={`/app?edit=${c.id}&d=${c.whenIso}`}>
-                <Icon name="edit" size={17} /> Edit this class
+                <Icon name="edit" size={19} /> Edit this class
               </Link>
             ) : c.shift?.canGiveUp ? (
               <button className="ovcta-btn" onClick={() => setManageOpen(true)}>
-                <Icon name="person_add" size={17} /> Manage shift
+                <Icon name="person_add" size={19} /> Manage shift
               </button>
             ) : (
               <>
@@ -672,7 +672,7 @@ export function ClassSheet({
                         heart, which said "favourite" and meant "I'm going";
                         the control should look like the place it puts
                         things. */}
-                    <Icon name={added ? "bookmark_added" : "bookmark"} size={19} />
+                    <Icon name={added ? "bookmark_added" : "bookmark"} size={21} />
                     {!added && "Add"}
                   </button>
                 )}
@@ -699,7 +699,7 @@ export function ClassSheet({
               aria-label="Close"
               onClick={() => setManageOpen(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Your shift</h2>
             <p className="lead">
@@ -714,12 +714,12 @@ export function ClassSheet({
                   setConfirmShift({ kind: "giveup" });
                 }}
               >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Give up this shift</span>
                   <span className="s">Opens the slot; the gym and every coach who could cover it are told</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {c.shift.sendable.length > 0 && (
                 <button
@@ -730,12 +730,12 @@ export function ClassSheet({
                     setTransferOpen(true);
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="person_add" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="person_add" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Transfer shift</span>
                     <span className="s">Hand the date to a coach you&rsquo;ve already squared it with</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
             </div>
@@ -760,7 +760,7 @@ export function ClassSheet({
               aria-label="Close"
               onClick={() => setTransferOpen(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Transfer shift</h2>
             <p className="lead">
@@ -788,7 +788,7 @@ export function ClassSheet({
                   <span className="setrow-txt">
                     <span className="t">{p.name}</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               ))}
             </div>
@@ -868,7 +868,7 @@ export function ClassSheet({
               aria-label="Close"
               onClick={() => setBookOpen(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Book this class</h2>
             <p className="lead">
@@ -886,7 +886,7 @@ export function ClassSheet({
                   onClick={() => setBookOpen(false)}
                 >
                   Book via {l.label}
-                  <Icon name="north_east" size={18} className="evbtn-ico" />
+                  <Icon name="north_east" size={20} className="evbtn-ico" />
                 </a>
               ))}
             </div>
@@ -938,7 +938,7 @@ export function ClassSheet({
           It names that list, because the list has a name and it is the tab
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
-        <Icon name="bookmark_added" size={16} />
+        <Icon name="bookmark_added" size={18} />
         <span className="favtoast-t">Added. Followers can see it.</span>
         <Link
           className="favtoast-link"

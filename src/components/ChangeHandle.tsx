@@ -65,7 +65,7 @@ export function ChangeHandle() {
     <>
       <button className="setrow" onClick={() => setOpen(true)}>
         <span className="setrow-ic">
-          <Icon name="link" size={22} />
+          <Icon name="link" size={24} />
         </span>
         <span className="setrow-txt">
           {/* "Handle" is what people call it: the row under it already
@@ -75,7 +75,7 @@ export function ChangeHandle() {
           <span className="s">fittlist.co/{handle}</span>
         </span>
         <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
+          <Icon name="chevron_right" size={22} />
         </span>
       </button>
       {/* Portalled to the body, same reason as InviteFriends: this row lives
@@ -90,7 +90,7 @@ export function ChangeHandle() {
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Change your handle</h2>
             {locked ? (

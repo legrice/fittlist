@@ -82,7 +82,7 @@ export function QrSheet({
         <div className="adderhead">
           <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Your QR code"}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
         <p className="lead">

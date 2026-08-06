@@ -77,7 +77,7 @@ export function ShareWeekSheet({
         <div className="adderhead">
           <h2>Share your schedule</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
         <div className="share-toggles">
@@ -103,7 +103,7 @@ export function ShareWeekSheet({
                 style={{ background: STORY_THEMES[themeId].bg, borderColor: STORY_THEMES[themeId].accent }}
               />
               <span className="stylepick-lbl">{STORY_THEMES[themeId].label}</span>
-              <Icon name="expand_more" size={18} />
+              <Icon name="expand_more" size={20} />
             </button>
             {styleOpen && (
               <div className="stylepick-menu" role="listbox" aria-label="Style">
@@ -121,7 +121,7 @@ export function ShareWeekSheet({
                     >
                       <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
                       <span className="stylepick-lbl">{t.label}</span>
-                      {id === themeId && <Icon name="check" size={16} />}
+                      {id === themeId && <Icon name="check" size={18} />}
                     </button>
                   ),
                 )}

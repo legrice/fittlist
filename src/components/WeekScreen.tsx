@@ -512,7 +512,7 @@ export function WeekScreen({
                           })
                         }
                       >
-                        <Icon name="close" size={16} />
+                        <Icon name="close" size={18} />
                       </button>
                     </>
                   );
@@ -614,7 +614,7 @@ export function WeekScreen({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddMenu(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Add to your calendar</h2>
             <div className="settingslist ownermenu">
@@ -626,13 +626,13 @@ export function WeekScreen({
                   setAddOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="bookmark" size={22} /></span>
+                <span className="setrow-ic"><Icon name="bookmark" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">
                     A class you&rsquo;re going to <span className="addtag">Shared</span>
                   </span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button
                 className="setrow"
@@ -642,13 +642,13 @@ export function WeekScreen({
                   setAddOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="calendar_today" size={22} /></span>
+                <span className="setrow-ic"><Icon name="calendar_today" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">
                     Anything else <span className="addtag">Private</span>
                   </span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>

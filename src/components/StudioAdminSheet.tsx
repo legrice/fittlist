@@ -51,7 +51,7 @@ export function StudioAdminSheet({
         aria-label="More studio settings"
         onClick={() => setOpen(true)}
       >
-        <Icon name="more_horiz" size={18} />
+        <Icon name="more_horiz" size={20} />
       </button>
 
       {open && (
@@ -63,7 +63,7 @@ export function StudioAdminSheet({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Studio admin</h2>
             {/* The number a studio actually asks about first: is anyone
@@ -79,12 +79,12 @@ export function StudioAdminSheet({
             <div className="settingslist ownermenu">
               {canSchedule && (
                 <Link className="setrow" href={`/s/${slug}/manage/counts`}>
-                  <span className="setrow-ic"><Icon name="event_available" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="event_available" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Shift counter</span>
                     <span className="s">Counted from the schedule, split for a pay run</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </Link>
               )}
               <button
@@ -94,20 +94,20 @@ export function StudioAdminSheet({
                   setEditOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="edit" size={22} /></span>
+                <span className="setrow-ic"><Icon name="edit" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Edit studio info</span>
                   <span className="s">Photo, address, what it offers, contact</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button className="setrow" onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
+                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share this studio</span>
                   <span className="s">Hand its page to someone</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>

@@ -154,7 +154,7 @@ export function FollowersList({
                   aria-label={`Decline ${p.name}`}
                   onClick={() => answer(p, false)}
                 >
-                  <Icon name="close" size={16} />
+                  <Icon name="close" size={18} />
                 </button>
               </div>
             );
@@ -235,7 +235,7 @@ export function FollowersList({
                   aria-label={`Remove ${f.name}`}
                   onClick={() => setConfirm(f)}
                 >
-                  <Icon name="close" size={16} />
+                  <Icon name="close" size={18} />
                 </button>
               )}
             </div>

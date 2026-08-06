@@ -81,7 +81,7 @@ export function PlanSheet({
   return (
     <div className="classoverlay">
       <button className="ovcircle ovcircle-back" aria-label="Back" onClick={onClose}>
-        <Icon name="arrow_back" size={19} />
+        <Icon name="arrow_back" size={21} />
       </button>
 
       {/* Scrolls inside, like the class overlay: the overlay's blur makes it
@@ -110,7 +110,7 @@ export function PlanSheet({
 
           <div className="evfacts classoverlay-facts">
             <div className="evfact">
-              <Icon name="event" size={20} />
+              <Icon name="event" size={22} />
               <span className="evfact-txt">
                 <span className="t">
                   {p.nextIso ? fmtDateLong(p.nextIso) : `${p.dayLabel}s`}
@@ -124,7 +124,7 @@ export function PlanSheet({
             </div>
             {where && (
               <div className="evfact">
-                <Icon name="place" size={20} />
+                <Icon name="place" size={22} />
                 <span className="evfact-txt">
                   <span className="t">{where}</span>
                 </span>
@@ -152,7 +152,7 @@ export function PlanSheet({
                     rel="noopener nofollow"
                   >
                     Book via {l.label}
-                    <Icon name="north_east" size={18} className="evbtn-ico" />
+                    <Icon name="north_east" size={20} className="evbtn-ico" />
                   </a>
                 ))}
               </div>
@@ -181,11 +181,11 @@ export function PlanSheet({
       {p && (
         <div className="classoverlay-cta">
           <button className="ovcta-btn" onClick={() => onEdit(p)}>
-            <Icon name="edit" size={17} /> Edit
+            <Icon name="edit" size={19} /> Edit
           </button>
           <span className="ovcta-div" aria-hidden="true" />
           <button className="ovcta-btn" onClick={() => setCardOpen(true)}>
-            <Icon name="auto_awesome" size={17} /> Share
+            <Icon name="auto_awesome" size={19} /> Share
           </button>
         </div>
       )}

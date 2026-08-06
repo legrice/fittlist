@@ -347,7 +347,7 @@ export function AuthFlow({
               <div className="obalts" style={{ marginTop: 16 }}>
                 {inviteOnly && !invited && !inviter && (
                   <button className="obalt obrequest" onClick={openRequest}>
-                    <Icon name="mail" size={18} /> Request an invite
+                    <Icon name="mail" size={20} /> Request an invite
                   </button>
                 )}
                 {providers.google && (
@@ -418,7 +418,7 @@ export function AuthFlow({
                 })
               }
             >
-              <Icon name="groups" size={19} /> I&rsquo;m here to train
+              <Icon name="groups" size={21} /> I&rsquo;m here to train
             </button>
             {error && <div className="errorcopy">{error}</div>}
             <div className="microcopy">
@@ -475,7 +475,7 @@ export function AuthFlow({
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>
               {sheet === "signup"
@@ -551,11 +551,11 @@ export function AuthFlow({
                 password, not footnotes about it. */}
             <div className="obalts" style={{ marginTop: 14 }}>
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
-                <Icon name="auto_awesome" size={19} /> Email me a magic link
+                <Icon name="auto_awesome" size={21} /> Email me a magic link
               </button>
               {sheet === "login" && passkeyable && (
                 <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
-                  <Icon name="fingerprint" size={19} /> Use a passkey
+                  <Icon name="fingerprint" size={21} /> Use a passkey
                 </button>
               )}
             </div>
@@ -626,7 +626,7 @@ export function AuthFlow({
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRequestOpen(false); }}>
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setRequestOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             {reqSent ? (
               <>

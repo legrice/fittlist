@@ -63,7 +63,7 @@ export function ClassLiveSheet({
     >
       <div className="sheet">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </button>
         <h2>Your class is live</h2>
         <p className="lead">
@@ -72,20 +72,20 @@ export function ClassLiveSheet({
         </p>
         <div className="settingslist ownermenu">
           <button className="setrow" onClick={shareLink}>
-            <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
+            <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Share the link</span>
               <span className="s">Send the class to someone, anywhere you message</span>
             </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </button>
           <button className="setrow" onClick={() => setCardOpen(true)}>
-            <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+            <span className="setrow-ic"><Icon name="auto_awesome" size={24} /></span>
             <span className="setrow-txt">
               <span className="t">Share a picture</span>
               <span className="s">The class card, made for a story or a post</span>
             </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
           </button>
         </div>
       </div>

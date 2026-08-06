@@ -154,7 +154,7 @@ export function ProfileTabs({
               anywhere
               notUnder={base}
             >
-              <Icon name="arrow_back" size={21} />
+              <Icon name="arrow_back" size={23} />
             </BackLink>
           </div>
         )}

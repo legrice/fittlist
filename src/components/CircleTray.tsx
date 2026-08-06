@@ -76,7 +76,7 @@ export function CircleTray({ circles }: { circles: Circle[] }) {
           ))}
           <Link className="trayitem" href="/discover">
             <span className="trayav trayav-add">
-              <Icon name="add" size={26} />
+              <Icon name="add" size={28} />
             </span>
             <span className="trayitem-nm">Add</span>
           </Link>

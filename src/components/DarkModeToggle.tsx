@@ -34,7 +34,7 @@ export function DarkModeToggle({ initialOn }: { initialOn: boolean }) {
 
   return (
     <button className="setrow" onClick={toggle} aria-pressed={on}>
-      <span className="setrow-ic"><Icon name={on ? "dark_mode" : "light_mode"} size={22} /></span>
+      <span className="setrow-ic"><Icon name={on ? "dark_mode" : "light_mode"} size={24} /></span>
       <span className="setrow-txt">
         <span className="t">Dark mode</span>
         <span className="s">{on ? "On for your page and app" : "Off"}</span>

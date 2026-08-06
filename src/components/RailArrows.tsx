@@ -69,12 +69,12 @@ export function RailArrows({ railRef }: { railRef: React.RefObject<HTMLDivElemen
     <>
       {left && (
         <button type="button" className="railarrow railarrow-l" aria-label="Scroll left" onClick={() => page(-1)}>
-          <Icon name="chevron_left" size={22} />
+          <Icon name="chevron_left" size={24} />
         </button>
       )}
       {right && (
         <button type="button" className="railarrow railarrow-r" aria-label="Scroll right" onClick={() => page(1)}>
-          <Icon name="chevron_right" size={22} />
+          <Icon name="chevron_right" size={24} />
         </button>
       )}
     </>

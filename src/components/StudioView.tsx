@@ -438,7 +438,7 @@ export async function StudioView({
             rel="noopener nofollow"
           >
             <span className="profstudio-ic">
-              <Icon name="place" size={20} />
+              <Icon name="place" size={22} />
             </span>
             <span className="profstudio-txt">
               <span className="nm">{s.address}</span>
@@ -481,7 +481,7 @@ export async function StudioView({
                   {c.title && <span className="ad">{c.title}</span>}
                 </span>
                 <span className="coachstudio-chev">
-                  <Icon name="chevron_right" size={18} />
+                  <Icon name="chevron_right" size={20} />
                 </span>
               </Link>
             ))}

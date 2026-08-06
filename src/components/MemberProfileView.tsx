@@ -174,7 +174,7 @@ export async function MemberProfileView({
           ownerTop={
             isOwner ? (
               <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={20} />
+                <Icon name="settings" size={22} />
               </Link>
             ) : null
           }
@@ -272,7 +272,7 @@ export async function MemberProfileView({
                     >
                       {body}
                       <span className="memweek-chev">
-                        <Icon name="chevron_right" size={18} />
+                        <Icon name="chevron_right" size={20} />
                       </span>
                     </Link>
                   ) : (

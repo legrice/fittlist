@@ -153,7 +153,7 @@ export function AvatarZoom({
               aria-label="Close"
               onClick={() => setOpen(false)}
             >
-              <Icon name="close" size={18} />
+              <Icon name="close" size={20} />
             </button>
             <div className="avoverlay-top">
               {photo ? (
@@ -188,26 +188,26 @@ export function AvatarZoom({
               {follow && (
                 <button className="avact" disabled={pending} onClick={toggleFollow}>
                   <span className={`avact-ic${following ? " on" : ""}`}>
-                    <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={22} />
+                    <Icon name={following ? "check" : requested ? "schedule" : "person_add"} size={24} />
                   </span>
                   {following ? "Following" : requested ? "Requested" : "Follow"}
                 </button>
               )}
               <button className="avact" onClick={share}>
                 <span className="avact-ic">
-                  <Icon name="ios_share" size={22} />
+                  <Icon name="ios_share" size={24} />
                 </span>
                 Share
               </button>
               <button className="avact" onClick={copy}>
                 <span className="avact-ic">
-                  <Icon name="link" size={22} />
+                  <Icon name="link" size={24} />
                 </span>
                 Copy link
               </button>
               <button className="avact" onClick={() => setQrOpen(true)}>
                 <span className="avact-ic">
-                  <Icon name="qr_code_2" size={22} />
+                  <Icon name="qr_code_2" size={24} />
                 </span>
                 QR code
               </button>
@@ -217,7 +217,7 @@ export function AvatarZoom({
               {isOwner && (
                 <button className="avact" onClick={() => setCardOpen(true)}>
                   <span className="avact-ic">
-                    <Icon name="auto_awesome" size={22} />
+                    <Icon name="auto_awesome" size={24} />
                   </span>
                   Card
                 </button>
@@ -239,7 +239,7 @@ export function AvatarZoom({
               >
                 <div className={availWriting ? "sheet" : "sheet infosheet"}>
                   <button className="iconbtn sheetclose" aria-label="Close" onClick={closeAvail}>
-                    <Icon name="close" size={16} />
+                    <Icon name="close" size={18} />
                   </button>
                   {availWriting ? (
                     <>

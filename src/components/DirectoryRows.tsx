@@ -118,7 +118,7 @@ export function PersonRow({
             the row shouting, and the whole row is still the link. */}
         {!follow && (
           <span className="disrow-chev">
-            <Icon name="chevron_right" size={18} />
+            <Icon name="chevron_right" size={20} />
           </span>
         )}
         <LinkPending />
@@ -164,7 +164,7 @@ export function StudioRow({ studio: st, from }: { studio: DirStudio; from: strin
         <span className="disrow-sub">{st.address}</span>
       </span>
       <span className="disrow-chev">
-        <Icon name="chevron_right" size={18} />
+        <Icon name="chevron_right" size={20} />
       </span>
     </Link>
   );

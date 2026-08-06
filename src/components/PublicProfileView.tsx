@@ -253,7 +253,7 @@ export async function PublicProfileView({
               <span className="ad">{s.address}</span>
             </span>
             <span className="coachstudio-chev">
-              <Icon name="chevron_right" size={18} />
+              <Icon name="chevron_right" size={20} />
             </span>
           </Link>
         ))}
@@ -499,7 +499,7 @@ export async function PublicProfileView({
           ownerTop={
             isOwner ? (
               <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={20} />
+                <Icon name="settings" size={22} />
               </Link>
             ) : null
           }

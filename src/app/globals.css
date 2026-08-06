@@ -5737,9 +5737,23 @@ a.clspeek-by:active { opacity: .6; }
    shape and the adder's head, because it is the same kind of act on the other
    tab: a thing you do to the week in front of you, which comes back down onto
    it rather than navigating away and back. */
-.dissheet { padding-left: 18px; padding-right: 18px; }
 .dissheet .dissearchrow { margin-top: 4px; }
 .dissheet-wait { margin: 30px 0; font-size: 15px; color: var(--ol); }
+/* The chip rail bleeds to the window on the page (`calc(50% - 50vw)`, which is
+   how it runs off both edges of a padded column). Inside a sheet that is the
+   wrong window: the sheet is the viewport's width but its content is inset by
+   its own padding, so a rail measuring against `vw` reached 20px past the
+   sheet on each side and took the whole sheet sideways with it. It bleeds by
+   the sheet's own padding here instead, which is the same effect against the
+   right box, and the sheet keeps `.sheet`'s 20px rather than a gutter of its
+   own: a second number would have to be kept in step with this one, which is
+   exactly how the head ended up 2px wide on each side while this was 18.
+
+   `overflow-x: clip` is the backstop. It clips without making a scroll
+   container, so it cannot turn into the vertical-clipping trap `overflow:
+   auto` sets (see `.tray-scroll`). */
+.dissheet { overflow-x: clip; }
+.dissheet .dischips { margin-left: -20px; margin-right: -20px; }
 
 /* Following is a list, not a week. Your calendar is a week you flip through
    because you are working on it; this is what is coming up, because you are

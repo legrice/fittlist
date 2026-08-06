@@ -81,7 +81,7 @@ export function CalBottomBar({
           right corner is the one part of a phone a thumb cannot reach, and
           adding is what somebody opens this screen to do. */}
       <button className={`caladd${lift}`} onClick={onAdd}>
-        <Icon name="add" size={19} strokeWidth={2.6} />
+        <Icon name="add" size={21} />
         Add
       </button>
     </>
@@ -159,7 +159,7 @@ export function CalShare({ onShare }: { onShare: () => void }) {
   return (
     <button className="calshare" onClick={onShare}>
       <span className="calshare-ic" aria-hidden="true">
-        <Icon name="auto_awesome" size={19} />
+        <Icon name="auto_awesome" size={21} />
       </span>
       Share
     </button>
@@ -285,10 +285,10 @@ export function CalHead({
       )}
       <span className="calhead-spacer" />
       <button className="calmenu" aria-label="Calendar views" onClick={onMenu}>
-        <Icon name={VIEW_ICON[view]} size={21} />
+        <Icon name={VIEW_ICON[view]} size={23} />
       </button>
       <button className="calfilter" aria-label="Filters" onClick={onFilter}>
-        <Icon name="tune" size={21} />
+        <Icon name="tune" size={23} />
       </button>
       {children}
     </div>
@@ -337,10 +337,10 @@ export function MiniCalPicker({
         <div className="calpicker-head">
           <span className="calpicker-title">{monthLabel(ym, todayIso)}</span>
           <button className="calpicker-arrow" aria-label="Previous month" onClick={() => shift(-1)}>
-            <Icon name="chevron_left" size={18} />
+            <Icon name="chevron_left" size={20} />
           </button>
           <button className="calpicker-arrow" aria-label="Next month" onClick={() => shift(1)}>
-            <Icon name="chevron_right" size={18} />
+            <Icon name="chevron_right" size={20} />
           </button>
         </div>
         <div className="calpicker-grid">
@@ -396,7 +396,7 @@ export function ViewSheet({
     >
       <div className="sheet">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </button>
         <h2>View</h2>
         <div className="settingslist ownermenu">
@@ -409,13 +409,13 @@ export function ViewSheet({
                 onPick(r.v);
               }}
             >
-              <span className="setrow-ic"><Icon name={r.icon} size={22} /></span>
+              <span className="setrow-ic"><Icon name={r.icon} size={24} /></span>
               <span className="setrow-txt">
                 <span className="t">{r.label}</span>
                 <span className="s">{r.sub}</span>
               </span>
               {view === r.v ? (
-                <span className="setrow-chev viewsheet-on"><Icon name="check" size={20} /></span>
+                <span className="setrow-chev viewsheet-on"><Icon name="check" size={22} /></span>
               ) : (
                 <span className="setrow-chev" />
               )}
@@ -469,7 +469,7 @@ export function KindFilterSheet({
     >
       <div className="sheet">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </button>
         <h2>Show on your calendar</h2>
         <div className="settingslist ownermenu">
@@ -546,7 +546,7 @@ export function DayStrip({
   return (
     <div className="daystrip" aria-label="Pick a day">
       <button className="daystrip-arrow" aria-label="Previous week" onClick={() => shift(-7)}>
-        <Icon name="chevron_left" size={18} />
+        <Icon name="chevron_left" size={20} />
       </button>
       {days.map((x) => (
         <button
@@ -560,7 +560,7 @@ export function DayStrip({
         </button>
       ))}
       <button className="daystrip-arrow" aria-label="Next week" onClick={() => shift(7)}>
-        <Icon name="chevron_right" size={18} />
+        <Icon name="chevron_right" size={20} />
       </button>
     </div>
   );

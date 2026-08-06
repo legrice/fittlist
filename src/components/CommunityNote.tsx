@@ -28,7 +28,7 @@ export function CommunityNote({ studioId, name }: { studioId: string; name: stri
         aria-label="About this schedule"
         onClick={() => setOpen(true)}
       >
-        <Icon name="info" size={15} />
+        <Icon name="info" size={17} />
       </button>
 
       {open &&
@@ -46,7 +46,7 @@ export function CommunityNote({ studioId, name }: { studioId: string; name: stri
                 aria-label="Close"
                 onClick={() => setOpen(false)}
               >
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
               <h2 style={{ marginTop: 10 }}>This schedule</h2>
               <p className="lead">

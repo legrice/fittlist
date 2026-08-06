@@ -206,7 +206,7 @@ export function ProfileOwnerBar({
               aria-label="Close"
               onClick={() => setShareMenu(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Share your page</h2>
             <div className="settingslist ownermenu">
@@ -217,20 +217,20 @@ export function ProfileOwnerBar({
                   setShareOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share your schedule</span>
                   <span className="s">A story image with your link</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button className="setrow" onClick={copyLink}>
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-ic"><Icon name="link" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy your link</span>
                   <span className="s">Straight to your page</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button
                 className="setrow"
@@ -239,12 +239,12 @@ export function ProfileOwnerBar({
                   setQrOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-ic"><Icon name="qr_code_2" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Your QR code</span>
                   <span className="s">A scannable code that opens your page</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {/* The square one: your face and your name rather than your
                   week. It lost its door when the avatar circle came off the
@@ -257,22 +257,22 @@ export function ProfileOwnerBar({
                   setCardOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="auto_awesome" size={22} /></span>
+                <span className="setrow-ic"><Icon name="auto_awesome" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Your profile card</span>
                   <span className="s">A square image for a post</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {/* The story image is for a story. This is for the group chat,
                   where an image is no use and a coach ends up typing it out. */}
               <button className="setrow" onClick={copyWeek}>
-                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-ic"><Icon name="content_copy" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy your week</span>
                   <span className="s">As text, ready to paste</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>
@@ -307,7 +307,7 @@ export function ProfileOwnerBar({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEditOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Edit profile</h2>
             <div className="editphoto">

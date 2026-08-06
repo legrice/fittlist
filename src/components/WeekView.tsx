@@ -67,7 +67,7 @@ export function WeekStepper({
             disabled={week === 0}
             onClick={() => onWeek(Math.max(0, week - 1))}
           >
-            <Icon name="chevron_left" size={20} />
+            <Icon name="chevron_left" size={22} />
           </button>
           <button
             className="wkarrow"
@@ -75,7 +75,7 @@ export function WeekStepper({
             disabled={week === WEEKS_AHEAD}
             onClick={() => onWeek(Math.min(WEEKS_AHEAD, week + 1))}
           >
-            <Icon name="chevron_right" size={20} />
+            <Icon name="chevron_right" size={22} />
           </button>
         </div>
       </div>

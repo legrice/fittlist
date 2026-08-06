@@ -26,7 +26,7 @@ export function ApproveFollowersToggle({ initialOn }: { initialOn: boolean }) {
 
   return (
     <button className="setrow" onClick={toggle} aria-pressed={on}>
-      <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+      <span className="setrow-ic"><Icon name="lock" size={24} /></span>
       <span className="setrow-txt">
         {/* The word everybody already knows from every other app. "Approve
             followers" named the mechanism, which meant reading the row to

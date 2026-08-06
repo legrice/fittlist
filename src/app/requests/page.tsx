@@ -72,7 +72,7 @@ export default async function RequestsPage() {
         <AppChrome userId={userId} bar />
         <div className="folback">
           <BackLink className="evback" href="/settings" label="Back to settings">
-            <Icon name="arrow_back" size={21} />
+            <Icon name="arrow_back" size={23} />
           </BackLink>
         </div>
         <div className="admintop">
@@ -105,12 +105,12 @@ export default async function RequestsPage() {
                 <p className="reqcard-msg">{theirs.get(t.id) ?? ""}</p>
                 <div className="reqcard-ways">
                   <a className="reqway" href={`mailto:${t.requesterEmail}`}>
-                    <Icon name="mail" size={15} />
+                    <Icon name="mail" size={17} />
                     {t.requesterEmail}
                   </a>
                   {t.requesterPhone && (
                     <a className="reqway" href={`tel:${t.requesterPhone.replace(/[^\d+]/g, "")}`}>
-                      <Icon name="call" size={15} />
+                      <Icon name="call" size={17} />
                       {t.requesterPhone}
                     </a>
                   )}

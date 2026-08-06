@@ -36,7 +36,7 @@ export function ChipsField({
             <span key={`${c}-${i}`} className="chipsfield-chip">
               {c}
               <button type="button" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((_, idx) => idx !== i))}>
-                <Icon name="close" size={13} />
+                <Icon name="close" size={15} />
               </button>
             </span>
           ))}

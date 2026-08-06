@@ -156,7 +156,7 @@ export function ShareComposer({
             `anywhere` pops to it; typed cold there is not, and the calendar is
             the honest fallback rather than a dead button. */}
         <BackLink className="iconbtn sheetclose adderclose" href="/calendar" anywhere label="Close">
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </BackLink>
       </div>
 
@@ -310,7 +310,7 @@ export function ShareComposer({
                       {r.sub && <span className="s">{r.sub}</span>}
                     </span>
                     <span className={`compcheck${on ? " on" : ""}`} aria-hidden="true">
-                      {on && <Icon name="check" size={14} />}
+                      {on && <Icon name="check" size={16} />}
                     </span>
                   </button>
                 );
@@ -462,7 +462,7 @@ function Sheet({
     >
       <div className="sheet">
         <button className="iconbtn sheetclose" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </button>
         <h2>{title}</h2>
         <p className="lead">{lead}</p>

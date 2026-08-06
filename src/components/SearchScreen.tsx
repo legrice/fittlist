@@ -140,7 +140,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     <>
       <div className="dissearchrow">
         <div className="dissearch">
-          <Icon name="search" size={19} className="dissearch-ic" />
+          <Icon name="search" size={21} className="dissearch-ic" />
           <input
             ref={box}
             className="dissearch-in"
@@ -162,7 +162,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
           />
           {q && (
             <button type="button" className="dissearch-x" onClick={() => setQ("")} aria-label="Clear">
-              <Icon name="close" size={17} />
+              <Icon name="close" size={19} />
             </button>
           )}
         </div>
@@ -190,7 +190,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             </h2>
             {recent.map((r) => (
               <Link key={r.base} className="recentrow" href={`/${r.base}?from=search`}>
-                <Icon name={r.t === "s" ? "place" : "account_circle"} size={17} />
+                <Icon name={r.t === "s" ? "place" : "account_circle"} size={19} />
                 {r.name}
               </Link>
             ))}

@@ -40,7 +40,7 @@ export function VerifiedBadge({
         onClick={() => setOpen(true)}
         aria-label={verified ? "What Verified means" : "What Unverified means"}
       >
-        <Icon name="verified" size={13} /> {verified ? "Verified" : "Unverified"}
+        <Icon name="verified" size={15} /> {verified ? "Verified" : "Unverified"}
       </button>
 
       {open &&
@@ -58,7 +58,7 @@ export function VerifiedBadge({
                 aria-label="Close"
                 onClick={() => setOpen(false)}
               >
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
               {verified ? (
                 <>

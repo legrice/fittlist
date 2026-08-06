@@ -4,16 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/check-copy.mjs && tsx scripts/storyplan-check.mjs && next build",
+    "build": "node scripts/check-copy.mjs && node scripts/icon-check.mjs && tsx scripts/storyplan-check.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "check:copy": "node scripts/check-copy.mjs",
-    "check:story": "tsx scripts/storyplan-check.mjs"
+    "check:story": "tsx scripts/storyplan-check.mjs",
+    "check:icons": "node scripts/icon-check.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.17",
+    "@phosphor-icons/react": "^2.1.10",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.2",
     "drizzle-orm": "^0.41.0",

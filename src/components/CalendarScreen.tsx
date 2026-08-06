@@ -122,11 +122,11 @@ export function CalendarScreen({
       {days.length > 0 && (
         <>
           <Link className="wkshare" href="/share">
-            <Icon name="auto_awesome" size={20} className="wkshare-ic" />
+            <Icon name="auto_awesome" size={22} className="wkshare-ic" />
             Share
           </Link>
           <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-            <Icon name="add" size={26} strokeWidth={2.6} />
+            <Icon name="add" size={28} />
           </button>
         </>
       )}

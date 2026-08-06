@@ -160,6 +160,15 @@ await m.waitForTimeout(900);
   console.log("discover sheet:", names.join(" | ") || "(empty)");
   if (!names.includes("Nadia Haq")) fail("the directory should list the coaches: " + names.join());
   if (!m.url().endsWith("/feed")) fail("the sheet should not navigate, at " + m.url());
+  // Nothing runs off the side. The chip rail bleeds to the window with
+  // `calc(50% - 50vw)` on the page, which inside a sheet is the wrong window:
+  // it reached past the sheet's own padding on both edges and took the whole
+  // sheet sideways with it.
+  const over = await m.locator(".dissheet").evaluate((e) => e.scrollWidth - e.clientWidth);
+  const body = await m.evaluate(() => document.body.scrollWidth - document.body.clientWidth);
+  console.log("sheet overflow:", over, "| body:", body);
+  if (over > 1) fail("the sheet scrolls sideways by " + over + "px");
+  if (body > 1) fail("the page behind it scrolls sideways by " + body + "px");
 }
 await m.locator(".dissheet .sheetclose").click();
 await m.waitForTimeout(300);

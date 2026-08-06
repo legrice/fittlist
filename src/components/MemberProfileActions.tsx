@@ -46,20 +46,20 @@ export function MemberProfileActions({ handle }: { handle: string }) {
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMenu(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Share your page</h2>
             <div className="settingslist ownermenu">
               <button className="setrow" onClick={copyLink}>
                 <span className="setrow-ic">
-                  <Icon name="link" size={22} />
+                  <Icon name="link" size={24} />
                 </span>
                 <span className="setrow-txt">
                   <span className="t">Copy your link</span>
                   <span className="s">Straight to your page</span>
                 </span>
                 <span className="setrow-chev">
-                  <Icon name="chevron_right" size={20} />
+                  <Icon name="chevron_right" size={22} />
                 </span>
               </button>
               <button
@@ -70,14 +70,14 @@ export function MemberProfileActions({ handle }: { handle: string }) {
                 }}
               >
                 <span className="setrow-ic">
-                  <Icon name="qr_code_2" size={22} />
+                  <Icon name="qr_code_2" size={24} />
                 </span>
                 <span className="setrow-txt">
                   <span className="t">Your QR code</span>
                   <span className="s">A scannable code that opens your page</span>
                 </span>
                 <span className="setrow-chev">
-                  <Icon name="chevron_right" size={20} />
+                  <Icon name="chevron_right" size={22} />
                 </span>
               </button>
             </div>

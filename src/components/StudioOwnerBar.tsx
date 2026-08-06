@@ -106,7 +106,7 @@ export function StudioOwnerBar({
                 aria-label="Close"
                 onClick={onClose}
               >
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
             </div>
 

@@ -337,7 +337,7 @@ export function OnboardingWizard({
             <h1>Where do you coach?</h1>
             <p>Pick the studios and spaces you work at. Can&rsquo;t find one? Add it.</p>
             <div className="searchbox">
-              <span className="mag"><Icon name="search" size={17} /></span>
+              <span className="mag"><Icon name="search" size={19} /></span>
               <input
                 type="text"
                 placeholder="Search studios by name or street"
@@ -360,7 +360,7 @@ export function OnboardingWizard({
                       <span className="ad">{s.address}</span>
                     </span>
                     <span className="wizstudio-tick" aria-hidden="true">
-                      {on && <Icon name="check" size={18} />}
+                      {on && <Icon name="check" size={20} />}
                     </span>
                   </button>
                 );
