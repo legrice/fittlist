@@ -354,7 +354,17 @@ await p.goto(BASE + "/raebell");
     return cs.boxShadow + " | " + cs.borderBottomWidth;
   });
   if (/inset/.test(row)) fail("no rule under the tab row, got " + row);
-  console.log("profile head pins at " + top + ", tabs are wash pills");
+  // And the tab row pins with the bands under it, the calendar's own pattern:
+  // it publishes its height, and the schedule's dates stick right below.
+  const spos = await p.locator(".pubstick").evaluate((e) => getComputedStyle(e).position);
+  if (spos !== "sticky") fail("the tab row should pin, got " + spos);
+  const stickH = await p.locator(".pubstick").evaluate((e) => e.offsetHeight);
+  const varTop = await p.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dayband-top")),
+  );
+  if (Math.abs(varTop - stickH) > 2)
+    fail(`the bands should pin under the tab row: ${varTop} vs ${stickH}`);
+  console.log("profile head pins at " + top + ", tab row pins at " + stickH + ", tabs are wash pills");
 }
 await p.locator(".profgear").click();
 await p.waitForURL(/\/settings/);

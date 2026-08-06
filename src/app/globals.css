@@ -2804,12 +2804,14 @@ button.ps-card { cursor: pointer; }
    copy of the name so the schedule keeps its owner. Full bleed lives here so
    the paper covers whatever scrolls beneath, edge to edge. */
 .pubstick {
-  /* Static, by the same call: only the day bands pin. The .stuck machinery
-     (the marker, the observer, the small name copy) is disarmed by the row
-     below staying display:none rather than removed, because the observer
-     still runs and toggles the class. */
-  position: static;
-  background: none;
+  /* Pinned at the top once the card slides up, the calendar title row's own
+     pattern: the tabs are the card's chrome, and the day bands pin under
+     them at this block's measured height (ProfileTabs publishes it through
+     useBandTop). The radius matches the card's, so pinned at the top of the
+     screen the corners sit where the phone's bezel rounds anyway. */
+  position: sticky; top: 0; z-index: 7;
+  background: var(--paper);
+  border-radius: 28px 28px 0 0;
   margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
 }
@@ -2837,14 +2839,15 @@ button.ps-card { cursor: pointer; }
   /* Above the pinned header, like .cardwrap: the card slides over it. */
   position: relative;
 }
-/* The bands pin at the top of the viewport everywhere the card is the only
-   chrome; the profile draws its bands server-side and never publishes the
-   variable, so a calendar visit's leftover height would push them down. */
-.pub .dayband { top: 0; }
+/* No profile override on the bands' top any more: the tab row pins and
+   publishes its height the way the calendar's title row does, so the bands
+   read `--dayband-top` here exactly as they do there. */
 /* Inside the card the tabs bleed to the card's edge, not the window's: the
    50vw trick below is for the row on the bare page, and past the card edge
    it would poke out of the rounded corners. */
-.pubcard .pubtabs { margin: 0 -18px; padding: 14px 18px 0; }
+/* Air under the pills, because the day bands pin right below this block:
+   without it the first pinned date sat flush against the tab row. */
+.pubcard .pubtabs { margin: 0 -18px; padding: 14px 18px 10px; }
 .pubtabs {
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
   /* No rule under the row, by Matt's call: the tabs are pills now (the nav's

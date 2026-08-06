@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { Fragment, useEffect, useRef, type ReactNode } from "react";
+import { useBandTop } from "@/components/CalendarBits";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
@@ -85,8 +86,13 @@ export function ProfileTabs({
 }) {
   const tracked = useRef(false);
   const stickRef = useRef<HTMLDivElement>(null);
-  const sentRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+
+  // The tab row pins at the top once the card slides up, the calendar's own
+  // pattern: it publishes its measured height as --dayband-top, and the day
+  // bands in the schedule pin right under it. One writer, one reader chain,
+  // same as everywhere bands pin under chrome.
+  useBandTop(stickRef);
 
   // The head is chrome, pinned like the header above it: face, name, meta and
   // the two pills all stay put, and the card slides up over the lot. Its
@@ -102,25 +108,6 @@ export function ProfileTabs({
     const ro = new ResizeObserver(set);
     ro.observe(bar);
     return () => ro.disconnect();
-  }, []);
-
-  // The tab row pins under the app header as the page scrolls, and once the
-  // big header is gone it grows a small copy of the name, so a long schedule
-  // never loses whose it is. The offset is measured because the header only
-  // exists for a signed-in viewer; a stranger's bar owns the top itself.
-  useEffect(() => {
-    const stick = stickRef.current;
-    const sent = sentRef.current;
-    if (!stick || !sent) return;
-    const bar = document.querySelector(".brandbar");
-    const off = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
-    if (off) stick.style.top = off + "px";
-    const ob = new IntersectionObserver(
-      ([e]) => stick.classList.toggle("stuck", !e.isIntersecting),
-      { rootMargin: `-${off + 1}px 0px 0px 0px` },
-    );
-    ob.observe(sent);
-    return () => ob.disconnect();
   }, []);
 
   // Count one "schedule open" per visit. It used to fire when the scroll-spy
@@ -196,9 +183,6 @@ export function ProfileTabs({
         )}
         {actions}
       </div>
-      {/* Zero-height marker: when it slides under the header, the bar below
-          is stuck and the small name switches on. */}
-      <div ref={sentRef} aria-hidden="true" />
       {/* The card. The head above sits on the shell gray; the tabs row is
           the first thing on the paper, and the panel rides it to the bottom
           of the page. */}
