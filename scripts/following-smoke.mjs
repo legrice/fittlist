@@ -131,6 +131,29 @@ await m.waitForTimeout(600);
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
+// The rail is chrome now: pinned under the header at the header's measured
+// height, and the card slides up over it, the same model every screen wears.
+{
+  const pos = await m.locator(".tray").evaluate((e) => getComputedStyle(e).position);
+  if (pos !== "sticky") fail("the tray should pin under the header, got " + pos);
+  const barH = await m.locator(".brandbar").evaluate((e) => e.offsetHeight);
+  const top = await m.locator(".tray").evaluate((e) => parseFloat(getComputedStyle(e).top));
+  console.log("tray top:", top, "| header:", barH);
+  if (Math.abs(top - barH) > 2) fail(`the tray pins at the header's height: ${top} vs ${barH}`);
+  const deep = await m.evaluate(() => {
+    window.scrollTo(0, 1e5);
+    return window.scrollY;
+  });
+  await m.waitForTimeout(300);
+  if (deep > 40) {
+    const tray = await m.locator(".tray").boundingBox();
+    if (Math.abs(tray.y - barH) > 3)
+      fail(`scrolled ${deep}, the tray should stay pinned under the header, at ${tray.y}`);
+    console.log("scrolled " + deep + ": tray pinned at " + Math.round(tray.y));
+  }
+  await m.evaluate(() => window.scrollTo(0, 0));
+}
+
 // One list of what is coming, under date headings, rather than a week you flip
 // through. All four classes are in it: this week's remainder plus next week's.
 await m.locator(".clline").first().waitFor();

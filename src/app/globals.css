@@ -5458,8 +5458,12 @@ button.ps-card { cursor: pointer; }
    No ground of its own: it sits on the shell, above the card, which is what
    makes the card read as starting under the faces. */
 .tray {
-  /* Positioned, because the arrows sit over its edges. */
-  position: relative;
+  /* Pinned under the header, part of the chrome the card slides over: the
+     faces stay put and the white covers them on the way up. The top is the
+     pinned header's measured height (`--tray-top`, written by the screen),
+     because the safe area moves it. Sticky also keeps the arrows' layer
+     working: it is positioned, which is all they needed. */
+  position: sticky; top: var(--tray-top, 66px);
   margin: 0 -18px; padding: 8px 0 12px;
 }
 /* The arrows hang level with the circles rather than the labels under them,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -75,6 +75,22 @@ export function FollowingScreen({
   // action revalidates /feed, but nothing re-renders a page that is already on
   // screen, so without this you would follow three people, close, and find the
   // same empty rail you opened.
+  // The tray pins under the header, part of the chrome the card slides over:
+  // its sticky top is the pinned header's own height, which is a measured
+  // number because the safe area moves it (a constant that has to track a
+  // measured thing is a constant that will be wrong again).
+  const trayRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = trayRef.current;
+    const bar = document.querySelector<HTMLElement>(".brandbar");
+    if (!el || !bar) return undefined;
+    const set = () => el.style.setProperty("--tray-top", `${bar.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
+
   const closeFind = () => {
     setFind(false);
     router.refresh();
@@ -170,9 +186,9 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* The rail sits above the chrome and scrolls away with the page: it
-          costs its height once, when you open the app. */}
-      <div className="tray">
+      {/* The rail is chrome, pinned under the header: the card slides up
+          over it, so the faces cost their height only until you scroll. */}
+      <div className="tray" ref={trayRef}>
         <div className="tray-scroll">
           <button
             className="trayitem"
