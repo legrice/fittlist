@@ -1151,14 +1151,14 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    checkmarks pin (top is set to the brandbar's measured height), the
    divider under them is the wrapper's own edge, and the list slides
    beneath. Under the brandbar's z-8; over the rows. */
+/* No edge. It had one for a build, on the argument that with the chrome and
+   the first band both grounded in the paper nothing said where one stopped;
+   the first band's own rule is directly under it and does that job, so the
+   two lines were the same break drawn twice, a few pixels apart. */
 .calsticky {
   position: sticky; top: 0; z-index: 7;
   background: var(--paper);
   margin: 0 -18px; padding: 10px 18px 0;
-  /* An edge, because the band that slides under it has none any more: with
-     the chrome and the first band both grounded in the paper, nothing said
-     where one stopped and the other began. */
-  border-bottom: var(--divw) solid var(--div);
 }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
@@ -5397,11 +5397,12 @@ button.ps-card { cursor: pointer; }
    that stops at the gutter reads as a finished row rather than one you can
    push, and the last circle sitting half off the screen is what says swipe.
    --------------------------------------------------------------------------- */
+/* No edge here either, and for the same reason: the first day band's rule is
+   the next line down the page. The rail is separated by its own air. */
 .tray {
   /* Positioned, because the arrows sit over its edges. */
   position: relative;
   margin: 0 -18px; padding: 8px 0 12px;
-  border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
 /* The arrows hang level with the circles rather than the labels under them,
