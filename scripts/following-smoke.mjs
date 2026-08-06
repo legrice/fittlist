@@ -152,8 +152,22 @@ if (!(await m.locator(".clspeek-btn", { hasText: "Share class" }).count()))
   fail("expected Share class");
 // The apostrophe is a curly one (&rsquo;), which a straight one in a regex
 // will not match. Match either.
-if (!(await m.locator(".clspeek-btn", { hasText: /See .*[\u2019'].?s week/ }).count()))
-  fail("expected the way to their week");
+// The depth is one tap behind the summary, in the same sheet rather than a
+// second one: a class had two designs for a while and two designs for one idea
+// is how they drift.
+if (!(await m.locator(".clspeek-btn", { hasText: "Full details" }).count()))
+  fail("expected Full details");
+await m.locator(".clspeek-btn", { hasText: "Full details" }).click();
+await m.locator(".clspeek-full").waitFor();
+await m.waitForTimeout(400);
+{
+  const outs = (await m.locator(".clspeek-out").allInnerTexts()).map((t) => t.trim());
+  console.log("full details:", outs.join(" | ") || "(no outs)");
+  if (!outs.some((o) => /week/.test(o))) fail("the depth should offer the coach's week");
+  // ...and it replaced the button it came from rather than stacking beside it.
+  if (await m.locator(".clspeek-btn", { hasText: "Full details" }).count())
+    fail("Full details should give way to what it opened");
+}
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-sheet.png" });
 
 // The range has an end, and the arrow greys rather than vanishing.

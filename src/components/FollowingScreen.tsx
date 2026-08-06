@@ -260,6 +260,9 @@ function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
     coach: coach ? { name: coach.name, handle: coach.handle } : null,
+    // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
+    // class, which is why the row carries it rather than the coach doing.
+    base: i.base,
     mine: false,
   };
 }

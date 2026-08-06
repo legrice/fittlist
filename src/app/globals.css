@@ -5548,3 +5548,29 @@ a.wkrow:active { transform: scale(.995); }
 .navtab.on .navface-photo, .navtab.on .navface-initial {
   box-shadow: 0 0 0 2px var(--si);
 }
+/* The depth, one tap behind the summary. It expands the sheet rather than
+   opening a second one: a class had two designs for a while, a summary here
+   and a full-screen overlay at its own URL, and two designs for one idea is
+   how they drift. */
+.clspeek-full { margin-top: 26px; }
+.clspeek-photo {
+  display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover;
+  border-radius: 22px; margin-bottom: 18px;
+}
+.clspeek-desc { margin: 0 0 18px; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+/* Booking leaves the app, so it looks like a door rather than a button. */
+.clspeek-link {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 15px 18px; margin-bottom: 10px; border-radius: 999px;
+  border: 2px solid var(--ink); color: var(--ink); text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px; font-weight: 900;
+}
+.clspeek-outs { margin-top: 4px; }
+.clspeek-out {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 15px 0; border-top: 1px solid var(--line);
+  color: var(--ink); text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px; font-weight: 900;
+}

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClass } from "@/app/actions/classes";
+import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { Icon } from "@/components/Icon";
 
 /**
@@ -33,6 +34,10 @@ export type PeekClass = {
   studio: string | null;
   /** Absent on your own class: the sheet you are looking at is yours. */
   coach?: { name: string; handle: string | null } | null;
+  /** Where the fuller detail is loaded from: a handle, or `s/{slug}` for a
+   *  gym's class. Without it the sheet stays a summary, which is all a row
+   *  built from a calendar the viewer already owns needs. */
+  base?: string;
   /** Your own class only. */
   repeats?: string | null;
   mine: boolean;
@@ -58,6 +63,19 @@ export function ClassPeek({
   const router = useRouter();
   const [confirm, setConfirm] = useState<"occurrence" | "all" | null>(null);
   const [pending, start] = useTransition();
+  // The depth, loaded only when somebody asks for it. Most taps are somebody
+  // checking a time, and a photograph and a description are a lot to send for
+  // that; this way the sheet is instant and the detail is one tap behind it.
+  const [full, setFull] = useState<ClassDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const openFull = () => {
+    if (full || loading || !cls.base) return;
+    setLoading(true);
+    classDetail(cls.base, cls.id, cls.iso)
+      .then((d) => setFull(d))
+      .finally(() => setLoading(false));
+  };
 
   const run = (scope: "occurrence" | "all") =>
     start(async () => {
@@ -149,11 +167,54 @@ export function ClassPeek({
             <button className="clspeek-btn si" onClick={onShare}>
               Share class
             </button>
-            {cls.coach?.handle && (
-              <a className="clspeek-btn ghost" href={`/${cls.coach.handle}`}>
-                See {firstName}&rsquo;s week
-              </a>
+            {/* The depth, rather than a jump to the coach. "See their week"
+                answered a question nobody asked from here: you tapped a class,
+                so the thing behind it should be more of that class. It is also
+                where the description, the photograph and the booking link
+                finally live, which used to need a second sheet of their own
+                and a second design with it. */}
+            {cls.base && !full && (
+              <button className="clspeek-btn ghost" onClick={openFull} disabled={loading}>
+                {loading ? "Opening…" : "Full details"}
+              </button>
             )}
+          </div>
+        )}
+
+        {full && (
+          <div className="clspeek-full">
+            {full.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="clspeek-photo" src={full.image} alt="" />
+            )}
+            {full.description && <p className="clspeek-desc">{full.description}</p>}
+            {/* Booking is somebody else's site, so it says whose. */}
+            {full.links.map((l) => (
+              <a
+                key={l.url}
+                className="clspeek-link"
+                href={l.url}
+                target="_blank"
+                rel="noopener nofollow"
+              >
+                Book via {l.label}
+                <Icon name="north_east" size={17} />
+              </a>
+            ))}
+            <div className="clspeek-outs">
+              {full.coachHandle && (
+                <a className="clspeek-out" href={`/${full.coachHandle}`}>
+                  See {firstName}&rsquo;s week
+                  <Icon name="chevron_right" size={18} />
+                </a>
+              )}
+              {full.studioHref && full.studioName && (
+                <a className="clspeek-out" href={full.studioHref}>
+                  {full.studioName}
+                  <Icon name="chevron_right" size={18} />
+                </a>
+              )}
+            </div>
           </div>
         )}
       </div>
