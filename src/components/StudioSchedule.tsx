@@ -1,6 +1,5 @@
 import { clockParts, todayIso } from "@/lib/format";
 import { ClassRow, DayBand } from "@/components/Agenda";
-import { ClassCardActions } from "@/components/ClassCardActions";
 import { ClassOpener } from "@/components/ClassOpener";
 
 export type StudioDay = {
@@ -114,17 +113,9 @@ export function StudioSchedule({
                         base: c.base ?? undefined,
                       }}
                     />
-                    {/* Nothing to add on a plain row: it is a fact about the
-                        studio with no class row behind it to mark. */}
-                    {!c.plain && (
-                      <ClassCardActions
-                        classId={c.id}
-                        iso={d.iso}
-                        name={c.name}
-                        canAdd={canAdd}
-                        initialOn={!!marks?.has(`${c.id}|${d.iso}`)}
-                      />
-                    )}
+                    {/* No ribbon. It put a class in your plans, and plans are
+                        gone: a member reads the week of the people they follow
+                        and has no calendar to add anything to. */}
                   </div>
                 );
               })}

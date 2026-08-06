@@ -5780,7 +5780,7 @@ a.clspeek-by:active { opacity: .6; }
 .dayband {
   position: sticky; top: var(--dayband-top, 56px); z-index: 6;
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  margin: 0 -18px; padding: 10px 18px;
+  margin: 0 -18px; padding: 7px 18px;
   background: var(--band);
   /* One rule, underneath. A band with a line above and below is a box drawn
      round a heading, and the gap over it is already the break. */
@@ -5789,7 +5789,7 @@ a.clspeek-by:active { opacity: .6; }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 15px; font-weight: 600; color: var(--ol);
+  font-size: 16px; font-weight: 500; color: var(--ol);
 }
 /* Today, and nothing else on the list, wears it. The word "Today" is already
    in the label; the dot is what makes the band findable in a scroll without
@@ -5872,10 +5872,12 @@ a.clspeek-by:active { opacity: .6; }
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
   border: var(--divw) solid var(--ink);
 }
+/* Square-ish, because what is inside is a glyph rather than a word: a pill
+   sized for "Month" and holding an icon is mostly empty pill. */
 .calseg button {
-  padding: 7px 17px; border-radius: 999px; border: none; background: none; cursor: pointer;
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 15.5px; font-weight: 700; color: var(--ink);
+  width: 40px; height: 34px; padding: 0; border-radius: 999px; border: none;
+  background: none; cursor: pointer; color: var(--ol);
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .calseg button.on { background: var(--ink); color: var(--paper); }
 

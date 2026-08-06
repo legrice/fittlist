@@ -164,13 +164,10 @@ export function ClassRow({
   ].filter(Boolean);
   const inner = (
     <>
-      {/* The coach's colour on merged lists; on your own calendar the kind
-          colours the bar through CSS, and an inline value would override it. */}
-      <span
-        className="ps-accent"
-        style={item.kind ? undefined : { background: item.coachColor }}
-        aria-hidden="true"
-      />
+      {/* The coloured bar down the left is gone. It said what a row was to
+          you, which mattered when one list could hold four kinds (teaching,
+          going, a shift, a private entry); every list holds one kind now, so
+          the bar was a legend of one drawn down every row. */}
       {/* The face is a column of its own now rather than a chip inside the
           name line: at card size it is the thing the eye lands on first, and
           inline it was a decoration on a line of grey text. A personal entry

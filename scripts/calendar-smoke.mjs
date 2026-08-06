@@ -93,16 +93,42 @@ await p.locator(".clline").first().waitFor();
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
+// No ribbon and no coloured bar, anywhere a class is listed. Both belonged to
+// the going marks this build removed: the ribbon put a class in your plans and
+// the bar said which of four kinds a row was, and there is one kind now.
+{
+  for (const sel of [".evcard-add", ".ps-accent", '[class*="bookmark"]']) {
+    if (await p.locator(sel).count()) fail("the calendar still draws " + sel);
+  }
+}
+
+// /app is the installed app's start_url and used to render the whole old
+// coach shell: two calendars, and the one most people opened was the one with
+// the ribbons and the bars still on it.
+await p.goto(BASE + "/app");
+await p.waitForURL(/\/calendar/);
+if (await p.locator(".ps-accent, .evcard-add").count())
+  fail("the old shell should be gone, not just hidden");
+console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
+
 // The title and the two views. The week stepper is gone: three weeks with an
 // arrow either side capped the calendar for no reason the data had, and asked
 // somebody to page through a thing they can scroll.
 {
   if (await p.locator(".wkarrow").count()) fail("the week stepper should be gone");
   await p.locator(".calbar-t", { hasText: "Calendar" }).waitFor();
-  const seg = (await p.locator(".calseg button").allInnerTexts()).map((t) => t.trim());
+  // Two glyphs rather than two words, so the label is the accessible name and
+  // the check reads that: a shape says which view it is better than a word
+  // does, and a screen reader gets nothing from a shape.
+  const seg = await p
+    .locator(".calseg button")
+    .evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
   console.log("views:", seg.join(" | "));
   if (seg.join() !== "List,Month") fail("expected List and Month, got " + seg.join());
-  if ((await p.locator(".calseg button.on").innerText()).trim() !== "List")
+  if ((await p.locator(".calseg button").count()) !== 2) fail("two views");
+  if (!(await p.locator(".calseg button svg").count()))
+    fail("the view switch should be glyphs");
+  if ((await p.locator(".calseg button.on").getAttribute("aria-label")) !== "List")
     fail("the list leads");
 }
 
@@ -154,13 +180,13 @@ await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png"
 // Month is the same rows, looked at differently, and a day in it comes back
 // to the list and lands on that day.
 {
-  await p.locator(".calseg button", { hasText: "Month" }).click();
+  await p.locator('.calseg button[aria-label="Month"]').click();
   await p.locator(".monthgrid").first().waitFor();
   if (await p.locator(".clline").count()) fail("Month replaces the list rather than joining it");
   if (!(await p.locator(".monthpill").count())) fail("the grid should carry the classes");
   await p.locator(".monthday:not([disabled])").first().click();
   await p.locator(".clline").first().waitFor();
-  if ((await p.locator(".calseg button.on").innerText()).trim() !== "List")
+  if ((await p.locator(".calseg button.on").getAttribute("aria-label")) !== "List")
     fail("tapping a day comes back to the list");
 }
 

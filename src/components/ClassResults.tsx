@@ -1,7 +1,6 @@
 "use client";
 
 import { Agenda, ClassRow } from "@/components/Agenda";
-import { ClassCardActions } from "@/components/ClassCardActions";
 import { ClassOpener } from "@/components/ClassOpener";
 import { fmtDayHeaderRel } from "@/lib/format";
 import type { DirClass } from "@/lib/discoverclasses";
@@ -39,7 +38,6 @@ export function ClassResults({
   todayIso: string;
   from: "discover" | "search";
 }) {
-  const byKey = new Map(classes.map((c) => [`${c.classId}|${c.iso}`, c]));
   return (
     <ClassOpener handle="">
       <Agenda
@@ -64,25 +62,10 @@ export function ClassResults({
             base: c.base,
           })),
         }))}
-        row={(item) => {
-          const src = byKey.get(item.key);
-          return (
-            <>
-              <ClassRow item={item} />
-              {/* The ribbon, the one control a class row carries anywhere.
-                  Not for one of your own. */}
-              {src && (
-                <ClassCardActions
-                  classId={src.classId}
-                  iso={src.iso}
-                  name={src.name}
-                  canAdd={!src.mine}
-                  initialOn={src.added}
-                />
-              )}
-            </>
-          );
-        }}
+        // No ribbon. It put a class in your plans, and plans are gone: a
+        // member reads the week of the people they follow and has no calendar
+        // to add anything to.
+        row={(item) => <ClassRow item={item} />}
       />
     </ClassOpener>
   );

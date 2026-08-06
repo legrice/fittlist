@@ -44,6 +44,7 @@ export function CalendarScreen({
   customTypes,
   lastUsed,
   subsCount,
+  openAdder = false,
 }: {
   classes: ClassDto[];
   todayIso: string;
@@ -52,10 +53,13 @@ export function CalendarScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
+  /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
+   *  carried through its redirect. */
+  openAdder?: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(openAdder);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
@@ -144,23 +148,31 @@ export function CalendarScreen({
       <CalSticky>
         <div className="calbar">
           <h1 className="calbar-t">Calendar</h1>
+          {/* Two glyphs rather than two words. A list and a month grid both
+              draw themselves in an icon better than they name themselves: the
+              shapes are the answer, where "List" and "Month" are two labels
+              you read to find out which one you are on. The words stay as the
+              accessible names, because a glyph on its own says nothing to a
+              screen reader. */}
           {!bare && (
             <div className="calseg" role="tablist" aria-label="Calendar view">
               <button
                 role="tab"
+                aria-label="List"
                 aria-selected={view === "list"}
                 className={view === "list" ? "on" : ""}
                 onClick={() => setView("list")}
               >
-                List
+                <Icon name="view_list" size={21} />
               </button>
               <button
                 role="tab"
+                aria-label="Month"
                 aria-selected={view === "month"}
                 className={view === "month" ? "on" : ""}
                 onClick={() => setView("month")}
               >
-                Month
+                <Icon name="calendar_month" size={21} />
               </button>
             </div>
           )}

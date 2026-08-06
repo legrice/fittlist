@@ -21,7 +21,15 @@ export const dynamic = "force-dynamic";
  * `/app` still resolves and lands here, because it is the installed app's
  * `start_url` and is in every bookmark a beta coach has.
  */
-export default async function CalendarPage() {
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ add?: string }>;
+}) {
+  // `?add=1` opens the adder on arrival. It is /app's old parameter, carried
+  // through its redirect, and it is what "Add a class" links out in the world
+  // still say.
+  const { add } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -109,6 +117,7 @@ export default async function CalendarPage() {
       customTypes={customTypeRows.map((r) => r.name)}
       lastUsed={lastUsed}
       subsCount={subRows.length}
+      openAdder={add === "1"}
     />
   );
 }
