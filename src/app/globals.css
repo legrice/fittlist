@@ -3225,27 +3225,37 @@ button.ps-card { cursor: pointer; }
 .pubhead-hero .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
 /* The corner controls ride the picture in white too. */
 .pubhead-hero .profgear { color: #fff; }
-/* The back circle was white on white the moment its glyph went white: over
-   the photo it goes dark glass instead, the way overlay chrome does. */
-.pubhead-hero .evback {
-  color: #fff; background: rgba(25, 21, 2, .34); border-color: transparent;
-  box-shadow: none;
-}
+/* The back circle keeps its ordinary drawing over the photo, by Matt's
+   call: a white circle with the arrow in ink. It went white-glyph with
+   everything else for a build and was a blank white disc. */
 /* The header floats on the photo: no ground of its own, the wordmark and the
    icons in white, and its scrim pinned with it (inside the bar, under its
    content, reaching a little past its bottom edge so the fade has room).
    The z-index makes the bar a stacking context, which is safe now that the
    directory sheet portals to the body. */
-.pub-hero { --wm-ink: #fff; }
+/* The whole lockup goes white on the photo: the words, the F, and the beta
+   tag flipped to white ground with ink text so it still reads as a chip. */
+.pub-hero { --wm-ink: #fff; --wm-mark: #fff; }
+.pub-hero .wm-beta { background: #fff; color: var(--ink); }
 .pub-hero .brandbar { background: transparent; z-index: 2; }
 .pub-hero .brandbar::before {
   content: ""; position: absolute; inset: 0 0 -30px; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
 }
 .pub-hero .brandbar-actions .iconbtn { color: #fff; }
-/* A stranger's bar sits on the photo the same way. */
-.pub-hero .pubtop { background: transparent; }
-.pub-hero .pubtop-login { border-color: rgba(255, 255, 255, .7); color: #fff; }
+/* A stranger's bar rides the photo the same way the app header does: pinned
+   at the top with the scrim inside it, the lockup in white (the --wm-ink
+   and --wm-mark the shell already set), and its margin dropped so the head's
+   measured top is exactly this bar's bottom edge. The Sign in pill stays the
+   ink fill: it is the one CTA up there and reads fine on a photograph. */
+.pub-hero .pubtop {
+  position: sticky; top: 0; z-index: 2;
+  margin-bottom: 0; padding-bottom: 12px;
+}
+.pub-hero .pubtop::before {
+  content: ""; position: absolute; inset: -20px -18px -30px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
+}
 /* Edit carries its word, so it is a pill in the same white as the dots. */
 .owneredit {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;

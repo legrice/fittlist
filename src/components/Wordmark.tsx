@@ -34,7 +34,10 @@ export function Wordmark({
         className="wm-ico"
         aria-hidden="true"
         dangerouslySetInnerHTML={{
-          __html: brandIcon(variant === "ink" ? "var(--si)" : "currentColor"),
+          // --wm-mark is the same escape hatch --wm-ink is, for the F: a
+          // surface floating over a photograph turns the whole lockup white
+          // by setting both on an ancestor.
+          __html: brandIcon(variant === "ink" ? "var(--wm-mark, var(--si))" : "currentColor"),
         }}
       />
       <span className="wm-text">FittList</span>

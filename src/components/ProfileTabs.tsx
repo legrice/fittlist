@@ -106,8 +106,13 @@ export function ProfileTabs({
   useEffect(() => {
     const el = headRef.current;
     if (!el) return;
-    const bar = document.querySelector<HTMLElement>(".brandbar");
-    const set = () => el.style.setProperty("--head-top", `${bar ? bar.offsetHeight : 0}px`);
+    // The app header signed in, the public bar for a stranger: whichever is
+    // above the head is what it pins under (and what the hero photo reaches
+    // up beneath). Its bottom edge is the head's natural top, because both
+    // bars pin at the very top themselves.
+    const bar = document.querySelector<HTMLElement>(".brandbar, .pubtop");
+    const set = () =>
+      el.style.setProperty("--head-top", `${bar ? Math.round(bar.getBoundingClientRect().bottom) : 0}px`);
     set();
     if (!bar) return;
     const ro = new ResizeObserver(set);
