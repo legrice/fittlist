@@ -5595,7 +5595,12 @@ button.ps-card { cursor: pointer; }
   position: fixed; left: 18px; bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 44; height: 56px; padding: 0 24px 0 20px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(255, 255, 255, .72); color: var(--ink); border: none;
+  /* An edge on the glass. Blur alone defines the pill only where the list
+     under it happens to give contrast, and over a quiet stretch of paper the
+     control dissolved; the hairline is what says where it stops, whatever is
+     scrolling underneath. */
+  background: rgba(255, 255, 255, .72); color: var(--ink);
+  border: 1px solid var(--div);
   cursor: pointer; text-decoration: none;
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
@@ -5730,6 +5735,9 @@ a.clspeek-by:active { opacity: .6; }
    without the control shouting over the week behind it. */
 .wkfab-find {
   background: rgba(255, 255, 255, .72); color: var(--si);
+  /* The same edge the Share pill wears, for the same reason: the two are one
+     family of control on two screens. */
+  border: 1px solid var(--div);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   box-shadow: 0 10px 28px rgba(25, 21, 2, .14);
