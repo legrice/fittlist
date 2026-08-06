@@ -163,7 +163,7 @@ export function CalendarScreen({
                 className={view === "list" ? "on" : ""}
                 onClick={() => setView("list")}
               >
-                <Icon name="view_list" size={21} />
+                <Icon name="list" size={21} />
               </button>
               <button
                 role="tab"

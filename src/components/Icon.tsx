@@ -94,23 +94,6 @@ import { X } from "@phosphor-icons/react/dist/ssr/X";
  * blank circle in the class photo picker for months.
  */
 
-/** The list view, drawn for this app rather than borrowed: two rules with a
- *  boxed band between them, which is a day's rows under a heading. */
-function ViewList({ size = 24, className = "" }: { size?: number; className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 12.67 10.67"
-      width={size}
-      height={size}
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12.67,9.33H0v1.33h12.67v-1.33ZM11.33,4v2.67H1.33v-2.67h10ZM12,2.67H.67c-.37,0-.67.3-.67.67v4c0,.37.3.67.67.67h11.33c.37,0,.67-.3.67-.67v-4c0-.37-.3-.67-.67-.67ZM12.67,0H0v1.33h12.67V0Z" />
-    </svg>
-  );
-}
-
 type Weight = "bold" | "fill";
 type Glyph = React.ComponentType<{ size?: number; weight?: Weight }>;
 
@@ -254,9 +237,6 @@ export function Icon({
    *  that a glyph looks the same everywhere it appears. */
   weight?: Weight;
 }) {
-  // Hand-drawn glyphs are their own components rather than set icons, so they
-  // are asked for before the map is.
-  if (name === "view_list") return <ViewList size={size} className={className} />;
   const Glyph = ICONS[name] ?? Circle;
   return (
     <span className={`icon ${className}`} style={{ width: size, height: size }} aria-hidden="true">

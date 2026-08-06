@@ -75,7 +75,7 @@ const missing = new Set();
 for (const f of walk("src").filter((f) => /\.tsx?$/.test(f))) {
   const body = readFileSync(f, "utf8");
   for (const [, n] of body.matchAll(/<Icon\s[^>]*?name="([a-z_0-9]+)"/g))
-    if (!seen.has(n) && n !== "view_list") missing.add(`${n} (${f})`);
+    if (!seen.has(n)) missing.add(`${n} (${f})`);
 }
 if (missing.size) fail("these names render a blank circle: " + [...missing].join(", "));
 
