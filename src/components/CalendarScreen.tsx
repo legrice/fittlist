@@ -96,6 +96,9 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
+            // An assigned shift says so above the name: which hat this row
+            // is comes before what the class is.
+            tag: c.shift ? "Shift" : undefined,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });

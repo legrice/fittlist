@@ -119,10 +119,16 @@ export function ClassPeek({
   const [sending, setSending] = useState(false);
   const [shiftErr, setShiftErr] = useState("");
 
+  // The base is an address ("s/{slug}" for a gym's class); classDetail wants
+  // the bare key it looks the owner up by. Conflating those two is how a
+  // shift's sheet loaded nothing: the lookup ran on "s/ironbound" and found
+  // neither a handle nor a slug.
+  const detailKey = cls.base?.replace(/^s\//, "");
+
   const openManage = () => {
-    if (loading || !cls.base) return;
+    if (loading || !detailKey) return;
     setLoading(true);
-    classDetail(cls.base, cls.id, cls.iso)
+    classDetail(detailKey, cls.id, cls.iso)
       // A shift with no rota block back means the gym has nothing to offer on
       // this date; the sheet still opens, with give-up as the one thing left.
       .then((d) => setManage(d?.shift ?? { onName: "", canGiveUp: true, canClaim: false, sendable: [] }))
@@ -213,10 +219,10 @@ export function ClassPeek({
   // booking door are the sheet rather than a second tap behind it. The
   // summary fields paint instantly from the row while it arrives.
   useEffect(() => {
-    if (!cls.base) return undefined;
+    if (!detailKey) return undefined;
     let live = true;
     setLoading(true);
-    classDetail(cls.base, cls.id, cls.iso)
+    classDetail(detailKey, cls.id, cls.iso)
       .then((d) => live && setFull(d))
       .finally(() => live && setLoading(false));
     return () => {
@@ -348,14 +354,9 @@ export function ClassPeek({
 
         {/* Your own class keeps its working controls above the footer: they
             are about changing the thing, where the footer is about handing
-            it on. */}
-        {cls.mine && cls.shift && (
-          <div className="clspeek-cta">
-            <button className="clspeek-btn ghost" onClick={openManage}>
-              {loading ? "Opening…" : "Manage shift"}
-            </button>
-          </div>
-        )}
+            it on. A shift's one control rides the footer instead, beside
+            Share, because give-up and transfer are what the footer's slot
+            means on a date that is yours to manage rather than book. */}
         {cls.mine && !cls.shift && (
           <>
             <div className="clspeek-cta">
@@ -379,6 +380,11 @@ export function ClassPeek({
           <button className="clsfull-btn dark" onClick={share}>
             Share
           </button>
+          {cls.mine && cls.shift && (
+            <button className="clsfull-btn manage" onClick={openManage}>
+              {loading ? "Opening…" : "Manage shift"}
+            </button>
+          )}
           {bookLinks.length > 0 && (
             <button className="clsfull-btn book" onClick={() => setBookOpen(true)}>
               Book

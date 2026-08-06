@@ -260,8 +260,9 @@ export function ShareHubScreen({
             {/* The card the mock drew: name, the ask, the code on white, the
                 address. A bare code is anybody's; this one says whose. */}
             <div className="qrcard">
+              {/* The name alone: "scan for my week" under it said what a QR
+                  code already says by existing, and came off by Matt's call. */}
               <div className="qrcard-nm">{name}</div>
-              <div className="qrcard-k">{coach ? "Scan for my week" : "Scan for my page"}</div>
               <div className="qrframe">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />

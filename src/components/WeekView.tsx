@@ -37,6 +37,9 @@ export type WeekRow = {
   ap: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
+  /** A word above the name saying which kind of yours this is: "Shift" on a
+   *  date a gym has you on. Which hat comes before what the class is. */
+  tag?: string;
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
@@ -123,6 +126,7 @@ export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean 
         )}
       </span>
       <span className="clline-main">
+        {row.tag && <span className="clline-tag">{row.tag}</span>}
         {row.coach && (
           <span className="clline-by">
             <span className="clline-av" style={{ background: row.coach.color }}>

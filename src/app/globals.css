@@ -5919,6 +5919,9 @@ button.ps-card { cursor: pointer; }
 }
 .clsfull-btn.dark { background: var(--ink); color: var(--paper); }
 .clsfull-btn.book { background: var(--si); color: #fff; }
+/* A shift's one act, in the footer slot a member's Book takes: the date is
+   yours to manage, not to book. */
+.clsfull-btn.manage { background: var(--si); color: #fff; }
 .clsfull-btn:active { transform: scale(.97); }
 .clspeek-grab {
   display: block; width: 44px; height: 5px; border-radius: 999px;
@@ -6071,8 +6074,8 @@ a.clspeek-by:active { opacity: .6; }
    ring (5px past the circle) was being cut off top, bottom and at the
    first swatch. Six of padding clears it. */
 .shcolors-row {
-  display: flex; gap: 10px; overflow-x: auto; padding: 6px;
-  margin: -6px 0; scrollbar-width: none;
+  display: flex; gap: 10px; overflow-x: auto; padding: 8px;
+  margin: -8px 0; scrollbar-width: none;
 }
 .shcolors-row::-webkit-scrollbar { display: none; }
 .shswatch {
@@ -6110,10 +6113,6 @@ a.clspeek-by:active { opacity: .6; }
 .qrcard-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 24px; font-weight: 600; letter-spacing: -.008em; color: var(--ink);
-}
-.qrcard-k {
-  margin-top: 4px; font-size: 12px; font-weight: 600; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ol);
 }
 .qrcard .qrframe { border: none; }
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
@@ -6322,6 +6321,13 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--ink); font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
 }
 .clline-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Which kind of yours a row is, above the name: an assigned shift wears the
+   word in the brand's wash, quiet enough that the name stays loudest. */
+.clline-tag {
+  align-self: flex-start; margin-bottom: 7px; padding: 3px 9px; border-radius: 999px;
+  background: color-mix(in srgb, var(--si) 13%, transparent); color: var(--si);
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+}
 /* The loudest thing on the screen, and the tracking is ordinary. The display
    type was set at -.025em, which is a headline's tracking applied to a list of
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
