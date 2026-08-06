@@ -5662,7 +5662,10 @@ button.ps-card { cursor: pointer; }
    carries on underneath it and the control reads as sitting above rather than
    cut into. The same reasoning Discover's filter pill has always used. */
 .wkshare {
-  position: fixed; left: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
+  /* The right corner, under the thumb: it is the calendar's one floating
+     control now that Add rides the title row, and the left corner is the
+     part of a phone a right thumb has to reach for. */
+  position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; height: 56px; padding: 0 24px 0 20px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 8px;
   color: var(--ink); border: none;

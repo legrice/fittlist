@@ -102,6 +102,10 @@ await p.locator(".clline").first().waitFor();
   if (word !== "Share") fail("the Share pill wears its word: " + word);
   if (href !== "/share") fail("Share opens the composer, got " + href);
   const box = await share.boundingBox();
+  // The right corner, under the thumb: it is the one floating control left
+  // on this screen now that Add rides the title row.
+  const vw = p.viewportSize().width;
+  if (!(box.x > vw / 2)) fail("Share should sit in the right corner, at x " + box.x);
   // Glass, not a solid slab: it floats over a list somebody is reading, and a
   // solid one there is a hole punched in the page.
   const blur = await share.evaluate(
