@@ -225,15 +225,15 @@ export function FollowingScreen({
  *  names the coach and offers their week rather than an edit. */
 function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
-  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase();
-  const md = d
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
-    .toUpperCase();
+  // Title case, because it is a value in the facts list now and reads beside
+  // "6:00 pm" and "Ironbound Performance Athletics", not above them.
+  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   return {
     id: i.classId,
     iso: i.iso,
     name: i.name,
-    when: `${dow} · ${md}`,
+    when: `${dow}, ${md}`,
     time: `${i.hm} ${i.ap.toLowerCase()}`,
     studio: i.where,
     coach: coach ? { name: coach.name, handle: coach.handle } : null,

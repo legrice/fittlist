@@ -181,16 +181,16 @@ export function CalendarScreen({
  *  because only the caller knows which date was tapped. */
 function peekOf(c: ClassDto, iso: string, where: string | null): PeekClass {
   const d = new Date(`${iso}T00:00:00Z`);
-  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase();
-  const md = d
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
-    .toUpperCase();
+  // Title case, because it is a value in the facts list now and reads beside
+  // "6:00 pm" and "Ironbound Performance Athletics", not above them.
+  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   const t = clockParts(c.startTime);
   return {
     id: c.id,
     iso,
     name: c.name,
-    when: `${dow} \u00b7 ${md}`,
+    when: `${dow}, ${md}`,
     time: `${t.hm} ${t.ap.toLowerCase()}`,
     studio: where,
     repeats: c.specificDate ? "Once" : "Weekly",

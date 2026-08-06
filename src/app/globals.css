@@ -5452,16 +5452,15 @@ a.wkrow:active { transform: scale(.995); }
 }
 .clspeek-head { display: flex; align-items: flex-start; gap: 14px; }
 .clspeek-titles { flex: 1; min-width: 0; }
-/* The date leads, small and tracked, because the sheet is about one occurrence
-   and the name alone does not say which. */
-.clspeek-when {
-  margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--ol);
-}
-/* Beats `.sheet h2`, which sets 22px/600 for every other sheet in the app.
+/* The name leads. The date was a tracked eyebrow above it for a build and is a
+   row in the facts now: it is a thing about this occurrence exactly like the
+   time and the studio are, and a small tracked line over a title reads as a
+   label on the sheet rather than as an answer to anything.
+
+   Beats `.sheet h2`, which sets 22px/600 for every other sheet in the app.
    This title is the sheet: the class name is what somebody tapped for. */
 .sheet .clspeek-nm, .clspeek-nm {
-  margin: 6px 0 0; padding-right: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  margin: 0; padding-right: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 34px; font-weight: 900; line-height: 1.02; letter-spacing: -.02em;
   color: var(--ink);
 }

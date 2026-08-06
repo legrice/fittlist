@@ -26,7 +26,8 @@ export type PeekClass = {
   id: string;
   iso: string;
   name: string;
-  /** "MON · AUG 3", already formatted by the caller that knows the date. */
+  /** "Wed, Aug 5". A fact about the class like the others, so it reads in the
+   *  same title case they do rather than as a tracked eyebrow. */
   when: string;
   time: string;
   studio: string | null;
@@ -85,7 +86,6 @@ export function ClassPeek({
         <span className="clspeek-grab" aria-hidden="true" />
         <div className="clspeek-head">
           <div className="clspeek-titles">
-            <p className="clspeek-when">{cls.when}</p>
             <h2 className="clspeek-nm">{cls.name}</h2>
           </div>
           <button className="clspeek-x" aria-label="Close" onClick={onClose}>
@@ -93,7 +93,16 @@ export function ClassPeek({
           </button>
         </div>
 
+        {/* The date is a row rather than an eyebrow over the title. It was a
+            small tracked line above the name, which read as a label on the
+            sheet; it is a fact about this occurrence exactly like the time and
+            the studio are, so it belongs in the list with them and leads it,
+            because which day is the first thing you check. */}
         <dl className="clspeek-facts">
+          <div className="clspeek-fact">
+            <dt>Date</dt>
+            <dd>{cls.when}</dd>
+          </div>
           {cls.coach && (
             <div className="clspeek-fact">
               <dt>Coach</dt>
@@ -153,7 +162,7 @@ export function ClassPeek({
         <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
           <div className="sheet confirmsheet">
             <h3>
-              {confirm === "occurrence" ? `Cancel ${cls.when.toLowerCase()}?` : `Delete ${cls.name}?`}
+              {confirm === "occurrence" ? `Cancel ${cls.when}?` : `Delete ${cls.name}?`}
             </h3>
             <p className="lead">
               {confirm === "occurrence"

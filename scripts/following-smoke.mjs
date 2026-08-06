@@ -128,7 +128,10 @@ await m.locator(".wkrow").first().click();
 await m.locator(".clspeek").waitFor();
 await m.waitForTimeout(500);
 const facts = (await m.locator(".clspeek-facts").innerText()).replace(/\s+/g, " ");
-console.log("sheet:", (await m.locator(".clspeek-when").innerText()).trim(), "|", facts);
+console.log("sheet:", (await m.locator(".clspeek-nm").innerText()).trim(), "|", facts);
+// The date is a row now, not an eyebrow over the title, and it leads the
+// facts because which day is the first thing anybody checks.
+if (!/^DATE/i.test(facts)) fail("the date should be the first fact: " + facts);
 if (!/COACH/i.test(facts)) fail("somebody else's class should name the coach");
 if (await m.locator(".clspeek-del").count()) fail("no delete on a class that is not yours");
 if (!(await m.locator(".clspeek-btn", { hasText: "Share class" }).count()))
