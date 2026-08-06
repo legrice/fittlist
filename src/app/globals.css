@@ -1078,6 +1078,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   display: grid; grid-template-columns: repeat(7, 1fr);
   margin-bottom: 2px; padding-bottom: 10px; text-align: center;
   font-size: 11px; font-weight: 600; color: var(--ol);
+  /* The pinned chrome's own edge: the grid scrolls up under this row, and
+     with nothing drawn here a half-cut month name read as a rendering bug
+     rather than as content sliding under the header. Gutter to gutter, the
+     same width the day bands' rules keep. */
+  border-bottom: var(--divw) solid var(--div);
 }
 .monthgrid { display: grid; grid-template-columns: repeat(7, 1fr); }
 .monthday {
