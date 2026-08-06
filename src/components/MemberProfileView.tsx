@@ -174,7 +174,7 @@ export async function MemberProfileView({
           ownerTop={
             isOwner ? (
               <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={22} />
+                <Icon name="settings" size={26} />
               </Link>
             ) : null
           }

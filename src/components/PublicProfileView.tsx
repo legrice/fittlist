@@ -359,10 +359,7 @@ export async function PublicProfileView({
                         <span className="clline-main">
                           <span className="clline-nm">{c.name}</span>
                           {where && (
-                            <span className="clline-w">
-                              <Icon name="place" size={17} />
-                              {where}
-                            </span>
+                            <span className="clline-w">{where}</span>
                           )}
                         </span>
                       </a>
@@ -510,7 +507,7 @@ export async function PublicProfileView({
           ownerTop={
             isOwner ? (
               <Link className="profgear" href="/settings" aria-label="Settings">
-                <Icon name="settings" size={22} />
+                <Icon name="settings" size={26} />
               </Link>
             ) : null
           }

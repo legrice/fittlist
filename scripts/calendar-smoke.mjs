@@ -116,6 +116,11 @@ await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png"
   if (!/\d+ CLASS(ES)?$/i.test(bands[0])) fail("a band counts its day: " + bands[0]);
   const dots = await p.locator(".dayband-dot").count();
   if (dots > 1) fail("only today wears a dot, got " + dots);
+  // Every band reads the same way, and the dot is what marks today: the words
+  // used to, which made two bands in a fortnight the odd ones out.
+  for (const band of bands)
+    if (!/^[A-Z][a-z]{2} \u2014 [A-Z][a-z]{2} \d{1,2}/.test(band))
+      fail("every band reads the same way, got " + band);
 }
 
 // The header and the bands both pin. This is the whole reason the calendar is

@@ -23,12 +23,21 @@
   /* The rule between rows, and its weight, as two tokens.
      They were one: every divider in the app was a 1px `--line`, the same
      hairline an input border wears, and a list of classes read as text
-     floating with faint gaps in it. A divider is doing more work than an
-     edge: it is what makes a list a list once the cards came off, so it is
-     darker and twice the weight. Keeping the input borders on `--line`
-     is what stops the forms going heavy with them. */
+     floating with faint gaps in it. A divider does more work than an edge: it
+     is what makes a list a list once the cards came off. So it is darker, and
+     keeping input borders on `--line` is what stops the forms going heavy
+     with it.
+
+     The weight went to 2px with the colour and came back to 1: at two, with
+     the type a weight lighter, the page read as ruled paper. Colour is what
+     separates a divider from an edge here, not thickness. The token stays
+     because one number for every rule in the app is worth having. */
   --div: #c9bc99;
-  --divw: 2px;
+  /* The day bands. Only just darker than the paper: a band is a break in a
+     scroll, and the whole of its job is done by being a shade off the page
+     with the date sitting quietly in it. At `--cl` it was a bar. */
+  --band: #f3efe3;
+  --divw: 1px;
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
   --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
@@ -86,7 +95,7 @@ a { color: inherit; }
    about 8% of padding, so it sits a touch shorter to read the same size. */
 .wm .wm-ico { display: block; height: .76em; flex-shrink: 0; }
 .wm .wm-ico svg { height: 100%; width: auto; display: block; }
-.wm .wm-text { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.02em; white-space: nowrap; }
+.wm .wm-text { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 1em; letter-spacing: -.008em; white-space: nowrap; }
 .wm .wm-beta {
   align-self: flex-start; margin-top: .05em; background: var(--si); color: #fff;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: .42em;
@@ -122,7 +131,7 @@ a { color: inherit; }
 .pagetoggle { display: flex; gap: 6px; }
 .pagetoggle a {
   padding: 8px 15px; border-radius: 999px; font-size: 14px; font-weight: 700;
-  color: var(--ol); text-decoration: none; border: 1.5px solid transparent;
+  color: var(--ol); text-decoration: none; border: 1px solid transparent;
 }
 .pagetoggle a.active { background: var(--ink); color: #fff; }
 [data-theme="poster"] .topnav { background: var(--pg-ground); }
@@ -132,7 +141,7 @@ a { color: inherit; }
 }
 @media (min-width: 940px) { .topnav { display: none; } }
 
-h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -.02em; line-height: 1.05; }
+h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -.008em; line-height: 1.05; }
 .daylabel {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; padding: 16px 0 8px;
@@ -178,13 +187,13 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 /* Headings and buttons sit at 600. 700 was doing the shouting for a typeface
    that doesn't need it, and at these sizes the lighter weight reads cleaner
    without giving up any of the hierarchy. */
-.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 31px; letter-spacing: -.025em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
+.ob h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 31px; letter-spacing: -.01em; line-height: 1.08; margin-bottom: 12px; color: var(--ink); }
 /* The one line the landing is built around, so it gets the room. */
-.ob h1.ob-hero { font-size: 46px; letter-spacing: -.035em; margin-bottom: 14px; }
+.ob h1.ob-hero { font-size: 46px; letter-spacing: -.006em; margin-bottom: 14px; }
 .ob p { font-size: 15px; color: var(--ol); line-height: 1.55; margin-bottom: 22px; }
 .ob p b { color: var(--ink); font-weight: 700; }
 .ob input {
-  width: 100%; padding: 15px 16px; border-radius: 16px; border: 1.5px solid var(--line);
+  width: 100%; padding: 15px 16px; border-radius: 16px; border: 1px solid var(--line);
   background: #fff; color: var(--ink); font-family: inherit; font-size: 17px; margin-bottom: 14px;
 }
 .ob input.code { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; letter-spacing: .5em; text-align: center; font-size: 20px; font-weight: 700; }
@@ -205,7 +214,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .obalts { display: flex; flex-direction: column; gap: 10px; }
 .obalt {
   display: flex; align-items: center; justify-content: center; gap: 9px;
-  width: 100%; padding: 13px; border-radius: 16px; border: 1.5px solid var(--line);
+  width: 100%; padding: 13px; border-radius: 16px; border: 1px solid var(--line);
   background: #fff; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 14px;
 }
 .obalt:active { background: #f3ecdf; }
@@ -230,7 +239,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .authforgot[disabled] { opacity: .5; }
 /* claim: fittlist.co/<handle> URL field */
 .urlfield {
-  display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 16px;
+  display: flex; align-items: center; border: 1px solid var(--line); border-radius: 16px;
   background: #fff; margin-top: 12px; overflow: hidden;
 }
 .urlfield:focus-within { border-color: var(--si); }
@@ -262,7 +271,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wizskip:active { color: var(--ink); }
 .wiz h1 {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 29px;
-  letter-spacing: -.025em; line-height: 1.08; margin-bottom: 10px; color: var(--ink);
+  letter-spacing: -.01em; line-height: 1.08; margin-bottom: 10px; color: var(--ink);
 }
 .wiz > .pad > p { font-size: 15px; color: var(--ol); line-height: 1.5; margin-bottom: 22px; }
 .wiz .flabel { margin-top: 16px; }
@@ -293,7 +302,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .wizstudio-txt .ad { display: block; font-size: 12px; color: var(--ol); margin-top: 1px; }
 .wizstudio-tick {
   width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
-  border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
   color: #fff;
 }
 .wizstudio.on .wizstudio-tick { background: var(--ink); border-color: var(--ink); }
@@ -380,7 +389,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   text-decoration: none;
 }
 .btn:active { transform: scale(.985); }
-.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .btn.si { background: var(--ink); color: var(--paper); }
 .btn[disabled] { opacity: .45; pointer-events: none; }
 
@@ -395,7 +404,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .linkcard .eyebrow { color: #c9c3ae; }
 .rowcta {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-  margin-top: 12px; border: 1.5px solid var(--ink); border-radius: 16px; padding: 14px 16px;
+  margin-top: 12px; border: 1px solid var(--ink); border-radius: 16px; padding: 14px 16px;
   text-decoration: none;
 }
 .rowcta .ig { font-size: 22px; }
@@ -406,7 +415,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .logoutbtn {
   display: block; box-sizing: border-box; text-align: center; text-decoration: none;
   width: 100%; margin-top: 18px; padding: 13px; border-radius: 16px;
-  border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
   font-family: inherit; font-weight: 600; font-size: 14px;
 }
 .logoutbtn:active { background: #f3ecdf; }
@@ -415,7 +424,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 .pub { background: var(--paper); min-height: 100dvh; }
 .pub .pubhero { padding: 26px 20px 18px; background: var(--ink); color: #fff; }
 .pub .pubhero .eyebrow { color: #c9c3ae; margin-bottom: 8px; }
-.pub .pubhero .big { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1; }
+.pub .pubhero .big { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.012em; line-height: 1; }
 .pub .pubhero .gyms { font-size: 13px; color: #c9c3ae; margin-top: 10px; line-height: 1.5; }
 .pub .pubbody { padding: 6px 18px 120px; }
 .booklink { display: inline-block; font-size: 12px; font-weight: 700; color: var(--si); margin-top: 7px; text-decoration: none; margin-right: 12px; }
@@ -479,7 +488,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .flabel { display: block; font-size: 12px; font-weight: 700; margin: 16px 0 7px; }
 .flabel span { color: var(--ol); font-weight: 400; }
 .adder input[type=text], .adder input[type=url] {
-  width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px;
+  width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .adder input:focus { outline: none; border-color: var(--si); }
@@ -487,17 +496,17 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .adder .sheet h2, .sheet.adder h2 { margin-bottom: 2px; }
 .namefield { position: relative; }
 .adder-card {
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   padding: 4px 16px 16px; margin-top: 14px;
 }
 .adder-card > .flabel:first-child { margin-top: 12px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.chip { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--ink); }
+.chip { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); }
 .chip:hover { border-color: var(--ink); }
 .chip.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
 .namesug {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 6;
-  background: #fff; border: 1.5px solid var(--line); border-radius: 16px; overflow: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
   box-shadow: 0 6px 20px rgba(17, 17, 17, .12); max-height: 240px; overflow-y: auto;
 }
 .namesug button {
@@ -517,20 +526,20 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .modetoggle { display: flex; gap: 6px; margin-top: 8px; }
 .modetoggle button {
-  flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 999px;
+  flex: 1; padding: 11px 0; border: 1px solid var(--line); border-radius: 999px;
   font-size: 12px; font-weight: 700; color: var(--ink);
 }
 .modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .daypick { display: flex; gap: 5px; }
 .daypick button {
-  flex: 1; padding: 11px 0; border: 1.5px solid var(--line); border-radius: 16px;
+  flex: 1; padding: 11px 0; border: 1px solid var(--line); border-radius: 16px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700;
 }
 .daypick button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .timegrid { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .timegrid .chip { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; }
 .timegrid input[type=time] {
-  padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 999px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; background: var(--card); color: var(--ink);
   /* iOS renders native time inputs at a fixed intrinsic width that ignores the
      grid track and overflows - flatten the appearance so width takes effect. */
@@ -547,7 +556,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .timegrid.two input[type=date] { width: 100%; }
 .timegrid input.timeinput { padding: 11px 14px; border-radius: 16px; }
 .timegrid input.timeinput:focus { outline: none; border-color: var(--si); }
-[data-theme="poster"] .timegrid input.timeinput { border: 1.5px solid var(--line); }
+[data-theme="poster"] .timegrid input.timeinput { border: 1px solid var(--line); }
 [data-theme="poster"] .timegrid input.timeinput:focus { border-color: var(--pg-day); }
 /* start + end side by side */
 /* two equal columns that actually shrink - native time inputs have a wide
@@ -567,7 +576,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .studio-sel {
   display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
-  border: 1.5px solid var(--line); border-radius: 16px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px;
 }
 .studio-sel:hover { border-color: var(--ink); }
 .studio-sel-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -609,7 +618,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* studio picker */
 .searchbox { position: relative; margin: 4px 0 8px; }
 .searchbox input {
-  width: 100%; padding: 13px 14px 13px 40px; border: 1.5px solid var(--line);
+  width: 100%; padding: 13px 14px 13px 40px; border: 1px solid var(--line);
   border-radius: 16px; font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .searchbox input:focus { outline: none; border-color: var(--si); }
@@ -629,7 +638,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* share story */
 .share-toggles { display: flex; gap: 8px; margin: 12px 0; }
 .chip.themechip { display: inline-flex; align-items: center; gap: 6px; }
-.chip.themechip .swd { width: 11px; height: 11px; border-radius: 16px; border: 2px solid; flex-shrink: 0; }
+.chip.themechip .swd { width: 11px; height: 11px; border-radius: 16px; border: 1px solid; flex-shrink: 0; }
 .seg { display: flex; background: var(--cl); border-radius: 999px; padding: 3px; gap: 3px; flex: 1; }
 .seg button { flex: 1; padding: 9px 0; border-radius: 999px; font-weight: 700; font-size: 13px; color: var(--ol); }
 .seg button.sel { background: var(--ink); color: #fff; }
@@ -1137,7 +1146,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* The calendar's name: the month, big enough to be the screen's title. */
 .calhead {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700; font-size: 27px; letter-spacing: -.02em;
+  font-weight: 700; font-size: 27px; letter-spacing: -.008em;
   margin: 18px 0 0;
 }
 /* Why the event is on your calendar, said once in the card's top-right
@@ -1185,7 +1194,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 .sidenav { display: none; }
 .weekgrid { display: block; }
 .daycol.nix { display: none; }
-.btn.cloudghost { background: transparent; color: #fff; border: 1.5px solid #c9c3ae; }
+.btn.cloudghost { background: transparent; color: #fff; border: 1px solid #c9c3ae; }
 
 @media (min-width: 940px) {
   .appshell { flex-direction: row; }
@@ -1252,12 +1261,12 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 /* v10: link rows */
 .linkrow { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
 .linkrow select {
-  padding: 11px 8px; border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 11px 8px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .linkfield { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; }
 .linkfield input {
-  width: 100%; padding: 11px 92px 11px 12px; border: 1.5px solid var(--line); border-radius: 16px;
+  width: 100%; padding: 11px 92px 11px 12px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; min-width: 0; background: var(--card); color: var(--ink);
   text-overflow: ellipsis;
 }
@@ -1270,7 +1279,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   pointer-events: none; max-width: 55%; white-space: nowrap; overflow: hidden;
 }
 .linkrow input {
-  flex: 1; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 16px;
+  flex: 1; padding: 11px 12px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; min-width: 0; background: var(--card); color: var(--ink);
 }
 .linkrow input:focus, .linkrow select:focus { outline: none; border-color: var(--si); }
@@ -1292,7 +1301,7 @@ input, select, textarea { font-size: max(1em, 16px); }
 }
 .bl-head h2 {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .86;
-  letter-spacing: -.03em; text-transform: uppercase; margin-top: 6px;
+  letter-spacing: -.012em; text-transform: uppercase; margin-top: 6px;
 }
 .bl-band {
   display: flex; gap: 16px; align-items: center; width: 100%; text-align: left;
@@ -1317,7 +1326,7 @@ button.bl-band { cursor: pointer; }
 }
 .bl-edit {
   margin-left: auto; align-self: flex-start; width: 32px; height: 32px; border-radius: 9px;
-  border: 2px solid var(--bfg); color: var(--bfg); display: grid; place-items: center; flex-shrink: 0;
+  border: 1px solid var(--bfg); color: var(--bfg); display: grid; place-items: center; flex-shrink: 0;
 }
 [data-theme="blocks"] .pub .pubhero .big { text-transform: uppercase; }
 
@@ -1356,7 +1365,7 @@ button.bl-band { cursor: pointer; }
   font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px;
 }
 .ps-h2 {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.03em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 46px; line-height: .84; letter-spacing: -.012em;
   text-transform: uppercase; color: var(--pg-cream); margin: 10px 0 18px;
 }
 /* schedule header: fittlist logo + profile icon up top, "My Schedule" below.
@@ -1373,7 +1382,7 @@ button.bl-band { cursor: pointer; }
 .brandbar .wordmark { font-size: 23px; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
 .calbar-title {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -.012em; line-height: 1;
   color: var(--ink); margin: 24px 0;
 }
 /* Dashboard strip under the header: quick links to the most-reached-for
@@ -1461,7 +1470,7 @@ button.bl-band { cursor: pointer; }
    shouts. The time beside it is still 700, so the row keeps a hierarchy. */
 .ps-enm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 17px; line-height: 1.15;
-  letter-spacing: -.015em; color: var(--ink);
+  letter-spacing: -.006em; color: var(--ink);
 }
 .ps-estudio { font-size: 13px; font-weight: 500; color: var(--ol); margin-top: 2px; }
 .ps-private {
@@ -1576,7 +1585,7 @@ button.bl-band { cursor: pointer; }
    three things on the card rather than the thing. */
 .ps-agenda .ps-enm {
   display: flex; align-items: center; gap: 8px;
-  font-weight: 700; font-size: 20px; line-height: 1.15; letter-spacing: -.018em;
+  font-weight: 700; font-size: 20px; line-height: 1.15; letter-spacing: -.008em;
 }
 .ps-agenda .ps-estudio {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 0;
@@ -1659,19 +1668,19 @@ button.ps-card { cursor: pointer; }
 [data-theme="poster"] .adder input[type=text], [data-theme="poster"] .adder input[type=url],
 [data-theme="poster"] .searchbox input, [data-theme="poster"] .linkrow input,
 [data-theme="poster"] .linkrow select, [data-theme="poster"] #ntEmail {
-  background: #fff; border: 1.5px solid var(--line);
+  background: #fff; border: 1px solid var(--line);
 }
 [data-theme="poster"] .adder input:focus, [data-theme="poster"] .searchbox input:focus,
 [data-theme="poster"] .linkrow input:focus, [data-theme="poster"] #ntEmail:focus {
   border-color: var(--pg-day);
 }
-[data-theme="poster"] .chip { background: #fff; border: 1.5px solid var(--line); }
+[data-theme="poster"] .chip { background: #fff; border: 1px solid var(--line); }
 [data-theme="poster"] .chip.sel { background: var(--pg-day); color: #fff; border-color: var(--pg-day); }
-[data-theme="poster"] .daypick button { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; }
+[data-theme="poster"] .daypick button { background: #fff; border: 1px solid var(--line); border-radius: 16px; }
 [data-theme="poster"] .daypick button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-[data-theme="poster"] .modetoggle button { background: #fff; border: 1.5px solid var(--line); border-radius: 999px; }
+[data-theme="poster"] .modetoggle button { background: #fff; border: 1px solid var(--line); border-radius: 999px; }
 [data-theme="poster"] .modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-[data-theme="poster"] .studio-sel { background: #fff; border: 1.5px solid var(--line); }
+[data-theme="poster"] .studio-sel { background: #fff; border: 1px solid var(--line); }
 [data-theme="poster"] .adder-card {
   background: #fff; border: none; border-radius: 16px;
   box-shadow: 0 1px 2px rgba(17, 17, 17, .06), 0 5px 16px rgba(17, 17, 17, .07);
@@ -1717,7 +1726,7 @@ button.ps-card { cursor: pointer; }
 .profhead { display: flex; align-items: flex-start; gap: 12px; }
 .profhead-txt { flex: 1; min-width: 0; }
 .profname {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -.03em; line-height: 1;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -.012em; line-height: 1;
   color: var(--ink); margin: 0;
 }
 /* What they do and where, on one line. They used to be two stacked lines with
@@ -1838,7 +1847,7 @@ button.ps-card { cursor: pointer; }
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
   border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper);
 }
 /* Your week (/week): the shortlist. A list, not a calendar — no grid, no empty
    days, and every row can leave. */
@@ -2166,7 +2175,7 @@ button.ps-card { cursor: pointer; }
 .mystudios .editinput { margin-top: 6px; }
 .mystudios-match {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   padding: 10px 14px; margin-top: 8px; cursor: pointer; color: var(--ink);
 }
 .mystudios-match:active { background: var(--cl); }
@@ -2176,7 +2185,7 @@ button.ps-card { cursor: pointer; }
 .studiofeedback { margin-top: 26px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .relpick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; margin-bottom: 4px; }
 .relchip {
-  padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--card); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
 }
@@ -2205,7 +2214,7 @@ button.ps-card { cursor: pointer; }
 .avphotodot-waitlist { background: #d98a2b; }
 /* The same dot on a 48px Discover avatar, scaled to match. */
 .disrow-avwrap { position: relative; flex-shrink: 0; display: flex; }
-.disrow-avwrap .avphotodot { top: 0; right: 0; width: 10px; height: 10px; border-width: 2px; }
+.disrow-avwrap .avphotodot { top: 0; right: 0; width: 10px; height: 10px; border-width: 1px; }
 /* The trigger picks up the avatar's bottom margin so the layout doesn't move;
    the img inside must not double it. */
 .avzoom-trigger .profav { margin-bottom: 0; }
@@ -2307,7 +2316,7 @@ button.ps-card { cursor: pointer; }
 .classsheet-wait { min-height: 220px; }
 .classsheet-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 26px; line-height: 1.1; letter-spacing: -.02em; margin: 10px 0 0; color: var(--ink);
+  font-size: 26px; line-height: 1.1; letter-spacing: -.008em; margin: 10px 0 0; color: var(--ink);
 }
 .classsheet-who {
   display: flex; align-items: center; gap: 8px; margin-top: 12px;
@@ -2338,7 +2347,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
   padding: 15px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
-  background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink);
+  background: var(--ink); color: var(--paper); border: 1px solid var(--ink);
   transition: transform .08s;
 }
 .classsheet-add:active { transform: scale(.97); }
@@ -2528,6 +2537,11 @@ button.ps-card { cursor: pointer; }
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
   padding-top: 78px; padding-bottom: 10px; position: relative;
 }
+/* On your own page there is no back arrow, so the photo can start level with
+   the gear across from it: two things at the top of the page, on one line. A
+   page with the arrow keeps the room, because the arrow is at the left and the
+   photo would sit on top of it. */
+.pubhead:not(:has(.profback)) { padding-top: 26px; }
 .pubhead:has(.profbanner) { padding-top: 0; }
 .pubhead .profname { font-size: 32px; line-height: 1.05; overflow-wrap: anywhere; }
 .pubhead .profname-row { justify-content: flex-start; }
@@ -2558,7 +2572,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 6px; height: 38px;
   padding: 0 16px; border-radius: 999px; cursor: pointer;
   /* White with a light outline; the horn keeps the brand orange. */
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 14px;
 }
 .sharepill .icon { color: var(--si); }
@@ -2647,7 +2661,7 @@ button.ps-card { cursor: pointer; }
   padding: 13px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
   transition: transform .08s;
-  border: 1.5px solid var(--line); background: transparent; color: var(--ink);
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
 }
 .actpill-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .actpill:active, .followpill:active { transform: scale(.97); }
@@ -2789,14 +2803,14 @@ button.ps-card { cursor: pointer; }
 .profrow-sub { font-size: 12px; color: var(--ol); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profrow-edit {
   flex-shrink: 0; font-weight: 700; font-size: 13px; color: var(--ink);
-  border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 16px;
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px;
 }
 .editphoto { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
 .editphoto-img { width: 72px; height: 72px; border-radius: 999px; object-fit: cover; flex-shrink: 0; font-size: 30px; }
 .editphoto-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .editphoto-actions .btn { width: auto; padding: 9px 16px; }
 .editinput {
-  width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
+  width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 16px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink);
 }
 .editinput:focus, .abouttext:focus { outline: none; border-color: var(--pg-day); }
@@ -2812,7 +2826,7 @@ button.ps-card { cursor: pointer; }
    and the input starts after it. */
 .editprefix-url {
   display: flex; align-items: center;
-  border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
+  border: 1px solid var(--line); border-radius: 16px; background: #fff;
   padding-left: 13px;
 }
 .editprefix-url .editprefix-at { position: static; transform: none; flex-shrink: 0; }
@@ -2824,7 +2838,7 @@ button.ps-card { cursor: pointer; }
 .editprefix-url:focus-within { border-color: var(--pg-day); }
 [data-mode="dark"] .editprefix-url { background: var(--card); }
 .abouttext {
-  width: 100%; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px; background: #fff;
+  width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 16px; background: #fff;
   font-family: inherit; font-size: 16px; color: var(--ink); resize: vertical; line-height: 1.5;
   /* A real box, always. Inside a sheet-full flex column a textarea's
      min-content height is one line, so it was silently squashed flat and
@@ -2849,7 +2863,7 @@ button.ps-card { cursor: pointer; }
   color: #191502; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .acctclose:active { background: #efe8d8; }
-.acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin: 0; }
+.acct-h { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; color: var(--ink); margin: 0; }
 /* Who this is, at the top of settings: face left, name and title beside it,
    Edit on the end. A row on the paper, not a card: it's the label on the
    drawer, and boxing it made it read as the first row of a list. */
@@ -2949,7 +2963,7 @@ button.ps-card { cursor: pointer; }
 .secrow-txt .s { font-size: 12px; color: var(--ol); margin-top: 1px; }
 .secbtn {
   flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
-  color: #191502; background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 18px;
+  color: #191502; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px;
 }
 .secbtn:active { background: #f3ecdf; }
 .secbtn[disabled] { opacity: .5; pointer-events: none; }
@@ -3045,7 +3059,7 @@ button.ps-card { cursor: pointer; }
 .availopt.sel .t, .availopt.sel .icon { color: var(--si); }
 /* adder: class Type dropdown */
 .typeselect {
-  width: 100%; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 16px;
+  width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; background: #fff; color: var(--ink); margin-top: 2px;
 }
 .typeselect:focus { outline: none; border-color: var(--si); }
@@ -3058,25 +3072,27 @@ button.ps-card { cursor: pointer; }
 .ownermore, .ownergear {
   /* White with the same light outline as the share pill beside it. */
   width: 38px; height: 38px; border-radius: 999px; background: var(--card);
-  border: 1.5px solid var(--line); color: var(--ink);
+  border: 1px solid var(--line); color: var(--ink);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
 }
 .ownermore:active, .ownergear:active { background: var(--cl); }
-/* The gear on your own profile, and the one door to settings there is now
-   that Profile is the tab and this page is what it opens. Same circle as the
-   studio's dots, because it sits in the same corner slot and doing the same
-   job; an anchor rather than a button, so it says so on its own. */
+/* The gear on your own profile, and the one door to settings there is now that
+   Profile is the tab and this page is what it opens.
+
+   No circle. It wore the studio page's dots treatment, white on a hairline,
+   which is right for one control among several and wrong for the only thing in
+   this corner: a ring drawn round a single glyph is a button explaining that a
+   glyph is a button. The mark carries itself at this size. */
 .profgear {
-  width: 38px; height: 38px; border-radius: 999px; background: var(--card);
-  border: 1.5px solid var(--line); color: var(--ink); text-decoration: none;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 40px; height: 40px; color: var(--ink); text-decoration: none;
+  display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;
 }
-.profgear:active { background: var(--cl); }
+.profgear:active { opacity: .55; }
 /* Edit carries its word, so it is a pill in the same white as the dots. */
 .owneredit {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
   height: 38px; padding: 0 14px; border-radius: 999px;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 13.5px; cursor: pointer;
 }
@@ -3152,7 +3168,7 @@ button.ps-card { cursor: pointer; }
   color: var(--ol); margin-bottom: 8px;
 }
 .evname {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 40px; line-height: .95; letter-spacing: -.035em;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 40px; line-height: .95; letter-spacing: -.006em;
   color: var(--ink);
 }
 /* Who teaches it — the page came from somewhere, and this is the way onward. */
@@ -3179,7 +3195,7 @@ button.ps-card { cursor: pointer; }
 .evsec { margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--line); }
 .evsec-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 22px;
-  letter-spacing: -.02em; color: var(--ink); margin-bottom: 10px;
+  letter-spacing: -.008em; color: var(--ink); margin-bottom: 10px;
 }
 .evdesc { font-size: 15px; line-height: 1.6; color: var(--ol); white-space: pre-wrap; }
 /* Secondary action row: Add to calendar + Share. Soft pills, no outlines —
@@ -3289,7 +3305,7 @@ button.ps-card { cursor: pointer; }
 .admintop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 /* A page title that follows the app header rather than starting the page. */
 .pagetop { margin-top: 20px; }
-.admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.03em; }
+.admin h1 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; }
 .adminsub { font-size: 12px; color: var(--ol); margin-top: 2px; word-break: break-all; }
 .adminback {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; text-decoration: none;
@@ -3371,7 +3387,7 @@ button.ps-card { cursor: pointer; }
 .adminaction { width: 100%; margin-top: 12px; }
 .adminlink { display: flex; gap: 8px; margin-top: 12px; }
 .adminlink input {
-  flex: 1; min-width: 0; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 12px;
+  flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px;
   font-family: inherit; font-size: 13px; background: var(--cl); color: var(--ink);
 }
 .adminlink .btn { width: auto; padding: 11px 18px; flex-shrink: 0; }
@@ -3565,6 +3581,7 @@ button.ps-card { cursor: pointer; }
   --ol: #a89f8a;
   --line: #35301f;
   --div: #4a4330;
+  --band: #221e12;
   --cl: #272115;
   --cl-d: #322b1b;
   --sa: #3d3826;
@@ -3724,14 +3741,14 @@ button.ps-card { cursor: pointer; }
 .stylepick { position: relative; }
 .stylepick-btn {
   width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 14px;
-  border: 1.5px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink);
   font-family: inherit; font-size: 16px; text-align: left;
 }
 .stylepick-lbl { flex: 1; min-width: 0; }
-.stylepick .swd { width: 18px; height: 18px; border-radius: 999px; border: 2px solid; flex-shrink: 0; }
+.stylepick .swd { width: 18px; height: 18px; border-radius: 999px; border: 1px solid; flex-shrink: 0; }
 .stylepick-menu {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 7;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   box-shadow: var(--soft-shadow-lg); max-height: 264px; overflow-y: auto;
 }
 .stylepick-row {
@@ -3749,7 +3766,7 @@ button.ps-card { cursor: pointer; }
 .linksfield { margin-top: 2px; }
 .linksfield-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
 }
 .linksfield-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .linksfield-txt .nm { font-weight: 700; font-size: 14px; color: var(--ink); }
@@ -3826,7 +3843,7 @@ button.ps-card { cursor: pointer; }
 }
 .feedav-all {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box;
-  background: var(--cl); color: var(--ink); border: 1.5px solid var(--line);
+  background: var(--cl); color: var(--ink); border: 1px solid var(--line);
 }
 /* The way to lengthen the rail, at the end of it. Dashed where All is solid:
    both are circles that are not a person, and the dash is what says this one
@@ -3977,7 +3994,7 @@ button.ps-card { cursor: pointer; }
 .navdot {
   position: absolute; top: -5px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px;
   border-radius: 999px; background: var(--go); color: #fff; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; border: 2px solid var(--paper);
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper);
 }
 .navtab:active { background: var(--cl); }
 /* the FAB clears the bar rather than sitting on it */
@@ -4207,7 +4224,7 @@ button.ps-card { cursor: pointer; }
    is chosen so the row says what it's showing without being read. */
 .discitysel {
   flex-shrink: 0; position: relative; display: flex; align-items: center;
-  height: 46px; border-radius: 999px; border: 1.5px solid var(--line);
+  height: 46px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--card); color: var(--ink);
   font-family: inherit; font-weight: 600; font-size: 13px; white-space: nowrap;
 }
@@ -4367,7 +4384,7 @@ button.ps-card { cursor: pointer; }
 @keyframes tapspin-in { from { opacity: 0; } to { opacity: 1; } }
 .tapspin {
   flex-shrink: 0; width: 15px; height: 15px; border-radius: 999px;
-  border: 2px solid var(--sa); border-top-color: var(--ink);
+  border: 1px solid var(--sa); border-top-color: var(--ink);
   animation: tapspin .6s linear infinite, tapspin-in .12s linear .18s both;
 }
 /* On a tab it sits over the icon rather than widening the row. */
@@ -4705,7 +4722,7 @@ button.ps-card { cursor: pointer; }
 .schedtool {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 15px; border-radius: 999px; cursor: pointer;
-  background: var(--card); border: 1.5px solid var(--line); color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 13.5px; white-space: nowrap; text-decoration: none;
 }
@@ -4874,7 +4891,7 @@ button.ps-card { cursor: pointer; }
 .hm-sechead { display: flex; align-items: baseline; justify-content: space-between; }
 .hm-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 19px; font-weight: 700; letter-spacing: -.02em; margin: 0;
+  font-size: 19px; font-weight: 700; letter-spacing: -.008em; margin: 0;
 }
 .hm-see {
   display: inline-flex; align-items: center; gap: 1px;
@@ -4906,7 +4923,7 @@ button.ps-card { cursor: pointer; }
   background: var(--cl); color: var(--ink);
   padding: 5px 10px; border-radius: 999px;
 }
-.hm-cardnm { font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.hm-cardnm { font-size: 17px; font-weight: 700; letter-spacing: -.008em; line-height: 1.15; }
 .hm-cardrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .hm-cardav {
   width: 22px; height: 22px; border-radius: 999px; overflow: hidden; flex: 0 0 auto;
@@ -4957,7 +4974,7 @@ button.ps-card { cursor: pointer; }
 }
 .hm-follow {
   font-size: 11.5px; font-weight: 700; font-family: inherit;
-  border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 12px;
+  border: 1px solid var(--ink); border-radius: 999px; padding: 4px 12px;
   background: none; color: var(--ink); cursor: pointer;
 }
 .hm-follow:active { transform: scale(.95); }
@@ -5076,7 +5093,7 @@ button.ps-card { cursor: pointer; }
 .acctinvite-txt { flex: 1; min-width: 0; }
 .acctinvite h3 {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600; font-size: 17px; letter-spacing: -.02em;
+  font-weight: 600; font-size: 17px; letter-spacing: -.008em;
 }
 .acctinvite p { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: var(--ol); }
 .acctinvite-btn {
@@ -5118,7 +5135,7 @@ button.ps-card { cursor: pointer; }
 .staffmenu { flex-shrink: 0; margin-left: 6px; }
 .staffadd { display: flex; gap: 8px; margin: 14px 0 26px; }
 .staffadd input {
-  flex: 1; min-width: 0; padding: 13px; border: 1.5px solid var(--line); border-radius: 16px;
+  flex: 1; min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; font-size: 16px; background: var(--card); color: var(--ink);
 }
 .staffadd input:focus { outline: none; border-color: var(--si); }
@@ -5145,7 +5162,7 @@ button.ps-card { cursor: pointer; }
 /* Activity as its own page. The rows are Home's, so only the heading is new. */
 .acthead {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600; font-size: 26px; letter-spacing: -.02em; margin: 4px 0 16px;
+  font-weight: 600; font-size: 26px; letter-spacing: -.008em; margin: 4px 0 16px;
 }
 
 /* The studio's shifts screen: the admin's named doors, the role tag on a
@@ -5202,7 +5219,7 @@ button.ps-card { cursor: pointer; }
    and the top level answers most of them without a tap. */
 .comprow {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 13px;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   font-family: inherit; cursor: pointer; text-align: left; color: var(--ink);
 }
 .comprow-t { flex: 1; font-size: 15px; font-weight: 700; }
@@ -5211,7 +5228,7 @@ button.ps-card { cursor: pointer; }
 /* The Style row carries the colour it is currently set to, because that is
    the one of the three whose answer is a thing to look at rather than read. */
 .comprow-sw { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
-.comprow-sw .swd { width: 22px; height: 22px; border-radius: 999px; border: 2px solid; }
+.comprow-sw .swd { width: 22px; height: 22px; border-radius: 999px; border: 1px solid; }
 
 /* ---------------------------------------------------------------------------
    The style picker: how loud, then which of three.
@@ -5277,7 +5294,7 @@ button.ps-card { cursor: pointer; }
 .dayrail::-webkit-scrollbar { display: none; }
 .daychip {
   flex: 0 0 auto; width: 52px; padding: 8px 0; border-radius: 14px;
-  border: 1.5px solid var(--line); background: var(--card); cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); cursor: pointer;
   font-family: inherit; color: var(--ink);
 }
 .daychip-dow {
@@ -5292,7 +5309,7 @@ button.ps-card { cursor: pointer; }
 .daychip.sel .daychip-dow { color: rgba(255, 255, 255, .82); }
 .lenchip {
   flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px;
-  border: 1.5px solid var(--line); background: var(--card); cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 700; color: var(--ink);
 }
@@ -5302,7 +5319,7 @@ button.ps-card { cursor: pointer; }
 .compwarn { background: var(--si); }
 .compcheck {
   width: 24px; height: 24px; border-radius: 7px; flex: 0 0 auto;
-  border: 1.7px solid rgba(25, 21, 2, .28); display: flex; align-items: center; justify-content: center; color: #fff;
+  border: 1px solid rgba(25, 21, 2, .28); display: flex; align-items: center; justify-content: center; color: #fff;
 }
 .compcheck.on { background: var(--si); border-color: var(--si); }
 .compnote { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ol); }
@@ -5509,7 +5526,7 @@ button.ps-card { cursor: pointer; }
 }
 .wkempty-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 25px; font-weight: 700; letter-spacing: -.015em; color: var(--ink);
+  font-size: 25px; font-weight: 700; letter-spacing: -.006em; color: var(--ink);
 }
 .wkempty-b { margin: 7px 0 0; font-size: 16px; line-height: 1.5; color: var(--ol); }
 .wkempty-cta { margin-top: 16px; width: auto; padding: 0 22px; }
@@ -5568,7 +5585,7 @@ button.ps-card { cursor: pointer; }
    This title is the sheet: the class name is what somebody tapped for. */
 .sheet .clspeek-nm, .clspeek-nm {
   margin: 0; padding-right: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -.02em;
+  font-size: 34px; font-weight: 700; line-height: 1.02; letter-spacing: -.008em;
   color: var(--ink);
 }
 /* Whose class it is, under the name. A by-line, not a field: the date, the
@@ -5626,8 +5643,8 @@ a.clspeek-by:active { opacity: .6; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 17px; font-weight: 700; cursor: pointer; text-decoration: none;
 }
-.clspeek-btn.si { background: var(--si); color: #fff; border: 2px solid var(--si); }
-.clspeek-btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+.clspeek-btn.si { background: var(--si); color: #fff; border: 1px solid var(--si); }
+.clspeek-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .clspeek-btn:active { transform: scale(.97); }
 /* The rarest of the three and the only one nothing undoes, so it is a link
    under the pair rather than a third button competing with them. */
@@ -5697,7 +5714,7 @@ a.clspeek-by:active { opacity: .6; }
 .clspeek-link {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 15px 18px; margin-bottom: 10px; border-radius: 999px;
-  border: 2px solid var(--ink); color: var(--ink); text-decoration: none;
+  border: 1px solid var(--ink); color: var(--ink); text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px; font-weight: 700;
 }
@@ -5763,21 +5780,23 @@ a.clspeek-by:active { opacity: .6; }
 .dayband {
   position: sticky; top: var(--dayband-top, 56px); z-index: 6;
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  margin: 0 -18px; padding: 11px 18px;
-  background: var(--cl);
-  border-top: var(--divw) solid var(--div); border-bottom: var(--divw) solid var(--div);
+  margin: 0 -18px; padding: 10px 18px;
+  background: var(--band);
+  /* One rule, underneath. A band with a line above and below is a box drawn
+     round a heading, and the gap over it is already the break. */
+  border-bottom: var(--divw) solid var(--div);
 }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -.01em;
+  font-size: 15px; font-weight: 600; color: var(--ol);
 }
 /* Today, and nothing else on the list, wears it. The word "Today" is already
    in the label; the dot is what makes the band findable in a scroll without
    reading any of them. */
 .dayband-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--si); }
 .dayband-n {
-  flex-shrink: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .1em;
+  flex-shrink: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .09em;
   text-transform: uppercase; color: var(--ol); white-space: nowrap;
 }
 
@@ -5804,12 +5823,14 @@ a.clspeek-by:active { opacity: .6; }
    rule immediately above a rule is one of them drawn twice. */
 .dayrows .clline:last-child { border-bottom: none; }
 .clline:active { opacity: .6; }
+/* The time is a caption on the name, not a heading of its own: it sat at the
+   display weight and competed with the class beside it. */
 .clline-t {
-  display: flex; align-items: baseline; gap: 2px; padding-top: 2px;
+  display: flex; align-items: baseline; gap: 2px; padding-top: 5px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 17px; font-weight: 700; color: var(--si); white-space: nowrap;
+  font-size: 16.5px; font-weight: 500; color: var(--si); white-space: nowrap;
 }
-.clline-ap { font-size: 11.5px; font-weight: 700; }
+.clline-ap { font-size: 11.5px; font-weight: 500; }
 .clline-main { min-width: 0; display: flex; flex-direction: column; }
 /* Whose class it is, above the name: which kind of row this is comes before
    what the row says. Following only. */
@@ -5823,9 +5844,12 @@ a.clspeek-by:active { opacity: .6; }
   color: var(--ink); font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
 }
 .clline-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The loudest thing on the screen, and the tracking is ordinary. The display
+   type was set at -.025em, which is a headline's tracking applied to a list of
+   real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
 .clline-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 25px; font-weight: 700; line-height: 1.08; letter-spacing: -.025em;
+  font-size: 27px; font-weight: 700; line-height: 1.1; letter-spacing: -.005em;
   color: var(--ink);
 }
 /* The studio, with a pin. The glyph is what stops it reading as a second line
@@ -5840,7 +5864,7 @@ a.clspeek-by:active { opacity: .6; }
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 34px; font-weight: 700; letter-spacing: -.03em; color: var(--ink);
+  font-size: 34px; font-weight: 700; letter-spacing: -.012em; color: var(--ink);
 }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. */

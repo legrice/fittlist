@@ -498,26 +498,22 @@ export function dayBandLabel(iso: string, today?: string): string {
   // do at this size, and a band that runs to "Wednesday" pushes its own date
   // toward the edge on a 390px screen.
   const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-  let lead = wd;
-  let rest = md;
-  if (today) {
-    const t = new Date(`${today}T00:00:00Z`);
-    t.setUTCDate(t.getUTCDate() + 1);
-    // A relative word leads, and the weekday it displaced joins the date, or
-    // "Today" would be the only band on the list not saying which day it is.
-    if (iso === today) {
-      lead = "Today";
-      rest = `${wd}, ${md}`;
-    } else if (iso === t.toISOString().slice(0, 10)) {
-      lead = "Tomorrow";
-      rest = `${wd}, ${md}`;
-    }
-  }
+  // Every band reads the same way: weekday, dash, date. "Today" and "Tomorrow"
+  // led their own bands for a long time, with the weekday they displaced
+  // pushed into the date so the day was still said. That was the right shape
+  // while the band was the only thing marking where you were in the list; the
+  // band carries a dot on today now, which says it without spending the label
+  // on it, and two bands out of a fortnight worded differently from the rest
+  // made the column of dates impossible to scan.
+  //
+  // `today` stays in the signature because every caller passes it and the dot
+  // is decided from the same value; it just no longer changes the words.
+  void today;
   // The date label's own dash, the same one fmtDayHeader carries and for the
   // same reason: a date is a label rather than a sentence, and this is the
   // shape it is wanted in.
   // check-copy-ignore
-  return `${lead} — ${rest}`;
+  return `${wd} — ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

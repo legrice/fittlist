@@ -139,6 +139,13 @@ const heads = (await m.locator(".dayband-d").allInnerTexts()).map((t) => t.trim(
 console.log("coming up rows:", rowsAll);
 console.log("headings:", heads.join(" | "));
 if (heads.length < 2) fail("expected a heading per day, got " + heads.join());
+// One wording for every band: weekday, dash, date. "Today" and "Tomorrow" led
+// their own for a long time, which made two bands out of a fortnight read
+// differently from the rest and the column of dates impossible to scan. The
+// dot on today says it instead.
+for (const h of heads)
+  if (!/^[A-Z][a-z]{2} \u2014 [A-Z][a-z]{2} \d{1,2}$/.test(h))
+    fail("every band reads the same way, got " + h);
 if (await m.locator(".wkarrow").count()) fail("Following is a list, so it has no week arrows");
 // No title and no count. "Coming up" said what the date headings say, and the
 // line under it counted the classes the rows are already showing: arithmetic

@@ -1,7 +1,5 @@
 "use client";
 
-import { Icon } from "@/components/Icon";
-
 /**
  * One list of classes, for every screen that draws one.
  *
@@ -98,7 +96,12 @@ export function ClassLine({ row }: { row: WeekRow }) {
       {/* The time, in its own column, top-aligned with whatever the row leads
           with. A column of times is scannable in a way a time tucked at the
           end of each line never is: you can find six o'clock without reading
-          a single class name. */}
+          a single class name.
+
+          The studio under the name carried a pin for a build. It came off: the
+          class name above it and the time beside it already say what each line
+          is, so the glyph was a mark explaining a thing that was not
+          ambiguous, repeated down every row of a long scroll. */}
       <span className="clline-t">
         {row.hm}
         <span className="clline-ap">{row.ap.toUpperCase()}</span>
@@ -119,10 +122,7 @@ export function ClassLine({ row }: { row: WeekRow }) {
         )}
         <span className="clline-nm">{row.name}</span>
         {row.where && (
-          <span className="clline-w">
-            <Icon name="place" size={17} />
-            {row.where}
-          </span>
+          <span className="clline-w">{row.where}</span>
         )}
       </span>
     </>
