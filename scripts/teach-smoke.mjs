@@ -96,7 +96,8 @@ if (!(await row.locator(".switch.on").count())) fail("the switch should read on"
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 3 || !t[0].includes("Calendar")) fail("expected a Calendar tab first, got " + t.join());
+if (t.length !== 3 || !t[0].includes("Following") || !t[1].includes("Calendar"))
+  fail("expected Following then Calendar, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.

@@ -43,8 +43,11 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    // Only for somebody who teaches, and first, because it is the thing they
-    // opened the app to do.
+    // Everyone you follow, as one week, and it leads now, by Matt's call:
+    // it is the only screen a member has, and for a coach it is the reading
+    // screen where the calendar is the working one.
+    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // Only for somebody who teaches.
     ...(coach
       ? [
           {
@@ -55,10 +58,6 @@ export function navTabs(
           },
         ]
       : []),
-    // Everyone you follow, as one week. It was deleted for a build while
-    // following delivered a face instead of a week; it delivers the week
-    // again, and this is the only screen a member has.
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab
