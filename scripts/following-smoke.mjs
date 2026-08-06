@@ -206,30 +206,19 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
-// Search is the floating circle over this list, wearing the calendar plus's
-// own dress: the brand fill with a white glyph, because finding a coach is
-// this screen's one act and orange is what the loudest call to action wears.
+// Search is a tab in the bar now, on every screen the bar shows, so the
+// floating circle that hovered over this one list is gone: the same act was
+// drawn twice on one screen.
 {
-  if (await m.locator(".navdock, .navfind").count())
-    fail("the dock's search circle should be gone");
-  const find = m.locator(".wkfab-find");
-  if (!(await find.count())) fail("the floating search circle should be back");
-  const look = await find.evaluate((e) => {
-    const cs = getComputedStyle(e);
-    return { bg: cs.backgroundColor, color: cs.color, bw: cs.borderTopWidth };
-  });
-  console.log("floating search:", look.bg, "|", look.color, "| border", look.bw);
-  // #C2410C
-  if (look.bg.replace(/\s/g, "") !== "rgb(194,65,12)")
-    fail("the circle should be the brand fill, got " + look.bg);
-  if (look.color.replace(/\s/g, "") !== "rgb(255,255,255)")
-    fail("the glyph should be white, got " + look.color);
-  if (parseFloat(look.bw) > 0) fail("the circle's stroke should be gone, got " + look.bw);
+  if (await m.locator(".navdock, .navfind, .wkfab-find").count())
+    fail("the older search doors should all be gone");
+  if (!(await m.locator('.navtab[data-tab="find"]').count()))
+    fail("Search should be a tab in the bar");
 }
 
-// The circle pulls the directory up over the week rather than navigating to
+// The tab pulls the directory up over the week rather than navigating to
 // it, and comes back down onto the list you were reading.
-await m.locator(".wkfab-find").click();
+await m.locator('.navtab[data-tab="find"]').click();
 await m.locator(".dissheet").waitFor();
 await m.waitForTimeout(900);
 {

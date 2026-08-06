@@ -33,7 +33,8 @@ const tabs = async () =>
 // A member: two tabs, and the Profile one wears their face rather than a glyph.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 2) fail("a member gets two tabs, got " + t.join());
+if (t.length !== 3) fail("a member gets three tabs, got " + t.join());
+if (!t[1].includes("Search")) fail("Search sits in the middle of a member's bar: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
@@ -96,8 +97,8 @@ if (!(await row.locator(".switch.on").count())) fail("the switch should read on"
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 3 || !t[0].includes("Following") || !t[1].includes("Calendar"))
-  fail("expected Following then Calendar, got " + t.join());
+if (t.length !== 4 || !t[0].includes("Following") || !t[1].includes("Calendar") || !t[2].includes("Search"))
+  fail("expected Following, Calendar, Search, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.
@@ -112,7 +113,7 @@ await p.locator(".setrow", { hasText: "I teach too" }).click();
 await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 2) fail("turning it off should take the tab away, got " + t.join());
+if (t.length !== 3) fail("turning it off should take the Calendar tab away, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");

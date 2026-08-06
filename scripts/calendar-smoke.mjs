@@ -387,19 +387,21 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// The header's magnifier opens the directory sheet from any tabbed screen,
+// The Search tab opens the directory sheet from any screen with the bar,
 // the calendar included: one act, one drawing of it, wherever you are
-// standing. The dock's separate circle is gone (three tabs and a circle read
-// as crammed), so the corner is the door again at every width.
+// standing. The header's magnifier yields to it below 940px, or the same
+// glyph would be drawn twice on one screen.
 await p.goto(BASE + "/calendar");
 if (await p.locator(".navfind").count())
   fail("the dock's search circle should be gone");
-await p.locator('.brandbar-actions .iconbtn[aria-label="Find coaches"]').click();
+if (await p.locator(".findbtn:visible").count())
+  fail("the header magnifier should yield to the Search tab on a phone");
+await p.locator('.navtab[data-tab="find"]').click();
 await p.locator(".dissheet").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the header's find should not navigate");
+if (!p.url().endsWith("/calendar")) fail("the Search tab should not navigate");
 await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the header's magnifier opens the directory over the calendar");
+console.log("the Search tab opens the directory over the calendar");
 
 // The card slides up over the header, and the calendar's title row is the
 // one piece of chrome that pins with the bands: without it, Month view has

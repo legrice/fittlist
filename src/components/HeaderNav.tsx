@@ -29,7 +29,11 @@ export function HeaderNav({
 
   return (
     <nav className="headnav" aria-label="Main">
-      {navTabs(coach, scheduleHref, profileHref).map((t) => {
+      {navTabs(coach, scheduleHref, profileHref)
+        // No Search link up here: the header's own magnifier is beside these
+        // links at this width, and the same act twice in one bar is noise.
+        .filter((t) => t.id !== "find")
+        .map((t) => {
         const cls = `headnav-l${here === t.id ? " on" : ""}`;
         const current = here === t.id ? "page" : undefined;
         return (

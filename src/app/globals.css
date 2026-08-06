@@ -6002,11 +6002,20 @@ a.clspeek-by:active { opacity: .6; }
    thumb between taps. */
 .trayitem.dim { opacity: .42; }
 .trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 600; }
-/* Search wears the same floating circle Add does, in the same corner, and
-   the same dress too, by Matt's call: .wkfab's own brand fill with a white
-   glyph, no overrides. Finding a coach is this screen's one act, exactly as
-   making a class is the calendar's, and orange is what the loudest call to
-   action wears. It was glass with an orange glyph for a build. */
+/* Following's floating search circle is gone again: Search is a tab in the
+   bar now, on every screen the bar shows, and a second door hovering over
+   one list was the same act drawn twice. The rail's plus and the empty
+   state's button still open the sheet, offers in context rather than
+   chrome. */
+/* The header's magnifier yields wherever the bar carries the Search tab
+   (the tabs shell, and your own profile, which is the one .pub page with
+   the bar): the same glyph twice on one screen is noise. Above 940px the
+   bar hides, the header links take over, and the corner takes the job
+   back. */
+.screen.hasnav .findbtn, .pub.ownbar .findbtn { display: none; }
+@media (min-width: 940px) {
+  .screen.hasnav .findbtn, .pub.ownbar .findbtn { display: flex; }
+}
 /* The Profile tab's face. Sized to the glyph beside it rather than to a
    header avatar, so the three tabs sit on one line: a picture that is even two
    pixels taller drags its label down and the row stops being a row. */

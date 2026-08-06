@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { BodyPortal } from "@/components/BodyPortal";
+import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -42,10 +45,36 @@ export function NavBar({
   face?: NavFace;
 }) {
   const here = activeTab(usePathname(), active);
+  const router = useRouter();
+  // Search rides the pill as a tab now, by Matt's call, third time asked and
+  // the first as part of the pill itself: it opens the directory sheet over
+  // wherever you are standing rather than navigating. The week behind the
+  // sheet is a server render, so closing is where it catches up.
+  const [find, setFind] = useState(false);
+  const closeFind = () => {
+    setFind(false);
+    router.refresh();
+  };
 
   return (
     <nav className="navbar" aria-label="Main">
       {navTabs(coach, scheduleHref, profileHref).map((t) => {
+        if (t.id === "find") {
+          return (
+            <button
+              key={t.id}
+              className={`navtab${find ? " on" : ""}`}
+              data-tab={t.id}
+              aria-expanded={find}
+              onClick={() => setFind(true)}
+            >
+              <span className="navglyph">
+                <Icon name={t.icon} size={26} />
+              </span>
+              <span>{t.label}</span>
+            </button>
+          );
+        }
         const on = here === t.id;
         const cls = `navtab${on ? " on" : ""}`;
         const isMe = t.id === "you" && !!face;
@@ -77,6 +106,11 @@ export function NavBar({
           </Link>
         );
       })}
+      {find && (
+        <BodyPortal>
+          <DiscoverSheet onClose={closeFind} />
+        </BodyPortal>
+      )}
     </nav>
   );
 }
