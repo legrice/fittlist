@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
@@ -103,6 +103,7 @@ export function ClassPeek({
   onToast: (msg: string) => void;
 }) {
   const router = useRouter();
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [confirm, setConfirm] = useState<"occurrence" | "all" | null>(null);
   const [pending, start] = useTransition();
   // The depth, loaded only when somebody asks for it. Most taps are somebody
@@ -153,6 +154,57 @@ export function ClassPeek({
       router.refresh();
     });
 
+  // The drawer pull works everywhere, not only on the handle: a downward
+  // drag anywhere on the sheet (with its own scroll at the top) follows the
+  // finger, and past a palm's width it lets go. Native listeners, because
+  // React's touchmove is passive and cannot preventDefault the scroll.
+  useEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return undefined;
+    let startY = 0;
+    let dy = 0;
+    let dragging = false;
+    const onStart = (e: TouchEvent) => {
+      if (el.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+      dy = 0;
+      dragging = true;
+      el.style.transition = "none";
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!dragging) return;
+      dy = e.touches[0].clientY - startY;
+      if (dy <= 0 || el.scrollTop > 0) {
+        el.style.transform = "";
+        return;
+      }
+      e.preventDefault();
+      el.style.transform = `translateY(${dy}px)`;
+    };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.style.transition = "transform .22s ease";
+      if (dy > 110) {
+        el.style.transform = "translateY(110%)";
+        setTimeout(onClose, 180);
+      } else {
+        el.style.transform = "";
+      }
+    };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchcancel", onEnd);
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // The depth loads the moment the sheet opens: this is the classic viewer
   // again, by Matt's call, so the photograph, the kicker, the address and the
   // booking door are the sheet rather than a second tap behind it. The
@@ -186,7 +238,8 @@ export function ClassPeek({
       /* dismissed the share tray */
     }
   };
-  const bookLink = !cls.mine ? full?.links[0] : undefined;
+  const bookLinks = !cls.mine ? (full?.links ?? []) : [];
+  const [bookOpen, setBookOpen] = useState(false);
 
   const run = (scope: "occurrence" | "all") =>
     start(async () => {
@@ -209,7 +262,7 @@ export function ClassPeek({
         if (e.target === e.currentTarget && !pending) onClose();
       }}
     >
-      <div className="sheet clspeek clsfull">
+      <div className="sheet clspeek clsfull" ref={sheetRef}>
         {/* The photograph leads when the class has one, running to the
             sheet's own top edge; the close floats on it as a white circle,
             where the classic viewer kept its corner controls. */}
@@ -315,18 +368,50 @@ export function ClassPeek({
           <button className="clsfull-btn dark" onClick={share}>
             Share
           </button>
-          {bookLink && (
-            <a
-              className="clsfull-btn book"
-              href={bookLink.url}
-              target="_blank"
-              rel="noopener nofollow"
-            >
+          {bookLinks.length > 0 && (
+            <button className="clsfull-btn book" onClick={() => setBookOpen(true)}>
               Book
-            </a>
+            </button>
           )}
         </div>
       </div>
+
+      {/* The booking doors, as a sheet: Book brings up the options rather
+          than jumping to somebody else's site unannounced, and each row says
+          whose site it opens. */}
+      {bookOpen && (
+        <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet clspeek">
+            <span className="clspeek-grab" aria-hidden="true" />
+            <div className="clspeek-head">
+              <div className="clspeek-titles">
+                <h2 className="clspeek-nm">Book</h2>
+              </div>
+              <button className="clspeek-x" aria-label="Close" onClick={() => setBookOpen(false)}>
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+            <div className="settingslist" style={{ marginTop: 22 }}>
+              {bookLinks.map((l) => (
+                <a
+                  key={l.url}
+                  className="setrow"
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener nofollow"
+                >
+                  <span className="setrow-txt">
+                    <span className="t">Book via {l.label}</span>
+                  </span>
+                  <span className="setrow-chev">
+                    <Icon name="north_east" size={20} />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {manage && (
         <div className="sheet-scrim" onClick={(e) => e.stopPropagation()}>

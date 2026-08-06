@@ -2746,14 +2746,20 @@ button.ps-card { cursor: pointer; }
    tight to the word for the same reason, because a glyph with a tab's worth
    of air on either side reads as a fourth tab. Brand orange, which is the
    one colour on this row that says "there is something to tap here". */
+/* A tab and its info dot as one capsule: the wash draws around the pair, so
+   the dot reads as part of the tab rather than a fourth one beside it. The
+   dot is quiet gray, not the brand: it explains, it does not call. */
+.pubtab-pair { display: inline-flex; align-items: center; border-radius: 999px; }
+.pubtab-pair.sel { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.pubtab-pair.sel .pubtab.sel { background: transparent; }
 .pubtab-info {
   display: inline-flex; align-items: center; align-self: stretch;
-  padding: 11px 4px 11px 0; margin-left: -9px;
-  color: var(--si); cursor: pointer;
+  padding: 11px 14px 11px 0; margin-left: -8px;
+  color: var(--ol); cursor: pointer;
 }
-/* No underline riding with it any more: the tabs are pills now, and the
-   3px rule it used to ink in with drew a stray dash beside the wash. */
 .pubtab-info:active { opacity: .6; }
+/* The badge above the name: the claim leads the identity it speaks for. */
+.profbadges-top { display: flex; margin-bottom: 10px; }
 .profbadges-onbanner .kindtag { background: rgba(255, 255, 255, .92); }
 /* The corner controls sit on the picture when there is one. They ride the
    content gutter, not their own inset: stepping in from the photo's edge put
@@ -3238,6 +3244,7 @@ button.ps-card { cursor: pointer; }
    into the flow, which is why an owner's head ran taller than a visitor's. */
 .pubhead-hero > .profname-row,
 .pubhead-hero > .profmeta,
+.pubhead-hero > .profbadges-top,
 .pubhead-hero > .profacts { position: relative; }
 /* The photo runs past the head's bottom edge, under the card: the card's
    rounded corners and the gap above it show photograph rather than shell,
@@ -5842,7 +5849,9 @@ button.ps-card { cursor: pointer; }
    --------------------------------------------------------------------------- */
 .clsfull { position: relative; }
 .clsfull-photo {
-  display: block; margin: -12px -20px 0; width: calc(100% + 40px);
+  /* Air under the picture: without it the title sat flush against the
+     photograph's bottom edge. */
+  display: block; margin: -12px -20px 20px; width: calc(100% + 40px);
   height: 250px; object-fit: cover; border-radius: 16px 16px 0 0;
 }
 .clsfull-x { position: absolute; top: 14px; right: 16px; z-index: 3; }
@@ -5853,7 +5862,9 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
 }
 .clsfull-kick {
-  margin: 20px 0 6px; font-size: 12.5px; font-weight: 600;
+  /* No top margin of its own: the photo's air (or the grab handle's) is
+     already above it, and the pair stacked to a gulf. */
+  margin: 0 0 6px; font-size: 12.5px; font-weight: 600;
   letter-spacing: .09em; text-transform: uppercase; color: var(--ol);
 }
 /* Clear the floating X when there is no photo pushing the title down. */

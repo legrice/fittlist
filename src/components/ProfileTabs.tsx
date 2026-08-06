@@ -136,8 +136,12 @@ export function ProfileTabs({
   // The first tab is the bare URL: it's what the link is for, and an About page
   // somebody hasn't filled in is an awkward first thing to land on. The old
   // suffix still resolves, because people have already sent that link.
-  const tabLink = (t: TabDef, i: number) => (
-    <Fragment key={t.key}>
+  // A tab with an info dot wraps the pair, so the pill's wash draws around
+  // both and the dot reads as part of the tab rather than a fourth one. The
+  // dot stays a sibling of the link inside it: a button in a link is not a
+  // thing.
+  const tabLink = (t: TabDef, i: number) => {
+    const link = (
       <Link
         href={i === 0 ? base : `${base}/${t.key}`}
         aria-current={tab === t.key ? "page" : undefined}
@@ -148,9 +152,15 @@ export function ProfileTabs({
       >
         {t.label}
       </Link>
-      {t.info}
-    </Fragment>
-  );
+    );
+    if (!t.info) return <Fragment key={t.key}>{link}</Fragment>;
+    return (
+      <span key={t.key} className={`pubtab-pair${tab === t.key ? " sel" : ""}`}>
+        {link}
+        {t.info}
+      </span>
+    );
+  };
 
   return (
     <>
@@ -186,11 +196,11 @@ export function ProfileTabs({
           </div>
         )}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
-        {/* The badge rides with the name and wraps under it when the name is
-            long, rather than being pushed down the page by the lines between. */}
+        {/* The badge sits above the name, by Matt's call: the claim leads
+            the identity it speaks for. */}
+        {badges && <div className="profbadges-top">{badges}</div>}
         <div className="profname-row">
           <h1 className="profname">{name}</h1>
-          {badges}
         </div>
         {/* What they do and where, on one line and quieter than the name. */}
         {(title.trim() || location.trim()) && (

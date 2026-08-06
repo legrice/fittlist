@@ -317,22 +317,12 @@ export async function StudioView({
                   aria-hidden="true"
                 />
               )}
-              {/* The badge rides the banner's bottom-left, above the name:
-                  the claim (or its absence) sits on the thing it speaks
-                  for. */}
-              <span className="profbadges profbadges-onbanner">
-                <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
-              </span>
             </span>
           }
           backTo={backTo}
-          // On the hero the banner never renders, so the badge moves up
-          // beside the name; its white pill already reads over a photograph.
-          badges={
-            s.photo ? (
-              <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
-            ) : null
-          }
+          // Above the name on every skin, hero and banner alike; the white
+          // pill already reads over a photograph.
+          badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />}
           ownerTop={
             /* Everything you can do with a studio, behind one set of dots:
                share, suggest, report, and for coaches the edit. */
