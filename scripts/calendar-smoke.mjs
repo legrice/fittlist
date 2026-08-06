@@ -73,9 +73,9 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// The two floating controls, in the two bottom corners. Add is the loud one
-// in the brand colour; Share is white with the sparkle carrying the colour,
-// and it wears its word because a sparkle on its own is a decoration.
+// The two floating controls, in the two bottom corners. Add is the loud one in
+// the brand colour; Share is glass with the sparkle carrying the colour, and it
+// wears its word because a sparkle on its own is a decoration.
 {
   if (!(await p.locator(".wkfab").count())) fail("the plus should be back once there is a week");
   const share = p.locator(".wkshare");
@@ -90,6 +90,12 @@ await p.locator(".clline").first().waitFor();
   if (!(box.x < fab.x)) fail("Share is the left corner and Add the right");
   if (Math.abs(box.y + box.height - (fab.y + fab.height)) > 6)
     fail("the two should sit on one line");
+  // Glass, not a solid slab: it floats over a list somebody is reading, and a
+  // solid one there is a hole punched in the page.
+  const blur = await share.evaluate(
+    (e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter,
+  );
+  if (!/blur/.test(blur ?? "")) fail("the Share pill should be glass, got " + blur);
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -132,14 +138,17 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
     fail("the list leads");
 }
 
-// Every day is banded, with its date and its count, and today wears a dot.
+// Every day is banded, and today wears a dot.
 {
   const bands = (await p.locator(".dayband").allInnerTexts()).map((t) =>
     t.replace(/\s+/g, " ").trim(),
   );
   console.log("bands:", bands.slice(0, 3).join(" | "));
   if (!bands.length) fail("the list should band its days");
-  if (!/\d+ CLASS(ES)?$/i.test(bands[0])) fail("a band counts its day: " + bands[0]);
+  // The date and nothing else. It counted the day's classes across from the
+  // date, which is arithmetic done at somebody who can see the rows directly
+  // underneath it.
+  if (/class/i.test(bands[0])) fail("a band is the date, not a count: " + bands[0]);
   const dots = await p.locator(".dayband-dot").count();
   if (dots > 1) fail("only today wears a dot, got " + dots);
   // Every band reads the same way, and the dot is what marks today: the words

@@ -329,9 +329,6 @@ export async function PublicProfileView({
                     {fmtDayHeaderRel(d.iso, today)}
                     {d.iso === today && <span className="dayband-dot" aria-hidden="true" />}
                   </span>
-                  <span className="dayband-n">
-                    {d.items.length} {d.items.length === 1 ? "class" : "classes"}
-                  </span>
                 </div>
                 <div className="dayrows">
                   {d.items.map((c) => {

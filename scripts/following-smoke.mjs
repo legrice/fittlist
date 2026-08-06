@@ -182,6 +182,21 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
+// The search button is the one act this screen offers: glass over the list it
+// floats on, with the glyph in the brand colour rather than the ground.
+{
+  const fab = m.locator(".wkfab-find");
+  const look = await fab.evaluate((e) => {
+    const cs = getComputedStyle(e);
+    return { blur: cs.backdropFilter || cs.webkitBackdropFilter, color: cs.color };
+  });
+  console.log("search fab:", look.blur, look.color);
+  if (!/blur/.test(look.blur ?? "")) fail("the search button should be glass, got " + look.blur);
+  // #C2410C
+  if (look.color.replace(/\s/g, "") !== "rgb(194,65,12)")
+    fail("the search glyph should be brand orange, got " + look.color);
+}
+
 // Search pulls the directory up over the week rather than navigating to it,
 // the way the plus pulls up the adder on the calendar, and comes back down
 // onto the list you were reading.

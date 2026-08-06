@@ -12,9 +12,8 @@
  *
  * The layout is built for reading down a long scroll:
  *
- *   * A full-bleed band per day, in the cream, with the date at the gutter and
- *     the count across from it. It pins under the chrome, so the day you are
- *     looking at is always named.
+ *   * A band per day, the date at the gutter and a rule under it. It pins
+ *     under the chrome, so the day you are looking at is always named.
  *   * A time gutter down the left, so the times line up as a column and the
  *     eye can run down them without reading a single class name.
  *   * The class name is the loudest thing on the screen, because this is a
@@ -53,18 +52,22 @@ export type WeekDayRows = {
   rows: WeekRow[];
 };
 
-/** The band: the date, a dot if it is today, and how many classes. It bleeds
- *  to both edges and pins under the chrome, which is what makes it read as a
- *  break in the scroll rather than a heading floating over some rows. */
-export function DayBand({ label, today, count }: { label: string; today?: boolean; count: number }) {
+/** The band: the date, and a dot if it is today. It bleeds to both edges and
+ *  pins under the chrome, which is what makes it read as a break in the scroll
+ *  rather than a heading floating over some rows.
+ *
+ *  It counted the day's classes across from the date for a while. That is
+ *  arithmetic done at somebody who can see the rows: they are directly
+ *  underneath, there are rarely more than three, and a number beside every
+ *  heading down a long scroll is a second thing to read on a line whose whole
+ *  job is one date. The list said this once before, about the same count on
+ *  the same kind of band, and it is worth only saying once more. */
+export function DayBand({ label, today }: { label: string; today?: boolean }) {
   return (
     <div className="dayband">
       <span className="dayband-d">
         {label}
         {today && <span className="dayband-dot" aria-hidden="true" />}
-      </span>
-      <span className="dayband-n">
-        {count} {count === 1 ? "class" : "classes"}
       </span>
     </div>
   );
@@ -78,7 +81,7 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
         /* The id is the scroll landing: tapping a day in the month grid
            comes back to the list and lands on it. */
         <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
-          <DayBand label={d.label} today={d.today} count={d.rows.length} />
+          <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
             {d.rows.map((r) => (
               <ClassLine key={r.key} row={r} />
