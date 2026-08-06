@@ -4347,7 +4347,13 @@ button.ps-card { cursor: pointer; }
 .distabs { padding-top: 0; margin-bottom: 2px; }
 .distabs .pubtab { font-size: 16px; }
 .dischips {
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 8px; align-items: center;
+  /* Sideways only. `overflow-x: auto` alone makes the row an implicit
+     vertical scroller too, and iOS could leave it scrolled a few pixels
+     down, cropping every chip to a sliver along its bottom edge: the rail
+     read as hidden behind something. Pinning the vertical axis shut and
+     the height to the chips' own makes that state unrepresentable. */
+  overflow-x: auto; overflow-y: hidden; height: 42px; scrollbar-width: none;
   margin: 12px calc(50% - 50vw) 14px; padding: 2px 18px;
 }
 .dischips::-webkit-scrollbar { display: none; }
