@@ -238,27 +238,28 @@ await p.locator(".clline").first().click();
 await p.locator(".clspeek").waitFor();
 await p.waitForTimeout(400);
 {
-  const facts = (await p.locator(".clspeek-facts").innerText()).replace(/\s+/g, " ");
-  console.log("sheet:", (await p.locator(".clspeek-nm").innerText()).trim(), "|", facts);
-  if (!/^DATE/i.test(facts)) fail("the date leads the facts: " + facts);
-  if (!/TIME/i.test(facts) || !/STUDIO/i.test(facts)) fail("expected time and studio: " + facts);
-  if (/COACH/i.test(facts)) fail("your own class does not name you: " + facts);
+  await p.locator(".clsfull-fact").first().waitFor();
+  const factRows = await p.locator(".clsfull-fact .t").allInnerTexts();
+  console.log("sheet:", (await p.locator(".clspeek-nm").innerText()).trim(), "|", factRows.join(" / "));
+  if (!/[A-Z][a-z]+, [A-Z]/.test(factRows[0] ?? ""))
+    fail("the date leads the facts: " + factRows.join());
   if (await p.locator(".clspeek-by").count()) fail("no by-line on your own class");
   // The studio is a door here too.
   const st = await p.locator(".clspeek-door").getAttribute("href");
   if (!/^\/s\//.test(st ?? "")) fail("the studio should open its page, got " + st);
   if (!(await p.locator(".clspeek-btn", { hasText: "Edit" }).count())) fail("expected Edit");
-  if (!(await p.locator(".clspeek-btn", { hasText: "Cancel class" }).count()))
-    fail("expected Cancel class");
+  if (!(await p.locator(".clspeek-btn", { hasText: "Cancel this date" }).count()))
+    fail("expected Cancel this date");
   if (!(await p.locator(".clspeek-del").count())) fail("expected the quiet delete");
-  if (await p.locator(".clspeek-btn", { hasText: "Full details" }).count())
-    fail("your own class has no depth to open: you wrote it");
+  // Your own footer is Share alone: there is nothing for you to book.
+  if (!(await p.locator(".clsfull-btn.dark").count())) fail("expected the ink Share");
+  if (await p.locator(".clsfull-btn.book").count()) fail("no Book on your own class");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-sheet.png" });
 
 // Cancelling one date takes that row off and leaves the rest of the class.
 const before = await p.locator(".clline").count();
-await p.locator(".clspeek-btn", { hasText: "Cancel class" }).click();
+await p.locator(".clspeek-btn", { hasText: "Cancel this date" }).click();
 await p.locator(".confirmsheet").waitFor();
 await p.locator(".confirmsheet .btn.si").click();
 // The sheet closes, then the week catches up on a refresh: wait for the row

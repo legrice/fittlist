@@ -255,19 +255,17 @@ await m.locator(".dissheet .sheetclose").click();
 await m.waitForTimeout(300);
 if (await m.locator(".dissheet").count()) fail("the close should put it away");
 
-// A class opens to say when, where and whose, and offers no way to add it.
+// A class opens as the classic viewer in a sheet: the facts with their
+// glyphs, the by-line, and the pinned footer, all at once rather than a
+// summary with the depth a tap behind it.
 await m.locator(".clline").first().click();
 await m.locator(".clspeek").waitFor();
-await m.waitForTimeout(500);
-const facts = (await m.locator(".clspeek-facts").innerText()).replace(/\s+/g, " ");
-console.log("sheet:", (await m.locator(".clspeek-nm").innerText()).trim(), "|", facts);
-// The date is a row now, not an eyebrow over the title, and it leads the
-// facts because which day is the first thing anybody checks.
-if (!/^DATE/i.test(facts)) fail("the date should be the first fact: " + facts);
-// Date, time, studio, and nothing else. The coach came out of the list and
-// is the by-line under the name: a person is not the same kind of answer as
-// a time, and in the list they read as a fourth field.
-if (/COACH/i.test(facts)) fail("the coach is a by-line, not a fact: " + facts);
+await m.waitForTimeout(700);
+const factRows = await m.locator(".clsfull-fact .t").allInnerTexts();
+console.log("sheet:", (await m.locator(".clspeek-nm").innerText()).trim(), "|", factRows.join(" / "));
+// The date leads the facts, because which day is the first thing checked.
+if (!/[A-Z][a-z]+, [A-Z]/.test(factRows[0] ?? ""))
+  fail("the date should lead the facts: " + factRows.join());
 {
   const by = (await m.locator(".clspeek-by").innerText()).trim();
   const href = await m.locator("a.clspeek-by").getAttribute("href");
@@ -279,25 +277,15 @@ if (/COACH/i.test(facts)) fail("the coach is a by-line, not a fact: " + facts);
   if (!/^\/s\//.test(st ?? "")) fail("the studio should open its page, got " + st);
 }
 if (await m.locator(".clspeek-del").count()) fail("no delete on a class that is not yours");
-if (!(await m.locator(".clspeek-btn", { hasText: "Share class" }).count()))
-  fail("expected Share class");
-// The apostrophe is a curly one (&rsquo;), which a straight one in a regex
-// will not match. Match either.
-// The depth is one tap behind the summary, in the same sheet rather than a
-// second one: a class had two designs for a while and two designs for one idea
-// is how they drift.
-if (!(await m.locator(".clspeek-btn", { hasText: "Full details" }).count()))
-  fail("expected Full details");
-await m.locator(".clspeek-btn", { hasText: "Full details" }).click();
-await m.locator(".clspeek-full").waitFor();
-await m.waitForTimeout(400);
+// The footer: Share in ink, and no Book on a class with no booking link.
 {
-  // The depth replaced the button it came from rather than stacking beside it.
+  if (!(await m.locator(".clsfull-btn.dark", { hasText: "Share" }).count()))
+    fail("expected the ink Share in the footer");
+  if (await m.locator(".clsfull-btn.book").count())
+    fail("no Book on a class without a booking link");
   if (await m.locator(".clspeek-btn", { hasText: "Full details" }).count())
-    fail("Full details should give way to what it opened");
-  // The two ways out are still up at the top, on the things they are about.
-  if (!(await m.locator("a.clspeek-by").count())) fail("the by-line should survive the expand");
-  console.log("full details opened, doors still on the by-line and the studio");
+    fail("the depth is the sheet now, not a button");
+  console.log("classic viewer: facts, by-line, and a Share-only footer");
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-sheet.png" });
 

@@ -37,6 +37,7 @@ const LIST_DAYS = 56;
 type View = "list" | "month";
 
 export function CalendarScreen({
+  handle,
   classes,
   todayIso,
   studios,
@@ -46,6 +47,9 @@ export function CalendarScreen({
   subsCount,
   openAdder = false,
 }: {
+  /** Your own handle: the base your classes' detail loads from, so the sheet
+   *  can show the photograph and the About you wrote, and Share has a URL. */
+  handle?: string | null;
   classes: ClassDto[];
   todayIso: string;
   studios: StudioDto[];
@@ -93,7 +97,7 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
-            onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null)),
+            onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
       if (rows.length)
@@ -295,6 +299,7 @@ function peekOf(
   iso: string,
   where: string | null,
   whereHref: string | null,
+  handle?: string | null,
 ): PeekClass {
   const d = new Date(`${iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list and reads beside
@@ -316,7 +321,7 @@ function peekOf(
     // coach can do with a date they are on is give it up or hand it over.
     shift: c.shift,
     // A shift's page lives under the studio, because that is who owns it.
-    base: c.shift ? (c.shiftBase ? `s/${c.shiftBase}` : undefined) : undefined,
+    base: c.shift ? (c.shiftBase ? `s/${c.shiftBase}` : undefined) : (handle ?? undefined),
     mine: true,
   };
 }

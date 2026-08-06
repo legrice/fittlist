@@ -110,6 +110,7 @@ export default async function CalendarPage({
 
   return (
     <CalendarScreen
+      handle={me.handle}
       classes={classes}
       todayIso={todayIso()}
       studios={studios}

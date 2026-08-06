@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
@@ -153,13 +153,40 @@ export function ClassPeek({
       router.refresh();
     });
 
-  const openFull = () => {
-    if (full || loading || !cls.base) return;
+  // The depth loads the moment the sheet opens: this is the classic viewer
+  // again, by Matt's call, so the photograph, the kicker, the address and the
+  // booking door are the sheet rather than a second tap behind it. The
+  // summary fields paint instantly from the row while it arrives.
+  useEffect(() => {
+    if (!cls.base) return undefined;
+    let live = true;
     setLoading(true);
     classDetail(cls.base, cls.id, cls.iso)
-      .then((d) => setFull(d))
-      .finally(() => setLoading(false));
+      .then((d) => live && setFull(d))
+      .finally(() => live && setLoading(false));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cls.id, cls.iso, cls.base]);
+
+  // Hand the picture on: the caller's sheet when it has one, the native
+  // share (or the clipboard) pointed at the class page when it doesn't.
+  const share = async () => {
+    if (onShare) return onShare();
+    const url = full?.shareUrl;
+    if (!url) return;
+    try {
+      if (navigator.share) await navigator.share({ url });
+      else {
+        await navigator.clipboard.writeText(url);
+        onToast("Link copied, ready to paste");
+      }
+    } catch {
+      /* dismissed the share tray */
+    }
   };
+  const bookLink = !cls.mine ? full?.links[0] : undefined;
 
   const run = (scope: "occurrence" | "all") =>
     start(async () => {
@@ -182,151 +209,123 @@ export function ClassPeek({
         if (e.target === e.currentTarget && !pending) onClose();
       }}
     >
-      <div className="sheet clspeek">
-        <span className="clspeek-grab" aria-hidden="true" />
-        <div className="clspeek-head">
-          <div className="clspeek-titles">
-            <h2 className="clspeek-nm">{cls.name}</h2>
-            {/* Whose class it is, as a by-line under the name rather than a
-                row down in the facts. A person is not the same kind of answer
-                as a time or a date: the other three are properties of the
-                occurrence, and this one is somebody you can go and look at.
-                Putting it in the list made it read as a fourth field and
-                spent a whole row on it; here it wears their face, sits where
-                a by-line sits, and is the door to their week. */}
-            {cls.coach && <CoachBy coach={cls.coach} />}
-          </div>
-          <button className="clspeek-x" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={20} />
-          </button>
-        </div>
+      <div className="sheet clspeek clsfull">
+        {/* The photograph leads when the class has one, running to the
+            sheet's own top edge; the close floats on it as a white circle,
+            where the classic viewer kept its corner controls. */}
+        {full?.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="clsfull-photo" src={full.image} alt="" />
+        )}
+        <button
+          className={`clspeek-x clsfull-x${full?.image ? " onphoto" : ""}`}
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <Icon name="close" size={20} />
+        </button>
+        {!full?.image && <span className="clspeek-grab" aria-hidden="true" />}
 
-        {/* The date is a row rather than an eyebrow over the title. It was a
-            small tracked line above the name, which read as a label on the
-            sheet; it is a fact about this occurrence exactly like the time and
-            the studio are, so it belongs in the list with them and leads it,
-            because which day is the first thing you check. */}
-        <dl className="clspeek-facts">
-          <div className="clspeek-fact">
-            <dt>Date</dt>
-            <dd>{cls.when}</dd>
-          </div>
-          <div className="clspeek-fact">
-            <dt>Time</dt>
-            <dd>{cls.time}</dd>
+        {full?.classType && <p className="clsfull-kick">{full.classType}</p>}
+        <h2 className="clspeek-nm">{cls.name}</h2>
+        {cls.coach && <CoachBy coach={cls.coach} />}
+
+        {/* The facts, the classic way: a glyph, the fact, its detail under
+            it. The date leads because which day is the first thing checked. */}
+        <div className="clsfull-facts">
+          <div className="clsfull-fact">
+            <span className="clsfull-ic" aria-hidden="true">
+              <Icon name="calendar_today" size={22} />
+            </span>
+            <span className="clsfull-txt">
+              <span className="t">{full?.dateLong ?? cls.when}</span>
+              <span className="s">
+                {full ? `${full.time} · ${full.durationMin} min` : cls.time}
+              </span>
+            </span>
           </div>
           {cls.studio && (
-            <div className="clspeek-fact">
-              <dt>Studio</dt>
-              {/* A door where there is a page behind it, plain text where
-                  there isn't: a class's own free-text location names a room
-                  rather than a place with a page. */}
-              <dd>
+            <div className="clsfull-fact">
+              <span className="clsfull-ic" aria-hidden="true">
+                <Icon name="place" size={22} />
+              </span>
+              <span className="clsfull-txt">
                 {cls.studioHref ? (
                   <a className="clspeek-door" href={cls.studioHref}>
-                    {cls.studio}
+                    <span className="t">{cls.studio}</span>
                     <Icon name="chevron_right" size={19} />
                   </a>
                 ) : (
-                  cls.studio
+                  <span className="t">{cls.studio}</span>
                 )}
-              </dd>
+                {full?.studioAddress && <span className="s">{full.studioAddress}</span>}
+              </span>
             </div>
           )}
           {cls.mine && cls.repeats && (
-            <div className="clspeek-fact">
-              <dt>Repeats</dt>
-              <dd>{cls.repeats}</dd>
+            <div className="clsfull-fact">
+              <span className="clsfull-ic" aria-hidden="true">
+                <Icon name="event" size={22} />
+              </span>
+              <span className="clsfull-txt">
+                <span className="t">Repeats</span>
+                <span className="s">{cls.repeats}</span>
+              </span>
             </div>
           )}
-        </dl>
+        </div>
 
-        {cls.mine && cls.shift ? (
-          <>
-            <div className="clspeek-cta">
-              <button className="clspeek-btn si" onClick={onShare}>
-                Share class
-              </button>
-              <button className="clspeek-btn ghost" onClick={openManage}>
-                {loading ? "Opening…" : "Manage shift"}
-              </button>
-            </div>
-          </>
-        ) : cls.mine ? (
+        {full?.description && (
+          <div className="clsfull-about">
+            <h3>About</h3>
+            <p>{full.description}</p>
+          </div>
+        )}
+
+        {/* Your own class keeps its working controls above the footer: they
+            are about changing the thing, where the footer is about handing
+            it on. */}
+        {cls.mine && cls.shift && (
+          <div className="clspeek-cta">
+            <button className="clspeek-btn ghost" onClick={openManage}>
+              {loading ? "Opening…" : "Manage shift"}
+            </button>
+          </div>
+        )}
+        {cls.mine && !cls.shift && (
           <>
             <div className="clspeek-cta">
               <button className="clspeek-btn ghost" onClick={onEdit}>
                 Edit
               </button>
-              <button className="clspeek-btn si" onClick={() => setConfirm("occurrence")}>
-                Cancel class
+              <button className="clspeek-btn ghost" onClick={() => setConfirm("occurrence")}>
+                Cancel this date
               </button>
             </div>
-            {/* The whole thing off, as a link rather than a third button: it
-                is the rarest of the three and the only one that cannot be
-                undone by adding the date back. */}
             <button className="clspeek-del" onClick={() => setConfirm("all")}>
               Delete from my week
             </button>
           </>
-        ) : (
-          <div className="clspeek-cta">
-            <button className="clspeek-btn si" onClick={onShare}>
-              Share class
-            </button>
-            {/* The depth, rather than a jump to the coach. "See their week"
-                answered a question nobody asked from here: you tapped a class,
-                so the thing behind it should be more of that class. It is also
-                where the description, the photograph and the booking link
-                finally live, which used to need a second sheet of their own
-                and a second design with it. */}
-            {cls.base && !full && (
-              <button className="clspeek-btn ghost" onClick={openFull} disabled={loading}>
-                {loading ? "Opening…" : "Full details"}
-              </button>
-            )}
-          </div>
         )}
 
-        {full && (
-          <div className="clspeek-full">
-            {full.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="clspeek-photo" src={full.image} alt="" />
-            )}
-            {full.description && <p className="clspeek-desc">{full.description}</p>}
-            {/* Booking is somebody else's site, so it says whose. */}
-            {full.links.map((l) => (
-              <a
-                key={l.url}
-                className="clspeek-link"
-                href={l.url}
-                target="_blank"
-                rel="noopener nofollow"
-              >
-                Book via {l.label}
-                <Icon name="north_east" size={19} />
-              </a>
-            ))}
-            {/* The two ways out of here used to be rows at the bottom of the
-                depth: the coach's week, and the studio's page. Both moved up
-                to the things they are about, the by-line under the name and
-                the studio in the facts, which is where somebody reading
-                either one is already looking. A door at the end of a
-                photograph and a paragraph is a door behind a scroll.
-
-                Which leaves this able to open onto nothing, for a class with
-                no picture, no words and no booking link. It says so rather
-                than expanding to an empty gap: a button that appears to do
-                nothing is worse than one that tells you there is nothing. */}
-            {!full.image && !full.description && full.links.length === 0 && (
-              <p className="clspeek-none">
-                Nothing else on this one. The coach hasn&rsquo;t added a description or a booking
-                link.
-              </p>
-            )}
-          </div>
-        )}
+        {/* The footer, pinned to the sheet's bottom edge: Share in ink on
+            the left, Book in the brand colour on the right when the class
+            has a booking door, and Share alone when it doesn't. */}
+        <div className="clsfull-cta">
+          <button className="clsfull-btn dark" onClick={share}>
+            Share
+          </button>
+          {bookLink && (
+            <a
+              className="clsfull-btn book"
+              href={bookLink.url}
+              target="_blank"
+              rel="noopener nofollow"
+            >
+              Book
+            </a>
+          )}
+        </div>
       </div>
 
       {manage && (
