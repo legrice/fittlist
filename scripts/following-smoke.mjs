@@ -94,7 +94,7 @@ await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-empty.png
 // for existing: the empty state's own button opens it, you follow somebody in
 // it, and closing brings the week behind it up to date. A page that stayed
 // empty after three follows would read as a follow that did nothing.
-await m.locator(".wkempty-cta", { hasText: "Find coaches" }).click();
+await m.locator(".wkempty-cta", { hasText: "Find a coach" }).click();
 await m.locator(".dissheet").waitFor();
 await m.waitForTimeout(900);
 await m.locator(".dissheet .disrow", { hasText: "Nadia Haq" }).getByRole("button").first().click();

@@ -5800,20 +5800,24 @@ button.ps-card { cursor: pointer; }
 
 /* A week with nothing in it, as a screen rather than an apology. Dashed,
    because a solid card would look like something that failed to load. */
+/* The empty state, on the reference Matt sent: the figure, a centred title
+   and line, and one full-width call. The dashed box came off (a border
+   around an empty state read as a form asking to be filled in), and centred
+   replaced left-set: this is the one screen about nothing, so it gets the
+   symmetry. */
 .wkempty {
-  margin-top: 22px; padding: 26px 22px; border-radius: 26px;
-  border: 1.5px dashed var(--line); text-align: left;
+  margin-top: 22px; padding: 26px 22px; text-align: center;
 }
-/* The figure, back on the first-run empty states: it was Following's and
-   then nobody's when the old screens went. Centred over left-set words is
-   deliberate, a drawing is not a paragraph. */
-.wkempty-fig { display: block; margin: 4px auto 22px; height: 190px; width: auto; }
+.wkempty-fig { display: block; margin: 12px auto 26px; height: 210px; width: auto; }
 .wkempty-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 25px; font-weight: 600; letter-spacing: -.006em; color: var(--ink);
+  font-size: 27px; font-weight: 600; letter-spacing: -.008em; color: var(--ink);
 }
-.wkempty-b { margin: 7px 0 0; font-size: 16px; line-height: 1.5; color: var(--ol); }
-.wkempty-cta { margin-top: 16px; width: auto; padding: 0 22px; }
+.wkempty-b {
+  margin: 10px auto 0; font-size: 16.5px; line-height: 1.5; color: var(--ol);
+  max-width: 34ch;
+}
+.wkempty-cta { margin-top: 22px; width: 100%; }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen
    wearing the brand colour. */

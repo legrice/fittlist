@@ -208,7 +208,7 @@ export function CalendarScreen({
           first
           title="Your calendar is empty"
           body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
-          cta="Add your first class"
+          cta="Add a class"
           onCta={() => setAddOpen(true)}
         />
       ) : view === "month" ? (

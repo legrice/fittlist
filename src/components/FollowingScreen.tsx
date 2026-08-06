@@ -171,6 +171,14 @@ export function FollowingScreen({
             answering a question they did not ask. */}
         <div className="cardwrap">
           <div className="wkempty">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="wkempty-fig"
+              src="/illustrations/following-empty.png"
+              alt=""
+              width={356}
+              height={600}
+            />
             <h2 className="wkempty-t">
               {coaches.length ? "Nothing up yet" : "You\u2019re not following anyone"}
             </h2>
@@ -179,8 +187,11 @@ export function FollowingScreen({
                 ? "The people you follow have not put any classes up. This fills in as they do."
                 : "Follow a coach and their week shows up here, beside everyone else you follow."}
             </p>
+            {/* One CTA, and it is this screen's own act: finding somebody.
+                Nothing here about adding classes, which is the calendar's
+                sentence, not Following's. */}
             <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-              Find coaches
+              Find a coach
             </button>
           </div>
         </div>
