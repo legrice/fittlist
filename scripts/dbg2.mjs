@@ -1,0 +1,11 @@
+import { chromium } from "playwright";
+const BASE = "http://localhost:3000";
+const OUT = "/tmp/claude-0/-home-user-fittlist/f5c2d228-192a-574b-90ee-b3d90eac7295/scratchpad";
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
+const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+p.setDefaultTimeout(20000);
+await p.goto(BASE + "/s/ember-yoga");
+await p.waitForTimeout(900);
+await p.screenshot({ path: OUT + "/studio-new.png" });
+console.log("cllines:", await p.locator(".clline").count(), "| bands:", await p.locator(".dayband").count());
+await b.close();

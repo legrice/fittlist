@@ -213,27 +213,10 @@ export async function StudioView({
   }
 
   const hasSchedule = !!s.accountUserId || community;
-  // What is already in their plans, so a row that is in shows Added rather
-  // than offering it twice. A studio has no owner to exclude the way a coach's
-  // page does: nobody's own page this is, so anybody signed in may add.
-  const scheduleIds = days.flatMap((d) => d.items.filter((i) => !i.plain).map((i) => i.id));
-  const canAddHere = signedIn && !!viewerId && scheduleIds.length > 0;
-  const studioMarks = new Set<string>();
-  if (canAddHere) {
-    const marks = await db
-      .select({
-        classId: schema.attendances.classId,
-        occurrenceDate: schema.attendances.occurrenceDate,
-      })
-      .from(schema.attendances)
-      .where(
-        and(
-          eq(schema.attendances.userId, viewerId!),
-          inArray(schema.attendances.classId, scheduleIds),
-        ),
-      );
-    for (const m of marks) studioMarks.add(`${m.classId}|${m.occurrenceDate}`);
-  }
+  // The viewer's going marks used to load here so each row's ribbon could
+  // say Added. The ribbon left every list when plans did, and the new rows
+  // carry no add at all, so the query went with it: a query nobody reads is
+  // one that gets slower without anybody noticing.
   // Every studio page wears the same three tabs now, whatever it holds:
   // Schedule leads (it is what the link is for, and an empty one is the
   // pitch), Info is the categories and the words, Coaches is who teaches
@@ -277,7 +260,10 @@ export async function StudioView({
   const base = `/s/${s.slug ?? s.id}`;
 
   return (
-    <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
+    <div
+      className={`pub profile${signedIn ? " hasnav" : ""}${s.photo ? " pub-hero" : ""}`}
+      data-mode={await viewerLook()}
+    >
       <div className="profwrap">
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
@@ -305,6 +291,11 @@ export async function StudioView({
           name={s.name}
           title=""
           location={s.address}
+          // The same full-bleed hero a coach's page wears, by Matt's call:
+          // one design for every profile. A photo-less studio keeps the
+          // coloured banner below, because a place has no face to fall back
+          // to a circle of.
+          heroPhoto={s.photo}
           // A studio's photo is a place, not a face, so it comes as the wide
           // rectangle its old page led with: a circle crops a room down to a
           // porthole, and the rectangle is also what tells a studio apart
@@ -335,7 +326,13 @@ export async function StudioView({
             </span>
           }
           backTo={backTo}
-          badges={null}
+          // On the hero the banner never renders, so the badge moves up
+          // beside the name; its white pill already reads over a photograph.
+          badges={
+            s.photo ? (
+              <VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />
+            ) : null
+          }
           ownerTop={
             /* Everything you can do with a studio, behind one set of dots:
                share, suggest, report, and for coaches the edit. */
@@ -395,8 +392,6 @@ export async function StudioView({
               slug={s.slug ?? s.id}
               days={days}
               accent={avatarColor({ id: s.id })}
-              canAdd={canAddHere}
-              marks={studioMarks}
             />
           ) : (
             <div className="empty-block">

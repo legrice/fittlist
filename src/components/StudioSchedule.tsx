@@ -1,5 +1,4 @@
-import { clockParts, todayIso } from "@/lib/format";
-import { ClassRow, DayBand } from "@/components/Agenda";
+import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
 import { ClassOpener } from "@/components/ClassOpener";
 
 export type StudioDay = {
@@ -34,12 +33,25 @@ export type StudioDay = {
   }[];
 };
 
-// The gym's own week, on its own page.
+/** Two letters, because one does not tell four coaches apart. A local copy of
+ *  WeekView's: that module is "use client", and importing a function value
+ *  from one into a server component hands back a reference, not a function. */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const two = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  return (two || name.trim().charAt(0) || "?").toUpperCase();
+}
+
+// The gym's own week, on its own page, drawn in the calendar's own grammar:
+// the day bands, the .clline rows, the coach as a by-line chip where the
+// commons knows one. It wore the old .ps-event card list long after every
+// other schedule moved on, which is exactly the drift one row everywhere
+// exists to prevent.
 //
-// No coach names. A gym's schedule goes out under the gym's name, which is
-// what lets somebody teach here without wanting a public profile at all, and
-// what keeps a schedule from turning into a leaderboard. Showing who is on is
-// a separate switch, and the coach has a say in it.
+// No coach names on a claimed gym's rows. A gym's schedule goes out under the
+// gym's name, which is what lets somebody teach here without wanting a public
+// profile at all; the by-line only appears on the commons' rows, where the
+// class is a coach's own listing.
 //
 // Rows are real links wrapped in ClassOpener, the same as a coach's schedule:
 // an ordinary tap opens the class over the list, a modified click or a crawler
@@ -48,20 +60,12 @@ export function StudioSchedule({
   slug,
   days,
   accent,
-  canAdd = false,
-  marks,
 }: {
   slug: string;
   days: StudioDay[];
-  /** The studio's own derived colour, worn on every row's bar: the same one
-   *  its directory tile and empty banner wear. */
+  /** The studio's own derived colour: the by-line chip's ground when a
+   *  coach's row carries no colour of its own. */
   accent: string;
-  /** A signed-in member looking at somebody else's place. The row carries the
-   *  same Add it carries on Following: a class you found here is a class you
-   *  wanted, and until now this was the one list you could not add from. */
-  canAdd?: boolean;
-  /** `classId|iso` for everything already in their plans. */
-  marks?: Set<string>;
 }) {
   if (days.length === 0) {
     return (
@@ -76,51 +80,68 @@ export function StudioSchedule({
     // The slug is the key classDetail resolves a gym's class by; the /s/
     // prefix belongs to the URL, not to the lookup.
     <ClassOpener handle={slug}>
-      <div className="ps-week ps-agenda callist">
+      <div className="daylist">
         {days.map((d) => (
-          <div key={d.iso} className="ps-daygroup">
-            <DayBand iso={d.iso} today={today} />
-            <div className="ps-daycards">
+          <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
+            <div className="dayband">
+              <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
+            </div>
+            <div className="dayrows">
               {d.items.map((c) => {
                 const start = clockParts(c.startTime);
-                const href = c.plain
-                  ? null
-                  : c.base
-                    ? `/${c.base}/${c.id}?d=${d.iso}`
-                    : `/s/${slug}/${c.id}?d=${d.iso}`;
+                const inner = (
+                  <>
+                    <span className="clline-t">
+                      {start.hm}
+                      <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                    </span>
+                    <span className="clline-main">
+                      {c.coachName && (
+                        <span className="clline-by">
+                          <span
+                            className="clline-av"
+                            style={{ background: c.coachColor ?? accent }}
+                          >
+                            {c.coachPhoto ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={c.coachPhoto} alt="" />
+                            ) : (
+                              initialsOf(c.coachName)
+                            )}
+                          </span>
+                          {c.coachName}
+                        </span>
+                      )}
+                      <span className="clline-nm">{c.name}</span>
+                      {c.where && <span className="clline-w">{c.where}</span>}
+                    </span>
+                  </>
+                );
+                if (c.plain) {
+                  return (
+                    <div key={`${d.iso}-${c.id}`} className="clline">
+                      {inner}
+                    </div>
+                  );
+                }
+                const href = c.base
+                  ? `/${c.base}/${c.id}?d=${d.iso}`
+                  : `/s/${slug}/${c.id}?d=${d.iso}`;
                 return (
-                  <div key={`${d.iso}-${c.id}`} className="ps-erow">
-                    {/* The same ClassRow Following and a coach's page draw.
-                        This list used to hand-roll its own, which is how the
-                        coach line ended up wearing the Added-by-you tag's
-                        styling and how the Add button never arrived here. */}
-                    <ClassRow
-                      item={{
-                        key: `${d.iso}-${c.id}`,
-                        name: c.name,
-                        hm: start.hm,
-                        ap: start.ap,
-                        durationMin: c.durationMin,
-                        where: c.where,
-                        coachName: c.coachName,
-                        coachPhoto: c.coachPhoto,
-                        coachColor: c.coachColor ?? accent,
-                        on: marks?.has(`${c.id}|${d.iso}`),
-                        href,
-                        plain: c.plain,
-                        classId: c.id,
-                        iso: d.iso,
-                        base: c.base ?? undefined,
-                      }}
-                    />
-                    {/* No ribbon. It put a class in your plans, and plans are
-                        gone: a member reads the week of the people they follow
-                        and has no calendar to add anything to. */}
-                  </div>
+                  <a
+                    key={`${d.iso}-${c.id}`}
+                    className="clline"
+                    href={href}
+                    data-cid={c.id}
+                    data-d={d.iso}
+                    data-base={c.base ?? undefined}
+                  >
+                    {inner}
+                  </a>
                 );
               })}
             </div>
-          </div>
+          </section>
         ))}
       </div>
     </ClassOpener>
