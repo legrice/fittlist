@@ -1756,9 +1756,16 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -.012em; line-height: 1;
   color: var(--ink); margin: 0;
 }
-/* What they do and where, on one line. They used to be two stacked lines with
-   a pin on the second; .profmeta below sets the type for both, and these two
-   names survive only so the row can be read a piece at a time. */
+/* What they do and where, on one line, with a middot between. They used to be
+   two stacked lines with a pin on the second; `.proftitle` and `.profwhere`
+   survive only so the row can be read a piece at a time.
+   The gap is the whole reason this rule exists: without it the three spans
+   butt together and the line reads "Strength & Mobility Coach·Jersey City". */
+.profmeta {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px;
+  font-size: 15px; line-height: 1.4; color: var(--ol); margin: 8px 0 0;
+}
+.profmeta-sep { color: var(--line); }
 .profabout { font-size: 15px; line-height: 1.55; color: var(--ink); margin-top: 18px; white-space: pre-wrap; }
 /* one horizontal, left/right-scrollable rail; bleeds to the content edges */
 .proflinks {
@@ -1787,10 +1794,14 @@ button.ps-card { cursor: pointer; }
 /* Studios: the places a coach is associated with, as its own tab. First
    thing on the page, so the sibling gap moves inside, between rows. */
 .profstudios { margin-top: 8px; }
-.profsec { margin-top: 26px; }
+/* The gap between one section of a profile and the next. About used to
+   override it to 4px, from when it was bare text rather than a labelled
+   section; the Teaches chips then ran straight into the About heading with
+   nothing between them. One number for all of them. */
+.profsec { margin-top: 30px; }
+.profsec:first-child { margin-top: 22px; }
 /* First on the tab, so it doesn't need the gap that separates siblings, and
    its label owns the spacing the bare paragraph used to carry. */
-.aboutsec { margin-top: 4px; }
 .aboutsec .profabout { margin-top: 10px; }
 
 /* The coach's status, as a badge beside their name. It answers the question a

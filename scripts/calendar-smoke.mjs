@@ -8,7 +8,6 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/calendar-smoke.mjs
 import { chromium } from "playwright";
-import { skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const fail = (m) => { throw new Error("CAL FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
@@ -25,7 +24,16 @@ await p.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Rae Bell");
 await p.getByRole("button", { name: "Claim it" }).click();
-await skipSetup(p);
+// Fill the profile rather than skipping it, so the Info tab has two sections
+// and a meta line with both halves: the spacing checks below need something
+// to measure, and against an empty profile they pass by having nothing to
+// look at, which is the quietest way for a check to stop meaning anything.
+await p.getByRole("button", { name: "Skip for now" }).click();
+await p.locator("#wTitle").fill("Strength & Mobility Coach");
+await p.locator("#wAbout").fill("Kettlebells, barbells, and getting people moving well.");
+await p.locator("#wLocation").fill("Montclair, NJ");
+await p.getByRole("button", { name: "Skip for now" }).click();
+await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
 
 // An empty calendar carries its own CTA and nothing else. Neither floating
 // control is drawn: a plus beside the CTA is one button explaining the other,
@@ -285,6 +293,33 @@ if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab 
   if (!names.length) fail("the profile should draw the calendar's rows");
   if (await p.locator(".pub .ps-event").count()) fail("the old card row should be gone");
 }
+// The Info tab's spacing. Both of these were long-standing and both were a
+// missing rule rather than a wrong number: About overrode the section gap to
+// 4px, from when it was bare text rather than a labelled section, so the
+// Teaches chips ran straight into its heading; and `.profmeta` had no rule at
+// all, so its three spans butted together into "Strength & Mobility
+// Coach\u00b7Montclair, NJ".
+await p.goto(BASE + "/raebell/about");
+{
+  const gap = await p
+    .locator(".profmeta")
+    .evaluate((e) => parseFloat(getComputedStyle(e).columnGap) || 0);
+  const line = (await p.locator(".profmeta").innerText()).replace(/\s+/g, " ").trim();
+  console.log("meta:", line, "| gap", gap);
+  if (gap < 4) fail("the meta line needs room round its middot, got " + gap);
+
+  // Measured off a rendered section rather than counted between two, because
+  // this fixture has one: disciplines are a settings field the wizard does not
+  // ask for, and a check that only runs on a fuller profile is a check that
+  // quietly does not run.
+  const top = await p
+    .locator(".profsec")
+    .first()
+    .evaluate((e) => parseFloat(getComputedStyle(e).marginTop) || 0);
+  console.log("section margin:", top);
+  if (top < 18) fail("sections need room between them, got " + top);
+}
+await p.goto(BASE + "/raebell");
 await p.locator(".profgear").click();
 await p.waitForURL(/\/settings/);
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
