@@ -6002,27 +6002,11 @@ a.clspeek-by:active { opacity: .6; }
    thumb between taps. */
 .trayitem.dim { opacity: .42; }
 .trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 600; }
-/* Search wears the same floating circle Add does, in the same corner, because
-   it is the same kind of thing: the one act this screen offers. It rode in
-   the dock for a build and came back, because three tabs and a circle in one
-   dock read as crammed.
-
-   The glass is the bar's own, stroke and all gone, the same dress the Share
-   pill wears now: the floating controls and the bar are one family of glass
-   over the page, and the glyph carries the brand colour because on a screen
-   with nothing else to make, finding a coach is the act. */
-.wkfab-find {
-  background: var(--paper);
-  background: color-mix(in srgb, var(--paper) 72%, transparent);
-  color: var(--si); border: none;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    inset 0 1px 0 0 rgba(255, 255, 255, .45),
-    0 6px 24px rgba(30, 24, 12, .13),
-    0 1px 3px rgba(30, 24, 12, .07);
-}
+/* Search wears the same floating circle Add does, in the same corner, and
+   the same dress too, by Matt's call: .wkfab's own brand fill with a white
+   glyph, no overrides. Finding a coach is this screen's one act, exactly as
+   making a class is the calendar's, and orange is what the loudest call to
+   action wears. It was glass with an orange glyph for a build. */
 /* The Profile tab's face. Sized to the glyph beside it rather than to a
    header avatar, so the three tabs sit on one line: a picture that is even two
    pixels taller drags its label down and the row stops being a row. */

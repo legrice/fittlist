@@ -206,10 +206,9 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
-// Search is the floating circle over this list again: the dock experiment
-// (its own circle beside the tab pill) came back off, because three tabs and
-// a circle in one dock read as crammed. The circle wears the bar's own glass
-// with the glyph in the brand colour, the same family the Share pill is in.
+// Search is the floating circle over this list, wearing the calendar plus's
+// own dress: the brand fill with a white glyph, because finding a coach is
+// this screen's one act and orange is what the loudest call to action wears.
 {
   if (await m.locator(".navdock, .navfind").count())
     fail("the dock's search circle should be gone");
@@ -217,17 +216,14 @@ if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showi
   if (!(await find.count())) fail("the floating search circle should be back");
   const look = await find.evaluate((e) => {
     const cs = getComputedStyle(e);
-    return {
-      blur: cs.backdropFilter || cs.webkitBackdropFilter,
-      color: cs.color,
-      bw: cs.borderTopWidth,
-    };
+    return { bg: cs.backgroundColor, color: cs.color, bw: cs.borderTopWidth };
   });
-  console.log("floating search:", look.blur, "|", look.color, "| border", look.bw);
-  if (!/blur/.test(look.blur ?? "")) fail("the search circle should be glass, got " + look.blur);
+  console.log("floating search:", look.bg, "|", look.color, "| border", look.bw);
   // #C2410C
-  if (look.color.replace(/\s/g, "") !== "rgb(194,65,12)")
-    fail("the search glyph should be brand orange, got " + look.color);
+  if (look.bg.replace(/\s/g, "") !== "rgb(194,65,12)")
+    fail("the circle should be the brand fill, got " + look.bg);
+  if (look.color.replace(/\s/g, "") !== "rgb(255,255,255)")
+    fail("the glyph should be white, got " + look.color);
   if (parseFloat(look.bw) > 0) fail("the circle's stroke should be gone, got " + look.bw);
 }
 
