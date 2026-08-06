@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { passwordAuth } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
 import { followTrainer, subscribe, unfollowTrainer, unsubscribeEmail } from "@/app/actions/subscribe";
+import { BodyPortal } from "@/components/BodyPortal";
 import { useFollowSync } from "@/components/FollowSync";
 import { Icon } from "@/components/Icon";
 import { FollowHint, followHintOff } from "@/components/FollowHint";
@@ -171,6 +172,10 @@ export function NotifyCta({
         {label}
       </button>
 
+      {/* Fixed layers, portaled out of the pinned head this pill renders in:
+          sticky is a stacking context on mobile, and trapped there the sheet
+          paints under the card and the tab bar. */}
+      <BodyPortal>
       <FollowHint name={firstName} on={hint} onClose={() => setHint(false)} />
 
       {open && (
@@ -315,6 +320,7 @@ export function NotifyCta({
       )}
 
       <Toast msg={toastMsg} on={toastOn} />
+      </BodyPortal>
     </>
   );
 }

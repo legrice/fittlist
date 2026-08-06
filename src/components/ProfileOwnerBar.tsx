@@ -9,6 +9,7 @@ import { TypePicker } from "@/components/TypePicker";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { readPhoto } from "@/lib/photo";
 import { LocationInput } from "@/components/LocationInput";
@@ -193,6 +194,11 @@ export function ProfileOwnerBar({
         </button>
       </div>
 
+      {/* Everything from here down is an overlay or a toast: fixed layers
+          that must escape the pinned head they render inside (sticky makes
+          a stacking context on mobile, and trapped there they paint under
+          the card and the tab bar). One portal moves the lot. */}
+      <BodyPortal>
       {shareMenu && (
         <div
           className="sheet-scrim"
@@ -513,6 +519,7 @@ export function ProfileOwnerBar({
       )}
 
       <Toast msg={toastMsg} on={toastOn} />
+      </BodyPortal>
     </>
   );
 }
