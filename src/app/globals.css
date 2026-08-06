@@ -1895,17 +1895,14 @@ button.ps-card { cursor: pointer; }
   font-size: 16px; text-align: left;
 }
 .msel-ph { color: var(--ol); }
-/* Click-away, under the menu and over everything else in the sheet. */
-.msel-away { position: fixed; inset: 0; z-index: 5; background: none; border: none; cursor: default; }
-/* In the flow, not floated: an absolute menu inside a scrolling sheet is
-   clipped by the sheet's own box, and iOS would not scroll the nested layer
-   at all. Open, it pushes the form down and scrolls inside itself. */
-.msel-menu {
-  position: relative; z-index: 6; margin-top: 6px;
-  background: #fff; border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(17, 17, 17, .12); max-height: 264px; overflow-y: auto;
-  overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;
+/* The options ride a bottom sheet of their own (a floated menu and an
+   in-flow one were both tried inside the scrolling editor, and each only
+   sort of worked); the sheet scrolls natively and Done puts it away. */
+.mselsheet .msel-list {
+  margin-top: 16px; border: 1px solid var(--line); border-radius: 16px;
+  overflow: hidden; background: #fff;
 }
+[data-mode="dark"] .mselsheet .msel-list { background: var(--card); }
 .msel-opt {
   display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
   padding: 12px 14px; border: none; background: none; cursor: pointer;

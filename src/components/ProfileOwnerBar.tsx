@@ -430,6 +430,7 @@ export function ProfileOwnerBar({
               onChange={setPDisciplines}
               max={4}
               placeholder="Pick up to four"
+              title="What you teach"
             />
             <label className="flabel">
               Certifications <span>· optional</span>
