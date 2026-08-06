@@ -163,6 +163,26 @@ function SparklesOutline({ size = 24, strokeWidth = 2 }: { size?: number; stroke
   );
 }
 
+/**
+ * The classic share arrow: a big head and a tail that sweeps down to a
+ * point, hand-drawn because Lucide's Share (a box with an arrow out of it)
+ * read as furniture next to it. One closed outline, stroked in
+ * currentColor, so it sits at the tab bar's weight beside the other glyphs.
+ */
+function ShareArrow({ size = 24, strokeWidth = 2 }: { size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        d="M12.5 7.6V4L21 11l-8.5 7v-3.7C8.2 14.3 5.6 16.1 3.6 19.6 3.4 12.9 6.8 8.5 12.5 7.6Z"
+      />
+    </svg>
+  );
+}
+
 const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   account_circle: CircleUserRound,
   activity: Activity,
@@ -225,7 +245,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   search: Search,
   send: Send,
   settings: Settings,
-  share: Share,
+  share: ShareArrow,
   shield: ShieldCheck,
   storefront: Store,
   travel_explore: Compass,
