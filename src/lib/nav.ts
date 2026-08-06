@@ -42,7 +42,7 @@ export function navTabs(coach: boolean, scheduleHref?: string): NavItem[] {
       ? [
           {
             id: "schedule" as const,
-            href: scheduleHref ?? "/app",
+            href: scheduleHref ?? "/calendar",
             icon: "calendar_today",
             label: "Calendar",
           },
@@ -70,7 +70,7 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // The Calendar tab is a coach's own classes. /week was a member's calendar
   // and is now a redirect onto Following, because a member has no calendar of
   // their own: they read the week of the people they follow.
-  if (pathname.startsWith("/app")) return "schedule";
+  if (pathname.startsWith("/calendar") || pathname.startsWith("/app")) return "schedule";
   if (pathname.startsWith("/you")) return "you";
   if (pathname.startsWith("/share")) return "share";
   return "none";

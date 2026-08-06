@@ -5380,8 +5380,11 @@ button.ps-card { cursor: pointer; }
    personal entries and going marks gone there is only one kind of row on a
    calendar, so a legend for it would be a legend of one. */
 .wkrow {
-  display: block; text-decoration: none; color: var(--ink);
-  background: var(--card); border-radius: 26px; padding: 16px 18px;
+  /* A button, so it needs telling: a control centres its text and this is a
+     row of prose. Width too, or a button shrink-wraps its content. */
+  display: block; width: 100%; text-align: left; font: inherit;
+  text-decoration: none; color: var(--ink); cursor: pointer;
+  background: var(--card); border: none; border-radius: 26px; padding: 16px 18px;
   box-shadow: 0 1px 3px rgba(25, 21, 2, .08);
 }
 a.wkrow:active { transform: scale(.995); }
@@ -5432,3 +5435,74 @@ a.wkrow:active { transform: scale(.995); }
   box-shadow: 0 12px 32px rgba(25, 21, 2, .22);
 }
 .wkfab:active { transform: scale(.95); }
+
+/* ---------------------------------------------------------------------------
+   A class, tapped: one sheet, two readings.
+
+   Your own offers Edit and Cancel; somebody else's offers the picture and the
+   way to their week. It replaced a full-screen overlay carrying a photograph,
+   a description, booking links, a Going pill, the coach's roster and an admin
+   photo tool behind a menu. That answered every question anybody had ever had
+   about a class; this answers the three somebody actually taps for.
+   --------------------------------------------------------------------------- */
+.clspeek { padding-top: 12px; }
+.clspeek-grab {
+  display: block; width: 44px; height: 5px; border-radius: 999px;
+  background: var(--line); margin: 0 auto 18px;
+}
+.clspeek-head { display: flex; align-items: flex-start; gap: 14px; }
+.clspeek-titles { flex: 1; min-width: 0; }
+/* The date leads, small and tracked, because the sheet is about one occurrence
+   and the name alone does not say which. */
+.clspeek-when {
+  margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ol);
+}
+/* Beats `.sheet h2`, which sets 22px/600 for every other sheet in the app.
+   This title is the sheet: the class name is what somebody tapped for. */
+.sheet .clspeek-nm, .clspeek-nm {
+  margin: 6px 0 0; padding-right: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 34px; font-weight: 900; line-height: 1.02; letter-spacing: -.02em;
+  color: var(--ink);
+}
+.clspeek-x {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cl); border: none; color: var(--ink); cursor: pointer;
+}
+.clspeek-x:active { transform: scale(.93); }
+
+/* Label left, answer right, a hairline between. A definition list, because
+   that is what it is. */
+.clspeek-facts { margin: 26px 0 0; }
+.clspeek-fact {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  padding: 16px 0; border-bottom: 1px solid var(--line);
+}
+.clspeek-fact dt {
+  font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ol);
+}
+.clspeek-fact dd {
+  margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 19px; font-weight: 900; color: var(--ink); text-align: right;
+}
+
+.clspeek-cta { display: flex; gap: 12px; margin-top: 26px; }
+.clspeek-btn {
+  flex: 1; min-height: 62px; padding: 10px 16px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; text-align: center;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 900; cursor: pointer; text-decoration: none;
+}
+.clspeek-btn.si { background: var(--si); color: #fff; border: 2px solid var(--si); }
+.clspeek-btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+.clspeek-btn:active { transform: scale(.97); }
+/* The rarest of the three and the only one nothing undoes, so it is a link
+   under the pair rather than a third button competing with them. */
+.clspeek-del {
+  display: block; margin: 18px auto 0; padding: 6px 10px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 900; color: var(--si);
+}

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { ClassOpener } from "@/components/ClassOpener";
+import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { WeekDays, WeekEmpty, WeekStepper, type WeekDayRows } from "@/components/WeekView";
@@ -44,6 +44,9 @@ export function CalendarScreen({
   const router = useRouter();
   const [week, setWeek] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
+  // The tapped occurrence, and the editor it can open onto.
+  const [peek, setPeek] = useState<PeekClass | null>(null);
+  const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -65,9 +68,7 @@ export function CalendarScreen({
               where: st?.name ?? c.location ?? null,
               hm: t.hm,
               ap: t.ap,
-              href: `#${c.id}`,
-              classId: c.id,
-              iso,
+              onTap: () => setPeek(peekOf(c, iso, st?.name ?? c.location ?? null)),
             };
           });
         return {
@@ -99,9 +100,7 @@ export function CalendarScreen({
           onCta={() => setAddOpen(true)}
         />
       ) : (
-        <ClassOpener handle="">
-          <WeekDays days={days} />
-        </ClassOpener>
+        <WeekDays days={days} />
       )}
 
       {/* The plus only once there is a week to add to: an empty calendar
@@ -135,7 +134,86 @@ export function CalendarScreen({
           }}
         />
       )}
+      {peek && (
+        <ClassPeek
+          cls={peek}
+          onClose={() => setPeek(null)}
+          onToast={toast}
+          onChanged={() => router.refresh()}
+          onEdit={() => {
+            const c = classes.find((x) => x.id === peek.id);
+            setPeek(null);
+            if (c) setEdit({ id: c.id, prefill: prefillOf(c) });
+          }}
+        />
+      )}
+
+      {edit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={subsCount}
+          firstPublish={false}
+          prefill={edit.prefill}
+          onClose={() => setEdit(null)}
+          onToast={toast}
+          onPublished={(msg) => {
+            setEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
+            setEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+        />
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
+}
+
+/** The tapped occurrence, as the sheet wants it. `MON · AUG 3` is the date
+ *  said the way the design says it, and it lives here rather than in the sheet
+ *  because only the caller knows which date was tapped. */
+function peekOf(c: ClassDto, iso: string, where: string | null): PeekClass {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const dow = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }).toUpperCase();
+  const md = d
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+    .toUpperCase();
+  const t = clockParts(c.startTime);
+  return {
+    id: c.id,
+    iso,
+    name: c.name,
+    when: `${dow} \u00b7 ${md}`,
+    time: `${t.hm} ${t.ap.toLowerCase()}`,
+    studio: where,
+    repeats: c.specificDate ? "Once" : "Weekly",
+    mine: true,
+  };
+}
+
+/** The editor, opened on this class and this date. */
+function prefillOf(c: ClassDto): AdderPrefill {
+  return {
+    name: c.name,
+    classType: c.classType,
+    description: c.description,
+    startTime: c.startTime,
+    durationMin: c.durationMin,
+    studioId: c.studioId,
+    location: c.location,
+    isPublic: c.isPublic,
+    links: c.links.map((l) => ({ ...l })),
+    days: [c.dayOfWeek],
+    dayOfWeek: c.dayOfWeek,
+    endsOn: c.endsOn,
+    specificDate: c.specificDate,
+    classId: c.id,
+  };
 }

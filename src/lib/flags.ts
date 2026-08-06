@@ -51,5 +51,5 @@ export async function landingHref(): Promise<string> {
     .select({ kind: schema.users.kind })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
-  return me && me.kind !== "fan" ? "/app" : "/feed";
+  return me && me.kind !== "fan" ? "/calendar" : "/feed";
 }

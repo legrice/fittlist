@@ -29,13 +29,9 @@ export type WeekRow = {
   ap: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
-  /** Where tapping goes. Absent rows are inert, which is what a member's
-   *  read-only week wants for anything it cannot open. */
-  href?: string;
-  /** Handed to a wrapping ClassOpener so a tap is a sheet, not a page. */
-  classId?: string;
-  iso?: string;
-  base?: string;
+  /** What tapping does. Every row opens a sheet over the week rather than
+   *  navigating: the list you came from is the thing you want back. */
+  onTap?: () => void;
 };
 
 export type WeekDayRows = { iso: string; dow: string; date: string; rows: WeekRow[] };
@@ -129,20 +125,11 @@ function WeekClassRow({ row }: { row: WeekRow }) {
       </span>
     </>
   );
-  // A real href when there is a page behind it, so a modified click still
-  // opens it and a crawler still sees a link; the wrapping ClassOpener catches
-  // the ordinary tap and shows the sheet instead.
-  if (!row.href) return <div className="wkrow">{inner}</div>;
+  if (!row.onTap) return <div className="wkrow">{inner}</div>;
   return (
-    <a
-      className="wkrow"
-      href={row.href}
-      data-cid={row.classId}
-      data-d={row.iso}
-      data-base={row.base}
-    >
+    <button className="wkrow" onClick={row.onTap}>
       {inner}
-    </a>
+    </button>
   );
 }
 
