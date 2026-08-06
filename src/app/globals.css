@@ -3192,11 +3192,14 @@ button.ps-card { cursor: pointer; }
 /* A little shorter than it first shipped, and air under the pills before
    the card arrives, both by Matt's call. */
 .pubhead.pubhead-hero { padding-top: 240px; padding-bottom: 26px; }
-/* Every child positioned, so the content paints above the two absolute
-   layers in DOM order: photo first, scrim over it, words over both. The
-   corner slots stay out of it: they are absolute already, and this rule
-   sits later in the file, so it would flatten them into the flow. */
-.pubhead-hero > :not(.profback, .ownertop, .pubhero-bg, .pubhero-dim) { position: relative; }
+/* The text blocks positioned, so they paint above the two absolute layers
+   in DOM order: photo first, scrim over it, words over both. An allowlist,
+   not a :not() sweep: the head also holds fixed-position strays (the owner
+   bar's toasts, its sheets when open), and a blanket rule flattened them
+   into the flow, which is why an owner's head ran taller than a visitor's. */
+.pubhead-hero > .profname-row,
+.pubhead-hero > .profmeta,
+.pubhead-hero > .profacts { position: relative; }
 /* The photo runs past the head's bottom edge, under the card: the card's
    rounded corners and the gap above it show photograph rather than shell,
    so the card reads as a sheet sitting on the picture. 44px covers the
