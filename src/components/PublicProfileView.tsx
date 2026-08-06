@@ -390,7 +390,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}`}
+      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}${user.photo ? " pub-hero" : ""}`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -435,6 +435,7 @@ export async function PublicProfileView({
           backTo={backTo}
           // The face is a circle again; tapping it blows it up with the
           // person's follow/share/link/QR actions under it.
+          heroPhoto={user.photo}
           avatar={
             <AvatarZoom
               className="profav"

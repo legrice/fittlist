@@ -3182,6 +3182,59 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;
 }
 .profgear:active { opacity: .55; }
+
+/* ---------------------------------------------------------------------------
+   The hero test, by Matt's ask: the profile photo full bleed, running up
+   under the header, with everything on it in white. Two scrims keep the
+   words legible: dark-to-clear under the header, clear-to-dark under the
+   name. A page with no photo keeps the circle head untouched.
+   --------------------------------------------------------------------------- */
+.pubhead.pubhead-hero { padding-top: 300px; }
+/* Every child positioned, so the content paints above the two absolute
+   layers in DOM order: photo first, scrim over it, words over both. The
+   corner slots stay out of it: they are absolute already, and this rule
+   sits later in the file, so it would flatten them into the flow. */
+.pubhead-hero > :not(.profback, .ownertop, .pubhero-bg, .pubhero-dim) { position: relative; }
+.pubhero-bg {
+  position: absolute; top: calc(-1 * var(--head-top, 0px)); bottom: 0;
+  left: calc(50% - 50vw); width: 100vw; height: calc(100% + var(--head-top, 0px));
+  object-fit: cover;
+}
+.pubhero-dim {
+  position: absolute; bottom: 0; left: calc(50% - 50vw); width: 100vw; height: 60%;
+  background: linear-gradient(to bottom, rgba(25, 21, 2, 0), rgba(25, 21, 2, .58));
+  pointer-events: none;
+}
+.pubhead-hero .profname,
+.pubhead-hero .profmeta,
+.pubhead-hero .proftitle,
+.pubhead-hero .profwhere,
+.pubhead-hero .profmeta-sep { color: #fff; }
+/* The pills go white over the photograph: the filled one is white with ink
+   words, the outline draws itself in white. */
+.pubhead-hero .actpill, .pubhead-hero .followpill {
+  border-color: rgba(255, 255, 255, .7); color: #fff; background: transparent;
+}
+.pubhead-hero .actpill-primary { background: #fff; color: var(--ink); border-color: #fff; }
+.pubhead-hero .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
+/* The corner controls ride the picture in white too. */
+.pubhead-hero .profgear { color: #fff; }
+.pubhead-hero .evback { color: #fff; }
+/* The header floats on the photo: no ground of its own, the wordmark and the
+   icons in white, and its scrim pinned with it (inside the bar, under its
+   content, reaching a little past its bottom edge so the fade has room).
+   The z-index makes the bar a stacking context, which is safe now that the
+   directory sheet portals to the body. */
+.pub-hero { --wm-ink: #fff; }
+.pub-hero .brandbar { background: transparent; z-index: 2; }
+.pub-hero .brandbar::before {
+  content: ""; position: absolute; inset: 0 0 -30px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
+}
+.pub-hero .brandbar-actions .iconbtn { color: #fff; }
+/* A stranger's bar sits on the photo the same way. */
+.pub-hero .pubtop { background: transparent; }
+.pub-hero .pubtop-login { border-color: rgba(255, 255, 255, .7); color: #fff; }
 /* Edit carries its word, so it is a pill in the same white as the dots. */
 .owneredit {
   display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
@@ -5994,7 +6047,9 @@ a.clspeek-by:active { opacity: .6; }
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
 .clline-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 27px; font-weight: 600; line-height: 1.1; letter-spacing: -.005em;
+  /* 23, down from 27 by Matt's call: still the loudest thing on the row,
+     without a two-line name eating the day. */
+  font-size: 23px; font-weight: 600; line-height: 1.1; letter-spacing: -.005em;
   color: var(--ink);
 }
 /* The studio, with a pin. The glyph is what stops it reading as a second line

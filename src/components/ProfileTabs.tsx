@@ -44,6 +44,7 @@ export function ProfileTabs({
   trackSchedule = false,
   trackHandle,
   avatar,
+  heroPhoto,
   actions,
   badges,
   ownerTop,
@@ -68,6 +69,10 @@ export function ProfileTabs({
   /** The face: a person's AvatarZoom (tap it, see it big, with the share
    *  actions under it), a studio's plain circle. */
   avatar: ReactNode;
+  /** The photo as a full-bleed hero instead of the circle: it runs up under
+   *  the header, everything on it goes white, and a scrim at each end keeps
+   *  the words legible. An experiment, by Matt's ask; null keeps the circle. */
+  heroPhoto?: string | null;
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
@@ -144,8 +149,18 @@ export function ProfileTabs({
       {/* Who this is, top to bottom and centred: face, name, what and where,
           then the two things you can do about it. A profile is the one screen
           about a person rather than a list, so it gets the symmetry. */}
-      <div className="pubhead" ref={headRef}>
-        {avatar}
+      <div className={`pubhead${heroPhoto ? " pubhead-hero" : ""}`} ref={headRef}>
+        {heroPhoto && (
+          <>
+            {/* The photo, from the very top of the screen: it reaches up by
+                the pinned header's measured height (--head-top is already on
+                this element), so the header floats on it in white. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="pubhero-bg" src={heroPhoto} alt="" />
+            <span className="pubhero-dim" aria-hidden="true" />
+          </>
+        )}
+        {!heroPhoto && avatar}
         {/* The corner slots come after the picture on purpose: neither owns a
             z-index (see the stacking note in the CSS), so DOM order is what
             paints them on top, and a studio's banner is positioned now. */}
