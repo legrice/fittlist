@@ -4348,13 +4348,18 @@ button.ps-card { cursor: pointer; }
 .distabs .pubtab { font-size: 16px; }
 .dischips {
   display: flex; gap: 8px; align-items: center;
-  /* Sideways only. `overflow-x: auto` alone makes the row an implicit
-     vertical scroller too, and iOS could leave it scrolled a few pixels
-     down, cropping every chip to a sliver along its bottom edge: the rail
-     read as hidden behind something. Pinning the vertical axis shut and
-     the height to the chips' own makes that state unrepresentable. */
+  /* Sideways only: `overflow-x: auto` alone makes the row an implicit
+     vertical scroller too, and a few pixels of stray scroll crops every
+     chip to a sliver. */
   overflow-x: auto; overflow-y: hidden; height: 42px; scrollbar-width: none;
   margin: 12px calc(50% - 50vw) 14px; padding: 2px 18px;
+  /* And never squashed. The Discover sheet is a flex column, and a scroll
+     container's automatic minimum size is zero, so when the list under the
+     rail overflows the sheet, Safari shrinks the rail to a sliver to make
+     room: the crammed pills every phone screenshot showed, which Chromium
+     only escapes by accident. A row of chips is never the thing to give
+     height back. */
+  flex-shrink: 0;
 }
 .dischips::-webkit-scrollbar { display: none; }
 /* The rail wears the Classes filter's size on all three halves. The chips
