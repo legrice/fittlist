@@ -3189,19 +3189,25 @@ button.ps-card { cursor: pointer; }
    words legible: dark-to-clear under the header, clear-to-dark under the
    name. A page with no photo keeps the circle head untouched.
    --------------------------------------------------------------------------- */
-.pubhead.pubhead-hero { padding-top: 300px; }
+/* A little shorter than it first shipped, and air under the pills before
+   the card arrives, both by Matt's call. */
+.pubhead.pubhead-hero { padding-top: 240px; padding-bottom: 26px; }
 /* Every child positioned, so the content paints above the two absolute
    layers in DOM order: photo first, scrim over it, words over both. The
    corner slots stay out of it: they are absolute already, and this rule
    sits later in the file, so it would flatten them into the flow. */
 .pubhead-hero > :not(.profback, .ownertop, .pubhero-bg, .pubhero-dim) { position: relative; }
+/* The photo runs past the head's bottom edge, under the card: the card's
+   rounded corners and the gap above it show photograph rather than shell,
+   so the card reads as a sheet sitting on the picture. 44px covers the
+   10px gap plus the 28px corner radius with room to spare. */
 .pubhero-bg {
-  position: absolute; top: calc(-1 * var(--head-top, 0px)); bottom: 0;
-  left: calc(50% - 50vw); width: 100vw; height: calc(100% + var(--head-top, 0px));
+  position: absolute; top: calc(-1 * var(--head-top, 0px)); bottom: -44px;
+  left: calc(50% - 50vw); width: 100vw; height: calc(100% + var(--head-top, 0px) + 44px);
   object-fit: cover;
 }
 .pubhero-dim {
-  position: absolute; bottom: 0; left: calc(50% - 50vw); width: 100vw; height: 60%;
+  position: absolute; bottom: -44px; left: calc(50% - 50vw); width: 100vw; height: 60%;
   background: linear-gradient(to bottom, rgba(25, 21, 2, 0), rgba(25, 21, 2, .58));
   pointer-events: none;
 }
@@ -3219,7 +3225,12 @@ button.ps-card { cursor: pointer; }
 .pubhead-hero .followpill.on { background: var(--go); color: #fff; border-color: var(--go); }
 /* The corner controls ride the picture in white too. */
 .pubhead-hero .profgear { color: #fff; }
-.pubhead-hero .evback { color: #fff; }
+/* The back circle was white on white the moment its glyph went white: over
+   the photo it goes dark glass instead, the way overlay chrome does. */
+.pubhead-hero .evback {
+  color: #fff; background: rgba(25, 21, 2, .34); border-color: transparent;
+  box-shadow: none;
+}
 /* The header floats on the photo: no ground of its own, the wordmark and the
    icons in white, and its scrim pinned with it (inside the bar, under its
    content, reaching a little past its bottom edge so the fade has room).
