@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { setStudioShowCoaches } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
 import { Toast, useToast } from "@/components/Toast";
@@ -16,6 +18,7 @@ export function StudioAdminSheet({
   canSchedule,
   pageViews,
   studio,
+  showCoaches = true,
 }: {
   slug: string;
   /** The gym account is on, so the rota and the counts exist to link to. */
@@ -24,10 +27,30 @@ export function StudioAdminSheet({
    *  is no account to track against yet. */
   pageViews: number | null;
   studio: StudioEditProps;
+  /** Whether the public schedule names who is coaching. On by default for a
+   *  verified studio; the switch below is the way off. */
+  showCoaches?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [names, setNames] = useState(showCoaches);
+  const [, startNames] = useTransition();
+  const router = useRouter();
   const [toastMsg, toastOn, toast] = useToast();
+
+  const toggleNames = () => {
+    const next = !names;
+    setNames(next);
+    startNames(async () => {
+      const res = await setStudioShowCoaches(studio.id, next);
+      if (!res.ok) {
+        setNames(!next);
+        toast(res.error ?? "Couldn't save that");
+        return;
+      }
+      router.refresh();
+    });
+  };
 
   const share = async () => {
     setOpen(false);
@@ -109,6 +132,25 @@ export function StudioAdminSheet({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
+              {/* Whether the public week is a roster: some gyms publish a
+                  schedule without naming anybody, and that is theirs to
+                  decide. Only meaningful once the gym runs its schedule. */}
+              {canSchedule && (
+                <button className="setrow" onClick={toggleNames} aria-pressed={names}>
+                  <span className="setrow-ic"><Icon name="groups" size={24} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Show who&rsquo;s coaching</span>
+                    <span className="s">
+                      {names
+                        ? "Coach names appear on the public schedule"
+                        : "The schedule lists classes without names"}
+                    </span>
+                  </span>
+                  <span className={`switch${names ? " on" : ""}`} aria-hidden="true">
+                    <span className="switch-knob" />
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>

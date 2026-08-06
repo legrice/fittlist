@@ -4224,28 +4224,23 @@ button.ps-card { cursor: pointer; }
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
-/* The dock: the tab pill and the search circle side by side, the way Slack
-   draws its bottom bar. The wrap owns the fixed position (above the account
-   view at 40 so You keeps the bar, below sheets at 46 so a takeover really
-   takes over); the pill and the circle each wear the same glass. Tried once
-   with three tabs and called crammed; at four tabs and the smaller glyph it
-   is the reference Matt sent, and search lives here for good. */
+/* The bar, back to the plain pill: the Slack-style dock (pill plus a search
+   circle) was tried twice and reverted twice, the second time by Matt after
+   living with it. The wrap owns the fixed position (above the account view
+   at 40 so You keeps the bar, below sheets at 46 so a takeover really takes
+   over); search is Following's floating orange circle again. */
 .navwrap {
   position: fixed; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 45;
-  display: flex; align-items: stretch; gap: 8px;
+  display: flex; align-items: stretch;
   max-width: 632px; margin: 0 auto;
-  /* One number for the dock's height: the pill wears it and the circle is
-     it, squared. Deriving the circle from the pill's natural height was
-     tried and the button collapsed to its glyph. */
-  --dock: 72px;
 }
 .navbar {
-  flex: 1; min-width: 0; height: var(--dock);
+  flex: 1; min-width: 0;
   /* The installed app's glass pill, in the browser too, by Matt's call: the
      content scrolls on under it, the blur says so, and the rounded rectangle
      matches the card's corners and the phone's. */
-  display: flex; align-items: center; padding: 5px;
+  display: flex; padding: 5px;
   /* A full pill: the radius is the height, by Matt's call. */
   border-radius: 999px;
   background: var(--paper);
@@ -4258,27 +4253,9 @@ button.ps-card { cursor: pointer; }
     0 6px 24px rgba(30, 24, 12, .13),
     0 1px 3px rgba(30, 24, 12, .07);
 }
-/* A perfect circle, the dock's own height squared. */
-.navfind {
-  flex: 0 0 auto; width: var(--dock); height: var(--dock);
-  border-radius: 999px; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--ink);
-  background: var(--paper);
-  background: color-mix(in srgb, var(--paper) 72%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    inset 0 1px 0 0 rgba(255, 255, 255, .45),
-    0 6px 24px rgba(30, 24, 12, .13),
-    0 1px 3px rgba(30, 24, 12, .07);
-}
-.navfind:active { transform: scale(.95); }
 .navtab {
-  flex: 1; min-width: 0; border: none; background: none; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  align-self: stretch; padding: 0; border-radius: 999px; text-decoration: none; color: var(--ink);
+  flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 0 9px; border-radius: 999px; text-decoration: none; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
 /* Ink everywhere, and the wash is the whole mark, by Matt's call: every tab's
@@ -4391,8 +4368,7 @@ button.ps-card { cursor: pointer; }
    block is the two rules that were about behaviour rather than dress. */
 .navtab { transition: background .18s ease, opacity .18s ease; }
 .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-[data-mode="dark"] .navbar,
-[data-mode="dark"] .navfind {
+[data-mode="dark"] .navbar {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, .1),
     inset 0 1px 0 0 rgba(255, 255, 255, .08),
@@ -5661,7 +5637,9 @@ button.ps-card { cursor: pointer; }
      because the safe area moves it. Sticky also keeps the arrows' layer
      working: it is positioned, which is all they needed. */
   position: sticky; top: var(--tray-top, 66px);
-  margin: 0 -18px; padding: 8px 0 12px;
+  /* Tight to the header above: the 8px of air between the bar and the
+     circles came down to 2, by Matt's call. */
+  margin: 0 -18px; padding: 2px 0 12px;
 }
 /* The arrows hang level with the circles rather than the labels under them,
    so they read as controls on the faces. `.railarrow` puts its own top at
@@ -5673,9 +5651,9 @@ button.ps-card { cursor: pointer; }
    over the button: it was in the tree, it was not `display: none`, and
    elementFromPoint at its centre returned the circle behind it. The feed rail
    never hit this because its arrows were the last thing in the box. */
-/* Level with the circles' centre: the tray's 8px top, 6px of ring room,
+/* Level with the circles' centre: the tray's 2px top, 6px of ring room,
    half of 80. */
-.tray .railarrow { top: 54px; z-index: 2; }
+.tray .railarrow { top: 48px; z-index: 2; }
 .tray-scroll {
   /* The vertical padding is the selected ring's room. `overflow-x: auto`
      computes overflow-y to auto as well, so the scroller clips on both axes
@@ -6174,25 +6152,19 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shtick.on { background: var(--ink); border-color: var(--ink); }
 
-/* Following's floating search circle is gone for good: search is the dock's
-   own circle now, on every screen with the bar. The rail's plus and the
-   empty state's button still open the sheet, offers in context. */
-/* The header's magnifier yields wherever the dock carries the circle (the
-   tabs shell, and your own profile, the one .pub page with the bar): the
-   same glyph twice on one screen is noise. Above 940px the dock hides, the
-   header links take over, and the corner takes the job back. */
-.screen.hasnav .findbtn, .pub.ownbar .findbtn { display: none; }
-@media (min-width: 940px) {
-  .screen.hasnav .findbtn, .pub.ownbar .findbtn { display: flex; }
-}
+/* Search wears the same floating circle Add does, in the same corner, and
+   the same dress too, by Matt's call: .wkfab's own brand fill with a white
+   glyph, no overrides. Finding a coach is this screen's one act, exactly as
+   making a class is the calendar's, and orange is what the loudest call to
+   action wears. The dock carried the circle for a build and this is the
+   shape Matt kept; the header's magnifier stays at every width with it. */
 /* The Profile tab's face. Sized to the glyph beside it rather than to a
    header avatar, so the three tabs sit on one line: a picture that is even two
    pixels taller drags its label down and the row stops being a row. */
 .navglyph-face { display: inline-flex; align-items: center; justify-content: center; }
 .navface-photo,
 .navface-initial {
-  /* 23, with the glyphs: four tabs and the circle share the width now. */
-  width: 23px; height: 23px; border-radius: 999px; display: block; object-fit: cover;
+  width: 26px; height: 26px; border-radius: 999px; display: block; object-fit: cover;
 }
 .navface-initial {
   display: flex; align-items: center; justify-content: center;

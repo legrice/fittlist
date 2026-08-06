@@ -366,14 +366,14 @@ await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
 // The Share tab is a place now: it lands on the hub screen of big tiles,
-// with the bar still underneath. Search is the dock's circle, so the
-// header's magnifier yields below 940px: the same glyph twice is noise.
+// with the bar still underneath. Search is Following's floating circle
+// again, and the header's magnifier stays at every width with it.
 await p.goto(BASE + "/calendar");
 if (await p.locator('.navtab[data-tab="find"]').count())
   fail("the Search tab should be gone from the bar");
-if (await p.locator(".findbtn:visible").count())
-  fail("the header magnifier should yield to the dock's circle on a phone");
-if (!(await p.locator(".navfind").count())) fail("the dock should carry the search circle");
+if (await p.locator(".navfind").count()) fail("the dock's search circle should be gone again");
+if (!(await p.locator(".findbtn:visible").count()))
+  fail("the header magnifier should be back on a phone");
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/sharehub/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
@@ -430,14 +430,13 @@ await p.locator(".shedit", { hasText: "Open the full editor" }).click();
 await p.waitForURL(/\/share$/);
 console.log("the Share tab lands on the hub, and the editor is one tap deeper");
 await p.goBack();
-// The dock's circle opens the directory over whatever screen you are on.
+// The magnifier still opens the directory, from the corner.
 await p.goto(BASE + "/calendar");
-await p.locator(".navfind").click();
+await p.locator(".findbtn:visible").click();
 await p.locator(".dissheet").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the circle should not navigate");
 await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the dock's circle opens the directory over the calendar");
+console.log("the header magnifier opens the directory over the calendar");
 
 // The card slides up over the header, and the calendar's title row is the
 // one piece of chrome that pins with the bands: without it, Month view has

@@ -292,10 +292,14 @@ export function FollowingScreen({
       )}
       </div>
 
-      {/* No floating search circle: search is the circle in the dock now, on
-          every screen with the bar, so a second one hovering over this list
-          was the same act drawn twice. The rail's plus and the empty state's
-          button stay, offers in context, and they open this same sheet. */}
+      {/* Discovery is this button and the plus on the rail, and they open the
+          same sheet. The dock carried a search circle for a build and Matt
+          reverted it after living with it: the floating orange circle over
+          the one list the act is about is the shape that stays. */}
+      <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
+        <Icon name="search" size={26} />
+      </button>
+
       {find && <DiscoverSheet onClose={closeFind} />}
 
       {peek && (

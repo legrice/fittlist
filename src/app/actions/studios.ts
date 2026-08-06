@@ -168,6 +168,32 @@ export async function updateStudio(
   return { ok: true, slug };
 }
 
+/** Whether the studio's public schedule names who is coaching each class.
+ *  A manager's call (the same door updateStudio guards), on by default. */
+export async function setStudioShowCoaches(
+  id: string,
+  on: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const db = await getDb();
+  const [me] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me || me.kind === "fan") return { ok: false, error: "Only coaches can edit a studio." };
+  const access = await studioAccess(id, { id: userId, kind: me.kind });
+  // Stricter than editing on purpose: an unclaimed page has no rota and no
+  // schedule of its own, so only the people who run the place hold this.
+  if (!access.claimed || !access.canEdit)
+    return { ok: false, error: "Only the studio's managers can change this." };
+  const [st] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
+  if (!st) return { ok: false, error: "Studio not found." };
+  await db.update(schema.studios).set({ showCoaches: on }).where(eq(schema.studios.id, id));
+  if (st.slug) revalidatePath(`/s/${st.slug}`);
+  return { ok: true };
+}
+
 // ---- Places I coach. The picks live in coach_studios; the profile shows the
 // union of these and anywhere they have a class, so removing a pick never
 // hides a studio they actually teach at.

@@ -1,0 +1,1 @@
+ALTER TABLE "studios" ADD COLUMN "show_coaches" boolean DEFAULT true NOT NULL;

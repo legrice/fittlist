@@ -526,6 +526,13 @@
       "when": 1785955655257,
       "tag": "0074_tiny_secret_warriors",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1786056181791,
+      "tag": "0075_orange_shadow_king",
+      "breakpoints": true
     }
   ]
 }

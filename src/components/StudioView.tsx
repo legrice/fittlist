@@ -104,6 +104,35 @@ export async function StudioView({
           and(eq(schema.classes.userId, s.accountUserId), eq(schema.classes.studioId, s.id)),
         )
     ).filter((c) => c.isPublic);
+    // Who is coaching, when the studio says so: the standing coach from the
+    // rota, with that date's cover winning over the class, the same rule the
+    // rota itself lives by. Off, the week lists classes without names, which
+    // some gyms prefer; on is the default for a verified studio.
+    let coachOf = new Map<string, { name: string; photo: string | null; color: string }>();
+    let covers: (typeof schema.shiftCovers.$inferSelect)[] = [];
+    if (s.showCoaches && rows.length) {
+      covers = await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, rows.map((c) => c.id)));
+      const ids = [
+        ...new Set(
+          [...rows.map((c) => c.coachUserId), ...covers.map((cv) => cv.coachUserId)].filter(
+            (x): x is string => !!x,
+          ),
+        ),
+      ];
+      if (ids.length) {
+        const people = await db
+          .select()
+          .from(schema.users)
+          .where(inArray(schema.users.id, ids));
+        coachOf = new Map(
+          people.map((u) => [u.id, { name: u.name, photo: u.photo, color: avatarColor(u) }]),
+        );
+      }
+    }
+    const coverBy = new Map(covers.map((cv) => [`${cv.classId}|${cv.occurrenceDate}`, cv.coachUserId]));
     const start = new Date(`${todayIso()}T00:00:00Z`);
     for (let i = 0; i < 7; i++) {
       const dt = new Date(start);
@@ -115,12 +144,20 @@ export async function StudioView({
         // Been and gone comes off here too: a schedule is what's still coming.
         .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-        .map((c) => ({
-          id: c.id,
-          name: c.name,
-          startTime: c.startTime,
-          durationMin: c.durationMin,
-        }));
+        .map((c) => {
+          const key = `${c.id}|${iso}`;
+          const onIt = coverBy.has(key) ? coverBy.get(key) : c.coachUserId;
+          const who = s.showCoaches && onIt ? coachOf.get(onIt) : undefined;
+          return {
+            id: c.id,
+            name: c.name,
+            startTime: c.startTime,
+            durationMin: c.durationMin,
+            coachName: who?.name ?? null,
+            coachPhoto: who?.photo ?? null,
+            coachColor: who?.color ?? null,
+          };
+        });
       if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
     }
   }

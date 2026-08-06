@@ -208,29 +208,24 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
-// Search is the dock's own circle now, beside the tab pill the way Slack
-// draws it: a perfect circle, on every screen with the bar, and Following's
-// floating circle is gone for good.
+// Search is Following's floating orange circle again: the dock's own circle
+// was tried and reverted by Matt after living with it.
 {
-  if (await m.locator(".wkfab-find").count())
-    fail("the floating search circle should be gone");
+  if (await m.locator(".navfind, .navdock").count())
+    fail("the dock's search circle should be gone again");
   if (await m.locator('.navtab[data-tab="find"]').count())
     fail("the Search tab should stay gone from the pill");
   if (!(await m.locator('.navtab[data-tab="share"]').count()))
     fail("Share should be a tab in the bar");
-  const circle = m.locator(".navfind");
-  if (!(await circle.count())) fail("the dock should carry the search circle");
-  const box = await circle.boundingBox();
-  if (Math.abs(box.width - box.height) > 1.5)
-    fail(`the circle should be a perfect circle: ${box.width}x${box.height}`);
-  const pill = await m.locator(".navbar").boundingBox();
-  if (Math.abs(box.height - pill.height) > 1.5)
-    fail("the circle stands as tall as the pill");
+  const fab = m.locator(".wkfab-find");
+  if (!(await fab.count())) fail("the floating search circle should be back");
+  const bg = await fab.evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (bg !== "rgb(194, 65, 12)") fail("the circle wears the brand fill, got " + bg);
 }
 
 // The circle pulls the directory up over the week rather than navigating to
 // it, and comes back down onto the list you were reading.
-await m.locator(".navfind").click();
+await m.locator(".wkfab-find").click();
 await m.locator(".dissheet").waitFor();
 await m.waitForTimeout(900);
 {

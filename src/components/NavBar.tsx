@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { BodyPortal } from "@/components/BodyPortal";
-import { DiscoverSheet } from "@/components/DiscoverSheet";
+import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -15,14 +12,12 @@ export type { NavTab };
  *  tab, but the shape is still what a shell hands around. */
 export type NavFace = { photo: string | null; color: string; initial: string };
 
-// The whole app in thumb reach: the screens you move between in the pill,
-// and the one act you reach for from anywhere in its own circle beside it,
-// the way Slack draws its bottom bar. The dock shape was tried once with
-// three tabs and read as crammed; with four tabs at the smaller glyph size
-// it is the reference Matt sent, so search lives here for good and
-// Following's floating circle is gone. The circle opens the directory sheet
-// over wherever you are standing. Above 940px this hides and HeaderNav
-// takes over, off the same list.
+// The whole app in thumb reach: the screens you move between, and nothing
+// else. The Slack-style dock (the pill plus a search circle beside it) was
+// tried twice now and reverted twice, the second time by Matt after living
+// with it; search is Following's floating orange circle again, and this
+// stays the plain pill. Above 940px this hides and HeaderNav takes over,
+// off the same list.
 export function NavBar({
   active,
   coach = true,
@@ -46,14 +41,6 @@ export function NavBar({
   face?: NavFace;
 }) {
   const here = activeTab(usePathname(), active);
-  const router = useRouter();
-  // The circle pulls the directory sheet up over wherever you are standing;
-  // the week behind it is a server render, so closing is where it catches up.
-  const [find, setFind] = useState(false);
-  const closeFind = () => {
-    setFind(false);
-    router.refresh();
-  };
 
   return (
     <div className="navwrap">
@@ -75,10 +62,9 @@ export function NavBar({
                     </span>
                   )
                 ) : (
-                  // 23, the face's own size, a step down from 26: four tabs
-                  // and the circle share the width now, and the glyphs give
-                  // back the room.
-                  <Icon name={t.icon} size={23} />
+                  // 26, the face's own size: a glyph even two pixels bigger
+                  // than the photo beside it makes the face the odd tab out.
+                  <Icon name={t.icon} size={26} />
                 )}
               </span>
               <span>{t.label}</span>
@@ -92,21 +78,6 @@ export function NavBar({
           );
         })}
       </nav>
-      {/* Search, in its own perfect circle beside the pill: the act you
-          reach for from anywhere, drawn the way Slack draws it. */}
-      <button
-        className="navfind"
-        aria-label="Find coaches"
-        aria-expanded={find}
-        onClick={() => setFind(true)}
-      >
-        <Icon name="search" size={24} />
-      </button>
-      {find && (
-        <BodyPortal>
-          <DiscoverSheet onClose={closeFind} />
-        </BodyPortal>
-      )}
     </div>
   );
 }

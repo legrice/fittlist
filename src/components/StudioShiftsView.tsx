@@ -34,6 +34,7 @@ export function StudioShiftsView({
   view,
   pageViews,
   studio,
+  showCoaches = true,
   canSchedule,
 }: {
   view: StaffView;
@@ -41,6 +42,8 @@ export function StudioShiftsView({
    *  the sheet is the manager's, and so is everything in it. */
   pageViews: number | null;
   studio: StudioEditProps | null;
+  /** Whether the public schedule names who is coaching; the overflow's switch. */
+  showCoaches?: boolean;
   /** The gym account exists, so there is a rota to count and to link to. A
    *  studio without one still renders this screen (it is the only door to the
    *  editor), it just has no shifts on it. */
@@ -135,6 +138,7 @@ export function StudioShiftsView({
               canSchedule={canSchedule}
               pageViews={pageViews}
               studio={studio}
+              showCoaches={showCoaches}
             />
           )}
         </div>

@@ -251,6 +251,12 @@ export const studios = pgTable("studios", {
   // did before this existed: the change lands the moment it is made and
   // everybody who should know is told, which some studios will prefer.
   approveShiftChanges: boolean("approve_shift_changes").notNull().default(true),
+  // Whether the studio's public schedule names who is coaching each class.
+  // On by default for a verified studio (only a claimed studio has a rota to
+  // name anyone from), off for the gyms that would rather publish a week
+  // without making it a roster. The switch lives on the shifts screen's
+  // overflow, with the studio's other settings.
+  showCoaches: boolean("show_coaches").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
