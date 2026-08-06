@@ -98,7 +98,24 @@ export function blocksFill(seq: number) {
   return BLOCKS_FILLS[Math.max(0, seq - 1) % BLOCKS_FILLS.length];
 }
 
-// Story-image looks - one per coach personality, all built from brand colors.
+/**
+ * The colourways a poster comes in. Sixteen, and colour is the whole of the
+ * choice again.
+ *
+ * There was a second axis for a while, ten arrangements the picture could be
+ * drawn in, and it came out: even spread hard apart they were not different
+ * enough to be worth a decision, and the picker cost a sheet and a grid to
+ * offer a difference nobody could see. Colour is the thing that actually makes
+ * two posters look like two posters, so there are twice as many of them now
+ * and nothing else to pick.
+ *
+ * Every one is built the same way and has to answer the same four questions,
+ * or it will look right in the swatch and wrong in the poster: the ground, the
+ * ink on it, an accent with enough contrast to carry the headline and the
+ * times, and a faint tone for the day labels that is still readable. `lockup`
+ * says which of the two wordmarks sits on it, and `lockupAccent` swaps the
+ * mark's sienna row when sienna would vanish into the ground.
+ */
 export type StoryThemeId =
   | "iron"
   | "paper"
@@ -107,7 +124,15 @@ export type StoryThemeId =
   | "midnight"
   | "sunset"
   | "blush"
-  | "slate";
+  | "slate"
+  | "citrus"
+  | "forest"
+  | "cobalt"
+  | "mono"
+  | "sand"
+  | "plum"
+  | "surf"
+  | "ember";
 export type StoryTheme = {
   label: string;
   bg: string;
@@ -128,39 +153,43 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
   sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
   blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
   slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
+  // The eight added when the style axis came out. Four grounds that are new
+  // families rather than shades of the eight above (a yellow, a deep green, a
+  // blue, a true black and white), and four that are the quiet end, because
+  // the quiet ones are what most people settle on and there was only one.
+  citrus: { label: "Citrus", bg: "#f2c14e", fg: "#241d05", accent: "#7a2e0e", muted: "#6d5a24", faint: "#8a7333", time: "#3a2f0c", lockup: "ink", lockupAccent: "#7a2e0e" },
+  forest: { label: "Forest", bg: "#14312a", fg: "#eaf3ec", accent: "#8fd6a8", muted: "#9db8a9", faint: "#7d9a8c", time: "#d3e6d8", lockup: "cloud", lockupAccent: "#8fd6a8" },
+  cobalt: { label: "Cobalt", bg: "#2438d6", fg: "#f2f3ff", accent: "#ffd447", muted: "#b3bbf5", faint: "#96a0ee", time: "#e2e5ff", lockup: "cloud", lockupAccent: "#ffd447" },
+  mono: { label: "Mono", bg: "#0d0d0d", fg: "#fafafa", accent: "#fafafa", muted: "#9a9a9a", faint: "#7a7a7a", time: "#e4e4e4", lockup: "cloud", lockupAccent: "#fafafa" },
+  sand: { label: "Sand", bg: "#e3d7c2", fg: "#2b2413", accent: "#a1522b", muted: "#6f6350", faint: "#8b7d67", time: "#3f3524", lockup: "ink", lockupAccent: "#a1522b" },
+  plum: { label: "Plum", bg: "#3b1c3f", fg: "#f6ecf5", accent: "#f0a3c8", muted: "#b79ab6", faint: "#9a7d9a", time: "#e6d6e5", lockup: "cloud", lockupAccent: "#f0a3c8" },
+  surf: { label: "Surf", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
+  ember: { label: "Ember", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
 };
 /**
- * The second axis: how the picture is drawn, as opposed to what colour it is.
+ * How the picture is drawn, as opposed to what colour it is.
  *
- * Colour and style are separate on purpose. Eight palettes times ten styles is
- * eighty posters from two small rows of controls, where one merged picker
- * would have been eighty swatches nobody could scan. It also keeps the two
- * decisions honest: a coach who has found their colour can change how loud the
- * poster is without losing it.
+ * There were ten of these, and there is one. The ten were an attempt at "more
+ * fun ways to share": a poster arrangement, a stacked one, a ticket, a
+ * marquee, and so on, each a different point in a small vocabulary of
+ * alignment, case, rules, chips and where the time sits. They were spread as
+ * hard apart as the vocabulary allowed and they still were not different
+ * enough to be worth a decision, which is the honest verdict on them: the
+ * picker cost a sheet, a grid and ten miniatures to offer a difference nobody
+ * could see. What actually makes two posters look like two posters is colour,
+ * so there are sixteen colourways now and no second question.
  *
- * Every style is data rather than a branch. `renderStory` stays the one paint
- * function, the way it has been since the third copy of it drifted from the
- * other two; a style that needed its own code path would be a fourth copy
- * wearing a different name.
- *
- * They run loud to quiet, because that is the order somebody scans them in and
- * the quiet ones are what most people settle on.
+ * The shape stays because the paint reads it: `renderStory` takes a
+ * `StoryStyle` and honours every knob on it, and `check:story` divides its
+ * budget by `rowScale`. Reducing this to one entry deletes nine styles without
+ * touching the renderer, and is what a style axis coming back would be built
+ * on. Nothing in the app offers a choice of one.
  */
-export type StoryStyleId =
-  | "poster"
-  | "stack"
-  | "ticket"
-  | "marquee"
-  | "chips"
-  | "editorial"
-  | "grid"
-  | "receipt"
-  | "plain"
-  | "bare";
+export type StoryStyleId = "plain";
 
 export type StoryStyle = {
   label: string;
-  /** Multiplies the headline. The loud ones shout, the quiet ones do not. */
+  /** Multiplies the headline. */
   headline: number;
   /** Multiplies the class name on each row. */
   name: number;
@@ -185,76 +214,38 @@ export type StoryStyle = {
    * `planStory` fits a week to a fixed budget using one set of constants, and
    * `check:story` holds 6,000 synthetic weeks to it; a style that quietly grew
    * its rows would pass the planner and overflow the paint, which is the exact
-   * failure the planner exists to prevent. Rather than teach the planner ten
-   * styles, the routes divide the budget by this: fitting scaled rows into B
-   * is the same as fitting plain rows into B/k. Err high. A style that draws
-   * shorter than it claims wastes a little canvas; one that draws taller loses
+   * failure the planner exists to prevent. Rather than teach the planner every
+   * style, the routes divide the budget by this. Err high: a style that draws
+   * shorter than it claims wastes a little canvas, one that draws taller loses
    * somebody's Thursday.
    */
   rowScale: number;
-  /**
-   * The three colourways this style is offered in, the first being its
-   * default.
-   *
-   * Colour belongs to the style rather than sitting beside it as a free second
-   * axis. Ten styles times eight palettes is eighty posters, and most of them
-   * are wrong: a diner sign in Midnight is not a diner sign, and the loud
-   * styles depend on specific pairings that a global picker would happily
-   * break. Three per style is thirty posters where every one of them is good,
-   * which is the better number even though it is smaller.
-   *
-   * It also makes the picking simpler, which is the point of this whole build:
-   * choose how loud, then choose which of three. Two small decisions in order,
-   * rather than two axes to hold in your head at once.
-   */
-  palettes: StoryTheme[];
 };
-
-/** Named so the picker can label them; the ids only have to be unique within
- *  a style, because that is the only place they are ever resolved. */
-const P = STORY_THEMES;
 
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
-  // Ten arrangements, not ten colourways. They were ten sets of small numeric
-  // nudges (headline 1.0 against 0.96, rowScale 1.0 against 0.98) over the
-  // same left-aligned cream layout, and in a picker they were indeed one style
-  // wearing ten labels. What actually differs between two posters is
-  // structural: where the block sits, whether the names shout, whether a row
-  // is ruled or boxed or neither, and whether the time holds its own gutter or
-  // drops under the name. So each of these picks a different point in that
-  // vocabulary, and the numbers follow the arrangement rather than standing in
-  // for one.
-  //
-  // Loud to quiet, because that is the order somebody scans them in.
-  poster:    { label: "Poster",    headline: 1.25, name: 1.30, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.18, rowScale: 1.45, palettes: [P.pop, P.iron, P.midnight] },
-  stack:     { label: "Stack",     headline: 1.30, name: 1.20, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.30, rowScale: 1.75, palettes: [P.iron, P.pop, P.moss] },
-  marquee:   { label: "Marquee",   headline: 1.20, name: 1.14, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.34, rowScale: 1.80, palettes: [P.sunset, P.pop, P.iron] },
-  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.02, upper: false, align: "left",   rule: "none", chip: true,  radius: 26,  stackTime: false, dayTrack: 0.10, rowScale: 1.40, palettes: [P.midnight, P.paper, P.slate] },
-  chips:     { label: "Chips",     headline: 1.0,  name: 0.95, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.08, rowScale: 1.30, palettes: [P.blush, P.moss, P.paper] },
-  receipt:   { label: "Receipt",   headline: 0.90, name: 0.90, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.40, rowScale: 1.05, palettes: [P.paper, P.iron, P.blush] },
-  editorial: { label: "Editorial", headline: 1.10, name: 1.08, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.12, rowScale: 1.18, palettes: [P.paper, P.iron, P.slate] },
-  grid:      { label: "Grid",      headline: 0.92, name: 0.95, upper: false, align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.06, rowScale: 1.10, palettes: [P.slate, P.paper, P.midnight] },
-  plain:     { label: "Plain",     headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0.12, rowScale: 1.0,  palettes: [P.paper, P.iron, P.moss] },
-  bare:      { label: "Bare",      headline: 0.80, name: 0.86, upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0,    rowScale: 0.95, palettes: [P.paper, P.slate, P.midnight] },
+  plain: { label: "Plain", headline: 1.0, name: 1.0, upper: false, align: "left", rule: "none", chip: false, radius: 0, stackTime: false, dayTrack: 0.12, rowScale: 1.0 },
 };
 
-
 /**
- * A style and one of its three colourways, from whatever the URL said.
+ * The one style, and a colourway, from whatever the URL said.
  *
- * Self-healing on purpose: a colour that does not belong to the style falls
- * back to that style's first rather than erroring or drawing something the
- * style was never meant to wear. Old `?theme=` links land here too, which is
- * why the lookup is by label rather than by index.
+ * Self-healing on purpose: an unknown colour falls back to Cream rather than
+ * erroring or drawing something with no ink on it. `?theme=` and `?palette=`
+ * both land here, by id and by label, because both are out in the world: the
+ * composer sent labels while colour belonged to a style, and every link before
+ * that sent ids.
  */
 export function storyLook(
   styleId: string | null,
   paletteId: string | null,
 ): [StoryStyleId, StoryStyle, StoryTheme] {
-  const key = (styleId && styleId in STORY_STYLES ? styleId : "plain") as StoryStyleId;
-  const style = STORY_STYLES[key];
-  const hit = style.palettes.find((p) => p.label.toLowerCase() === (paletteId ?? "").toLowerCase());
-  return [key, style, hit ?? style.palettes[0]];
+  void styleId;
+  const want = (paletteId ?? "").toLowerCase();
+  const byId = (Object.keys(STORY_THEMES) as StoryThemeId[]).find((k) => k.toLowerCase() === want);
+  const byLabel = (Object.keys(STORY_THEMES) as StoryThemeId[]).find(
+    (k) => STORY_THEMES[k].label.toLowerCase() === want,
+  );
+  return ["plain", STORY_STYLES.plain, STORY_THEMES[byId ?? byLabel ?? "paper"]];
 }
 
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {

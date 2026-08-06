@@ -152,6 +152,16 @@ await m.waitForTimeout(400);
 const rowsOne = await m.locator(".clline").count();
 console.log("filtered rows:", rowsOne, "of", rowsAll);
 if (!(rowsOne > 0 && rowsOne < rowsAll)) fail("picking a face should narrow the list");
+// ...and says whose week it is, with the door to them. A filtered list is
+// otherwise indistinguishable from a quiet one: five faces with a ring on one,
+// and a shorter list under them for somebody to infer.
+{
+  const bar = (await m.locator(".focusbar-t").innerText()).trim();
+  const href = await m.locator(".focusbar-a").getAttribute("href");
+  console.log("focus bar:", bar, "->", href);
+  if (!/^Classes with Nadia$/.test(bar)) fail("the bar should name the coach: " + bar);
+  if (!href?.startsWith("/nadiahaq")) fail("View profile should open them, got " + href);
+}
 if (!(await m.locator(".trayav.sel").count())) fail("the picked face should wear the ring");
 if (!(await m.locator(".trayitem.dim").count())) fail("the others should step back");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-filtered.png" });
@@ -161,6 +171,9 @@ await m.locator(".trayitem", { hasText: "Nadia" }).click();
 await m.waitForTimeout(400);
 if ((await m.locator(".clline").count()) !== rowsAll)
   fail("tapping the picked coach again should clear the filter");
+// With everyone showing there is nothing to name and no single profile to
+// open, so the bar goes.
+if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
 // Search pulls the directory up over the week rather than navigating to it,
 // the way the plus pulls up the adder on the calendar, and comes back down

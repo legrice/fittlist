@@ -214,6 +214,28 @@ export function FollowingScreen({
         </div>
       </div>
 
+      {/* Who the rail has narrowed to, and the way to them.
+          A filtered list looks exactly like a quiet week: five faces, one of
+          them ringed, and a shorter list underneath. This says which coach in
+          words, so the state is readable rather than inferred, and it carries
+          the one thing you want next after "what has Emdilger got on", which
+          is Emdilger. It is only drawn when a face is picked: with everyone
+          showing there is nothing to name and no single profile to open. */}
+      {focus &&
+        (() => {
+          const c = coachById.get(focus);
+          if (!c) return null;
+          return (
+            <div className="focusbar">
+              <span className="focusbar-t">Classes with {c.name.split(/\s+/)[0]}</span>
+              <a className="focusbar-a" href={`/${c.handle}?from=following`}>
+                View profile
+                <Icon name="chevron_right" size={19} />
+              </a>
+            </div>
+          );
+        })()}
+
       {/* No week stepper here, on purpose. Your calendar is a week you flip
           through, because you are working on it; this is a list of what is
           coming, because you are reading it and "when can I train next" is not

@@ -130,8 +130,15 @@ await settled(coach);
     t.split("\n")[0].trim(),
   );
   console.log("rows:", heads.join(" | "));
-  if (heads.join() !== "Dates,Classes,Style")
-    fail("expected Dates, Classes, Style, got " + heads.join());
+  if (heads.join() !== "Dates,Classes,Colour")
+    fail("expected Dates, Classes, Colour, got " + heads.join());
+  // The questions sit above the picture they change. They were under it,
+  // which reads as a caption on the poster rather than as the controls that
+  // make it: on a phone the poster is most of the screen, so the answer was
+  // what you saw and the questions were what you scrolled for.
+  const optY = (await coach.locator(".storycustom").boundingBox()).y;
+  const picY = (await coach.locator(".composer > .storyimg-wrap").boundingBox()).y;
+  if (!(optY < picY)) fail("the options belong above the preview");
   if (!/All 3 showing/.test(await rowWords(coach, "Classes")))
     fail("the Classes row should count what is on the picture: " + (await rowWords(coach, "Classes")));
 }
@@ -165,45 +172,29 @@ await drawn(coach);
 }
 console.log("one canvas offered, and the square still renders at the route ok");
 
-// ---- the style picker: ten styles, and colour belongs to the style
+// ---- sixteen colourways, and colour is the whole of the look
 {
-  await openSheet(coach, "Style", "Style");
-  const cards = await coach.locator(".stylecard").count();
-  if (cards !== 10) fail("expected ten styles, got " + cards);
+  await openSheet(coach, "Colour", "Colour");
+  const cards = await coach.locator(".palcard").count();
+  console.log("colourways:", cards);
+  if (cards !== 16) fail("expected sixteen colours, got " + cards);
+  // The style axis is gone. Ten arrangements were not different enough to be
+  // worth a decision, and a picker asking about a difference nobody can see is
+  // a sheet and a grid spent on nothing.
+  if (await coach.locator(".stylecard, .stylegrid").count())
+    fail("the style grid should be gone");
 
-  // Each card draws the real arrangement, not a swatch: the whole complaint
-  // about the old picker was that ten cards differed only in hue above a
-  // question about layout. So the miniatures have to be ten different
-  // miniatures, and this measures the four things that actually vary: whether
-  // the names are uppercase, whether the block is centred, whether a row is
-  // ruled or boxed, and how big the class name is. Ten styles cannot all be
-  // unique on four axes, but they must not collapse to a handful.
-  const shapes = await coach.locator(".stylethumb").evaluateAll((els) =>
-    els.map((e) => {
-      const nm = e.querySelector("span span span");
-      const row = nm?.parentElement?.parentElement;
-      const cs = (n) => getComputedStyle(n);
-      return [
-        cs(nm).textTransform,
-        cs(e).alignItems,
-        cs(row).borderBottomWidth,
-        cs(row).borderTopLeftRadius,
-        Math.round(parseFloat(cs(nm).fontSize) * 10),
-        cs(row).flexDirection,
-      ].join("/");
-    }),
-  );
-  console.log("thumb shapes:", shapes.join("  "));
-  const distinct = new Set(shapes).size;
-  if (distinct < 7) fail(`the miniatures collapse to ${distinct} shapes: ${shapes.join(" ")}`);
-  // And they carry words, because a bar chart of three lines is what they
-  // replaced.
-  if (!(await coach.locator(".stylethumb", { hasText: "Barbell" }).count()))
-    fail("a miniature should show a real class name");
+  // Every swatch is a different ground: two that looked the same would be two
+  // rows in a picker doing one row's work.
+  const grounds = await coach
+    .locator(".palcard-sw")
+    .evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundImage + getComputedStyle(e).backgroundColor));
+  if (new Set(grounds).size !== 16)
+    fail(`the sixteen collapse to ${new Set(grounds).size} grounds`);
 
-  // The real poster is in the sheet, at the poster's own proportions, and it
-  // redraws as you pick. It used to live behind the scrim, which meant
-  // choosing a style blind, closing, looking, and opening again.
+  // The real poster is in the sheet and redraws as you pick, at the poster's
+  // own proportions. It used to live behind the scrim, which meant choosing
+  // blind, closing, looking, and opening again.
   const peek = coach.locator(".stylepeek .storyimg");
   await peek.waitFor();
   {
@@ -213,38 +204,38 @@ console.log("one canvas offered, and the square still renders at the route ok");
       fail(`the sheet's preview should be 9:16, got ${ratio.toFixed(2)}`);
   }
   const before = await peek.getAttribute("src");
-  const first = (await coach.locator(".palchip").allInnerTexts()).map((t) => t.trim());
-  console.log("plain's colours:", first.join(" | "));
-  if (first.length !== 3) fail("a style is offered in three colours, got " + first.length);
-
-  // Picking a loud style changes the picture, and swaps in that style's own
-  // colours: a diner sign is never asked to wear Midnight.
-  await coach.locator(".stylecard", { hasText: "Poster" }).click();
+  await coach.locator(".palcard", { hasText: "Cobalt" }).click();
   await coach.waitForTimeout(400);
   if ((await peek.getAttribute("src")) === before)
-    fail("picking a style should redraw the poster in the sheet");
-  const loud = (await coach.locator(".palchip").allInnerTexts()).map((t) => t.trim());
-  console.log("poster's colours:", loud.join(" | "));
-  if (loud.join() === first.join()) fail("each style carries its own three colours");
-  if (loud.length !== 3) fail("still three, got " + loud.length);
-
-  // The second colour of that style, and the URL says both halves.
-  await coach.locator(".palchip").nth(1).click();
-  await coach.waitForTimeout(400);
-  const src = await coach.locator(".composer > .storyimg-wrap .storyimg").getAttribute("src");
+    fail("picking a colour should redraw the poster in the sheet");
+  const src = await peek.getAttribute("src");
   console.log("picture:", src.replace(/^.*compose\?/, ""));
-  if (!/style=poster/.test(src)) fail("the picture should carry the style: " + src);
-  if (!new RegExp(`palette=${encodeURIComponent(loud[1])}`, "i").test(src))
-    fail("the picture should carry the colourway: " + src);
+  if (!/theme=cobalt/.test(src)) fail("the picture should carry the colour: " + src);
+  // Every one of the sixteen actually draws. A colourway is four colours and a
+  // lockup choice, and a bad hex in any of them is a 500 from Satori that the
+  // swatch grid cannot show you: the swatch is CSS and the poster is not.
+  {
+    const ids = await coach.locator(".palcard").evaluateAll((els) =>
+      els.map((e) => e.querySelector(".palcard-lbl").textContent.trim().toLowerCase()),
+    );
+    for (const label of ids) {
+      const r = await coach.request.get(
+        `${BASE}/api/story/compose?theme=${encodeURIComponent(label)}&days=7`,
+      );
+      if (!r.ok()) fail(`${label} does not render: ${r.status()}`);
+      const buf = await r.body();
+      if (buf.readUInt32BE(16) !== 1080 || buf.readUInt32BE(20) !== 1920)
+        fail(`${label} drew the wrong size`);
+    }
+    console.log("all sixteen draw:", ids.join(" "));
+  }
   await closeSheet(coach);
-  // ...and the row says where it stands without opening it.
-  const words = await rowWords(coach, "Style");
-  console.log("style row:", words);
-  if (!words.includes("Poster") || !words.includes(loud[1]))
-    fail("the Style row should name both halves: " + words);
+  const words = await rowWords(coach, "Colour");
+  console.log("colour row:", words);
+  if (!words.includes("Cobalt")) fail("the Colour row should name it: " + words);
   await drawn(coach);
 }
-console.log("style first, then one of its three colours ok");
+console.log("sixteen colourways, and no second question ok");
 
 // ---- the range picker is back: a start day and a length
 {

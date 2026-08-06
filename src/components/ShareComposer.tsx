@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { shareRows, type ShareRow } from "@/app/actions/share";
-import { STORY_STYLES, type StoryStyleId } from "@/lib/format";
+import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { Adder } from "@/components/Adder";
 import { BackLink } from "@/components/BackLink";
 import { Icon } from "@/components/Icon";
 import { StoryPreview } from "@/components/StoryPreview";
-import { StyleThumb } from "@/components/StyleThumb";
 import { putImage } from "@/lib/shareimage";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -60,11 +59,11 @@ export function ShareComposer({
 }) {
   const [toastMsg, toastOn, toast] = useToast();
 
-  const [styleId, setStyleId] = useState<StoryStyleId>("plain");
-  // The colourway, by label rather than by index: the route resolves it that
-  // way so an old ?theme= link still lands, and a style that reorders its
-  // three should not silently repaint everybody's saved pick.
-  const [palette, setPalette] = useState<string>(STORY_STYLES.plain.palettes[0].label);
+  // Colour is the whole of the look now. There was a style axis beside it for
+  // a build (ten arrangements the poster could be drawn in) and it came out:
+  // they were not different enough to be worth a decision, so the picker was
+  // a sheet and a grid asking about a difference nobody could see.
+  const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [showPhoto, setShowPhoto] = useState(true);
 
   const [from, setFrom] = useState(firstIso > today ? firstIso : today);
@@ -72,18 +71,14 @@ export function ShareComposer({
 
   const [rows, setRows] = useState<ShareRow[] | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [sheet, setSheet] = useState<"dates" | "classes" | "style" | null>(null);
+  const [sheet, setSheet] = useState<"dates" | "classes" | "colour" | null>(null);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   // Adding a class changes the week without changing a single control, so the
   // picture has no reason of its own to redraw. This is that reason.
   const [bust, setBust] = useState(0);
 
-  const style = STORY_STYLES[styleId];
-  // Self-healing the way the route does: a colourway that does not belong to
-  // the style in front of you falls back to that style's first, so switching
-  // style never leaves the swatch row pointing at nothing.
-  const look = style.palettes.find((p) => p.label === palette) ?? style.palettes[0];
+  const look = STORY_THEMES[themeId];
 
   useEffect(() => {
     getStoryPrefs().then((p) => setShowPhoto(p.showPhoto));
@@ -108,8 +103,7 @@ export function ShareComposer({
   const bare = rows !== null && shown.length === 0;
 
   const q = new URLSearchParams({
-    style: styleId,
-    palette: look.label,
+    theme: themeId,
     from,
     days: String(days),
     headline: HEADLINE,
@@ -119,7 +113,7 @@ export function ShareComposer({
   if (hideList) q.set("hide", hideList);
   if (bust) q.set("v", String(bust));
   const src = `/api/story/compose?${q.toString()}`;
-  const fileName = `fittlist-${styleId}-${look.label.toLowerCase()}.png`;
+  const fileName = `fittlist-${themeId}.png`;
 
   // Changing the range changes which keys exist, and a key hidden out of one
   // range means nothing in another: carrying them across would silently drop
@@ -161,12 +155,11 @@ export function ShareComposer({
         </BackLink>
       </div>
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <StoryPreview src={src} alt="Story image of your week" bg={look.bg} />
-
-      {/* The three questions, under the thing they are about. Each is a row
-          that says where it stands, so the screen answers most of itself
-          without a tap. */}
+      {/* The three questions, above the picture they change. They sat under
+          it, which reads as a caption on the poster rather than as the
+          controls that make it: on a phone the poster is most of the screen,
+          so the answer was what you saw and the questions were what you
+          scrolled for. Decide, then look. */}
       <div className="storycustom">
         <button className="comprow" onClick={() => setSheet("dates")}>
           <span className="comprow-t">
@@ -192,12 +185,10 @@ export function ShareComposer({
           <span className="comprow-a">Edit ›</span>
         </button>
 
-        <button className="comprow" onClick={() => setSheet("style")}>
+        <button className="comprow" onClick={() => setSheet("colour")}>
           <span className="comprow-t">
-            Style
-            <small>
-              {style.label} · {look.label}
-            </small>
+            Colour
+            <small>{look.label}</small>
           </span>
           <span className="comprow-sw">
             <span
@@ -218,6 +209,9 @@ export function ShareComposer({
           </button>
         )}
       </div>
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <StoryPreview src={src} alt="Story image of your week" bg={look.bg} />
 
       <div className="publishwrap">
         {bare ? (
@@ -336,87 +330,49 @@ export function ShareComposer({
         </Sheet>
       )}
 
-      {sheet === "style" && (
+      {sheet === "colour" && (
         <Sheet
-          title="Style"
-          lead="How loud the picture is, then which of its three colours."
+          title="Colour"
+          lead="Sixteen ways to paint the same week."
           onClose={() => setSheet(null)}
         >
-          {/* The real poster, in the sheet, redrawing as you pick.
-              The miniatures below say what the arrangement is; this says what
-              you will actually post, which is the thing a picker is for. It
-              was behind the scrim: the preview lives on the screen underneath,
-              so choosing a style meant picking blind, closing, looking, and
-              opening again. Small, because the grid is what you are working
-              in and this is the answer beside it. */}
+          {/* The real poster, in the sheet, redrawing as you pick. It used to
+              live behind the scrim: the preview is on the screen underneath,
+              so choosing meant picking blind, closing, looking, and opening
+              again. Small, because the grid is what you are working in and
+              this is the answer beside it. */}
           <div className="stylepeek">
-            <StoryPreview src={src} alt="Your picture in this style" bg={look.bg} />
+            <StoryPreview src={src} alt="Your picture in this colour" bg={look.bg} />
           </div>
-          {/* Loud to quiet, because that is the order somebody scans them in
-              and the quiet ones are what most people settle on.
 
-              Each card draws the real arrangement rather than a swatch. It
-              was three coloured bars per style, which said the colours and
-              nothing else: ten cards differing only in hue, above a question
-              about layout. What actually differs is where the block sits,
-              whether the names shout, whether a row is ruled or boxed, and
-              whether the time holds a gutter, so that is what the card shows,
-              off the same style object the image route reads. */}
-          <div className="stylegrid">
-            {(Object.entries(STORY_STYLES) as [StoryStyleId, (typeof STORY_STYLES)["plain"]][]).map(
-              ([id, s]) => {
-                const on = id === styleId;
-                const sw = s.palettes.find((p) => p.label === palette) ?? s.palettes[0];
+          {/* Whole swatches rather than dots: a colourway is a ground, an ink
+              and an accent, and a dot only shows you the ground. Two of the
+              sixteen would look identical as dots. */}
+          <div className="palgrid">
+            {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
+              ([id, t]) => {
+                const on = id === themeId;
                 return (
                   <button
                     key={id}
-                    className={`stylecard${on ? " sel" : ""}`}
+                    className={`palcard${on ? " sel" : ""}`}
                     aria-pressed={on}
-                    onClick={() => {
-                      setStyleId(id);
-                      // Keep the colourway if this style is offered in it,
-                      // otherwise take its first. Somebody who has found their
-                      // colour should be able to try every style without
-                      // losing it, and a style that cannot wear it should not
-                      // pretend to.
-                      setPalette(
-                        (s.palettes.find((p) => p.label === palette) ?? s.palettes[0]).label,
-                      );
-                    }}
+                    onClick={() => setThemeId(id)}
                   >
-                    <StyleThumb style={s} theme={sw} />
-                    <span className="stylecard-lbl">{s.label}</span>
+                    <span
+                      className="palcard-sw"
+                      style={{ background: t.bg, color: t.fg }}
+                      aria-hidden="true"
+                    >
+                      <span className="palcard-bar" style={{ background: t.accent }} />
+                      <span className="palcard-line" style={{ background: t.fg }} />
+                      <span className="palcard-line short" style={{ background: t.faint }} />
+                    </span>
+                    <span className="palcard-lbl">{t.label}</span>
                   </button>
                 );
               },
             )}
-          </div>
-
-          {/* Three, not eight. Colour belongs to the style rather than sitting
-              beside it as a free second axis: ten styles times eight palettes
-              is eighty posters and most of them are wrong, because the loud
-              ones depend on specific pairings a global picker would happily
-              break. */}
-          <label className="flabel">Colour</label>
-          <div className="palrow">
-            {style.palettes.map((p) => {
-              const on = p.label === look.label;
-              return (
-                <button
-                  key={p.label}
-                  className={`palchip${on ? " sel" : ""}`}
-                  aria-pressed={on}
-                  onClick={() => setPalette(p.label)}
-                >
-                  <span
-                    className="swd"
-                    style={{ background: p.bg, borderColor: p.accent }}
-                    aria-hidden="true"
-                  />
-                  {p.label}
-                </button>
-              );
-            })}
           </div>
         </Sheet>
       )}
