@@ -5943,6 +5943,17 @@ button.ps-card { cursor: pointer; }
 /* A shift's one act, in the footer slot a member's Book takes: the date is
    yours to manage, not to book. */
 .clsfull-btn.manage { background: var(--si); color: #fff; }
+/* The booking doors, as the buttons they are: each one is the act this
+   sheet exists for, in the same brand pill Book itself wears. */
+.bookbtns { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.bookbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 16px; border-radius: 999px;
+  background: var(--si); color: #fff; text-decoration: none;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16.5px; font-weight: 600;
+}
+.bookbtn:active { transform: scale(.97); }
 .clsfull-btn:active { transform: scale(.97); }
 .clspeek-grab {
   display: block; width: 44px; height: 5px; border-radius: 999px;

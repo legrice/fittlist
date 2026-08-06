@@ -408,21 +408,19 @@ export function ClassPeek({
                 <Icon name="close" size={20} />
               </button>
             </div>
-            <div className="settingslist" style={{ marginTop: 22 }}>
+            {/* Real buttons, not rows: each is the one act this sheet exists
+                for, and a grey row read as a setting. */}
+            <div className="bookbtns">
               {bookLinks.map((l) => (
                 <a
                   key={l.url}
-                  className="setrow"
+                  className="bookbtn"
                   href={l.url}
                   target="_blank"
                   rel="noopener nofollow"
                 >
-                  <span className="setrow-txt">
-                    <span className="t">Book via {l.label}</span>
-                  </span>
-                  <span className="setrow-chev">
-                    <Icon name="north_east" size={20} />
-                  </span>
+                  Book via {l.label}
+                  <Icon name="north_east" size={19} />
                 </a>
               ))}
             </div>

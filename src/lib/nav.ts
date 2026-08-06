@@ -46,7 +46,10 @@ export function navTabs(
     // Everyone you follow, as one week, and it leads now, by Matt's call:
     // it is the only screen a member has, and for a coach it is the reading
     // screen where the calendar is the working one.
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    // "Follow", not "Following", by Matt's call: the shorter word gives four
+    // tabs and the search circle their room, and it names the act as well
+    // as the place.
+    { id: "following", href: "/feed", icon: "groups", label: "Follow" },
     // Only for somebody who teaches.
     ...(coach
       ? [
