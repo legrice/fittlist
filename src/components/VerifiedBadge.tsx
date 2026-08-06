@@ -35,12 +35,15 @@ export function VerifiedBadge({
 
   return (
     <>
+      {/* Only Verified wears the check: the mark means the claim was made
+          good, and drawing it beside Unverified said the opposite of the
+          word. Unverified is the word alone, in ink. */}
       <button
-        className="kindtag studiokept"
+        className={`kindtag studiokept${verified ? "" : " studiokept-un"}`}
         onClick={() => setOpen(true)}
         aria-label={verified ? "What Verified means" : "What Unverified means"}
       >
-        <Icon name="verified" size={15} /> {verified ? "Verified" : "Unverified"}
+        {verified && <Icon name="verified" size={15} />} {verified ? "Verified" : "Unverified"}
       </button>
 
       {open &&

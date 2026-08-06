@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { StudioFeedback } from "@/components/StudioFeedback";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
@@ -47,18 +48,20 @@ export function StudioMenu({
 
   return (
     <>
-      {/* On the commons the pencil is out in the open: any coach may fix an
-          unclaimed page, and a door you can see is a door that gets used.
-          A claimed studio keeps editing behind its managers' own doors. */}
-      {canEdit && !claimed && (
-        <button className="owneredit" onClick={() => setMindfulOpen(true)}>
-          <Icon name="edit" size={17} /> Edit
-        </button>
-      )}
+      {/* No pencil out in the open any more, by Matt's call: an Edit button
+          on the page read as an invitation to everybody, and it took over
+          the corner. Editing lives in the dots, behind the word about care;
+          a door you have to open on purpose is opened by the people who
+          mean it. */}
       <button className="ownermore" aria-label="More" onClick={() => setMenuOpen(true)}>
         <Icon name="more_horiz" size={22} />
       </button>
 
+      {/* Everything from here down portals out: this menu renders in the
+          pinned head's corner slot, and sticky makes a stacking context on
+          mobile, so a sheet drawn in place paints behind the card that
+          slides over the head. Same trap and same fix as ProfileOwnerBar. */}
+      <BodyPortal>
       {menuOpen && (
         <div
           className="sheet-scrim"
@@ -83,11 +86,10 @@ export function StudioMenu({
                 </span>
                 <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
-              {/* Only a claimed studio keeps the pencil in here (its
-                  managers' row); on the commons the Edit button beside the
-                  dots is the one door, because two doors to one editor is
-                  how one gets forgotten. */}
-              {canEdit && claimed && (
+              {/* The one door to the editor, for anyone allowed through it:
+                  a manager on a claimed page, any coach on the commons. The
+                  word about care comes first either way. */}
+              {canEdit && (
                 <button
                   className="setrow"
                   onClick={() => {
@@ -219,6 +221,7 @@ export function StudioMenu({
         onDone={toast}
       />
       <Toast msg={toastMsg} on={toastOn} />
+      </BodyPortal>
     </>
   );
 }

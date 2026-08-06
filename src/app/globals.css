@@ -3305,15 +3305,9 @@ button.ps-card { cursor: pointer; }
   content: ""; position: absolute; inset: -20px -18px -30px; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
 }
-/* Edit carries its word, so it is a pill in the same white as the dots. */
-.owneredit {
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
-  height: 38px; padding: 0 14px; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600; font-size: 13.5px; cursor: pointer;
-}
-.owneredit:active { background: var(--cl); }
+/* The open Edit pill is gone, by Matt's call: a pencil on the page read as
+   an invitation to everybody and took over the corner. Editing lives in the
+   studio's dots now, behind the word about care. */
 /* The gear carries its word, so it is a pill rather than a circle: the round
    one had to be guessed at, and what is behind it is worth a label. The
    studio's dots stay a circle, because a menu of five things has no one name. */
@@ -4877,6 +4871,11 @@ button.ps-card { cursor: pointer; }
 }
 .pubhead .studiokept,
 [data-mode="dark"] .pubhead .studiokept { color: #2c6b3f; }
+/* Unverified is the word alone in ink: green and a check are the verified
+   claim's, and wearing either while saying the opposite reads as a badge
+   contradicting itself. */
+.pubhead .studiokept-un,
+[data-mode="dark"] .pubhead .studiokept-un { color: var(--ink); }
 
 /* Admin: who holds the keys to a studio page. */
 .adminclaimed { color: var(--go); font-weight: 600; }
