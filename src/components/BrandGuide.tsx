@@ -87,7 +87,7 @@ export function BrandGuide({ mark }: { mark: string }) {
       </section>
 
       <section className="brandsec">
-        <h2 className="brandh">Core colour</h2>
+        <h2 className="brandh">Core color</h2>
         <p className="brandp">Tap any swatch to copy the hex.</p>
         <div className="brandsws">
           {CORE.map((s) => (

@@ -88,7 +88,7 @@ export function ShareWeekSheet({
         </div>
         <div className="storycustom">
           <label className="flabel" htmlFor="stTheme">
-            Style <span>· colours for your image</span>
+            Style <span>· colors for your image</span>
           </label>
           <div className="stylepick">
             <button

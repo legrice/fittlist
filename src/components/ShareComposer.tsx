@@ -187,7 +187,7 @@ export function ShareComposer({
 
         <button className="comprow" onClick={() => setSheet("colour")}>
           <span className="comprow-t">
-            Colour
+            Color
             <small>{look.label}</small>
           </span>
           <span className="comprow-sw">
@@ -332,7 +332,7 @@ export function ShareComposer({
 
       {sheet === "colour" && (
         <Sheet
-          title="Colour"
+          title="Color"
           lead="Sixteen ways to paint the same week."
           onClose={() => setSheet(null)}
         >
@@ -342,7 +342,7 @@ export function ShareComposer({
               again. Small, because the grid is what you are working in and
               this is the answer beside it. */}
           <div className="stylepeek">
-            <StoryPreview src={src} alt="Your picture in this colour" bg={look.bg} />
+            <StoryPreview src={src} alt="Your picture in this color" bg={look.bg} />
           </div>
 
           {/* Whole swatches rather than dots: a colourway is a ground, an ink

@@ -5849,7 +5849,7 @@ a.clspeek-by:active { opacity: .6; }
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
 .clline-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 27px; font-weight: 700; line-height: 1.1; letter-spacing: -.005em;
+  font-size: 27px; font-weight: 600; line-height: 1.1; letter-spacing: -.005em;
   color: var(--ink);
 }
 /* The studio, with a pin. The glyph is what stops it reading as a second line

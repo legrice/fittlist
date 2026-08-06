@@ -87,7 +87,7 @@ export function ShareCardSheet({
         </p>
         <div className="storycustom">
           <label className="flabel" htmlFor="cardTheme">
-            Style <span>· colours for the card</span>
+            Style <span>· colors for the card</span>
           </label>
           <div className="stylepick">
             <button

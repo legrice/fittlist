@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Brand · fittlist",
-  description: "The fittlist mark, colour, type and voice.",
+  description: "The fittlist mark, color, type and voice.",
 };
 
 // The brand guide. Open to anyone with the link: it's a reference, not a
@@ -49,7 +49,7 @@ export default async function BrandPage() {
         <div className="admintop">
           <div>
             <h1>Brand</h1>
-            <p className="adminsub">The mark, the colour, the type and the words</p>
+            <p className="adminsub">The mark, the color, the type and the words</p>
           </div>
         </div>
         <BrandGuide mark={brandIcon("#C2410C")} />

@@ -2,8 +2,8 @@
 //
 // It is the one screen whose whole job is making something worth sending, so
 // what this walks is the making: that the preview is a real PNG at the poster's
-// own proportions, that the three rows say where they stand, that a style owns
-// its colours, that the picker's count and the picture agree, that adding a
+// own proportions, that the three rows say where they stand, that the sixteen
+// colorways are sixteen, that the picker's count and the picture agree, that adding a
 // class from the picker reaches the calendar and the studio directory, and that
 // an empty range is an offer rather than a blank image.
 //
@@ -130,8 +130,8 @@ await settled(coach);
     t.split("\n")[0].trim(),
   );
   console.log("rows:", heads.join(" | "));
-  if (heads.join() !== "Dates,Classes,Colour")
-    fail("expected Dates, Classes, Colour, got " + heads.join());
+  if (heads.join() !== "Dates,Classes,Color")
+    fail("expected Dates, Classes, Color, got " + heads.join());
   // The questions sit above the picture they change. They were under it,
   // which reads as a caption on the poster rather than as the controls that
   // make it: on a phone the poster is most of the screen, so the answer was
@@ -172,12 +172,12 @@ await drawn(coach);
 }
 console.log("one canvas offered, and the square still renders at the route ok");
 
-// ---- sixteen colourways, and colour is the whole of the look
+// ---- sixteen colorways, and color is the whole of the look
 {
-  await openSheet(coach, "Colour", "Colour");
+  await openSheet(coach, "Color", "Color");
   const cards = await coach.locator(".palcard").count();
-  console.log("colourways:", cards);
-  if (cards !== 16) fail("expected sixteen colours, got " + cards);
+  console.log("colorways:", cards);
+  if (cards !== 16) fail("expected sixteen colors, got " + cards);
   // The style axis is gone. Ten arrangements were not different enough to be
   // worth a decision, and a picker asking about a difference nobody can see is
   // a sheet and a grid spent on nothing.
@@ -207,11 +207,11 @@ console.log("one canvas offered, and the square still renders at the route ok");
   await coach.locator(".palcard", { hasText: "Cobalt" }).click();
   await coach.waitForTimeout(400);
   if ((await peek.getAttribute("src")) === before)
-    fail("picking a colour should redraw the poster in the sheet");
+    fail("picking a color should redraw the poster in the sheet");
   const src = await peek.getAttribute("src");
   console.log("picture:", src.replace(/^.*compose\?/, ""));
-  if (!/theme=cobalt/.test(src)) fail("the picture should carry the colour: " + src);
-  // Every one of the sixteen actually draws. A colourway is four colours and a
+  if (!/theme=cobalt/.test(src)) fail("the picture should carry the color: " + src);
+  // Every one of the sixteen actually draws. A colorway is four colors and a
   // lockup choice, and a bad hex in any of them is a 500 from Satori that the
   // swatch grid cannot show you: the swatch is CSS and the poster is not.
   {
@@ -230,12 +230,12 @@ console.log("one canvas offered, and the square still renders at the route ok");
     console.log("all sixteen draw:", ids.join(" "));
   }
   await closeSheet(coach);
-  const words = await rowWords(coach, "Colour");
-  console.log("colour row:", words);
-  if (!words.includes("Cobalt")) fail("the Colour row should name it: " + words);
+  const words = await rowWords(coach, "Color");
+  console.log("color row:", words);
+  if (!words.includes("Cobalt")) fail("the Color row should name it: " + words);
   await drawn(coach);
 }
-console.log("sixteen colourways, and no second question ok");
+console.log("sixteen colorways, and no second question ok");
 
 // ---- the range picker is back: a start day and a length
 {

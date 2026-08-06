@@ -339,7 +339,7 @@ export function ProfileOwnerBar({
                     aria-expanded={colorOpen}
                     onClick={() => setColorOpen((v) => !v)}
                   >
-                    {colorOpen ? "Done" : "Or pick a colour"}
+                    {colorOpen ? "Done" : "Or pick a color"}
                   </button>
                 )}
               </div>
