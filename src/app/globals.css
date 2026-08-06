@@ -12,14 +12,22 @@
 
 :root {
   /* Delight typeface. Warm charcoal ink, cream ground, pleasant orange CTA -
-     the original fittlist palette (à la the meetgen reference boards). */
-  --cl: #f4efe1;           /* warm cream — headers, tags, accents */
-  --cl-d: #e9e1cc;         /* one step down: chips that need to read off the page */
-  --paper: #faf8f2;        /* very light near-white ground for the main scroll */
+     the original fittlist palette (à la the meetgen reference boards).
+
+     The whole set lifted one step toward white, keeping its warmth. The
+     creams were mixed for a page of white cards floating on them: with the
+     cards gone the ground *is* the surface, over the whole screen, and at the
+     old values a phone of it read as aged paper rather than as light. Warm
+     and light are not the same axis, so the hue is unchanged and only the
+     lightness moved; a lift that also desaturated would have traded drab for
+     grey, which is the other way to lose the brand. */
+  --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
+  --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
+  --paper: #fdfcf7;        /* the ground for the main scroll, a breath off white */
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
-  --line: #ddd2b6;         /* warm cream input borders and light edges */
+  --line: #e6ddc8;         /* warm cream input borders and light edges */
   /* The rule between rows, and its weight, as two tokens.
      They were one: every divider in the app was a 1px `--line`, the same
      hairline an input border wears, and a list of classes read as text
@@ -32,11 +40,11 @@
      the type a weight lighter, the page read as ruled paper. Colour is what
      separates a divider from an edge here, not thickness. The token stays
      because one number for every rule in the app is worth having. */
-  --div: #c9bc99;
+  --div: #d4c8ab;
   /* The day bands. Only just darker than the paper: a band is a break in a
      scroll, and the whole of its job is done by being a shade off the page
      with the date sitting quietly in it. At `--cl` it was a bar. */
-  --band: #f3efe3;
+  --band: #f7f3e9;
   --divw: 1px;
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
@@ -217,7 +225,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   width: 100%; padding: 13px; border-radius: 16px; border: 1px solid var(--line);
   background: #fff; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 14px;
 }
-.obalt:active { background: #f3ecdf; }
+.obalt:active { background: #f6f1e5; }
 .obalt[disabled] { opacity: .5; pointer-events: none; }
 .obalt.google, .obalt.apple { text-decoration: none; }
 .obalt.apple { background: #191502; color: #fff; border-color: #191502; }
@@ -418,7 +426,7 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
   border: 1px solid var(--line); background: #fff; color: var(--ink);
   font-family: inherit; font-weight: 600; font-size: 14px;
 }
-.logoutbtn:active { background: #f3ecdf; }
+.logoutbtn:active { background: #f6f1e5; }
 
 /* public */
 .pub { background: var(--paper); min-height: 100dvh; }
@@ -476,7 +484,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   background: var(--card); border: 1px solid var(--line); color: var(--ink);
   display: flex; align-items: center; justify-content: center;
 }
-.sheetclose:active { background: #f3ecdf; }
+.sheetclose:active { background: #f6f1e5; }
 .sheet h2 { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 22px; margin-bottom: 4px; padding-right: 46px; }
 .sheet p.lead { font-size: 13px; color: var(--ol); line-height: 1.5; margin-bottom: 14px; }
 /* The informational sheets (the badges' explainers, the community note) are
@@ -515,7 +523,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   border-bottom: 1px solid var(--line);
 }
 .namesug button:last-child { border-bottom: none; }
-.namesug button:hover { background: #f3ecdf; }
+.namesug button:hover { background: #f6f1e5; }
 .namesug-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1411,7 +1419,7 @@ button.bl-band { cursor: pointer; }
 .usericon {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; border-radius: 999px; overflow: hidden;
-  background: #eae3d2; color: #191502; border: 1px solid var(--line); box-shadow: none; padding: 0;
+  background: #f0ebdd; color: #191502; border: 1px solid var(--line); box-shadow: none; padding: 0;
 }
 .usericon:active { opacity: .7; }
 .usericon-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1603,7 +1611,7 @@ button.bl-band { cursor: pointer; }
 .ps-agenda .ps-ap { font-size: 11px; margin-left: 2px; letter-spacing: .01em; }
 /* Private sessions: no card fill, just a muted accent bar + the Private badge. */
 .ps-agenda .ps-event-private { background: transparent; border: none; border-bottom: 1px solid var(--line); }
-.ps-agenda .ps-event-private:active { background: #f3ecdf; }
+.ps-agenda .ps-event-private:active { background: #f6f1e5; }
 .ps-agenda .ps-event-private .ps-accent { background: var(--sa); }
 
 .ps-card {
@@ -1957,7 +1965,7 @@ button.ps-card { cursor: pointer; }
   border-top: 1px solid var(--line); font-family: inherit; color: inherit;
 }
 .brandsw:first-child { border-top: 0; }
-.brandsw:active { background: #f3ecdf; }
+.brandsw:active { background: #f6f1e5; }
 .brandsw-chip {
   width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
   box-shadow: inset 0 0 0 1px rgba(25, 21, 2, .12);
@@ -2329,7 +2337,7 @@ button.ps-card { cursor: pointer; }
 .classsheet-who .icon { color: var(--ol); opacity: .7; }
 .classsheet-av {
   width: 26px; height: 26px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
-  background: #eae3d2; display: block;
+  background: #f0ebdd; display: block;
 }
 .classsheet-av-empty {
   display: flex; align-items: center; justify-content: center;
@@ -2376,9 +2384,9 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; gap: 12px; padding: 14px 2px; text-decoration: none;
   color: var(--ink); border-bottom: 1px solid var(--line); -webkit-tap-highlight-color: transparent;
 }
-.inboxrow:active { background: #f3ecdf; }
+.inboxrow:active { background: #f6f1e5; }
 .inboxrow-av {
-  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: #eae3d2;
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; background: #f0ebdd;
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: #191502;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -2471,7 +2479,7 @@ button.ps-card { cursor: pointer; }
 .coachstudio:active { opacity: .6; }
 .coachstudio-av {
   flex-shrink: 0; width: 48px; height: 48px; border-radius: 999px; object-fit: cover;
-  background: #eae3d2; display: block;
+  background: #f0ebdd; display: block;
 }
 .coachstudio-av-empty {
   display: flex; align-items: center; justify-content: center;
@@ -2592,7 +2600,7 @@ button.ps-card { cursor: pointer; }
    only photograph on it, so it can carry the weight. */
 .profav {
   width: 128px; height: 128px; border-radius: 999px; object-fit: cover; display: block;
-  margin-bottom: 18px; background: #eae3d2;
+  margin-bottom: 18px; background: #f0ebdd;
   box-shadow: 0 14px 30px rgba(17, 17, 17, .18), 0 3px 8px rgba(17, 17, 17, .10);
 }
 .profav-empty {
@@ -2875,7 +2883,7 @@ button.ps-card { cursor: pointer; }
 }
 .acctwho-av {
   width: 56px; height: 56px; border-radius: 999px; object-fit: cover;
-  background: #eae3d2; flex-shrink: 0;
+  background: #f0ebdd; flex-shrink: 0;
 }
 /* Filled with the coach's own palette colour, same as the header avatar and
    every other photo-less face in the app. */
@@ -2932,7 +2940,7 @@ button.ps-card { cursor: pointer; }
   padding: 18px 16px 16px; background: #fff; border-radius: 16px; box-shadow: var(--soft-shadow);
   text-align: left;
 }
-.acctcard:active { background: #f3ecdf; }
+.acctcard:active { background: #f6f1e5; }
 .acctcard-ic { color: #191502; margin-bottom: 24px; }
 .acctcard-t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 16px; color: #191502; }
 .acctcard-s { font-size: 12px; color: #928b78; line-height: 1.35; }
@@ -2965,7 +2973,7 @@ button.ps-card { cursor: pointer; }
   flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 13px;
   color: #191502; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px;
 }
-.secbtn:active { background: #f3ecdf; }
+.secbtn:active { background: #f6f1e5; }
 .secbtn[disabled] { opacity: .5; pointer-events: none; }
 
 /* account: settings list of rows (Login & security, Contact info, …) */
@@ -2984,7 +2992,7 @@ button.ps-card { cursor: pointer; }
    position in the list instead means a row can bring whatever it likes. */
 .settingslist > .setrow { border-top: var(--divw) solid var(--div); }
 .settingslist > .setrow:first-child { border-top: 0; }
-.setrow:active { background: #f3ecdf; }
+.setrow:active { background: #f6f1e5; }
 .setrow-ic { color: #191502; display: flex; flex-shrink: 0; }
 .setrow-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .setrow-txt .t { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #191502; }
@@ -3530,7 +3538,7 @@ button.ps-card { cursor: pointer; }
    with both in it still lines up. */
 .notifrow-av {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; object-fit: cover;
-  display: block; background: #eae3d2;
+  display: block; background: #f0ebdd;
 }
 .notifrow-av-empty {
   display: flex; align-items: center; justify-content: center; color: #fff;
@@ -3827,7 +3835,7 @@ button.ps-card { cursor: pointer; }
 }
 .feedstrip.hassel .feedav:not(.on) { opacity: .45; }
 .feedav-img {
-  width: 72px; height: 72px; border-radius: 999px; object-fit: cover; background: #eae3d2;
+  width: 72px; height: 72px; border-radius: 999px; object-fit: cover; background: #f0ebdd;
   display: block;
 }
 .feedav-img-empty {
@@ -3883,7 +3891,7 @@ button.ps-card { cursor: pointer; }
 }
 .ps-ecoachav {
   flex-shrink: 0; width: 22px; height: 22px; border-radius: 999px; object-fit: cover;
-  background: #eae3d2; display: block;
+  background: #f0ebdd; display: block;
 }
 .ps-ecoachav-empty {
   display: flex; align-items: center; justify-content: center; font-size: 12px;
@@ -3896,7 +3904,7 @@ button.ps-card { cursor: pointer; }
    with the glyphs every other .setrow in the same sheet wears. */
 .sendav {
   flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px; object-fit: cover;
-  background: #eae3d2; display: block;
+  background: #f0ebdd; display: block;
 }
 .sendav-empty {
   display: flex; align-items: center; justify-content: center; font-size: 13px;
@@ -3975,7 +3983,7 @@ button.ps-card { cursor: pointer; }
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
   width: 26px; height: 26px; border-radius: 999px; object-fit: cover; display: block;
-  background: #eae3d2; opacity: .55; transition: opacity .12s;
+  background: #f0ebdd; opacity: .55; transition: opacity .12s;
 }
 .navav-empty {
   display: flex; align-items: center; justify-content: center; color: #fff;
@@ -4264,7 +4272,7 @@ button.ps-card { cursor: pointer; }
 }
 .disrow-av {
   flex-shrink: 0; width: 48px; height: 48px; border-radius: 999px; object-fit: cover;
-  background: #eae3d2; display: block;
+  background: #f0ebdd; display: block;
 }
 /* A place is a rectangle and a person is a circle: the same shape rule the
    profile heads follow, at row size, so the two halves of the directory read
@@ -4348,7 +4356,7 @@ button.ps-card { cursor: pointer; }
 
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
-.mepho-img { width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block; background: #eae3d2; }
+.mepho-img { width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block; background: #f0ebdd; }
 .mepho-empty {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 34px; color: #fff;

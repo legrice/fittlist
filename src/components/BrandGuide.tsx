@@ -14,12 +14,12 @@ type Swatch = { name: string; token: string; hex: string; note: string; onDark?:
 const CORE: Swatch[] = [
   { name: "Orange", token: "--si", hex: "#C2410C", note: "The accent, and every primary action", onDark: true },
   { name: "Ink", token: "--ink", hex: "#191502", note: "Text, and dark surfaces", onDark: true },
-  { name: "Paper", token: "--paper", hex: "#faf8f2", note: "The ground everything scrolls on" },
+  { name: "Paper", token: "--paper", hex: "#fdfcf7", note: "The ground everything scrolls on" },
   { name: "Card", token: "--card", hex: "#ffffff", note: "What floats on the paper" },
 ];
 
 const SUPPORTING: Swatch[] = [
-  { name: "Cream", token: "--cl", hex: "#f4efe1", note: "Headers, tags, quiet fills" },
+  { name: "Cream", token: "--cl", hex: "#f7f4ea", note: "Headers, tags, quiet fills" },
   { name: "Cream, down one", token: "--cl-d", hex: "#e9e1cc", note: "Chips that need to read off the page" },
   { name: "Soft orange", token: "--si-soft", hex: "#f7e6d6", note: "A tint of the accent" },
   { name: "Sand", token: "--sa", hex: "#d6d1b3", note: "Muted fills" },
@@ -77,7 +77,7 @@ export function BrandGuide({ mark }: { mark: string }) {
         <div className="brandmarks">
           <div className="brandmark on-si" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#ffffff"') }} />
           <div className="brandmark on-paper" dangerouslySetInnerHTML={{ __html: mark }} />
-          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#faf8f2"') }} />
+          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#fdfcf7"') }} />
         </div>
         <p className="brandp brandp-tight">
           White on orange is the app icon. Orange on paper is the header lockup. Paper on ink is
