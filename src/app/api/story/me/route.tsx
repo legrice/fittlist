@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { storyStyle, storyTheme, todayIso as todayIsoNow } from "@/lib/format";
+import { storyLook, todayIso as todayIsoNow } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory } from "@/lib/storyplan";
@@ -20,9 +20,10 @@ export async function GET(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) return new Response("Not found", { status: 404 });
   const qs = new URL(req.url).searchParams;
-  const [, t] = storyTheme(qs.get("theme"));
-  // Two axes: what colour, and how it is drawn.
-  const [, y] = storyStyle(qs.get("style"));
+  // Style first, then one of the three colourways that style is offered in.
+  // Colour belongs to the style rather than sitting beside it, so a diner
+  // sign is never asked to wear Midnight.
+  const [, y, t] = storyLook(qs.get("style"), qs.get("palette") ?? qs.get("theme"));
 
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));

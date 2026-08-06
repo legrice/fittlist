@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { storyStyle, storyTheme } from "@/lib/format";
+import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
@@ -37,9 +37,10 @@ export async function GET(req: Request) {
   // rather than an empty picture: the URL is not a way around the wall.
   const asked = qs.get("kind") === "coaching" ? "coaching" : "going";
   const kind: ShareKind = me.kind === "fan" ? "going" : asked;
-  const [, t] = storyTheme(qs.get("theme"));
-  // Two axes: what colour, and how it is drawn.
-  const [, y] = storyStyle(qs.get("style"));
+  // Style first, then one of the three colourways that style is offered in.
+  // Colour belongs to the style rather than sitting beside it, so a diner
+  // sign is never asked to wear Midnight.
+  const [, y, t] = storyLook(qs.get("style"), qs.get("palette") ?? qs.get("theme"));
   const format: StoryFormat = qs.get("fmt") === "square" ? "square" : "story";
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
   const hide = new Set((qs.get("hide") ?? "").split(",").filter(Boolean));

@@ -192,24 +192,57 @@ export type StoryStyle = {
    * somebody's Thursday.
    */
   rowScale: number;
+  /**
+   * The three colourways this style is offered in, the first being its
+   * default.
+   *
+   * Colour belongs to the style rather than sitting beside it as a free second
+   * axis. Ten styles times eight palettes is eighty posters, and most of them
+   * are wrong: a diner sign in Midnight is not a diner sign, and the loud
+   * styles depend on specific pairings that a global picker would happily
+   * break. Three per style is thirty posters where every one of them is good,
+   * which is the better number even though it is smaller.
+   *
+   * It also makes the picking simpler, which is the point of this whole build:
+   * choose how loud, then choose which of three. Two small decisions in order,
+   * rather than two axes to hold in your head at once.
+   */
+  palettes: StoryTheme[];
 };
+
+/** Named so the picker can label them; the ids only have to be unique within
+ *  a style, because that is the only place they are ever resolved. */
+const P = STORY_THEMES;
 
 export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
-  poster:    { label: "Poster",    headline: 1.18, name: 1.16, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,  stackTime: false, dayTrack: 0.18, rowScale: 1.2 },
-  stack:     { label: "Stack",     headline: 1.22, name: 1.10, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,  stackTime: true,  dayTrack: 0.14, rowScale: 1.55 },
-  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: true,  radius: 28, stackTime: false, dayTrack: 0.12, rowScale: 1.3 },
-  marquee:   { label: "Marquee",   headline: 1.14, name: 1.08, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,  stackTime: true,  dayTrack: 0.22, rowScale: 1.6 },
-  chips:     { label: "Chips",     headline: 1.0,  name: 0.98, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.1, rowScale: 1.22 },
-  editorial: { label: "Editorial", headline: 1.08, name: 1.02, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.14, rowScale: 1.06 },
-  grid:      { label: "Grid",      headline: 0.96, name: 0.96, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.1, rowScale: 1.0 },
-  receipt:   { label: "Receipt",   headline: 0.92, name: 0.92, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,  stackTime: false, dayTrack: 0.24, rowScale: 1.0 },
-  plain:     { label: "Plain",     headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: false, radius: 0,  stackTime: false, dayTrack: 0.12, rowScale: 1.0 },
-  bare:      { label: "Bare",      headline: 0.88, name: 0.94, upper: false, align: "left",   rule: "none", chip: false, radius: 0,  stackTime: false, dayTrack: 0.08, rowScale: 0.98 },
+  poster:    { label: "Poster",    headline: 1.18, name: 1.16, upper: true,  align: "left",   rule: "bold", chip: false, radius: 0,   stackTime: false, dayTrack: 0.18, rowScale: 1.2,  palettes: [P.pop, P.iron, P.midnight] },
+  stack:     { label: "Stack",     headline: 1.22, name: 1.10, upper: true,  align: "left",   rule: "none", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.14, rowScale: 1.55, palettes: [P.iron, P.pop, P.moss] },
+  ticket:    { label: "Ticket",    headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: true,  radius: 28,  stackTime: false, dayTrack: 0.12, rowScale: 1.3,  palettes: [P.midnight, P.paper, P.slate] },
+  marquee:   { label: "Marquee",   headline: 1.14, name: 1.08, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: true,  dayTrack: 0.22, rowScale: 1.6,  palettes: [P.pop, P.sunset, P.iron] },
+  chips:     { label: "Chips",     headline: 1.0,  name: 0.98, upper: false, align: "left",   rule: "none", chip: true,  radius: 999, stackTime: false, dayTrack: 0.1,  rowScale: 1.22, palettes: [P.blush, P.paper, P.moss] },
+  editorial: { label: "Editorial", headline: 1.08, name: 1.02, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.14, rowScale: 1.06, palettes: [P.paper, P.iron, P.slate] },
+  grid:      { label: "Grid",      headline: 0.96, name: 0.96, upper: false, align: "left",   rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.1,  rowScale: 1.0,  palettes: [P.paper, P.slate, P.iron] },
+  receipt:   { label: "Receipt",   headline: 0.92, name: 0.92, upper: true,  align: "center", rule: "hair", chip: false, radius: 0,   stackTime: false, dayTrack: 0.24, rowScale: 1.0,  palettes: [P.paper, P.iron, P.blush] },
+  plain:     { label: "Plain",     headline: 1.0,  name: 1.0,  upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0.12, rowScale: 1.0,  palettes: [P.paper, P.iron, P.moss] },
+  bare:      { label: "Bare",      headline: 0.88, name: 0.94, upper: false, align: "left",   rule: "none", chip: false, radius: 0,   stackTime: false, dayTrack: 0.08, rowScale: 0.98, palettes: [P.paper, P.slate, P.midnight] },
 };
 
-export function storyStyle(id: string | null): [StoryStyleId, StoryStyle] {
-  const key = (id && id in STORY_STYLES ? id : "plain") as StoryStyleId;
-  return [key, STORY_STYLES[key]];
+/**
+ * A style and one of its three colourways, from whatever the URL said.
+ *
+ * Self-healing on purpose: a colour that does not belong to the style falls
+ * back to that style's first rather than erroring or drawing something the
+ * style was never meant to wear. Old `?theme=` links land here too, which is
+ * why the lookup is by label rather than by index.
+ */
+export function storyLook(
+  styleId: string | null,
+  paletteId: string | null,
+): [StoryStyleId, StoryStyle, StoryTheme] {
+  const key = (styleId && styleId in STORY_STYLES ? styleId : "plain") as StoryStyleId;
+  const style = STORY_STYLES[key];
+  const hit = style.palettes.find((p) => p.label.toLowerCase() === (paletteId ?? "").toLowerCase());
+  return [key, style, hit ?? style.palettes[0]];
 }
 
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
