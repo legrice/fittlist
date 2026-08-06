@@ -210,11 +210,14 @@ export function ShareHubScreen({
                       aria-selected={id === themeId}
                       aria-label={t.label}
                       className={`shswatch${id === themeId ? " sel" : ""}`}
-                      style={
-                        t.bg.includes("gradient")
-                          ? { background: t.bg }
-                          : { background: `linear-gradient(105deg, ${t.bg} 50%, ${t.accent} 50%)` }
-                      }
+                      // backgroundImage, never the shorthand: the CSS clips
+                      // the colour to the content circle so the ring can be
+                      // the border, and the shorthand would reset that clip.
+                      style={{
+                        backgroundImage: t.bg.includes("gradient")
+                          ? t.bg
+                          : `linear-gradient(105deg, ${t.bg} 50%, ${t.accent} 50%)`,
+                      }}
                       onClick={() => setThemeId(id)}
                     />
                   ),
@@ -305,6 +308,24 @@ export function ShareHubScreen({
               <Icon name="close" size={18} />
             </button>
             <h2>Dates</h2>
+            {/* A dropdown, not a list of rows: fourteen rows was a scroll for
+                a one-word answer, and the native picker is the control
+                everybody's thumb already knows. */}
+            <label className="flabel" htmlFor="shFrom">
+              Starting
+            </label>
+            <select
+              id="shFrom"
+              className="typeselect"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            >
+              {startDays.map((iso) => (
+                <option key={iso} value={iso}>
+                  {wday(iso)}, {short(iso)}
+                </option>
+              ))}
+            </select>
             <label className="flabel">How many days</label>
             <div className="shdays">
               {[1, 2, 3, 4, 5, 6, 7].map((n) => (
@@ -314,23 +335,6 @@ export function ShareHubScreen({
                   onClick={() => setDays(n)}
                 >
                   {n}
-                </button>
-              ))}
-            </div>
-            <label className="flabel">Starting</label>
-            <div className="settingslist shpick-list">
-              {startDays.map((iso) => (
-                <button key={iso} className="setrow" onClick={() => setFrom(iso)}>
-                  <span className="setrow-txt">
-                    <span className="t">
-                      {wday(iso)}, {short(iso)}
-                    </span>
-                  </span>
-                  {from === iso && (
-                    <span className="setrow-chev">
-                      <Icon name="check" size={20} />
-                    </span>
-                  )}
                 </button>
               ))}
             </div>

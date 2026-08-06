@@ -182,18 +182,17 @@ export function WeekEmpty({
 }) {
   return (
     <div className="wkempty">
-      {/* The figure, on the real empty state only: "nothing coming up" is a
-          week that has run its course, not a screen that needs a welcome. */}
-      {first && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          className="wkempty-fig"
-          src="/illustrations/following-empty.png"
-          alt=""
-          width={356}
-          height={600}
-        />
-      )}
+      {/* The figure, on every empty state now, by Matt's call: it was the
+          first-run welcome only, and "nothing coming up" stood as bare text
+          in a dashed box. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="wkempty-fig"
+        src="/illustrations/following-empty.png"
+        alt=""
+        width={356}
+        height={600}
+      />
       <h2 className="wkempty-t">{first ? title : "Nothing coming up"}</h2>
       <p className="wkempty-b">{first ? body : "Nothing on the days ahead."}</p>
       {first && cta && onCta && (

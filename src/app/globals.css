@@ -63,8 +63,9 @@
 
      Not `transparent`, which is the same thing said in a way that breaks. A
      band pins, and a pinned element with no ground lets the rows scroll
-     through the words underneath it. */
-  --band: var(--paper);
+     through the words underneath it. The card went white, so the band
+     follows it: a paper band on a white card read as a cream bar again. */
+  --band: var(--card);
   --divw: 1px;
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
@@ -111,20 +112,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* A sunrise behind the chrome, on the tabbed shell: warm at the very top,
-   gone before the card. It is the screen's own ground rather than a fixed
-   layer, because a negative-z layer paints under the screen's shell and a
-   stacking context here would trap every sheet; the white card covers it
-   on the way up regardless. Dark mode keeps its night. */
-.screen.hasnav {
-  background:
-    radial-gradient(130% 100% at 50% -30%, rgba(226, 122, 44, .30), rgba(226, 122, 44, 0) 72%) top / 100% 46vh no-repeat,
-    linear-gradient(180deg, rgba(244, 198, 152, .60) 0%, rgba(244, 208, 172, .28) 45%, rgba(240, 238, 232, 0) 100%) top / 100% 46vh no-repeat,
-    var(--shell);
-}
-[data-mode="dark"] .screen.hasnav { background: var(--shell); }
-/* The header sits on the sunrise, not on a shell-coloured slab over it. */
-.screen.hasnav .brandbar { background: transparent; }
+/* The sunrise gradient behind the chrome was tried here and came back out,
+   by Matt's call: the shell gray returns, and the white content card is
+   what does the freshening against it. */
 .pad { padding: 20px 18px; }
 
 .appbar {
@@ -1191,7 +1181,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    is why this screen is the one that passes an element in. */
 .calsticky {
   position: sticky; top: 0; z-index: 7;
-  background: var(--paper);
+  background: var(--card);
   margin: -10px -18px 0; padding: 16px 18px 0;
   border-radius: 28px 28px 0 0;
   transition: border-radius .18s ease;
@@ -2866,7 +2856,7 @@ button.ps-card { cursor: pointer; }
      useBandTop). The radius matches the card's, so pinned at the top of the
      screen the corners sit where the phone's bezel rounds anyway. */
   position: sticky; top: 0; z-index: 7;
-  background: var(--paper);
+  background: var(--card);
   border-radius: 28px 28px 0 0;
   margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
@@ -2888,7 +2878,7 @@ button.ps-card { cursor: pointer; }
 /* The card starts just above the tabs: the head (face, name, pills) sits on
    the shell, and the tabs row is the first thing on the paper. */
 .pubcard {
-  background: var(--paper);
+  background: var(--card);
   border-radius: 28px 28px 0 0;
   margin: 10px -18px 0;
   padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
@@ -4216,7 +4206,11 @@ button.ps-card { cursor: pointer; }
    --------------------------------------------------------------------------- */
 .cardwrap {
   flex: 1 0 auto;
-  background: var(--paper);
+  /* White, not paper, by Matt's call: against the shell gray the card is
+     what freshens the screen now that the gradient is gone. Everything
+     pinned on the card (the title row, the tab row, the day bands) matches,
+     or it reads as cream slabs on white. */
+  background: var(--card);
   border-radius: 28px 28px 0 0;
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
@@ -6069,20 +6063,24 @@ a.clspeek-by:active { opacity: .6; }
   flex-shrink: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .09em;
   text-transform: uppercase; color: var(--ol);
 }
-/* Room for the selected ring on every side: `overflow-x: auto` computes
-   overflow-y to auto as well, so the scroller clips on both axes and the
-   ring (5px past the circle) was being cut off top, bottom and at the
-   first swatch. Six of padding clears it. */
 .shcolors-row {
-  display: flex; gap: 10px; overflow-x: auto; padding: 8px;
-  margin: -8px 0; scrollbar-width: none;
+  display: flex; gap: 8px; overflow-x: auto; padding: 2px;
+  margin: -2px 0; scrollbar-width: none;
 }
 .shcolors-row::-webkit-scrollbar { display: none; }
+/* The ring lives inside the swatch's own box: the colour paints the content
+   circle, the padding is the gap, and the border is the ring. Box-shadow
+   rings drew outside the box, so the scroller clipped them into crescents
+   on whichever side had least room; nothing here can be clipped, because
+   nothing reaches past the box. The colour is set as backgroundImage at the
+   call site, since the background shorthand would reset this clip. */
 .shswatch {
-  flex-shrink: 0; width: 38px; height: 38px; border-radius: 999px;
-  border: 1px solid rgba(25, 21, 2, .14); cursor: pointer; padding: 0;
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 999px;
+  border: 2.5px solid transparent; padding: 3px;
+  background-clip: content-box; background-origin: content-box;
+  cursor: pointer;
 }
-.shswatch.sel { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 5px var(--ink); }
+.shswatch.sel { border-color: var(--ink); }
 /* The picture, sized by height the way the composer's poster is: what it has
    to fit inside is the room the controls above and the button below leave. */
 .shprev {
@@ -6113,6 +6111,9 @@ a.clspeek-by:active { opacity: .6; }
 .qrcard-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 24px; font-weight: 600; letter-spacing: -.008em; color: var(--ink);
+  /* One line however long the name runs: the card has a fixed shape, and a
+     wrapping name pushed the code around. */
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .qrcard .qrframe { border: none; }
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
