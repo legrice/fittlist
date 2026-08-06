@@ -398,9 +398,33 @@ await p.locator(".qrcard .qrimg").waitFor();
 if (!(await p.locator(".qrcard-nm").innerText()).trim()) fail("the QR card names its owner");
 if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
   fail("the copy link lives with the QR code");
-// And the week segment carries the door to the full editor.
+// The week segment carries Dates and Classes side by side, and the pickers
+// really move the picture: fewer days, and a hidden class comes off the
+// count and the compose URL alike.
 await p.locator(".shseg-pill", { hasText: "Week" }).click();
-await p.locator(".shedit", { hasText: "Choose the dates and classes" }).click();
+{
+  if ((await p.locator(".shctrl").count()) !== 2) fail("Dates and Classes sit side by side");
+  const a = await p.locator(".shctrl").first().boundingBox();
+  const b2 = await p.locator(".shctrl").nth(1).boundingBox();
+  if (Math.abs(a.y - b2.y) > 2) fail("the two controls share a row");
+  await p.locator(".shctrl", { hasText: "Dates" }).click();
+  await p.locator(".shday", { hasText: /^3$/ }).click();
+  await p.locator(".shpick .btn", { hasText: "Done" }).click();
+  const src1 = await p.locator(".shprev").getAttribute("src");
+  if (!/days=3/.test(src1 ?? "")) fail("the range should reach the picture: " + src1);
+  await p.locator(".shctrl", { hasText: "Classes" }).click();
+  const first = p.locator(".shpick .setrow").first();
+  if (await first.count()) {
+    await first.click();
+    await p.locator(".shpick .btn", { hasText: "Done" }).click();
+    const src2 = await p.locator(".shprev").getAttribute("src");
+    if (!/hide=/.test(src2 ?? "")) fail("a hidden class should reach the picture: " + src2);
+  } else {
+    await p.locator(".shpick .btn", { hasText: "Done" }).click();
+  }
+}
+// And the full editor is still one quiet tap away.
+await p.locator(".shedit", { hasText: "Open the full editor" }).click();
 await p.waitForURL(/\/share$/);
 console.log("the Share tab lands on the hub, and the editor is one tap deeper");
 await p.goBack();

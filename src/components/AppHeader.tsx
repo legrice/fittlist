@@ -42,7 +42,8 @@ export function AppHeader({
   return (
     <div className="brandbar">
       <Link className="brandbar-home" href={home} aria-label="Home">
-        <Wordmark variant="ink" beta />
+        {/* The beta tag came off at a hundred users, by Matt's call. */}
+        <Wordmark variant="ink" />
       </Link>
       {nav && (
         <HeaderNav

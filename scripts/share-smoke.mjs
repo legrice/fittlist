@@ -111,7 +111,7 @@ await coach.locator(".clline").first().waitFor();
 }
 await coach.locator('.navtab[data-tab="share"]').click();
 await coach.waitForURL(/\/sharehub/);
-await coach.locator(".shedit", { hasText: "Choose the dates and classes" }).click();
+await coach.locator(".shedit", { hasText: "Open the full editor" }).click();
 await coach.waitForURL(/\/share$/);
 await coach.locator(".composer").waitFor();
 await coach.locator(".adderhead h2", { hasText: "Share your schedule" }).waitFor();

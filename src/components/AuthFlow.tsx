@@ -253,7 +253,7 @@ export function AuthFlow({
   return (
     <section className="screen ob">
       <div className="pad">
-        <Wordmark variant="ink" className="mark" beta />
+        <Wordmark variant="ink" className="mark" />
 
         {stage === "landing" && (
           <>
