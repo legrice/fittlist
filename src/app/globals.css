@@ -5442,7 +5442,7 @@ button.ps-card { cursor: pointer; }
 .wkhead-range {
   flex: 1; min-width: 0; margin: 0;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 32px; font-weight: 900; line-height: 1.02; letter-spacing: -.015em;
+  font-size: 34px; font-weight: 900; line-height: 1.02; letter-spacing: -.02em;
   color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -5462,15 +5462,16 @@ button.ps-card { cursor: pointer; }
 .wkhead-sum { margin: 6px 0 0; font-size: 14px; color: var(--ol); }
 
 .wkdays { display: flex; flex-direction: column; gap: 26px; padding-top: 14px; }
-.wkday { display: grid; grid-template-columns: 46px 1fr; gap: 12px; align-items: start; }
+.wkday { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
 .wkday-when { padding-top: 2px; }
 .wkday-dow {
-  display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em;
+  display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em;
   text-transform: uppercase; color: var(--ol);
 }
 .wkday-date {
   display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 24px; font-weight: 900; line-height: 1.1; color: var(--ink);
+  font-size: 27px; font-weight: 900; line-height: 1.1; letter-spacing: -.02em;
+  color: var(--ink);
 }
 /* No gap: the rows are divided by their own hairline now, and a gap as well
    would be the break said twice. */
@@ -5502,21 +5503,29 @@ button.ps-card { cursor: pointer; }
 .wkrow:active { opacity: .6; }
 .wkrow-body { display: flex; align-items: flex-start; gap: 12px; }
 .wkrow-txt { flex: 1; min-width: 0; }
+/* The class name is the biggest thing in a list, on purpose.
+   This is a calendar app: what somebody is reading down a week is the names
+   of classes, and everything else on the row (where, when, whose) is a caption
+   on that. At 18px the name was one step above the sub-line and read as a
+   label; at 22 it is the row and the rest arranges itself underneath. Typing
+   is most of what this app has to be good at, so it commits. */
 .wkrow-nm {
   display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 18px; font-weight: 900; line-height: 1.25; color: var(--ink);
+  font-size: 22px; font-weight: 900; line-height: 1.2; letter-spacing: -.015em;
+  color: var(--ink);
 }
-.wkrow-where { display: block; font-size: 13px; color: var(--ol); margin-top: 1px; }
+.wkrow-where { display: block; font-size: 14.5px; color: var(--ol); margin-top: 3px; }
 .wkrow-time {
-  flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--si);
-  white-space: nowrap; padding-top: 2px;
+  flex-shrink: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 800; color: var(--si);
+  white-space: nowrap; padding-top: 3px;
 }
-.wkrow-ap { font-size: 11px; margin-left: 1px; }
+.wkrow-ap { font-size: 12.5px; margin-left: 1px; }
 /* Following leads with whose class it is: the dot carries their colour, which
    is the same colour their circle wears on the rail above. */
 .wkrow-coach {
   display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-  font-size: 14px; font-weight: 700; color: var(--ink);
+  font-size: 15px; font-weight: 700; color: var(--ink);
 }
 .wkrow-dot {
   width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0;
@@ -5532,9 +5541,9 @@ button.ps-card { cursor: pointer; }
 }
 .wkempty-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 22px; font-weight: 900; color: var(--ink);
+  font-size: 25px; font-weight: 900; letter-spacing: -.015em; color: var(--ink);
 }
-.wkempty-b { margin: 6px 0 0; font-size: 15px; line-height: 1.5; color: var(--ol); }
+.wkempty-b { margin: 7px 0 0; font-size: 16px; line-height: 1.5; color: var(--ol); }
 .wkempty-cta { margin-top: 16px; width: auto; padding: 0 22px; }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen
@@ -5599,13 +5608,13 @@ button.ps-card { cursor: pointer; }
    you can go and look at, so it wears their face and a chevron rather than
    sitting in the definition list looking like a fourth fact. */
 .clspeek-by {
-  display: inline-flex; align-items: center; gap: 9px; margin-top: 12px;
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 14px;
   color: var(--ink); text-decoration: none;
-  font-size: 15px; font-weight: 700;
+  font-size: 16.5px; font-weight: 700;
 }
 a.clspeek-by:active { opacity: .6; }
 .clspeek-by-av {
-  width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
   color: #fff; font-size: 13px; font-weight: 800;
 }
@@ -5634,12 +5643,12 @@ a.clspeek-by:active { opacity: .6; }
   padding: 16px 0; border-bottom: 1px solid var(--line);
 }
 .clspeek-fact dt {
-  font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  font-size: 13.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
   color: var(--ol);
 }
 .clspeek-fact dd {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 19px; font-weight: 900; color: var(--ink); text-align: right;
+  font-size: 21px; font-weight: 900; color: var(--ink); text-align: right;
 }
 
 .clspeek-cta { display: flex; gap: 12px; margin-top: 26px; }
@@ -5742,8 +5751,8 @@ a.clspeek-by:active { opacity: .6; }
    and a line as well made every day read as a boxed-off block on a screen
    that is meant to scroll as one list. */
 .upday-h {
-  margin: 0 0 10px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 15px; font-weight: 500; color: var(--ink);
+  margin: 0 0 8px; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 600; color: var(--ol);
 }
 /* The rows sit under their heading rather than beside a date gutter: the
    heading already said the day, and a gutter repeating it is the date twice. */

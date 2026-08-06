@@ -93,7 +93,11 @@ export async function MemberProfileView({
   const week = canSee ? await sharedWeek(user.id) : [];
   const firstName = name.split(/\s+/)[0];
 
-  const backTo = backToFor(from, !!viewerId);
+  // No arrow on your own page. It is what the Profile tab opens now, so
+  // there is nothing behind it to go back to: the bar underneath is the way
+  // on, and an arrow pointing at Following on a screen you reached from a tab
+  // is a control offering to undo a tap you did not make.
+  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
 
   // The same ways in a coach's page offers, minus the one that needs a
   // published week. A member with nothing filled in gets no pill at all.

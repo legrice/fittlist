@@ -519,18 +519,10 @@ export function ScheduleScreen({
           // coaches-only mode has no face in the corner, so it is the one door.
           settings={showFanView ? undefined : "/settings"}
           home={showFanView ? landing : "/app"}
-          // Your face is the corner and the way to You. The magnifier left
-          // with the tab reorg, since Discover's tab wears that glyph again.
-          avatar={
-            showFanView
-              ? {
-                  photo,
-                  color: myAccent,
-                  initial: (name.trim().charAt(0) || "?").toUpperCase(),
-                  href: "/settings",
-                }
-              : undefined
-          }
+          // The magnifier, opening the directory as a sheet. Nobody to find in
+          // the coaches-only shell, so it is off there and the gear above is
+          // that shell's one corner control.
+          find={showFanView}
           // Only where the bottom bar is: without the member side there are no
           // tabs to show, on any width.
           nav={showFanView ? { active: "schedule", scheduleHref: "/app" } : undefined}

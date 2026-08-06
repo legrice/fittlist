@@ -1,17 +1,20 @@
 import Link from "next/link";
+import { HeaderFind } from "@/components/HeaderFind";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
 import { HeaderNav } from "@/components/HeaderNav";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
 
-// The same header on every screen of the app: wordmark left, notifications
-// and your avatar right. The avatar is the way to You now that the tab has
-// come off the bar, so it carries an href wherever the member side is on; it
-// still takes a handler for the one shell where the account is an overlay.
+// The same header on every screen of the app: wordmark left, the magnifier and
+// the bell right. The corner held your own face for a while, as the way to
+// You; the Profile tab wears the face now and opens the same page, so that was
+// a second door to somewhere that already had one. What the corner is for is
+// the thing you reach for from anywhere, and on this app that is finding a
+// coach, because every other screen is empty until a follow happens.
 export function AppHeader({
   unread = 0,
   settings,
-  avatar,
+  find = false,
   home = "/week",
   nav,
 }: {
@@ -21,13 +24,9 @@ export function AppHeader({
    *  the account. Everywhere the tabs render, You is the door and the
    *  corner stays clear. */
   settings?: string;
-  avatar?: {
-    photo: string | null;
-    color: string;
-    initial: string;
-    onClick?: () => void;
-    href?: string;
-  };
+  /** The magnifier, opening the directory as a sheet. Off in the shell with
+   *  no member side at all, where there is nobody to find. */
+  find?: boolean;
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
@@ -50,11 +49,11 @@ export function AppHeader({
         />
       )}
       <div className="brandbar-actions">
-        {/* The bell, your face, and (coaches-only mode) the gear: the corner
-            is for what you reach for from anywhere. The magnifier left when
-            Discover's tab took that glyph back, and the shield left long
-            before it, because a corner of one-off icons fills up. `/search`
-            is still behind the directory's own search door. */}
+        {/* Find, the bell, and (coaches-only mode) the gear. Two icons is the
+            budget: a corner of one-off icons fills up, and the shield and the
+            face both left it for that reason. `/search` is still behind the
+            directory's own search door. */}
+        {find && <HeaderFind />}
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"
@@ -71,30 +70,6 @@ export function AppHeader({
             match="/settings"
           />
         )}
-        {avatar &&
-          (() => {
-            const face = avatar.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="usericon-photo" src={avatar.photo} alt="" />
-            ) : (
-              <span
-                className="usericon-initial"
-                style={{ background: avatar.color }}
-                aria-hidden="true"
-              >
-                {avatar.initial}
-              </span>
-            );
-            return avatar.href ? (
-              <Link className="usericon" aria-label="My page" href={avatar.href}>
-                {face}
-              </Link>
-            ) : (
-              <button className="usericon" aria-label="My page" onClick={avatar.onClick}>
-                {face}
-              </button>
-            );
-          })()}
       </div>
     </div>
   );

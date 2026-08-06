@@ -74,12 +74,11 @@ export async function AppChrome({
       // the bare editable schedule: a page with no identity that read as
       // showing up at random.
       home={fans ? await landingHref() : "/app"}
-      // Your face is the corner and the way to You wherever the tabs render:
-      // it came off the bar because a person is not a place. The magnifier
-      // came off with it, since Discover's tab wears that glyph again.
-      avatar={fans ? { ...face, href: profileHref } : undefined}
+      // The magnifier, opening the directory as a sheet. Nobody to find in
+      // the coaches-only shell, so it is off there.
+      find={fans}
       // The gear only where there is no member side at all: the coaches-only
-      // mode has no tab bar and no face in the corner, so it is the one door.
+      // mode has no tab bar, so it is the one door to the account.
       settings={fans ? undefined : "/settings"}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />

@@ -171,10 +171,41 @@ await p.locator(".navtab[data-tab='you']").click();
 await p.waitForURL(/\/raebell/);
 await p.locator(".profname", { hasText: "Rae Bell" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
+{
+  // No arrow: the tab is how you got here, so there is nothing behind it, and
+  // a control offering to undo a tap nobody made is a control in the way.
+  if (await p.locator(".profback").count()) fail("your own profile carries no back arrow");
+  // No Add class either. The plus lives on the calendar, next to the week it
+  // adds to; a second door here meant two screens both claiming to be where
+  // classes come from.
+  if (await p.locator(".fab").count()) fail("adding a class is the calendar's job");
+  // The header's corner is the magnifier now, not your own face: the Profile
+  // tab already opens this page, so the face was a second door to it.
+  if (await p.locator(".usericon").count()) fail("the header carries no avatar");
+  // And the schedule is the calendar's own rows, not a second design for one
+  // list. No Teaching/Going segment either: going marks are gone, so the
+  // other half can only ever be empty.
+  if (await p.locator(".seg", { hasText: "Teaching" }).count())
+    fail("the Teaching/Going segment should be gone");
+  const names = (await p.locator(".pub .wkrow-nm").allInnerTexts()).map((t) => t.trim());
+  console.log("profile rows:", [...new Set(names)].join(" | "));
+  if (!names.length) fail("the profile should draw the calendar's rows");
+  if (await p.locator(".pub .ps-event").count()) fail("the old card row should be gone");
+}
 await p.locator(".profgear").click();
 await p.waitForURL(/\/settings/);
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 console.log("Profile opens your page, and the gear on it opens settings");
+
+// The magnifier in the header opens the same directory sheet Following's
+// button does: one act, one drawing of it, wherever you are standing.
+await p.goto(BASE + "/calendar");
+await p.locator(".brandbar-actions .iconbtn").first().click();
+await p.locator(".dissheet").waitFor();
+if (!p.url().endsWith("/calendar")) fail("the header's find should not navigate");
+await p.locator(".dissheet .sheetclose").click();
+await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
+console.log("the header's magnifier opens the directory over the calendar");
 
 await b.close();
 console.log("ALL CALENDAR CHECKS PASSED");

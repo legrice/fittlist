@@ -61,11 +61,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           home={landing}
-          // Your face is the corner now, and it is the way to You: the tab
-          // came off the bar, because a person is not a place. The magnifier
-          // came off with it, since Discover's tab wears that glyph again and
-          // the same mark is never drawn twice on one screen.
-          avatar={{ ...face, href: profileHref }}
+          // The magnifier is the corner. Your face went to the Profile tab,
+          // which opens the same page the corner used to, and a second door
+          // to somewhere that already has one is a door too many.
+          find
           nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

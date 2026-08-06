@@ -102,7 +102,7 @@ function BookmarkAdded({ size = 24 }: { size?: number }) {
  * solid where the outline read as furniture. The two small sparks stay
  * strokes so the shape keeps its air; everything is currentColor.
  */
-function SparklesFilled({ size = 24, strokeWidth = 1.75 }: { size?: number; strokeWidth?: number }) {
+function SparklesFilled({ size = 24, strokeWidth = 2.25 }: { size?: number; strokeWidth?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
@@ -128,7 +128,7 @@ function SparklesFilled({ size = 24, strokeWidth = 1.75 }: { size?: number; stro
  * five equals. The filled one stays everywhere it is a button or a row, where
  * solid is what stops it reading as furniture.
  */
-function SparklesOutline({ size = 24, strokeWidth = 1.75 }: { size?: number; strokeWidth?: number }) {
+function SparklesOutline({ size = 24, strokeWidth = 2.25 }: { size?: number; strokeWidth?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
@@ -241,17 +241,35 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth?: n
   visibility: Eye,
 };
 
+/**
+ * The house size and weight.
+ *
+ * They were 18 and 1.75, which is a hairline set drawn small, and against a
+ * 22px class name it read as a different app's furniture: thin marks next to
+ * heavy type. This is a calendar app whose whole surface is words, so the
+ * glyphs beside them have to hold their own weight rather than apologise for
+ * being there.
+ *
+ * A true filled set (Material Symbols, say) is the other way to get here and
+ * is deliberately not taken: it is a self-hosted font or seventy re-mapped
+ * names, and Lucide at this weight is most of the way there for two numbers.
+ * If it still reads too light after living with it, that swap is its own
+ * commit and this is the one place it would land.
+ */
+const SIZE = 21;
+const WEIGHT = 2.25;
+
 export function Icon({
   name,
-  size = 18,
+  size = SIZE,
   className = "",
-  strokeWidth = 1.75,
+  strokeWidth = WEIGHT,
 }: {
   name: string;
   size?: number;
   className?: string;
-  /** The house weight is 1.75; a control that is nothing but its glyph
-   *  (the header's plus) can ask for more. */
+  /** The house weight; a control that is nothing but its glyph can ask for
+   *  more, and a glyph inside dense type can ask for less. */
   strokeWidth?: number;
 }) {
   // Hand-drawn glyphs are their own components rather than Lucide icons, so

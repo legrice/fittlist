@@ -4,17 +4,14 @@ import { getDb, schema } from "@/db";
 import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
-import { canSeeWeek, sharedWeek } from "@/lib/week";
-import { ProfileWeekSwitch } from "@/components/ProfileWeekSwitch";
 
-import { AgendaAvatar, ClassRow, DayBand } from "@/components/Agenda";
+import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
-import { ClassCardActions } from "@/components/ClassCardActions";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowSync } from "@/components/FollowSync";
@@ -121,7 +118,11 @@ export async function PublicProfileView({
     }
   }
 
-  const backTo = backToFor(from, !!viewerId);
+  // No arrow on your own page. It is what the Profile tab opens now, so
+  // there is nothing behind it to go back to: the bar underneath is the way
+  // on, and an arrow pointing at Following on a screen you reached from a tab
+  // is a control offering to undo a tap you did not make.
+  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
@@ -158,33 +159,15 @@ export async function PublicProfileView({
   // group into chunks of seven POPULATED days, not seven calendar days, so a
   // Mon/Wed/Fri coach still shows a full week's worth of schedule before the
   // View more button, and each tap reveals seven more real days.
-  // The viewer's own marks on these classes, so the card's ribbon can say
-  // what is already in their plans. Visitors with the member side only; the
-  // server-side setGoing still holds the real rules.
-  const canAddAny = !isOwner && !!viewerId && fansOn;
-  const myMarks = new Set<string>();
-  if (canAddAny && classRows.length) {
-    const marks = await db
-      .select({
-        classId: schema.attendances.classId,
-        occurrenceDate: schema.attendances.occurrenceDate,
-      })
-      .from(schema.attendances)
-      .where(
-        and(
-          eq(schema.attendances.userId, viewerId!),
-          inArray(
-            schema.attendances.classId,
-            classRows.map((c) => c.id),
-          ),
-        ),
-      );
-    for (const m of marks) myMarks.add(`${m.classId}|${m.occurrenceDate}`);
-  }
+  // The viewer's own going marks used to be loaded here, so each row's ribbon
+  // could say whether the class was already in their plans. Plans are gone: a
+  // member reads the week of the people they follow and has no calendar to add
+  // anything to, so the ribbon came off the row and the query went with it. A
+  // query nobody reads is one that gets slower without anybody noticing.
 
   const today = todayIso();
   const start = new Date(`${today}T00:00:00Z`);
-  const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
+  const days: { iso: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);
     d.setUTCDate(start.getUTCDate() + i);
@@ -197,7 +180,7 @@ export async function PublicProfileView({
       .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length)
-      days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(days.length / 7), items });
+      days.push({ iso, week: Math.floor(days.length / 7), items });
   }
 
   const about = (
@@ -305,50 +288,11 @@ export async function PublicProfileView({
         ways.links.length
       ));
 
-  // The other hat. A coach trains too, and their page could not say so: the
-  // going week is the same mutual-follow list a member's profile carries, and
-  // it is loaded only for somebody allowed to see it, because a segment whose
-  // second half is always empty is a control that means nothing.
-  const canSeeGoing = (await fansVisible()) && (await canSeeWeek(viewerId, user));
-  const goingWeek = canSeeGoing ? await sharedWeek(user.id) : [];
-
-  const goingRows = (
-    <div className="memweek">
-      {isOwner && (
-        <p className="memweek-note">
-          {user.approveFollowers
-            ? "The people you have approved see this. Nobody else does."
-            : "Anyone who opens your page can see this."}
-        </p>
-      )}
-      {goingWeek.length === 0 ? (
-        <div className="empty-block">
-          <h2>Nothing yet</h2>
-          <p>
-            {isOwner
-              ? "Classes you add as going to land here."
-              : `${user.name.split(/\s+/)[0]} hasn't added anything this week.`}
-          </p>
-        </div>
-      ) : (
-        goingWeek.map((day) => (
-          <div key={day.iso} className="memweek-day">
-            <div className="memweek-dayh">{day.label}</div>
-            {day.items.map((i) => (
-              <div key={`${i.classId}-${i.iso}`} className="memweek-row">
-                <span className="memweek-txt">
-                  <span className="nm">{i.name}</span>
-                  <span className="sub">
-                    {[`${i.hm}${i.ap}`, i.coachName, i.where].filter(Boolean).join(" \u00b7 ")}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-        ))
-      )}
-    </div>
-  );
+  // The other hat used to be loaded here: the going week, behind a
+  // Teaching/Going segment on this tab, gated on `canSeeWeek`. Going marks are
+  // gone from the app, so there is one week on a coach's page and it is the
+  // one the link is for. `canSeeWeek` and `sharedWeek` still exist for a
+  // member's own profile, which is the other place they were read.
 
   const schedule = (
     <>
@@ -367,12 +311,21 @@ export async function PublicProfileView({
         // owner a tap opens the editor instead: this is your class, and the
         // one thing you'd do with it from here is change it.
         <MaybeOpener isOwner={isOwner} handle={handle}>
-        <div className="ps-week ps-agenda callist">
+        {/* The calendar's own rows, and the calendar's own day headings.
+            This drew `.ps-event` cards in a `.callist` while the calendar and
+            Following drew `.wkrow` on the ground, which is two designs for one
+            list: a coach flipping between their calendar and their page was
+            reading two apps. It is one row now, everywhere a class is listed.
+
+            The ribbon went with them. It put a class in your plans, and plans
+            are gone: a member reads the week of the people they follow, and
+            there is nothing to add it to. */}
+        <div className="upcoming">
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
-              <div key={d.iso} className="ps-daygroup">
-                <DayBand iso={d.iso} today={today} />
-                <div className="ps-daycards">
+              <div key={d.iso} className="upday">
+                <h2 className="upday-h">{fmtDayHeaderRel(d.iso, today)}</h2>
+                <div className="wkday-rows">
                   {d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;
                     const where = s ? s.name : c.location;
@@ -383,42 +336,25 @@ export async function PublicProfileView({
                     const at = classAddress(c, handle, s?.slug);
                     const href = `/${at?.base ?? handle}/${c.id}?d=${d.iso}`;
                     return (
-                      <div key={`${d.iso}-${c.id}`} className="ps-erow">
-                      {/* The same ClassRow Following draws, so the two lists
-                          cannot drift again. The coach line is redundant here
-                          (the page already names them) and stays on purpose,
-                          by Matt's call: the row has to read exactly like the
-                          row on Following. */}
-                      <ClassRow
-                        item={{
-                          key: `${d.iso}-${c.id}`,
-                          name: c.name,
-                          hm: start.hm,
-                          ap: start.ap,
-                          durationMin: c.durationMin,
-                          where,
-                          coachName: user.name,
-                          coachPhoto: user.photo,
-                          coachColor: avatarColor(user),
-                          on: myMarks.has(`${c.id}|${d.iso}`),
-                          href,
-                          classId: c.id,
-                          iso: d.iso,
-                          base: at?.key,
-                        }}
-                      />
-                      {/* The ribbon, only for somebody the class could
-                          belong to. The owner adds nothing: it is already
-                          their class. A coach on the slot doesn't either,
-                          for the same reason. */}
-                      <ClassCardActions
-                        classId={c.id}
-                        iso={d.iso}
-                        name={c.name}
-                        canAdd={canAddAny && c.coachUserId !== viewerId}
-                        initialOn={myMarks.has(`${c.id}|${d.iso}`)}
-                      />
-                      </div>
+                      <a
+                        key={`${d.iso}-${c.id}`}
+                        className="wkrow"
+                        href={href}
+                        data-cid={c.id}
+                        data-d={d.iso}
+                        data-base={at?.key}
+                      >
+                        <span className="wkrow-body">
+                          <span className="wkrow-txt">
+                            <span className="wkrow-nm">{c.name}</span>
+                            {where && <span className="wkrow-where">{where}</span>}
+                          </span>
+                          <span className="wkrow-time">
+                            {start.hm}
+                            <span className="wkrow-ap">{start.ap.toLowerCase()}</span>
+                          </span>
+                        </span>
+                      </a>
                     );
                   })}
                 </div>
@@ -590,22 +526,23 @@ export async function PublicProfileView({
             about
           ) : tab === "studios" && studios ? (
             studios
-          ) : canSeeGoing ? (
-            <ProfileWeekSwitch teaching={schedule} going={goingRows} />
           ) : (
+            /* One week on this tab: what they teach. It carried a
+               Teaching/Going segment, which was the other hat: the classes
+               this coach was going to. Going marks are gone from the app, so
+               the second half is empty by construction and a segment whose
+               other side can only ever be empty is a control that means
+               nothing. */
             schedule
           )}
         </ProfileTabs>
         </FollowSync>
-        {/* The primary action holds the thumb spot, in the same glass the
-            Discover filter wears; sharing sits up top as the tinted pill. Schedule section only:
-            About and Contact aren't places you add a class from. */}
-        {isOwner && tab === "schedule" && (
-          <Link className="fab" href="/app?add=1">
-            <Icon name="add" size={20} />
-            Add class
-          </Link>
-        )}
+        {/* No Add class here. This page is where you look at your week, and
+            the Calendar tab is where you work on it: the plus lives on the
+            calendar, under a thumb, next to the week it adds to. A second
+            door on the profile meant two screens both claiming to be where
+            classes come from, and this is the one that is really a page you
+            hand to somebody. */}
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (
