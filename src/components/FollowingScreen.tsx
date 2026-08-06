@@ -267,11 +267,16 @@ export function FollowingScreen({
       )}
       </div>
 
-      {/* No floating search here any more: the dock's own circle is the
-          search on every screen, so a second one hovering over this list was
-          the same act drawn twice on one screen. The rail's plus and the
-          empty state's button stay, because they are offers in context rather
-          than chrome. */}
+      {/* Discovery is this button and the plus on the rail, and they open the
+          same sheet. It is not a tab: a directory is somewhere you go
+          occasionally, and a tab is somewhere you live. It rode in the dock
+          for a build, in its own circle beside the tab pill, and came back
+          here: three tabs and a circle in one dock read as crammed, and this
+          list is the screen the act is about. */}
+      <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
+        <Icon name="search" size={26} />
+      </button>
+
       {find && <DiscoverSheet onClose={closeFind} />}
 
       {peek && (

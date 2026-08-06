@@ -205,25 +205,27 @@ export function scrollCalTop() {
  * above the list); a calendar passes its own chrome block.
  */
 export function publishBandTop(extra?: HTMLElement | null): number {
-  // Zero, always, since the header stopped pinning: a band sticks to the top
-  // of the viewport because there is nothing left above it to sit under. The
-  // function survives because the var still has readers (the search screen's
-  // legacy bands) and a dead variable inherited from the last screen is
-  // exactly the bug this machinery existed to prevent.
-  void extra;
-  document.documentElement.style.setProperty("--dayband-top", "0px");
-  return 0;
+  // The app header never pins above the card any more (the card slides over
+  // it), so the only thing a band can sit under is the screen's own pinned
+  // chrome: the calendar's title row, and nothing anywhere else. A screen
+  // that passes no element publishes zero, which also keeps the variable
+  // honest for whatever the last screen left behind.
+  const h = extra?.offsetHeight ?? 0;
+  document.documentElement.style.setProperty("--dayband-top", `${h}px`);
+  return h;
 }
 
-/** Keep it current: the header and the chrome both change height with the
- *  view, so this is watched rather than read once. */
+/** Keep it current: the calendar's pinned row changes height with the view
+ *  (the Month grid adds the weekday initials), so it is watched rather than
+ *  read once. */
 export function useBandTop(ref?: { current: HTMLElement | null }) {
   useEffect(() => {
     const el = ref?.current ?? null;
-    // Nothing to measure or watch any more; one write keeps the variable
-    // honest for whatever the last screen left behind.
     publishBandTop(el);
-    return undefined;
+    if (!el) return undefined;
+    const ro = new ResizeObserver(() => publishBandTop(el));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [ref]);
 }
 

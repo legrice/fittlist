@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useBandTop } from "@/components/CalendarBits";
 import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
 import { PersonRow, type DirPerson } from "@/components/DirectoryRows";
@@ -69,12 +68,10 @@ export function DiscoverList({
   hideBack?: boolean;
   /** Which half to open on, for a link that means one of them. */
 }) {
-  // The Classes half draws the app's day bands, and they pin. Nothing above
-  // this list is sticky except the app header (the search door, the halves
-  // and the filters all scroll away), so it publishes the header's height
-  // and nothing else. Without this the bands fell back to a guessed offset
-  // and pinned halfway down the screen, through the middle of a class row.
-  useBandTop();
+  // No useBandTop here, deliberately: this list draws no day bands any more
+  // (the Classes half is long gone), and it renders inside the DiscoverSheet
+  // too, where publishing zero would stamp on the calendar's own published
+  // height while the sheet is up over it.
   // Coaches lead, per the Discover spec: a follow is what makes every other
   // surface work (Following and Activity are both empty until one happens), so
   // the act that unlocks the app is the whole screen.

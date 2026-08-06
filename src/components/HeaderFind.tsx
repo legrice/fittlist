@@ -22,7 +22,7 @@ export function HeaderFind() {
   return (
     <>
       <button
-        className={`iconbtn inboxbtn findbtn${open ? " onroute" : ""}`}
+        className={`iconbtn inboxbtn${open ? " onroute" : ""}`}
         aria-label="Find coaches"
         aria-expanded={open}
         onClick={() => setOpen(true)}

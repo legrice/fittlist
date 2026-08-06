@@ -182,39 +182,34 @@ if ((await m.locator(".clline").count()) !== rowsAll)
 // open, so the bar goes.
 if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showing");
 
-// Search lives in the dock now: its own glass circle beside the tab pill,
-// laid out the way Photos does it, with the glyph in the brand colour. The
-// floating circle that hovered over this list is gone, because the dock is on
-// every screen and a second magnifier over the week was the same act drawn
-// twice on one screen.
+// Search is the floating circle over this list again: the dock experiment
+// (its own circle beside the tab pill) came back off, because three tabs and
+// a circle in one dock read as crammed. The circle wears the bar's own glass
+// with the glyph in the brand colour, the same family the Share pill is in.
 {
-  if (await m.locator(".wkfab-find").count()) fail("the floating search circle should be gone");
-  const dock = m.locator(".navdock");
-  if (!(await dock.count())) fail("the dock should hold the pill and the search circle");
-  const look = await m.locator(".navfind").evaluate((e) => {
+  if (await m.locator(".navdock, .navfind").count())
+    fail("the dock's search circle should be gone");
+  const find = m.locator(".wkfab-find");
+  if (!(await find.count())) fail("the floating search circle should be back");
+  const look = await find.evaluate((e) => {
     const cs = getComputedStyle(e);
-    return { blur: cs.backdropFilter || cs.webkitBackdropFilter, color: cs.color };
+    return {
+      blur: cs.backdropFilter || cs.webkitBackdropFilter,
+      color: cs.color,
+      bw: cs.borderTopWidth,
+    };
   });
-  console.log("dock search:", look.blur, "|", look.color);
-  if (!/blur/.test(look.blur ?? "")) fail("the dock search should be glass, got " + look.blur);
+  console.log("floating search:", look.blur, "|", look.color, "| border", look.bw);
+  if (!/blur/.test(look.blur ?? "")) fail("the search circle should be glass, got " + look.blur);
   // #C2410C
   if (look.color.replace(/\s/g, "") !== "rgb(194,65,12)")
     fail("the search glyph should be brand orange, got " + look.color);
-  // Separate from the pill, to its right, the two on one line.
-  const bar = await m.locator(".navbar").boundingBox();
-  const find = await m.locator(".navfind").boundingBox();
-  if (!(find.x > bar.x + bar.width - 4)) fail("search sits to the right of the pill");
-  // The pill is a pill: its radius is half its height, not a rounded box.
-  const rad = await m.locator(".navbar").evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius));
-  if (rad < bar.height / 2 - 2) fail("the bar should be a full pill, radius " + rad);
-  // The current tab wears a wash behind the whole tab.
-  const onBg = await m.locator(".navtab.on").evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (/rgba\(0, 0, 0, 0\)|transparent/.test(onBg)) fail("the current tab wears a wash, got " + onBg);
+  if (parseFloat(look.bw) > 0) fail("the circle's stroke should be gone, got " + look.bw);
 }
 
-// The dock's search pulls the directory up over the week rather than
-// navigating to it, and comes back down onto the list you were reading.
-await m.locator(".navfind").click();
+// The circle pulls the directory up over the week rather than navigating to
+// it, and comes back down onto the list you were reading.
+await m.locator(".wkfab-find").click();
 await m.locator(".dissheet").waitFor();
 await m.waitForTimeout(900);
 {

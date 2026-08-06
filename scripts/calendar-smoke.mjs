@@ -104,13 +104,13 @@ await p.locator(".clline").first().waitFor();
     (e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter,
   );
   if (!/blur/.test(blur ?? "")) fail("the Share pill should be glass, got " + blur);
-  // No stroke: the pill wears the dock's own glass exactly, so the floating
-  // controls and the dock read as one family.
+  // No stroke: the pill wears the bar's own glass exactly, so the floating
+  // controls and the bar read as one family.
   const bw = await share.evaluate((e) => getComputedStyle(e).borderTopWidth);
   if (parseFloat(bw) > 0) fail("the Share pill's stroke should be gone, got " + bw);
-  // And clear air above the dock, not touching it.
-  const dock = await p.locator(".navdock").boundingBox();
-  if (!(box.y + box.height < dock.y - 8)) fail("Share should clear the dock");
+  // And clear air above the bar, not touching it.
+  const bar = await p.locator(".navbar").boundingBox();
+  if (!(box.y + box.height < bar.y - 8)) fail("Share should clear the bar");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -173,35 +173,37 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
       fail("every band reads the same way, got " + band);
 }
 
-// The day band is the ONLY thing that pins, by Matt's call: the header and
-// the calendar's own title row scroll away with the page, and opening the
-// calendar with everything moving as one piece is the cleaner read. The day
-// you are looking at stays named because the band sticks to the very top.
+// The card slides up over the header: the brandbar pins underneath and the
+// content covers it, so a scroll reads as lifting a sheet of paper over the
+// chrome. On the calendar the title row pins with the bands (the one
+// exception to "only the day bands pin": Month view has no other way back
+// to List), and the bands pin under its measured height.
 {
   const stick = (sel) => p.locator(sel).first().evaluate((e) => getComputedStyle(e).position);
   if ((await stick(".dayband")) !== "sticky") fail("the day bands should pin");
-  if ((await stick(".calsticky")) === "sticky") fail("the title row should scroll away");
-  if ((await stick(".brandbar")) === "sticky") fail("the app header should scroll away");
+  if ((await stick(".calsticky")) !== "sticky") fail("the title row should pin on the calendar");
+  if ((await stick(".brandbar")) !== "sticky") fail("the header should pin under the card");
   // A pinned band still needs a ground of its own: with nothing behind it the
   // rows scroll through its words, and "no background" is one word away from
   // exactly that bug.
   const bg = await p.locator(".dayband").first().evaluate((e) => getComputedStyle(e).backgroundColor);
   if (/transparent|rgba\(0, 0, 0, 0\)/.test(bg)) fail("a pinned band needs a ground, got " + bg);
-  // Scroll a long way: the header is gone, and the thing at the very top of
-  // the viewport is a band.
+  // Scroll a long way: the card is over the header (the pinned title row sits
+  // at the very top of the viewport), and a band is pinned right under it.
   await p.evaluate(() => window.scrollTo(0, 600));
   await p.waitForTimeout(400);
-  const headerGone = await p.evaluate(() => {
-    const bb = document.querySelector(".brandbar");
-    return bb ? bb.getBoundingClientRect().bottom <= 0 : true;
+  const covered = await p.evaluate(() => {
+    const cs = document.querySelector(".calsticky");
+    return cs ? cs.getBoundingClientRect().top <= 2 : false;
   });
-  if (!headerGone) fail("the header should have scrolled away");
-  const stuck = await p.evaluate(() => {
-    const el = document.elementFromPoint(200, 8);
+  if (!covered) fail("the title row should be pinned at the very top, over the header");
+  const calH = await p.locator(".calsticky").evaluate((e) => e.offsetHeight);
+  const stuck = await p.evaluate((y) => {
+    const el = document.elementFromPoint(200, y + 8);
     return el?.closest(".dayband") ? "band" : (el?.className ?? "nothing");
-  });
-  if (stuck !== "band") fail("a band should be pinned at the top, found " + stuck);
-  console.log("scrolled: header gone, a band pinned at the top");
+  }, calH);
+  if (stuck !== "band") fail("a band should be pinned under the title row, found " + stuck);
+  console.log("scrolled: card over the header, a band pinned under the title row");
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(300);
 }
@@ -337,19 +339,54 @@ await p.waitForURL(/\/settings/);
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 console.log("Profile opens your page, and the gear on it opens settings");
 
-// The dock's search circle opens the directory sheet from any screen the dock
-// shows, the calendar included: one act, one drawing of it, wherever you are
-// standing. The header's magnifier yields to it below 940px, or the same
-// glyph would be drawn twice on one screen.
+// The header's magnifier opens the directory sheet from any tabbed screen,
+// the calendar included: one act, one drawing of it, wherever you are
+// standing. The dock's separate circle is gone (three tabs and a circle read
+// as crammed), so the corner is the door again at every width.
 await p.goto(BASE + "/calendar");
-if (await p.locator(".findbtn:visible").count())
-  fail("the header magnifier should yield to the dock on a phone");
-await p.locator(".navfind").click();
+if (await p.locator(".navfind").count())
+  fail("the dock's search circle should be gone");
+await p.locator('.brandbar-actions .iconbtn[aria-label="Find coaches"]').click();
 await p.locator(".dissheet").waitFor();
-if (!p.url().endsWith("/calendar")) fail("the dock's find should not navigate");
+if (!p.url().endsWith("/calendar")) fail("the header's find should not navigate");
 await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the dock's search opens the directory over the calendar");
+console.log("the header's magnifier opens the directory over the calendar");
+
+// The card slides up over the header, and the calendar's title row is the
+// one piece of chrome that pins with the bands: without it, Month view has
+// no way back to List. The bands pin under it at its measured height.
+{
+  const pos = await p.locator(".brandbar").evaluate((e) => getComputedStyle(e).position);
+  if (pos !== "sticky") fail("the header should pin under the card, got " + pos);
+  const spos = await p.locator(".calsticky").evaluate((e) => getComputedStyle(e).position);
+  if (spos !== "sticky") fail("the calendar's title row should pin, got " + spos);
+  const calH = await p.locator(".calsticky").evaluate((e) => e.offsetHeight);
+  const varTop = await p.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dayband-top")),
+  );
+  console.log("calsticky:", calH, "| --dayband-top:", varTop);
+  if (Math.abs(varTop - calH) > 2)
+    fail(`the bands should pin under the title row: ${varTop} vs ${calH}`);
+  // Land on a deep day and the card is over the header: the pinned title row
+  // sits at the very top of the viewport, and the landed day's band sits
+  // just under it rather than behind it (the scroll margin has to clear the
+  // pinned chrome, or openDay buries the band it landed on).
+  // A middle day, not the last: the last block can be too close to the page
+  // end to reach the top of the viewport at all.
+  const n = await p.locator(".dayblock").count();
+  const deep = await p.locator(".dayblock").nth(Math.floor(n / 2)).getAttribute("id");
+  await p.evaluate((id) => document.getElementById(id)?.scrollIntoView({ block: "start" }), deep);
+  await p.waitForTimeout(200);
+  const stick = await p.locator(".calsticky").boundingBox();
+  if (stick.y > 2) fail("scrolled, the title row should pin at the very top, got " + stick.y);
+  const band = await p.locator(`#${deep} .dayband`).boundingBox();
+  console.log("pinned row:", stick.y, "+", stick.height, "| landed band:", band.y);
+  if (band.y < stick.y + stick.height - 4)
+    fail("the landed band should sit below the pinned title row, got " + band.y);
+  await p.evaluate(() => window.scrollTo(0, 0));
+  console.log("the card slides over the header, and the title row pins with the bands");
+}
 
 await b.close();
 console.log("ALL CALENDAR CHECKS PASSED");

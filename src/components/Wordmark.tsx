@@ -1,8 +1,11 @@
 import { brandIcon } from "@/lib/brand";
 
-// The lockup: the block mark + "FittList" in Archivo Black. Monochrome - the
-// mark takes the same colour as the wordmark text (near-black on light
-// surfaces, off-white on dark).
+// The lockup: the block mark + "FittList". The mark wears the brand orange
+// (the app icon's own colour, and the same accent the search glyph and the
+// Share sparkle carry) while the text stays in the surface's ink; it was
+// monochrome for a long time, and the F in ink was the one place the brand
+// never showed on its own header. The cloud variant stays monochrome: on a
+// dark hero the off-white lockup is the point.
 export function Wordmark({
   variant = "ink",
   className = "wordmark",
@@ -27,7 +30,13 @@ export function Wordmark({
       aria-label={beta ? "FittList beta" : "FittList"}
       style={{ color }}
     >
-      <span className="wm-ico" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("currentColor") }} />
+      <span
+        className="wm-ico"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{
+          __html: brandIcon(variant === "ink" ? "var(--si)" : "currentColor"),
+        }}
+      />
       <span className="wm-text">FittList</span>
       {beta && <span className="wm-beta">beta</span>}
     </span>

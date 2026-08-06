@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { DiscoverSheet } from "@/components/DiscoverSheet";
+import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -14,10 +12,12 @@ export type { NavTab };
  *  tab, but the shape is still what a shell hands around. */
 export type NavFace = { photo: string | null; color: string; initial: string };
 
-// The whole app in thumb reach, laid out the way Photos lays its dock: the
-// pill of places on the left, and search in its own circle on the right,
-// separate because finding somebody is an act rather than a place and the
-// pill is for the screens you move between. Above 940px this hides and
+// The whole app in thumb reach: the three screens you move between. Share and
+// You both came off, because one is an act and the other is a person, and
+// neither is a place. Search rode here for a build, in its own circle beside
+// the pill the way Photos does it, and came back off: three tabs and a circle
+// in one dock read as crammed, so search lives on Following's own floating
+// circle again until a better home turns up. Above 940px this hides and
 // HeaderNav takes over, off the same list.
 export function NavBar({
   active,
@@ -42,17 +42,8 @@ export function NavBar({
   face?: NavFace;
 }) {
   const here = activeTab(usePathname(), active);
-  const router = useRouter();
-  const [find, setFind] = useState(false);
-  // The week behind the sheet is a server render, so closing is where it
-  // catches up: follow three people and the rail has to know.
-  const closeFind = () => {
-    setFind(false);
-    router.refresh();
-  };
 
   return (
-    <div className="navdock">
     <nav className="navbar" aria-label="Main">
       {navTabs(coach, scheduleHref, profileHref).map((t) => {
         const on = here === t.id;
@@ -85,10 +76,5 @@ export function NavBar({
         );
       })}
     </nav>
-    <button className="navfind" aria-label="Find coaches" onClick={() => setFind(true)}>
-      <Icon name="search" size={26} />
-    </button>
-    {find && <DiscoverSheet onClose={closeFind} />}
-    </div>
   );
 }

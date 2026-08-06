@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
 import { DiscoverList } from "@/components/DiscoverList";
 import { Icon } from "@/components/Icon";
@@ -21,6 +22,12 @@ import { Icon } from "@/components/Icon";
  */
 export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<DiscoverData | null>(null);
+  // Portaled to the body (see InviteFriends): the header's magnifier renders
+  // this from inside the sticky brandbar, and sticky makes a stacking
+  // context in every mobile browser, so left in place the sheet's z-46
+  // painted under the content card that slides over the header.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     let live = true;
@@ -30,7 +37,8 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     };
   }, []);
 
-  return (
+  if (!mounted) return null;
+  return createPortal(
     <div
       className="sheet-scrim"
       onClick={(e) => {
@@ -59,6 +67,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
           <p className="dissheet-wait">Loading coaches…</p>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

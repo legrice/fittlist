@@ -1066,7 +1066,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    each block names itself while the sticky title follows along. */
 /* Same measured offset as the list's landing: the Month grid pins its
    weekday row inside the chrome, so --dayband-top already covers it. */
-.monthblock { scroll-margin-top: calc(var(--dayband-top, 190px) + 8px); margin-bottom: 30px; }
+.monthblock { scroll-margin-top: calc(var(--dayband-top, 0px) + 8px); margin-bottom: 30px; }
 .monthblock-h {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 17px; margin: 0 0 8px;
@@ -1162,12 +1162,16 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    two lines were the same break drawn twice, a few pixels apart.
 
    It carries the card's own top radius: it is the first thing inside the
-   card, so the two curves coincide. Not sticky any more, despite the name:
-   the title and the view switch scroll away with the header, and the day
-   band is the one thing that pins. The class name survives because the
-   measuring machinery it carries (publishBandTop) still has callers. */
+   card, so the two curves coincide, and pinned at the top of the screen the
+   corner notches sit where the phone's own bezel rounds anyway.
+
+   Sticky again, and it is the calendar's own exception to "only the day
+   bands pin": the Month view has no bands and no other chrome, so with the
+   title row gone there is no way back to List once you are in the grid.
+   The bands pin under it at its measured height (`publishBandTop`), which
+   is why this screen is the one that passes an element in. */
 .calsticky {
-  position: relative; z-index: 7;
+  position: sticky; top: 0; z-index: 7;
   background: var(--paper);
   margin: -10px -18px 0; padding: 16px 18px 0;
   border-radius: 28px 28px 0 0;
@@ -1415,11 +1419,14 @@ button.bl-band { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   background: var(--shell);
   margin: -14px -18px 0; padding: 16px 18px 12px;
-  /* Not sticky, by Matt's call: the only thing that pins on a scroll is the
-     day band. A header that rides along is chrome spending screen the whole
-     way down a list, and opening the calendar with everything scrolling as
-     one piece is the cleaner read. */
-  position: relative; z-index: 8;
+  /* Pinned, but underneath: the header stays where it is and the content
+     card slides up over it, so a scroll feels like lifting a sheet of paper
+     over the chrome rather than the whole screen moving as one. The card
+     (a later positioned sibling) paints above it by DOM order, which is why
+     there is deliberately no z-index here: a z-index would make this a
+     stacking context, and the sheets the header's own buttons open (the
+     directory behind the magnifier) would be trapped under the card with it. */
+  position: sticky; top: 0;
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
@@ -1730,7 +1737,11 @@ button.ps-card { cursor: pointer; }
 }
 
 /* public page: ground bg, cream hero card, green CTA, cloud footer */
-[data-theme="poster"].pub { background: var(--paper); display: block; }
+/* The shell gray, not the paper: the head (face, name, meta) is chrome the
+   way the app header is, and the white starts at the card above the tabs.
+   On paper the card's rounded corners were white on white, which is to say
+   invisible, and the head read as sitting on its own white slab. */
+[data-theme="poster"].pub { background: var(--shell); display: block; }
 [data-theme="poster"] .pubhero {
   background: transparent; color: #191502; border: none; box-shadow: none;
   margin: calc(20px + env(safe-area-inset-top)) 0 0; padding: 0 18px 4px; position: static; width: auto; min-height: 0;
@@ -2590,6 +2601,12 @@ button.ps-card { cursor: pointer; }
 .pubhead {
   display: flex; flex-direction: column; align-items: flex-start; text-align: left;
   padding-top: 78px; padding-bottom: 10px; position: relative;
+  /* Opaque, in the shell it sits on: the head is positioned (for its corner
+     slots) and so paints above the pinned header, and on a transparent
+     ground the name slid over the wordmark as a double exposure. The header
+     content starts at the same 18px gutter this box does, so no bleed is
+     needed to cover it. */
+  background: var(--shell);
 }
 /* On your own page there is no back arrow, so the photo can start level with
    the gear across from it: two things at the top of the page, on one line. A
@@ -2809,7 +2826,13 @@ button.ps-card { cursor: pointer; }
   border-radius: 28px 28px 0 0;
   margin: 10px -18px 0;
   padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
+  /* Above the pinned header, like .cardwrap: the card slides over it. */
+  position: relative;
 }
+/* The bands pin at the top of the viewport everywhere the card is the only
+   chrome; the profile draws its bands server-side and never publishes the
+   variable, so a calendar visit's leftover height would push them down. */
+.pub .dayband { top: 0; }
 /* Inside the card the tabs bleed to the card's edge, not the window's: the
    50vw trick below is for the row on the bare page, and past the card edge
    it would poke out of the rounded corners. */
@@ -4045,29 +4068,31 @@ button.ps-card { cursor: pointer; }
   border-radius: 28px 28px 0 0;
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
+  /* Positioned so it paints above the pinned header it slides over. No
+     z-index: DOM order does it, and a number here would start a stacking
+     context that traps the day bands' own z under whatever comes later. */
+  position: relative;
 }
 /* The settings screen brings its own bottom clearance from its overlay days;
    inside the card that room is the card's own, or the two stack into a
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
-/* The dock: the tab pill on the left and search in its own circle on the
-   right, laid out the way Photos lays its bottom bar. Search is separated
-   because finding somebody is an act rather than a place, and the pill is for
-   the screens you move between; giving the act its own circle is what keeps
-   the pill honest. */
-.navdock {
+.navbar {
   /* above the account view (40) so You keeps the bar, below sheets (46) so a
      takeover really takes over */
   position: fixed; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 45;
-  display: flex; gap: 12px; align-items: stretch;
+  /* The installed app's glass pill, in the browser too, by Matt's call: the
+     content scrolls on under it, the blur says so, and the rounded rectangle
+     matches the card's corners and the phone's. It held a separate search
+     circle for a build, laid out the way Photos does it, and Matt called it
+     back: three tabs and a circle in one dock read as crammed, so the bar is
+     the three places again and search went back to Following's own floating
+     circle until a better home turns up. */
+  display: flex; padding: 5px;
   max-width: 632px; margin: 0 auto;
-}
-/* One glass for the whole dock, and it is the family every floating control
-   belongs to now: the Share pill matches it, and only Add keeps a colour of
-   its own, because making something is the one loud act. */
-.navbar, .navfind {
+  border-radius: 28px;
   background: var(--paper);
   background: color-mix(in srgb, var(--paper) 72%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -4078,21 +4103,9 @@ button.ps-card { cursor: pointer; }
     0 6px 24px rgba(30, 24, 12, .13),
     0 1px 3px rgba(30, 24, 12, .07);
 }
-.navbar {
-  flex: 1; min-width: 0;
-  display: flex; padding: 5px;
-  /* A full pill, not a rounded rectangle: the radius is the height. */
-  border-radius: 999px;
-}
-.navfind {
-  flex: 0 0 auto; width: 62px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  border: none; cursor: pointer; color: var(--si);
-}
-.navfind:active { transform: scale(.94); }
 .navtab {
   flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 9px; border-radius: 999px; text-decoration: none; color: var(--ol);
+  padding: 8px 0 9px; border-radius: 23px; text-decoration: none; color: var(--ol);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
 /* The current tab is said in the brand colour and nothing else: the glyph and
@@ -4174,7 +4187,7 @@ button.ps-card { cursor: pointer; }
   padding: 14px 18px calc(40px + env(safe-area-inset-bottom));
   width: 100%; max-width: 660px; margin: 0 auto;
 }
-.navdock { display: none; }
+.navbar { display: none; }
 .headnav { display: flex; align-items: center; gap: 26px; }
 
 /* Desktop header: the window's width, not the column's.
@@ -4203,17 +4216,7 @@ button.ps-card { cursor: pointer; }
    block is the two rules that were about behaviour rather than dress. */
 .navtab { transition: background .18s ease, opacity .18s ease; }
 .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-/* The current tab sits on a wash of its own colour, the way Photos marks the
-   pane you are in: the ink alone said it, and the pill under it says it at a
-   glance without reading. */
-.navtab.on { background: color-mix(in srgb, var(--si) 11%, transparent); }
-/* The header's magnifier yields to the dock's circle wherever the dock is on
-   screen: the same glyph is never drawn twice on one screen, and below 940px
-   the dock is the search. Above it the dock hides and the header takes the
-   job back. */
-.screen.hasnav .findbtn { display: none; }
-@media (min-width: 940px) { .screen.hasnav .findbtn { display: flex; } }
-[data-mode="dark"] .navbar, [data-mode="dark"] .navfind {
+[data-mode="dark"] .navbar {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, .1),
     inset 0 1px 0 0 rgba(255, 255, 255, .08),
@@ -4269,7 +4272,10 @@ button.ps-card { cursor: pointer; }
    fixed rather than padded for the reason the pill's was: a padded chip grows
    the rail the moment anything inside it is taller than the line box. */
 .dischips .chip {
-  flex-shrink: 0; background: var(--card);
+  /* The step-down cream, not the card white: this rail rides white grounds
+     now (the sheet is `--card`, the page a near-white card), and a white
+     chip on either was a pill you could only find by its hairline. */
+  flex-shrink: 0; background: var(--cl-d); border-color: transparent;
   display: inline-flex; align-items: center;
   height: 38px; padding: 0 14px;
   font-size: 14px; font-weight: 600;
@@ -5779,8 +5785,27 @@ a.clspeek-by:active { opacity: .6; }
    thumb between taps. */
 .trayitem.dim { opacity: .42; }
 .trayitem[aria-pressed="true"] .trayitem-nm { font-weight: 600; }
-/* Following's floating search circle is gone: search lives in the dock, in
-   its own circle beside the tab pill, on every screen the dock shows. */
+/* Search wears the same floating circle Add does, in the same corner, because
+   it is the same kind of thing: the one act this screen offers. It rode in
+   the dock for a build and came back, because three tabs and a circle in one
+   dock read as crammed.
+
+   The glass is the bar's own, stroke and all gone, the same dress the Share
+   pill wears now: the floating controls and the bar are one family of glass
+   over the page, and the glyph carries the brand colour because on a screen
+   with nothing else to make, finding a coach is the act. */
+.wkfab-find {
+  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  color: var(--si); border: none;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    inset 0 1px 0 0 rgba(255, 255, 255, .45),
+    0 6px 24px rgba(30, 24, 12, .13),
+    0 1px 3px rgba(30, 24, 12, .07);
+}
 /* The Profile tab's face. Sized to the glyph beside it rather than to a
    header avatar, so the three tabs sit on one line: a picture that is even two
    pixels taller drags its label down and the row stops being a row. */
@@ -5878,8 +5903,9 @@ a.clspeek-by:active { opacity: .6; }
    (`publishBandTop`), which is why a screen that draws bands without calling
    `useBandTop` pins them at a guessed offset halfway down the phone. */
 .dayband {
-  /* Top of the viewport: nothing else pins, so there is nothing to sit under. */
-  position: sticky; top: 0; z-index: 6;
+  /* The top of the viewport on most screens (nothing else pins, so nothing
+     to sit under); on the calendar, the pinned title row's measured height. */
+  position: sticky; top: var(--dayband-top, 0px); z-index: 6;
   display: flex; align-items: baseline; gap: 12px;
   margin: 0 -18px; padding: 7px 18px;
   background: var(--band);
@@ -5910,7 +5936,7 @@ a.clspeek-by:active { opacity: .6; }
    chrome rather than behind it. */
 /* The band is the block's own first child, so a landing only needs a breath:
    the band sticks to the top the moment the block arrives. */
-.dayblock { scroll-margin-top: 8px; }
+.dayblock { scroll-margin-top: calc(var(--dayband-top, 0px) + 8px); }
 
 .dayrows { display: flex; flex-direction: column; }
 
