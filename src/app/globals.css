@@ -5836,9 +5836,16 @@ a.clspeek-by:active { opacity: .6; }
   display: flex; align-items: baseline; gap: 12px;
   margin: 0 -18px; padding: 7px 18px;
   background: var(--band);
-  /* One rule, underneath. A band with a line above and below is a box drawn
-     round a heading, and the gap over it is already the break. */
-  border-bottom: var(--divw) solid var(--div);
+}
+/* One rule, underneath, and it stops at the gutters. The band's ground bleeds
+   to the window edges (it has to, or rows show either side of it while it is
+   pinned), but a rule running the full width read as the screen being sliced
+   into bars; inset to the content column it reads as underlining the date,
+   which is what it is. Drawn as a pseudo-element because a border sits on the
+   border box and cannot be inset from it. */
+.dayband::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 0;
+  height: var(--divw); background: var(--div);
 }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
