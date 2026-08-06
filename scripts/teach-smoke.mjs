@@ -41,22 +41,24 @@ await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
-// The Share tab lands on the hub screen, and a member's holds no week
-// tile and no week row: their page has no schedule to draw a picture of.
+// The Share tab lands on the hub screen, and a member's has no Week
+// segment: their page has no schedule to draw a picture of.
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/sharehub/);
-await p.locator(".shtile").first().waitFor();
+await p.locator(".shseg-pill").first().waitFor();
 {
-  const tiles = (await p.locator(".shtile .shtile-t").allInnerTexts()).map((s) => s.trim());
-  console.log("member hub tiles:", tiles.join(" | "));
-  if (await p.locator(".shtile-lead").count())
-    fail("a member has no week to share: " + tiles.join());
-  if (!tiles.includes("Profile card") || !tiles.includes("QR code"))
-    fail("the hub should offer the card and the code: " + tiles.join());
-  if (await p.locator(".shrows .setrow", { hasText: "week" }).count())
-    fail("no week-as-text row for a member");
-  if (!(await p.locator(".shrows .setrow", { hasText: "Copy your link" }).count()))
-    fail("the hub should offer the link");
+  const pills = (await p.locator(".shseg-pill").allInnerTexts()).map((s) => s.trim());
+  console.log("member hub segments:", pills.join(" | "));
+  if (pills.join("|") !== "Profile|QR code")
+    fail("a member's segments are Profile and QR code: " + pills.join("|"));
+  await p.locator(".shtitle", { hasText: "Share your profile" }).waitFor();
+  // The link rides with the QR code, and nothing anywhere offers a week.
+  await p.locator(".shseg-pill", { hasText: "QR code" }).click();
+  await p.locator(".qrcard .qrimg").waitFor();
+  if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
+    fail("the copy link lives with the QR code");
+  if (await p.locator(".cardwrap").getByText(/week/i).count())
+    fail("a member's hub should not say week");
 }
 await p.goto(BASE + "/feed");
 

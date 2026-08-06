@@ -375,24 +375,34 @@ if (!(await p.locator(".findbtn:visible").count()))
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/sharehub/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
-// A coach's hub: the week tile leading in brand, the card and QR tiles
-// wearing their real previews, and the two copy rows underneath.
-await p.locator(".shtile-lead", { hasText: "Your week" }).waitFor();
-if ((await p.locator(".shtile").count()) !== 3) fail("a coach gets three tiles");
-for (const row of ["Copy your link", "Copy your week as text"]) {
-  if (!(await p.locator(".shrows .setrow", { hasText: row }).count()))
-    fail("the hub should offer " + row);
+// A coach's hub: Week leads and is selected, the colours redraw the
+// preview, and the QR segment carries the code card and the copy link.
+await p.locator(".shtitle", { hasText: "Share the week" }).waitFor();
+{
+  const pills = (await p.locator(".shseg-pill").allInnerTexts()).map((t) => t.trim());
+  if (pills.join("|") !== "Week|Profile|QR code")
+    fail("a coach's segments are Week, Profile, QR code: " + pills.join("|"));
+  if (!(await p.locator(".shseg-pill.on", { hasText: "Week" }).count()))
+    fail("Week should lead selected");
+  if ((await p.locator(".shswatch").count()) !== 16) fail("sixteen colours");
+  const before = await p.locator(".shprev").getAttribute("src");
+  await p.locator(".shswatch").nth(3).click();
+  const after = await p.locator(".shprev").getAttribute("src");
+  if (before === after) fail("a swatch should redraw the preview");
+  if (await p.locator(".setrow", { hasText: "Copy your week" }).count())
+    fail("copy-week-as-text is gone, by Matt's call");
 }
-// The QR tile opens its sheet and closing it lands back on the hub.
-await p.locator(".shtile", { hasText: "QR code" }).click();
-await p.locator(".sheet", { hasText: "QR code" }).waitFor();
-await p.locator(".sheet .sheetclose").click();
-await p.locator(".sheet-scrim").waitFor({ state: "detached", timeout: 10000 });
-if (!p.url().includes("/sharehub")) fail("closing the QR should land back on the hub");
-// And the week tile is the door to the picture editor.
-await p.locator(".shtile-lead").click();
+// The QR segment: the named card, the code, and the link beside it.
+await p.locator(".shseg-pill", { hasText: "QR code" }).click();
+await p.locator(".qrcard .qrimg").waitFor();
+if (!(await p.locator(".qrcard-nm").innerText()).trim()) fail("the QR card names its owner");
+if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
+  fail("the copy link lives with the QR code");
+// And the week segment carries the door to the full editor.
+await p.locator(".shseg-pill", { hasText: "Week" }).click();
+await p.locator(".shedit", { hasText: "Choose the dates and classes" }).click();
 await p.waitForURL(/\/share$/);
-console.log("the Share tab lands on the hub, and the week tile reaches the editor");
+console.log("the Share tab lands on the hub, and the editor is one tap deeper");
 await p.goBack();
 // The magnifier still opens the directory, from the corner it went back to.
 await p.goto(BASE + "/calendar");

@@ -1,126 +1,232 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { myWeekText } from "@/app/actions/weektext";
+import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
-import { QrSheet } from "@/components/QrSheet";
-import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { Toast, useToast } from "@/components/Toast";
 
-// The Share tab's own screen: every way of handing your page on, drawn as
-// the thing it makes rather than a list of rows. It grew out of a sheet of
-// setrows, by Matt's call: five rows saying five different acts in the same
-// grey voice, when the acts make visibly different things. The card tile
-// shows your card, the QR tile shows your code, and the week tile wears the
-// one loud colour because a picture of your week is the act the whole app
-// is for.
+// The Share tab's screen, on Matt's concept: one surface, three subjects.
+// Week, Profile and QR code are segments rather than tiles, the title says
+// which one you are on, the colours redraw the picture live, and the big
+// button saves the thing on screen. Copy-week-as-text is gone by the same
+// call, and the page link lives with the QR code, where somebody reaching
+// for one way to hand the page over finds the other.
 //
-// The copies stay rows underneath: copying is an instant act with nothing
-// to show, and a big tile for it would be a picture of nothing.
+// Deliberately absent: the style row (Poster, Ticket, Grid, Minimal) from
+// the concept. Ten layout styles shipped once and came out because the
+// differences were not worth a decision; colour is what makes two posters
+// read as two posters. The renderer still honours a StoryStyle, so a real
+// style axis can return, but a row of thumbnails over one layout would be
+// a picker of lies.
+type Seg = "week" | "profile" | "qr";
+
+const WORDS: Record<Seg, { title: string; sub: string }> = {
+  week: { title: "Share the week", sub: "Straight to your story." },
+  profile: { title: "Share your profile", sub: "Your card, wherever people ask for it." },
+  qr: { title: "Your QR code", sub: "Hold it up after class. They land on your page." },
+};
+
 export function ShareHubScreen({
   coach,
   handle,
+  name,
 }: {
-  /** A coach gets the week tile and the week-as-text row; a member's page
-   *  has no schedule to draw. */
+  /** A coach gets the Week segment; a member's page has no schedule to draw. */
   coach: boolean;
   handle: string;
+  /** On the QR card, above the code: the code is a thing you hold up, and a
+   *  bare code is anybody's. */
+  name: string;
 }) {
-  const [card, setCard] = useState(false);
-  const [qr, setQr] = useState(false);
+  const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
+  const [themeId, setThemeId] = useState<StoryThemeId>("paper");
+  const [canShareFiles, setCanShareFiles] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [pageHost, setPageHost] = useState("fittlist.co");
+  // One buster per visit: the week can change behind the picture, and a
+  // cached preview of last Tuesday is a lie waiting to be posted.
+  const [bust] = useState(() => Date.now());
   const [toastMsg, toastOn, toast] = useToast();
 
-  const copyLink = async () => {
+  useEffect(() => {
+    setCanShareFiles(
+      typeof navigator !== "undefined" &&
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function",
+    );
+    setPageHost(window.location.host);
+  }, []);
+
+  const imgUrl =
+    seg === "week"
+      ? `/api/story/compose?theme=${themeId}&v=${bust}-${themeId}`
+      : `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
+  const fileName =
+    seg === "week" ? `fittlist-${handle}-week.png` : `fittlist-${handle}-card.png`;
+  const qrUrl = `/api/qr/${handle}`;
+  const qrFileName = `fittlist-${handle}-qr.png`;
+
+  const shareImage = async (url: string, file: string, failWord: string) => {
+    if (sharing) return;
+    setSharing(true);
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/${handle}`);
+      if (canShareFiles) {
+        const res = await fetch(url);
+        if (res.ok) {
+          const f = new File([await res.blob()], file, { type: "image/png" });
+          if (navigator.canShare({ files: [f] })) {
+            await navigator.share({ files: [f] });
+            return;
+          }
+        }
+      }
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file;
+      a.click();
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") onFail(failWord);
+    } finally {
+      setSharing(false);
+    }
+  };
+  const onFail = (what: string) => toast(`Couldn't share the ${what}`);
+
+  const copyLink = async () => {
+    const url = `${window.location.origin}/${handle}`;
+    try {
+      await navigator.clipboard.writeText(url);
       toast("Link copied, ready to paste");
     } catch {
-      toast("Couldn't copy that");
+      toast(url);
     }
   };
 
-  const copyWeek = async () => {
-    const res = await myWeekText();
-    if (!res.ok || !res.text) {
-      toast(res.error ?? "Couldn't copy that");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(res.text);
-      toast("Week copied, ready to paste");
-    } catch {
-      toast("Couldn't copy that");
-    }
-  };
+  const segs: { id: Seg; label: string }[] = [
+    ...(coach ? [{ id: "week" as const, label: "Week" }] : []),
+    { id: "profile" as const, label: "Profile" },
+    { id: "qr" as const, label: "QR code" },
+  ];
+  const words = WORDS[seg];
 
   return (
     <>
       <div className="cardwrap">
-        <div className="calbar">
-          <h1 className="calbar-t">Share</h1>
-        </div>
+        <h1 className="calbar-t shtitle">{words.title}</h1>
+        <p className="shsub">{words.sub}</p>
 
-        <div className="shgrid">
-          {coach && (
-            <Link className="shtile shtile-lead" href="/share">
-              <span className="shtile-ic" aria-hidden="true">
-                <Icon name="auto_awesome" size={26} />
-              </span>
-              <span className="shtile-t">Your week</span>
-              <span className="shtile-s">A picture of your schedule, made to post</span>
-            </Link>
-          )}
-          {/* The previews are the real images the tiles hand on, drawn small:
-              seeing the thing is what tells these apart at a glance. */}
-          <button className="shtile" onClick={() => setCard(true)}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="shtile-img" src={`/api/card/${handle}`} alt="" loading="lazy" />
-            <span className="shtile-t">Profile card</span>
-            <span className="shtile-s">A square image for a post</span>
-          </button>
-          <button className="shtile" onClick={() => setQr(true)}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="shtile-img shtile-qr" src={`/api/qr/${handle}`} alt="" loading="lazy" />
-            <span className="shtile-t">QR code</span>
-            <span className="shtile-s">Scans straight to your page</span>
-          </button>
-        </div>
-
-        <div className="settingslist shrows">
-          <button className="setrow" onClick={copyLink}>
-            <span className="setrow-ic"><Icon name="link" size={24} /></span>
-            <span className="setrow-txt">
-              <span className="t">Copy your link</span>
-              <span className="s">fittlist.co/{handle}</span>
-            </span>
-            <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-          </button>
-          {coach && (
-            <button className="setrow" onClick={copyWeek}>
-              <span className="setrow-ic"><Icon name="content_copy" size={24} /></span>
-              <span className="setrow-txt">
-                <span className="t">Copy your week as text</span>
-                <span className="s">For the group chat, ready to paste</span>
-              </span>
-              <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+        <div className="shseg" role="tablist" aria-label="What to share">
+          {segs.map((s) => (
+            <button
+              key={s.id}
+              role="tab"
+              aria-selected={seg === s.id}
+              className={`shseg-pill${seg === s.id ? " on" : ""}`}
+              onClick={() => setSeg(s.id)}
+            >
+              {s.label}
             </button>
-          )}
+          ))}
         </div>
+
+        {seg !== "qr" && (
+          <>
+            {/* The colours, as the swatches they are: tapping one redraws the
+                picture below it, and the picture is the label. */}
+            <div className="shcolors">
+              <span className="shcolors-lbl">Colors</span>
+              <div className="shcolors-row" role="listbox" aria-label="Colors">
+                {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
+                  ([id, t]) => (
+                    <button
+                      key={id}
+                      role="option"
+                      aria-selected={id === themeId}
+                      aria-label={t.label}
+                      className={`shswatch${id === themeId ? " sel" : ""}`}
+                      style={
+                        t.bg.includes("gradient")
+                          ? { background: t.bg }
+                          : { background: `linear-gradient(105deg, ${t.bg} 50%, ${t.accent} 50%)` }
+                      }
+                      onClick={() => setThemeId(id)}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={`shprev${seg === "profile" ? " shprev-sq" : ""}`}
+              src={imgUrl}
+              alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
+            />
+
+            <div className="shcta">
+              {canShareFiles ? (
+                <button
+                  className="btn si"
+                  disabled={sharing}
+                  onClick={() =>
+                    shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
+                  }
+                >
+                  {sharing ? "Opening…" : seg === "week" ? "Share the week" : "Share the card"}
+                </button>
+              ) : (
+                <a className="btn si" href={imgUrl} download={fileName}>
+                  Save image
+                </a>
+              )}
+              {seg === "week" && (
+                <Link className="shedit" href="/share">
+                  Choose the dates and classes
+                  <Icon name="chevron_right" size={18} />
+                </Link>
+              )}
+            </div>
+          </>
+        )}
+
+        {seg === "qr" && (
+          <>
+            {/* The card the mock drew: name, the ask, the code on white, the
+                address. A bare code is anybody's; this one says whose. */}
+            <div className="qrcard">
+              <div className="qrcard-nm">{name}</div>
+              <div className="qrcard-k">{coach ? "Scan for my week" : "Scan for my page"}</div>
+              <div className="qrframe">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
+              </div>
+              <div className="qrurl">
+                {pageHost}/{handle}
+              </div>
+            </div>
+            <div className="shcta">
+              {canShareFiles ? (
+                <button
+                  className="btn si"
+                  disabled={sharing}
+                  onClick={() => shareImage(qrUrl, qrFileName, "QR code")}
+                >
+                  {sharing ? "Opening…" : "Share QR code"}
+                </button>
+              ) : (
+                <a className="btn si" href={qrUrl} download={qrFileName}>
+                  Save QR code
+                </a>
+              )}
+              <button className="btn ghost" onClick={copyLink}>
+                Copy link
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
-      <QrSheet handle={handle} open={qr} onClose={() => setQr(false)} onToast={toast} />
-      {card && (
-        <ShareCardSheet
-          path={`/api/card/${handle}`}
-          fileName={`fittlist-${handle}-card.png`}
-          title="Share your card"
-          lead="A square image of your profile, made for a post or a story. Your page is one tap from the link on it."
-          alt="Your profile card"
-          onClose={() => setCard(false)}
-          onToast={toast}
-        />
-      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
