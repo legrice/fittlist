@@ -25,6 +25,9 @@ export default async function ShareHubPage() {
   if (!me?.handle) redirect("/you");
 
   const coach = me.kind !== "fan";
+  // A member's bar carries no Share tab, so this screen has no door for
+  // them; a typed URL lands back on the one screen they live in.
+  if (!coach) redirect("/feed");
   // A fortnight of what the picture could hold, for the Dates and Classes
   // pickers: the range moves client-side, so the screen gets the whole
   // window and filters. Same loader as the image route, so the picker and

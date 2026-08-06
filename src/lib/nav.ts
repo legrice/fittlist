@@ -50,7 +50,11 @@ export function navTabs(
     // tabs and the search circle their room, and it names the act as well
     // as the place.
     { id: "following", href: "/feed", icon: "groups", label: "Follow" },
-    // Only for somebody who teaches.
+    // Only for somebody who teaches: the calendar, and the hub for sharing
+    // it. Share was in every bar for a build and came off the member's, by
+    // Matt's call: until a member has a way to add things and a reason to,
+    // their app is two places, Follow and Profile, and a Share tab over a
+    // page with nothing on it was an ask before there was anything to give.
     ...(coach
       ? [
           {
@@ -59,15 +63,9 @@ export function navTabs(
             icon: "calendar_today",
             label: "Calendar",
           },
+          { id: "share" as const, href: "/sharehub", icon: "share", label: "Share" },
         ]
       : []),
-    // Share, as a tab, by Matt's call: it is the half of "build a calendar,
-    // share a calendar" the whole build is for, so it earns a place in the
-    // bar you always have. It is a real screen now rather than a sheet (the
-    // hub of big tiles: the week picture, the profile card, the QR code,
-    // the copy rows), because a tab is a place you go. Search stays on the
-    // header's magnifier and Following's floating circle.
-    { id: "share" as const, href: "/sharehub", icon: "share", label: "Share" },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab

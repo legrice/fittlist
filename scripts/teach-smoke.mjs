@@ -30,37 +30,24 @@ await p.waitForURL("**/feed");
 const tabs = async () =>
   (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 
-// A member: two tabs, and the Profile one wears their face rather than a glyph.
+// A member: two tabs and nothing else, by Matt's call. Until a member has a
+// way to add things and a reason to, their app is Follow and Profile, and
+// the Profile one wears their face rather than a glyph.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 3) fail("a member gets three tabs, got " + t.join());
-if (!t[1].includes("Share")) fail("Share sits in the middle of a member's bar: " + t.join());
+if (t.length !== 2) fail("a member gets two tabs, got " + t.join());
+if (!t[0].includes("Follow") || t.some((x) => /Share|Calendar/.test(x)))
+  fail("a member's bar is Follow and Profile only: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
-// The Share tab lands on the hub screen, and a member's has no Week
-// segment: their page has no schedule to draw a picture of.
-await p.locator('.navtab[data-tab="share"]').click();
-await p.waitForURL(/\/sharehub/);
-await p.locator(".shseg-pill").first().waitFor();
-{
-  const pills = (await p.locator(".shseg-pill").allInnerTexts()).map((s) => s.trim());
-  console.log("member hub segments:", pills.join(" | "));
-  if (pills.join("|") !== "Profile|QR code")
-    fail("a member's segments are Profile and QR code: " + pills.join("|"));
-  await p.locator(".shtitle", { hasText: "Share your profile" }).waitFor();
-  // The link rides with the QR code, and nothing anywhere offers a week.
-  await p.locator(".shseg-pill", { hasText: "QR code" }).click();
-  await p.locator(".qrcard .qrimg").waitFor();
-  if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
-    fail("the copy link lives with the QR code");
-  if (await p.locator(".cardwrap").getByText(/week/i).count())
-    fail("a member's hub should not say week");
-}
-await p.goto(BASE + "/feed");
+// No Share tab means no hub either: a typed URL lands back on Following.
+await p.goto(BASE + "/sharehub");
+await p.waitForURL(/\/feed/);
+console.log("a member's /sharehub lands back on Following");
 
 // The Profile tab opens your page, not a list of switches. Settings are the
 // gear on it, which is the only door to them there is.
@@ -134,7 +121,7 @@ await p.locator(".setrow", { hasText: "I teach too" }).click();
 await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 3) fail("turning it off should take the Calendar tab away, got " + t.join());
+if (t.length !== 2) fail("turning it off should take Calendar and Share away, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");

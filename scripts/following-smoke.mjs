@@ -215,8 +215,10 @@ if (await m.locator(".focusbar").count()) fail("no focus bar with everyone showi
     fail("the dock's search circle should be gone again");
   if (await m.locator('.navtab[data-tab="find"]').count())
     fail("the Search tab should stay gone from the pill");
-  if (!(await m.locator('.navtab[data-tab="share"]').count()))
-    fail("Share should be a tab in the bar");
+  // A member's bar is Follow and Profile only, by Matt's call: no Share
+  // until they have a way to add things and a reason to.
+  if (await m.locator('.navtab[data-tab="share"]').count())
+    fail("a member's bar should carry no Share tab");
   const fab = m.locator(".wkfab-find");
   if (!(await fab.count())) fail("the floating search circle should be back");
   const bg = await fab.evaluate((e) => getComputedStyle(e).backgroundColor);
