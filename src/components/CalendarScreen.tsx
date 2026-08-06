@@ -158,24 +158,32 @@ export function CalendarScreen({
               accessible names, because a glyph on its own says nothing to a
               screen reader. */}
           {!bare && (
-            <div className="calseg" role="tablist" aria-label="Calendar view">
-              <button
-                role="tab"
-                aria-label="List"
-                aria-selected={view === "list"}
-                className={view === "list" ? "on" : ""}
-                onClick={() => setView("list")}
-              >
-                <Icon name="list" size={21} />
-              </button>
-              <button
-                role="tab"
-                aria-label="Month"
-                aria-selected={view === "month"}
-                className={view === "month" ? "on" : ""}
-                onClick={() => setView("month")}
-              >
-                <Icon name="calendar_month" size={21} />
+            <div className="calbar-tools">
+              <div className="calseg" role="tablist" aria-label="Calendar view">
+                <button
+                  role="tab"
+                  aria-label="List"
+                  aria-selected={view === "list"}
+                  className={view === "list" ? "on" : ""}
+                  onClick={() => setView("list")}
+                >
+                  <Icon name="list" size={21} />
+                </button>
+                <button
+                  role="tab"
+                  aria-label="Month"
+                  aria-selected={view === "month"}
+                  className={view === "month" ? "on" : ""}
+                  onClick={() => setView("month")}
+                >
+                  <Icon name="calendar_month" size={21} />
+                </button>
+              </div>
+              {/* Add rides the title row now, sized to the toggle beside it:
+                  the bottom corners were getting crowded with Share and the
+                  bar, and adding is what somebody opens this screen to do. */}
+              <button className="calbar-add" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+                <Icon name="add" size={22} />
               </button>
             </div>
           )}
@@ -205,25 +213,15 @@ export function CalendarScreen({
       )}
       </div>
 
-      {/* The two things you do with a calendar, in the two bottom corners:
-          make it, and hand it on. Both only once there is a week behind them.
-          An empty calendar carries its own CTA, so a plus beside it is one
-          button explaining the other, and a poster of nothing is the app
-          talking to itself.
-
-          Add is the loud one, under the thumb, because it is what somebody
-          opens this screen to do. Share is white with the sparkle carrying the
-          colour, wearing its word because it is occasional and needs saying. */}
+      {/* Share floats alone at the bottom now: Add moved up beside the view
+          toggle, because two floating controls and the bar made the bottom
+          of the screen crowded. Only once there is a week behind it: a
+          poster of nothing is the app talking to itself. */}
       {!bare && (
-        <>
-          <Link className="wkshare" href="/share">
-            <Icon name="auto_awesome" size={22} className="wkshare-ic" />
-            Share
-          </Link>
-          <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-            <Icon name="add" size={28} />
-          </button>
-        </>
+        <Link className="wkshare" href="/share">
+          <Icon name="auto_awesome" size={22} className="wkshare-ic" />
+          Share
+        </Link>
       )}
 
       {addOpen && (

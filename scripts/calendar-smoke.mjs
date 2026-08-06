@@ -40,13 +40,13 @@ await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 }
 // and a poster of an empty week is the app talking to itself.
 await p.goto(BASE + "/calendar");
 await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
-if (await p.locator(".wkfab").count()) fail("no plus on an empty calendar");
+if (await p.locator(".calbar-add").count()) fail("no plus on an empty calendar");
 if (await p.locator(".wkshare").count()) fail("no Share on an empty calendar");
-console.log("an empty calendar is its own CTA, and carries neither floating control");
+console.log("an empty calendar is its own CTA, and carries no other control");
 
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
-  await p.locator(".wkempty-cta, .wkfab").first().click();
+  await p.locator(".wkempty-cta, .calbar-add").first().click();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(nm);
   await p.getByRole("button", { name: day, exact: true }).click();
   await p.locator("#fStart").fill(t);
@@ -81,23 +81,27 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// The two floating controls, in the two bottom corners. Add is the loud one in
-// the brand colour; Share is glass with the sparkle carrying the colour, and it
-// wears its word because a sparkle on its own is a decoration.
+// Add rides the title row beside the view toggle, sized to it; Share floats
+// alone at the bottom, glass with the sparkle carrying the colour, wearing
+// its word because a sparkle on its own is a decoration.
 {
-  if (!(await p.locator(".wkfab").count())) fail("the plus should be back once there is a week");
+  if (await p.locator(".wkfab").count()) fail("the floating plus should be gone from the calendar");
+  const addBtn = p.locator(".calbar-add");
+  if (!(await addBtn.count())) fail("the plus should ride the title row once there is a week");
+  const abox = await addBtn.boundingBox();
+  const seg = await p.locator(".calseg").boundingBox();
+  if (!(abox.x > seg.x + seg.width - 4)) fail("Add sits right of the toggle");
+  if (Math.abs(abox.height - seg.height) > 2)
+    fail(`Add matches the toggle's height: ${abox.height} vs ${seg.height}`);
+  if (Math.abs(abox.y - seg.y) > 2) fail("Add and the toggle sit on one line");
   const share = p.locator(".wkshare");
-  if (!(await share.count())) fail("Share should sit across from Add");
+  if (!(await share.count())) fail("Share should float at the bottom");
   const word = (await share.innerText()).trim();
   const href = await share.getAttribute("href");
-  console.log("share pill:", word, "->", href);
+  console.log("share pill:", word, "->", href, "| add beside toggle:", Math.round(abox.x));
   if (word !== "Share") fail("the Share pill wears its word: " + word);
   if (href !== "/share") fail("Share opens the composer, got " + href);
   const box = await share.boundingBox();
-  const fab = await p.locator(".wkfab").boundingBox();
-  if (!(box.x < fab.x)) fail("Share is the left corner and Add the right");
-  if (Math.abs(box.y + box.height - (fab.y + fab.height)) > 6)
-    fail("the two should sit on one line");
   // Glass, not a solid slab: it floats over a list somebody is reading, and a
   // solid one there is a hole punched in the page.
   const blur = await share.evaluate(

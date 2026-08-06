@@ -78,7 +78,7 @@ const mk = async (email, name, member) => {
 // ---- a coach with a real week
 const coach = await mk("carina@example.com", "Carina Clores", false);
 await coach.goto(BASE + "/calendar");
-await coach.locator(".wkempty-cta, .wkfab").first().click();
+await coach.locator(".wkempty-cta, .calbar-add").first().click();
 await coach.getByPlaceholder("e.g. Barbell Strength").fill("Guns, Buns, and Lungs");
 for (const d of ["Mo", "We", "Fr"])
   await coach.getByRole("button", { name: d, exact: true }).click();

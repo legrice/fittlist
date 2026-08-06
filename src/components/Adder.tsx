@@ -218,7 +218,10 @@ export function Adder({
   const [studioId, setStudioId] = useState<string | null>(gym?.studioId ?? prefill?.studioId ?? null);
   // Public by default; private items are the coach's own work (PT clients etc.).
   // A gym has none: its schedule is the thing it publishes.
-  const [isPublic, setIsPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  // The Public/Private control is off the form for now (see the note where it
+  // rendered), so this is state without a setter: new classes are public, and
+  // an edit keeps whatever the class already was.
+  const [isPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
   // The rota, on a gym's class. Null on a coach's own.
   const [coachUserId, setCoachUserId] = useState(gym?.coachUserId ?? "");
   const [location, setLocation] = useState(prefill?.location ?? "");
@@ -677,28 +680,11 @@ export function Adder({
               </div>
             )}
 
-            {/* Public (on your page) vs private (your own clients / sessions).
-                A gym has no private classes: its schedule is what it publishes.
-                Neither does a class you're only going to: there is no page for
-                it to be on. */}
-            {!gym && !mineOnly && (
-            <div className="adder-card">
-            <label className="flabel">Who sees this?</label>
-            <div className="modetoggle">
-              <button type="button" className={isPublic ? "sel" : ""} onClick={() => setIsPublic(true)}>
-                Public
-              </button>
-              <button type="button" className={!isPublic ? "sel" : ""} onClick={() => setIsPublic(false)}>
-                Private
-              </button>
-            </div>
-            <p className="durnote" style={{ marginTop: 8 }}>
-              {isPublic
-                ? "For public classes. Will be visible on your private schedule and on your public page."
-                : "Use for private clients or classes. Visible on your schedule only, hidden from your public page."}
-            </p>
-            </div>
-            )}
+            {/* No Public/Private toggle for now, by Matt's call: a published
+                class is public, and the whole form stays simple. The isPublic
+                state and everything downstream of it survive untouched (an
+                edit to an old private class keeps it private), so bringing
+                the control back is re-rendering this block, not a migration. */}
 
             {/* An event has no studio: the field would invite the catalog
                 write the event flavor exists to avoid. A plain Where does

@@ -28,7 +28,7 @@ const mkCoach = async (email, name, studio, classes) => {
   if (!classes.length) { await c.close(); return; }
   for (const [nm, day, t] of classes) {
     await p.goto(BASE + "/calendar");
-    await p.locator(".wkempty-cta, .wkfab").first().click();
+    await p.locator(".wkempty-cta, .calbar-add").first().click();
     await p.getByPlaceholder("e.g. Barbell Strength").fill(nm);
     await p.getByRole("button", { name: day, exact: true }).click();
     await p.locator("#fStart").fill(t);

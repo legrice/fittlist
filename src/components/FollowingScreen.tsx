@@ -180,7 +180,7 @@ export function FollowingScreen({
             aria-pressed={focus === null}
           >
             <span className={`trayav trayav-all${focus === null ? " sel" : ""}`}>All</span>
-            <span className="trayitem-nm">Everyone</span>
+            <span className="trayitem-nm">All coaches</span>
           </button>
           {rail.map((c) => {
             const on = focus === c.id;
@@ -258,7 +258,7 @@ export function FollowingScreen({
           title={focus ? "Nothing from them coming up" : "Nothing coming up"}
           body={
             focus
-              ? "Tap Everyone to see the rest."
+              ? "Tap All coaches to see the rest."
               : "The people you follow have not put anything up yet."
           }
         />

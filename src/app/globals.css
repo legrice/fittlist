@@ -4092,7 +4092,8 @@ button.ps-card { cursor: pointer; }
      circle until a better home turns up. */
   display: flex; padding: 5px;
   max-width: 632px; margin: 0 auto;
-  border-radius: 28px;
+  /* A full pill: the radius is the height, by Matt's call. */
+  border-radius: 999px;
   background: var(--paper);
   background: color-mix(in srgb, var(--paper) 72%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -4105,16 +4106,15 @@ button.ps-card { cursor: pointer; }
 }
 .navtab {
   flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 9px; border-radius: 23px; text-decoration: none; color: var(--ol);
+  padding: 8px 0 9px; border-radius: 999px; text-decoration: none; color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 11px;
 }
-/* The current tab is said in the brand colour and nothing else: the glyph and
-   the word both take it, the way Airbnb marks Explore. It was a light orange
-   wash behind the icon, which is a second shape to read on a row whose whole
-   job is five equals; colour alone says the same thing without drawing a
-   thing that isn't there. Every glyph is currentColor, so tinting the tab
-   tints its icon. */
-.navtab.on { color: var(--si); }
+/* Ink everywhere, and the wash is the whole mark, by Matt's call: every tab's
+   glyph and word stay the same colour, and the current one sits on a quiet
+   pill of its own, the way Photos marks the pane you are in. It was the brand
+   colour on the current tab's ink for a long time, and before that a wash
+   behind the glyph alone; one indicator, and it is the ground. */
+.navtab.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -5818,10 +5818,8 @@ a.clspeek-by:active { opacity: .6; }
   display: flex; align-items: center; justify-content: center;
   color: #fff; font-size: 13px; font-weight: 600;
 }
-/* The current tab inks in; a photograph cannot, so its ring does instead. */
-.navtab.on .navface-photo, .navtab.on .navface-initial {
-  box-shadow: 0 0 0 2px var(--si);
-}
+/* No ring on the current face: the wash behind the whole tab is the one
+   selection mark now, and a second one on the photo said it twice. */
 /* The depth, one tap behind the summary. It expands the sheet rather than
    opening a second one: a class had two designs for a while, a summary here
    and a full-screen overlay at its own URL, and two designs for one idea is
@@ -5995,15 +5993,19 @@ a.clspeek-by:active { opacity: .6; }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+.calbar-tools { display: flex; align-items: center; gap: 10px; }
 .calbar-t {
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 34px; font-weight: 600; letter-spacing: -.012em; color: var(--ink);
 }
 /* List and Month, as one control rather than two buttons: they are two ways of
-   looking at one thing, and a segment is what says so. */
+   looking at one thing, and a segment is what says so. Light all over, by
+   Matt's call: the edge is the input border rather than ink, and the current
+   view sits on the step-down cream with its glyph unchanged, the same
+   grammar the nav tabs use now (the ground is the mark, never the ink). */
 .calseg {
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
-  border: var(--divw) solid var(--ink);
+  border: var(--divw) solid var(--line);
 }
 /* Square-ish, because what is inside is a glyph rather than a word: a pill
    sized for "Month" and holding an icon is mostly empty pill. */
@@ -6012,7 +6014,16 @@ a.clspeek-by:active { opacity: .6; }
   background: none; cursor: pointer; color: var(--ol);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.calseg button.on { background: var(--ink); color: var(--paper); }
+.calseg button.on { background: var(--cl-d); }
+/* Add, moved up beside the toggle and sized to it: the bottom corners were
+   getting crowded, and adding is the screen's own act, so it rides the title
+   row. The one loud colour stays its own. */
+.calbar-add {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--si); color: #fff; cursor: pointer;
+}
+.calbar-add:active { transform: scale(.94); }
 
 /* The rail's answer, in words. A filtered list is otherwise indistinguishable
    from a quiet one: five faces with a ring on one and a shorter list under
