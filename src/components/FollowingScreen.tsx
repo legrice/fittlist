@@ -60,6 +60,20 @@ export function FollowingScreen({
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
 
+  // Only the people who actually have something in the range. The rail filters
+  // the week, so a face with nothing behind it is a chip that can only ever
+  // empty the screen. They stay followed; they are just not on the rail.
+  //
+  // Across all three weeks rather than the visible one, on purpose. Scoped to
+  // the week the rail would rearrange itself every time you tapped an arrow,
+  // and a face moving out from under a thumb between taps is worse than a face
+  // that is quiet this week: the arrow is right there, and the empty state
+  // says so.
+  const rail = useMemo(() => {
+    const has = new Set(items.map((i) => i.coachId));
+    return coaches.filter((c) => has.has(c.id));
+  }, [coaches, items]);
+
   const shown = useMemo(
     () => items.filter((i) => i.week === week && (!focus || i.coachId === focus)),
     [items, week, focus],
@@ -104,7 +118,7 @@ export function FollowingScreen({
   // says what is on screen rather than what exists, so it agrees with the list
   // underneath it whichever way the rail is set.
   const summary = (() => {
-    if (!coaches.length) return null;
+    if (!rail.length) return null;
     const n = shown.length;
     const cls = `${n} ${n === 1 ? "class" : "classes"}`;
     if (focus) {
@@ -119,16 +133,25 @@ export function FollowingScreen({
   // Nobody followed at all is a different screen from a quiet week, and it is
   // the one that matters: this tab is empty until a follow happens, so the
   // empty state is the whole screen and it points at the one way out.
-  if (!coaches.length) {
+  if (!rail.length) {
     return (
       <>
         <WeekStepper week={week} onWeek={setWeek} />
+        {/* Two different nothings, and they want different words. Following
+            nobody is a screen with one thing to do; following people who have
+            not put anything up is a screen where the app is fine and the week
+            is just quiet, and telling somebody to find coaches there would be
+            answering a question they did not ask. */}
         <div className="wkempty">
-          <h2 className="wkempty-t">You&rsquo;re not following anyone</h2>
+          <h2 className="wkempty-t">
+            {coaches.length ? "Nothing up yet" : "You\u2019re not following anyone"}
+          </h2>
           <p className="wkempty-b">
-            Follow a coach and their week shows up here, beside everyone else you follow.
+            {coaches.length
+              ? "The people you follow have not put any classes up. This fills in as they do."
+              : "Follow a coach and their week shows up here, beside everyone else you follow."}
           </p>
-          <Link className="btn si wkempty-cta" href="/search">
+          <Link className="btn si wkempty-cta" href="/discover">
             Find coaches
           </Link>
         </div>
@@ -150,7 +173,7 @@ export function FollowingScreen({
             <span className={`trayav trayav-all${focus === null ? " sel" : ""}`}>All</span>
             <span className="trayitem-nm">Everyone</span>
           </button>
-          {coaches.map((c) => {
+          {rail.map((c) => {
             const on = focus === c.id;
             return (
               <button
@@ -175,7 +198,7 @@ export function FollowingScreen({
           })}
           {/* The way to lengthen the rail, at the end of it, never one of the
               faces: it keeps its full opacity when a face is picked. */}
-          <Link className="trayitem" href="/search">
+          <Link className="trayitem" href="/discover">
             <span className="trayav trayav-add">
               <Icon name="add" size={26} />
             </span>
@@ -205,7 +228,7 @@ export function FollowingScreen({
       {/* Discovery is this button and the plus on the rail, and they open the
           same place. It is not a tab: a directory is somewhere you go
           occasionally, and a tab is somewhere you live. */}
-      <Link className="wkfab wkfab-find" aria-label="Find coaches" href="/search">
+      <Link className="wkfab wkfab-find" aria-label="Find coaches" href="/discover">
         <Icon name="search" size={24} strokeWidth={2.75} />
       </Link>
 

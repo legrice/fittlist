@@ -25,6 +25,7 @@ const mkCoach = async (email, name, studio, classes) => {
   await p.getByPlaceholder("Your name").fill(name);
   await p.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(p);
+  if (!classes.length) { await c.close(); return; }
   for (const [nm, day, t] of classes) {
     await p.goto(BASE + "/calendar");
     await p.locator(".wkempty-cta, .wkfab").first().click();
@@ -58,6 +59,9 @@ await mkCoach("theo@example.com", "Theo Lang", "Ironside Gym", [
   ["Conditioning", "Tu", "06:30"],
   ["Barbell Club", "Th", "06:45"],
 ]);
+// A coach with nothing up at all. Followed, and deliberately not on the rail:
+// a face with nothing behind it is a chip that can only ever empty the screen.
+await mkCoach("quinn@example.com", "Quinn Reyes", "", []);
 
 const c2 = await b.newContext({ viewport: { width: 390, height: 844 } });
 const m = await c2.newPage();
@@ -83,7 +87,7 @@ await m.locator(".wkempty-t", { hasText: "not following anyone" }).waitFor();
 if (await m.locator(".tray").count()) fail("no rail until there is somebody on it");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-empty.png" });
 
-for (const h of ["nadiahaq", "theolang"]) {
+for (const h of ["nadiahaq", "theolang", "quinnreyes"]) {
   await m.goto(BASE + "/" + h);
   await m.getByRole("button", { name: "Follow", exact: true }).first().click();
   await m.waitForTimeout(500);
@@ -93,6 +97,16 @@ await m.goto(BASE + "/feed");
 await m.locator(".tray").waitFor();
 await m.waitForTimeout(600);
 console.log("this week:", (await m.locator(".wkhead-sum").innerText()).trim());
+{
+  const faces = (await m.locator(".trayitem-nm").allInnerTexts()).map((t) => t.trim());
+  console.log("rail:", faces.join(" | "));
+  if (faces.includes("Quinn")) fail("a coach with nothing up should not be on the rail");
+  if (!faces.includes("Nadia") || !faces.includes("Theo"))
+    fail("both coaches with classes should be on the rail: " + faces.join());
+  // Search and the rail's plus are the same act and land in the same place.
+  const fab = await m.locator(".wkfab-find").getAttribute("href");
+  if (fab !== "/discover") fail("search should open Discover, got " + fab);
+}
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
 // Next week, where nothing has run yet, so both coaches and all four classes
