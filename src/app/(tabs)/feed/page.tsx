@@ -104,6 +104,23 @@ export default async function FollowingPage() {
     }
   }
 
+  // Soonest first. The rail was alphabetical, which is an order about the
+  // names rather than about the week: whoever is teaching in an hour was
+  // wherever the alphabet put them, and a rail is read left to right with only
+  // its first few faces seen without a swipe. So the face in front is the one
+  // with the nearest class, and the question "who can I train with next" is
+  // answered by the order itself.
+  //
+  // Keyed on the date and the time together, because `mins` alone would put
+  // next Monday's 6am ahead of tonight's 6pm. A coach with nothing in the
+  // three weeks sorts last and is dropped by the rail anyway; they keep the
+  // alphabet among themselves so the tail is at least stable.
+  const soonest = new Map<string, string>();
+  for (const i of items) {
+    const at = `${i.iso}T${String(i.mins).padStart(4, "0")}`;
+    const had = soonest.get(i.coachId);
+    if (!had || at < had) soonest.set(i.coachId, at);
+  }
   const rail: FeedCoach[] = coaches
     .map((c) => ({
       id: c.id,
@@ -112,7 +129,14 @@ export default async function FollowingPage() {
       photo: c.photo,
       color: avatarColor(c),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      const x = soonest.get(a.id);
+      const y = soonest.get(b.id);
+      if (x && y && x !== y) return x < y ? -1 : 1;
+      if (x && !y) return -1;
+      if (!x && y) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   return <FollowingScreen items={items} coaches={rail} todayIso={today} />;
 }

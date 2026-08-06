@@ -19,7 +19,16 @@
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
-  --line: #e6dfcd;         /* warm cream dividers / input borders */
+  --line: #ddd2b6;         /* warm cream input borders and light edges */
+  /* The rule between rows, and its weight, as two tokens.
+     They were one: every divider in the app was a 1px `--line`, the same
+     hairline an input border wears, and a list of classes read as text
+     floating with faint gaps in it. A divider is doing more work than an
+     edge: it is what makes a list a list once the cards came off, so it is
+     darker and twice the weight. Keeping the input borders on `--line`
+     is what stops the forms going heavy with them. */
+  --div: #c9bc99;
+  --divw: 2px;
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
   --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
@@ -2728,7 +2737,7 @@ button.ps-card { cursor: pointer; }
      children paint above an inset shadow, so the selected tab's underline
      sits in front of the line instead of being clipped behind it by the
      row's own horizontal scroll. */
-  box-shadow: inset 0 -1px 0 var(--line);
+  box-shadow: inset 0 calc(-1 * var(--divw)) 0 var(--div);
   /* Full bleed again inside the sticky shell, so a tab can still slide half
      off the screen rather than stopping at the column edge. */
   margin: 0 calc(50% - 50vw);
@@ -2886,13 +2895,13 @@ button.ps-card { cursor: pointer; }
 /* the 3 stats split the tile height evenly so both columns balance */
 .acctstats { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .acctstat { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; }
-.acctstat + .acctstat { border-top: 1px solid var(--line); }
+.acctstat + .acctstat { border-top: var(--divw) solid var(--div); }
 .acctstat .n { display: block; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 21px; color: #191502; line-height: 1; }
 .acctstat .l { display: block; font-size: 13px; font-weight: 700; color: #6b6555; margin-top: 5px; }
 /* Analytics: three actionable numbers in one row below the profile tile. */
 .acctstats-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; flex: none;
-  margin-top: 12px; background: var(--line); border-radius: 16px; overflow: hidden;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--divw); flex: none;
+  margin-top: 12px; background: var(--div); border-radius: 16px; overflow: hidden;
   box-shadow: var(--soft-shadow);
 }
 /* A member has two of them rather than three: Requests are a coach's, so a
@@ -2960,7 +2969,7 @@ button.ps-card { cursor: pointer; }
    come from components that render a Toast alongside the row: an always-present
    element that broke the adjacency and silently dropped the line. Keying on
    position in the list instead means a row can bring whatever it likes. */
-.settingslist > .setrow { border-top: 1px solid var(--line); }
+.settingslist > .setrow { border-top: var(--divw) solid var(--div); }
 .settingslist > .setrow:first-child { border-top: 0; }
 .setrow:active { background: #f3ecdf; }
 .setrow-ic { color: #191502; display: flex; flex-shrink: 0; }
@@ -3556,6 +3565,7 @@ button.ps-card { cursor: pointer; }
   --ink: #f3efe3;
   --ol: #a89f8a;
   --line: #35301f;
+  --div: #4a4330;
   --cl: #272115;
   --cl-d: #322b1b;
   --sa: #3d3826;
@@ -4222,7 +4232,7 @@ button.ps-card { cursor: pointer; }
 }
 .disrow {
   display: flex; align-items: center; gap: 10px; padding: 13px 14px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: var(--divw) solid var(--div);
 }
 .disrow:last-child { border-bottom: none; }
 .disrow-studio { text-decoration: none; color: var(--ink); gap: 12px; }
@@ -5495,7 +5505,7 @@ button.ps-card { cursor: pointer; }
   display: block; width: 100%; text-align: left; font: inherit;
   text-decoration: none; color: var(--ink); cursor: pointer;
   background: none; border: none; border-radius: 0; padding: 13px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: var(--divw) solid var(--div);
 }
 /* The last row in a day owns no line: the gap to the next day heading is the
    break, and a rule hanging under the last class is a line to nothing. */
@@ -5640,7 +5650,7 @@ a.clspeek-by:active { opacity: .6; }
 .clspeek-facts { margin: 26px 0 0; }
 .clspeek-fact {
   display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-  padding: 16px 0; border-bottom: 1px solid var(--line);
+  padding: 16px 0; border-bottom: var(--divw) solid var(--div);
 }
 .clspeek-fact dt {
   font-size: 13.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;

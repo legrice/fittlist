@@ -115,6 +115,14 @@ await m.waitForTimeout(600);
   if (faces.includes("Quinn")) fail("a coach with nothing up should not be on the rail");
   if (!faces.includes("Nadia") || !faces.includes("Theo"))
     fail("both coaches with classes should be on the rail: " + faces.join());
+  // Soonest first, not alphabetical: a rail is read left to right and only its
+  // first few faces are seen without a swipe, so the one in front is whoever
+  // is teaching next. Checked against the list rather than a fixed order,
+  // because which coach that is depends on the day the suite runs.
+  await m.locator(".wkrow").first().waitFor();
+  const next = (await m.locator(".wkrow-coach").first().innerText()).trim().split(/\s+/)[0];
+  console.log("next class is", next, "| rail leads with", faces[1]);
+  if (faces[1] !== next) fail(`the rail should lead with ${next}, led with ${faces[1]}`);
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
