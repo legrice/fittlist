@@ -171,7 +171,13 @@ export function CalendarScreen({
                   aria-label="List"
                   aria-selected={view === "list"}
                   className={view === "list" ? "on" : ""}
-                  onClick={() => setView("list")}
+                  onClick={() => {
+                    // Coming back from the month, land at the top of the
+                    // list: the month scroll can be months deep, and a
+                    // shorter view inherits that offset as a random landing.
+                    if (view !== "list") window.scrollTo({ top: 0 });
+                    setView("list");
+                  }}
                 >
                   <Icon name="list" size={21} />
                 </button>

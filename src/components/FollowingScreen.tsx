@@ -292,15 +292,10 @@ export function FollowingScreen({
       )}
       </div>
 
-      {/* Discovery is this button and the plus on the rail, and they open the
-          same sheet. It rode the bar as a Search tab for a build and handed
-          the spot to Share: a directory is somewhere you go occasionally, and
-          sharing is the act the whole app is for. So the circle is back over
-          the list the act is about. */}
-      <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
-        <Icon name="search" size={26} />
-      </button>
-
+      {/* No floating search circle: search is the circle in the dock now, on
+          every screen with the bar, so a second one hovering over this list
+          was the same act drawn twice. The rail's plus and the empty state's
+          button stay, offers in context, and they open this same sheet. */}
       {find && <DiscoverSheet onClose={closeFind} />}
 
       {peek && (

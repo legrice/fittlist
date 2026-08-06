@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { BodyPortal } from "@/components/BodyPortal";
+import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { LinkPending } from "@/components/LinkPending";
 import { activeTab, navTabs, type NavTab } from "@/lib/nav";
@@ -12,12 +15,14 @@ export type { NavTab };
  *  tab, but the shape is still what a shell hands around. */
 export type NavFace = { photo: string | null; color: string; initial: string };
 
-// The whole app in thumb reach: the screens you move between. Share rides
-// the bar as a tab, by Matt's call, and it is a real screen now rather than
-// a sheet: the hub of big tiles at /sharehub, because a tab is a place you
-// go. Search went back where it came from, the header's magnifier and
-// Following's floating circle. Above 940px this hides and HeaderNav takes
-// over, off the same list.
+// The whole app in thumb reach: the screens you move between in the pill,
+// and the one act you reach for from anywhere in its own circle beside it,
+// the way Slack draws its bottom bar. The dock shape was tried once with
+// three tabs and read as crammed; with four tabs at the smaller glyph size
+// it is the reference Matt sent, so search lives here for good and
+// Following's floating circle is gone. The circle opens the directory sheet
+// over wherever you are standing. Above 940px this hides and HeaderNav
+// takes over, off the same list.
 export function NavBar({
   active,
   coach = true,
@@ -41,41 +46,67 @@ export function NavBar({
   face?: NavFace;
 }) {
   const here = activeTab(usePathname(), active);
+  const router = useRouter();
+  // The circle pulls the directory sheet up over wherever you are standing;
+  // the week behind it is a server render, so closing is where it catches up.
+  const [find, setFind] = useState(false);
+  const closeFind = () => {
+    setFind(false);
+    router.refresh();
+  };
 
   return (
-    <nav className="navbar" aria-label="Main">
-      {navTabs(coach, scheduleHref, profileHref).map((t) => {
-        const on = here === t.id;
-        const cls = `navtab${on ? " on" : ""}`;
-        const isMe = t.id === "you" && !!face;
-        const inner = (
-          <>
-            <span className={`navglyph${isMe ? " navglyph-face" : ""}`}>
-              {isMe ? (
-                face!.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="navface-photo" src={face!.photo} alt="" />
+    <div className="navwrap">
+      <nav className="navbar" aria-label="Main">
+        {navTabs(coach, scheduleHref, profileHref).map((t) => {
+          const on = here === t.id;
+          const cls = `navtab${on ? " on" : ""}`;
+          const isMe = t.id === "you" && !!face;
+          const inner = (
+            <>
+              <span className={`navglyph${isMe ? " navglyph-face" : ""}`}>
+                {isMe ? (
+                  face!.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="navface-photo" src={face!.photo} alt="" />
+                  ) : (
+                    <span className="navface-initial" style={{ background: face!.color }}>
+                      {face!.initial}
+                    </span>
+                  )
                 ) : (
-                  <span className="navface-initial" style={{ background: face!.color }}>
-                    {face!.initial}
-                  </span>
-                )
-              ) : (
-                // 26, the face's own size: a glyph even two pixels bigger
-                // than the photo beside it makes the face the odd tab out.
-                <Icon name={t.icon} size={26} />
-              )}
-            </span>
-            <span>{t.label}</span>
-          </>
-        );
-        return (
-          <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-current={on ? "page" : undefined}>
-            {inner}
-            <LinkPending className="tapspin-tab" />
-          </Link>
-        );
-      })}
-    </nav>
+                  // 23, the face's own size, a step down from 26: four tabs
+                  // and the circle share the width now, and the glyphs give
+                  // back the room.
+                  <Icon name={t.icon} size={23} />
+                )}
+              </span>
+              <span>{t.label}</span>
+            </>
+          );
+          return (
+            <Link key={t.id} className={cls} data-tab={t.id} href={t.href} aria-current={on ? "page" : undefined}>
+              {inner}
+              <LinkPending className="tapspin-tab" />
+            </Link>
+          );
+        })}
+      </nav>
+      {/* Search, in its own perfect circle beside the pill: the act you
+          reach for from anywhere, drawn the way Slack draws it. */}
+      <button
+        className="navfind"
+        aria-label="Find coaches"
+        aria-expanded={find}
+        onClick={() => setFind(true)}
+      >
+        <Icon name="search" size={24} />
+      </button>
+      {find && (
+        <BodyPortal>
+          <DiscoverSheet onClose={closeFind} />
+        </BodyPortal>
+      )}
+    </div>
   );
 }
