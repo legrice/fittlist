@@ -278,6 +278,26 @@ if (await m.locator(".clspeek-del").count()) fail("no delete on a class that is 
     fail("the depth is the sheet now, not a button");
   console.log("classic viewer: facts, by-line, and a Share-only footer");
 }
+// The X pins: the sheet is its own scroller, and the one way off it has to
+// stay under the thumb when a long class scrolls. Sticky, so its top edge
+// holds still while the content underneath it moves.
+{
+  const sheet = m.locator(".sheet.clspeek.clsfull");
+  const before = await m.locator(".clsfull-x").boundingBox();
+  await sheet.evaluate((e) => { e.scrollTop = 300; });
+  await m.waitForTimeout(250);
+  const after = await m.locator(".clsfull-x").boundingBox();
+  console.log("x pinned:", Math.round(before.y), "->", Math.round(after.y));
+  if (Math.abs(after.y - before.y) > 30)
+    fail(`the close should stay pinned through a scroll: ${before.y} -> ${after.y}`);
+  await sheet.evaluate((e) => { e.scrollTop = 0; });
+}
+// Share always ends somewhere: no tray in this browser, so the clipboard
+// takes it and the toast says so. Silence here is what reads as a dead
+// button.
+await m.locator(".clsfull-btn.dark", { hasText: "Share" }).click();
+await m.locator(".toast.on").waitFor({ timeout: 5000 });
+console.log("share toast:", (await m.locator(".toast").innerText()).trim());
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-sheet.png" });
 
 await m.locator(".clspeek-x").click();

@@ -6,6 +6,7 @@ import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
+import { Toast, useToast } from "@/components/Toast";
 import { fmtDayHeaderRel } from "@/lib/format";
 import { DayList, WeekEmpty, initials, type WeekDayRows } from "@/components/WeekView";
 
@@ -61,6 +62,10 @@ export function FollowingScreen({
   const [focus, setFocus] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
+  // The class sheet's copy fallback speaks through this: it was a no-op
+  // for a while, so on a browser with no share tray the link was copied
+  // and nothing said so, which reads as a dead button.
+  const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
 
   // The bands pin under the app header and nothing else: the coach rail above
@@ -302,10 +307,11 @@ export function FollowingScreen({
         <ClassPeek
           cls={peek}
           onClose={() => setPeek(null)}
-          onToast={() => {}}
+          onToast={toast}
           onChanged={() => {}}
         />
       )}
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }

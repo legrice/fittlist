@@ -5815,15 +5815,26 @@ button.ps-card { cursor: pointer; }
 .clsfull { position: relative; }
 .clsfull-photo {
   /* Air under the picture: without it the title sat flush against the
-     photograph's bottom edge. */
-  display: block; margin: -12px -20px 20px; width: calc(100% + 40px);
+     photograph's bottom edge. The top margin reaches past the sticky X's
+     flow box as well as the sheet's padding: adjoining negative margins
+     collapse to the more negative one, so -54 (the X's 42 plus the 12 of
+     padding) is what puts the picture at the sheet's very top edge, sliding
+     under the pinned circle. */
+  display: block; margin: -54px -20px 20px; width: calc(100% + 40px);
   height: 250px; object-fit: cover; border-radius: 16px 16px 0 0;
 }
-.clsfull-x { position: absolute; top: 14px; right: 16px; z-index: 3; }
-/* Over the photograph it needs its own ground, the classic corner circle. */
-.clsfull-x.onphoto {
-  width: 42px; height: 42px; border-radius: 999px; background: var(--card);
-  display: inline-flex; align-items: center; justify-content: center;
+/* Sticky, not absolute: the sheet is its own scroller, and an absolute X
+   rode the photograph away, leaving a long class with no visible way off.
+   It sits first in the flow, pulls its own height back so the photo starts
+   where it always did, and pins at the top of the scrollport the whole way
+   down. The white circle and shadow are always on, because pinned it floats
+   over whatever scrolled under it, photo and prose alike. Doubled selector
+   on purpose: .clspeek-x is later in this file, and its inline-flex made
+   margin-left: auto mean nothing. */
+.clspeek-x.clsfull-x {
+  position: sticky; top: 2px; z-index: 6;
+  display: flex; margin-left: auto; margin-bottom: -42px;
+  width: 42px; height: 42px; background: var(--card);
   box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
 }
 .clsfull-kick {

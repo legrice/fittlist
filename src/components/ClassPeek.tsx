@@ -174,12 +174,15 @@ export function ClassPeek({
     const onMove = (e: TouchEvent) => {
       if (!dragging) return;
       dy = e.touches[0].clientY - startY;
-      if (dy <= 0 || el.scrollTop > 0) {
+      // A tap wobbles by a few pixels. The drag only takes over past a slop,
+      // because preventDefault on the first wobble also swallows the click,
+      // and every button in the sheet went dead to a slightly-moving thumb.
+      if (dy <= 10 || el.scrollTop > 0) {
         el.style.transform = "";
         return;
       }
       e.preventDefault();
-      el.style.transform = `translateY(${dy}px)`;
+      el.style.transform = `translateY(${dy - 10}px)`;
     };
     const onEnd = () => {
       if (!dragging) return;
@@ -223,19 +226,30 @@ export function ClassPeek({
   }, [cls.id, cls.iso, cls.base]);
 
   // Hand the picture on: the caller's sheet when it has one, the native
-  // share (or the clipboard) pointed at the class page when it doesn't.
+  // share pointed at the class page when it doesn't, and the clipboard when
+  // the tray is missing or refuses. Every path ends in the tray or a toast;
+  // a share button that can silently do nothing reads as broken.
   const share = async () => {
     if (onShare) return onShare();
     const url = full?.shareUrl;
-    if (!url) return;
+    if (!url) {
+      onToast(loading ? "Still loading, try again" : "Couldn't share that");
+      return;
+    }
     try {
-      if (navigator.share) await navigator.share({ url });
-      else {
-        await navigator.clipboard.writeText(url);
-        onToast("Link copied, ready to paste");
+      if (typeof navigator.share === "function") {
+        await navigator.share({ url });
+        return;
       }
+    } catch (e) {
+      // Dismissing the tray is a decision, not a failure.
+      if ((e as DOMException)?.name === "AbortError") return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      onToast("Link copied, ready to paste");
     } catch {
-      /* dismissed the share tray */
+      onToast("Couldn't share that");
     }
   };
   const bookLinks = !cls.mine ? (full?.links ?? []) : [];
@@ -263,20 +277,17 @@ export function ClassPeek({
       }}
     >
       <div className="sheet clspeek clsfull" ref={sheetRef}>
-        {/* The photograph leads when the class has one, running to the
-            sheet's own top edge; the close floats on it as a white circle,
-            where the classic viewer kept its corner controls. */}
+        {/* The close first, sticky in the corner: it rode the photograph
+            away on a scroll, and the one way off a sheet has to stay under
+            the thumb the whole way down. The photograph follows, running to
+            the sheet's own top edge, and slides under the circle. */}
+        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={20} />
+        </button>
         {full?.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="clsfull-photo" src={full.image} alt="" />
         )}
-        <button
-          className={`clspeek-x clsfull-x${full?.image ? " onphoto" : ""}`}
-          aria-label="Close"
-          onClick={onClose}
-        >
-          <Icon name="close" size={20} />
-        </button>
         {!full?.image && <span className="clspeek-grab" aria-hidden="true" />}
 
         {full?.classType && <p className="clsfull-kick">{full.classType}</p>}
