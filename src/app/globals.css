@@ -35,11 +35,16 @@
   --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
   --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
   --paper: #fdfcf7;        /* the content card: a breath off white */
-  /* The screen behind the card. The app reads as two layers now: the header
-     (and whatever else is chrome) sits on this quiet warm gray, and the
-     content rides a near-white card with rounded top corners over it. One
-     step of contrast is the whole effect; the card edge does the rest. */
-  --shell: #f0eee8;
+  /* The screen behind the card. It was a quiet warm gray a step below the
+     paper, and it is the paper itself now, by Matt's call: the gray read
+     as drab next to the brightened list, and with the chrome and the
+     content on one surface the border on the card's top edge is what
+     separates them. The token stays so the two layers can part again. */
+  --shell: var(--paper);
+  /* Near-ink outlines: the boxes, the card's top edge, the controls. The
+     ink itself was a touch hard beside the type it boxes; a breath of
+     paper softens it without reading as gray. */
+  --edge: color-mix(in srgb, var(--ink) 85%, var(--paper));
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
@@ -2880,6 +2885,7 @@ button.ps-card { cursor: pointer; }
 .pubcard {
   background: var(--paper);
   border-radius: 28px 28px 0 0;
+  border-top: var(--divw) solid var(--edge);
   margin: 10px -18px 0;
   padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
   /* Above the pinned header, like .cardwrap: the card slides over it. */
@@ -3789,7 +3795,8 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
-  --shell: #0c0b07;
+  --shell: var(--paper);
+  --edge: color-mix(in srgb, var(--ink) 85%, var(--paper));
   --si-tint: #3f2413;
   --si-ink: #f0a071;
   --card: #211c13;
@@ -4212,6 +4219,7 @@ button.ps-card { cursor: pointer; }
      reads as cream slabs on off-white. */
   background: var(--paper);
   border-radius: 28px 28px 0 0;
+  border-top: var(--divw) solid var(--edge);
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
   /* Positioned so it paints above the pinned header it slides over. No
@@ -4248,6 +4256,7 @@ button.ps-card { cursor: pointer; }
      sits brighter than the list scrolling under it. */
   background: var(--card);
   background: color-mix(in srgb, var(--card) 86%, transparent);
+  border: var(--divw) solid var(--edge);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   box-shadow:
@@ -5828,7 +5837,8 @@ button.ps-card { cursor: pointer; }
   position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; width: 64px; height: 64px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; border: none; cursor: pointer;
+  background: var(--si); color: #fff; cursor: pointer;
+  border: var(--divw) solid var(--edge);
   box-shadow: 0 12px 32px rgba(25, 21, 2, .22);
 }
 .wkfab:active { transform: scale(.95); }
@@ -6320,7 +6330,7 @@ a.clspeek-by:active { opacity: .6; }
      filled with the card's white over the paper ground, so the boxes are
      the brightest thing on the screen. */
   background: var(--card); border-radius: 16px;
-  border: var(--divw) solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border: var(--divw) solid var(--edge);
 }
 /* Which cell lives where. The by-line and the shift tag span both columns
    (whose row this is reads over the time, not beside it); everything else
@@ -6404,7 +6414,7 @@ a.clspeek-by:active { opacity: .6; }
    same grammar the nav tabs use (the ground is the mark, never the ink). */
 .calseg {
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
-  border: var(--divw) solid var(--line);
+  border: var(--divw) solid var(--edge);
 }
 /* Square-ish, because what is inside is a glyph rather than a word: a pill
    sized for "Month" and holding an icon is mostly empty pill. */
@@ -6420,7 +6430,8 @@ a.clspeek-by:active { opacity: .6; }
    getting crowded, and adding is the screen's own act, so it rides the title
    row. The one loud colour stays its own. */
 .calbar-add {
-  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px;
+  border: var(--divw) solid var(--edge);
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--si); color: #fff; cursor: pointer;
 }
