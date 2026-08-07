@@ -6300,7 +6300,9 @@ a.clspeek-by:active { opacity: .6; }
 /* One row. A grid rather than a flex row, so every time in the list shares one
    column edge however long the class names beside them run. */
 .clline {
-  display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: start;
+  /* The time column sized to the widest ordinary clock and a tighter gap:
+     84 and 12 left a gutter of dead air between the time and the name. */
+  display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: start;
   width: 100%; text-align: left; font: inherit; color: var(--ink);
   background: none; border: none; border-radius: 0; cursor: pointer;
   padding: 16px 0; text-decoration: none;
@@ -6318,7 +6320,8 @@ a.clspeek-by:active { opacity: .6; }
    plus its 12px gap. */
 .dayrows .clline:has(+ .clline-cont) { border-bottom: none; position: relative; }
 .dayrows .clline:has(+ .clline-cont)::after {
-  content: ""; position: absolute; left: 96px; right: 0; bottom: 0;
+  /* The grid's own arithmetic: the 72px time column plus its 8px gap. */
+  content: ""; position: absolute; left: 80px; right: 0; bottom: 0;
   height: var(--divw); background: color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .clline:active { opacity: .6; }
@@ -6361,9 +6364,9 @@ a.clspeek-by:active { opacity: .6; }
    real names: at 27px it closed "Guns, Buns, and Lungs" into one word. */
 .clline-nm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* 23, down from 27 by Matt's call: still the loudest thing on the row,
-     without a two-line name eating the day. */
-  font-size: 23px; font-weight: 600; line-height: 1.1; letter-spacing: -.005em;
+  /* 18, down from 23 by Matt's call: inside the day containers the bigger
+     name shouted, and at 18 a long name keeps its single line. */
+  font-size: 18px; font-weight: 600; line-height: 1.15; letter-spacing: -.005em;
   color: var(--ink);
 }
 /* The studio, with a pin. The glyph is what stops it reading as a second line
