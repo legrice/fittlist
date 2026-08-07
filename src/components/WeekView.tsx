@@ -89,15 +89,9 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
         <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
           <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
-            {d.rows.map((r, i) => {
-              // Two classes at the same hour say the hour once: the second
-              // row leaves the time column open, and the divider between
-              // them runs under the classes only, so the column reads as
-              // one six o'clock with two things in it.
-              const prev = d.rows[i - 1];
-              const cont = !!prev && prev.hm === r.hm && prev.ap === r.ap;
-              return <ClassLine key={r.key} row={r} cont={cont} />;
-            })}
+            {d.rows.map((r) => (
+              <ClassLine key={r.key} row={r} />
+            ))}
           </div>
         </section>
       ))}
@@ -105,7 +99,7 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
   );
 }
 
-export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean }) {
+export function ClassLine({ row }: { row: WeekRow }) {
   const inner = (
     <>
       {/* Whose row this is leads, full width over both columns: the by-line
@@ -114,10 +108,11 @@ export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean 
           the two things meant to read as one line never lined up.
 
           The row itself is the grid, and every cell names its column: the
-          time shares a baseline with the name, the length shares one with
-          the studio, and a continuation row (same time as the one above)
-          simply omits its time cells, so the hour reads once while the
-          column's edge holds. */}
+          time shares a baseline with the name and the length shares one
+          with the studio. Every row says its own time, even beside another
+          at the same hour, by Matt's call: each is its own box now, and a
+          box with a blank time column read as a box missing something
+          rather than as a second thing at six. */}
       {row.tag && <span className="clline-tag">{row.tag}</span>}
       {row.coach && (
         <span className="clline-by">
@@ -132,23 +127,20 @@ export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean 
           {row.coach.name}
         </span>
       )}
-      {!cont && (
-        <span className="clline-t">
-          {row.hm}
-          <span className="clline-ap">{row.ap.toUpperCase()}</span>
-        </span>
-      )}
+      <span className="clline-t">
+        {row.hm}
+        <span className="clline-ap">{row.ap.toUpperCase()}</span>
+      </span>
       <span className="clline-nm">{row.name}</span>
-      {!cont && row.dur && <span className="clline-dur">{row.dur}</span>}
+      {row.dur && <span className="clline-dur">{row.dur}</span>}
       {row.where && (
         <span className="clline-w">{row.where}</span>
       )}
     </>
   );
-  const cls = `clline${cont ? " clline-cont" : ""}`;
-  if (!row.onTap) return <div className={cls}>{inner}</div>;
+  if (!row.onTap) return <div className="clline">{inner}</div>;
   return (
-    <button className={cls} onClick={row.onTap}>
+    <button className="clline" onClick={row.onTap}>
       {inner}
     </button>
   );
