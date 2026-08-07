@@ -4279,6 +4279,10 @@ button.ps-card { cursor: pointer; }
    orange, and it is the same wash the calendar's view toggle and a profile's
    tabs wear: one colour for "you are here", wherever the ground says it. */
 .navtab.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+/* The current tab's glyph goes brand orange while its word stays ink, by
+   Matt's call: the wash says where you are, the colour warms it. The You
+   tab's face is a photo and already marks itself by opacity. */
+.navtab.on .icon { color: var(--si); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -6284,7 +6288,9 @@ a.clspeek-by:active { opacity: .6; }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px; font-weight: 500; color: var(--ink);
+  /* 22, up from 16 by Matt's call: the date is the heading and now reads
+     as one. */
+  font-size: 22px; font-weight: 500; color: var(--ink);
 }
 /* The today dot is gone, by Matt's call: every band is the date and nothing
    else, on every list. */
@@ -6305,7 +6311,9 @@ a.clspeek-by:active { opacity: .6; }
    is the header's own shell gray, by Matt's call, so the boxes and the
    chrome read as one material. */
 .dayrows {
-  display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
+  /* Tight under its date (the two are one section); the room between days
+     lives on .dayblock, not here. */
+  display: flex; flex-direction: column; gap: 8px; margin-top: 2px;
 }
 
 /* One row. A grid rather than a flex row, so every time in the list shares one

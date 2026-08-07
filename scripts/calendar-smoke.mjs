@@ -178,9 +178,16 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
   // exactly that bug.
   const bg = await p.locator(".dayband").first().evaluate((e) => getComputedStyle(e).backgroundColor);
   if (/transparent|rgba\(0, 0, 0, 0\)/.test(bg)) fail("a pinned band needs a ground, got " + bg);
-  // Scroll a long way: the card is over the header (the pinned title row sits
-  // at the very top of the viewport), and a band is pinned right under it.
-  await p.evaluate(() => window.scrollTo(0, 600));
+  // Scroll deep INTO a day group (not to a fixed offset: a fixed 600 landed
+  // in the gap between two sections the moment the bands grew, and the check
+  // read the gap as a missing band). Halfway into a group, its band must be
+  // the thing pinned under the title row.
+  await p.evaluate(() => {
+    const blocks = document.querySelectorAll(".dayblock");
+    const b = blocks[Math.floor(blocks.length / 2)];
+    const r = b.getBoundingClientRect();
+    window.scrollTo(0, window.scrollY + r.top + r.height / 2 - 200);
+  });
   await p.waitForTimeout(400);
   const covered = await p.evaluate(() => {
     const cs = document.querySelector(".calsticky");
