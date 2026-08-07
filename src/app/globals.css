@@ -6290,9 +6290,9 @@ a.clspeek-by:active { opacity: .6; }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* Up from 16 to 22 and back to 20, by Matt's call: the heading with a
-     step less shout. */
-  font-size: 20px; font-weight: 500; color: var(--ink);
+  /* Up from 16 to 22, then down two and two again to 18, by Matt's call:
+     a step above the class names and no more. */
+  font-size: 18px; font-weight: 500; color: var(--ink);
 }
 /* The today dot is gone, by Matt's call: every band is the date and nothing
    else, on every list. */
