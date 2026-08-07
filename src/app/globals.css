@@ -4269,7 +4269,10 @@ button.ps-card { cursor: pointer; }
    at 40 so You keeps the bar, below sheets at 46 so a takeover really takes
    over); search is Following's floating orange circle again. */
 .navwrap {
-  position: fixed; left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom));
+  /* Docked, by Matt's call: flush to the bottom edge with no gap, as if
+     the bar were part of the phone. It floated as a pill 10px up for a
+     long time. */
+  position: fixed; left: 0; right: 0; bottom: 0;
   z-index: 45;
   display: flex; align-items: stretch;
   max-width: 632px; margin: 0 auto;
@@ -4279,9 +4282,13 @@ button.ps-card { cursor: pointer; }
   /* The installed app's glass pill, in the browser too, by Matt's call: the
      content scrolls on under it, the blur says so, and the rounded rectangle
      matches the card's corners and the phone's. */
-  display: flex; padding: 5px;
-  /* A full pill: the radius is the height, by Matt's call. */
-  border-radius: 999px;
+  /* The home indicator's room lives inside the bar now that it touches
+     the bottom edge. */
+  display: flex; padding: 5px 5px calc(5px + env(safe-area-inset-bottom));
+  /* Rounded where it meets the content, square where it meets the edge of
+     the phone: the bar reads as connected to the bottom of the app. The
+     selected tab keeps its own full pill. */
+  border-radius: 22px 22px 0 0;
   /* White, by Matt's call, and still translucent enough for the blur to
      read: the card's own white rather than the paper's cream, so the pill
      sits brighter than the list scrolling under it. */
@@ -6110,18 +6117,20 @@ a.clspeek-by:active { opacity: .6; }
 .shsub { margin: 4px 0 0; font-size: 16px; color: var(--ol); }
 .shseg { display: flex; gap: 8px; margin-top: 16px; }
 .shseg-pill {
+  /* White with no stroke, by Matt's call: on the hub's gray the fill is
+     the edge, the same treatment the class boxes wear. */
   padding: 11px 18px; border-radius: 999px;
-  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border: none; background: var(--card); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600; cursor: pointer;
 }
-.shseg-pill.on { background: var(--si); border-color: var(--si); color: #fff; }
+.shseg-pill.on { background: var(--si); color: #fff; }
 /* Dates and Classes, side by side above the colours: what the picture
    covers, then what it wears. Each is a small labelled door to its sheet. */
 .shctrls { display: flex; gap: 10px; margin-top: 16px; }
 .shctrl {
   flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
-  padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line);
+  padding: 12px 14px; border-radius: 16px; border: none;
   background: var(--card); color: var(--ink); text-align: left; cursor: pointer;
 }
 .shctrl:active { background: var(--cl); }
