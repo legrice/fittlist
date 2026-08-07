@@ -71,7 +71,6 @@ const m = await c2.newPage();
 m.setDefaultTimeout(20000);
 await m.goto(BASE + "/");
 await m.getByRole("button", { name: "Sign up with email" }).click();
-await m.locator(".roleseg button", { hasText: "here to train" }).click();
 await m.getByPlaceholder("you@example.com").fill("kia@example.com");
 await m.getByPlaceholder("Password").fill("member-pass-123");
 await m.getByRole("button", { name: "Create account" }).click();
@@ -79,10 +78,9 @@ await m.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await m.getByText("Pick your link.").waitFor();
 await m.getByPlaceholder("Your name").fill("Kia");
 await m.getByRole("button", { name: "Claim it" }).click();
-await m.getByRole("heading", { name: "Add a photo." }).waitFor();
-await m.getByRole("button", { name: "Continue" }).click();
-await m.locator("#wLocation").fill("Montclair, NJ");
-await m.getByRole("button", { name: "Finish setup" }).click();
+// One wizard for everyone now: role, About, and the follow step (skipped
+// here, because this suite's whole point is following from the app).
+await skipSetup(m, "Montclair, NJ", false);
 await m.waitForURL("**/feed");
 
 // Following nobody: the empty state is the whole screen and points at the way out.

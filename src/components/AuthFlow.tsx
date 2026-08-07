@@ -6,7 +6,6 @@ import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 import {
   beginPasskeyLogin,
   beginPasskeyRegistration,
-  chooseFan,
   claimProfile,
   finishPasskeyLogin,
   finishPasskeyRegistration,
@@ -19,7 +18,7 @@ import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
-type Stage = "landing" | "sent" | "role" | "claim";
+type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
 
 const GoogleG = () => (
@@ -49,7 +48,7 @@ export function AuthFlow({
   fans = false,
   landing = "/week",
 }: {
-  startStage: "email" | "role" | "claim";
+  startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
@@ -75,7 +74,7 @@ export function AuthFlow({
   const router = useRouter();
   const search = useSearchParams();
   const [stage, setStage] = useState<Stage>(
-    startStage === "claim" ? "claim" : startStage === "role" ? "role" : "landing",
+    startStage === "claim" ? "claim" : "landing",
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
@@ -143,7 +142,9 @@ export function AuthFlow({
     if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
-      const res = await passwordAuth(email, password, fans && sheet === "signup" && role === "fan");
+      // Everyone signs up as a member: "do you teach" is the wizard's
+      // first page now, and setTeaching flips the account there.
+      const res = await passwordAuth(email, password, fans && sheet === "signup");
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
@@ -391,42 +392,6 @@ export function AuthFlow({
           </>
         )}
 
-        {stage === "role" && (
-          <>
-            <h1>How will you use fittlist?</h1>
-            <p>
-              You can change this later. Following is free either way, and you can add a page of
-              your own whenever you want one.
-            </p>
-            <button className="btn" onClick={() => setStage("claim")} disabled={pending}>
-              I coach classes
-            </button>
-            <button
-              className="obalt"
-              style={{ marginTop: 12 }}
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const res = await chooseFan();
-                  if (!res.ok) {
-                    setError(res.error ?? "Something went wrong.");
-                    return;
-                  }
-                  setRole("fan");
-                  pendingFan.current = true;
-                  setStage("claim");
-                })
-              }
-            >
-              <Icon name="groups" size={21} /> I&rsquo;m here to train
-            </button>
-            {error && <div className="errorcopy">{error}</div>}
-            <div className="microcopy">
-              Coaches get a page at fittlist.co/yourname. Everyone else gets one week across every
-              coach they follow.
-            </div>
-          </>
-        )}
 
         {stage === "claim" && (
           <>
@@ -484,16 +449,6 @@ export function AuthFlow({
                   : "Sign up with email"
                 : "Sign in"}
             </h2>
-            {fans && sheet === "signup" && (
-              <div className="seg roleseg">
-                <button className={role === "coach" ? "sel" : ""} onClick={() => setRole("coach")}>
-                  I coach classes
-                </button>
-                <button className={role === "fan" ? "sel" : ""} onClick={() => setRole("fan")}>
-                  I&rsquo;m here to train
-                </button>
-              </div>
-            )}
             {/* Two sentences, built rather than picked: what this role gets,
                 then how to get in. The old chain let the beta gate swallow the
                 role copy, so someone who tapped "I'm here to train" was never
@@ -509,9 +464,7 @@ export function AuthFlow({
                     : "Use the email your invite was sent to. Pick a password you'll remember."
                   : [
                       fans
-                        ? role === "fan"
-                          ? "Follow your coaches and see their whole week in one place."
-                          : "Your classes across every studio, behind one link."
+                        ? "One account, whether you coach or you're here to train."
                         : null,
                       inviteOnly && !inviter
                         ? "Invite-only beta: use your invited email."

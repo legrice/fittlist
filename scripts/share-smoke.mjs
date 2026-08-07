@@ -55,7 +55,6 @@ const mk = async (email, name, member) => {
   p.setDefaultTimeout(20000);
   await p.goto(BASE + "/");
   await p.getByRole("button", { name: "Sign up with email" }).click();
-  if (member) await p.locator(".roleseg button", { hasText: "here to train" }).click();
   await p.getByPlaceholder("you@example.com").fill(email);
   await p.getByPlaceholder("Password").fill("share-pass-123");
   await p.getByRole("button", { name: "Create account" }).click();
@@ -63,15 +62,8 @@ const mk = async (email, name, member) => {
   await p.getByText("Pick your link.").waitFor();
   await p.getByPlaceholder("Your name").fill(name);
   await p.getByRole("button", { name: "Claim it" }).click();
-  if (member) {
-    await p.getByRole("heading", { name: "Add a photo." }).waitFor();
-    await p.getByRole("button", { name: "Continue" }).click();
-    await p.locator("#wLocation").fill("Jersey City, NJ");
-    await p.getByRole("button", { name: "Finish setup" }).click();
-    await p.waitForURL("**/feed");
-  } else {
-    await skipSetup(p);
-  }
+  await skipSetup(p, "Jersey City, NJ", !member);
+  if (member) await p.waitForURL("**/feed");
   return p;
 };
 

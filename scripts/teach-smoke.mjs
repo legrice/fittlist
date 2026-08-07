@@ -5,6 +5,7 @@
 //   INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
 //   node scripts/teach-smoke.mjs
 import { chromium } from "playwright";
+import { skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const fail = (m) => { throw new Error("TEACH FAIL: " + m); };
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
@@ -13,7 +14,6 @@ const p = await c.newPage();
 p.setDefaultTimeout(20000);
 await p.goto(BASE + "/");
 await p.getByRole("button", { name: "Sign up with email" }).click();
-await p.locator(".roleseg button", { hasText: "here to train" }).click();
 await p.getByPlaceholder("you@example.com").fill("kia@example.com");
 await p.getByPlaceholder("Password").fill("member-pass-123");
 await p.getByRole("button", { name: "Create account" }).click();
@@ -21,10 +21,7 @@ await p.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Kia Bright");
 await p.getByRole("button", { name: "Claim it" }).click();
-await p.getByRole("heading", { name: "Add a photo." }).waitFor();
-await p.getByRole("button", { name: "Continue" }).click();
-await p.locator("#wLocation").fill("Montclair, NJ");
-await p.getByRole("button", { name: "Finish setup" }).click();
+await skipSetup(p, "Montclair, NJ", false);
 await p.waitForURL("**/feed");
 
 const tabs = async () =>

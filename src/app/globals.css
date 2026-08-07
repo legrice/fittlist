@@ -347,6 +347,53 @@ h1.screen-title { font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; f
 
 /* photo step */
 .wizphoto { display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 22px 0 6px; }
+/* The merged About page draws it smaller and in a row: the photo is one of
+   four things on the page now, not the page. */
+.wizphoto.wizphoto-row { flex-direction: row; justify-content: flex-start; margin: 18px 0 14px; }
+.wizphoto-row .wizphoto-img { width: 84px; height: 84px; font-size: 30px; }
+
+/* Do you teach: two answer cards, the picked one in the brand's wash with
+   its border saying so, per Matt's mock. */
+.teachcard {
+  display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left;
+  padding: 20px 18px; margin-top: 14px; border-radius: 22px;
+  border: 1.5px solid var(--line); background: var(--card); cursor: pointer;
+}
+.teachcard.sel {
+  border-color: var(--si);
+  background: color-mix(in srgb, var(--si) 10%, var(--card));
+}
+.teachcard-t {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 21px; font-weight: 600; color: var(--ink);
+}
+.teachcard-s { font-size: 15px; line-height: 1.45; color: var(--ol); }
+
+/* The wizard's one big call, with air above it. */
+.wizfoot { margin-top: 26px; }
+
+/* Follow a few coaches: white rows with the directory's own pill. */
+.obfollist { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.obfolrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: 18px; background: var(--card);
+}
+.obfolrow-av {
+  width: 52px; height: 52px; border-radius: 999px; object-fit: cover; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 20px; font-weight: 600;
+}
+.obfolrow-txt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.obfolrow-txt .nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.obfolrow-txt .sub {
+  font-size: 13.5px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .wizphoto-img {
   width: 132px; height: 132px; border-radius: 999px; object-fit: cover;
   box-shadow: var(--soft-shadow); background: #fff;

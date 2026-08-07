@@ -28,11 +28,14 @@ await p.getByRole("button", { name: "Claim it" }).click();
 // and a meta line with both halves: the spacing checks below need something
 // to measure, and against an empty profile they pass by having nothing to
 // look at, which is the quietest way for a check to stop meaning anything.
-await p.getByRole("button", { name: "Skip for now" }).click();
+await p.locator(".teachcard", { hasText: "Yes, I teach" }).click();
+await p.getByRole("button", { name: "Continue", exact: true }).click();
 await p.locator("#wTitle").fill("Strength & Mobility Coach");
 await p.locator("#wAbout").fill("Kettlebells, barbells, and getting people moving well.");
 await p.locator("#wLocation").fill("Montclair, NJ");
-await p.getByRole("button", { name: "Skip for now" }).click();
+await p.getByRole("button", { name: "Continue", exact: true }).click();
+await p.getByText("Follow a few coaches").waitFor();
+await p.getByRole("button", { name: /find people later/ }).click();
 await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
 
 // An empty calendar carries its own CTA and nothing else. Neither floating

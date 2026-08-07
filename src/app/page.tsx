@@ -55,7 +55,7 @@ export default async function Home({
     if (user)
       return (
         <AuthFlow
-          startStage={fansEnabled() && user.kind !== "fan" ? "role" : "claim"}
+          startStage="claim"
           claimAs={user.kind === "fan" ? "fan" : "coach"}
           via={viaHandle}
           providers={providers}
