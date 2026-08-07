@@ -186,7 +186,13 @@ export function CalendarScreen({
                   aria-label="Month"
                   aria-selected={view === "month"}
                   className={view === "month" ? "on" : ""}
-                  onClick={() => setView("month")}
+                  onClick={() => {
+                    // A view switch swaps what is in front of you and moves
+                    // nothing: arriving mid-scroll slid the card over the
+                    // header, which read as the calendar going full screen.
+                    if (view !== "month") window.scrollTo({ top: 0 });
+                    setView("month");
+                  }}
                 >
                   <Icon name="calendar_month" size={21} />
                 </button>

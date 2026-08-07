@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 
 // The calendar's chrome, shared by both calendars (a coach's /app, a member's
@@ -839,15 +839,15 @@ export function MonthScroll({
   const thisYm = todayIso.slice(0, 7);
   const [y0, m0] = thisYm.split("-").map(Number);
   const yms: string[] = [];
-  for (let i = -MONTHS_BACK; i <= MONTHS_AHEAD; i++) {
+  // This month first, nothing above it. Two months used to render behind
+  // and a mount effect scrolled down to today's, which slid the card over
+  // the app header: tapping the toggle read as the calendar going full
+  // screen. A view switch swaps what is in front of you and moves nothing;
+  // the current month's own dimmed past days are still the record.
+  for (let i = 0; i <= MONTHS_AHEAD; i++) {
     const d = new Date(Date.UTC(y0, m0 - 1 + i, 1));
     yms.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
   }
-  // Land on the current month, instantly, once: the past sits above the
-  // fold the way the list's past does.
-  useLayoutEffect(() => {
-    document.getElementById(`month-${thisYm}`)?.scrollIntoView({ block: "start" });
-  }, [thisYm]);
   // The title follows the month crossing the band under the header.
   useEffect(() => {
     const blocks = wrapRef.current?.querySelectorAll<HTMLElement>("[data-ym]");
