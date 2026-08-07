@@ -6248,7 +6248,9 @@ a.clspeek-by:active { opacity: .6; }
    is a set of checkboxes wearing photographs. */
 .trayav-all {
   display: flex; align-items: center; justify-content: center;
-  background: var(--cl); color: var(--ink);
+  /* White like the class cards, by Matt's call: the cream tint it wore
+     sank into the warm ground once the gradient came off. */
+  background: var(--card); color: var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 19px; font-weight: 600;
 }
