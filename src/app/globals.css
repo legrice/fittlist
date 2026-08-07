@@ -52,8 +52,10 @@
      boxes floating on the gray. Three stops because the fade is drawn in
      two pieces (the screen's chrome zone, then the calendar card's own
      top), and the splice colour has to be one token or the seam shows. */
-  --grad-top: #f8dcc6;
-  --grad-mid: #f3e6db;
+  /* Deepened, by Matt's call: the first pass read as trying to be a
+     gradient, and the extra chroma at the top is what makes it one. */
+  --grad-top: #f7cda6;
+  --grad-mid: #f3e0c9;
   --ground: #eef0f1;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
@@ -3940,8 +3942,8 @@ button.ps-card { cursor: pointer; }
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  --grad-top: #2a2014;
-  --grad-mid: #1c1913;
+  --grad-top: #33230e;
+  --grad-mid: #1f1a11;
   --ground: #16171a;
   --si-tint: #3f2413;
   --si-ink: #f0a071;
