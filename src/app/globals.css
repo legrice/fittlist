@@ -4256,12 +4256,13 @@ button.ps-card { cursor: pointer; }
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
-/* The calendar's card starts where the screen's fade reaches the splice
-   colour, and finishes the fade itself across its title row, so the glow
-   runs down into the list instead of cutting off at the card's edge. The
-   :has is how the calendar's card is told apart from Following's, whose
-   own fade completes in the tray zone above it. */
-.cardwrap:has(.calsticky) {
+/* A card that starts right under the header (the calendar's, and the
+   share hub's) picks up where the screen's fade reached the splice colour
+   and finishes it across its own title, so the glow runs down into the
+   content instead of cutting off at the card's edge. The :has is how
+   they're told apart from Following's card, whose fade completes in the
+   tray zone above it. */
+.cardwrap:has(.calsticky), .cardwrap:has(.shtitle) {
   background: linear-gradient(180deg, var(--grad-mid) 0px, var(--ground) 84px);
 }
 /* The bar, back to the plain pill: the Slack-style dock (pill plus a search
