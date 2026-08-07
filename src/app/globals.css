@@ -6463,7 +6463,11 @@ a.clspeek-by:active { opacity: .6; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 40;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
-  background: color-mix(in srgb, var(--card) 45%, transparent);
+  /* Up from 45%, by Matt's call: the blur stays a hint, the words stop
+     fighting the rows underneath. The hairline under it is what says
+     where the bar ends now that the ground is mostly its own. */
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
   opacity: 0; transform: translateY(-8px); pointer-events: none;
