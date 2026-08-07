@@ -2041,6 +2041,12 @@ button.ps-card { cursor: pointer; }
    clapper are open strokes, and filling those paints shapes nobody drew. */
 .brandbar-actions .iconbtn.onroute svg path:first-of-type { fill: currentColor; }
 .inboxbtn { position: relative; }
+/* New activity, said as a dot rather than a count: the pulse's number
+   would only ever grow, and a scoreboard in the header is not the point. */
+.actnewdot {
+  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
+  border-radius: 999px; background: var(--si); border: 1.5px solid var(--paper);
+}
 .inboxdot {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
   border-radius: 999px; background: var(--si); color: #fff; font-size: 11px; font-weight: 600;
@@ -2223,7 +2229,13 @@ button.ps-card { cursor: pointer; }
   flex: 1; display: flex; align-items: center; justify-content: center;
   position: relative; overflow: visible; padding: 11px 0;
 }
-.adminseg-icons .inboxdot {
+.adminseg-icons /* New activity, said as a dot rather than a count: the pulse's number
+   would only ever grow, and a scoreboard in the header is not the point. */
+.actnewdot {
+  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
+  border-radius: 999px; background: var(--si); border: 1.5px solid var(--paper);
+}
+.inboxdot {
   position: absolute; top: 2px; right: calc(50% - 22px); min-width: 17px; height: 17px;
   font-size: 10px;
 }
@@ -4830,7 +4842,13 @@ button.ps-card { cursor: pointer; }
 
 /* The admin's Activity door and its list. */
 .adminact { position: relative; }
-.adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
+.adminact /* New activity, said as a dot rather than a count: the pulse's number
+   would only ever grow, and a scoreboard in the header is not the point. */
+.actnewdot {
+  position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
+  border-radius: 999px; background: var(--si); border: 1.5px solid var(--paper);
+}
+.inboxdot { position: absolute; top: -6px; right: -6px; }
 .actsheet .actlist { margin-top: 6px; }
 .actrow {
   display: flex; align-items: flex-start; gap: 11px;

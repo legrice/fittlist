@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible, landingHref } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
@@ -47,6 +48,7 @@ export async function AppChrome({
       email: schema.users.email,
       photo: schema.users.photo,
       avatarColor: schema.users.avatarColor,
+      adminActivityAt: schema.users.adminActivityAt,
       id: schema.users.id,
     })
     .from(schema.users)
@@ -90,6 +92,7 @@ export async function AppChrome({
       // mode has no tab bar, so it is the one door to the account.
       settings={fans ? undefined : "/settings"}
       adminActivity={isAdmin}
+      adminActivityNew={isAdmin && (await adminActivityFreshSince(me.adminActivityAt))}
       gear={gear}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />

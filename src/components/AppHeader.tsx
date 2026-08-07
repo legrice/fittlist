@@ -17,6 +17,7 @@ export function AppHeader({
   settings,
   gear = false,
   adminActivity = false,
+  adminActivityNew = false,
   find = false,
   home = "/week",
   nav,
@@ -32,6 +33,9 @@ export function AppHeader({
   /** The admin's pulse: the same activity the admin screen shows, one tap
    *  from anywhere. Only ever true for an ADMIN_EMAILS account. */
   adminActivity?: boolean;
+  /** Something new since the list was last opened: the little dot on the
+   *  pulse, cleared when the activity view marks itself seen. */
+  adminActivityNew?: boolean;
   /** The magnifier, opening the directory as a sheet. Off in the shell with
    *  no member side at all, where there is nobody to find. */
   find?: boolean;
@@ -65,10 +69,11 @@ export function AppHeader({
         {find && <HeaderFind />}
         {adminActivity && (
           <HeaderIconLink
-            label="Admin activity"
+            label={`Admin activity${adminActivityNew ? ", new" : ""}`}
             icon="activity"
             href="/admin?activity=1"
             match="/admin"
+            badge={adminActivityNew ? <span className="actnewdot" aria-hidden="true" /> : undefined}
           />
         )}
         <HeaderIconLink

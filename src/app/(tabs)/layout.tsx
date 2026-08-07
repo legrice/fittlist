@@ -6,6 +6,7 @@ import { landingHref } from "@/lib/flags";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { adminEmails } from "@/lib/admin";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { unreadNotifications } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
@@ -62,6 +63,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         <AppHeader
           unread={unread}
           adminActivity={adminEmails().includes(me.email.toLowerCase())}
+          adminActivityNew={
+            adminEmails().includes(me.email.toLowerCase()) &&
+            (await adminActivityFreshSince(me.adminActivityAt))
+          }
           home={landing}
           // The magnifier is the corner. Your face went to the Profile tab,
           // which opens the same page the corner used to, and a second door
