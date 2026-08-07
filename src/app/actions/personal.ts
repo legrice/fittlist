@@ -3,6 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import { hiddenFrom } from "@/lib/blocks";
 import { clockParts, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
@@ -152,7 +153,7 @@ export async function addPersonalClass(input: {
 
   const classType = input.classType?.trim().slice(0, 40) || null;
   const description = input.description?.trim().slice(0, 600) || null;
-  const image = input.image?.trim() || null;
+  const image = await storeImage(input.image?.trim() || null, "class");
   const links = (input.links ?? [])
     .filter((l) => l?.url?.trim())
     .slice(0, 6)
@@ -388,7 +389,7 @@ export async function updatePersonalClass(
       studioId: studio?.id ?? null,
       classType: input.classType?.trim().slice(0, 40) || null,
       description: input.description?.trim().slice(0, 600) || null,
-      image: input.image?.trim() || null,
+      image: await storeImage(input.image?.trim() || null, "class"),
       links: (input.links ?? [])
         .filter((l) => l?.url?.trim())
         .slice(0, 6)
@@ -409,7 +410,7 @@ export async function updatePersonalClass(
     const tName = name;
     const tType = input.classType?.trim().slice(0, 40) || null;
     const tDesc = input.description?.trim().slice(0, 600) || null;
-    const tImage = input.image?.trim() || null;
+    const tImage = await storeImage(input.image?.trim() || null, "class");
     const tLoc = studio ? null : (input.location?.trim().slice(0, 120) || null);
     const tWith = input.withWho?.trim().slice(0, 80) || null;
     const tLinks = (input.links ?? [])

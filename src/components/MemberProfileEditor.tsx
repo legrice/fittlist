@@ -7,6 +7,7 @@ import { claimProfile } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { LocationInput } from "@/components/LocationInput";
+import { shrinkDataUrl } from "@/lib/photo";
 import { slug } from "@/lib/format";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -42,6 +43,7 @@ export function MemberProfileEditor({
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
@@ -71,7 +73,10 @@ export function MemberProfileEditor({
         const w = img.width * scale;
         const h = img.height * scale;
         ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
+        const full = canvas.toDataURL("image/jpeg", 0.82);
+        setPPhoto(full);
+        // The list-size copy shrinks from the same crop.
+        shrinkDataUrl(full, setPThumb);
       };
       img.src = String(reader.result);
     };
@@ -102,6 +107,7 @@ export function MemberProfileEditor({
         about: pAbout,
         location: pLocation,
         photo: pPhoto,
+        photoThumb: pThumb ?? undefined,
         // Contact fields are a coach's, and this sheet doesn't offer them.
         // Empty is the honest value rather than a field left half-set.
         instagram: "",

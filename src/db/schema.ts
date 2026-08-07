@@ -28,6 +28,10 @@ export const users = pgTable("users", {
   // Public profile: a short bio and a photo (stored as a small data URL).
   about: text("about"),
   photo: text("photo"),
+  // The same picture at list size, written alongside it by the pickers: a
+  // 26px circle should not download the hero's file. Null on rows saved
+  // before this existed; readers fall back to photo.
+  photoThumb: text("photo_thumb"),
   // A short role/tagline shown under the name (e.g. "Strength coach").
   title: text("title"),
   // City / area shown under the name on the public profile (e.g. "Jersey City").

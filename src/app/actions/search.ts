@@ -129,7 +129,7 @@ export async function searchAll(
       handle: r.handle!,
       name: r.name,
       kind: (r.kind === "fan" ? "member" : "coach") as "coach" | "member",
-      photo: r.photo,
+      photo: r.photoThumb ?? r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,

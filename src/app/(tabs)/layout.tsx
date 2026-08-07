@@ -52,7 +52,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // the fallback for an account still mid-signup with no handle to point at.
   const profileHref = me.handle ? `/${me.handle}` : "/you";
   const face = {
-    photo: me.photo,
+    photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
     initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
   };

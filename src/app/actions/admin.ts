@@ -3,6 +3,7 @@
 import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import { purgeUser } from "@/lib/purge";
 import { PLACEHOLDER_KIND } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
@@ -50,7 +51,7 @@ export async function adminSetClassImage(
   const db = await getDb();
   const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
   if (!c) return { ok: false, error: "That class isn't there any more." };
-  const img = image?.trim() || null;
+  const img = await storeImage(image?.trim() || null, "class");
   const sameTitle = and(
     eq(schema.classes.userId, c.userId),
     sql`lower(${schema.classes.name}) = ${c.name.toLowerCase()}`,

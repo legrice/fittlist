@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import { STUDIO_TYPES } from "@/lib/studio";
 import { AVATAR_COLORS } from "@/lib/avatar";
 import { fmtDateLong, RESERVED_HANDLES, slug, todayIso } from "@/lib/format";
@@ -83,7 +84,8 @@ export async function updateProfile(input: {
   phone?: string;
   whatsapp?: string;
   profileLinks?: { label: string; url: string }[];
-  photo?: string | null; // data URL, "" to clear, undefined to leave as-is
+  photo?: string | null; // data URL or stored URL, "" to clear, undefined to leave as-is
+  photoThumb?: string | null; // the same picture at list size, from readPhotoPair
   avatarColor?: string | null; // a pick from AVATAR_COLORS, null to go back to the derived one
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
@@ -130,6 +132,7 @@ export async function updateProfile(input: {
     whatsapp: string | null;
     profileLinks?: { label: string; url: string }[];
     photo?: string | null;
+    photoThumb?: string | null;
     avatarColor?: string | null;
   } = { name, title: title || null, about, instagram, website, contactEmail, phone, whatsapp };
   if (location !== null) set.location = location;
@@ -173,10 +176,28 @@ export async function updateProfile(input: {
   }
   if (input.photo !== undefined) {
     const photo = input.photo;
-    if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {
+    // A data URL from a picker, or the stored URL round-tripping through an
+    // editor unchanged: both are fine. Anything else is not a photo.
+    if (photo && !photo.startsWith("data:image/") && !/^https:\/\//.test(photo)) {
       return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
-    set.photo = photo || null;
+    if (photo?.startsWith("data:image/") && photo.length > 900_000) {
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
+    }
+    set.photo = (await storeImage(photo || null, "u")) || null;
+    // The thumb travels with the photo, and clears with it: a stale small
+    // copy of an old picture is worse than the fallback to the full one.
+    // An unchanged stored photo round-tripping through an editor leaves
+    // the thumb alone.
+    const thumb = input.photoThumb;
+    if (thumb && !thumb.startsWith("data:image/") && !/^https:\/\//.test(thumb)) {
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
+    }
+    if (thumb !== undefined) {
+      set.photoThumb = (await storeImage(thumb || null, "ut")) || null;
+    } else if (!photo || photo.startsWith("data:image/")) {
+      set.photoThumb = null;
+    }
   }
   if (input.avatarColor !== undefined) {
     // Only a colour from the palette; anything else falls back to the derived one.

@@ -43,7 +43,7 @@ export default async function WelcomePage() {
       id: c.id,
       handle: c.handle!,
       name: c.name.trim() || c.email.split("@")[0],
-      photo: c.photo,
+      photo: c.photoThumb ?? c.photo,
       color: avatarColor(c),
       sub: c.title?.trim() || c.disciplines.slice(0, 2).join(", "),
     }));

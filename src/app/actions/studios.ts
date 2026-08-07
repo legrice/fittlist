@@ -3,6 +3,7 @@
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
@@ -103,7 +104,11 @@ export async function updateStudio(
   const address = input.address.trim();
   if (!name) return { ok: false, error: "Enter the studio name." };
   if (!address) return { ok: false, error: "Enter the address." };
-  if (input.photo && (!input.photo.startsWith("data:image/") || input.photo.length > 900_000))
+  if (
+    input.photo &&
+    !/^https:\/\//.test(input.photo) &&
+    (!input.photo.startsWith("data:image/") || input.photo.length > 900_000)
+  )
     return { ok: false, error: "That image didn't work. Try a smaller one." };
 
   const [existing] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
@@ -126,7 +131,7 @@ export async function updateStudio(
     website: input.website.trim() || null,
     instagram: input.instagram.trim().replace(/^@/, "") || null,
   };
-  if (input.photo !== undefined) set.photo = input.photo || null;
+  if (input.photo !== undefined) set.photo = (await storeImage(input.photo || null, "studio")) || null;
 
   // The receipt. Anyone with the button can edit, so every save that changed
   // something writes who did what, in plain words the admin can read straight

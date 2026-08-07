@@ -8,7 +8,7 @@ import { completeOnboarding } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { takeAfterAuth } from "@/lib/afterauth";
-import { readPhoto } from "@/lib/photo";
+import { readPhotoPair } from "@/lib/photo";
 
 /** Somebody worth following on the way in: loaded by the welcome page. */
 export type SuggestedCoach = {
@@ -61,6 +61,7 @@ export function OnboardingWizard({
   // the whole point of moving the question here is that it gets answered.
   const [teach, setTeach] = useState<boolean | null>(null);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
@@ -69,7 +70,11 @@ export function OnboardingWizard({
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const pickPhoto = (file: File) => readPhoto(file, setPPhoto);
+  const pickPhoto = (file: File) =>
+    readPhotoPair(file, (full, thumb) => {
+      setPPhoto(full);
+      setPThumb(thumb);
+    });
 
   // Save everything and land in the app. Reached only through the follow
   // step's own button, so the teach answer always exists by now.
@@ -91,6 +96,7 @@ export function OnboardingWizard({
         instagram: "",
         website: "",
         photo: pPhoto,
+        photoThumb: pThumb,
       });
       if (!res.ok) {
         setError(res.error ?? "Couldn't save. Try again.");
@@ -199,7 +205,13 @@ export function OnboardingWizard({
                   {pPhoto ? "Change photo" : "Add a photo"}
                 </button>
                 {pPhoto && (
-                  <button className="linktoggle" onClick={() => setPPhoto(null)}>
+                  <button
+                    className="linktoggle"
+                    onClick={() => {
+                      setPPhoto(null);
+                      setPThumb(null);
+                    }}
+                  >
                     Remove
                   </button>
                 )}

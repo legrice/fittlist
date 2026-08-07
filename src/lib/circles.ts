@@ -73,7 +73,7 @@ export async function myCircles(userId: string): Promise<Circle[]> {
         name,
         first: name.split(/\s+/)[0],
         handle: u.handle,
-        photo: u.photo,
+        photo: u.photoThumb ?? u.photo,
         color: avatarColor(u),
         // Never looked is new; otherwise, anything put up since you looked.
         fresh: !!last && (!seen || last > seen),
@@ -153,7 +153,7 @@ export async function followingList(email: string, viewerId?: string | null): Pr
       handle: u.handle!,
       name: u.name.trim() || u.email.split("@")[0],
       kind: (u.kind === "fan" ? "member" : "coach") as "coach" | "member",
-      photo: u.photo,
+      photo: u.photoThumb ?? u.photo,
       title: u.title?.trim() ?? "",
       location: u.location ?? "",
       classesThisWeek: 0,

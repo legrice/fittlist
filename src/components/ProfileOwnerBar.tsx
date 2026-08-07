@@ -11,7 +11,7 @@ import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
 import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
-import { readPhoto } from "@/lib/photo";
+import { readPhotoPair } from "@/lib/photo";
 import { LocationInput } from "@/components/LocationInput";
 import { QrSheet } from "@/components/QrSheet";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
@@ -85,6 +85,7 @@ export function ProfileOwnerBar({
   // A link typed but not yet "+ Add"ed when Save is tapped. See LinksField.
   const pendingLink = useRef<ProfileLink | null>(null);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
   const [colorOpen, setColorOpen] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
@@ -95,7 +96,11 @@ export function ProfileOwnerBar({
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const pickPhoto = (file: File) => readPhoto(file, setPPhoto);
+  const pickPhoto = (file: File) =>
+    readPhotoPair(file, (full, thumb) => {
+      setPPhoto(full);
+      setPThumb(thumb);
+    });
 
   // ?edit=1 arrives from the account tile's Edit profile — open straight into
   // the editor rather than making them find the button again.
@@ -121,6 +126,7 @@ export function ProfileOwnerBar({
     setPWhatsapp(whatsapp);
     setPLinks(profileLinks);
     setPPhoto(photo);
+    setPThumb(null);
     setPColor(avatarColorProp ?? null);
     setEditOpen(true);
   };
@@ -143,6 +149,7 @@ export function ProfileOwnerBar({
         whatsapp: pWhatsapp,
         profileLinks: links,
         photo: pPhoto,
+        photoThumb: pThumb ?? undefined,
         avatarColor: pColor,
       });
       if (!res.ok) {

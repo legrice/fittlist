@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import type { BookingLink } from "@/db/schema";
 import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate, todayIso } from "@/lib/format";
@@ -144,7 +145,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const links = cleanLinks(input.links ?? []);
   const classType = cleanType(input.classType);
   const description = input.description?.trim().slice(0, 500) || null;
-  const image = input.image?.trim() || null;
+  const image = await storeImage(input.image?.trim() || null, "class");
 
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.

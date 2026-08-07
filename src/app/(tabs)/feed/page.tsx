@@ -127,7 +127,7 @@ export default async function FollowingPage() {
       id: c.id,
       name: c.name.trim() || c.email.split("@")[0],
       handle: c.handle!,
-      photo: c.photo,
+      photo: c.photoThumb ?? c.photo,
       color: avatarColor(c),
     }))
     .sort((a, b) => {

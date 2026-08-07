@@ -47,6 +47,7 @@ export async function AppChrome({
       name: schema.users.name,
       email: schema.users.email,
       photo: schema.users.photo,
+      photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
       adminActivityAt: schema.users.adminActivityAt,
       id: schema.users.id,
@@ -72,7 +73,7 @@ export async function AppChrome({
   // account still mid-signup, which has no handle to point at yet.
   const profileHref = me.handle ? `/${me.handle}` : "/you";
   const face = {
-    photo: me.photo,
+    photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
     initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
   };
