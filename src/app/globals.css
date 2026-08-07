@@ -54,7 +54,10 @@
      top), and the splice colour has to be one token or the seam shows. */
   --grad-top: #f8dcc6;
   --grad-mid: #f3e6db;
-  --ground: #eef0f1;
+  /* Warmed from the cool #eef0f1: the ink, the paper and the gradient are
+     all warm, and a cool ground under them made the app two palettes. The
+     gradient now fades into its own family instead of bridging a clash. */
+  --ground: #f1efe9;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
