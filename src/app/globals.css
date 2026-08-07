@@ -4315,13 +4315,22 @@ button.ps-card { cursor: pointer; }
    the quiet gray (ink at a whisper), by Matt's call after a day as the light
    orange, and it is the same wash the calendar's view toggle and a profile's
    tabs wear: one colour for "you are here", wherever the ground says it. */
-/* The current tab goes brand orange, glyph and word both, on the quiet
-   wash, by Matt's call: the word joined the glyph after a build apart. The
-   You tab's face is a photo and marks itself by opacity instead. */
-.navtab.on {
-  background: color-mix(in srgb, var(--ink) 7%, transparent);
-  color: var(--si);
+/* The mark is a filled brand circle around the current tab's glyph, the
+   glyph in white inside it, and nothing else: the tab-wide wash and the
+   orange word both came off, by Matt's call. Every tab's glyph rides the
+   same circular box (content-box padding around the 26px icon, margins
+   pulling most of the growth back), so nothing jumps when the selection
+   moves; only the current one fills in. The You tab's face is a photo and
+   marks itself by opacity instead. */
+.navtab.on { background: none; }
+.navtab .icon {
+  box-sizing: content-box; padding: 7px; margin: -5px 0 -3px;
+  border-radius: 999px;
 }
+.navtab.on .icon { background: var(--si); color: #fff; }
+/* The face matches the glyphs' layout box, or the Profile label sits high
+   beside the others. */
+.navtab .navav { margin: 3px 0; }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
