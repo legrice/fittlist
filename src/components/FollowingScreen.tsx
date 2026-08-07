@@ -190,12 +190,12 @@ export function FollowingScreen({
               height={600}
             />
             <h2 className="wkempty-t">
-              {follows ? "Nothing up yet" : "Nothing here yet"}
+              {follows ? "Nothing up yet" : "Start by following a coach"}
             </h2>
             <p className="wkempty-b">
               {follows
                 ? "The people you follow have not put any classes up. This fills in as they do."
-                : "You aren\u2019t following anyone. Follow a coach and their week shows up here."}
+                : "Once you follow someone, every class they post will show up here."}
             </p>
             {/* One CTA, and it is this screen's own act: finding somebody.
                 Nothing here about adding classes, which is the calendar's

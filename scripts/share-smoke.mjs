@@ -78,7 +78,7 @@ const mk = async (email, name, member) => {
 // ---- a coach with a real week
 const coach = await mk("carina@example.com", "Carina Clores", false);
 await coach.goto(BASE + "/calendar");
-await coach.locator(".wkempty-cta, .calbar-add").first().click();
+await coach.locator(".wkempty-cta, .wkfab").first().click();
 // The stepped adder: studio first (a brand-new one lands straight on the
 // form), then the class details and the times.
 await coach.locator(".stepline", { hasText: "Choose the studio" }).waitFor();

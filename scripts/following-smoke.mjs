@@ -28,7 +28,7 @@ const mkCoach = async (email, name, studio, classes) => {
   if (!classes.length) { await c.close(); return; }
   for (const [nm, day, t] of classes) {
     await p.goto(BASE + "/calendar");
-    await p.locator(".wkempty-cta, .calbar-add").first().click();
+    await p.locator(".wkempty-cta, .wkfab").first().click();
     // The stepped adder: studio, then the class list, then the form. The
     // list waits for typing now, so the name goes in first.
     await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
@@ -86,8 +86,8 @@ await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 
 // Following nobody: the empty state is the whole screen and points at the way out.
-await m.locator(".wkempty-t", { hasText: "Nothing here yet" }).waitFor();
-if (!(await m.locator(".wkempty-b", { hasText: "aren’t following anyone" }).count()))
+await m.locator(".wkempty-t", { hasText: "Start by following a coach" }).waitFor();
+if (!(await m.locator(".wkempty-b", { hasText: "every class they post will show up here" }).count()))
   fail("the empty state should say why: no follows yet");
 if (await m.locator(".tray").count()) fail("no rail until there is somebody on it");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-empty.png" });
