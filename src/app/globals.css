@@ -6312,11 +6312,14 @@ a.clspeek-by:active { opacity: .6; }
   display: grid; grid-template-columns: 72px 1fr; column-gap: 8px;
   align-items: baseline;
   width: 100%; text-align: left; font: inherit; color: var(--ink);
-  border: none; cursor: pointer;
+  cursor: pointer;
   padding: 14px 16px; text-decoration: none;
   /* Its own box, not a shared one with dividers, by Matt's call: two
-     classes on a day are two containers. */
-  background: var(--shell); border-radius: 16px;
+     classes on a day are two containers. An outline rather than a fill,
+     also by Matt's call, and the neutral ink wash rather than the warm
+     input border, which read as a different material against this gray. */
+  background: none; border-radius: 16px;
+  border: var(--divw) solid color-mix(in srgb, var(--ink) 14%, transparent);
 }
 /* Which cell lives where. The by-line and the shift tag span both columns
    (whose row this is reads over the time, not beside it); everything else
