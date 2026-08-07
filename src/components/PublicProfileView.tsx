@@ -350,12 +350,10 @@ export async function PublicProfileView({
                           {start.hm}
                           <span className="clline-ap">{start.ap.toUpperCase()}</span>
                         </span>
-                        <span className="clline-main">
-                          <span className="clline-nm">{c.name}</span>
-                          {where && (
-                            <span className="clline-w">{where}</span>
-                          )}
-                        </span>
+                        <span className="clline-nm">{c.name}</span>
+                        {where && (
+                          <span className="clline-w">{where}</span>
+                        )}
                       </a>
                     );
                   })}

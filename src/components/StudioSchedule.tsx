@@ -96,37 +96,31 @@ export function StudioSchedule({
                 const rowCls = `clline${cont ? " clline-cont" : ""}`;
                 const inner = (
                   <>
-                    <span className="clline-left">
-                      {!cont && (
-                        <>
-                          <span className="clline-t">
-                            {start.hm}
-                            <span className="clline-ap">{start.ap.toUpperCase()}</span>
-                          </span>
-                          <span className="clline-dur">{c.durationMin} min</span>
-                        </>
-                      )}
-                    </span>
-                    <span className="clline-main">
-                      {c.coachName && (
-                        <span className="clline-by">
-                          <span
-                            className="clline-av"
-                            style={{ background: c.coachColor ?? accent }}
-                          >
-                            {c.coachPhoto ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={c.coachPhoto} alt="" />
-                            ) : (
-                              initialsOf(c.coachName)
-                            )}
-                          </span>
-                          {c.coachName}
+                    {c.coachName && (
+                      <span className="clline-by">
+                        <span
+                          className="clline-av"
+                          style={{ background: c.coachColor ?? accent }}
+                        >
+                          {c.coachPhoto ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={c.coachPhoto} alt="" />
+                          ) : (
+                            initialsOf(c.coachName)
+                          )}
                         </span>
-                      )}
-                      <span className="clline-nm">{c.name}</span>
-                      {c.where && <span className="clline-w">{c.where}</span>}
-                    </span>
+                        {c.coachName}
+                      </span>
+                    )}
+                    {!cont && (
+                      <span className="clline-t">
+                        {start.hm}
+                        <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                      </span>
+                    )}
+                    <span className="clline-nm">{c.name}</span>
+                    {!cont && <span className="clline-dur">{c.durationMin} min</span>}
+                    {c.where && <span className="clline-w">{c.where}</span>}
                   </>
                 );
                 if (c.plain) {

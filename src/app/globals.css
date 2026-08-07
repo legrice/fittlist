@@ -6266,13 +6266,12 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* No rule under the band any more, by Matt's call: the day's container
    under it does the sectioning, and a line over a box was both saying it. */
-/* Back to the muted tone, by Matt's call: with the class names in ink and
-   the times joining them, an ink date read as a fourth ink voice on every
-   screen, and gray is what lets the rows own the list. */
+/* Ink, by Matt's call: the date is the list's headings, and gray made the
+   one line that structures the scroll the quietest thing on it. */
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px; font-weight: 500; color: var(--ol);
+  font-size: 16px; font-weight: 500; color: var(--ink);
 }
 /* The today dot is gone, by Matt's call: every band is the date and nothing
    else, on every list. */
@@ -6298,11 +6297,18 @@ a.clspeek-by:active { opacity: .6; }
 }
 
 /* One row. A grid rather than a flex row, so every time in the list shares one
-   column edge however long the class names beside them run. */
+   column edge however long the class names beside them run.
+
+   The cells are direct grid children now, each naming its column, and the
+   rows align by baseline: the time shares a line with the class name and
+   the length shares one with the studio, by Matt's call. The old shape (two
+   column stacks) could not say that: the by-line inside the class column
+   pushed the name down while the time stayed at the top of its own stack. */
 .clline {
   /* The time column sized to the widest ordinary clock and a tighter gap:
      84 and 12 left a gutter of dead air between the time and the name. */
-  display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: start;
+  display: grid; grid-template-columns: 72px 1fr; column-gap: 8px;
+  align-items: baseline;
   width: 100%; text-align: left; font: inherit; color: var(--ink);
   background: none; border: none; border-radius: 0; cursor: pointer;
   padding: 16px 0; text-decoration: none;
@@ -6310,6 +6316,13 @@ a.clspeek-by:active { opacity: .6; }
      divider read as a different material. An ink wash cools with the box. */
   border-bottom: var(--divw) solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
+/* Which cell lives where. The by-line and the shift tag span both columns
+   (whose row this is reads over the time, not beside it); everything else
+   is a column's own. The explicit columns are what let a continuation row
+   omit its time cells and keep the name on the right edge regardless. */
+.clline-by, .clline-tag { grid-column: 1 / -1; }
+.clline-t, .clline-dur { grid-column: 1; }
+.clline-nm, .clline-w { grid-column: 2; min-width: 0; }
 /* The last row of a day owns no line: the band under it is the break, and a
    rule immediately above a rule is one of them drawn twice. */
 .dayrows .clline:last-child { border-bottom: none; }
@@ -6325,21 +6338,19 @@ a.clspeek-by:active { opacity: .6; }
   height: var(--divw); background: color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .clline:active { opacity: .6; }
-/* The time is a caption on the name, not a heading of its own: it sat at the
-   display weight and competed with the class beside it. */
-/* The time cell: the clock, and the length in gray under it. */
-.clline-left { display: flex; flex-direction: column; gap: 1px; }
-.clline-dur { font-size: 13px; color: var(--ol); }
+/* The time cell: the clock on the name's baseline, at the name's weight (by
+   Matt's call: one voice at two sizes), the length in gray on the studio's
+   line under it. */
+.clline-dur { font-size: 13px; color: var(--ol); margin-top: 5px; }
 .clline-t {
-  display: flex; align-items: baseline; gap: 2px; padding-top: 5px;
+  display: flex; align-items: baseline; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   /* Ink, not the brand orange, by Matt's call: orange is for the loudest
      calls to action only, and a column of orange clocks was the loudest
      thing on every list. */
-  font-size: 16.5px; font-weight: 500; color: var(--ink); white-space: nowrap;
+  font-size: 16.5px; font-weight: 600; color: var(--ink); white-space: nowrap;
 }
 .clline-ap { font-size: 11.5px; font-weight: 500; }
-.clline-main { min-width: 0; display: flex; flex-direction: column; }
 /* Whose class it is, above the name: which kind of row this is comes before
    what the row says. Following only. */
 /* Lighter than the class name under it. Both sat at the old bold, which made
@@ -6358,7 +6369,7 @@ a.clspeek-by:active { opacity: .6; }
 /* Which kind of yours a row is, above the name: an assigned shift wears the
    word in the brand's wash, quiet enough that the name stays loudest. */
 .clline-tag {
-  align-self: flex-start; margin-bottom: 7px; padding: 3px 9px; border-radius: 999px;
+  justify-self: start; margin-bottom: 7px; padding: 3px 9px; border-radius: 999px;
   background: color-mix(in srgb, var(--si) 13%, transparent); color: var(--si);
   font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
 }

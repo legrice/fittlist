@@ -108,48 +108,41 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
 export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean }) {
   const inner = (
     <>
-      {/* The time, in its own column, top-aligned with whatever the row leads
-          with. A column of times is scannable in a way a time tucked at the
-          end of each line never is: you can find six o'clock without reading
-          a single class name. A continuation row (same time as the one
-          above) keeps the column and leaves it empty, so the grid's edge
-          holds while the hour reads once.
+      {/* Whose row this is leads, full width over both columns: the by-line
+          and the shift tag sat inside the class column for a while, which
+          pushed the name down while the time stayed pinned at the top, so
+          the two things meant to read as one line never lined up.
 
-          The studio under the name carried a pin for a build. It came off: the
-          class name above it and the time beside it already say what each line
-          is, so the glyph was a mark explaining a thing that was not
-          ambiguous, repeated down every row of a long scroll. */}
-      <span className="clline-left">
-        {!cont && (
-          <>
-            <span className="clline-t">
-              {row.hm}
-              <span className="clline-ap">{row.ap.toUpperCase()}</span>
-            </span>
-            {row.dur && <span className="clline-dur">{row.dur}</span>}
-          </>
-        )}
-      </span>
-      <span className="clline-main">
-        {row.tag && <span className="clline-tag">{row.tag}</span>}
-        {row.coach && (
-          <span className="clline-by">
-            <span className="clline-av" style={{ background: row.coach.color }}>
-              {row.coach.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={row.coach.photo} alt="" />
-              ) : (
-                initials(row.coach.name)
-              )}
-            </span>
-            {row.coach.name}
+          The row itself is the grid, and every cell names its column: the
+          time shares a baseline with the name, the length shares one with
+          the studio, and a continuation row (same time as the one above)
+          simply omits its time cells, so the hour reads once while the
+          column's edge holds. */}
+      {row.tag && <span className="clline-tag">{row.tag}</span>}
+      {row.coach && (
+        <span className="clline-by">
+          <span className="clline-av" style={{ background: row.coach.color }}>
+            {row.coach.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={row.coach.photo} alt="" />
+            ) : (
+              initials(row.coach.name)
+            )}
           </span>
-        )}
-        <span className="clline-nm">{row.name}</span>
-        {row.where && (
-          <span className="clline-w">{row.where}</span>
-        )}
-      </span>
+          {row.coach.name}
+        </span>
+      )}
+      {!cont && (
+        <span className="clline-t">
+          {row.hm}
+          <span className="clline-ap">{row.ap.toUpperCase()}</span>
+        </span>
+      )}
+      <span className="clline-nm">{row.name}</span>
+      {!cont && row.dur && <span className="clline-dur">{row.dur}</span>}
+      {row.where && (
+        <span className="clline-w">{row.where}</span>
+      )}
     </>
   );
   const cls = `clline${cont ? " clline-cont" : ""}`;
