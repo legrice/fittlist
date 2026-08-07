@@ -4787,6 +4787,47 @@ button.ps-card { cursor: pointer; }
    the page doesn't jump when the content lands. */
 .tabloading { min-height: 60vh; }
 
+/* ---------------------------------------------------------------------------
+   Skeletons: a page's shape while it loads, by Matt's call (the space was
+   deliberately blank before). Gray bars where words will be, white boxes
+   where the rows will be, and one sweep of light to say something is
+   coming. The sweep respects reduced motion.
+   --------------------------------------------------------------------------- */
+.skel {
+  position: relative; overflow: hidden; display: block; border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.skel::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent);
+  animation: skelsweep 1.3s ease-in-out infinite;
+}
+@keyframes skelsweep { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
+.skelwrap { padding-top: 10px; }
+.skelday + .skelday { margin-top: 26px; }
+.skel-band { width: 96px; height: 18px; margin-bottom: 10px; }
+.skelrow {
+  background: var(--card); border-radius: 16px; padding: 16px;
+  display: grid; grid-template-columns: 72px 1fr; column-gap: 8px; row-gap: 9px;
+}
+.skelrow + .skelrow { margin-top: 8px; }
+.skel-t { grid-column: 1; height: 16px; width: 54px; }
+.skel-nm { grid-column: 2; height: 16px; width: 62%; }
+.skel-sub { grid-column: 2; height: 12px; width: 42%; }
+/* The profile's copy: hero first, everything else in the gutter. */
+.skelprof { min-height: 100dvh; background: var(--ground); }
+.skelprof-hero { height: 44vh; border-radius: 0; }
+.skelprof-pad { padding: 18px; }
+.skel-title { height: 26px; width: 58%; margin: 6px 0 4px; }
+.skel-pillrow { display: flex; gap: 8px; margin: 14px 0 4px; }
+.skel-pill { width: 118px; height: 46px; border-radius: 999px; }
+.skel-tab { width: 84px; height: 38px; border-radius: 999px; }
+/* The hub's copy. */
+.skel-doorrow { display: flex; gap: 10px; margin: 14px 0 4px; }
+.skel-door { flex: 1; height: 66px; border-radius: 16px; }
+.skel-poster { width: min(62vw, 300px); height: min(44vh, 420px); border-radius: 20px; margin: 18px auto 0; }
+
 /* The admin's Activity door and its list. */
 .adminact { position: relative; }
 .adminact .inboxdot { position: absolute; top: -6px; right: -6px; }
