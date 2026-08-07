@@ -6287,9 +6287,9 @@ a.clspeek-by:active { opacity: .6; }
 .dayband-d {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  /* 22, up from 16 by Matt's call: the date is the heading and now reads
-     as one. */
-  font-size: 22px; font-weight: 500; color: var(--ink);
+  /* Up from 16 to 22 and back to 20, by Matt's call: the heading with a
+     step less shout. */
+  font-size: 20px; font-weight: 500; color: var(--ink);
 }
 /* The today dot is gone, by Matt's call: every band is the date and nothing
    else, on every list. */
