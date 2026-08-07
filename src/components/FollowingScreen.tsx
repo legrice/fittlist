@@ -33,7 +33,6 @@ export type FeedItem = {
   whereHref: string | null;
   hm: string;
   ap: string;
-  durationMin: number;
   /** For sorting inside a day, since "6:00" sorts badly as a string. */
   mins: number;
 };
@@ -153,7 +152,6 @@ export function FollowingScreen({
                 where: i.where,
                 hm: i.hm,
                 ap: i.ap,
-                dur: `${i.durationMin} min`,
                 coach: c
                   ? { id: c.id, name: c.name, color: c.color, photo: c.photo }
                   : null,

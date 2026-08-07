@@ -35,8 +35,6 @@ export type WeekRow = {
   /** "6:00" and "pm", kept apart so the meridiem can ride small. */
   hm: string;
   ap: string;
-  /** "45 min", gray under the time. Absent on rows that don't know it. */
-  dur?: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
   /** A word above the name saying which kind of yours this is: "Shift" on a
@@ -108,11 +106,11 @@ export function ClassLine({ row }: { row: WeekRow }) {
           the two things meant to read as one line never lined up.
 
           The row itself is the grid, and every cell names its column: the
-          time shares a baseline with the name and the length shares one
-          with the studio. Every row says its own time, even beside another
-          at the same hour, by Matt's call: each is its own box now, and a
-          box with a blank time column read as a box missing something
-          rather than as a second thing at six. */}
+          time shares a baseline with the name, the studio sits under the
+          name. Every row says its own time, even beside another at the
+          same hour, by Matt's call: each is its own box now, and a box
+          with a blank time column read as a box missing something rather
+          than as a second thing at six. */}
       {row.tag && <span className="clline-tag">{row.tag}</span>}
       {row.coach && (
         <span className="clline-by">
@@ -132,7 +130,6 @@ export function ClassLine({ row }: { row: WeekRow }) {
         <span className="clline-ap">{row.ap.toUpperCase()}</span>
       </span>
       <span className="clline-nm">{row.name}</span>
-      {row.dur && <span className="clline-dur">{row.dur}</span>}
       {row.where && (
         <span className="clline-w">{row.where}</span>
       )}

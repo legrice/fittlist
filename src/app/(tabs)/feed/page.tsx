@@ -98,7 +98,6 @@ export default async function FollowingPage() {
           whereHref: st ? `/s/${st.slug}` : null,
           hm: t.hm,
           ap: t.ap,
-          durationMin: c.durationMin,
           mins: timeToMinutes(c.startTime),
         });
       }

@@ -6346,7 +6346,7 @@ a.clspeek-by:active { opacity: .6; }
    (whose row this is reads over the time, not beside it); everything else
    is a column's own. */
 .clline-by, .clline-tag { grid-column: 1 / -1; }
-.clline-t, .clline-dur { grid-column: 1; }
+.clline-t { grid-column: 1; }
 .clline-nm, .clline-w { grid-column: 2; min-width: 0; }
 /* No dividers between rows any more: each row is its own box and the gap
    between boxes is the break. Every box says its own time, even beside
@@ -6354,11 +6354,8 @@ a.clspeek-by:active { opacity: .6; }
    missing something rather than as a second thing at six. */
 .clline:active { opacity: .6; }
 /* The time cell: the clock on the name's baseline, at the name's weight (by
-   Matt's call: one voice at two sizes), the length in gray on the studio's
-   line under it. */
-/* The two second-line captions share a margin, because they share a row:
-   the length under the time, the studio under the name. */
-.clline-dur { font-size: 13px; color: var(--ol); margin-top: 2px; }
+   Matt's call: one voice at two sizes). The length in gray lived under it
+   and came off every list, also by Matt's call. */
 .clline-t {
   display: flex; align-items: baseline; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
