@@ -3,6 +3,7 @@
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { geocodeAddress } from "@/lib/geocode";
 import { storeImage } from "@/lib/storage";
 import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
@@ -50,9 +51,19 @@ export async function createStudio(
   if (!name) return { ok: false, error: "Enter the studio name." };
   if (!address) return { ok: false, error: "Enter the address." };
   const db = await getDb();
+  // A studio is a place, and a place has a point: one lookup at save,
+  // best-effort, null on a miss.
+  const geo = await geocodeAddress(address);
   const [studio] = await db
     .insert(schema.studios)
-    .values({ name, address, slug: await uniqueSlug(name), createdByUserId: userId })
+    .values({
+      name,
+      address,
+      lat: geo?.lat ?? null,
+      lng: geo?.lng ?? null,
+      slug: await uniqueSlug(name),
+      createdByUserId: userId,
+    })
     .returning();
   return {
     ok: true,
@@ -115,12 +126,15 @@ export async function updateStudio(
   if (!existing) return { ok: false, error: "Studio not found." };
 
   // Only recompute the slug when the name actually moved, so a link to a studio
-  // survives unrelated edits.
+  // survives unrelated edits. Same rule for the point: the address moving is
+  // what makes the old coordinates wrong.
   const slug =
     existing.slug && existing.name.trim() === name ? existing.slug : await uniqueSlug(name, id);
+  const geo = existing.address.trim() === address ? null : await geocodeAddress(address);
 
   const types = input.types.filter((t) => (STUDIO_TYPES as readonly string[]).includes(t));
   const set: Partial<typeof schema.studios.$inferInsert> = {
+    ...(geo ? { lat: geo.lat, lng: geo.lng } : {}),
     name,
     address,
     slug,

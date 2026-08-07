@@ -2,15 +2,18 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LocationInput } from "@/components/LocationInput";
+import { LocationPicker } from "@/components/LocationPicker";
 import { updateProfile } from "@/app/actions/profile";
-import { completeOnboarding } from "@/app/actions/onboarding";
+import { completeOnboarding, suggestedCoaches } from "@/app/actions/onboarding";
 import { setTeaching } from "@/app/actions/auth";
 import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
 import { takeAfterAuth } from "@/lib/afterauth";
 import { readPhotoPair } from "@/lib/photo";
+import type { GeoPlace } from "@/lib/geocode";
 
-/** Somebody worth following on the way in: loaded by the welcome page. */
+/** Somebody worth following on the way in: loaded when the follow step
+ *  opens, so the place picked on the page before can rank them by
+ *  nearness. */
 export type SuggestedCoach = {
   id: string;
   handle: string;
@@ -44,7 +47,6 @@ export function OnboardingWizard({
   title,
   about,
   location,
-  suggested,
 }: {
   landing?: string;
   name: string;
@@ -52,7 +54,6 @@ export function OnboardingWizard({
   title: string;
   about: string;
   location: string;
-  suggested: SuggestedCoach[];
 }) {
   const router = useRouter();
   const TOTAL = 3;
@@ -65,6 +66,10 @@ export function OnboardingWizard({
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
+  // The picked place's point. Typed-but-unpicked text saves too (the server
+  // geocodes it best-effort); the point is what ranks the next page.
+  const [pPlace, setPPlace] = useState<GeoPlace | null>(null);
+  const [suggested, setSuggested] = useState<SuggestedCoach[] | null>(null);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -91,6 +96,8 @@ export function OnboardingWizard({
         title: pTitle,
         about: pAbout,
         location: pLocation,
+        locationLat: pPlace?.lat ?? null,
+        locationLng: pPlace?.lng ?? null,
         // Untouched here: they moved to settings, and updateProfile writes
         // what it is handed.
         instagram: "",
@@ -118,6 +125,11 @@ export function OnboardingWizard({
       return;
     }
     setStep(3);
+    // Loaded here rather than with the page, so the place just picked can
+    // put the nearest coaches first.
+    suggestedCoaches(pPlace ? { lat: pPlace.lat, lng: pPlace.lng } : null)
+      .then(setSuggested)
+      .catch(() => setSuggested([]));
   };
 
   const toggleFollow = (c: SuggestedCoach) => {
@@ -260,7 +272,14 @@ export function OnboardingWizard({
             <label className="flabel" htmlFor="wLocation">
               Location <span>· city and state, required</span>
             </label>
-            <LocationInput id="wLocation" value={pLocation} onChange={setPLocation} />
+            <LocationPicker
+              id="wLocation"
+              value={pLocation}
+              onChange={(v, place) => {
+                setPLocation(v);
+                setPPlace(place);
+              }}
+            />
             <div className="wizfoot">
               <button className="btn si" onClick={toStep3} disabled={pending}>
                 Continue
@@ -273,11 +292,23 @@ export function OnboardingWizard({
           <>
             <h1>Follow a few coaches.</h1>
             <p>Their weeks land on your Following tab. Skip if you&rsquo;d rather not.</p>
-            {suggested.length === 0 && (
+            {suggested !== null && suggested.length === 0 && (
               <p className="microcopy">Nobody to suggest yet. You&rsquo;ll find people in Discover.</p>
             )}
+            {suggested === null && (
+              <div className="obfollist" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="obfolrow">
+                    <span className="skel obfolrow-av" />
+                    <span className="obfolrow-txt">
+                      <span className="skel" style={{ width: "52%", height: 16 }} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="obfollist">
-              {suggested.map((c) => {
+              {(suggested ?? []).map((c) => {
                 const on = followed.has(c.id);
                 return (
                   <div key={c.id} className="obfolrow">

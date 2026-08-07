@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 
 export type BookingLink = { label: string; url: string };
@@ -36,6 +37,11 @@ export const users = pgTable("users", {
   title: text("title"),
   // City / area shown under the name on the public profile (e.g. "Jersey City").
   location: text("location"),
+  // The location as real coordinates, written when it was picked from the
+  // geocoder (or backfilled by the server's own lookup of the typed text).
+  // What "near you" is computed from; null on rows saved before this.
+  locationLat: doublePrecision("location_lat"),
+  locationLng: doublePrecision("location_lng"),
   // Compact credential chips shown on the profile (e.g. "NASM CPT", "HYROX Coach").
   certifications: jsonb("certifications").$type<string[]>().notNull().default([]),
   // "What to Expect" — a few short descriptors of the coach's style/vibe.
@@ -235,6 +241,10 @@ export const studios = pgTable("studios", {
   slug: text("slug").unique(),
   name: text("name").notNull(),
   address: text("address").notNull(),
+  // The address, geocoded once at save: a studio is a place, and a place
+  // has coordinates. Best-effort; null when the lookup missed.
+  lat: doublePrecision("lat"),
+  lng: doublePrecision("lng"),
   // What kind of gym it is — a studio is usually more than one thing.
   types: jsonb("types").$type<string[]>().notNull().default([]),
   photo: text("photo"),
