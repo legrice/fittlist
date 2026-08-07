@@ -265,6 +265,7 @@ export function CalendarScreen({
                 : ""
               : topDay
           }
+          sub={view === "month" ? <MonthHeadRow /> : undefined}
         >
           <div className="calseg" role="tablist" aria-label="Calendar view, overlay">
             <button

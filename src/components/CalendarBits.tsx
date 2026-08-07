@@ -335,16 +335,23 @@ export function useTopDayLabel(): string {
 export function ScrollHead({
   on,
   label,
+  sub,
   children,
 }: {
   on: boolean;
   label: string;
+  /** A full-width second row under the bar: the month grid passes the
+   *  weekday initials, so the columns stay named however deep the scroll. */
+  sub?: ReactNode;
   children?: ReactNode;
 }) {
   return (
     <div className={`scrollhead${on ? " on" : ""}`} aria-hidden={on ? undefined : true}>
-      <span className="scrollhead-d">{label}</span>
-      {on && children && <div className="scrollhead-tools">{children}</div>}
+      <div className="scrollhead-row">
+        <span className="scrollhead-d">{label}</span>
+        {on && children && <div className="scrollhead-tools">{children}</div>}
+      </div>
+      {on && sub}
     </div>
   );
 }
