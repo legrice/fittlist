@@ -119,18 +119,9 @@ export function renderStory(model: StoryModel) {
           fontFamily: "Delight",
         }}
       >
-        {/* Not content, so it still bleeds to the edge. */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 1080,
-            height: 26,
-            background: t.accent,
-            display: "flex",
-          }}
-        />
+        {/* The accent bar across the top came off, by Matt's call: the
+            brand stopped using the edge stripe anywhere else, and the
+            poster was the last place carrying it. */}
         <div
           style={{
             display: "flex",

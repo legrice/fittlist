@@ -105,18 +105,6 @@ export function classCard(c: ClassCard) {
       )}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: 1080,
-          height: 20,
-          background: c.theme.accent,
-          display: "flex",
-        }}
-      />
-
-      <div
-        style={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
