@@ -88,7 +88,7 @@ export async function MemberProfileView({
 
   // The coaches they follow: the page's first tab now, in place of the
   // shared week.
-  const follows = await followingList(user.email);
+  const follows = await followingList(user.email, viewerId);
   const firstName = name.split(/\s+/)[0];
 
   // No arrow on your own page. It is what the Profile tab opens now, so
@@ -224,7 +224,7 @@ export async function MemberProfileView({
         {/* The coaches they follow. One component with the coach page's own
             Following tab, so the row and the empty state cannot drift. */}
         {tab === "schedule" && (
-          <FollowList rows={follows} isOwner={isOwner} firstName={firstName} />
+          <FollowList rows={follows} isOwner={isOwner} firstName={firstName} signedIn={!!viewerId} />
         )}
         </ProfileTabs>
       </div>

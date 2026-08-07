@@ -170,7 +170,7 @@ export async function PublicProfileView({
   // Who they follow, only when that tab is the one being read: the other
   // tabs have no use for it, and a query nobody reads gets slower without
   // anybody noticing.
-  const follows = tab === "following" ? await followingList(user.email) : [];
+  const follows = tab === "following" ? await followingList(user.email, viewerId) : [];
 
   const today = todayIso();
   const start = new Date(`${today}T00:00:00Z`);
@@ -434,9 +434,9 @@ export async function PublicProfileView({
           tab={tab}
           tabs={[
             { key: "schedule", label: "Schedule" },
-            { key: "following", label: "Following" },
             { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
+            { key: "following", label: "Following" },
           ]}
           name={user.name}
           title={user.title ?? ""}
@@ -539,6 +539,7 @@ export async function PublicProfileView({
               rows={follows}
               isOwner={isOwner}
               firstName={user.name.trim().split(/\s+/)[0] || user.name}
+              signedIn={!!viewerId}
             />
           ) : tab === "studios" && studios ? (
             studios

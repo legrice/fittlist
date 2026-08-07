@@ -2932,9 +2932,9 @@ button.ps-card { cursor: pointer; }
    it would poke out of the rounded corners. */
 /* Air under the pills, because the day bands pin right below this block:
    without it the first pinned date sat flush against the tab row. */
-.pubcard .pubtabs { margin: 0 -18px; padding: 14px 18px 10px; }
+.pubcard .pubtabs { margin: 0; padding: 14px 0 10px; }
 .pubtabs {
-  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
   /* No rule under the row, by Matt's call: the tabs are pills now (the nav's
      own grammar, ink words with the quiet gray wash as the one selection
      mark), and a line under a row of pills boxed the card's top in. */
@@ -2946,10 +2946,13 @@ button.ps-card { cursor: pointer; }
 .pubtabs::-webkit-scrollbar { display: none; }
 .pubtab {
   /* White pills with the current one filled ink, by Matt's call: on the
-     gray card the bare-text tabs read as labels rather than controls. */
-  flex: 0 0 auto; padding: 11px 18px; border-radius: 999px; text-decoration: none;
+     gray card the bare-text tabs read as labels rather than controls.
+     Sized so all four (Schedule, Info, Studios, Following) fit inside the
+     card's rounded bounds at 390px, also by Matt's call: the last pill
+     used to run off the corner. */
+  flex: 0 0 auto; padding: 9px 14px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 17px; color: var(--ink); background: var(--card); white-space: nowrap;
+  font-size: 15px; color: var(--ink); background: var(--card); white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 .pubtab.sel { color: var(--paper); background: var(--ink); }
@@ -6465,33 +6468,10 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
 
-/* The Following tab on a profile: everyone this person follows, a white
-   row each on the page's ground. The empty state is the ordinary dashed
-   block, with Find a coach offered to the owner only. */
-.folist { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.folrow {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; border-radius: 16px;
-  background: var(--card); color: var(--ink); text-decoration: none;
-}
-.folrow:active { opacity: .7; }
-.folrow-av {
-  width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 15px; font-weight: 600; letter-spacing: .02em;
-}
-.folrow-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.folrow-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.folrow-nm {
-  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16.5px; font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.folrow-sub {
-  font-size: 13.5px; color: var(--ol);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.folrow-chev { margin-left: auto; flex-shrink: 0; color: var(--ol); display: inline-flex; }
+/* The Following tab on a profile: the directory's own rows, so a person
+   reads the same way everywhere. A touch of top air before the first
+   divider. */
+.folist-dir { margin-top: 6px; }
 /* Brand orange with white words, the empty-state CTA rule. */
 .empty-block .folfind { margin-top: 18px; display: inline-block; padding-left: 28px; padding-right: 28px; }
 .btn.si.folfind { background: var(--si); color: #fff; }

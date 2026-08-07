@@ -68,12 +68,16 @@ export function PersonRow({
   from,
   kindTag = true,
   follow = false,
+  weekLine = true,
 }: {
   person: DirPerson;
   from: string;
   kindTag?: boolean;
   /** Offer the pill in the corner. Discover does; search doesn't. */
   follow?: boolean;
+  /** The classes-this-week line. A profile's Following tab drops it, by
+   *  Matt's call: that list is about who, not how much. */
+  weekLine?: boolean;
 }) {
   return (
     <div className="disrow">
@@ -106,7 +110,7 @@ export function PersonRow({
             {c.title || `fittlist.co/${c.handle}`}
             {follow ? "" : c.following ? " · Following" : c.requested ? " · Requested" : ""}
           </span>
-          {c.kind === "coach" && (
+          {weekLine && c.kind === "coach" && (
             <span className="wk">
               {c.classesThisWeek
                 ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`

@@ -85,21 +85,33 @@ export async function myCircles(userId: string): Promise<Circle[]> {
     .sort((a, b) => Number(b.fresh) - Number(a.fresh) || a.first.localeCompare(b.first));
 }
 
-/** Everyone this address follows, as profile rows: the Following tab a
- *  profile wears now, by Matt's call (it reverses the old "a follow is
- *  private" line, in as many words). Anyone followed with a page is
- *  listed, because a tab named Following that hid half the follows would
- *  be lying; gym accounts have no handle and drop out on that. */
+/** Everyone this address follows, shaped for the directory's own
+ *  PersonRow: the Following tab a profile wears now, by Matt's call (it
+ *  reverses the old "a follow is private" line, in as many words; his
+ *  reasons: safety, Instagram's convention, and list management, with
+ *  follower counts unshown so it is no scoreboard). Anyone followed with
+ *  a page is listed; gym accounts have no handle and drop out on that.
+ *
+ *  Each row carries the VIEWER'S relationship to that person, so the pill
+ *  is the easy unfollow on your own list and the Instagram-style follow
+ *  door on somebody else's. */
 export type FollowRow = {
   id: string;
   handle: string;
   name: string;
-  title: string | null;
+  kind: "coach" | "member";
   photo: string | null;
+  title: string;
+  location: string;
+  classesThisWeek: number;
+  following: boolean;
+  requested: boolean;
+  availability: string | null;
   color: string;
+  disciplines: string[];
 };
 
-export async function followingList(email: string): Promise<FollowRow[]> {
+export async function followingList(email: string, viewerId?: string | null): Promise<FollowRow[]> {
   const db = await getDb();
   const subs = await db
     .select({ trainerUserId: schema.subscribers.trainerUserId })
@@ -107,6 +119,32 @@ export async function followingList(email: string): Promise<FollowRow[]> {
     .where(and(eq(schema.subscribers.email, email), isNull(schema.subscribers.optedOutAt)));
   const ids = subs.map((s) => s.trainerUserId);
   if (!ids.length) return [];
+
+  // The viewer's own follows and pending asks, so each row's pill starts
+  // right. On your own list that set is the list itself.
+  let viewerFollows = new Set<string>();
+  let viewerAsks = new Set<string>();
+  if (viewerId) {
+    const [viewer] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, viewerId));
+    if (viewer) {
+      const [f, r] = await Promise.all([
+        db
+          .select({ trainerUserId: schema.subscribers.trainerUserId })
+          .from(schema.subscribers)
+          .where(and(eq(schema.subscribers.email, viewer.email), isNull(schema.subscribers.optedOutAt))),
+        db
+          .select({ trainerUserId: schema.followRequests.trainerUserId })
+          .from(schema.followRequests)
+          .where(eq(schema.followRequests.requesterUserId, viewerId)),
+      ]);
+      viewerFollows = new Set(f.map((x) => x.trainerUserId));
+      viewerAsks = new Set(r.map((x) => x.trainerUserId));
+    }
+  }
+
   const users = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
   return users
     .filter((u) => !!u.handle)
@@ -114,9 +152,16 @@ export async function followingList(email: string): Promise<FollowRow[]> {
       id: u.id,
       handle: u.handle!,
       name: u.name.trim() || u.email.split("@")[0],
-      title: u.title?.trim() || null,
+      kind: (u.kind === "fan" ? "member" : "coach") as "coach" | "member",
       photo: u.photo,
+      title: u.title?.trim() ?? "",
+      location: u.location ?? "",
+      classesThisWeek: 0,
+      following: viewerFollows.has(u.id),
+      requested: viewerAsks.has(u.id),
+      availability: u.kind === "fan" ? null : u.availability,
       color: avatarColor(u),
+      disciplines: u.disciplines ?? [],
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
