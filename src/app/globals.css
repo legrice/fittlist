@@ -47,16 +47,11 @@
      black frames shouted on every row. The class boxes wore it too until
      the gradient concept landed them borderless on the gray. */
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  /* The tabs shell's Health-style ground: a light pleasant warmth at the
-     very top flowing down into a cool light gray, with the white class
-     boxes floating on the gray. Three stops because the fade is drawn in
-     two pieces (the screen's chrome zone, then the calendar card's own
-     top), and the splice colour has to be one token or the seam shows. */
-  --grad-top: #f8dcc6;
-  --grad-mid: #f3e6db;
-  /* Warmed from the cool #eef0f1: the ink, the paper and the gradient are
-     all warm, and a cool ground under them made the app two palettes. The
-     gradient now fades into its own family instead of bridging a clash. */
+  /* The tabs shell's ground. Warmed from the cool #eef0f1 (the ink, the
+     paper and the lines are all warm, and a cool ground under them made
+     the app two palettes), then the gradient over it came off entirely,
+     both by Matt's call: one flat warm gray, with the shadowed white
+     cards doing the lifting. */
   --ground: #f1efe9;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
@@ -130,22 +125,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* The tabs shell is the Health treatment, by Matt's call: no two-tone,
-   and nothing pinned. The warmth runs essentially the first viewport and
-   scrolls away with the page; everything below is the cool gray, and the
-   overlay header (.scrollhead) is the only thing that stays. The header
-   goes clear and static so the glow is the chrome's ground, the bands go
-   static and clear (they no longer pin, so they need no ground), and the
-   cards go clear so the fade runs behind everything. */
+/* The tabs shell is one flat warm gray, by Matt's call: the gradient
+   went (it read as there for no reason once the ground warmed to its
+   family), and the shadowed white cards do the lifting against the
+   plain ground. Nothing pins; the overlay header (.scrollhead) is the
+   only thing that stays. The header keeps its clear static treatment
+   and the bands stay static and clear, because none of that was the
+   gradient's; it was the no-pinning model's. */
 .screen.hasnav {
-  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+  background: var(--ground);
   --band: transparent;
 }
 .screen.hasnav .brandbar { background: transparent; position: static; }
-/* The logged-out landing wears the same fade, by Matt's call: the first
+/* The logged-out landing wears the same ground, by Matt's call: the first
    thing anybody sees and the app they sign into are one surface. */
 .screen.ob {
-  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+  background: var(--ground);
 }
 .screen.hasnav .dayband { position: static; }
 /* The overlay header replaces the pinned chrome, so a landing only has to
@@ -3946,9 +3941,9 @@ button.ps-card { cursor: pointer; }
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  --grad-top: #2a2014;
-  --grad-mid: #1c1913;
-  --ground: #16171a;
+  /* Warm like the light ground: the cool #16171a had the same clash with
+     the warm dark surfaces that the light side's cool gray had. */
+  --ground: #17150f;
   --si-tint: #3f2413;
   --si-ink: #f0a071;
   --card: #211c13;
