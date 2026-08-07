@@ -96,11 +96,14 @@ export function StudioSchedule({
                 const rowCls = `clline${cont ? " clline-cont" : ""}`;
                 const inner = (
                   <>
-                    <span className="clline-t">
+                    <span className="clline-left">
                       {!cont && (
                         <>
-                          {start.hm}
-                          <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                          <span className="clline-t">
+                            {start.hm}
+                            <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                          </span>
+                          <span className="clline-dur">{c.durationMin} min</span>
                         </>
                       )}
                     </span>

@@ -157,8 +157,9 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
   if (await p.locator(".dayband-dot").count()) fail("the today dot should be gone");
   // Every band reads the same way: the relative words went first, then the
   // dot, so nothing marks today and no band is the odd one out.
+  // "Tue, Aug 5": the comma, not the dash, by Matt's call.
   for (const band of bands)
-    if (!/^[A-Z][a-z]{2} \u2014 [A-Z][a-z]{2} \d{1,2}/.test(band))
+    if (!/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/.test(band))
       fail("every band reads the same way, got " + band);
 }
 
@@ -425,11 +426,11 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
   }
 }
-// And the full editor is still one quiet tap away.
-await p.locator(".shedit", { hasText: "Open the full editor" }).click();
-await p.waitForURL(/\/share$/);
-console.log("the Share tab lands on the hub, and the editor is one tap deeper");
-await p.goBack();
+// No door to the old composer any more: the hub is the whole share screen.
+if (await p.locator(".shedit").count()) fail("the editor link should be gone");
+if (!(await p.locator(".shcta .btn", { hasText: "Share image" }).count() + await p.locator(".shcta a", { hasText: "Save image" }).count()))
+  fail("the week segment should offer its image");
+console.log("the Share tab lands on the hub, and the hub is the whole screen");
 // The magnifier still opens the directory, from the corner.
 await p.goto(BASE + "/calendar");
 await p.locator(".findbtn:visible").click();

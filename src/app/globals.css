@@ -6327,6 +6327,9 @@ a.clspeek-by:active { opacity: .6; }
 .clline:active { opacity: .6; }
 /* The time is a caption on the name, not a heading of its own: it sat at the
    display weight and competed with the class beside it. */
+/* The time cell: the clock, and the length in gray under it. */
+.clline-left { display: flex; flex-direction: column; gap: 1px; }
+.clline-dur { font-size: 13px; color: var(--ol); }
 .clline-t {
   display: flex; align-items: baseline; gap: 2px; padding-top: 5px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;

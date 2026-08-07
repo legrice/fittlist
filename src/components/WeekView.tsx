@@ -35,6 +35,8 @@ export type WeekRow = {
   /** "6:00" and "pm", kept apart so the meridiem can ride small. */
   hm: string;
   ap: string;
+  /** "45 min", gray under the time. Absent on rows that don't know it. */
+  dur?: string;
   /** Following only: whose class this is. */
   coach?: { id: string; name: string; color: string; photo: string | null } | null;
   /** A word above the name saying which kind of yours this is: "Shift" on a
@@ -117,11 +119,14 @@ export function ClassLine({ row, cont = false }: { row: WeekRow; cont?: boolean 
           class name above it and the time beside it already say what each line
           is, so the glyph was a mark explaining a thing that was not
           ambiguous, repeated down every row of a long scroll. */}
-      <span className="clline-t">
+      <span className="clline-left">
         {!cont && (
           <>
-            {row.hm}
-            <span className="clline-ap">{row.ap.toUpperCase()}</span>
+            <span className="clline-t">
+              {row.hm}
+              <span className="clline-ap">{row.ap.toUpperCase()}</span>
+            </span>
+            {row.dur && <span className="clline-dur">{row.dur}</span>}
           </>
         )}
       </span>

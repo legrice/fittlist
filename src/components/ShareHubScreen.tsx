@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -11,9 +10,9 @@ import { Toast, useToast } from "@/components/Toast";
 // which one you are on, the colours redraw the picture live, and the big
 // button saves the thing on screen. The Week segment carries the Dates and
 // Classes pickers side by side above the colours, so the whole picture is
-// decided here; the full editor stays one quiet tap away for adding a class
-// from the picker. Copy-week-as-text is gone by the same call, and the page
-// link lives with the QR code.
+// decided here. The old composer at /share still exists but nothing links
+// to it any more, by Matt's call; copy-week-as-text is gone the same way,
+// and the page link lives with the QR code.
 //
 // Deliberately absent: the style row (Poster, Ticket, Grid, Minimal) from
 // the concept. Ten layout styles shipped once and came out because the
@@ -241,18 +240,12 @@ export function ShareHubScreen({
                     shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
                   }
                 >
-                  {sharing ? "Opening…" : seg === "week" ? "Share the week" : "Share the card"}
+                  {sharing ? "Opening…" : "Share image"}
                 </button>
               ) : (
                 <a className="btn si" href={imgUrl} download={fileName}>
                   Save image
                 </a>
-              )}
-              {seg === "week" && (
-                <Link className="shedit" href="/share">
-                  Open the full editor
-                  <Icon name="chevron_right" size={18} />
-                </Link>
               )}
             </div>
           </>

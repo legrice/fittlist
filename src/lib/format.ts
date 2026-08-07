@@ -509,11 +509,9 @@ export function dayBandLabel(iso: string, today?: string): string {
   // `today` stays in the signature because every caller passes it and the dot
   // is decided from the same value; it just no longer changes the words.
   void today;
-  // The date label's own dash, the same one fmtDayHeader carries and for the
-  // same reason: a date is a label rather than a sentence, and this is the
-  // shape it is wanted in.
-  // check-copy-ignore
-  return `${wd} — ${md}`;
+  // A comma, not the dash, by Matt's call: "Tue, Aug 5", the same shape the
+  // class sheet's date fact wears.
+  return `${wd}, ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

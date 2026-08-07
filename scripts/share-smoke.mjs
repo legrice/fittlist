@@ -111,8 +111,10 @@ await coach.locator(".clline").first().waitFor();
 }
 await coach.locator('.navtab[data-tab="share"]').click();
 await coach.waitForURL(/\/sharehub/);
-await coach.locator(".shedit", { hasText: "Open the full editor" }).click();
-await coach.waitForURL(/\/share$/);
+if (await coach.locator(".shedit").count()) fail("the hub should carry no editor link");
+// The composer survives at its route with nothing linking to it; the rest
+// of this suite holds it there so it cannot rot unnoticed.
+await coach.goto(BASE + "/share");
 await coach.locator(".composer").waitFor();
 await coach.locator(".adderhead h2", { hasText: "Share your schedule" }).waitFor();
 // It opens over the app: no bar underneath competing with it.
