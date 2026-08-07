@@ -8,7 +8,7 @@ import { useBandTop, useStuck } from "@/components/CalendarBits";
 
 // Contact is not among them: it's the pill in the header and a sheet, and
 // /{handle}/contact redirects onto the schedule where that pill lives.
-export type ProfileTab = "about" | "studios" | "schedule";
+export type ProfileTab = "about" | "studios" | "schedule" | "following";
 
 /** One tab: the key is the URL suffix, and the first in the list owns the
  *  bare base rather than a suffix of its own. */

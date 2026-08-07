@@ -139,6 +139,11 @@ a { color: inherit; }
   --band: transparent;
 }
 .screen.hasnav .brandbar { background: transparent; position: static; }
+/* The logged-out landing wears the same fade, by Matt's call: the first
+   thing anybody sees and the app they sign into are one surface. */
+.screen.ob {
+  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+}
 .screen.hasnav .dayband { position: static; }
 /* The overlay header replaces the pinned chrome, so a landing only has to
    clear its height rather than the old measured stack. */
@@ -6446,6 +6451,37 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15px; color: var(--ol); min-width: 0;
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
+
+/* The Following tab on a profile: everyone this person follows, a white
+   row each on the page's ground. The empty state is the ordinary dashed
+   block, with Find a coach offered to the owner only. */
+.folist { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.folrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 16px;
+  background: var(--card); color: var(--ink); text-decoration: none;
+}
+.folrow:active { opacity: .7; }
+.folrow-av {
+  width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 15px; font-weight: 600; letter-spacing: .02em;
+}
+.folrow-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.folrow-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.folrow-nm {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.folrow-sub {
+  font-size: 13.5px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.folrow-chev { margin-left: auto; flex-shrink: 0; color: var(--ol); display: inline-flex; }
+/* Brand orange with white words, the empty-state CTA rule. */
+.empty-block .folfind { margin-top: 18px; display: inline-block; padding-left: 28px; padding-right: 28px; }
+.btn.si.folfind { background: var(--si); color: #fff; }
 
 /* The overlay header: hidden at rest, fading in once the page has
    scrolled, the day (or month) under it on the left and the screen's own

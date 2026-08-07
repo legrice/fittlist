@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { AvatarZoom } from "@/components/AvatarZoom";
@@ -6,12 +5,12 @@ import { backToFor } from "@/lib/nav";
 import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
+import { followingList } from "@/lib/circles";
 import { fansVisible } from "@/lib/flags";
-import { canSeeWeek, sharedWeek } from "@/lib/week";
 import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
+import { FollowList } from "@/components/FollowList";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
-import { Icon } from "@/components/Icon";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
@@ -20,11 +19,11 @@ import { PublicTopBar } from "@/components/PublicTopBar";
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
 // which is what a coach seeing a new follower actually wants to know.
 //
-// It used to list the coaches they follow. That turned a profile into a
-// scoreboard: two people side by side, one with six coaches and one with none,
-// and the comparison is doing something nobody asked for. Who you train with
-// is yours. You can see your own on Following; a coach sees their own
-// followers; and that's the whole audience for it.
+// It lists the coaches they follow, by Matt's call, and that is a doctrine
+// reversal said out loud: "a follow is private" held for a long time, on the
+// scoreboard argument. On this build following is the app's public spine
+// (the tab, the merged week, the whole member side), so who you train with
+// is the one thing a member's page has to say.
 export async function MemberProfileView({
   user,
   isOwner,
@@ -37,8 +36,9 @@ export async function MemberProfileView({
   /** Signed in, a member profile is an app screen like any other, so it gets
    *  the header and the tabs. This was the one page that didn't. */
   viewerId?: string | null;
-  /** Schedule leads (what they're going to, for the people allowed to see
-   *  it), Info is the about. Same two-tab shape as everyone else's page. */
+  /** Following leads (the coaches they follow), Info is the about. The
+   *  key stays "schedule" because the bare handle is that tab's route and
+   *  the word in the URL is not worth breaking links over. */
   tab?: "schedule" | "about";
   from?: string;
 }) {
@@ -84,13 +84,9 @@ export async function MemberProfileView({
     }
   }
 
-  // Their week. Open unless they have approve-first on, and then it is
-  // followers only: the same switch that turns Follow into an ask decides
-  // what a stranger can see, which is the Instagram rule and the whole rule.
-  // Knowing who is going where and when is what this app is for, so the
-  // default is that you can see it.
-  const canSee = (await fansVisible()) && (await canSeeWeek(viewerId, user));
-  const week = canSee ? await sharedWeek(user.id) : [];
+  // The coaches they follow: the page's first tab now, in place of the
+  // shared week.
+  const follows = await followingList(user.email);
   const firstName = name.split(/\s+/)[0];
 
   // No arrow on your own page. It is what the Profile tab opens now, so
@@ -150,7 +146,7 @@ export async function MemberProfileView({
           base={`/${user.handle ?? ""}`}
           tab={tab}
           tabs={[
-            { key: "schedule", label: "Schedule" },
+            { key: "schedule", label: "Following" },
             { key: "about", label: "Info" },
           ]}
           name={name}
@@ -211,73 +207,10 @@ export async function MemberProfileView({
             </div>
           ))}
 
-        {/* Approve-first and not following yet: say so plainly and name the
-            way in. It says the same words whatever the week holds, so it
-            cannot be read for whether there is anything behind it. */}
-        {tab === "schedule" && !canSee && (
-          <div className="empty-block">
-            <h2>Follow to see {firstName}&rsquo;s schedule</h2>
-            <p>{firstName} approves followers, so their week is for the people they let in.</p>
-          </div>
-        )}
-        {tab === "schedule" && canSee && week.length === 0 && (
-          <div className="empty-block">
-            <h2>Nothing coming up</h2>
-            <p>
-              {isOwner
-                ? "Add a class and it shows up here."
-                : `${firstName} hasn't added anything this week.`}
-            </p>
-          </div>
-        )}
-
-        {tab === "schedule" && canSee && week.length > 0 && (
-          <div className="memweek">
-            <h2 className="prof-sec-h">{isOwner ? "Your week" : `${firstName}'s week`}</h2>
-            {isOwner && (
-              <p className="memweek-note">
-                {user.approveFollowers
-                  ? "The people you have approved see this. Nobody else does."
-                  : "Anyone who opens your page can see this."}
-              </p>
-            )}
-            {week.map((day) => (
-              <div key={day.iso} className="memweek-day">
-                <div className="memweek-dayh">{day.label}</div>
-                {day.items.map((i) => {
-                  const sub = [
-                    `${i.hm}${i.ap}`,
-                    i.coachName,
-                    i.where,
-                  ].filter(Boolean).join(" · ");
-                  const body = (
-                    <span className="memweek-txt">
-                      <span className="nm">{i.name}</span>
-                      <span className="sub">{sub}</span>
-                    </span>
-                  );
-                  // One of their own has no page to open, so it is a plain
-                  // row rather than a link with nowhere to go.
-                  return i.handle ? (
-                    <Link
-                      key={`${i.classId}-${i.iso}`}
-                      className="memweek-row"
-                      href={`/${i.handle}/${i.classId}?d=${i.iso}`}
-                    >
-                      {body}
-                      <span className="memweek-chev">
-                        <Icon name="chevron_right" size={20} />
-                      </span>
-                    </Link>
-                  ) : (
-                    <div key={`${i.classId}-${i.iso}`} className="memweek-row">
-                      {body}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+        {/* The coaches they follow. One component with the coach page's own
+            Following tab, so the row and the empty state cannot drift. */}
+        {tab === "schedule" && (
+          <FollowList rows={follows} isOwner={isOwner} firstName={firstName} />
         )}
         </ProfileTabs>
       </div>

@@ -84,3 +84,39 @@ export async function myCircles(userId: string): Promise<Circle[]> {
     // only its first few are seen without a swipe.
     .sort((a, b) => Number(b.fresh) - Number(a.fresh) || a.first.localeCompare(b.first));
 }
+
+/** Everyone this address follows, as profile rows: the Following tab a
+ *  profile wears now, by Matt's call (it reverses the old "a follow is
+ *  private" line, in as many words). Anyone followed with a page is
+ *  listed, because a tab named Following that hid half the follows would
+ *  be lying; gym accounts have no handle and drop out on that. */
+export type FollowRow = {
+  id: string;
+  handle: string;
+  name: string;
+  title: string | null;
+  photo: string | null;
+  color: string;
+};
+
+export async function followingList(email: string): Promise<FollowRow[]> {
+  const db = await getDb();
+  const subs = await db
+    .select({ trainerUserId: schema.subscribers.trainerUserId })
+    .from(schema.subscribers)
+    .where(and(eq(schema.subscribers.email, email), isNull(schema.subscribers.optedOutAt)));
+  const ids = subs.map((s) => s.trainerUserId);
+  if (!ids.length) return [];
+  const users = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
+  return users
+    .filter((u) => !!u.handle)
+    .map((u) => ({
+      id: u.id,
+      handle: u.handle!,
+      name: u.name.trim() || u.email.split("@")[0],
+      title: u.title?.trim() || null,
+      photo: u.photo,
+      color: avatarColor(u),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}

@@ -9,11 +9,13 @@ import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
+import { followingList } from "@/lib/circles";
 
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
+import { FollowList } from "@/components/FollowList";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ScheduleMore } from "@/components/ScheduleMore";
@@ -164,6 +166,11 @@ export async function PublicProfileView({
   // member reads the week of the people they follow and has no calendar to add
   // anything to, so the ribbon came off the row and the query went with it. A
   // query nobody reads is one that gets slower without anybody noticing.
+
+  // Who they follow, only when that tab is the one being read: the other
+  // tabs have no use for it, and a query nobody reads gets slower without
+  // anybody noticing.
+  const follows = tab === "following" ? await followingList(user.email) : [];
 
   const today = todayIso();
   const start = new Date(`${today}T00:00:00Z`);
@@ -427,6 +434,7 @@ export async function PublicProfileView({
           tab={tab}
           tabs={[
             { key: "schedule", label: "Schedule" },
+            { key: "following", label: "Following" },
             { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
           ]}
@@ -523,6 +531,15 @@ export async function PublicProfileView({
               tab that isn't there. */}
           {tab === "about" ? (
             about
+          ) : tab === "following" ? (
+            /* Who they follow, the same list a member's page leads with:
+               a coach follows coaches too, and the tab means the same
+               thing on both kinds of page. */
+            <FollowList
+              rows={follows}
+              isOwner={isOwner}
+              firstName={user.name.trim().split(/\s+/)[0] || user.name}
+            />
           ) : tab === "studios" && studios ? (
             studios
           ) : (
