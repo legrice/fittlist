@@ -3303,6 +3303,18 @@ button.ps-card { cursor: pointer; }
   left: calc(50% - 50vw); width: 100vw; height: calc(100% + var(--head-top, 0px) + 44px);
   object-fit: cover;
 }
+/* The colour hero: a span rather than an img, riding the photo's own box. */
+.pubhero-color { display: block; }
+/* The owner's way to the photo the colour is standing in for: one white
+   circle, centred in the hero's open air above the name. */
+.herocta {
+  position: absolute; left: 50%; top: 110px; transform: translateX(-50%);
+  width: 52px; height: 52px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .94); color: var(--ink);
+  box-shadow: 0 4px 16px rgba(25, 21, 2, .2);
+}
+.herocta:active { transform: translateX(-50%) scale(.94); }
 .pubhero-dim {
   position: absolute; bottom: -44px; left: calc(50% - 50vw); width: 100vw; height: 60%;
   background: linear-gradient(to bottom, rgba(25, 21, 2, 0), rgba(25, 21, 2, .58));

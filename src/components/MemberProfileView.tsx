@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { AvatarZoom } from "@/components/AvatarZoom";
@@ -10,6 +11,7 @@ import { fansVisible } from "@/lib/flags";
 import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowList } from "@/components/FollowList";
+import { Icon } from "@/components/Icon";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
@@ -121,7 +123,7 @@ export async function MemberProfileView({
 
   return (
     <div
-      className={`pub memberpub${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}`}
+      className={`pub memberpub${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-mode={await viewerLook()}
     >
       <div className="profwrap">
@@ -149,6 +151,18 @@ export async function MemberProfileView({
             { key: "schedule", label: "Following" },
             { key: "about", label: "Info" },
           ]}
+          /* The coach page's full-bleed hero, by Matt's call: the photo when
+             there is one, the person's own colour when there isn't, so a
+             member's page is the same page rather than a lesser layout. */
+          heroPhoto={user.photo}
+          heroColor={avatarColor(user)}
+          heroCta={
+            isOwner && !user.photo ? (
+              <Link className="herocta" href="/settings?edit=1" aria-label="Add a photo">
+                <Icon name="image" size={24} />
+              </Link>
+            ) : undefined
+          }
           name={name}
           title={user.title ?? ""}
           location={user.location ?? ""}

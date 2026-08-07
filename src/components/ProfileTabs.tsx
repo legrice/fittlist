@@ -45,6 +45,8 @@ export function ProfileTabs({
   trackHandle,
   avatar,
   heroPhoto,
+  heroColor,
+  heroCta,
   actions,
   badges,
   ownerTop,
@@ -73,6 +75,13 @@ export function ProfileTabs({
    *  the header, everything on it goes white, and a scrim at each end keeps
    *  the words legible. An experiment, by Matt's ask; null keeps the circle. */
   heroPhoto?: string | null;
+  /** No photo yet: the hero runs anyway, filled with the person's own
+   *  derived colour, so a page without a picture is the same page rather
+   *  than a lesser layout. */
+  heroColor?: string | null;
+  /** A small control on the colour hero: the owner's way to add the photo
+   *  the space is waiting for. */
+  heroCta?: ReactNode;
   /** The row of pills under the name. A visitor gets Contact and Follow; the
    *  owner gets Share and Edit profile in the same two slots. */
   actions: ReactNode;
@@ -167,8 +176,8 @@ export function ProfileTabs({
       {/* Who this is, top to bottom and centred: face, name, what and where,
           then the two things you can do about it. A profile is the one screen
           about a person rather than a list, so it gets the symmetry. */}
-      <div className={`pubhead${heroPhoto ? " pubhead-hero" : ""}`} ref={headRef}>
-        {heroPhoto && (
+      <div className={`pubhead${heroPhoto || heroColor ? " pubhead-hero" : ""}`} ref={headRef}>
+        {heroPhoto ? (
           <>
             {/* The photo, from the very top of the screen: it reaches up by
                 the pinned header's measured height (--head-top is already on
@@ -177,8 +186,16 @@ export function ProfileTabs({
             <img className="pubhero-bg" src={heroPhoto} alt="" />
             <span className="pubhero-dim" aria-hidden="true" />
           </>
-        )}
-        {!heroPhoto && avatar}
+        ) : heroColor ? (
+          <>
+            {/* The same full-bleed block in the person's own colour, with
+                the same bottom scrim so the name reads the same way. */}
+            <span className="pubhero-bg pubhero-color" style={{ background: heroColor }} aria-hidden="true" />
+            <span className="pubhero-dim" aria-hidden="true" />
+          </>
+        ) : null}
+        {!heroPhoto && !heroColor && avatar}
+        {heroCta}
         {/* The corner slots come after the picture on purpose: neither owns a
             z-index (see the stacking note in the CSS), so DOM order is what
             paints them on top, and a studio's banner is positioned now. */}
