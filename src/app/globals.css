@@ -3040,10 +3040,13 @@ button.ps-card { cursor: pointer; }
      gray card the bare-text tabs read as labels rather than controls.
      Sized so all four (Schedule, Info, Studios, Following) fit inside the
      card's rounded bounds at 390px, also by Matt's call: the last pill
-     used to run off the corner. */
-  flex: 0 0 auto; padding: 9px 14px; border-radius: 999px; text-decoration: none;
+     used to run off the corner. Up a step from 15px/9px 14px (they read
+     tight, same voice): taller and a point larger, with the horizontal
+     padding trimmed to 13, which is as big as the row goes before
+     Following breaks the 390px budget. */
+  flex: 0 0 auto; padding: 11px 13px; border-radius: 999px; text-decoration: none;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600;
-  font-size: 15px; color: var(--ink); background: var(--card); white-space: nowrap;
+  font-size: 16px; color: var(--ink); background: var(--card); white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 .pubtab.sel { color: var(--paper); background: var(--ink); }
