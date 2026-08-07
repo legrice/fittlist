@@ -47,11 +47,14 @@
      black frames shouted on every row. The class boxes wore it too until
      the gradient concept landed them borderless on the gray. */
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  /* The tabs shell's ground. Warmed from the cool #eef0f1 (the ink, the
-     paper and the lines are all warm, and a cool ground under them made
-     the app two palettes), then the gradient over it came off entirely,
-     both by Matt's call: one flat warm gray, with the shadowed white
-     cards doing the lifting. */
+  /* The tabs shell's Health-style ground: a light pleasant warmth at the
+     very top flowing down into the warm gray. It went flat for a moment,
+     by Matt's call, and came straight back by the same voice: the fade
+     is something to look at, and a flat page had nothing. The ground
+     stays warm (#f1efe9, from the cool #eef0f1) so the fade settles into
+     its own family rather than bridging a clash. */
+  --grad-top: #f8dcc6;
+  --grad-mid: #f3e6db;
   --ground: #f1efe9;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
@@ -125,22 +128,21 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* The tabs shell is one flat warm gray, by Matt's call: the gradient
-   went (it read as there for no reason once the ground warmed to its
-   family), and the shadowed white cards do the lifting against the
-   plain ground. Nothing pins; the overlay header (.scrollhead) is the
-   only thing that stays. The header keeps its clear static treatment
-   and the bands stay static and clear, because none of that was the
-   gradient's; it was the no-pinning model's. */
+/* The tabs shell is the Health treatment: the warmth runs essentially
+   the first viewport and scrolls away with the page into the warm gray,
+   and nothing pins; the overlay header (.scrollhead) is the only thing
+   that stays. It went flat gray for a moment and came back, by Matt's
+   call both times: the fade is something to look at. The cards sit
+   flat on it (no shadows), because the fade is the depth. */
 .screen.hasnav {
-  background: var(--ground);
+  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
   --band: transparent;
 }
 .screen.hasnav .brandbar { background: transparent; position: static; }
-/* The logged-out landing wears the same ground, by Matt's call: the first
+/* The logged-out landing wears the same fade, by Matt's call: the first
    thing anybody sees and the app they sign into are one surface. */
 .screen.ob {
-  background: var(--ground);
+  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
 }
 .screen.hasnav .dayband { position: static; }
 /* The overlay header replaces the pinned chrome, so a landing only has to
@@ -3941,6 +3943,8 @@ button.ps-card { cursor: pointer; }
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
+  --grad-top: #2a2014;
+  --grad-mid: #1c1913;
   /* Warm like the light ground: the cool #16171a had the same clash with
      the warm dark surfaces that the light side's cool gray had. */
   --ground: #17150f;
@@ -5888,10 +5892,6 @@ button.ps-card { cursor: pointer; }
 .trayav {
   position: relative; display: block; width: 80px; height: 80px; border-radius: 999px;
   overflow: hidden; background: var(--card);
-  /* A soft lift off the gradient, the same treatment the class cards wear.
-     The ring states restate it after their rings, because box-shadow is one
-     property and the override would otherwise drop the shadow mid-tap. */
-  box-shadow: 0 3px 10px rgba(30, 24, 12, .14);
 }
 .trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trayav-ini {
@@ -5901,7 +5901,7 @@ button.ps-card { cursor: pointer; }
 /* Classes up since you last looked. The ring is the most important pixel on
    the screen, because it is the only thing that says the tray is worth a tap
    today rather than in general. */
-.trayav.fresh { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si), 0 3px 10px rgba(30, 24, 12, .14); }
+.trayav.fresh { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
 .trayav-add {
   display: flex; align-items: center; justify-content: center;
   background: var(--card); border: 1.5px dashed var(--line); color: var(--ol);
@@ -6258,7 +6258,7 @@ a.clspeek-by:active { opacity: .6; }
    face is never cropped by its own highlight. */
 /* Brand orange, by Matt's call, the same warmth the current nav tab wears:
    it was ink for a stretch on the state-not-action argument. */
-.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si), 0 3px 10px rgba(30, 24, 12, .14); }
+.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
    thumb between taps. */
@@ -6541,11 +6541,11 @@ a.clspeek-by:active { opacity: .6; }
   cursor: pointer;
   padding: 16px 18px; text-decoration: none;
   /* Its own box, not a shared one with dividers, by Matt's call: two
-     classes on a day are two containers. No outline any more: white on
-     the cool gray ground is the whole treatment, the Health card, with
-     a light shadow lifting each one off the ground. */
+     classes on a day are two containers. No outline and no shadow: white
+     on the warm ground is the whole treatment, the Health card. The
+     shadow was tried alongside the flat-gray experiment and came off
+     with it; the gradient is the depth now. */
   background: var(--card); border-radius: 20px;
-  box-shadow: 0 2px 12px rgba(30, 24, 12, .06);
 }
 /* Which cell lives where. The by-line and the shift tag span both columns
    (whose row this is reads over the time, not beside it); everything else
