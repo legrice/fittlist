@@ -53,7 +53,7 @@ export function SettingsGear({ header = false }: {
         aria-label="Settings"
         onClick={openSheet}
       >
-        <Icon name="settings" size={23} />
+        <Icon name="settings" size={18} />
       </button>
       {open && data && (
         <BodyPortal>

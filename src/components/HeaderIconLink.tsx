@@ -40,8 +40,8 @@ export function HeaderIconLink({
       aria-current={on ? "page" : undefined}
       href={href}
     >
-      {/* 23, with the search and the gear: one size across the corner. */}
-      <Icon name={icon} size={23} />
+      {/* 18, with the search and the gear: one size across the corner. */}
+      <Icon name={icon} size={18} />
       {badge}
     </Link>
   );

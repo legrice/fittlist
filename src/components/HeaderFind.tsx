@@ -27,7 +27,7 @@ export function HeaderFind() {
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
-        <Icon name="search" size={23} />
+        <Icon name="search" size={18} />
       </button>
       {open && <DiscoverSheet onClose={() => setOpen(false)} />}
     </>

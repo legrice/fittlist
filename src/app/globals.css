@@ -6304,7 +6304,9 @@ a.clspeek-by:active { opacity: .6; }
   width: 100%; text-align: left; font: inherit; color: var(--ink);
   background: none; border: none; border-radius: 0; cursor: pointer;
   padding: 16px 0; text-decoration: none;
-  border-bottom: var(--divw) solid var(--div);
+  /* A neutral hairline, not the tan one: inside the gray container the warm
+     divider read as a different material. An ink wash cools with the box. */
+  border-bottom: var(--divw) solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 /* The last row of a day owns no line: the band under it is the break, and a
    rule immediately above a rule is one of them drawn twice. */
@@ -6317,7 +6319,7 @@ a.clspeek-by:active { opacity: .6; }
 .dayrows .clline:has(+ .clline-cont) { border-bottom: none; position: relative; }
 .dayrows .clline:has(+ .clline-cont)::after {
   content: ""; position: absolute; left: 96px; right: 0; bottom: 0;
-  height: var(--divw); background: var(--div);
+  height: var(--divw); background: color-mix(in srgb, var(--ink) 10%, transparent);
 }
 .clline:active { opacity: .6; }
 /* The time is a caption on the name, not a heading of its own: it sat at the
@@ -6331,12 +6333,7 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 16.5px; font-weight: 500; color: var(--ink); white-space: nowrap;
 }
 .clline-ap { font-size: 11.5px; font-weight: 500; }
-.clline-main {
-  min-width: 0; display: flex; flex-direction: column;
-  /* The short vertical rule between the time and the class, spanning
-     whatever the right side holds: the mock's one piece of row furniture. */
-  border-left: 1px solid var(--div); padding-left: 14px;
-}
+.clline-main { min-width: 0; display: flex; flex-direction: column; }
 /* Whose class it is, above the name: which kind of row this is comes before
    what the row says. Following only. */
 /* Lighter than the class name under it. Both sat at the old bold, which made
