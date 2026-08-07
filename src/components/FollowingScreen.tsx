@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useBandTop } from "@/components/CalendarBits";
+import { ScrollHead, useBandTop, useTopDayLabel } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
@@ -79,6 +79,10 @@ export function FollowingScreen({
   // and pins them halfway down the phone, through the middle of a row. That
   // has shipped once already, on Discover.
   useBandTop();
+
+  // The overlay header's words: the day under the top of the viewport. At
+  // rest no day has reached it, the label is empty, and the bar stays away.
+  const topDay = useTopDayLabel();
 
   // Following somebody in the sheet is the whole reason the sheet exists, and
   // the week behind it is a server render: closing is where it catches up. The
@@ -208,8 +212,11 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* The rail is chrome, pinned under the header: the card slides up
-          over it, so the faces cost their height only until you scroll. */}
+      {/* The overlay header: nothing at rest, and the day under it once
+          you're deep, so the scroll is never unlabelled. */}
+      <ScrollHead on={!!topDay} label={topDay} />
+      {/* The rail is chrome, and it scrolls away with the page now: the
+          overlay header is what stays. */}
       <div className="tray" ref={trayRef}>
         <div className="tray-scroll">
           <button

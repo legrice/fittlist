@@ -270,6 +270,85 @@ export function CalSticky({ children }: { children: ReactNode }) {
   );
 }
 
+/** True once the page has scrolled past `px`. The overlay header's own
+ *  switch on screens whose label isn't derived from a day under it. */
+export function useScrolledPast(px: number): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      setOn(window.scrollY > px);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(read);
+    };
+    read();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [px]);
+  return on;
+}
+
+/** The label of the day group under the top of the viewport, or "" while
+ *  the list hasn't reached one (which is also the overlay header's hidden
+ *  state: at rest the first band sits below the fold line, so the label is
+ *  empty and the bar stays away). */
+export function useTopDayLabel(): string {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      let cur = "";
+      for (const b of document.querySelectorAll<HTMLElement>(".dayblock")) {
+        if (b.getBoundingClientRect().top <= 76)
+          cur = b.querySelector(".dayband-d")?.textContent ?? "";
+        else break;
+      }
+      setLabel(cur);
+    };
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(read);
+    };
+    read();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return label;
+}
+
+/** The overlay header the Health concept brings: nothing at rest, and a
+ *  glass bar fading in once the page has scrolled, naming the day (or the
+ *  month) under it, with whatever tools the screen passes riding its right
+ *  side. Fixed rather than sticky, because the chrome it stands in for
+ *  scrolls away with the page. The tools render only while it shows, so a
+ *  hidden bar leaves no second copy of the toggle in anybody's way. */
+export function ScrollHead({
+  on,
+  label,
+  children,
+}: {
+  on: boolean;
+  label: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={`scrollhead${on ? " on" : ""}`} aria-hidden={on ? undefined : true}>
+      <span className="scrollhead-d">{label}</span>
+      {on && children && <div className="scrollhead-tools">{children}</div>}
+    </div>
+  );
+}
+
 const VIEW_ICON: Record<CalView, string> = {
   list: "list",
   day: "calendar_today",

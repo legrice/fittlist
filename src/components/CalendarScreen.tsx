@@ -3,7 +3,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { CalSticky, MonthHeadRow, MonthScroll, type MonthCellItem } from "@/components/CalendarBits";
+import {
+  CalSticky,
+  MonthHeadRow,
+  MonthScroll,
+  ScrollHead,
+  monthLabel,
+  useScrolledPast,
+  useTopDayLabel,
+  type MonthCellItem,
+} from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -63,6 +72,13 @@ export function CalendarScreen({
   const router = useRouter();
   const [view, setView] = useState<View>("list");
   const [addOpen, setAddOpen] = useState(openAdder);
+  // The overlay header's words: the day under it on the list, the month in
+  // view on the grid. The grid's label is set from the first render (this
+  // month is in view at rest), so the grid gates the bar on scroll depth
+  // instead of on having a label at all.
+  const topDay = useTopDayLabel();
+  const [ymInView, setYmInView] = useState<string | null>(null);
+  const scrolled = useScrolledPast(120);
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
@@ -223,7 +239,7 @@ export function CalendarScreen({
           todayIso={todayIso}
           items={monthItems}
           onDay={openDay}
-          onMonthInView={() => {}}
+          onMonthInView={setYmInView}
         />
       ) : days.length === 0 ? (
         // A week that has run its course still offers the one act that
@@ -234,6 +250,53 @@ export function CalendarScreen({
         <DayList days={days} />
       )}
       </div>
+
+      {/* The overlay header: nothing at rest, a glass bar once you're deep,
+          naming the day (or month) under it with the toggle and Add along
+          for the ride, so the two things the title row offered are never a
+          long scroll away. */}
+      {!bare && (
+        <ScrollHead
+          on={view === "month" ? scrolled : !!topDay}
+          label={
+            view === "month"
+              ? ymInView
+                ? monthLabel(ymInView, todayIso)
+                : ""
+              : topDay
+          }
+        >
+          <div className="calseg" role="tablist" aria-label="Calendar view, overlay">
+            <button
+              role="tab"
+              aria-label="List"
+              aria-selected={view === "list"}
+              className={view === "list" ? "on" : ""}
+              onClick={() => {
+                window.scrollTo({ top: 0 });
+                setView("list");
+              }}
+            >
+              <Icon name="list" size={21} />
+            </button>
+            <button
+              role="tab"
+              aria-label="Month"
+              aria-selected={view === "month"}
+              className={view === "month" ? "on" : ""}
+              onClick={() => {
+                window.scrollTo({ top: 0 });
+                setView("month");
+              }}
+            >
+              <Icon name="calendar_month" size={21} />
+            </button>
+          </div>
+          <button className="calbar-add" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+            <Icon name="add" size={22} />
+          </button>
+        </ScrollHead>
+      )}
 
       {/* No floating Share pill any more: Share is a tab in the bar, on
           every screen the bar shows, so a pill hovering over this one list

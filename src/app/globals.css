@@ -127,16 +127,25 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* The tabs shell is the Health treatment, by Matt's call: no two-tone at
-   the top any more. The warmth lives in the first couple hundred pixels
-   and scrolls away with the page; everything below is the cool gray. The
-   header goes clear so the glow is the chrome's ground, and the bands pin
-   on the gray. */
+/* The tabs shell is the Health treatment, by Matt's call: no two-tone,
+   and nothing pinned. The warmth runs essentially the first viewport and
+   scrolls away with the page; everything below is the cool gray, and the
+   overlay header (.scrollhead) is the only thing that stays. The header
+   goes clear and static so the glow is the chrome's ground, the bands go
+   static and clear (they no longer pin, so they need no ground), and the
+   cards go clear so the fade runs behind everything. */
 .screen.hasnav {
-  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 116px, var(--ground) 240px);
-  --band: var(--ground);
+  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+  --band: transparent;
 }
-.screen.hasnav .brandbar { background: transparent; }
+.screen.hasnav .brandbar { background: transparent; position: static; }
+.screen.hasnav .dayband { position: static; }
+/* The overlay header replaces the pinned chrome, so a landing only has to
+   clear its height rather than the old measured stack. */
+.screen.hasnav .dayblock { scroll-margin-top: 64px; }
+/* The share hub opts out of the gradient entirely, by Matt's call: that
+   screen is the solid light gray, top to bottom. */
+.screen.hasnav:has(.shtitle) { background: var(--ground); }
 /* The sunrise gradient behind the chrome was tried here and came back out,
    by Matt's call: the shell gray returns, and the white content card is
    what does the freshening against it. */
@@ -1205,20 +1214,17 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    The bands pin under it at its measured height (`publishBandTop`), which
    is why this screen is the one that passes an element in. */
 .calsticky {
-  position: sticky; top: 0; z-index: 7;
-  /* Clear at rest, so the card's fade shows through the title row; the
-     gray lands with the .stuck class the moment it pins, where the list
-     behind it is already flat gray. */
+  /* Static now, by Matt's call: the title row scrolls away with the page
+     and the overlay header (.scrollhead) is what takes over. Clear, so
+     the screen's gradient is its ground. */
+  position: static;
   background: transparent;
   margin: -10px -18px 0; padding: 16px 18px 0;
-  border-radius: 28px 28px 0 0;
-  transition: border-radius .18s ease;
 }
 /* Pinned at the very top the corners square off (useStuck writes the
    class): kept round, the rows scroll up visibly behind the notches. The
    same pair of rules covers the profile's pinned tab row. */
-.calsticky.stuck, .pubstick.stuck { border-radius: 0; }
-.calsticky.stuck { background: var(--ground); }
+.pubstick.stuck { border-radius: 0; }
 .pubstick { transition: border-radius .18s ease; }
 /* Air above and below the month row: the list's first heading slides right
    under the divider, and a cramped band read as a rendering bug. */
@@ -4239,10 +4245,9 @@ button.ps-card { cursor: pointer; }
    --------------------------------------------------------------------------- */
 .cardwrap {
   flex: 1 0 auto;
-  /* The cool gray the white boxes float on, by Matt's call: the paper
-     card and its two-tone went with the gradient concept. The radius stays
-     and is invisible on the matched grounds. */
-  background: var(--ground);
+  /* Clear: the screen's own gradient (or the hub's solid gray) is the
+     ground, and the card is only the column that holds the content. */
+  background: transparent;
   border-radius: 28px 28px 0 0;
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
@@ -4256,15 +4261,8 @@ button.ps-card { cursor: pointer; }
    quarter-screen of empty paper. */
 .cardwrap .acctwrap, .hasnav .cardwrap .acctwrap { padding-bottom: 0; }
 .screen.hasnav .brandbar { padding-top: calc(16px + env(safe-area-inset-top)); }
-/* A card that starts right under the header (the calendar's, and the
-   share hub's) picks up where the screen's fade reached the splice colour
-   and finishes it across its own title, so the glow runs down into the
-   content instead of cutting off at the card's edge. The :has is how
-   they're told apart from Following's card, whose fade completes in the
-   tray zone above it. */
-.cardwrap:has(.calsticky), .cardwrap:has(.shtitle) {
-  background: linear-gradient(180deg, var(--grad-mid) 0px, var(--ground) 84px);
-}
+/* No per-card fade any more: the screen's gradient runs behind clear
+   cards, so there is nothing to splice. */
 /* The bar, back to the plain pill: the Slack-style dock (pill plus a search
    circle) was tried twice and reverted twice, the second time by Matt after
    living with it. The wrap owns the fixed position (above the account view
@@ -5686,7 +5684,11 @@ button.ps-card { cursor: pointer; }
      pinned header's measured height (`--tray-top`, written by the screen),
      because the safe area moves it. Sticky also keeps the arrows' layer
      working: it is positioned, which is all they needed. */
-  position: sticky; top: var(--tray-top, 66px);
+  /* It pinned under the header for a long time; it scrolls away with the
+     page now, by Matt's call, and the overlay header is what stays.
+     Relative rather than static, because the desktop arrows are absolute
+     children and need the positioned ancestor. */
+  position: relative;
   /* Tight to the header above: the 8px of air between the bar and the
      circles came down to 2, by Matt's call. */
   margin: 0 -18px; padding: 2px 0 12px;
@@ -6443,6 +6445,31 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15px; color: var(--ol); min-width: 0;
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
+
+/* The overlay header: hidden at rest, fading in once the page has
+   scrolled, the day (or month) under it on the left and the screen's own
+   tools on the right. A hint of what's behind it, by Matt's call: mostly
+   clear, blurred. */
+.scrollhead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+  background: color-mix(in srgb, var(--card) 45%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  opacity: 0; transform: translateY(-8px); pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.scrollhead.on { opacity: 1; transform: none; pointer-events: auto; }
+.scrollhead-d {
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.scrollhead-tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* The overlay's copies ride a translucent bar, so they trade the hairline
+   for the card wash the originals have. */
+.scrollhead .calseg { background: color-mix(in srgb, var(--card) 70%, transparent); }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }

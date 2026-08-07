@@ -163,46 +163,39 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
       fail("every band reads the same way, got " + band);
 }
 
-// The card slides up over the header: the brandbar pins underneath and the
-// content covers it, so a scroll reads as lifting a sheet of paper over the
-// chrome. On the calendar the title row pins with the bands (the one
-// exception to "only the day bands pin": Month view has no other way back
-// to List), and the bands pin under its measured height.
+// Nothing pins at rest any more: the header, the title row and the bands
+// all scroll away with the page, and the overlay header fades in once
+// you're deep, naming the day under it with the toggle and Add along for
+// the ride, on a hint of blurred background.
 {
   const stick = (sel) => p.locator(sel).first().evaluate((e) => getComputedStyle(e).position);
-  if ((await stick(".dayband")) !== "sticky") fail("the day bands should pin");
-  if ((await stick(".calsticky")) !== "sticky") fail("the title row should pin on the calendar");
-  if ((await stick(".brandbar")) !== "sticky") fail("the header should pin under the card");
-  // A pinned band still needs a ground of its own: with nothing behind it the
-  // rows scroll through its words, and "no background" is one word away from
-  // exactly that bug.
-  const bg = await p.locator(".dayband").first().evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (/transparent|rgba\(0, 0, 0, 0\)/.test(bg)) fail("a pinned band needs a ground, got " + bg);
-  // Scroll deep INTO a day group (not to a fixed offset: a fixed 600 landed
-  // in the gap between two sections the moment the bands grew, and the check
-  // read the gap as a missing band). Halfway into a group, its band must be
-  // the thing pinned under the title row.
+  if ((await stick(".dayband")) === "sticky") fail("the bands scroll with the list now");
+  if ((await stick(".calsticky")) === "sticky") fail("the title row scrolls away now");
+  if ((await stick(".brandbar")) === "sticky") fail("the header scrolls away now");
+  if (await p.locator(".scrollhead.on").count()) fail("the overlay header hides at rest");
+  // Scroll deep into a day group: the overlay appears and names it.
   await p.evaluate(() => {
     const blocks = document.querySelectorAll(".dayblock");
     const b = blocks[Math.floor(blocks.length / 2)];
     const r = b.getBoundingClientRect();
     window.scrollTo(0, window.scrollY + r.top + r.height / 2 - 200);
   });
-  await p.waitForTimeout(400);
-  const covered = await p.evaluate(() => {
-    const cs = document.querySelector(".calsticky");
-    return cs ? cs.getBoundingClientRect().top <= 2 : false;
-  });
-  if (!covered) fail("the title row should be pinned at the very top, over the header");
-  const calH = await p.locator(".calsticky").evaluate((e) => e.offsetHeight);
-  const stuck = await p.evaluate((y) => {
-    const el = document.elementFromPoint(200, y + 8);
-    return el?.closest(".dayband") ? "band" : (el?.className ?? "nothing");
-  }, calH);
-  if (stuck !== "band") fail("a band should be pinned under the title row, found " + stuck);
-  console.log("scrolled: card over the header, a band pinned under the title row");
+  await p.locator(".scrollhead.on").waitFor({ timeout: 5000 });
+  const named = (await p.locator(".scrollhead-d").innerText()).trim();
+  if (!/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/.test(named))
+    fail("the overlay should name the day under it, got " + named);
+  if ((await p.locator(".scrollhead .calseg button").count()) !== 2)
+    fail("the overlay carries the view toggle");
+  if (!(await p.locator(".scrollhead .calbar-add").count()))
+    fail("the overlay carries Add");
+  const blur = await p
+    .locator(".scrollhead")
+    .evaluate((e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter || "");
+  if (!/blur/.test(blur)) fail("the overlay hints at what's behind it, got " + blur);
+  console.log("overlay header:", named, "| toggle + Add, blurred");
   await p.evaluate(() => window.scrollTo(0, 0));
-  await p.waitForTimeout(300);
+  await p.waitForTimeout(400);
+  if (await p.locator(".scrollhead.on").count()) fail("back at the top, the overlay should go");
 }
 
 // Month is the same rows, looked at differently, and a day in it comes back
@@ -214,7 +207,9 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
   if (!(await p.locator(".monthpill").count())) fail("the grid should carry the classes");
   await p.locator(".monthday:not([disabled])").first().click();
   await p.locator(".clline").first().waitFor();
-  if ((await p.locator(".calseg button.on").getAttribute("aria-label")) !== "List")
+  // Scoped to the in-flow toggle: a deep landing can have the overlay's
+  // copy mounted too, and the bare selector would match both.
+  if ((await p.locator(".calbar .calseg button.on").getAttribute("aria-label")) !== "List")
     fail("tapping a day comes back to the list");
 }
 
@@ -446,51 +441,29 @@ await p.locator(".dissheet .sheetclose").click();
 await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
 console.log("the header magnifier opens the directory over the calendar");
 
-// The card slides up over the header, and the calendar's title row is the
-// one piece of chrome that pins with the bands: without it, Month view has
-// no way back to List. The bands pin under it at its measured height.
+// A landing from the month grid puts the day's band near the top of the
+// viewport, under the overlay header rather than behind it: the scroll
+// margin only has to clear the overlay's height now.
 {
-  const pos = await p.locator(".brandbar").evaluate((e) => getComputedStyle(e).position);
-  if (pos !== "sticky") fail("the header should pin under the card, got " + pos);
-  const spos = await p.locator(".calsticky").evaluate((e) => getComputedStyle(e).position);
-  if (spos !== "sticky") fail("the calendar's title row should pin, got " + spos);
-  const calH = await p.locator(".calsticky").evaluate((e) => e.offsetHeight);
-  const varTop = await p.evaluate(() =>
-    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dayband-top")),
-  );
-  console.log("calsticky:", calH, "| --dayband-top:", varTop);
-  if (Math.abs(varTop - calH) > 2)
-    fail(`the bands should pin under the title row: ${varTop} vs ${calH}`);
-  // Land on a deep day and the card is over the header: the pinned title row
-  // sits at the very top of the viewport, and the landed day's band sits
-  // just under it rather than behind it (the scroll margin has to clear the
-  // pinned chrome, or openDay buries the band it landed on).
   // A middle day, not the last: the last block can be too close to the page
   // end to reach the top of the viewport at all.
   const n = await p.locator(".dayblock").count();
   const deep = await p.locator(".dayblock").nth(Math.floor(n / 2)).getAttribute("id");
   await p.evaluate((id) => document.getElementById(id)?.scrollIntoView({ block: "start" }), deep);
-  await p.waitForTimeout(200);
-  const stick = await p.locator(".calsticky").boundingBox();
-  if (stick.y > 2) fail("scrolled, the title row should pin at the very top, got " + stick.y);
-  const band = await p.locator(`#${deep} .dayband`).boundingBox();
-  console.log("pinned row:", stick.y, "+", stick.height, "| landed band:", band.y);
-  if (band.y < stick.y + stick.height - 4)
-    fail("the landed band should sit below the pinned title row, got " + band.y);
-  // Pinned at the very top the corners square off; kept round, the rows
-  // scroll up visibly behind the notches.
   await p.waitForTimeout(300);
-  const radPinned = await p
-    .locator(".calsticky")
-    .evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius));
-  if (radPinned > 1) fail("pinned, the corners should square off, got " + radPinned);
+  const band = await p.locator(`#${deep} .dayband`).boundingBox();
+  console.log("landed band:", Math.round(band.y));
+  if (band.y < 40 || band.y > 150)
+    fail("the landed band should sit just under the overlay header, got " + band.y);
+  // And the overlay names the landed day, because it is the day under it.
+  await p.locator(".scrollhead.on").waitFor({ timeout: 5000 });
+  const named = (await p.locator(".scrollhead-d").innerText()).trim();
+  const bandText = (await p.locator(`#${deep} .dayband-d`).innerText()).trim();
+  if (named !== bandText)
+    fail(`the overlay should name the landed day: "${named}" vs "${bandText}"`);
+  console.log("landed under the overlay, which names " + named);
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(400);
-  const radRest = await p
-    .locator(".calsticky")
-    .evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius));
-  if (radRest < 20) fail("at rest, the corners come back, got " + radRest);
-  console.log("the card slides over the header, and the title row pins with the bands");
 }
 
 await b.close();

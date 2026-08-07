@@ -136,27 +136,29 @@ await m.waitForTimeout(600);
 }
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-week.png" });
 
-// The rail is chrome now: pinned under the header at the header's measured
-// height, and the card slides up over it, the same model every screen wears.
+// Nothing pins any more: the header and the rail scroll away with the
+// page, and the overlay header fades in once you're deep, naming the day
+// under it on a hint of blurred background.
 {
   const pos = await m.locator(".tray").evaluate((e) => getComputedStyle(e).position);
-  if (pos !== "sticky") fail("the tray should pin under the header, got " + pos);
-  const barH = await m.locator(".brandbar").evaluate((e) => e.offsetHeight);
-  const top = await m.locator(".tray").evaluate((e) => parseFloat(getComputedStyle(e).top));
-  console.log("tray top:", top, "| header:", barH);
-  if (Math.abs(top - barH) > 2) fail(`the tray pins at the header's height: ${top} vs ${barH}`);
+  if (pos === "sticky") fail("the rail scrolls away now, got " + pos);
+  const hpos = await m.locator(".brandbar").evaluate((e) => getComputedStyle(e).position);
+  if (hpos === "sticky") fail("the header scrolls away now, got " + hpos);
+  if (await m.locator(".scrollhead.on").count()) fail("the overlay header hides at rest");
   const deep = await m.evaluate(() => {
     window.scrollTo(0, 1e5);
     return window.scrollY;
   });
-  await m.waitForTimeout(300);
-  if (deep > 40) {
-    const tray = await m.locator(".tray").boundingBox();
-    if (Math.abs(tray.y - barH) > 3)
-      fail(`scrolled ${deep}, the tray should stay pinned under the header, at ${tray.y}`);
-    console.log("scrolled " + deep + ": tray pinned at " + Math.round(tray.y));
+  await m.waitForTimeout(400);
+  if (deep > 300) {
+    await m.locator(".scrollhead.on").waitFor({ timeout: 5000 });
+    const named = (await m.locator(".scrollhead-d").innerText()).trim();
+    if (!/^[A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}/.test(named))
+      fail("the overlay should name the day under it, got " + named);
+    console.log("scrolled " + deep + ": overlay header names " + named);
   }
   await m.evaluate(() => window.scrollTo(0, 0));
+  await m.waitForTimeout(400);
 }
 
 // One list of what is coming, under date headings, rather than a week you flip
