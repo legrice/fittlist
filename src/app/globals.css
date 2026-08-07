@@ -6508,15 +6508,15 @@ a.clspeek-by:active { opacity: .6; }
   display: inline-flex; align-items: center; justify-content: center;
 }
 .calseg button.on { background: color-mix(in srgb, var(--ink) 7%, transparent); }
-/* Add, moved up beside the toggle and sized to it: the bottom corners were
-   getting crowded, and adding is the screen's own act, so it rides the title
-   row. The one loud colour stays its own. */
-.calbar-add {
+/* Share, white beside the toggle: the title row's corner is the quiet
+   door to the hub now, and Add took the floating button under the thumb
+   (the same .wkfab Following's search wears). */
+.calbar-share {
   flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; cursor: pointer;
+  background: var(--card); color: var(--ink); cursor: pointer; text-decoration: none;
 }
-.calbar-add:active { transform: scale(.94); }
+.calbar-share:active { transform: scale(.94); }
 
 /* The rail's answer, in words. A filtered list is otherwise indistinguishable
    from a quiet one: five faces with a ring on one and a shorter list under

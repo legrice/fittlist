@@ -214,12 +214,12 @@ export function CalendarScreen({
                   <Icon name="calendar_month" size={21} />
                 </button>
               </div>
-              {/* Add rides the title row now, sized to the toggle beside it:
-                  the bottom corners were getting crowded with Share and the
-                  bar, and adding is what somebody opens this screen to do. */}
-              <button className="calbar-add" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-                <Icon name="add" size={22} />
-              </button>
+              {/* Share rides the title row now, white beside the toggle;
+                  Add moved to the floating button under the thumb, the spot
+                  Following's search wears. */}
+              <a className="calbar-share" href="/sharehub" aria-label="Share">
+                <Icon name="share" size={20} />
+              </a>
             </div>
           )}
         </div>
@@ -293,15 +293,21 @@ export function CalendarScreen({
               <Icon name="calendar_month" size={21} />
             </button>
           </div>
-          <button className="calbar-add" aria-label="Add a class" onClick={() => setAddOpen(true)}>
-            <Icon name="add" size={22} />
-          </button>
+          <a className="calbar-share" href="/sharehub" aria-label="Share">
+            <Icon name="share" size={20} />
+          </a>
         </ScrollHead>
       )}
 
-      {/* No floating Share pill any more: Share is a tab in the bar, on
-          every screen the bar shows, so a pill hovering over this one list
-          was the same act drawn twice. */}
+      {/* Add floats bottom right, under the thumb, the same spot and dress
+          as Following's search: adding is what somebody opens this screen
+          to do, and the title row's corner belongs to Share now. */}
+      {!bare && (
+        <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+          <Icon name="add" size={28} />
+        </button>
+      )}
+
       {addOpen && (
         <Adder
           studios={studios}

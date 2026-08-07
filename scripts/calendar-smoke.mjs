@@ -40,7 +40,8 @@ await p.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 }
 // and a poster of an empty week is the app talking to itself.
 await p.goto(BASE + "/calendar");
 await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
-if (await p.locator(".calbar-add").count()) fail("no plus on an empty calendar");
+if (await p.locator(".wkfab").count()) fail("no floating Add on an empty calendar");
+if (await p.locator(".calbar-share").count()) fail("no Share door on an empty calendar");
 console.log("an empty calendar is its own CTA, and carries no other control");
 
 // The adder walks in steps now: the studio first, then the studio's class
@@ -48,7 +49,7 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 // with the times.
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
-  await p.locator(".wkempty-cta, .calbar-add").first().click();
+  await p.locator(".wkempty-cta, .wkfab").first().click();
   await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);
@@ -86,21 +87,24 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// Add rides the title row beside the view toggle, sized to it. The floating
-// Share pill is gone: Share is a tab in the bar now, so nothing floats over
-// the calendar at all.
+// Add floats bottom right (Following's search spot and dress), and the
+// title row's corner carries the white Share door to the hub instead.
 {
-  if (await p.locator(".wkfab").count()) fail("the floating plus should be gone from the calendar");
-  const addBtn = p.locator(".calbar-add");
-  if (!(await addBtn.count())) fail("the plus should ride the title row once there is a week");
-  const abox = await addBtn.boundingBox();
+  const fab = p.locator(".wkfab");
+  if (!(await fab.count())) fail("Add should float bottom right once there is a week");
+  const fbox = await fab.boundingBox();
+  if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
+  const share = p.locator(".calbar-share");
+  if (!(await share.count())) fail("Share should ride the title row");
+  const href = await share.getAttribute("href");
+  if (href !== "/sharehub") fail("Share opens the hub, got " + href);
+  const sbox = await share.boundingBox();
   const seg = await p.locator(".calseg").boundingBox();
-  if (!(abox.x > seg.x + seg.width - 4)) fail("Add sits right of the toggle");
-  if (Math.abs(abox.height - seg.height) > 2)
-    fail(`Add matches the toggle's height: ${abox.height} vs ${seg.height}`);
-  if (Math.abs(abox.y - seg.y) > 2) fail("Add and the toggle sit on one line");
-  if (await p.locator(".wkshare").count()) fail("the floating Share pill should be gone");
-  console.log("add beside toggle:", Math.round(abox.x), "| no floating share");
+  if (!(sbox.x > seg.x + seg.width - 4)) fail("Share sits right of the toggle");
+  if (Math.abs(sbox.y - seg.y) > 2) fail("Share and the toggle sit on one line");
+  const sbg = await share.evaluate((e) => getComputedStyle(e).backgroundColor);
+  if (sbg !== "rgb(255, 255, 255)") fail("Share is the white circle, got " + sbg);
+  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| white Share beside the toggle");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -186,8 +190,8 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
     fail("the overlay should name the day under it, got " + named);
   if ((await p.locator(".scrollhead .calseg button").count()) !== 2)
     fail("the overlay carries the view toggle");
-  if (!(await p.locator(".scrollhead .calbar-add").count()))
-    fail("the overlay carries Add");
+  if (!(await p.locator(".scrollhead .calbar-share").count()))
+    fail("the overlay carries the Share door");
   const blur = await p
     .locator(".scrollhead")
     .evaluate((e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter || "");
