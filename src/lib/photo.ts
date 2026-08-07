@@ -7,10 +7,13 @@
 // 3MB while the others store 40KB.
 //
 // Photos live in text columns as data URLs, so the size here is the size on
-// the row: 640px on the long edge at 82% JPEG lands around 40 to 80KB, small
-// enough to sit in a row and sharp enough to fill a phone's width.
-const MAX_EDGE = 640;
-const QUALITY = 0.82;
+// the row. 640 was chosen when a photo was a circle; the full-bleed hero is
+// ~1170 device pixels wide on a 3x phone, and 640 stretched across that is
+// why every profile read soft. 1280 lands around 150 to 300KB a photo, which
+// is the accepted cost until photos move out of the rows into real files;
+// pictures uploaded before this stay at 640 until they are re-picked.
+const MAX_EDGE = 1280;
+const QUALITY = 0.8;
 
 /** Read a picked file, scale it down, and hand back a JPEG data URL. */
 export function readPhoto(file: File, onDone: (dataUrl: string) => void): void {

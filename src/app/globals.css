@@ -6264,16 +6264,8 @@ a.clspeek-by:active { opacity: .6; }
   margin: 0 -18px; padding: 7px 18px;
   background: var(--band);
 }
-/* One rule, underneath, and it stops at the gutters. The band's ground bleeds
-   to the window edges (it has to, or rows show either side of it while it is
-   pinned), but a rule running the full width read as the screen being sliced
-   into bars; inset to the content column it reads as underlining the date,
-   which is what it is. Drawn as a pseudo-element because a border sits on the
-   border box and cannot be inset from it. */
-.dayband::after {
-  content: ""; position: absolute; left: 18px; right: 18px; bottom: 0;
-  height: var(--divw); background: var(--div);
-}
+/* No rule under the band any more, by Matt's call: the day's container
+   under it does the sectioning, and a line over a box was both saying it. */
 /* Back to the muted tone, by Matt's call: with the class names in ink and
    the times joining them, an ink date read as a fourth ink voice on every
    screen, and gray is what lets the rows own the list. */
@@ -6295,7 +6287,15 @@ a.clspeek-by:active { opacity: .6; }
    untouched. */
 .dayblock + .dayblock { margin-top: 18px; }
 
-.dayrows { display: flex; flex-direction: column; }
+/* The day's classes, in a light container with the date title outside it:
+   Matt tried the rows every other way (cards, flat with rules, photo cards)
+   and this is the keeper. The wash is ink over the card, so it stays a
+   shade of the ground in dark mode too. */
+.dayrows {
+  display: flex; flex-direction: column;
+  background: color-mix(in srgb, var(--ink) 4.5%, transparent);
+  border-radius: 20px; padding: 2px 16px; margin-top: 8px;
+}
 
 /* One row. A grid rather than a flex row, so every time in the list shares one
    column edge however long the class names beside them run. */
@@ -6331,7 +6331,12 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 16.5px; font-weight: 500; color: var(--ink); white-space: nowrap;
 }
 .clline-ap { font-size: 11.5px; font-weight: 500; }
-.clline-main { min-width: 0; display: flex; flex-direction: column; }
+.clline-main {
+  min-width: 0; display: flex; flex-direction: column;
+  /* The short vertical rule between the time and the class, spanning
+     whatever the right side holds: the mock's one piece of row furniture. */
+  border-left: 1px solid var(--div); padding-left: 14px;
+}
 /* Whose class it is, above the name: which kind of row this is comes before
    what the row says. Following only. */
 /* Lighter than the class name under it. Both sat at the old bold, which made
