@@ -42,10 +42,10 @@
      surface needed a drawn edge to say where content starts, and the two
      tones say it without one. */
   --shell: #f0eee8;
-  /* Near-ink outlines: the boxes, the card's top edge, the controls. The
-     ink itself was a touch hard beside the type it boxes; a breath of
-     paper softens it without reading as gray. */
-  --edge: color-mix(in srgb, var(--ink) 85%, var(--paper));
+  /* The outline the class boxes and the view toggle wear. It went nearly
+     ink for a build and stepped back to this wash, by Matt's call: worth
+     the try, but the black frames shouted on every row. */
+  --edge: color-mix(in srgb, var(--ink) 18%, transparent);
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
   --ol: #6b6555;           /* warm muted secondary text */
@@ -3796,7 +3796,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
   --shell: #0c0b07;
-  --edge: color-mix(in srgb, var(--ink) 85%, var(--paper));
+  --edge: color-mix(in srgb, var(--ink) 18%, transparent);
   --si-tint: #3f2413;
   --si-ink: #f0a071;
   --card: #211c13;
@@ -5833,7 +5833,10 @@ button.ps-card { cursor: pointer; }
   margin: 10px auto 0; font-size: 16.5px; line-height: 1.5; color: var(--ol);
   max-width: 34ch;
 }
+/* Brand orange with white words, by Matt's call: the one thing to do on
+   an empty screen wears the one loud colour. */
 .wkempty-cta { margin-top: 22px; width: 100%; }
+.btn.si.wkempty-cta { background: var(--si); color: #fff; }
 /* The one filled control on the calendar: adding a class. It floats bottom
    right, where a thumb already is, and it is the only thing on this screen
    wearing the brand colour. */
@@ -5841,8 +5844,7 @@ button.ps-card { cursor: pointer; }
   position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom));
   z-index: 44; width: 64px; height: 64px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--si); color: #fff; cursor: pointer;
-  border: var(--divw) solid var(--edge);
+  background: var(--si); color: #fff; border: none; cursor: pointer;
   box-shadow: 0 12px 32px rgba(25, 21, 2, .22);
 }
 .wkfab:active { transform: scale(.95); }
@@ -6378,9 +6380,9 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 16px; font-weight: 600; color: var(--ink);
 }
 .clline-av {
-  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
-  color: var(--ink); font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  color: var(--ink); font-size: 12px; font-weight: 600; letter-spacing: .02em;
 }
 .clline-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Which kind of yours a row is, above the name: an assigned shift wears the
@@ -6438,8 +6440,7 @@ a.clspeek-by:active { opacity: .6; }
    getting crowded, and adding is the screen's own act, so it rides the title
    row. The one loud colour stays its own. */
 .calbar-add {
-  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px;
-  border: var(--divw) solid var(--edge);
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px; border: none;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--si); color: #fff; cursor: pointer;
 }
