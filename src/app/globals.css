@@ -52,10 +52,8 @@
      boxes floating on the gray. Three stops because the fade is drawn in
      two pieces (the screen's chrome zone, then the calendar card's own
      top), and the splice colour has to be one token or the seam shows. */
-  /* Deepened, by Matt's call: the first pass read as trying to be a
-     gradient, and the extra chroma at the top is what makes it one. */
-  --grad-top: #f7cda6;
-  --grad-mid: #f3e0c9;
+  --grad-top: #f8dcc6;
+  --grad-mid: #f3e6db;
   --ground: #eef0f1;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
@@ -3942,8 +3940,8 @@ button.ps-card { cursor: pointer; }
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  --grad-top: #33230e;
-  --grad-mid: #1f1a11;
+  --grad-top: #2a2014;
+  --grad-mid: #1c1913;
   --ground: #16171a;
   --si-tint: #3f2413;
   --si-ink: #f0a071;
@@ -5889,6 +5887,10 @@ button.ps-card { cursor: pointer; }
 .trayav {
   position: relative; display: block; width: 80px; height: 80px; border-radius: 999px;
   overflow: hidden; background: var(--card);
+  /* A soft lift off the gradient, the same treatment the class cards wear.
+     The ring states restate it after their rings, because box-shadow is one
+     property and the override would otherwise drop the shadow mid-tap. */
+  box-shadow: 0 3px 10px rgba(30, 24, 12, .14);
 }
 .trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trayav-ini {
@@ -5898,7 +5900,7 @@ button.ps-card { cursor: pointer; }
 /* Classes up since you last looked. The ring is the most important pixel on
    the screen, because it is the only thing that says the tray is worth a tap
    today rather than in general. */
-.trayav.fresh { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
+.trayav.fresh { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si), 0 3px 10px rgba(30, 24, 12, .14); }
 .trayav-add {
   display: flex; align-items: center; justify-content: center;
   background: var(--card); border: 1.5px dashed var(--line); color: var(--ol);
@@ -6253,7 +6255,7 @@ a.clspeek-by:active { opacity: .6; }
    face is never cropped by its own highlight. */
 /* Brand orange, by Matt's call, the same warmth the current nav tab wears:
    it was ink for a stretch on the state-not-action argument. */
-.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
+.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si), 0 3px 10px rgba(30, 24, 12, .14); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
    thumb between taps. */
@@ -6534,11 +6536,13 @@ a.clspeek-by:active { opacity: .6; }
   align-items: baseline;
   width: 100%; text-align: left; font: inherit; color: var(--ink);
   cursor: pointer;
-  padding: 14px 16px; text-decoration: none;
+  padding: 16px 18px; text-decoration: none;
   /* Its own box, not a shared one with dividers, by Matt's call: two
      classes on a day are two containers. No outline any more: white on
-     the cool gray ground is the whole treatment, the Health card. */
-  background: var(--card); border-radius: 16px;
+     the cool gray ground is the whole treatment, the Health card, with
+     a light shadow lifting each one off the ground. */
+  background: var(--card); border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(30, 24, 12, .06);
 }
 /* Which cell lives where. The by-line and the shift tag span both columns
    (whose row this is reads over the time, not beside it); everything else
