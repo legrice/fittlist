@@ -6053,8 +6053,9 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The ring is the whole selected state, and it sits outside the circle so the
    face is never cropped by its own highlight. */
-/* Ink, same call as the times: selection is a state, not a call to action. */
-.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--ink); }
+/* Brand orange, by Matt's call, the same warmth the current nav tab wears:
+   it was ink for a stretch on the state-not-action argument. */
+.trayav.sel { box-shadow: 0 0 0 3px var(--shell), 0 0 0 6px var(--si); }
 /* Everyone else steps back when one is picked, rather than disappearing: the
    rail has to stay the same length or the one you want moves under your
    thumb between taps. */
