@@ -195,7 +195,9 @@ export function WeekEmpty({
       />
       <h2 className="wkempty-t">{first ? title : "Nothing coming up"}</h2>
       <p className="wkempty-b">{first ? body : "Nothing on the days ahead."}</p>
-      {first && cta && onCta && (
+      {/* The call renders whenever the caller offers one: "nothing coming
+          up" wants the way to change that as much as the first run does. */}
+      {cta && onCta && (
         <button className="btn si wkempty-cta" onClick={onCta}>
           {cta}
         </button>

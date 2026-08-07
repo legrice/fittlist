@@ -219,7 +219,10 @@ export function CalendarScreen({
           onMonthInView={() => {}}
         />
       ) : days.length === 0 ? (
-        <WeekEmpty first={false} title="" body="" />
+        // A week that has run its course still offers the one act that
+        // changes it: the same Add the title row carries, where somebody
+        // reading "nothing coming up" is already looking.
+        <WeekEmpty first={false} title="" body="" cta="Add a class" onCta={() => setAddOpen(true)} />
       ) : (
         <DayList days={days} />
       )}
