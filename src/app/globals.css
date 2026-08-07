@@ -6426,9 +6426,9 @@ a.clspeek-by:active { opacity: .6; }
    a Following row two headings stacked; whose class it is is a caption on
    what the class is, not a second title. */
 .clline-by {
-  /* 12 under the by-line, by Matt's call: whose row it is gets its own
-     breath before what the row says. */
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  /* 16 under the by-line, by Matt's call (from 7, then 9, then 12):
+     whose row it is gets a full breath before what the row says. */
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
   /* Up from 14.5/500, by Matt's call: whose class it is earns real weight
      on Following, where every row is somebody's. */
   font-size: 16px; font-weight: 600; color: var(--ink);
@@ -6489,9 +6489,6 @@ a.clspeek-by:active { opacity: .6; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .scrollhead-tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-/* The overlay's copies ride a translucent bar, so they trade the hairline
-   for the card wash the originals have. */
-.scrollhead .calseg { background: color-mix(in srgb, var(--card) 70%, transparent); }
 
 /* The title and the two ways of looking, at the top of the calendar. */
 .calbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
@@ -6506,8 +6503,10 @@ a.clspeek-by:active { opacity: .6; }
    view sits on the nav's own quiet gray wash with its glyph unchanged, the
    same grammar the nav tabs use (the ground is the mark, never the ink). */
 .calseg {
+  /* White with no stroke, by Matt's call: the fill is the edge, the same
+     treatment the class boxes and the hub's pills wear. */
   display: flex; flex-shrink: 0; border-radius: 999px; padding: 3px;
-  border: var(--divw) solid var(--edge);
+  background: var(--card);
 }
 /* Square-ish, because what is inside is a glyph rather than a word: a pill
    sized for "Month" and holding an icon is mostly empty pill. */
