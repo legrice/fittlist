@@ -65,7 +65,7 @@
      band pins, and a pinned element with no ground lets the rows scroll
      through the words underneath it. The card went white, so the band
      follows it: a paper band on a white card read as a cream bar again. */
-  --band: var(--card);
+  --band: var(--paper);
   --divw: 1px;
   --rule: #191502;         /* charcoal hairline rules */
   --si: #C2410C;           /* the brand orange, everywhere it appears */
@@ -1181,7 +1181,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    is why this screen is the one that passes an element in. */
 .calsticky {
   position: sticky; top: 0; z-index: 7;
-  background: var(--card);
+  background: var(--paper);
   margin: -10px -18px 0; padding: 16px 18px 0;
   border-radius: 28px 28px 0 0;
   transition: border-radius .18s ease;
@@ -2856,7 +2856,7 @@ button.ps-card { cursor: pointer; }
      useBandTop). The radius matches the card's, so pinned at the top of the
      screen the corners sit where the phone's bezel rounds anyway. */
   position: sticky; top: 0; z-index: 7;
-  background: var(--card);
+  background: var(--paper);
   border-radius: 28px 28px 0 0;
   margin: 0 calc(50% - 50vw) 0;
   padding: 0 calc(50vw - 50%);
@@ -2878,7 +2878,7 @@ button.ps-card { cursor: pointer; }
 /* The card starts just above the tabs: the head (face, name, pills) sits on
    the shell, and the tabs row is the first thing on the paper. */
 .pubcard {
-  background: var(--card);
+  background: var(--paper);
   border-radius: 28px 28px 0 0;
   margin: 10px -18px 0;
   padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
@@ -4206,11 +4206,11 @@ button.ps-card { cursor: pointer; }
    --------------------------------------------------------------------------- */
 .cardwrap {
   flex: 1 0 auto;
-  /* White, not paper, by Matt's call: against the shell gray the card is
-     what freshens the screen now that the gradient is gone. Everything
-     pinned on the card (the title row, the tab row, the day bands) matches,
-     or it reads as cream slabs on white. */
-  background: var(--card);
+  /* Back to the paper, by Matt's call: a breath off white, so the pure
+     white class boxes read as the brightest thing on it. Everything pinned
+     on the card (the title row, the tab row, the day bands) matches, or it
+     reads as cream slabs on off-white. */
+  background: var(--paper);
   border-radius: 28px 28px 0 0;
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
@@ -6315,11 +6315,12 @@ a.clspeek-by:active { opacity: .6; }
   cursor: pointer;
   padding: 14px 16px; text-decoration: none;
   /* Its own box, not a shared one with dividers, by Matt's call: two
-     classes on a day are two containers. An outline rather than a fill,
-     also by Matt's call, and the neutral ink wash rather than the warm
-     input border, which read as a different material against this gray. */
-  background: none; border-radius: 16px;
-  border: var(--divw) solid color-mix(in srgb, var(--ink) 14%, transparent);
+     classes on a day are two containers. Outlined in the neutral ink wash
+     (never the warm input border, which read as a different material) and
+     filled with the card's white over the paper ground, so the boxes are
+     the brightest thing on the screen. */
+  background: var(--card); border-radius: 16px;
+  border: var(--divw) solid color-mix(in srgb, var(--ink) 18%, transparent);
 }
 /* Which cell lives where. The by-line and the shift tag span both columns
    (whose row this is reads over the time, not beside it); everything else
@@ -6353,8 +6354,10 @@ a.clspeek-by:active { opacity: .6; }
    a Following row two headings stacked; whose class it is is a caption on
    what the class is, not a second title. */
 .clline-by {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
-  font-size: 14.5px; font-weight: 500; color: var(--ink);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+  /* Up from 14.5/500, by Matt's call: whose class it is earns real weight
+     on Following, where every row is somebody's. */
+  font-size: 16px; font-weight: 600; color: var(--ink);
 }
 .clline-av {
   width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
