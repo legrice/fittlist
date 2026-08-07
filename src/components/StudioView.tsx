@@ -152,6 +152,7 @@ export async function StudioView({
             id: c.id,
             name: c.name,
             startTime: c.startTime,
+            durationMin: c.durationMin,
             coachName: who?.name ?? null,
             coachPhoto: who?.photo ?? null,
             coachColor: who?.color ?? null,
@@ -217,6 +218,7 @@ export async function StudioView({
           id: c.id,
           name: c.name,
           startTime: c.startTime,
+          durationMin: c.durationMin,
           base,
           coachName: nameOf.get(c.userId) ?? null,
           coachPhoto: faceOf.get(c.userId)?.photo ?? null,
@@ -236,6 +238,7 @@ export async function StudioView({
           id: p.id,
           name: p.name,
           startTime: p.startTime,
+          durationMin: p.durationMin,
           plain: true,
           where: p.location,
         });

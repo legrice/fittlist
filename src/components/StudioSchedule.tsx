@@ -8,6 +8,7 @@ export type StudioDay = {
     id: string;
     name: string;
     startTime: string;
+    durationMin: number;
     /** A community row from a coach's own listing: its page lives under
      *  their handle, not the studio. */
     base?: string | null;
@@ -114,6 +115,7 @@ export function StudioSchedule({
                       <span className="clline-ap">{start.ap.toUpperCase()}</span>
                     </span>
                     <span className="clline-nm">{c.name}</span>
+                    <span className="clline-dur">{c.durationMin} min</span>
                     {c.where && <span className="clline-w">{c.where}</span>}
                   </>
                 );

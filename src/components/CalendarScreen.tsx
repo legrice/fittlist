@@ -96,6 +96,7 @@ export function CalendarScreen({
             where,
             hm: t.hm,
             ap: t.ap,
+            dur: `${c.durationMin} min`,
             // An assigned shift says so above the name: which hat this row
             // is comes before what the class is.
             tag: c.shift ? "Shift" : undefined,
