@@ -4297,10 +4297,7 @@ button.ps-card { cursor: pointer; }
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    inset 0 1px 0 0 rgba(255, 255, 255, .45),
-    0 6px 24px rgba(30, 24, 12, .13),
-    0 1px 3px rgba(30, 24, 12, .07);
+    0 -6px 24px rgba(30, 24, 12, .1);
 }
 .navtab {
   flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -4315,22 +4312,11 @@ button.ps-card { cursor: pointer; }
    the quiet gray (ink at a whisper), by Matt's call after a day as the light
    orange, and it is the same wash the calendar's view toggle and a profile's
    tabs wear: one colour for "you are here", wherever the ground says it. */
-/* The mark is a filled brand circle around the current tab's glyph, the
-   glyph in white inside it, and nothing else: the tab-wide wash and the
-   orange word both came off, by Matt's call. Every tab's glyph rides the
-   same circular box (content-box padding around the 26px icon, margins
-   pulling most of the growth back), so nothing jumps when the selection
-   moves; only the current one fills in. The You tab's face is a photo and
-   marks itself by opacity instead. */
-.navtab.on { background: none; }
-.navtab .icon {
-  box-sizing: content-box; padding: 7px; margin: -5px 0 -3px;
-  border-radius: 999px;
-}
-.navtab.on .icon { background: var(--si); color: #fff; }
-/* The face matches the glyphs' layout box, or the Profile label sits high
-   beside the others. */
-.navtab .navav { margin: 3px 0; }
+/* The mark is the brand colour on the current tab's own ink, glyph and
+   word together, and nothing else, by Matt's call: the filled circle and
+   the tab-wide wash were both tried and came off. The You tab's face is a
+   photo and marks itself by opacity instead. */
+.navtab.on { background: none; color: var(--si); }
 /* Your face is the You tab. Dim until it's the current one. Exactly the
    icons' 26px box: a hair smaller and the whole tab reads as sitting low. */
 .navav {
@@ -4433,10 +4419,7 @@ button.ps-card { cursor: pointer; }
 .navtab { transition: background .18s ease, opacity .18s ease; }
 .navtab:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 [data-mode="dark"] .navbar {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .1),
-    inset 0 1px 0 0 rgba(255, 255, 255, .08),
-    0 6px 24px rgba(0, 0, 0, .4);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, .4);
 }
 
 /* Avatar colour picker: sixty swatches, so a photo-less coach is still
