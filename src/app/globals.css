@@ -35,12 +35,13 @@
   --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
   --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
   --paper: #fdfcf7;        /* the content card: a breath off white */
-  /* The screen behind the card. It was a quiet warm gray a step below the
-     paper, and it is the paper itself now, by Matt's call: the gray read
-     as drab next to the brightened list, and with the chrome and the
-     content on one surface the border on the card's top edge is what
-     separates them. The token stays so the two layers can part again. */
-  --shell: var(--paper);
+  /* The screen behind the card. The app reads as two layers: the header
+     (and whatever else is chrome) sits on this quiet warm gray, and the
+     content rides the paper with rounded top corners over it. It merged
+     onto the paper for a build and came back apart, by Matt's call: one
+     surface needed a drawn edge to say where content starts, and the two
+     tones say it without one. */
+  --shell: #f0eee8;
   /* Near-ink outlines: the boxes, the card's top edge, the controls. The
      ink itself was a touch hard beside the type it boxes; a breath of
      paper softens it without reading as gray. */
@@ -2885,7 +2886,6 @@ button.ps-card { cursor: pointer; }
 .pubcard {
   background: var(--paper);
   border-radius: 28px 28px 0 0;
-  border-top: var(--divw) solid var(--edge);
   margin: 10px -18px 0;
   padding: 2px 18px calc(120px + env(safe-area-inset-bottom));
   /* Above the pinned header, like .cardwrap: the card slides over it. */
@@ -3795,7 +3795,7 @@ button.ps-card { cursor: pointer; }
 [data-mode="dark"] .sheet,
 [data-mode="dark"] .pub, .pub[data-mode="dark"] {
   --paper: #14120d;
-  --shell: var(--paper);
+  --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 85%, var(--paper));
   --si-tint: #3f2413;
   --si-ink: #f0a071;
@@ -4219,7 +4219,6 @@ button.ps-card { cursor: pointer; }
      reads as cream slabs on off-white. */
   background: var(--paper);
   border-radius: 28px 28px 0 0;
-  border-top: var(--divw) solid var(--edge);
   margin: 6px -18px 0;
   padding: 10px 18px calc(110px + env(safe-area-inset-bottom));
   /* Positioned so it paints above the pinned header it slides over. No
