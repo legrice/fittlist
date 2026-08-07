@@ -53,10 +53,14 @@ export type FeedItem = {
 export function FollowingScreen({
   items,
   coaches,
+  follows,
   todayIso,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
+  /** How many people they actually follow: the empty state's two wordings
+   *  fork on this, because `coaches` carries a coach's own week too. */
+  follows: number;
   todayIso: string;
 }) {
   const [focus, setFocus] = useState<string | null>(null);
@@ -180,12 +184,12 @@ export function FollowingScreen({
               height={600}
             />
             <h2 className="wkempty-t">
-              {coaches.length ? "Nothing up yet" : "You\u2019re not following anyone"}
+              {follows ? "Nothing up yet" : "Nothing here yet"}
             </h2>
             <p className="wkempty-b">
-              {coaches.length
+              {follows
                 ? "The people you follow have not put any classes up. This fills in as they do."
-                : "Follow a coach and their week shows up here, beside everyone else you follow."}
+                : "You aren\u2019t following anyone. Follow a coach and their week shows up here."}
             </p>
             {/* One CTA, and it is this screen's own act: finding somebody.
                 Nothing here about adding classes, which is the calendar's

@@ -86,7 +86,9 @@ await m.getByRole("button", { name: "Finish setup" }).click();
 await m.waitForURL("**/feed");
 
 // Following nobody: the empty state is the whole screen and points at the way out.
-await m.locator(".wkempty-t", { hasText: "not following anyone" }).waitFor();
+await m.locator(".wkempty-t", { hasText: "Nothing here yet" }).waitFor();
+if (!(await m.locator(".wkempty-b", { hasText: "aren’t following anyone" }).count()))
+  fail("the empty state should say why: no follows yet");
 if (await m.locator(".tray").count()) fail("no rail until there is somebody on it");
 await m.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-fol-empty.png" });
 

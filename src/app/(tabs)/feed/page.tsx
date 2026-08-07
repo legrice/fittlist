@@ -138,5 +138,9 @@ export default async function FollowingPage() {
       return a.name.localeCompare(b.name);
     });
 
-  return <FollowingScreen items={items} coaches={rail} todayIso={today} />;
+  // The empty state's two wordings fork on real follows, not on the rail:
+  // a coach rides their own week here, so the rail is never empty for them,
+  // and "the people you follow have not put anything up" to somebody who
+  // follows nobody blamed people who do not exist.
+  return <FollowingScreen items={items} coaches={rail} follows={followed.length} todayIso={today} />;
 }
