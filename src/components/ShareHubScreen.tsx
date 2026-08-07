@@ -67,6 +67,10 @@ export function ShareHubScreen({
   today: string;
 }) {
   const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
+  // The preview redraws server-side on every knob (theme, dates, classes),
+  // and a story takes a second or two to paint: the spinner is what says
+  // the wait is the picture coming rather than a dead control.
+  const [imgLoading, setImgLoading] = useState(true);
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
@@ -106,6 +110,12 @@ export function ShareHubScreen({
       : `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const fileName =
     seg === "week" ? `fittlist-${handle}-week.png` : `fittlist-${handle}-card.png`;
+
+  // Every knob that changes the url restarts the wait; a cached picture
+  // fires onLoad immediately and the spinner never registers.
+  useEffect(() => {
+    setImgLoading(true);
+  }, [imgUrl]);
   const qrUrl = `/api/qr/${handle}`;
   const qrFileName = `fittlist-${handle}-qr.png`;
 
@@ -224,12 +234,17 @@ export function ShareHubScreen({
               </div>
             </div>
 
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className={`shprev${seg === "profile" ? " shprev-sq" : ""}`}
-              src={imgUrl}
-              alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
-            />
+            <div className="shprev-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={`shprev${seg === "profile" ? " shprev-sq" : ""}${imgLoading ? " loading" : ""}`}
+                src={imgUrl}
+                alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
+                onLoad={() => setImgLoading(false)}
+                onError={() => setImgLoading(false)}
+              />
+              {imgLoading && <span className="shspin" aria-label="Drawing the picture" />}
+            </div>
 
             <div className="shcta">
               {canShareFiles ? (
