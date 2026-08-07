@@ -16,6 +16,7 @@ export function AppHeader({
   unread = 0,
   settings,
   gear = false,
+  adminActivity = false,
   find = false,
   home = "/week",
   nav,
@@ -28,6 +29,9 @@ export function AppHeader({
    *  the photo for a build and read as loose furniture, and the header's
    *  corner is both where every app keeps it and easier to reach. */
   gear?: boolean;
+  /** The admin's pulse: the same activity the admin screen shows, one tap
+   *  from anywhere. Only ever true for an ADMIN_EMAILS account. */
+  adminActivity?: boolean;
   /** The magnifier, opening the directory as a sheet. Off in the shell with
    *  no member side at all, where there is nobody to find. */
   find?: boolean;
@@ -59,6 +63,14 @@ export function AppHeader({
             face both left it for that reason. `/search` is still behind the
             directory's own search door. */}
         {find && <HeaderFind />}
+        {adminActivity && (
+          <HeaderIconLink
+            label="Admin activity"
+            icon="activity"
+            href="/admin?activity=1"
+            match="/admin"
+          />
+        )}
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"

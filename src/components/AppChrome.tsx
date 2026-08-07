@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { adminEmails } from "@/lib/admin";
 import { avatarColor } from "@/lib/avatar";
 import { fansVisible, landingHref } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
@@ -53,6 +54,10 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
+  // The admin's own pulse rides the header beside the bell, for the one or
+  // two accounts that have /admin at all: the same activity list the admin
+  // screen shows, one tap from anywhere.
+  const isAdmin = adminEmails().includes(me.email.toLowerCase());
   const fans = await fansVisible();
   const unread = await unreadNotifications(userId);
   // One calendar, at one address. This forked by kind for months, back when a
@@ -84,6 +89,7 @@ export async function AppChrome({
       // The gear only where there is no member side at all: the coaches-only
       // mode has no tab bar, so it is the one door to the account.
       settings={fans ? undefined : "/settings"}
+      adminActivity={isAdmin}
       gear={gear}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />

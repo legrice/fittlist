@@ -148,9 +148,6 @@ a { color: inherit; }
 /* The overlay header replaces the pinned chrome, so a landing only has to
    clear its height rather than the old measured stack. */
 .screen.hasnav .dayblock { scroll-margin-top: 64px; }
-/* The share hub opts out of the gradient entirely, by Matt's call: that
-   screen is the solid light gray, top to bottom. */
-.screen.hasnav:has(.shtitle) { background: var(--ground); }
 /* The sunrise gradient behind the chrome was tried here and came back out,
    by Matt's call: the shell gray returns, and the white content card is
    what does the freshening against it. */
