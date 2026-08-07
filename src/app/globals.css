@@ -6289,6 +6289,11 @@ a.clspeek-by:active { opacity: .6; }
 /* The band is the block's own first child, so a landing only needs a breath:
    the band sticks to the top the moment the block arrives. */
 .dayblock { scroll-margin-top: calc(var(--dayband-top, 0px) + 8px); }
+/* Air between one day and the next: the following band sat straight on the
+   previous day's last row, and the list read as one run of lines rather
+   than days. The margin rides the block, so a pinned band's own box is
+   untouched. */
+.dayblock + .dayblock { margin-top: 18px; }
 
 .dayrows { display: flex; flex-direction: column; }
 
