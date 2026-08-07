@@ -46,10 +46,9 @@ export function navTabs(
     // Everyone you follow, as one week, and it leads now, by Matt's call:
     // it is the only screen a member has, and for a coach it is the reading
     // screen where the calendar is the working one.
-    // "Follow", not "Following", by Matt's call: the shorter word gives four
-    // tabs and the search circle their room, and it names the act as well
-    // as the place.
-    { id: "following", href: "/feed", icon: "groups", label: "Follow" },
+    // "Following" again, by Matt's call: it wore the shorter "Follow" for a
+    // stretch, and the longer word names the place rather than the act.
+    { id: "following", href: "/feed", icon: "groups", label: "Following" },
     // Only for somebody who teaches: the calendar, and the hub for sharing
     // it. Share was in every bar for a build and came off the member's, by
     // Matt's call: until a member has a way to add things and a reason to,
