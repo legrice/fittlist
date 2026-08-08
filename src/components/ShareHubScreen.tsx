@@ -311,22 +311,18 @@ export function ShareHubScreen({
       <div className="cardwrap shpage">
         {/* The start block, in place of an empty poster, by Matt's call:
             the picture of nothing pushed the one button that fixes it
-            below the fold, and the words here are the experiment saying
-            what it is before anybody has invested a tap. */}
+            below the fold. Two lines and the button; the experiment talk
+            and the feedback link came off, also by Matt's call. */}
         {building && (
           <div className="shstart">
-            <h2>Build the week you&rsquo;re going to</h2>
+            <h2>Add the classes you&rsquo;re taking this week</h2>
             <p>
-              Add your classes and they become a picture: post it, or send it to the group
-              chat. Each class sits on your profile until it has run.
+              We&rsquo;ll turn them into a shareable schedule and keep them on your profile
+              until they&rsquo;re over.
             </p>
-            <p>This is an experiment. We&rsquo;re finding out whether it&rsquo;s worth keeping.</p>
             <button className="btn si" onClick={() => setAddOpen(true)}>
-              Add the classes you&rsquo;re going to
+              Add a class
             </button>
-            <a className="shstart-fb" href="/feedback">
-              Tell us what you think
-            </a>
           </div>
         )}
         {segs.length > 1 && (
@@ -481,19 +477,6 @@ export function ShareHubScreen({
                 </a>
               )}
             </div>
-            {/* Said out loud, by Matt's call: this side of the tab is being
-                tried, and the people trying it should know that and have a
-                door to say whether it earns its place. The door is the same
-                feedback thread the settings rows open. */}
-            {!coach && (
-              <div className="shexp">
-                <p>
-                  This is an experiment. Build the week you&rsquo;re going to and share it with
-                  your people; we want to know whether it&rsquo;s worth keeping.
-                </p>
-                <a href="/feedback">Tell us what you think</a>
-              </div>
-            )}
           </>
         )}
 

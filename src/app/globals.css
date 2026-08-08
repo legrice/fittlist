@@ -4812,23 +4812,11 @@ button.ps-card { cursor: pointer; }
 .shpick-add { display: block; margin: 10px 0 2px; font-size: 14.5px; }
 
 /* The member hub's start block: in place of an empty poster, so the one
-   button that fixes the emptiness is never below the fold. The words are
-   the experiment introducing itself. */
+   button that fixes the emptiness is never below the fold. */
 .shstart { padding: 34px 10px 20px; text-align: center; }
 .shstart h2 { font-size: 24px; line-height: 1.15; margin: 0 0 12px; }
 .shstart p { font-size: 14px; line-height: 1.55; color: var(--ol); margin: 0 auto 10px; max-width: 320px; }
 .shstart .btn { width: 100%; margin-top: 14px; background: var(--si); color: #fff; }
-.shstart-fb {
-  display: inline-block; margin-top: 14px; font-size: 13px; font-weight: 600;
-  color: var(--si); text-decoration: none;
-}
-
-/* The experiment note under the member hub's buttons: quiet, honest, and
-   carrying the one door that decides whether the experiment stays. The
-   bottom margin is what lets it scroll clear of the fixed tab bar. */
-.shexp { margin: 18px 2px 96px; text-align: center; }
-.shexp p { font-size: 13px; line-height: 1.5; color: var(--ol); margin: 0 0 6px; }
-.shexp a { font-size: 13px; font-weight: 600; color: var(--si); text-decoration: none; }
 
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }

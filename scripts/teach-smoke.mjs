@@ -44,9 +44,10 @@ console.log("a member has no calendar to land on: /calendar sends them to Follow
 // The Share tab opens the hub for a member too now: the Week alone, and
 // the build flow leading because the week starts empty.
 await p.goto(BASE + "/sharehub");
-await p.getByRole("button", { name: /Add the classes/ }).waitFor();
+await p.locator(".shstart h2", { hasText: "Add the classes you\u2019re taking this week" }).waitFor();
+await p.getByRole("button", { name: "Add a class" }).waitFor();
 if (await p.locator(".shseg").count()) fail("a member's hub has one subject and no segment row");
-console.log("a member's /sharehub is the Week alone, leading with the add");
+console.log("a member's /sharehub opens on the start block");
 
 // The Profile tab opens your page, not a list of switches. Settings are the
 // gear on it, which is the only door to them there is.
