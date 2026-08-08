@@ -34,6 +34,18 @@ export function loadStoryFonts() {
   return fonts;
 }
 
+/** The picked Type's own file, cached per path the way the base four are:
+ *  the poster only ever carries Delight plus at most one guest face. */
+const extraFonts = new Map<string, Buffer>();
+function loadTypeFace(family: string, file: string) {
+  let data = extraFonts.get(file);
+  if (!data) {
+    data = font(file);
+    extraFonts.set(file, data);
+  }
+  return { name: family, data, weight: 400 as const };
+}
+
 /** The block mark as a base64 SVG. It is recoloured only when it would vanish
  *  against the theme's own background. */
 export function iconUri(color: string) {
@@ -64,6 +76,10 @@ export type StoryModel = {
   /** The small line above the URL: "Full schedule at", "Join me". */
   verb: string;
   url: string;
+  /** The headline's Type: a guest face for the two big lines only. The rows
+   *  stay Delight, because the planner's budgets are sums over Delight's
+   *  metrics. Null or Delight means no guest font to load. */
+  typeface?: { family: string; file: string | null } | null;
 };
 
 export function renderStory(model: StoryModel) {
@@ -82,7 +98,9 @@ export function renderStory(model: StoryModel) {
     emptyLine,
     verb,
     url,
+    typeface,
   } = model;
+  const guest = typeface?.file ? typeface : null;
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
   const square = format === "square";
@@ -166,7 +184,10 @@ export function renderStory(model: StoryModel) {
             fontWeight: 800,
             fontSize: hSize,
             lineHeight: 0.98,
-            letterSpacing: -3,
+            // Delight's own tight tracking; a guest face keeps its natural
+            // fit, because -3 was tuned to one font and crushes a serif.
+            letterSpacing: guest ? 0 : -3,
+            fontFamily: guest ? guest.family : "Delight",
             textTransform: "uppercase",
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
@@ -381,7 +402,9 @@ export function renderStory(model: StoryModel) {
     {
       width: 1080,
       height: square ? 1080 : 1920,
-      fonts: loadStoryFonts(),
+      fonts: guest
+        ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!)]
+        : loadStoryFonts(),
       headers: { "Cache-Control": "no-store" },
     },
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
+import { TYPEFACES, typeFaceOf, type TypeFaceId } from "@/lib/typefaces";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -76,7 +77,9 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message">(null);
+  // The headline's voice, picked by personality: see typefaces.ts.
+  const [typeId, setTypeId] = useState<TypeFaceId>("standard");
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "type">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -108,7 +111,7 @@ export function ShareHubScreen({
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
     `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=1` +
-    `&headline=${encodeURIComponent(headline)}` +
+    `&headline=${encodeURIComponent(headline)}&type=${typeId}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
@@ -345,6 +348,10 @@ export function ShareHubScreen({
                   <span className="shctrl-k">Message</span>
                   <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
                 </button>
+                <button className="shctrl" onClick={() => setPick("type")}>
+                  <span className="shctrl-k">Type</span>
+                  <span className="shctrl-v">{typeFaceOf(typeId).label}</span>
+                </button>
               </div>
             )}
 
@@ -466,6 +473,51 @@ export function ShareHubScreen({
               <button className="btn si" onClick={() => setPick(null)}>
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "type" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Type</h2>
+            {/* Each row wears its own face: the label is the sample, and
+                naming the personality instead of the font is the point. */}
+            <div className="settingslist typelist">
+              {TYPEFACES.map((f) => {
+                const on = f.id === typeId;
+                return (
+                  <button
+                    key={f.id}
+                    className="setrow"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setTypeId(f.id);
+                      setPick(null);
+                    }}
+                  >
+                    <span className="setrow-txt">
+                      <span className="typerow-sample" style={{ fontFamily: `'${f.family}'` }}>
+                        {f.label}
+                      </span>
+                    </span>
+                    {on && (
+                      <span className="setrow-ic">
+                        <Icon name="check" size={20} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

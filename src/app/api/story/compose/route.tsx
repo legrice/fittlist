@@ -3,6 +3,7 @@ import { getDb, schema } from "@/db";
 import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
+import { typeFaceOf } from "@/lib/typefaces";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
 import { shareKicker, shareRange, shareWeek } from "@/lib/shareweek";
 
@@ -90,5 +91,8 @@ export async function GET(req: Request) {
     emptyLine: "Nothing on the calendar for these days yet.",
     verb: "Full schedule at",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
+    // The headline's Type, picked by personality on the hub: a guest face
+    // for the two big lines, Delight for everything else.
+    typeface: typeFaceOf(qs.get("type")),
   });
 }

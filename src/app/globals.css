@@ -8,6 +8,15 @@
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Delight'; src: url('/fonts/delight-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+/* The poster's guest faces (the Type picker's personalities): the same TTFs
+   satori draws with, so the picker's sample rows show the truth. Loaded
+   lazily by font-display: swap; only the picker and nothing else uses them. */
+@font-face { font-family: 'Anybody'; src: url('/fonts/anybody.ttf') format('truetype'); font-weight: 400 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url('/fonts/dm-serif-display.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barriecito'; src: url('/fonts/barriecito.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Bagel Fat One'; src: url('/fonts/bagel-fat-one.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Righteous'; src: url('/fonts/righteous.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Young Serif'; src: url('/fonts/young-serif.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 
 /* fittlist design system - ported from design/fittlist-prototype-v10.html.
    The prototype renders inside a fake phone frame; here the viewport is the
@@ -6423,6 +6432,10 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shslide .qrcard { width: min(100%, 340px); }
 .shslide .shtext { width: min(100%, 340px); margin-top: 0; }
+/* The Type picker's rows: the label is the sample, drawn big in its own
+   face, because a personality name set in Helvetica is a claim with no
+   evidence. */
+.typerow-sample { font-size: 24px; line-height: 1.25; color: var(--ink); }
 /* The why above the words: without it the text half reads as a lesser
    copy of the picture rather than the format group chats want. */
 .shtext-why { margin: 18px 0 0; font-size: 15px; line-height: 1.5; color: var(--ol); }
