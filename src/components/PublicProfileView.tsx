@@ -409,7 +409,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""}${user.photo ? " pub-hero" : ""}`}
+      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -458,9 +458,20 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           trackHandle={handle}
           backTo={backTo}
-          // The face is a circle again; tapping it blows it up with the
-          // person's follow/share/link/QR actions under it.
+          // The full-bleed hero for everybody, by Matt's call: the photo
+          // when there is one, the person's own colour when there isn't,
+          // the same rule the member page follows, so no photo is never a
+          // lesser layout. The owner's colour hero carries the image
+          // icon into the editor (?edit=1, which ProfileOwnerBar reads).
           heroPhoto={user.photo}
+          heroColor={avatarColor(user)}
+          heroCta={
+            isOwner && !user.photo ? (
+              <Link className="herocta" href={`/${handle}?edit=1`} aria-label="Add a photo">
+                <Icon name="image" size={24} />
+              </Link>
+            ) : undefined
+          }
           avatar={
             <AvatarZoom
               className="profav"
