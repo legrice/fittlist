@@ -61,10 +61,13 @@ export async function GET(req: Request) {
   const city = qs.get("city") === "0" ? "" : (me.location ?? "").trim();
   const handle = (me.handle ?? "").trim();
 
-  // No photo means the headline owns the corner too, so it grows a step,
-  // by Matt's call. The budget below reads the grown size, or the extra
-  // height would come out of the rows without the sums knowing.
-  const hSize = showPhoto ? size : Math.round(size * 1.16);
+  // Two scalers on the headline, multiplied. The slider's (hs, percent,
+  // clamped to a range that can neither vanish nor swallow the poster) is
+  // the writer's own loudness knob; the photo-off bump is the layout's.
+  // The budget below reads the final size, or the extra height would come
+  // out of the rows without the sums knowing.
+  const hs = Math.max(60, Math.min(180, parseInt(qs.get("hs") ?? "100", 10) || 100)) / 100;
+  const hSize = Math.round(size * hs * (showPhoto ? 1 : 1.16));
 
   const plan = planStory(
     byDay.map(({ day, items }) => ({

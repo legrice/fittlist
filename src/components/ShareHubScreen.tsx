@@ -83,6 +83,12 @@ export function ShareHubScreen({
   const [headline, setHeadline] = useState(savedHeadline);
   // The poster's voice, picked by personality: see typefaces.ts.
   const [typeId, setTypeId] = useState<TypeFaceId>("standard");
+  // The headline's loudness, in percent. hsize is what the picture reads;
+  // slider is the thumb's live position, committed on release, because a
+  // poster takes a second to draw and a redraw per pixel of drag is a
+  // spinner that never ends.
+  const [hsize, setHsize] = useState(100);
+  const [slider, setSlider] = useState(100);
   // The face on the poster, offered only to somebody who has one. A chip
   // that toggles in place rather than opening a sheet: two states need no
   // room of their own.
@@ -119,7 +125,7 @@ export function ShareHubScreen({
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
     `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
-    `&headline=${encodeURIComponent(headline)}&type=${typeId}` +
+    `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
@@ -560,6 +566,25 @@ export function ShareHubScreen({
               maxLength={44}
               placeholder="Come train with me."
               onChange={(e) => setHeadline(e.target.value)}
+            />
+            {/* How loud: a slider, by Matt's call, for taking up the room a
+                quiet week leaves. It commits on release rather than per
+                pixel, because every value is a fresh server render. */}
+            <label className="flabel" htmlFor="shSize">
+              Size <span>· {slider}%</span>
+            </label>
+            <input
+              id="shSize"
+              className="shslider"
+              type="range"
+              min={60}
+              max={180}
+              step={5}
+              value={slider}
+              onChange={(e) => setSlider(Number(e.target.value))}
+              onPointerUp={() => setHsize(slider)}
+              onKeyUp={() => setHsize(slider)}
+              onTouchEnd={() => setHsize(slider)}
             />
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>

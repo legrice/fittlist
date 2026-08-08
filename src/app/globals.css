@@ -6432,6 +6432,9 @@ a.clspeek-by:active { opacity: .6; }
 }
 .shslide .qrcard { width: min(100%, 340px); }
 .shslide .shtext { width: min(100%, 340px); margin-top: 0; }
+/* The headline's loudness slider: the platform's own control in the brand
+   colour, full width under its label. */
+.shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
 /* The Type picker's rows: the label is the sample, drawn big in its own
    face, because a personality name set in Helvetica is a claim with no
    evidence. */

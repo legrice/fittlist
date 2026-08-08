@@ -198,7 +198,10 @@ export function renderStory(model: StoryModel) {
           }}
         >
           <span>{line1}</span>
-          {line2 && <span style={{ color: t.accent }}>{line2}</span>}
+          {/* One colour for both lines, by Matt's call: the accent second
+              line was a house style tic, and the headline reads as one
+              sentence now that the case is the writer's own. */}
+          {line2 && <span>{line2}</span>}
         </div>
 
         {city && (
