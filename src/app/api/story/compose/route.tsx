@@ -19,9 +19,10 @@ import { shareRange, shareWeek } from "@/lib/shareweek";
 
 export const dynamic = "force-dynamic";
 
-/** Never a blank field. It was a record keyed on the hat, back when a picture
- *  could be of the classes you were going to; there is one week to draw now. */
+/** Never a blank field. One week per kind: a coach's picture invites people
+ *  to train with them, a member's invites people along. */
 const FALLBACK: [string, string] = ["Come train", "with me."];
+const FALLBACK_FAN: [string, string] = ["Come", "with me."];
 
 export async function GET(req: Request) {
   const userId = await getSessionUserId();
@@ -32,9 +33,9 @@ export async function GET(req: Request) {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return new Response("Not found", { status: 404 });
 
-  // A member has no week of their own to draw, so there is nothing here for
-  // them: the composer is a coach's screen and this is the same wall.
-  if (me.kind === "fan") return new Response("Not found", { status: 404 });
+  // A member's week draws here too now: the Share tab is theirs as well,
+  // and `shareWeek` answers by kind, so the same route serves both.
+  const fan = me.kind === "fan";
   // Style first, then one of the three colourways that style is offered in.
   // Colour belongs to the style rather than sitting beside it, so a diner
   // sign is never asked to wear Midnight.
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
   // The headline rides the URL so the preview redraws without a round trip;
   // the saved one is the fallback for anything that isn't the composer.
   const typed = qs.get("headline") ?? prefs.headline ?? "";
-  const { line1, line2, size } = headlineOf(typed, FALLBACK);
+  const { line1, line2, size } = headlineOf(typed, fan ? FALLBACK_FAN : FALLBACK);
 
   // An explicit param wins over the saved preference: the hub always asks
   // for the photo (photo=1, by Matt's call), and a coach who turned it off
@@ -94,7 +95,9 @@ export async function GET(req: Request) {
     photo: showPhoto ? me.photo : null,
     plan,
     empty: byDay.length === 0,
-    emptyLine: "Nothing on the calendar for these days yet.",
+    emptyLine: fan
+      ? "Nothing on the week yet."
+      : "Nothing on the calendar for these days yet.",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
     // The headline's Font, picked by personality on the hub; the body
     // stays Delight.

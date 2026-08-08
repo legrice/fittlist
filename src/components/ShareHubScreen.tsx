@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import { DECOS, type DecoId } from "@/lib/decorations";
+import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
+import type { PersonalMatch } from "@/app/actions/personal";
+import { setGoing } from "@/app/actions/going";
+import { Adder } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -50,8 +55,13 @@ export function ShareHubScreen({
   today,
   savedHeadline,
   hasPhoto,
+  studios,
+  templates,
+  customTypes,
+  lastUsed,
 }: {
-  /** A coach gets the Week segment; a member's page has no schedule to draw. */
+  /** A coach's picture is the week they teach, beside their card and QR
+   *  code; a member gets the Week alone and builds it right here. */
   coach: boolean;
   handle: string;
   /** On the QR card, above the code: the code is a thing you hold up, and a
@@ -72,8 +82,15 @@ export function ShareHubScreen({
   /** Whether there is a face to offer: the Photo chip only renders when
    *  turning it on could show something. */
   hasPhoto: boolean;
+  /** The adder's ingredients, loaded only for a member: their hub carries
+   *  the personal adder, because building the week is what the tab is for. */
+  studios: StudioDto[];
+  templates: TemplateDto[];
+  customTypes: string[];
+  lastUsed: LastUsed;
 }) {
-  const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
+  const router = useRouter();
+  const [seg, setSeg] = useState<Seg>("week");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
@@ -102,10 +119,24 @@ export function ShareHubScreen({
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
-  // One buster per visit: the week can change behind the picture, and a
-  // cached preview of last Tuesday is a lie waiting to be posted.
-  const [bust] = useState(() => Date.now());
+  // One buster per visit, bumped after an add: the week changes behind the
+  // picture the moment a class lands, and a cached preview of the week
+  // before is a lie waiting to be posted.
+  const [bust, setBust] = useState(() => Date.now());
+  // The member's build flow: the adder, and the "that class is on fittlist"
+  // offer that comes back from it.
+  const [addOpen, setAddOpen] = useState(false);
+  const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
+  const [matchBusy, setMatchBusy] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
+
+  // A server change (an add, a mark) has to reach both the list and the
+  // picture: refresh re-runs the page's loader for the list, the bust
+  // redraws the picture.
+  const refreshWeek = () => {
+    setBust(Date.now());
+    router.refresh();
+  };
 
   useEffect(() => {
     setCanShareFiles(
@@ -201,15 +232,22 @@ export function ShareHubScreen({
     }
   };
 
-  const segs: { id: Seg; label: string }[] = [
-    ...(coach ? [{ id: "week" as const, label: "Week" }] : []),
-    { id: "profile" as const, label: "Profile" },
-    { id: "qr" as const, label: "QR code" },
-    // The week as words is a subject of its own, by Matt's call: it sat on
-    // the rail as a chip and reads better beside Profile and QR code,
-    // because it is a different thing to send, not a knob on the picture.
-    ...(coach ? [{ id: "text" as const, label: "Text" }] : []),
-  ];
+  // A member gets the Week alone, by Matt's call: no profile card, no QR
+  // code, none of the extra stuff. Their tab is for building the week
+  // they're going to and handing it on, and one segment is no segment row
+  // at all, because a control with one option teaches somebody the screen
+  // is more complicated than it is.
+  const segs: { id: Seg; label: string }[] = coach
+    ? [
+        { id: "week", label: "Week" },
+        { id: "profile", label: "Profile" },
+        { id: "qr", label: "QR code" },
+        // The week as words is a subject of its own, by Matt's call: it sat
+        // on the rail as a chip and reads better beside Profile and QR code,
+        // because it is a different thing to send, not a knob on the picture.
+        { id: "text", label: "Text" },
+      ]
+    : [{ id: "week", label: "Week" }];
   // The next fortnight of start days on offer, whether or not each holds
   // anything: "from Saturday" is a real ask on a week that starts quiet.
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
@@ -265,19 +303,21 @@ export function ShareHubScreen({
           above them were room spent saying what the eye already sees.
           `shpage` is the marker the gradient opt-out keys on. */}
       <div className="cardwrap shpage">
-        <div className="shseg" role="tablist" aria-label="What to share">
-          {segs.map((s) => (
-            <button
-              key={s.id}
-              role="tab"
-              aria-selected={seg === s.id}
-              className={`shseg-pill${seg === s.id ? " on" : ""}`}
-              onClick={() => goSeg(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        {segs.length > 1 && (
+          <div className="shseg" role="tablist" aria-label="What to share">
+            {segs.map((s) => (
+              <button
+                key={s.id}
+                role="tab"
+                aria-selected={seg === s.id}
+                className={`shseg-pill${seg === s.id ? " on" : ""}`}
+                onClick={() => goSeg(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* The slides, one per segment, swiped between the way Spotify's
             share sheet swipes between the song card and the lyrics, by
@@ -290,28 +330,30 @@ export function ShareHubScreen({
           onScroll={onSlides}
           onTouchStart={() => (rideTo.current = null)}
         >
+          <div className="shslide">
+            <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
+          </div>
           {coach && (
             <div className="shslide">
-              <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
+              <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
             </div>
           )}
-          <div className="shslide">
-            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
-          </div>
-          <div className="shslide">
-            {/* The card the mock drew: name, the code on white, the address.
-                A bare code is anybody's; this one says whose. */}
-            <div className="qrcard">
-              <div className="qrcard-nm">{name}</div>
-              <div className="qrframe">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
-              </div>
-              <div className="qrurl">
-                {pageHost}/{handle}
+          {coach && (
+            <div className="shslide">
+              {/* The card the mock drew: name, the code on white, the address.
+                  A bare code is anybody's; this one says whose. */}
+              <div className="qrcard">
+                <div className="qrcard-nm">{name}</div>
+                <div className="qrframe">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
+                </div>
+                <div className="qrurl">
+                  {pageHost}/{handle}
+                </div>
               </div>
             </div>
-          </div>
+          )}
           {coach && (
             <div className="shslide">
               <pre className="shtext">{weekText}</pre>
@@ -365,7 +407,9 @@ export function ShareHubScreen({
                 </button>
                 <button className="shctrl" onClick={() => setPick("message")}>
                   <span className="shctrl-k">Headline</span>
-                  <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
+                  <span className="shctrl-v">
+                    {headline.trim() || (coach ? "Come train with me." : "Come with me.")}
+                  </span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
                   <span className="shctrl-k">Decoration</span>
@@ -382,23 +426,40 @@ export function ShareHubScreen({
               </div>
             )}
 
-            <div className="shcta">
-              {canShareFiles ? (
-                <button
-                  className="btn si"
-                  disabled={sharing}
-                  onClick={() =>
-                    shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
-                  }
-                >
-                  {sharing ? "Opening…" : "Share image"}
+            {/* A member's week starts empty and this screen is where it gets
+                built, so an empty range leads with the one act that fixes
+                it. With something on it, sharing leads and adding stays a
+                tap away. */}
+            {!coach && inRange.length === 0 ? (
+              <div className="shcta">
+                <button className="btn si" onClick={() => setAddOpen(true)}>
+                  Add the classes you&rsquo;re going to
                 </button>
-              ) : (
-                <a className="btn si" href={imgUrl} download={fileName}>
-                  Save image
-                </a>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="shcta">
+                {canShareFiles ? (
+                  <button
+                    className="btn si"
+                    disabled={sharing}
+                    onClick={() =>
+                      shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
+                    }
+                  >
+                    {sharing ? "Opening…" : "Share image"}
+                  </button>
+                ) : (
+                  <a className="btn si" href={imgUrl} download={fileName}>
+                    Save image
+                  </a>
+                )}
+                {!coach && (
+                  <button className="btn ghost" onClick={() => setAddOpen(true)}>
+                    Add a class
+                  </button>
+                )}
+              </div>
+            )}
           </>
         )}
 
@@ -659,9 +720,103 @@ export function ShareHubScreen({
                 );
               })}
             </div>
+            {/* The sheet adds as well as picks, for a member: choosing what
+                goes on the picture and keeping the week current are the
+                same list, so doing one does the other. */}
+            {!coach && (
+              <button
+                className="tertiary shpick-add"
+                onClick={() => {
+                  setPick(null);
+                  setAddOpen(true);
+                }}
+              >
+                + Add a class
+              </button>
+            )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {addOpen && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach: false, oneOff: true }}
+          onClose={() => setAddOpen(false)}
+          onToast={toast}
+          onPublished={() => {
+            setAddOpen(false);
+            toast("Added to your week");
+            refreshWeek();
+          }}
+          onDeleted={(msg) => {
+            setAddOpen(false);
+            toast(msg);
+            refreshWeek();
+          }}
+          onMatch={(m, again) => {
+            // The match stands alone; two stacked sheets read as a collision.
+            // `again` still holds everything they typed.
+            setAddOpen(false);
+            setMatch({ m, again });
+          }}
+        />
+      )}
+
+      {match && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMatch(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>That class is on fittlist</h2>
+            <p className="lead">
+              {match.m.name} with {match.m.coachName} runs then. Add the real one and it stays up
+              to date when the coach changes it.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={matchBusy}
+                onClick={async () => {
+                  if (!match || matchBusy) return;
+                  setMatchBusy(true);
+                  const res = await setGoing(match.m.classId, match.m.iso, true);
+                  setMatchBusy(false);
+                  setMatch(null);
+                  if (res.ok) {
+                    toast("Added to your week");
+                    refreshWeek();
+                  } else {
+                    toast(res.error ?? "Couldn't add it");
+                  }
+                }}
+              >
+                Add {match.m.name}
+              </button>
+              <button
+                className="btn ghost"
+                style={{ marginTop: 8 }}
+                disabled={matchBusy}
+                onClick={() => {
+                  const { again } = match;
+                  setMatch(null);
+                  again();
+                }}
+              >
+                Add mine anyway
               </button>
             </div>
           </div>

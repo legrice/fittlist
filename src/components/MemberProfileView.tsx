@@ -7,6 +7,7 @@ import { viewerLook } from "@/lib/look";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { followingList } from "@/lib/circles";
+import { canSeeWeek, memberWeek, type SharedWeekItem } from "@/lib/week";
 import { fansVisible } from "@/lib/flags";
 import { AppChrome } from "@/components/AppChrome";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
@@ -91,6 +92,13 @@ export async function MemberProfileView({
   const follows = await followingList(user.email, viewerId);
   const firstName = name.split(/\s+/)[0];
 
+  // The week they built on the Share tab, by Matt's call: the classes they
+  // marked and the dated entries they typed land here and nowhere else
+  // public, and each falls off once it has run. Gated the way every week
+  // is: open unless they turned approve-first on.
+  const week =
+    user.handle && (await canSeeWeek(viewerId, user)) ? await memberWeek(user.id) : [];
+
   // No arrow on your own page. It is what the Profile tab opens now, so
   // there is nothing behind it to go back to: the bar underneath is the way
   // on, and an arrow pointing at Following on a screen you reached from a tab
@@ -148,7 +156,9 @@ export async function MemberProfileView({
           base={`/${user.handle ?? ""}`}
           tab={tab}
           tabs={[
-            { key: "schedule", label: "Following" },
+            // The tab names what's behind it: a built week says Schedule,
+            // and until there is one the coaches they follow are the page.
+            { key: "schedule", label: week.length ? "Schedule" : "Following" },
             { key: "about", label: "Info" },
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
@@ -221,6 +231,21 @@ export async function MemberProfileView({
             </div>
           ))}
 
+        {/* The week they're going to, then the coaches they follow. The
+            week leads when it exists: it is the thing the page's owner
+            built to be seen, and it empties itself as the days run. */}
+        {tab === "schedule" && week.length > 0 && (
+          <div className="memwk">
+            {week.map((day) => (
+              <div key={day.iso} className="memwk-day">
+                <div className="memwk-band">{day.label}</div>
+                {day.items.map((it) => (
+                  <MemberWeekRow key={`${it.classId}.${it.iso}`} it={it} />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
         {/* The coaches they follow. One component with the coach page's own
             Following tab, so the row and the empty state cannot drift. */}
         {tab === "schedule" && (
@@ -229,5 +254,32 @@ export async function MemberProfileView({
         </ProfileTabs>
       </div>
     </div>
+  );
+}
+
+/** One row of the member's week. A mark at a real class links to its page;
+ *  one of their own is plain text, because there is no page behind it. */
+function MemberWeekRow({ it }: { it: SharedWeekItem }) {
+  const sub = [it.coachName ? `with ${it.coachName}` : "", it.where ?? ""]
+    .filter(Boolean)
+    .join(" · ");
+  const body = (
+    <>
+      <span className="memwk-time">
+        {it.hm}
+        <em>{it.ap}</em>
+      </span>
+      <span className="memwk-txt">
+        <span className="memwk-nm">{it.name}</span>
+        {sub && <span className="memwk-sub">{sub}</span>}
+      </span>
+    </>
+  );
+  return it.handle ? (
+    <Link className="memwk-row" href={`/${it.handle}/${it.classId}?d=${it.iso}`}>
+      {body}
+    </Link>
+  ) : (
+    <div className="memwk-row">{body}</div>
   );
 }

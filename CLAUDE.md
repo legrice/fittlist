@@ -1242,18 +1242,19 @@ every gym class the moment gyms existed. Anything building a class URL wants
 the base (`handle`, or `s/{slug}` for a gym), not the handle.
 
 **An unclaimed studio's schedule is built by the commons too.** The page
-draws a seven-day week from the public classes coaches list there and from
-members' personal entries that named the studio (`community` in
-`StudioView`), deduped on name and time, coach rows first because they have
-real pages to open. A coach's row names the coach: the page is built by the
-people who train at the place, whoever runs it had no way to ask anybody
-about a listing they did not recognise, and the name is already public on
-the class it names. A member's entry surfaces as a plain row: name, time,
-length, no link, and never one word about the member; the consent is the
-line under the personal adder's studio field, which says the class joins
-this page, not that they do. Both carry the class's own `location` when it
-has one, which is a room or a floor rather than the studio, because the
-studio is the page. The
+draws a seven-day week from the public classes coaches list there
+(`community` in `StudioView`), deduped on name and time. A coach's row
+names the coach: the page is built by the people who teach at the place,
+whoever runs it had no way to ask anybody about a listing they did not
+recognise, and the name is already public on the class it names. Members'
+personal entries used to join it as plain rows and no longer do, by Matt's
+call: the Share tab has members typing classes by the dozen now, and what
+they add stays off every public page but their own. The details still land
+in `studio_classes` so the next person typing the class gets them back;
+the catalog is memory, not a listing, and the line under the personal
+adder's studio field says exactly that. Rows carry the class's own
+`location` when it has one, which is a room or a floor rather than the
+studio, because the studio is the page. The
 week explains itself from an info dot beside the Schedule tab
 (`CommunityNote`, rendered through `TabDef.info` as a sibling of the tab
 link, never inside it; it rides the tab's own 3px rule and inks in with it,
@@ -1266,6 +1267,26 @@ claimed the community week is gone: from then on what the page says is
 theirs to say, and a gym account replaces it with the real rota. This is
 the inventory building itself, and it is also the pitch: a studio arriving
 finds its page already worth keeping.
+
+**A member's Share tab is the Week alone, and building it is the point.**
+Members carry the Share tab now (`navTabs`), and their hub is one subject:
+no profile card, no QR code, no segment row, because a control with one
+option teaches somebody the screen is more complicated than it is. The
+week is built right there: the adder rides the hub (`personal.oneOff`,
+dated entries only, no weekly repeat, because "going" names a date), and
+`shareWeek` answers by kind, a coach's teaching week or a member's marks
+and dated entries, so the picker and the picture cannot disagree. Typing a
+class a coach already lists (same date, time, close name) offers the real
+one instead ("That class is on fittlist", `addPersonalClass`'s `match`),
+and taking the offer writes a Going mark, so the coach's roster and the
+poster's "with Stacey" line both come true. What a member adds lands in
+three places and no more: their own week, their own profile page
+(`memberWeek` in `week.ts`: marks and dated entries only, seven days,
+`occurrenceEnded` dropping each one as it runs, gated by `canSeeWeek`),
+and the studio's catalog when a studio was named, so the next member
+typing the class gets the details back. Standing weekly personal entries
+stay off the profile on purpose: they were written before the page showed
+anything, and half of them are appointments.
 
 **Running a studio is reached from the You tab and nowhere else.** It floated
 on the studio's own public page for a while (`StudioAdminSheet` where a

@@ -101,6 +101,10 @@ export type AdderPersonal = {
    *  photo, the catalog write) put away, because a dentist appointment has
    *  no studio and should touch nothing shared. */
   event?: boolean;
+  /** A dated entry only, no weekly repeat: the member's share week is built
+   *  of the classes they are going to, and "going" names a date. The When
+   *  card drops its toggle and asks for the date alone. */
+  oneOff?: boolean;
 };
 
 type Stage = "start" | "form" | "pick" | "class" | "new";
@@ -176,7 +180,7 @@ export function Adder({
       ? isPersonalEdit
         ? {
             title: "Edit class",
-            lead: "Change anything. People you follow back see this; nobody else does.",
+            lead: "Change anything. Your week says the new version everywhere it shows.",
           }
         : personal.event
           ? {
@@ -185,7 +189,7 @@ export function Adder({
             }
           : {
             title: "Add a class",
-            lead: "A class you go to. It lands on your calendar and on the week people you follow back can see, and the studio gets the details so the next person doesn't type them again.",
+            lead: "A class you go to. It lands on your week, and a dated class shows on your profile until it has run. The studio gets the details so the next person doesn't type them again.",
           }
       : isEdit
       ? { title: "Edit class", lead: "Change anything. One save updates your page." }
@@ -209,10 +213,14 @@ export function Adder({
   const [extraTimes, setExtraTimes] = useState<string[]>([]);
   const imgRef = useRef<HTMLInputElement>(null);
   const [days, setDays] = useState<Set<number>>(new Set(prefill?.days ?? []));
-  const [mode, setMode] = useState<"weekly" | "date">(prefill?.specificDate ? "date" : "weekly");
+  const [mode, setMode] = useState<"weekly" | "date">(
+    prefill?.specificDate || personal?.oneOff ? "date" : "weekly",
+  );
   // null = runs forever (the default); a string = the picker is showing.
   const [endsOn, setEndsOn] = useState<string | null>(prefill?.endsOn ?? null);
-  const [date, setDate] = useState(prefill?.specificDate ?? "");
+  // A share-week add starts on today rather than a blank field: the date is
+  // the one thing the flow already knows something about.
+  const [date, setDate] = useState(prefill?.specificDate ?? (personal?.oneOff ? todayIso() : ""));
   const initStart = prefill?.startTime ?? lastUsed.startTime;
   const initDur = prefill?.durationMin ?? lastUsed.durationMin;
   const [time, setTime] = useState(initStart);
@@ -614,22 +622,26 @@ export function Adder({
   const whenCard = (
     <div className="adder-card">
             <label className="flabel">When</label>
-            <div className="modetoggle">
-              <button
-                className={!oneTime ? "sel" : ""}
-                onClick={() => setMode("weekly")}
-                type="button"
-              >
-                Repeats weekly
-              </button>
-              <button
-                className={oneTime ? "sel" : ""}
-                onClick={() => setMode("date")}
-                type="button"
-              >
-                One-time
-              </button>
-            </div>
+            {/* The share week is dated by nature, so the toggle would only
+                offer a wrong answer; everywhere else both are real. */}
+            {!personal?.oneOff && (
+              <div className="modetoggle">
+                <button
+                  className={!oneTime ? "sel" : ""}
+                  onClick={() => setMode("weekly")}
+                  type="button"
+                >
+                  Repeats weekly
+                </button>
+                <button
+                  className={oneTime ? "sel" : ""}
+                  onClick={() => setMode("date")}
+                  type="button"
+                >
+                  One-time
+                </button>
+              </div>
+            )}
 
             {oneTime ? (
               <>
@@ -948,12 +960,13 @@ export function Adder({
                   onChange={(e) => setWithWho(e.target.value)}
                 />
                 {/* Said out loud, because it is the one thing here that leaves
-                    your own week. The class goes to the studio's list; you do
-                    not, and nothing anywhere says who added it. */}
+                    your own week. The details go to the studio's list so the
+                    next person typing this class gets them back; nothing goes
+                    on the studio's page, and nothing says who added it. */}
                 <p className="durnote" style={{ marginTop: 10 }}>
                   {selectedStudio
-                    ? `This class joins ${selectedStudio.name}'s list, and its name and time appear on that page's schedule while nobody runs it. Never who added it. Your plans stay yours.`
-                    : "Pick a studio and the class joins that studio's list, and its name and time appear on that page's schedule while nobody runs it. Never who added it. Your plans stay yours."}
+                    ? `The details are remembered for ${selectedStudio.name}, so the next person adding this class gets them filled in. Nothing shows on that page, and never who added it.`
+                    : "Pick a studio and the details are remembered for it, so the next person adding this class gets them filled in. Nothing shows on that page, and never who added it."}
                 </p>
               </>
             )}

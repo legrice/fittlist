@@ -118,6 +118,8 @@ export type SharedWeekItem = {
   name: string;
   hm: string;
   ap: string;
+  /** Raw HH:MM, so a caller can ask `occurrenceEnded` about it. */
+  startTime: string;
   durationMin: number;
   where: string | null;
   /** The base its class page lives under, or null for one of their own: a
@@ -125,6 +127,10 @@ export type SharedWeekItem = {
   handle: string | null;
   /** Whose class it is, or null for one of their own. */
   coachName: string | null;
+  /** A dated entry rather than a weekly one. The profile week shows only
+   *  these among their own rows: the share flow writes dated entries, and
+   *  a standing weekly entry predates the page ever showing anything. */
+  oneOff?: boolean;
 };
 
 /**
@@ -202,6 +208,7 @@ export async function sharedWeek(
       name: c.name,
       hm: t.hm,
       ap: t.ap,
+      startTime: c.startTime,
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
@@ -244,11 +251,13 @@ export async function sharedWeek(
         name: p.name,
         hm: t.hm,
         ap: t.ap,
+        startTime: p.startTime,
         durationMin: p.durationMin,
         where: p.studioId ? (ownStudioById.get(p.studioId)?.name ?? null) : p.location,
         // No page and nobody else's name: one of their own is a plain row.
         handle: null,
         coachName: null,
+        oneOff: !!p.specificDate,
       });
       byDay.set(iso, list);
     }
@@ -261,6 +270,36 @@ export async function sharedWeek(
       label: fmtDayHeader(iso),
       items: items.sort((a, b) => a.hm.localeCompare(b.hm)),
     }));
+}
+
+/**
+ * The week a member's own profile page shows: the next seven days of the
+ * classes they marked and the dated entries they typed, an occurrence gone
+ * the moment it has run. This is the Share tab's week said as a page, by
+ * Matt's call, and it is deliberately narrower than `sharedWeek`: a standing
+ * weekly entry stays off it, because those were written before this page
+ * showed anything and half of them are appointments, not classes. Gate it
+ * with `canSeeWeek`, same as any week.
+ */
+export async function memberWeek(
+  userId: string,
+): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
+  const last = (() => {
+    const d = new Date(`${todayIso()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 6);
+    return d.toISOString().slice(0, 10);
+  })();
+  return (await sharedWeek(userId))
+    .filter((day) => day.iso <= last)
+    .map((day) => ({
+      ...day,
+      items: day.items.filter(
+        (it) =>
+          (it.handle !== null || it.oneOff) &&
+          !occurrenceEnded(it.iso, it.startTime, it.durationMin),
+      ),
+    }))
+    .filter((day) => day.items.length > 0);
 }
 
 /** The shortlist itself, grouped by day. With `pastDays` the same list also

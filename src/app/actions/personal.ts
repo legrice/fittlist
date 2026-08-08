@@ -109,12 +109,17 @@ export async function addPersonalClass(input: {
     ).filter((c) => c.userId !== userId);
     if (candidates.length) {
       const hidden = await hiddenFrom(userId);
-      const iso = (() => {
-        const d = new Date(`${todayIso()}T00:00:00Z`);
-        const today = (d.getUTCDay() + 6) % 7;
-        d.setUTCDate(d.getUTCDate() + ((days[0] - today + 7) % 7));
-        return d.toISOString().slice(0, 10);
-      })();
+      // A one-off names its date, so the match is checked against that date
+      // and the offer marks that date. Deriving "the next Tuesday" put the
+      // mark a week early for a date picked further out.
+      const iso =
+        specificDate ??
+        (() => {
+          const d = new Date(`${todayIso()}T00:00:00Z`);
+          const today = (d.getUTCDay() + 6) % 7;
+          d.setUTCDate(d.getUTCDate() + ((days[0] - today + 7) % 7));
+          return d.toISOString().slice(0, 10);
+        })();
       const hit = candidates.find((c) => {
         if (hidden.has(c.userId)) return false;
         if (!runsOn(c, iso, days[0])) return false;
@@ -260,6 +265,7 @@ export async function addPersonalClass(input: {
   }
 
   revalidatePath("/week");
+  revalidatePath("/sharehub");
   return { ok: true, id: written.length === 1 ? written[0].id : undefined };
 }
 
@@ -454,6 +460,7 @@ export async function updatePersonalClass(
   }
 
   revalidatePath("/week");
+  revalidatePath("/sharehub");
   return { ok: true };
 }
 
@@ -468,5 +475,6 @@ export async function removePersonalClass(id: string): Promise<{ ok: boolean; er
   // entries lived only on /app and survived every removal for want of this.
   revalidatePath("/week");
   revalidatePath("/app");
+  revalidatePath("/sharehub");
   return { ok: true };
 }

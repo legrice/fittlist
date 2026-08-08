@@ -4789,6 +4789,28 @@ button.ps-card { cursor: pointer; }
   font-size: 14px; line-height: 1.55; color: var(--ink); margin-top: 6px;
 }
 
+/* The week a member built on the Share tab, on their own page: small day
+   bands, flat rows, a hairline under each, the coach's class a link and
+   their own entries plain. It sits above the coaches they follow. */
+.memwk { margin: 6px 0 22px; }
+.memwk-band {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--ol); padding: 14px 0 6px; border-bottom: 1px solid var(--line);
+}
+.memwk-row {
+  display: flex; align-items: baseline; gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid var(--line); color: inherit; text-decoration: none;
+}
+.memwk-time { flex-shrink: 0; width: 62px; font-weight: 600; font-size: 15px; }
+.memwk-time em { font-style: normal; font-size: 11px; margin-left: 1px; color: var(--ol); }
+.memwk-txt { display: flex; flex-direction: column; min-width: 0; }
+.memwk-nm { font-weight: 600; font-size: 15px; }
+.memwk-sub { font-size: 13px; color: var(--ol); }
+
+/* The classes sheet's add door, member only: the sheet adds as well as
+   picks, and the door reads as a row of its own under the list. */
+.shpick-add { display: block; margin: 10px 0 2px; font-size: 14.5px; }
+
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
 .mepho-img { width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block; background: #f0ebdd; }

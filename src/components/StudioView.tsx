@@ -162,18 +162,20 @@ export async function StudioView({
     }
   }
   // The commons builds the week before the studio arrives: an unclaimed
-  // studio's schedule is drawn from the public classes coaches list here and
-  // the entries members have added with this studio picked. Deduped on name
-  // and time, never attributed (a member's entry surfaces the class's facts
-  // and nothing about the member; the personal adder says so under its studio
-  // field, which is the consent), and gone the moment somebody claims the
-  // page: from then on what it says is theirs to say.
+  // studio's schedule is drawn from the public classes coaches list here.
+  // Members' own entries used to join it as plain rows and no longer do, by
+  // Matt's call: a member building their share week types classes here by
+  // the dozen now, and what they add stays off every public page but their
+  // own. The details still land in the studio's catalog, so the next person
+  // typing the class gets them back; the catalog is memory, not a listing.
+  // Gone the moment somebody claims the page either way: from then on what
+  // it says is theirs to say.
   let community = false;
   if (!s.accountUserId && !access.claimed) {
-    const [pubAll, own] = await Promise.all([
-      db.select().from(schema.classes).where(eq(schema.classes.studioId, s.id)),
-      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.studioId, s.id)),
-    ]);
+    const pubAll = await db
+      .select()
+      .from(schema.classes)
+      .where(eq(schema.classes.studioId, s.id));
     const pub = pubAll.filter((c) => c.isPublic);
     const owners = pub.length
       ? await db
@@ -224,23 +226,6 @@ export async function StudioView({
           coachPhoto: faceOf.get(c.userId)?.photo ?? null,
           coachColor: faceOf.get(c.userId)?.color ?? null,
           where: c.location,
-        });
-      }
-      for (const p of own) {
-        if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
-        if (occurrenceEnded(iso, p.startTime, p.durationMin)) continue;
-        const key = `${p.name.trim().toLowerCase()}|${p.startTime}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        // Still nobody's name on it: the consent under the personal adder's
-        // studio field is that the class joins this page, not that they do.
-        items.push({
-          id: p.id,
-          name: p.name,
-          startTime: p.startTime,
-          durationMin: p.durationMin,
-          plain: true,
-          where: p.location,
         });
       }
       items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));

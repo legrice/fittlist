@@ -13,12 +13,12 @@ export type NavItem = {
 };
 
 /**
- * Three tabs at most, and the third only for somebody who teaches.
+ * Four tabs at most, and Schedule only for somebody who teaches.
  *
  * | Account   | Tabs                                    |
  * | --------- | --------------------------------------- |
  * | Follows   | Following, Share, Profile               |
- * | Teaches   | Following, Calendar, Share, Profile     |
+ * | Teaches   | Following, Schedule, Share, Profile     |
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -49,11 +49,7 @@ export function navTabs(
     // "Following" again, by Matt's call: it wore the shorter "Follow" for a
     // stretch, and the longer word names the place rather than the act.
     { id: "following", href: "/feed", icon: "group", label: "Following" },
-    // Only for somebody who teaches: the calendar, and the hub for sharing
-    // it. Share was in every bar for a build and came off the member's, by
-    // Matt's call: until a member has a way to add things and a reason to,
-    // their app is two places, Follow and Profile, and a Share tab over a
-    // page with nothing on it was an ask before there was anything to give.
+    // Only for somebody who teaches: the calendar.
     ...(coach
       ? [
           {
@@ -65,9 +61,12 @@ export function navTabs(
             icon: "calendar_month",
             label: "Schedule",
           },
-          { id: "share" as const, href: "/sharehub", icon: "arrow_outward", label: "Share" },
         ]
       : []),
+    // Everyone's now, by Matt's call: it came off the member's bar while a
+    // member had nothing to give, and the hub is where they build the week
+    // they're going to before handing it on, so the tab is the way in.
+    { id: "share", href: "/sharehub", icon: "arrow_outward", label: "Share" },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab

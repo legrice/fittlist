@@ -12,11 +12,11 @@ import { DAYS, fmtTime, runsOn, timeToMinutes, todayIso as todayIsoNow } from "@
 // asked for it, so "share the state" means "share the loader" rather than
 // "pass the rows along".
 //
-// There was a second hat here: a week of the classes you were going to,
-// deliberately never merged with the week you teach, because promoting your
-// own classes and showing where you train are two different posts. Going marks
-// are gone from the app, so there is one hat and the segment that picked
-// between them came off the composer with it.
+// One week per person, decided by kind rather than by a hat segment: a
+// coach's picture is the week they teach, a member's is the week they are
+// going to (their marks at real classes, plus the entries they typed). The
+// two never merge, because promoting your own classes and showing where you
+// train are two different posts, and each kind only has the one.
 
 export type ShareItem = {
   /** Stable across a reload, and what the hide list is keyed on: a class row
@@ -91,31 +91,92 @@ export async function shareWeek(
     return new Map(rows.map((s) => [s.id, s.name]));
   };
 
-  // The same rows the coach's public page draws, so the picture and the page
-  // it points at can't disagree. Shifts ride along exactly when the coach has
-  // said they may.
-  //
-  // There was a second branch here, for a week of classes you were going to.
-  // It is gone with the going marks and the personal entries that fed it: a
-  // member has no calendar of their own now, so there is no second week to
-  // draw and nothing on this path forks by kind any more.
-  const rows = (await publicSchedule(me)).filter((c) => c.isPublic);
-  const names = await studioNames(rows.map((c) => c.studioId));
-  for (const iso of dates) {
-    const dow = dowOf(iso);
-    for (const c of rows) {
-      if (!runsOn(c, iso, dow)) continue;
+  if (me.kind === "fan") {
+    // The member's week: the marks they made at real classes, and the
+    // entries they typed themselves. This branch was deleted when the
+    // member calendar went, and it is back by Matt's call as the Share
+    // tab's whole subject: a member builds the week they are going to and
+    // shares it, and this loader is what the picture and the picker both
+    // read. Their profile page draws the same rows through `sharedWeek`.
+    const [marks, own] = await Promise.all([
+      db.select().from(schema.attendances).where(eq(schema.attendances.userId, userId)),
+      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+    ]);
+    const marked = marks.filter((m) => inRange.has(m.occurrenceDate));
+    const classRows = marked.length
+      ? (
+          await db
+            .select()
+            .from(schema.classes)
+            .where(inArray(schema.classes.id, [...new Set(marked.map((m) => m.classId))]))
+        ).filter((c) => c.isPublic)
+      : [];
+    const classById = new Map(classRows.map((c) => [c.id, c]));
+    const coachRows = classRows.length
+      ? await db
+          .select({ id: schema.users.id, name: schema.users.name })
+          .from(schema.users)
+          .where(inArray(schema.users.id, [...new Set(classRows.map((c) => c.userId))]))
+      : [];
+    const coachName = new Map(coachRows.map((u) => [u.id, u.name.split(/\s+/)[0]]));
+    const names = await studioNames([
+      ...classRows.map((c) => c.studioId),
+      ...own.map((p) => p.studioId),
+    ]);
+    for (const m of marked) {
+      const c = classById.get(m.classId);
+      if (!c) continue;
       put(
-        iso,
+        m.occurrenceDate,
         {
           time: fmtTime(c.startTime),
           startTime: c.startTime,
           name: c.name,
           where: (c.studioId && names.get(c.studioId)) || c.location || "",
-          who: "",
+          who: coachName.get(c.userId) ?? "",
         },
         c.id,
       );
+    }
+    for (const iso of dates) {
+      const dow = dowOf(iso);
+      for (const p of own) {
+        if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
+        put(
+          iso,
+          {
+            time: fmtTime(p.startTime),
+            startTime: p.startTime,
+            name: p.name,
+            where: (p.studioId && names.get(p.studioId)) || p.location || "",
+            who: p.withWho || "",
+          },
+          p.id,
+        );
+      }
+    }
+  } else {
+    // The same rows the coach's public page draws, so the picture and the
+    // page it points at can't disagree. Shifts ride along exactly when the
+    // coach has said they may.
+    const rows = (await publicSchedule(me)).filter((c) => c.isPublic);
+    const names = await studioNames(rows.map((c) => c.studioId));
+    for (const iso of dates) {
+      const dow = dowOf(iso);
+      for (const c of rows) {
+        if (!runsOn(c, iso, dow)) continue;
+        put(
+          iso,
+          {
+            time: fmtTime(c.startTime),
+            startTime: c.startTime,
+            name: c.name,
+            where: (c.studioId && names.get(c.studioId)) || c.location || "",
+            who: "",
+          },
+          c.id,
+        );
+      }
     }
   }
 

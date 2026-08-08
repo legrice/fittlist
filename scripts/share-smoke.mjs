@@ -380,16 +380,16 @@ await settled(coach);
 console.log("an empty week offers rather than draws nothing ok");
 await coach.close();
 
-// ---- a member has no week of their own, so the composer is not theirs
+// ---- a member's composer draws their week now: marks and dated entries
 const member = await mk("sarah@example.com", "Sarah", true);
 await member.goto(BASE + "/share");
 await member.waitForURL(/\/feed/);
 {
   // And the URL is not a way round it either.
   const r = await member.request.get(`${BASE}/api/story/compose`);
-  if (r.status() !== 404) fail("the image route should refuse a member, got " + r.status());
+  if (r.status() !== 200) fail("the image route draws a member's week now, got " + r.status());
 }
-console.log("a member has no week to draw, and the route says so too ok");
+console.log("a member's week draws from the same route ok");
 
 await member.close();
 await b.close();

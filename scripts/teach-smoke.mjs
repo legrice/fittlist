@@ -27,24 +27,26 @@ await p.waitForURL("**/feed");
 const tabs = async () =>
   (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 
-// A member: two tabs and nothing else, by Matt's call. Until a member has a
-// way to add things and a reason to, their app is Follow and Profile, and
-// the Profile one wears their face rather than a glyph.
+// A member: three tabs, by Matt's call. Share is theirs now too, because
+// the hub is where they build the week they're going to; Schedule stays a
+// coach's. The Profile tab wears their face rather than a glyph.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 2) fail("a member gets two tabs, got " + t.join());
-if (!t[0].includes("Follow") || t.some((x) => /Share|Schedule/.test(x)))
-  fail("a member's bar is Follow and Profile only: " + t.join());
+if (t.length !== 3) fail("a member gets three tabs, got " + t.join());
+if (!t[0].includes("Follow") || !t[1].includes("Share") || t.some((x) => /Schedule/.test(x)))
+  fail("a member's bar is Follow, Share and Profile: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
 await p.waitForURL(/\/feed/);
 console.log("a member has no calendar to land on: /calendar sends them to Following");
 
-// No Share tab means no hub either: a typed URL lands back on Following.
+// The Share tab opens the hub for a member too now: the Week alone, and
+// the build flow leading because the week starts empty.
 await p.goto(BASE + "/sharehub");
-await p.waitForURL(/\/feed/);
-console.log("a member's /sharehub lands back on Following");
+await p.getByRole("button", { name: /Add the classes/ }).waitFor();
+if (await p.locator(".shseg").count()) fail("a member's hub has one subject and no segment row");
+console.log("a member's /sharehub is the Week alone, leading with the add");
 
 // The Profile tab opens your page, not a list of switches. Settings are the
 // gear on it, which is the only door to them there is.
@@ -118,7 +120,8 @@ await p.locator(".setrow", { hasText: "I teach too" }).click();
 await p.locator(".navtab", { hasText: "Schedule" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 2) fail("turning it off should take Calendar and Share away, got " + t.join());
+if (t.length !== 3 || t.some((x) => /Schedule/.test(x)))
+  fail("turning it off should take Schedule away and leave Share, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");
