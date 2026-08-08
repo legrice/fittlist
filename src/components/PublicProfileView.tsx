@@ -304,13 +304,27 @@ export async function PublicProfileView({
   const schedule = (
     <>
       {days.length === 0 ? (
-        <div className="empty-block">
-          <h2>Nothing on the calendar</h2>
-          <p>
-            {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
-            the moment they do.
-          </p>
-        </div>
+        // The owner reads their own page in the first person, with the way
+        // to fix it right there: the third-person copy told a coach on
+        // their own profile that "Anotherone hasn't posted classes yet",
+        // which is the app talking about them to them.
+        isOwner ? (
+          <div className="empty-block">
+            <h2>Nothing on your schedule</h2>
+            <p>Add the classes you coach and this page fills in.</p>
+            <Link className="btn si folfind" href="/calendar">
+              Add a class
+            </Link>
+          </div>
+        ) : (
+          <div className="empty-block">
+            <h2>Nothing on the calendar</h2>
+            <p>
+              {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
+              the moment they do.
+            </p>
+          </div>
+        )
       ) : (
         // Server-rendered rows. For a visitor they're wrapped so an ordinary
         // tap opens the class from the bottom instead of navigating, with the
