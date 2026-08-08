@@ -171,7 +171,15 @@ export function Adder({
   // (where), and the catalog was hidden inside a name field's autocomplete.
   // Everything else (an edit, a duplicate, a gym's slot, a personal entry)
   // keeps the single form: their answers are already mostly filled.
-  const stepped = !isGym && !isPersonal && !isEdit && !prefill?.name;
+  // Stepped for a coach's brand-new class, and for a member's share-week
+  // add, by Matt's call: the studio first, then the studio's own list
+  // (which is the catalog handing the details back), then the form. A
+  // studio-less entry still goes through the form's own picker elsewhere.
+  const stepped =
+    !isGym &&
+    !isEdit &&
+    !prefill?.name &&
+    (!isPersonal || (Boolean(personal?.oneOff) && !personal?.editId));
   const [stage, setStage] = useState<Stage>(stepped ? "pick" : "form");
   // A prefill with no name is a starting point, not a copy: the rota opens the
   // form on the day that was tapped, and that is still a new class.

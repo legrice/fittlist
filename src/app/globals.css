@@ -4811,6 +4811,18 @@ button.ps-card { cursor: pointer; }
    picks, and the door reads as a row of its own under the list. */
 .shpick-add { display: block; margin: 10px 0 2px; font-size: 14.5px; }
 
+/* The member hub's start block: in place of an empty poster, so the one
+   button that fixes the emptiness is never below the fold. The words are
+   the experiment introducing itself. */
+.shstart { padding: 34px 10px 20px; text-align: center; }
+.shstart h2 { font-size: 24px; line-height: 1.15; margin: 0 0 12px; }
+.shstart p { font-size: 14px; line-height: 1.55; color: var(--ol); margin: 0 auto 10px; max-width: 320px; }
+.shstart .btn { width: 100%; margin-top: 14px; background: var(--si); color: #fff; }
+.shstart-fb {
+  display: inline-block; margin-top: 14px; font-size: 13px; font-weight: 600;
+  color: var(--si); text-decoration: none;
+}
+
 /* The experiment note under the member hub's buttons: quiet, honest, and
    carrying the one door that decides whether the experiment stays. The
    bottom margin is what lets it scroll clear of the fixed tab bar. */
@@ -6361,6 +6373,17 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--card); color: var(--ink); text-align: left; cursor: pointer;
 }
 .shctrl:active { background: var(--cl); }
+/* The rail's add chip, member only: the one loud chip, because growing the
+   week is this screen's first action. Single-line where its siblings stack
+   a label over a value. After .shctrl and its :active, or the base ground
+   wins the cascade and the chip goes white. */
+.shctrl.shctrl-add {
+  flex-direction: row; align-items: center; min-width: 0;
+  background: var(--si); color: #fff;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600; font-size: 15px;
+}
+.shctrl.shctrl-add:active { background: var(--si); opacity: .85; }
 .shctrl-k {
   font-size: 11px; font-weight: 600; letter-spacing: .09em;
   text-transform: uppercase; color: var(--ol);

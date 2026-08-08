@@ -147,6 +147,12 @@ export function ShareHubScreen({
     setPageHost(window.location.host);
   }, []);
 
+  // A member with nothing anywhere yet is building, not sharing: the screen
+  // becomes the start block alone, because an empty poster pushed the one
+  // button that fixes it below the fold. The first add flips this off and
+  // the picture appears with the class on it.
+  const building = !coach && items.length === 0;
+
   // What the picked range holds, and what of it is showing: the control says
   // "4 of 5" and the picture has to be those four, which is why both read
   // the same items and the same hide set.
@@ -303,6 +309,26 @@ export function ShareHubScreen({
           above them were room spent saying what the eye already sees.
           `shpage` is the marker the gradient opt-out keys on. */}
       <div className="cardwrap shpage">
+        {/* The start block, in place of an empty poster, by Matt's call:
+            the picture of nothing pushed the one button that fixes it
+            below the fold, and the words here are the experiment saying
+            what it is before anybody has invested a tap. */}
+        {building && (
+          <div className="shstart">
+            <h2>Build the week you&rsquo;re going to</h2>
+            <p>
+              Add your classes and they become a picture: post it, or send it to the group
+              chat. Each class sits on your profile until it has run.
+            </p>
+            <p>This is an experiment. We&rsquo;re finding out whether it&rsquo;s worth keeping.</p>
+            <button className="btn si" onClick={() => setAddOpen(true)}>
+              Add the classes you&rsquo;re going to
+            </button>
+            <a className="shstart-fb" href="/feedback">
+              Tell us what you think
+            </a>
+          </div>
+        )}
         {segs.length > 1 && (
           <div className="shseg" role="tablist" aria-label="What to share">
             {segs.map((s) => (
@@ -324,6 +350,7 @@ export function ShareHubScreen({
             Matt's call: the next card peeks in from the edge, which is
             what says a swipe exists. A grab mid-ride cancels the pill
             tap's claim on the scroll. */}
+        {!building && (
         <div
           className="shslides"
           ref={slidesRef}
@@ -360,8 +387,9 @@ export function ShareHubScreen({
             </div>
           )}
         </div>
+        )}
 
-        {(seg === "week" || seg === "profile") && (
+        {!building && (seg === "week" || seg === "profile") && (
           <>
             {/* The colours right under the picture, bare circles, centred:
                 tapping one redraws the picture above it, and the picture is
@@ -394,7 +422,15 @@ export function ShareHubScreen({
             {seg === "week" && (
               <div className="shctrls">
                 {/* The rail of what the picture says: its range, its roster,
-                    its words. Each chip is a small labelled door to a sheet. */}
+                    its words. Each chip is a small labelled door to a sheet.
+                    A member's rail leads with the add in brand, by Matt's
+                    call: growing the week is this screen's first action, so
+                    the loud chip is the one that does it. */}
+                {!coach && (
+                  <button className="shctrl shctrl-add" onClick={() => setAddOpen(true)}>
+                    + Add a class
+                  </button>
+                )}
                 <button className="shctrl" onClick={() => setPick("dates")}>
                   <span className="shctrl-k">Dates</span>
                   <span className="shctrl-v">{rangeLabel}</span>
@@ -426,40 +462,25 @@ export function ShareHubScreen({
               </div>
             )}
 
-            {/* A member's week starts empty and this screen is where it gets
-                built, so an empty range leads with the one act that fixes
-                it. With something on it, sharing leads and adding stays a
-                tap away. */}
-            {!coach && inRange.length === 0 ? (
-              <div className="shcta">
-                <button className="btn si" onClick={() => setAddOpen(true)}>
-                  Add the classes you&rsquo;re going to
+            {/* One call now that the rail carries the add: the button under
+                the picture shares the thing on screen. */}
+            <div className="shcta">
+              {canShareFiles ? (
+                <button
+                  className="btn si"
+                  disabled={sharing}
+                  onClick={() =>
+                    shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
+                  }
+                >
+                  {sharing ? "Opening…" : "Share image"}
                 </button>
-              </div>
-            ) : (
-              <div className="shcta">
-                {canShareFiles ? (
-                  <button
-                    className="btn si"
-                    disabled={sharing}
-                    onClick={() =>
-                      shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
-                    }
-                  >
-                    {sharing ? "Opening…" : "Share image"}
-                  </button>
-                ) : (
-                  <a className="btn si" href={imgUrl} download={fileName}>
-                    Save image
-                  </a>
-                )}
-                {!coach && (
-                  <button className="btn ghost" onClick={() => setAddOpen(true)}>
-                    Add a class
-                  </button>
-                )}
-              </div>
-            )}
+              ) : (
+                <a className="btn si" href={imgUrl} download={fileName}>
+                  Save image
+                </a>
+              )}
+            </div>
             {/* Said out loud, by Matt's call: this side of the tab is being
                 tried, and the people trying it should know that and have a
                 door to say whether it earns its place. The door is the same
