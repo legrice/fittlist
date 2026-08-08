@@ -6285,11 +6285,20 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15.5px; font-weight: 600; cursor: pointer;
 }
 .shseg-pill.on { background: var(--si); color: #fff; }
-/* Dates and Classes, side by side above the colours: what the picture
-   covers, then what it wears. Each is a small labelled door to its sheet. */
-.shctrls { display: flex; gap: 10px; margin-top: 16px; }
+/* The rail under the colours: Dates, Classes, Message, each a small
+   labelled door to its sheet. What the picture covers, what's on it,
+   what it says. It scrolls rather than splitting the width three ways:
+   three equal chips at 390px cut every value to its first word. */
+.shctrls {
+  display: flex; gap: 10px; margin-top: 14px;
+  overflow-x: auto; scrollbar-width: none;
+  margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  padding-left: calc(50vw - 50%); padding-right: calc(50vw - 50%);
+}
+.shctrls::-webkit-scrollbar { display: none; }
 .shctrl {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  flex: 0 0 auto; min-width: 128px; max-width: 240px;
+  display: flex; flex-direction: column; gap: 2px;
   padding: 12px 14px; border-radius: 16px; border: none;
   background: var(--card); color: var(--ink); text-align: left; cursor: pointer;
 }
@@ -6303,14 +6312,15 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15.5px; font-weight: 600; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
-.shcolors { display: flex; align-items: center; gap: 12px; margin-top: 14px; min-width: 0; }
-.shcolors-lbl {
-  flex-shrink: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .09em;
-  text-transform: uppercase; color: var(--ol);
-}
+/* Bare circles centred under the picture, the Spotify grammar, by Matt's
+   call: the picture is the label, so the word "Colors" came off. `safe
+   center` keeps the row scrollable when sixteen swatches overflow; plain
+   center would clip the left end off the scroller. */
+.shcolors { display: flex; align-items: center; margin-top: 16px; min-width: 0; }
 .shcolors-row {
-  display: flex; gap: 8px; overflow-x: auto; padding: 2px;
+  flex: 1; display: flex; gap: 8px; overflow-x: auto; padding: 2px;
   margin: -2px 0; scrollbar-width: none;
+  justify-content: safe center;
 }
 .shcolors-row::-webkit-scrollbar { display: none; }
 /* The ring lives inside the swatch's own box: the colour paints the content

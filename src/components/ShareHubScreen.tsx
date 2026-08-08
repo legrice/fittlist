@@ -50,6 +50,7 @@ export function ShareHubScreen({
   items,
   defaultFrom,
   today,
+  savedHeadline,
 }: {
   /** A coach gets the Week segment; a member's page has no schedule to draw. */
   coach: boolean;
@@ -65,6 +66,10 @@ export function ShareHubScreen({
   /** The app's today, decided on the server clock: the start-day list runs
    *  a fortnight from it. */
   today: string;
+  /** The words the poster opens with: the saved headline when there is
+   *  one, so the Message chip never claims the default while the picture
+   *  draws something else. */
+  savedHeadline: string;
 }) {
   const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
   // The preview redraws server-side on every knob (theme, dates, classes),
@@ -75,7 +80,11 @@ export function ShareHubScreen({
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
   const [hide, setHide] = useState<Set<string>>(new Set());
-  const [pick, setPick] = useState<null | "dates" | "classes">(null);
+  // The words at the top of the poster. Sent explicitly on every request
+  // (the composer's old doctrine): letting the route fall back to saved
+  // prefs would let the chip and the picture disagree.
+  const [headline, setHeadline] = useState(savedHeadline);
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -106,6 +115,7 @@ export function ShareHubScreen({
   const imgUrl =
     seg === "week"
       ? `/api/story/compose?theme=${themeId}&from=${from}&days=${days}` +
+        `&headline=${encodeURIComponent(headline)}` +
         `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`
       : `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const fileName =
@@ -187,29 +197,27 @@ export function ShareHubScreen({
           ))}
         </div>
 
-        {seg === "week" && (
-          <div className="shctrls">
-            {/* The range and the roster, side by side above the colours: what
-                the picture covers, then what it wears. */}
-            <button className="shctrl" onClick={() => setPick("dates")}>
-              <span className="shctrl-k">Dates</span>
-              <span className="shctrl-v">{rangeLabel}</span>
-            </button>
-            <button className="shctrl" onClick={() => setPick("classes")}>
-              <span className="shctrl-k">Classes</span>
-              <span className="shctrl-v">
-                {inRange.length === 0 ? "None in range" : `${shown} of ${inRange.length} showing`}
-              </span>
-            </button>
-          </div>
-        )}
-
         {seg !== "qr" && (
           <>
-            {/* The colours, as the swatches they are: tapping one redraws the
-                picture below it, and the picture is the label. */}
+            {/* The picture leads, the way Spotify's share sheet leads with
+                the card, by Matt's call: the poster is the point of the
+                screen, so it comes before every knob that changes it. */}
+            <div className="shprev-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={`shprev${seg === "profile" ? " shprev-sq" : ""}${imgLoading ? " loading" : ""}`}
+                src={imgUrl}
+                alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
+                onLoad={() => setImgLoading(false)}
+                onError={() => setImgLoading(false)}
+              />
+              {imgLoading && <span className="shspin" aria-label="Drawing the picture" />}
+            </div>
+
+            {/* The colours right under the picture, bare circles, centred:
+                tapping one redraws the picture above it, and the picture is
+                the label, so the word "Colors" said nothing. */}
             <div className="shcolors">
-              <span className="shcolors-lbl">Colors</span>
               <div className="shcolors-row" role="listbox" aria-label="Colors">
                 {(Object.entries(STORY_THEMES) as [StoryThemeId, (typeof STORY_THEMES)["paper"]][]).map(
                   ([id, t]) => (
@@ -234,17 +242,26 @@ export function ShareHubScreen({
               </div>
             </div>
 
-            <div className="shprev-wrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className={`shprev${seg === "profile" ? " shprev-sq" : ""}${imgLoading ? " loading" : ""}`}
-                src={imgUrl}
-                alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
-                onLoad={() => setImgLoading(false)}
-                onError={() => setImgLoading(false)}
-              />
-              {imgLoading && <span className="shspin" aria-label="Drawing the picture" />}
-            </div>
+            {seg === "week" && (
+              <div className="shctrls">
+                {/* The rail of what the picture says: its range, its roster,
+                    its words. Each chip is a small labelled door to a sheet. */}
+                <button className="shctrl" onClick={() => setPick("dates")}>
+                  <span className="shctrl-k">Dates</span>
+                  <span className="shctrl-v">{rangeLabel}</span>
+                </button>
+                <button className="shctrl" onClick={() => setPick("classes")}>
+                  <span className="shctrl-k">Classes</span>
+                  <span className="shctrl-v">
+                    {inRange.length === 0 ? "None in range" : `${shown} of ${inRange.length} showing`}
+                  </span>
+                </button>
+                <button className="shctrl" onClick={() => setPick("message")}>
+                  <span className="shctrl-k">Message</span>
+                  <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
+                </button>
+              </div>
+            )}
 
             <div className="shcta">
               {canShareFiles ? (
@@ -346,6 +363,39 @@ export function ShareHubScreen({
                 </button>
               ))}
             </div>
+            <div className="publishwrap nostick">
+              <button className="btn si" onClick={() => setPick(null)}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "message" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Message</h2>
+            <p className="lead">The words at the top of the picture.</p>
+            <label className="flabel" htmlFor="shMsg">
+              Your words
+            </label>
+            <input
+              id="shMsg"
+              className="editinput"
+              value={headline}
+              maxLength={44}
+              placeholder="Come train with me."
+              onChange={(e) => setHeadline(e.target.value)}
+            />
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done

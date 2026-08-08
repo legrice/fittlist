@@ -17,7 +17,12 @@ export default async function ShareHubPage() {
   if (!userId) redirect("/");
   const db = await getDb();
   const [me] = await db
-    .select({ kind: schema.users.kind, handle: schema.users.handle, name: schema.users.name })
+    .select({
+      kind: schema.users.kind,
+      handle: schema.users.handle,
+      name: schema.users.name,
+      storyPrefs: schema.users.storyPrefs,
+    })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   // No handle means mid-signup, and nothing here works without a page to
@@ -53,6 +58,7 @@ export default async function ShareHubPage() {
       items={items}
       defaultFrom={defaultFrom}
       today={today}
+      savedHeadline={me.storyPrefs?.headline ?? ""}
     />
   );
 }
