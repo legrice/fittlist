@@ -50,25 +50,24 @@ export function detectProvider(rawUrl: string): string {
   return "Website";
 }
 
-// Curated class categories. Kept short and canonical so the per-studio catalog
-// (and a future member-facing browse) stays organized instead of ten spellings
-// of the same thing.
-export const CLASS_TYPES = [
-  "Strength",
-  "HIIT",
-  "Conditioning",
-  "Bootcamp",
-  "Cycle",
-  "Yoga",
-  "Pilates",
-  "Barre",
-  "Mobility",
-  "Boxing",
-  "Run",
-  "Dance",
-  "Other",
-] as const;
-export type ClassType = (typeof CLASS_TYPES)[number];
+/**
+ * What a class is, from the one vocabulary.
+ *
+ * This was its own shorter list (thirteen words) while a studio's types and a
+ * coach's disciplines both came from `STUDIO_TYPES`, and the split quietly
+ * broke the rule the rest of the directory is built on: one word has to mean
+ * the same thing everywhere. "Kettlebell" found the kettlebell gyms and the
+ * kettlebell coaches and could not be put on a kettlebell class at all,
+ * because the class picker had never heard of it. Discover's chips were built
+ * from two vocabularies for the same idea, so a word that narrowed one half
+ * could not narrow another.
+ *
+ * It is the same list now. The alias stays because the name reads right at
+ * the call site: a class picks what it is, a studio picks what it offers, and
+ * they are the same set of words.
+ */
+export { STUDIO_TYPES as CLASS_TYPES } from "@/lib/studio";
+export type ClassType = string;
 
 // Studio colors cycle by directory index (studios.seq), deterministic.
 export const PALETTES = [
@@ -99,7 +98,24 @@ export function blocksFill(seq: number) {
   return BLOCKS_FILLS[Math.max(0, seq - 1) % BLOCKS_FILLS.length];
 }
 
-// Story-image looks - one per coach personality, all built from brand colors.
+/**
+ * The colourways a poster comes in. Sixteen, and colour is the whole of the
+ * choice again.
+ *
+ * There was a second axis for a while, ten arrangements the picture could be
+ * drawn in, and it came out: even spread hard apart they were not different
+ * enough to be worth a decision, and the picker cost a sheet and a grid to
+ * offer a difference nobody could see. Colour is the thing that actually makes
+ * two posters look like two posters, so there are twice as many of them now
+ * and nothing else to pick.
+ *
+ * Every one is built the same way and has to answer the same four questions,
+ * or it will look right in the swatch and wrong in the poster: the ground, the
+ * ink on it, an accent with enough contrast to carry the headline and the
+ * times, and a faint tone for the day labels that is still readable. `lockup`
+ * says which of the two wordmarks sits on it, and `lockupAccent` swaps the
+ * mark's sienna row when sienna would vanish into the ground.
+ */
 export type StoryThemeId =
   | "iron"
   | "paper"
@@ -108,7 +124,15 @@ export type StoryThemeId =
   | "midnight"
   | "sunset"
   | "blush"
-  | "slate";
+  | "slate"
+  | "citrus"
+  | "forest"
+  | "cobalt"
+  | "mono"
+  | "sand"
+  | "plum"
+  | "surf"
+  | "ember";
 export type StoryTheme = {
   label: string;
   bg: string;
@@ -121,15 +145,112 @@ export type StoryTheme = {
   lockupAccent?: string; // swap the lockup's Sienna row when it would vanish on bg
 };
 export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
-  paper: { label: "Cream", bg: "#f4efe1", fg: "#191502", accent: "#dd6a35", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
-  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#dd6a35", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
+  // The first colourway wears the site's own gradient, by Matt's call: the
+  // warm top fading into the warm gray, so the default poster and the app
+  // it came from are one thing.
+  paper: { label: "Cream", bg: "linear-gradient(180deg, #f8dcc6 0%, #f3e6db 38%, #f1efe9 78%)", fg: "#191502", accent: "#C2410C", muted: "#6b6555", faint: "#8a8570", time: "#3a3526", lockup: "ink" },
+  iron: { label: "Ink", bg: "#191502", fg: "#f4efe1", accent: "#C2410C", muted: "#c9c3ae", faint: "#8a8570", time: "#dad4be", lockup: "cloud" },
   moss: { label: "Moss", bg: "#4E4B3B", fg: "#F7F2E8", accent: "#CBD665", muted: "#C9C3AE", faint: "#A8A48E", time: "#E6E3D6", lockup: "cloud" },
-  pop: { label: "Pop", bg: "#dd6a35", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
+  pop: { label: "Pop", bg: "#C2410C", fg: "#f4efe1", accent: "#191502", muted: "#f9e4dd", faint: "#f2c1b2", time: "#fff2ea", lockup: "cloud", lockupAccent: "#191502" },
   midnight: { label: "Midnight", bg: "#161e33", fg: "#f2efe4", accent: "#e5b558", muted: "#9aa3ba", faint: "#77809a", time: "#d5d9e6", lockup: "cloud", lockupAccent: "#e5b558" },
   sunset: { label: "Sunset", bg: "linear-gradient(170deg, #3b1c53 0%, #8f3a5f 55%, #d96b4a 100%)", fg: "#fdf3e6", accent: "#ffc46b", muted: "#e5c3bc", faint: "#d3a9a6", time: "#ffe6cf", lockup: "cloud", lockupAccent: "#ffc46b" },
   blush: { label: "Blush", bg: "#f7dde2", fg: "#3d1b25", accent: "#c2385e", muted: "#8f6470", faint: "#b18f98", time: "#5c333f", lockup: "ink", lockupAccent: "#c2385e" },
   slate: { label: "Slate", bg: "#2b2e33", fg: "#eef0ee", accent: "#c9e265", muted: "#a3a8ad", faint: "#7f858c", time: "#d8dcd8", lockup: "cloud", lockupAccent: "#c9e265" },
+  // The eight added when the style axis came out. Four grounds that are new
+  // families rather than shades of the eight above (a yellow, a deep green, a
+  // blue, a true black and white), and four that are the quiet end, because
+  // the quiet ones are what most people settle on and there was only one.
+  citrus: { label: "Citrus", bg: "#f2c14e", fg: "#241d05", accent: "#7a2e0e", muted: "#6d5a24", faint: "#8a7333", time: "#3a2f0c", lockup: "ink", lockupAccent: "#7a2e0e" },
+  forest: { label: "Forest", bg: "#14312a", fg: "#eaf3ec", accent: "#8fd6a8", muted: "#9db8a9", faint: "#7d9a8c", time: "#d3e6d8", lockup: "cloud", lockupAccent: "#8fd6a8" },
+  cobalt: { label: "Cobalt", bg: "#2438d6", fg: "#f2f3ff", accent: "#ffd447", muted: "#b3bbf5", faint: "#96a0ee", time: "#e2e5ff", lockup: "cloud", lockupAccent: "#ffd447" },
+  mono: { label: "Mono", bg: "#0d0d0d", fg: "#fafafa", accent: "#fafafa", muted: "#9a9a9a", faint: "#7a7a7a", time: "#e4e4e4", lockup: "cloud", lockupAccent: "#fafafa" },
+  sand: { label: "Sand", bg: "#e3d7c2", fg: "#2b2413", accent: "#a1522b", muted: "#6f6350", faint: "#8b7d67", time: "#3f3524", lockup: "ink", lockupAccent: "#a1522b" },
+  plum: { label: "Plum", bg: "#3b1c3f", fg: "#f6ecf5", accent: "#f0a3c8", muted: "#b79ab6", faint: "#9a7d9a", time: "#e6d6e5", lockup: "cloud", lockupAccent: "#f0a3c8" },
+  surf: { label: "Surf", bg: "#cfe9e4", fg: "#10322e", accent: "#0f6b5c", muted: "#5c7f7a", faint: "#7c9b96", time: "#1d423d", lockup: "ink", lockupAccent: "#0f6b5c" },
+  ember: { label: "Ember", bg: "linear-gradient(165deg, #1a1005 0%, #6b2a0f 60%, #c2410c 100%)", fg: "#fdeee2", accent: "#ffb066", muted: "#d9b49c", faint: "#bd9a80", time: "#ffe0c6", lockup: "cloud", lockupAccent: "#ffb066" },
 };
+/**
+ * How the picture is drawn, as opposed to what colour it is.
+ *
+ * There were ten of these, and there is one. The ten were an attempt at "more
+ * fun ways to share": a poster arrangement, a stacked one, a ticket, a
+ * marquee, and so on, each a different point in a small vocabulary of
+ * alignment, case, rules, chips and where the time sits. They were spread as
+ * hard apart as the vocabulary allowed and they still were not different
+ * enough to be worth a decision, which is the honest verdict on them: the
+ * picker cost a sheet, a grid and ten miniatures to offer a difference nobody
+ * could see. What actually makes two posters look like two posters is colour,
+ * so there are sixteen colourways now and no second question.
+ *
+ * The shape stays because the paint reads it: `renderStory` takes a
+ * `StoryStyle` and honours every knob on it, and `check:story` divides its
+ * budget by `rowScale`. Reducing this to one entry deletes nine styles without
+ * touching the renderer, and is what a style axis coming back would be built
+ * on. Nothing in the app offers a choice of one.
+ */
+export type StoryStyleId = "plain";
+
+export type StoryStyle = {
+  label: string;
+  /** Multiplies the headline. */
+  headline: number;
+  /** Multiplies the class name on each row. */
+  name: number;
+  /** UPPERCASE the class names. */
+  upper: boolean;
+  /** Where the block sits, and where each row reads from. */
+  align: "left" | "center";
+  /** A line under each row: none, a hairline, or a full rule. */
+  rule: "none" | "hair" | "bold";
+  /** A filled block behind each row, in the theme's own faint tone. */
+  chip: boolean;
+  /** Corner radius on that block. */
+  radius: number;
+  /** The time on its own line under the name rather than out to the right. */
+  stackTime: boolean;
+  /** Letter-spacing on the day label, in em. */
+  dayTrack: number;
+  /**
+   * How much taller a row draws than the plain one, as a multiplier.
+   *
+   * This is the contract that keeps a style from clipping the canvas.
+   * `planStory` fits a week to a fixed budget using one set of constants, and
+   * `check:story` holds 6,000 synthetic weeks to it; a style that quietly grew
+   * its rows would pass the planner and overflow the paint, which is the exact
+   * failure the planner exists to prevent. Rather than teach the planner every
+   * style, the routes divide the budget by this. Err high: a style that draws
+   * shorter than it claims wastes a little canvas, one that draws taller loses
+   * somebody's Thursday.
+   */
+  rowScale: number;
+};
+
+export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
+  plain: { label: "Plain", headline: 1.0, name: 1.0, upper: false, align: "left", rule: "none", chip: false, radius: 0, stackTime: false, dayTrack: 0.12, rowScale: 1.0 },
+};
+
+/**
+ * The one style, and a colourway, from whatever the URL said.
+ *
+ * Self-healing on purpose: an unknown colour falls back to Cream rather than
+ * erroring or drawing something with no ink on it. `?theme=` and `?palette=`
+ * both land here, by id and by label, because both are out in the world: the
+ * composer sent labels while colour belonged to a style, and every link before
+ * that sent ids.
+ */
+export function storyLook(
+  styleId: string | null,
+  paletteId: string | null,
+): [StoryStyleId, StoryStyle, StoryTheme] {
+  void styleId;
+  const want = (paletteId ?? "").toLowerCase();
+  const byId = (Object.keys(STORY_THEMES) as StoryThemeId[]).find((k) => k.toLowerCase() === want);
+  const byLabel = (Object.keys(STORY_THEMES) as StoryThemeId[]).find(
+    (k) => STORY_THEMES[k].label.toLowerCase() === want,
+  );
+  return ["plain", STORY_STYLES.plain, STORY_THEMES[byId ?? byLabel ?? "paper"]];
+}
+
 export function storyTheme(id: string | null): [StoryThemeId, StoryTheme] {
   const key = (id && id in STORY_THEMES ? id : "paper") as StoryThemeId;
   return [key, STORY_THEMES[key]];
@@ -201,6 +322,29 @@ export function fmtDays(days: number[]): string {
 // these three functions.
 const APP_TZ = process.env.NEXT_PUBLIC_APP_TZ || "America/New_York";
 
+/** The app's timezone, for anything that writes a wall-clock time somewhere
+ *  else (the Google Calendar sync): a class's "6:00" means 6:00 here. */
+export function appTz(): string {
+  return APP_TZ;
+}
+
+/** How far back the calendars scroll: eight weeks of what has been. One
+ *  number, shared by the loader that fetches the window and the screens
+ *  that reveal it, so the scroll can't outrun the data. */
+export const CAL_PAST_DAYS = 56;
+
+/** "Today", "Tomorrow", then the ordinary day header: the two days you
+ *  stand closest to read better as words than dates. One helper so
+ *  Following and the calendars can't disagree on where words end.
+ *
+ *  The relative word no longer replaces the date, it leads it: "Today" alone
+ *  made somebody work out which date they were looking at, and every other
+ *  heading in the app was already saying one. `dayBandLabel` is the single
+ *  answer, so a heading and a band can't word the same day differently. */
+export function fmtDayHeaderRel(iso: string, today = todayIso()): string {
+  return dayBandLabel(iso, today);
+}
+
 /** ISO date (YYYY-MM-DD) of this instant in the app's timezone. Where "from
  *  now on" starts. Pass a Date to ask what day some other instant falls on. */
 export function todayIso(now = new Date()): string {
@@ -241,6 +385,51 @@ export function mondayOfCurrentWeek(now = new Date()): string {
   const m = new Date(`${todayIso(now)}T00:00:00Z`);
   m.setUTCDate(m.getUTCDate() - ((m.getUTCDay() + 6) % 7));
   return m.toISOString().slice(0, 10);
+}
+
+/**
+ * The three weeks the app flips through, Sunday to Saturday.
+ *
+ * Both Calendar and Following are a week at a time with an arrow either side,
+ * and this is where "which week" is decided so the two cannot disagree. Three
+ * is the whole range: this one, next, and the one after. A schedule that runs
+ * a year out is a thing to scroll, and a week you step through is a thing to
+ * read, which is the difference the simplification is about.
+ *
+ * Sunday-led, like every other week this app draws. `mondayOfCurrentWeek` is
+ * still here for the digests, which think in working weeks.
+ */
+export const WEEKS_AHEAD = 2;
+
+export function sundayOfWeek(offset = 0, today = todayIso()): string {
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - d.getUTCDay() + offset * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+/** The seven ISO dates of that week, in order. */
+export function weekDates(offset = 0, today = todayIso()): string[] {
+  const start = new Date(`${sundayOfWeek(offset, today)}T00:00:00Z`);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+/** "Aug 3 - 9", or "Aug 31 - Sep 6" when it straddles a month. The dash is a
+ *  range's own, the same label exemption a date header carries. */
+export function weekRangeLabel(offset = 0, today = todayIso()): string {
+  const days = weekDates(offset, today);
+  const a = new Date(`${days[0]}T00:00:00Z`);
+  const b = new Date(`${days[6]}T00:00:00Z`);
+  const mon = (d: Date) => d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+  const num = (d: Date) => d.getUTCDate();
+  const right = mon(a) === mon(b) ? `${num(b)}` : `${mon(b)} ${num(b)}`;
+  // The range's own dash, the same exemption a date header carries: this is a
+  // label rather than a sentence.
+  // check-copy-ignore
+  return `${mon(a)} ${num(a)} — ${right}`;
 }
 
 export function timeToMinutes(v: string): number {
@@ -294,6 +483,38 @@ export function fmtDayHeader(iso: string): string {
   // The one em dash in the product. A date is a label, not a sentence, and
   // this is the shape it's wanted in. check-copy-ignore
   return `${weekday} — ${md}`;
+}
+
+/**
+ * The day heading split in two: the name on the left, the date on the right.
+ *
+ * The band wants them apart rather than joined by the dash, so the relative
+ * word and the absolute date are both scannable and the right-hand column
+ * stays aligned down the whole scroll. Only the relative words need to know
+ * what today is; a weekday and a date are the same whatever the clock says,
+ * so `today` is optional and its absence just means no Today or Tomorrow.
+ */
+export function dayBandLabel(iso: string, today?: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  // Abbreviated, per the design: three letters carry the day as well as nine
+  // do at this size, and a band that runs to "Wednesday" pushes its own date
+  // toward the edge on a 390px screen.
+  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  // Every band reads the same way: weekday, dash, date. "Today" and "Tomorrow"
+  // led their own bands for a long time, with the weekday they displaced
+  // pushed into the date so the day was still said. That was the right shape
+  // while the band was the only thing marking where you were in the list; the
+  // band carries a dot on today now, which says it without spending the label
+  // on it, and two bands out of a fortnight worded differently from the rest
+  // made the column of dates impossible to scan.
+  //
+  // `today` stays in the signature because every caller passes it and the dot
+  // is decided from the same value; it just no longer changes the words.
+  void today;
+  // A comma, not the dash, by Matt's call: "Tue, Aug 5", the same shape the
+  // class sheet's date fact wears.
+  return `${wd}, ${md}`;
 }
 
 /** Where a one-off falls relative to the current Mon–Sun week.

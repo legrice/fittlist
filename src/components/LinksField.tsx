@@ -53,7 +53,7 @@ export function LinksField({
             aria-label={`Remove ${l.label}`}
             onClick={() => onChange(value.filter((_, j) => j !== i))}
           >
-            <Icon name="close" size={14} />
+            <Icon name="close" size={16} />
           </button>
         </div>
       ))}

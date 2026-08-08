@@ -1,139 +1,92 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LocationInput } from "@/components/LocationInput";
+import { LocationPicker } from "@/components/LocationPicker";
 import { updateProfile } from "@/app/actions/profile";
-import { completeOnboarding, setCoachStudios } from "@/app/actions/onboarding";
-import { createStudio } from "@/app/actions/studios";
-import type { StudioDto } from "@/lib/types";
-import { Icon } from "@/components/Icon";
+import { completeOnboarding, suggestedCoaches } from "@/app/actions/onboarding";
+import { setTeaching } from "@/app/actions/auth";
+import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
+import { takeAfterAuth } from "@/lib/afterauth";
+import { readPhotoPair } from "@/lib/photo";
+import type { GeoPlace } from "@/lib/geocode";
 
+/** Somebody worth following on the way in: loaded when the follow step
+ *  opens, so the place picked on the page before can rank them by
+ *  nearness. */
+export type SuggestedCoach = {
+  id: string;
+  handle: string;
+  name: string;
+  photo: string | null;
+  color: string;
+  /** Their tagline, or nothing: the row survives an empty one. */
+  sub: string;
+};
 
-
+// The post-signup wizard, one shape for everyone, by Matt's call. The
+// username came first (AuthFlow's claim step), and then three pages here:
+//
+//   1. Do you teach? The role question moved here from the signup sheet:
+//      asking before the account exists made the very first screen a form,
+//      and the answer is one tap that can change later in settings anyway
+//      (setTeaching is the same switch either way).
+//   2. About you: photo, tagline, a line or two, and the one required
+//      field, the city. Skippable except the city, which Discover needs.
+//   3. Follow a few coaches: the act the whole member side waits on,
+//      offered while the app is still empty. Skippable in as many words.
+//
+// The studio-picking step is gone: publishing a class already writes the
+// association, so the wizard was asking for something the adder learns
+// anyway. The contact fields went to settings for the same reason: an
+// onboarding is for what the app cannot work without.
 export function OnboardingWizard({
-  kind = "coach",
+  landing = "/feed",
   name,
   photo,
   title,
   about,
   location,
-  instagram,
-  website,
-  contactEmail,
-  phone,
-  whatsapp,
-  studios: studiosProp,
-  selectedStudioIds,
 }: {
-  /** A member sets up a photo and a bio and stops there. The rest of this
-   *  wizard is about being findable and bookable as a coach. */
-  kind?: "coach" | "fan";
+  landing?: string;
   name: string;
   photo: string | null;
   title: string;
   about: string;
   location: string;
-  instagram: string;
-  website: string;
-  contactEmail: string;
-  phone: string;
-  whatsapp: string;
-  studios: StudioDto[];
-  selectedStudioIds: string[];
 }) {
   const router = useRouter();
-  const fan = kind === "fan";
-  const TOTAL = fan ? 2 : 3;
-  // Step 2 asks who you are, and that's where the city lives.
-  const LOCATION_STEP = 2;
+  const TOTAL = 3;
   const [step, setStep] = useState(1);
+  // Null until they answer: the Continue under the cards stays off, because
+  // the whole point of moving the question here is that it gets answered.
+  const [teach, setTeach] = useState<boolean | null>(null);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [pTitle, setPTitle] = useState(title);
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
-  const [pInstagram, setPInstagram] = useState(instagram);
-  const [pWebsite, setPWebsite] = useState(website);
-  const [pEmail, setPEmail] = useState(contactEmail);
-  const [pPhone, setPPhone] = useState(phone);
-  const [pWhatsapp, setPWhatsapp] = useState(whatsapp);
-  const [studios, setStudios] = useState(studiosProp);
-  const [selected, setSelected] = useState<Set<string>>(new Set(selectedStudioIds));
-  const [search, setSearch] = useState("");
-  const [adding, setAdding] = useState(false);
-  const [nsName, setNsName] = useState("");
-  const [nsAddr, setNsAddr] = useState("");
+  // The picked place's point. Typed-but-unpicked text saves too (the server
+  // geocodes it best-effort); the point is what ranks the next page.
+  const [pPlace, setPPlace] = useState<GeoPlace | null>(null);
+  const [suggested, setSuggested] = useState<SuggestedCoach[] | null>(null);
+  const [followed, setFollowed] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Resize the picked image to a small JPEG data URL before storing it (same
-  // treatment as the profile editor).
-  const pickPhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 640;
-        let { width, height } = img;
-        if (width > height && width > max) {
-          height = (height * max) / width;
-          width = max;
-        } else if (height > max) {
-          width = (width * max) / height;
-          height = max;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const toggleStudio = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const pickPhoto = (file: File) =>
+    readPhotoPair(file, (full, thumb) => {
+      setPPhoto(full);
+      setPThumb(thumb);
     });
-  };
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return studios.filter(
-      (s) => !q || s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q),
-    );
-  }, [studios, search]);
-
-  const addStudio = () => {
-    if (!nsName.trim() || !nsAddr.trim()) return;
-    setError("");
-    startTransition(async () => {
-      const res = await createStudio(nsName, nsAddr);
-      if (!res.ok || !res.studio) {
-        setError(res.error ?? "Couldn't add that studio");
-        return;
-      }
-      setStudios((prev) => [...prev, res.studio!]);
-      setSelected((prev) => new Set(prev).add(res.studio!.id));
-      setNsName("");
-      setNsAddr("");
-      setAdding(false);
-    });
-  };
-
-  // Save everything collected so far and drop the coach into the app. Used by
-  // both "Finish" on the last step and "Skip for now" from anywhere. Every field
-  // is optional, so this never blocks.
+  // Save everything and land in the app. Reached only through the follow
+  // step's own button, so the teach answer always exists by now.
   const finish = () => {
     setError("");
     if (!pLocation.trim()) {
-      setStep(LOCATION_STEP);
+      setStep(2);
       setError("Add your city first. It's how people find you.");
       return;
     }
@@ -143,32 +96,59 @@ export function OnboardingWizard({
         title: pTitle,
         about: pAbout,
         location: pLocation,
-        instagram: pInstagram,
-        website: pWebsite,
-        contactEmail: pEmail,
-        phone: pPhone,
-        whatsapp: pWhatsapp,
+        locationLat: pPlace?.lat ?? null,
+        locationLng: pPlace?.lng ?? null,
+        // Untouched here: they moved to settings, and updateProfile writes
+        // what it is handed.
+        instagram: "",
+        website: "",
         photo: pPhoto,
+        photoThumb: pThumb,
       });
       if (!res.ok) {
         setError(res.error ?? "Couldn't save. Try again.");
         return;
       }
-      if (!fan) await setCoachStudios([...selected]);
+      await setTeaching(!!teach);
       await completeOnboarding();
-      router.push(fan ? "/feed" : "/app");
+      // Back to whatever they were part way through, if signing in was in
+      // the middle of something; otherwise each side's own front door.
+      router.push(takeAfterAuth() ?? (teach ? "/calendar" : landing));
       router.refresh();
     });
   };
 
-  const next = () => {
+  const toStep3 = () => {
     setError("");
-    if (step === LOCATION_STEP && !pLocation.trim()) {
+    if (!pLocation.trim()) {
       setError("Add your city first. It's how people find you.");
       return;
     }
-    if (step < TOTAL) setStep(step + 1);
-    else finish();
+    setStep(3);
+    // Loaded here rather than with the page, so the place just picked can
+    // put the nearest coaches first.
+    suggestedCoaches(pPlace ? { lat: pPlace.lat, lng: pPlace.lng } : null)
+      .then(setSuggested)
+      .catch(() => setSuggested([]));
+  };
+
+  const toggleFollow = (c: SuggestedCoach) => {
+    if (pending) return;
+    startTransition(async () => {
+      if (followed.has(c.id)) {
+        const res = await unfollowTrainer(c.handle);
+        if (!res.ok) return;
+        setFollowed((cur) => {
+          const next = new Set(cur);
+          next.delete(c.id);
+          return next;
+        });
+      } else {
+        const res = await followTrainer(c.handle);
+        if (!res.ok) return;
+        setFollowed((cur) => new Set(cur).add(c.id));
+      }
+    });
   };
 
   return (
@@ -180,20 +160,50 @@ export function OnboardingWizard({
               <span key={i} className={`wizdot${i + 1 === step ? " on" : ""}${i + 1 < step ? " done" : ""}`} />
             ))}
           </div>
-          <button className="wizskip" onClick={finish} disabled={pending}>
-            Skip for now
-          </button>
+          {/* Only the middle page is skippable: the role question is the
+              page, and the follow page carries its skip in its own button. */}
+          {step === 2 && (
+            <button className="wizskip" onClick={toStep3} disabled={pending}>
+              Skip for now
+            </button>
+          )}
         </div>
 
         {step === 1 && (
           <>
-            <h1>Add a photo.</h1>
-            <p>
-              {fan
-                ? "So the coaches you follow know who you are. You can change it anytime."
-                : "A friendly face makes your page feel like you. You can change it anytime."}
-            </p>
-            <div className="wizphoto">
+            <h1>Do you teach?</h1>
+            <p>You can change this later in your profile.</p>
+            <button
+              type="button"
+              className={`teachcard${teach === true ? " sel" : ""}`}
+              aria-pressed={teach === true}
+              onClick={() => setTeach(true)}
+            >
+              <span className="teachcard-t">Yes, I teach</span>
+              <span className="teachcard-s">You get a calendar, a shareable page, and followers.</span>
+            </button>
+            <button
+              type="button"
+              className={`teachcard${teach === false ? " sel" : ""}`}
+              aria-pressed={teach === false}
+              onClick={() => setTeach(false)}
+            >
+              <span className="teachcard-t">I just take classes</span>
+              <span className="teachcard-s">Follow coaches and see everyone&rsquo;s week in one place.</span>
+            </button>
+            <div className="wizfoot">
+              <button className="btn si" disabled={teach === null} onClick={() => setStep(2)}>
+                Continue
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h1>About you.</h1>
+            <p>A face, a line, and your city. All of it can change later.</p>
+            <div className="wizphoto wizphoto-row">
               {pPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className="wizphoto-img" src={pPhoto} alt="" />
@@ -207,7 +217,13 @@ export function OnboardingWizard({
                   {pPhoto ? "Change photo" : "Add a photo"}
                 </button>
                 {pPhoto && (
-                  <button className="linktoggle" onClick={() => setPPhoto(null)}>
+                  <button
+                    className="linktoggle"
+                    onClick={() => {
+                      setPPhoto(null);
+                      setPThumb(null);
+                    }}
+                  >
                     Remove
                   </button>
                 )}
@@ -224,26 +240,15 @@ export function OnboardingWizard({
                 }}
               />
             </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <h1>Tell people who you are.</h1>
-            <p>
-              {fan
-                ? "A line about you, so a coach knows who just followed them."
-                : "A tagline and a couple of lines. Add the ways you want to be reached."}
-            </p>
             <label className="flabel" htmlFor="wTitle">
-              {fan ? "Tagline" : "Title"} <span>· {fan ? "optional" : "your role or tagline"}</span>
+              {teach ? "Title" : "Tagline"} <span>· optional</span>
             </label>
             <input
               id="wTitle"
               className="editinput"
               value={pTitle}
               maxLength={80}
-              placeholder={fan ? "Lifts heavy, runs slow" : "Strength coach"}
+              placeholder={teach ? "Strength coach" : "Lifts heavy, runs slow"}
               onChange={(e) => setPTitle(e.target.value)}
             />
             <label className="flabel" htmlFor="wAbout">
@@ -255,188 +260,92 @@ export function OnboardingWizard({
               value={pAbout}
               maxLength={600}
               rows={4}
-              placeholder="Coach at Ironbound Performance. Strength & conditioning, all levels."
+              placeholder={
+                teach
+                  ? "Coach at Ironbound Performance. Strength & conditioning, all levels."
+                  : "Train mostly at Ironbound. Strength three mornings a week, yoga when I can."
+              }
               onChange={(e) => setPAbout(e.target.value)}
             />
-            {/* The one field here that isn't optional. Discover is organised by
-                city, so a profile without one can't be browsed to. */}
+            {/* The one field here that isn't optional. Discover is organised
+                by city, so a profile without one can't be browsed to. */}
             <label className="flabel" htmlFor="wLocation">
               Location <span>· city and state, required</span>
             </label>
-            <LocationInput id="wLocation" value={pLocation} onChange={setPLocation} />
-            {!fan && (
-            <>
-            <label className="flabel" htmlFor="wInstagram">
-              Instagram <span>· optional</span>
-            </label>
-            <div className="editprefix">
-              <span className="editprefix-at">@</span>
-              <input
-                id="wInstagram"
-                className="editinput"
-                value={pInstagram}
-                maxLength={40}
-                placeholder="yourhandle"
-                autoCapitalize="none"
-                autoCorrect="off"
-                onChange={(e) => setPInstagram(e.target.value)}
-              />
+            <LocationPicker
+              id="wLocation"
+              value={pLocation}
+              onChange={(v, place) => {
+                setPLocation(v);
+                setPPlace(place);
+              }}
+            />
+            <div className="wizfoot">
+              <button className="btn si" onClick={toStep3} disabled={pending}>
+                Continue
+              </button>
             </div>
-            <label className="flabel" htmlFor="wWebsite">
-              Website <span>· optional</span>
-            </label>
-            <input
-              id="wWebsite"
-              type="url"
-              className="editinput"
-              value={pWebsite}
-              maxLength={200}
-              placeholder="yoursite.com"
-              autoCapitalize="none"
-              autoCorrect="off"
-              onChange={(e) => setPWebsite(e.target.value)}
-            />
-            <label className="flabel" htmlFor="wEmail">
-              Contact email <span>· optional</span>
-            </label>
-            <input
-              id="wEmail"
-              type="email"
-              className="editinput"
-              value={pEmail}
-              maxLength={120}
-              placeholder="you@example.com"
-              autoCapitalize="none"
-              autoCorrect="off"
-              onChange={(e) => setPEmail(e.target.value)}
-            />
-            <label className="flabel" htmlFor="wPhone">
-              Phone <span>· optional</span>
-            </label>
-            <input
-              id="wPhone"
-              type="tel"
-              className="editinput"
-              value={pPhone}
-              maxLength={40}
-              placeholder="+1 555 123 4567"
-              onChange={(e) => setPPhone(e.target.value)}
-            />
-            <label className="flabel" htmlFor="wWhatsapp">
-              WhatsApp <span>· optional</span>
-            </label>
-            <input
-              id="wWhatsapp"
-              type="tel"
-              className="editinput"
-              value={pWhatsapp}
-              maxLength={40}
-              placeholder="+1 555 123 4567"
-              onChange={(e) => setPWhatsapp(e.target.value)}
-            />
-            </>
-            )}
           </>
         )}
 
         {step === 3 && (
           <>
-            <h1>Where do you coach?</h1>
-            <p>Pick the studios and spaces you work at. Can&rsquo;t find one? Add it.</p>
-            <div className="searchbox">
-              <span className="mag"><Icon name="search" size={17} /></span>
-              <input
-                type="text"
-                placeholder="Search studios by name or street"
-                autoComplete="off"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="wizstudios">
-              {filtered.map((s) => {
-                const on = selected.has(s.id);
+            <h1>Follow a few coaches.</h1>
+            <p>Their weeks land on your Following tab. Skip if you&rsquo;d rather not.</p>
+            {suggested !== null && suggested.length === 0 && (
+              <p className="microcopy">Nobody to suggest yet. You&rsquo;ll find people in Discover.</p>
+            )}
+            {suggested === null && (
+              <div className="obfollist" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="obfolrow">
+                    <span className="skel obfolrow-av" />
+                    <span className="obfolrow-txt">
+                      <span className="skel" style={{ width: "52%", height: 16 }} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="obfollist">
+              {(suggested ?? []).map((c) => {
+                const on = followed.has(c.id);
                 return (
-                  <button
-                    key={s.id}
-                    className={`wizstudio${on ? " on" : ""}`}
-                    onClick={() => toggleStudio(s.id)}
-                  >
-                    <span className="wizstudio-txt">
-                      <span className="nm">{s.name}</span>
-                      <span className="ad">{s.address}</span>
+                  <div key={c.id} className="obfolrow">
+                    {c.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="obfolrow-av" src={c.photo} alt="" />
+                    ) : (
+                      <span className="obfolrow-av obfolrow-av-empty" style={{ background: c.color }}>
+                        {(c.name.trim().charAt(0) || "?").toUpperCase()}
+                      </span>
+                    )}
+                    <span className="obfolrow-txt">
+                      <span className="nm">{c.name}</span>
+                      {c.sub && <span className="sub">{c.sub}</span>}
                     </span>
-                    <span className="wizstudio-tick" aria-hidden="true">
-                      {on && <Icon name="check" size={18} />}
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      className={`disfollow${on ? " on" : ""}`}
+                      disabled={pending}
+                      aria-label={on ? `Unfollow ${c.name}` : `Follow ${c.name}`}
+                      onClick={() => toggleFollow(c)}
+                    >
+                      {on ? "Following" : "Follow"}
+                    </button>
+                  </div>
                 );
               })}
-              {!filtered.length && !adding && (
-                <p className="wizempty">
-                  {studios.length ? "No match." : "No studios yet."} Add the one you coach at below.
-                </p>
-              )}
             </div>
-
-            {adding ? (
-              <div className="wizadd">
-                <input
-                  className="editinput"
-                  placeholder="Studio name"
-                  autoFocus
-                  value={nsName}
-                  maxLength={80}
-                  onChange={(e) => setNsName(e.target.value)}
-                />
-                <input
-                  className="editinput"
-                  style={{ marginTop: 8 }}
-                  placeholder="Address"
-                  value={nsAddr}
-                  maxLength={160}
-                  onChange={(e) => setNsAddr(e.target.value)}
-                />
-                <div className="wizadd-row">
-                  <button
-                    className="btn si"
-                    disabled={pending || !nsName.trim() || !nsAddr.trim()}
-                    onClick={addStudio}
-                  >
-                    {pending ? "Adding…" : "Add studio"}
-                  </button>
-                  <button
-                    className="linktoggle"
-                    onClick={() => {
-                      setAdding(false);
-                      setNsName("");
-                      setNsAddr("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button className="wizaddnew" onClick={() => setAdding(true)}>
-                + Add a studio
+            <div className="wizfoot">
+              <button className="btn si" onClick={finish} disabled={pending}>
+                {pending ? "Finishing…" : followed.size ? "Continue" : "Skip, I'll find people later"}
               </button>
-            )}
+            </div>
           </>
         )}
 
-        {error && <div className="errorcopy" style={{ textAlign: "left" }}>{error}</div>}
-
-        <div className="wiznav">
-          {step > 1 && (
-            <button className="btn ghost wizback" onClick={() => setStep(step - 1)} disabled={pending}>
-              Back
-            </button>
-          )}
-          <button className="btn si" onClick={next} disabled={pending}>
-            {pending ? "One sec…" : step < TOTAL ? "Continue" : "Finish setup"}
-          </button>
-        </div>
+        {error && <div className="errorcopy">{error}</div>}
       </div>
     </section>
   );

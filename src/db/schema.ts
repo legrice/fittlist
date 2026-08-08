@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 
 export type BookingLink = { label: string; url: string };
@@ -28,10 +29,19 @@ export const users = pgTable("users", {
   // Public profile: a short bio and a photo (stored as a small data URL).
   about: text("about"),
   photo: text("photo"),
+  // The same picture at list size, written alongside it by the pickers: a
+  // 26px circle should not download the hero's file. Null on rows saved
+  // before this existed; readers fall back to photo.
+  photoThumb: text("photo_thumb"),
   // A short role/tagline shown under the name (e.g. "Strength coach").
   title: text("title"),
   // City / area shown under the name on the public profile (e.g. "Jersey City").
   location: text("location"),
+  // The location as real coordinates, written when it was picked from the
+  // geocoder (or backfilled by the server's own lookup of the typed text).
+  // What "near you" is computed from; null on rows saved before this.
+  locationLat: doublePrecision("location_lat"),
+  locationLng: doublePrecision("location_lng"),
   // Compact credential chips shown on the profile (e.g. "NASM CPT", "HYROX Coach").
   certifications: jsonb("certifications").$type<string[]>().notNull().default([]),
   // "What to Expect" — a few short descriptors of the coach's style/vibe.
@@ -231,6 +241,10 @@ export const studios = pgTable("studios", {
   slug: text("slug").unique(),
   name: text("name").notNull(),
   address: text("address").notNull(),
+  // The address, geocoded once at save: a studio is a place, and a place
+  // has coordinates. Best-effort; null when the lookup missed.
+  lat: doublePrecision("lat"),
+  lng: doublePrecision("lng"),
   // What kind of gym it is — a studio is usually more than one thing.
   types: jsonb("types").$type<string[]>().notNull().default([]),
   photo: text("photo"),
@@ -246,6 +260,17 @@ export const studios = pgTable("studios", {
   // Tom can teach without a public profile and Josh can publish a schedule
   // without naming anyone. Its managers act for it; see studio_managers.
   accountUserId: uuid("account_user_id").references(() => users.id),
+  // Whether a coach handing a shift on or picking one up needs a manager to
+  // say yes. On by default, per the staff spec. Off restores what the rota
+  // did before this existed: the change lands the moment it is made and
+  // everybody who should know is told, which some studios will prefer.
+  approveShiftChanges: boolean("approve_shift_changes").notNull().default(true),
+  // Whether the studio's public schedule names who is coaching each class.
+  // On by default for a verified studio (only a claimed studio has a rota to
+  // name anyone from), off for the gyms that would rather publish a week
+  // without making it a roster. The switch lives on the shifts screen's
+  // overflow, with the studio's other settings.
+  showCoaches: boolean("show_coaches").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -272,6 +297,105 @@ export const shiftCovers = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("shift_covers_once").on(t.classId, t.occurrenceDate)],
+);
+
+// A shift change waiting on a manager.
+//
+// The rota's own tables say what is true: `classes.coachUserId` is who
+// normally teaches a slot and `shift_covers` is one date's exception. Neither
+// can hold "somebody would like this to be true", which is what an approval
+// queue is, so a pending change lives here and only becomes a cover once it
+// is approved. That keeps the calendars honest: nothing a manager has not
+// answered ever reaches a public page, a feed, or anybody's .ics.
+//
+// It is keyed on the class and the date rather than on a cover row, for the
+// same reason a report is keyed on the series: the cover may not exist yet
+// (a pickup of a never-assigned slot) and may be deleted underneath it.
+export const shiftRequests = pgTable(
+  "shift_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    classId: uuid("class_id").notNull().references(() => classes.id),
+    occurrenceDate: date("occurrence_date").notNull(),
+    /** "pickup" (an open shift somebody wants) or "transfer" (a named
+     *  hand-over). The two read differently to a manager and are the same
+     *  write once approved. */
+    kind: text("kind").notNull(),
+    /** Who the shift is coming from. Null on a pickup of a slot nobody held. */
+    fromUserId: uuid("from_user_id").references(() => users.id),
+    /** Who it would land on. Never null: a request with nobody on the end of
+     *  it is a release, and a release is immediate. */
+    toUserId: uuid("to_user_id").notNull().references(() => users.id),
+    /** pending | approved | declined. Answered rows are kept, because the
+     *  Requests tab becomes a log when a studio turns approval off and a
+     *  declined ask is a thing the coach should still be able to see. */
+    state: text("state").notNull().default("pending"),
+    decidedByUserId: uuid("decided_by_user_id").references(() => users.id),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // One live ask per person per slot. Two coaches may both want the same
+    // open shift, which is a real race a manager settles, so the index
+    // carries the taker.
+    uniqueIndex("shift_requests_live").on(t.classId, t.occurrenceDate, t.toUserId, t.state),
+    index("shift_requests_studio_state").on(t.studioId, t.state),
+  ],
+);
+
+// Who a shift can be handed to. Anyone may say they coach at a gym (the
+// directory runs on trust), but not everyone listed there teaches the group
+// classes on the rota, so the managers name the pool: a coach handing a date
+// on picks from these people and nobody else. Its own table rather than a
+// flag on coach_studios because that row is the coach's own claim about
+// themselves, and this is the gym's claim about the coach.
+//
+// A roster entry is a position, not an account. This is the rule the rest of
+// the staff side follows from: a studio building next week cannot wait for
+// every coach to sign up, so an entry has to be able to exist, and hold
+// shifts, before any real person is attached to it.
+//
+// The row still points at a `users` id, and deliberately so. A placeholder
+// gets a real users row with `kind = "placeholder"`, the same trick the gym
+// account already uses (`studios.accountUserId`): a synthetic .invalid email
+// nobody can receive or sign up with, no handle, not discoverable. The value
+// of that is everything downstream keeps working untouched, because
+// `classes.coachUserId`, `shift_covers.coachUserId`, the counts, the private
+// feed and the notifications all just see a user. The alternative, a nullable
+// userId plus a name on this row, would mean every one of those learning that
+// a shift might be held by something that isn't a user.
+//
+// `state` is what the roster screen groups by:
+//   active       on fittlist, accepted, linked            holds shifts
+//   invited      on fittlist, asked, hasn't answered      holds shifts
+//   placeholder  not on fittlist; a name and an invite    holds shifts
+//   unconfirmed  turned up by claiming or asked to join   holds none
+//
+// Only `unconfirmed` cannot hold a shift, and that is the whole difference:
+// it names somebody the studio has not agreed to yet.
+export const studioRotaCoaches = pgTable(
+  "studio_rota_coaches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studioId: uuid("studio_id").notNull().references(() => studios.id),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    /** active | invited | placeholder | unconfirmed. */
+    state: text("state").notNull().default("active"),
+    /** Where the invite went, for a resend. Null once they are on. */
+    invitedEmail: text("invited_email"),
+    invitedPhone: text("invited_phone"),
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    /** Why they are in the unconfirmed pile: "claimed" (they had classes here
+     *  when the studio took the page) or "asked" (they requested it). It
+     *  changes the wording of the decline, which is not the same act in the
+     *  two cases: declining a coach who added classes only unpicks the
+     *  studio, it never touches their classes. */
+    source: text("source"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("studio_rota_coaches_once").on(t.studioId, t.userId)],
 );
 
 // Who runs a studio's page. A studio with no rows here is unclaimed, which is
@@ -374,12 +498,19 @@ export const classTemplates = pgTable(
     classType: text("class_type"),
     // Short blurb shown on the public class page.
     description: text("description"),
+    // The picture comes back with the class name, same as the description.
+    image: text("image"),
     startTime: text("start_time").notNull(), // "HH:MM" 24h
     durationMin: integer("duration_min").notNull(),
     // Null for private items with no listed studio; `location` holds a free-form
     // place ("Client's home", "Online") in that case.
     studioId: uuid("studio_id").references(() => studios.id),
     location: text("location"),
+    // Who it's with, for one of your own: "Kia". A name, not an account, the
+    // same as on the entry itself. It lives here so the second "Training with
+    // Kia" comes back filled in rather than retyped, which is the whole point
+    // of a template.
+    withWho: text("with_who"),
     // false = a private client/session: on the coach's own schedule only, never
     // on their public page, and no subscriber emails.
     isPublic: boolean("is_public").notNull().default(true),
@@ -401,6 +532,14 @@ export const studioClasses = pgTable(
     nameKey: text("name_key").notNull(), // lowercased name, for dedupe
     classType: text("class_type"),
     description: text("description"),
+    // Shared with the description: a picture belongs to the class rather than
+    // to whichever coach wrote it down first.
+    image: text("image"),
+    /** How long it runs, so pulling a class in fills the length too. A gym
+     *  filling a week types the same 60 over and over otherwise, and the
+     *  number is a fact about the class rather than about one slot. Nullable
+     *  because every row written before this column existed has none. */
+    durationMin: integer("duration_min"),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -461,6 +600,11 @@ export const classes = pgTable(
     description: text("description"),
     studioId: uuid("studio_id").references(() => studios.id),
     location: text("location"),
+    // A picture of the class, as a small data URL, the same way every other
+    // photo here is stored. It is the thing that makes a shared class look
+    // like something rather than a line of text, and it is optional forever:
+    // a schedule with no photos has to stay a good schedule.
+    image: text("image"),
     // false = private (own schedule only, hidden from the public page).
     isPublic: boolean("is_public").notNull().default(true),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
@@ -479,6 +623,11 @@ export const classes = pgTable(
 // nowhere else, so it can never pollute Discover or a feed. `withWho` is free
 // text, not a users reference; naming your coach is not the same as putting
 // them on the platform, and every name in here is an invite lead.
+// It carries what a class carries, because it is one: the same form fills it
+// in, and a class you go to deserves a description and a picture as much as a
+// class you teach. The columns mirror `classes` field for field so `runsOn`
+// can read one without translation. What it still doesn't have is any way to
+// be published: no `isPublic`, no owner but you.
 export const personalClasses = pgTable("personal_classes", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id),
@@ -488,6 +637,20 @@ export const personalClasses = pgTable("personal_classes", {
   durationMin: integer("duration_min").notNull().default(60),
   location: text("location").notNull().default(""),
   withWho: text("with_who").notNull().default(""),
+  // The place, when it's a place in the directory rather than free text. This
+  // is also the gate on the catalog write: a class at a studio is a fact about
+  // that studio, a 1:1 in somebody's garage is not.
+  studioId: uuid("studio_id").references(() => studios.id),
+  classType: text("class_type"),
+  description: text("description"),
+  image: text("image"),
+  // How you book it. ClassPass, Mindbody, the studio's own page: yours alone,
+  // and the reason a plan is worth opening twice.
+  links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
+  // Set = a one-off on this date, and `dayOfWeek` is only its weekday. Null =
+  // it repeats. Same pair, same meaning, as on `classes`.
+  specificDate: text("specific_date"),
+  endsOn: text("ends_on"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -587,6 +750,18 @@ export const subscribers = pgTable(
     userId: uuid("user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
+    /** When this follower last opened this coach's peek.
+     *
+     *  The ring on the circle is what makes the tray a tool rather than a row
+     *  of decoration: it says this coach has put classes up since you last
+     *  looked. Following stopped delivering classes to your week, so the ring
+     *  is the only thing left that tells you there is anything to pull, and a
+     *  tray of identical circles asks people to check six coaches one at a
+     *  time to find out.
+     *
+     *  Null means never opened, which is a ring: somebody you just followed
+     *  and have not looked at has, by definition, everything new. */
+    peekedAt: timestamp("peeked_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("subscribers_trainer_email").on(t.trainerUserId, t.email),
@@ -614,6 +789,12 @@ export const attendances = pgTable(
     // (the coach and fellow goers) and nowhere public. Not users references,
     // on purpose: the friend without the app is still a person in the room.
     companions: jsonb("companions").$type<string[]>().notNull().default([]),
+    // Whether the mark shows to people who follow you: Home's Activity, an
+    // Upcoming card's "also going" line. Public by default, because a feed
+    // of nobody doing anything is no feed at all; the moment of marking
+    // says so out loud and offers the way off, and off means the mark shows
+    // only where it always did (the coach's roster, your own week).
+    isPublic: boolean("is_public").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("attendances_user_class_date").on(t.userId, t.classId, t.occurrenceDate)],

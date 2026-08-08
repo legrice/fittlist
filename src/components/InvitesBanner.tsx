@@ -34,7 +34,7 @@ export function InvitesBanner() {
       <div className="invbanner">
         <button className="invbanner-main" onClick={() => setOpen(true)}>
           <span className="invbanner-ic" aria-hidden="true">
-            <Icon name="groups" size={18} />
+            <Icon name="groups" size={20} />
           </span>
           <span className="invbanner-txt">
             <b>Bring people in</b>
@@ -42,7 +42,7 @@ export function InvitesBanner() {
           </span>
         </button>
         <button className="invbanner-x" aria-label="Dismiss" onClick={close}>
-          <Icon name="close" size={16} />
+          <Icon name="close" size={18} />
         </button>
       </div>
       {open && (

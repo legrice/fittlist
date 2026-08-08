@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
+import { shiftCoach, shiftNaming } from "@/lib/coachweek";
 import { clockParts, fmtDayHeader, occurrenceEnded, todayIso } from "@/lib/format";
 
 // The classes someone has added, from today forward.
@@ -42,65 +43,73 @@ function nextOccurrence(dayOfWeek: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** How many added classes are still ahead of them, personal entries included. */
-export async function weekCount(userId: string): Promise<number> {
-  const db = await getDb();
-  const [rows, own] = await Promise.all([
-    db
-      .select({ id: schema.attendances.id })
-      .from(schema.attendances)
-      .where(
-        and(
-          eq(schema.attendances.userId, userId),
-          gte(schema.attendances.occurrenceDate, todayIso()),
-        ),
-      ),
-    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
-  ]);
-  // A personal entry recurs weekly; it counts once, for this week's occurrence,
-  // and drops out of the number once that has run, same as everything else.
-  const ownAhead = own.filter(
-    (p) => !occurrenceEnded(nextOccurrence(p.dayOfWeek), p.startTime, p.durationMin),
-  ).length;
-  return rows.length + ownAhead;
+/**
+ * The next date one of your own entries runs that hasn't been and gone, or
+ * null once it has stopped: a one-off whose date has passed, or a weekly one
+ * past its end date. One function so the list, the count and the share image
+ * can't disagree about whether something is still ahead.
+ */
+export function personalNext(p: {
+  dayOfWeek: number;
+  startTime: string;
+  durationMin: number;
+  specificDate?: string | null;
+  endsOn?: string | null;
+}): string | null {
+  if (p.specificDate)
+    return occurrenceEnded(p.specificDate, p.startTime, p.durationMin) ? null : p.specificDate;
+  let iso = nextOccurrence(p.dayOfWeek);
+  if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 7);
+    iso = d.toISOString().slice(0, 10);
+  }
+  return p.endsOn && iso > p.endsOn ? null : iso;
 }
 
-/** Do these two people follow each other? Both directions, neither opted out.
- *  Account follows always carry the follower's email, so the pair of email
- *  matches is the whole check. */
-export async function mutualFollow(aId: string, bId: string): Promise<boolean> {
-  if (aId === bId) return false;
+/**
+ * May this viewer see that person's week?
+ *
+ * The Instagram rule, and it is the whole rule: an account is open unless its
+ * owner has turned approve-first on, and then it is followers only. It used to
+ * take a mutual follow, which meant somebody had to follow you back before you
+ * could see when they train, and that is a handshake nobody asked for on a
+ * schedule. This is a scheduling app: knowing who is going where and when is
+ * the point, so the default is that you can see it.
+ *
+ * `users.approveFollowers` is the one switch, already in settings and already
+ * what turns Follow into an ask. Nothing new to set, and the two halves of
+ * "private account" now agree: gating who may follow gates what they see.
+ *
+ * A signed-out viewer counts as following nobody, so an approve-first person's
+ * week is invisible to them, which is right: they cannot have been approved.
+ */
+export async function canSeeWeek(
+  viewerId: string | null,
+  owner: { id: string; approveFollowers: boolean },
+): Promise<boolean> {
+  if (viewerId === owner.id) return true;
+  if (!owner.approveFollowers) return true;
+  if (!viewerId) return false;
   const db = await getDb();
-  const people = await db
-    .select({ id: schema.users.id, email: schema.users.email })
+  const [viewer] = await db
+    .select({ email: schema.users.email })
     .from(schema.users)
-    .where(inArray(schema.users.id, [aId, bId]));
-  const a = people.find((p) => p.id === aId);
-  const b = people.find((p) => p.id === bId);
-  if (!a || !b) return false;
-  const [aFollowsB, bFollowsA] = await Promise.all([
-    db
-      .select({ id: schema.subscribers.id })
-      .from(schema.subscribers)
-      .where(
-        and(
-          eq(schema.subscribers.trainerUserId, bId),
-          eq(schema.subscribers.email, a.email),
-          isNull(schema.subscribers.optedOutAt),
-        ),
+    .where(eq(schema.users.id, viewerId));
+  if (!viewer) return false;
+  // Approved follows are the only rows in `subscribers`: an ask that has not
+  // been answered lives in `follow_requests` and is not one of these.
+  const rows = await db
+    .select({ id: schema.subscribers.id })
+    .from(schema.subscribers)
+    .where(
+      and(
+        eq(schema.subscribers.trainerUserId, owner.id),
+        eq(schema.subscribers.email, viewer.email),
+        isNull(schema.subscribers.optedOutAt),
       ),
-    db
-      .select({ id: schema.subscribers.id })
-      .from(schema.subscribers)
-      .where(
-        and(
-          eq(schema.subscribers.trainerUserId, aId),
-          eq(schema.subscribers.email, b.email),
-          isNull(schema.subscribers.optedOutAt),
-        ),
-      ),
-  ]);
-  return aFollowsB.length > 0 && bFollowsA.length > 0;
+    );
+  return rows.length > 0;
 }
 
 export type SharedWeekItem = {
@@ -111,28 +120,46 @@ export type SharedWeekItem = {
   ap: string;
   durationMin: number;
   where: string | null;
-  handle: string;
-  coachName: string;
+  /** The base its class page lives under, or null for one of their own: a
+   *  personal entry has no page, so its row is plain text. */
+  handle: string | null;
+  /** Whose class it is, or null for one of their own. */
+  coachName: string | null;
 };
 
-/** The week someone shows the people they follow back: only real, public
- *  classes they added, from today forward. Personal entries never appear
- *  here; there is deliberately no way to share those. */
+/**
+ * The week someone shows the people they follow back, from today forward.
+ *
+ * Both halves of it now: the marks they made at a coach's real class, and the
+ * entries they keep themselves. Personal entries used to be excluded outright,
+ * on the grounds that there was deliberately no way to share them, and by
+ * Matt's call that is no longer the rule: a week made mostly of your own
+ * entries showed a mutual follow an empty page, which is the whole thing this
+ * list exists to avoid.
+ *
+ * The audience is unchanged and is what makes it safe: only somebody you
+ * follow who follows you back, never a stranger with the link, and never a
+ * one-way follower. That mutual tap is the consent, and it is why a row here
+ * can name a place and a time that a public page never could.
+ */
 export async function sharedWeek(
   userId: string,
 ): Promise<{ iso: string; label: string; items: SharedWeekItem[] }[]> {
   const db = await getDb();
-  const marks = await db
-    .select()
-    .from(schema.attendances)
-    .where(
-      and(
-        eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, todayIso()),
-      ),
-    )
-    .orderBy(asc(schema.attendances.occurrenceDate));
-  if (marks.length === 0) return [];
+  const [marks, own] = await Promise.all([
+    db
+      .select()
+      .from(schema.attendances)
+      .where(
+        and(
+          eq(schema.attendances.userId, userId),
+          gte(schema.attendances.occurrenceDate, todayIso()),
+        ),
+      )
+      .orderBy(asc(schema.attendances.occurrenceDate)),
+    db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+  ]);
+  if (marks.length === 0 && own.length === 0) return [];
 
   const classIds = [...new Set(marks.map((m) => m.classId))];
   const classRows = (
@@ -144,6 +171,11 @@ export async function sharedWeek(
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
+  // A gym owns its classes, so the row's owner is the place. Who is actually
+  // on it comes from the rota, where that coach shows their shifts.
+  const naming = await shiftNaming(
+    classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+  );
   const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
@@ -173,10 +205,55 @@ export async function sharedWeek(
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
-      coachName: coach.name,
+      coachName: shiftCoach(naming, c.id, m.occurrenceDate)?.name ?? coach.name,
     });
     byDay.set(m.occurrenceDate, list);
   }
+
+  // Their own entries, expanded the same way the calendar expands them, out to
+  // a fortnight rather than the calendar's nine weeks: this is somebody
+  // else's page, and two weeks answers "what are they up to" without handing
+  // over two months of a person's movements.
+  const SHARED_WEEKS = 2;
+  const ownStudioIds = [...new Set(own.map((p) => p.studioId).filter((x): x is string => !!x))];
+  const ownStudios = ownStudioIds.length
+    ? await db.select().from(schema.studios).where(inArray(schema.studios.id, ownStudioIds))
+    : [];
+  const ownStudioById = new Map(ownStudios.map((s) => [s.id, s]));
+  for (const p of own) {
+    const first = personalNext(p);
+    if (!first) continue;
+    const dates: string[] = [];
+    if (p.specificDate) dates.push(first);
+    else {
+      let iso = first;
+      for (let k = 0; k < SHARED_WEEKS; k++) {
+        if (p.endsOn && iso > p.endsOn) break;
+        dates.push(iso);
+        const d = new Date(`${iso}T00:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + 7);
+        iso = d.toISOString().slice(0, 10);
+      }
+    }
+    const t = clockParts(p.startTime);
+    for (const iso of dates) {
+      const list = byDay.get(iso) ?? [];
+      list.push({
+        classId: p.id,
+        iso,
+        name: p.name,
+        hm: t.hm,
+        ap: t.ap,
+        durationMin: p.durationMin,
+        where: p.studioId ? (ownStudioById.get(p.studioId)?.name ?? null) : p.location,
+        // No page and nobody else's name: one of their own is a plain row.
+        handle: null,
+        coachName: null,
+      });
+      byDay.set(iso, list);
+    }
+  }
+
   return [...byDay.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([iso, items]) => ({
@@ -186,16 +263,28 @@ export async function sharedWeek(
     }));
 }
 
-/** The shortlist itself, grouped by day. */
-export async function myWeek(userId: string): Promise<WeekDay[]> {
+/** The shortlist itself, grouped by day. With `pastDays` the same list also
+ *  reaches back: the calendars let you scroll into what has been, so the
+ *  marks and entries inside that window come along. Every other caller gets
+ *  today forward, exactly as before. */
+export async function myWeek(
+  userId: string,
+  opts?: { pastDays?: number },
+): Promise<WeekDay[]> {
   const db = await getDb();
+  const pastDays = opts?.pastDays ?? 0;
+  const sinceIso = (() => {
+    const d = new Date(`${todayIso()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - pastDays);
+    return d.toISOString().slice(0, 10);
+  })();
   const marks = await db
     .select()
     .from(schema.attendances)
     .where(
       and(
         eq(schema.attendances.userId, userId),
-        gte(schema.attendances.occurrenceDate, todayIso()),
+        gte(schema.attendances.occurrenceDate, sinceIso),
       ),
     )
     .orderBy(asc(schema.attendances.occurrenceDate));
@@ -217,12 +306,26 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
     ? await db.select().from(schema.users).where(inArray(schema.users.id, coachIds))
     : [];
   const coachById = new Map(coaches.map((u) => [u.id, u]));
+  // A gym owns its classes, so the row's owner is the place. Who is actually
+  // on it comes from the rota, where that coach shows their shifts.
+  const naming = await shiftNaming(
+    classRows.filter((c) => coachById.get(c.userId)?.kind === "gym").map((c) => c.id),
+  );
 
-  const studioIds = [...new Set(classRows.map((c) => c.studioId).filter((s): s is string => !!s))];
+  // Both halves' studios in one query: a class's, and the places on your own
+  // entries, which have a real studio now rather than a line of free text.
+  const studioIds = [
+    ...new Set(
+      [...classRows.map((c) => c.studioId), ...own.map((p) => p.studioId)].filter(
+        (s): s is string => !!s,
+      ),
+    ),
+  ];
   const studios = studioIds.length
     ? await db.select().from(schema.studios).where(inArray(schema.studios.id, studioIds))
     : [];
   const studioById = new Map(studios.map((s) => [s.id, s]));
+  const ownStudioById = studioById;
 
   // Who you know that's going: mutuals only. A follows B and B follows A, and
   // both added the same occurrence. One-way follows surface nothing, so
@@ -328,42 +431,83 @@ export async function myWeek(userId: string): Promise<WeekDay[]> {
       durationMin: c.durationMin,
       where: c.studioId ? (studioById.get(c.studioId)?.name ?? null) : c.location,
       handle: base,
-      coachName: coach.name,
-      coachPhoto: coach.photo,
-      coachColor: avatarColor(coach),
+      // The rota's person where they show their shifts, the owner otherwise.
+      // The face has to travel with the name or the chip reads as the gym
+      // wearing somebody else's.
+      ...(() => {
+        const who = shiftCoach(naming, c.id, m.occurrenceDate) ?? coach;
+        return { coachName: who.name, coachPhoto: who.photo, coachColor: avatarColor(who) };
+      })(),
       alsoGoing: alsoByKey.get(`${m.classId}|${m.occurrenceDate}`),
     });
     byDay.set(m.occurrenceDate, list);
   }
 
-  // Personal entries land on their next occurrence that hasn't already run,
-  // so a weekly one reappears each week and the list still empties itself.
+  // Personal entries land on every occurrence still ahead, out to the same
+  // horizon the calendars draw: this list is a calendar now, and a weekly
+  // entry that only showed its next date read as a class that stopped. A
+  // one-off whose date has passed, or a weekly one past its end, is gone.
+  const HORIZON_WEEKS = 9;
+  const today = todayIso();
   for (const p of own) {
-    let iso = nextOccurrence(p.dayOfWeek);
-    if (occurrenceEnded(iso, p.startTime, p.durationMin)) {
-      const d = new Date(`${iso}T00:00:00Z`);
-      d.setUTCDate(d.getUTCDate() + 7);
-      iso = d.toISOString().slice(0, 10);
+    const first = personalNext(p);
+    const dates: string[] = [];
+    if (p.specificDate) {
+      // Still ahead as ever; been-and-gone only inside the past window.
+      if (first) dates.push(first);
+      else if (pastDays > 0 && p.specificDate >= sinceIso && p.specificDate < today)
+        dates.push(p.specificDate);
+    } else {
+      if (first) {
+        let iso = first;
+        for (let k = 0; k < HORIZON_WEEKS; k++) {
+          if (p.endsOn && iso > p.endsOn) break;
+          dates.push(iso);
+          const d = new Date(`${iso}T00:00:00Z`);
+          d.setUTCDate(d.getUTCDate() + 7);
+          iso = d.toISOString().slice(0, 10);
+        }
+      }
+      // The past window walks the weekday back from the last date it could
+      // have run: yesterday, or the entry's end if that came first. Only
+      // dates before `first` so the two halves can't double a day.
+      if (pastDays > 0) {
+        const upper = p.endsOn && p.endsOn < today ? p.endsOn : today;
+        const d = new Date(`${upper}T00:00:00Z`);
+        const dow = (d.getUTCDay() + 6) % 7;
+        d.setUTCDate(d.getUTCDate() - ((dow - p.dayOfWeek + 7) % 7));
+        let iso = d.toISOString().slice(0, 10);
+        while (iso >= sinceIso) {
+          if ((!first || iso < first) && iso < today && !dates.includes(iso)) dates.push(iso);
+          d.setUTCDate(d.getUTCDate() - 7);
+          iso = d.toISOString().slice(0, 10);
+        }
+      }
     }
+    if (!dates.length) continue;
     const t = clockParts(p.startTime);
-    const list = byDay.get(iso) ?? [];
-    list.push({
-      id: p.id,
-      classId: "",
-      iso,
-      dayLabel: fmtDayHeader(iso),
-      name: p.name,
-      hm: t.hm,
-      ap: t.ap,
-      durationMin: p.durationMin,
-      where: p.location || null,
-      handle: "",
-      coachName: p.withWho,
-      coachPhoto: null,
-      coachColor: "#d6d1b3",
-      personal: true,
-    });
-    byDay.set(iso, list);
+    for (const iso of dates) {
+      const list = byDay.get(iso) ?? [];
+      list.push({
+        id: p.id,
+        classId: "",
+        iso,
+        dayLabel: fmtDayHeader(iso),
+        name: p.name,
+        hm: t.hm,
+        ap: t.ap,
+        durationMin: p.durationMin,
+        where: (p.studioId ? ownStudioById.get(p.studioId)?.name : null) || p.location || null,
+        handle: "",
+        coachName: p.withWho,
+        coachPhoto: null,
+        // Deep enough for white words: the card draws the class in this colour
+        // when there is no photo, and sand under white text was unreadable.
+        coachColor: "#77705a",
+        personal: true,
+      });
+      byDay.set(iso, list);
+    }
   }
 
   return [...byDay.entries()]

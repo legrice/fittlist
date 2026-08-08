@@ -3,10 +3,12 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import { STUDIO_TYPES } from "@/lib/studio";
 import { AVATAR_COLORS } from "@/lib/avatar";
 import { fmtDateLong, RESERVED_HANDLES, slug, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
+import { geocodeCity } from "@/lib/geocode";
 import { normalizeLocation } from "@/lib/location";
 import { knownLocations } from "@/app/actions/locations";
 
@@ -73,6 +75,10 @@ export async function updateProfile(input: {
   title: string;
   about: string;
   location?: string;
+  /** The picked place's point, from LocationPicker. Passed with location or
+   *  not at all; absent, the server takes its own best-effort shot. */
+  locationLat?: number | null;
+  locationLng?: number | null;
   certifications?: string[];
   highlights?: string[];
   disciplines?: string[];
@@ -83,7 +89,8 @@ export async function updateProfile(input: {
   phone?: string;
   whatsapp?: string;
   profileLinks?: { label: string; url: string }[];
-  photo?: string | null; // data URL, "" to clear, undefined to leave as-is
+  photo?: string | null; // data URL or stored URL, "" to clear, undefined to leave as-is
+  photoThumb?: string | null; // the same picture at list size, from readPhotoPair
   avatarColor?: string | null; // a pick from AVATAR_COLORS, null to go back to the derived one
 }): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
@@ -129,10 +136,27 @@ export async function updateProfile(input: {
     phone: string | null;
     whatsapp: string | null;
     profileLinks?: { label: string; url: string }[];
+    locationLat?: number | null;
+    locationLng?: number | null;
     photo?: string | null;
+    photoThumb?: string | null;
     avatarColor?: string | null;
   } = { name, title: title || null, about, instagram, website, contactEmail, phone, whatsapp };
-  if (location !== null) set.location = location;
+  if (location !== null) {
+    set.location = location;
+    // The point travels with the words. Picked, it arrives from the client;
+    // typed, the server looks the city up itself, best-effort, because a
+    // profile that saves without coordinates beats one that cannot save
+    // while a geocoder is having a bad day.
+    if (typeof input.locationLat === "number" && typeof input.locationLng === "number") {
+      set.locationLat = input.locationLat;
+      set.locationLng = input.locationLng;
+    } else {
+      const place = await geocodeCity(location);
+      set.locationLat = place?.lat ?? null;
+      set.locationLng = place?.lng ?? null;
+    }
+  }
   // Same rule as location, and for the same reason: passing a field means the
   // form collected it, omitting it means the form was about something else.
   // These three were written on every call, so saving contact info wiped a
@@ -173,10 +197,28 @@ export async function updateProfile(input: {
   }
   if (input.photo !== undefined) {
     const photo = input.photo;
-    if (photo && (!photo.startsWith("data:image/") || photo.length > 900_000)) {
+    // A data URL from a picker, or the stored URL round-tripping through an
+    // editor unchanged: both are fine. Anything else is not a photo.
+    if (photo && !photo.startsWith("data:image/") && !/^https:\/\//.test(photo)) {
       return { ok: false, error: "Photo is too large. Try a smaller image." };
     }
-    set.photo = photo || null;
+    if (photo?.startsWith("data:image/") && photo.length > 900_000) {
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
+    }
+    set.photo = (await storeImage(photo || null, "u")) || null;
+    // The thumb travels with the photo, and clears with it: a stale small
+    // copy of an old picture is worse than the fallback to the full one.
+    // An unchanged stored photo round-tripping through an editor leaves
+    // the thumb alone.
+    const thumb = input.photoThumb;
+    if (thumb && !thumb.startsWith("data:image/") && !/^https:\/\//.test(thumb)) {
+      return { ok: false, error: "Photo is too large. Try a smaller image." };
+    }
+    if (thumb !== undefined) {
+      set.photoThumb = (await storeImage(thumb || null, "ut")) || null;
+    } else if (!photo || photo.startsWith("data:image/")) {
+      set.photoThumb = null;
+    }
   }
   if (input.avatarColor !== undefined) {
     // Only a colour from the palette; anything else falls back to the derived one.
@@ -340,7 +382,7 @@ export async function changeHandle(
   handleRaw: string,
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db
     .select({ handle: schema.users.handle, changedAt: schema.users.handleChangedAt })

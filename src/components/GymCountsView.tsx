@@ -13,7 +13,7 @@ const shift = (month: string, by: number) => {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 };
 
-// Shifts worked, counted from the schedule rather than tallied by hand.
+// The shift counter, counted from the schedule rather than tallied by hand.
 //
 // This is a count and an export. It models no rates and no pay periods and
 // produces nothing that is itself a pay record: the number goes to whatever
@@ -52,21 +52,21 @@ export function GymCountsView({
     <div className="pad">
       <div className="admintop pagetop">
         <div>
-          <h1>Shifts worked</h1>
+          <h1>Shift counter</h1>
           <p className="adminsub">{studioName}</p>
         </div>
         <BackLink className="iconbtn acctclose" href={backHref} label="Back to the schedule">
-          <Icon name="close" size={18} />
+          <Icon name="close" size={20} />
         </BackLink>
       </div>
 
       <div className="rotaweek">
         <Link className="rotanav" href={`${countsBase}?m=${shift(counts.month, -1)}`}>
-          <Icon name="chevron_left" size={18} />
+          <Icon name="chevron_left" size={20} />
         </Link>
         <span className="rotaweek-lbl">{counts.label}</span>
         <Link className="rotanav" href={`${countsBase}?m=${shift(counts.month, 1)}`}>
-          <Icon name="chevron_right" size={18} />
+          <Icon name="chevron_right" size={20} />
         </Link>
       </div>
 
@@ -104,7 +104,7 @@ export function GymCountsView({
           )}
           <div className="publishwrap nostick">
             <button className="btn ghost" onClick={copy}>
-              <Icon name="ios_share" size={17} /> Copy the table
+              <Icon name="ios_share" size={19} /> Copy the table
             </button>
           </div>
         </>

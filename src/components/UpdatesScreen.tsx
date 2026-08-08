@@ -54,6 +54,11 @@ const ICON: Record<string, string> = {
   studio_manager: "verified",
   shift_assigned: "calendar_month",
   shift_dropped: "event",
+  // A change waiting on the studio, and the answer when it is no. A type with
+  // no entry here renders a blank circle and nothing complains, which is how
+  // every notification row was empty for months.
+  shift_request: "schedule",
+  shift_declined: "close",
 };
 
 function fmt(d: Date | string) {
@@ -93,8 +98,8 @@ export function UpdatesScreen({
           <h1>Updates</h1>
           <p className="adminsub">Follows, requests, and messages</p>
         </div>
-        <Link className="iconbtn acctclose" aria-label="Close" href="/feed">
-          <Icon name="close" size={18} />
+        <Link className="iconbtn acctclose" aria-label="Close" href="/week">
+          <Icon name="close" size={20} />
         </Link>
       </div>
 
@@ -132,7 +137,7 @@ export function UpdatesScreen({
                     )
                   ) : (
                     <span className="notifrow-ic" aria-hidden="true">
-                      <Icon name={ICON[n.type] ?? "notifications"} size={20} />
+                      <Icon name={ICON[n.type] ?? "notifications"} size={22} />
                     </span>
                   )}
                   <span className="notifrow-main">

@@ -71,20 +71,63 @@ const LIFTED_H = 73;
 /** The "+ 3 more days" line. */
 const MORE_H = 52;
 
+/** The two canvases. A story is what gets posted to Stories; a square is what
+ *  gets pasted into a group chat and posted to feed, and it is the shorter of
+ *  the two by a long way, so the same week has to summarise sooner on it. */
+export type StoryFormat = "story" | "square";
 const CANVAS_H = 1920;
-const PAD_Y = 104;
-/** "Week of Jul 31" and its margin. */
-const KICKER_H = 71;
-/** The url and the lockup along the bottom. */
+const SQUARE_H = 1080;
+/** A square has no reply bar over it, so its margins are ordinary margins. */
+const SQ_PAD_TOP = 92;
+const SQ_PAD_BOTTOM = 92;
+/**
+ * The margins, and they are ordinary margins again.
+ *
+ * They were 240 and 280 for a while, held apart to clear Instagram's profile
+ * row at the top and its reply bar at the bottom, on the argument that the
+ * lockup is the acquisition channel and the last thing that should be covered.
+ * Matt's call is that the picture has to be worth looking at first: at those
+ * numbers a light week read as a band of content floating in a lot of nothing,
+ * and the composer's preview shows the whole canvas, so the empty space is what
+ * somebody sees while deciding whether to post at all.
+ *
+ * The cost is real and worth writing down rather than discovering: posted to
+ * Stories, the footer now sits inside the reply bar's zone and can be partly
+ * covered. Raising `PAD_BOTTOM` is the one-line way back, and the sums follow
+ * it because `listBudget` and `storyPadding` both read from here.
+ */
+const PAD_TOP = 104;
+const PAD_BOTTOM = 104;
+/** The verb, the url and the lockup along the bottom. */
 const FOOTER_H = 76;
+/** "Full schedule at", the small line above the url. */
+const VERB_H = 46;
+/** The city under the headline, when the profile has one. */
+const CITY_H = 52;
 
 /**
  * How much room the list gets, once the furniture has taken its share. The
  * headline is the one part that changes size with the coach's own words, so
  * the caller measures that and passes it in.
  */
-export function listBudget(headlineHeight: number): number {
-  return CANVAS_H - PAD_Y * 2 - KICKER_H - headlineHeight - FOOTER_H;
+export function listBudget(
+  headlineHeight: number,
+  hasCity = false,
+  format: StoryFormat = "story",
+): number {
+  const [h, top, bottom] =
+    format === "square" ? [SQUARE_H, SQ_PAD_TOP, SQ_PAD_BOTTOM] : [CANVAS_H, PAD_TOP, PAD_BOTTOM];
+  // The kicker's 71px came off with the kicker itself: the day headings
+  // carry their dates now, and the freed room goes to the rows.
+  return h - top - bottom - headlineHeight - FOOTER_H - VERB_H - (hasCity ? CITY_H : 0);
+}
+
+/** The padding the canvas is drawn with, so the route and the sums can't
+ *  disagree about the safe area. */
+export function storyPadding(format: StoryFormat): { top: number; bottom: number; side: number } {
+  return format === "square"
+    ? { top: SQ_PAD_TOP, bottom: SQ_PAD_BOTTOM, side: 86 }
+    : { top: PAD_TOP, bottom: PAD_BOTTOM, side: 86 };
 }
 
 /**

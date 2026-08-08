@@ -55,7 +55,7 @@ export default async function ManageStudioPage({
       studioId={studio.id}
       studioName={studio.name}
       studioAddress={studio.address}
-      backHref={`/s/${studio.slug ?? studio.id}`}
+      backHref={`/s/${studio.slug ?? studio.id}/shifts`}
       manageBase={`/s/${studio.slug ?? studio.id}/manage`}
       hasAccount={!!studio.accountUserId}
       week={week}

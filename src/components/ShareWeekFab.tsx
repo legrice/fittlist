@@ -15,7 +15,7 @@ export function ShareWeekPill({ handle }: { handle: string }) {
   return (
     <>
       <button className="sharepill" onClick={() => setOpen(true)}>
-        <Icon name="campaign" size={18} />
+        <Icon name="campaign" size={20} />
         Share your schedule
       </button>
       <ShareWeekSheet handle={handle} open={open} onClose={() => setOpen(false)} onToast={toast} />

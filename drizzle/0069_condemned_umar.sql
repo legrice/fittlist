@@ -1,0 +1,1 @@
+ALTER TABLE "class_templates" ADD COLUMN "with_who" text;

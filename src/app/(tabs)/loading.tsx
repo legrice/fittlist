@@ -1,7 +1,14 @@
 // Only the content area. The header and the tab bar live in the layout above
 // this, so they stay on screen while a tab loads instead of unmounting and
-// coming back. Nothing here pretends to be content: an empty space that fills
-// in reads better than blocks that shimmer and then move.
+// coming back. It was deliberately blank for a while; it sketches the list's
+// own shape now, by Matt's call, so a slow tab reads as arriving rather than
+// missing.
+import { ListSkeleton } from "@/components/Skeletons";
+
 export default function Loading() {
-  return <div className="tabloading" aria-busy="true" />;
+  return (
+    <div className="tabloading" aria-busy="true">
+      <ListSkeleton />
+    </div>
+  );
 }

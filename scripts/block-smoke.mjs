@@ -44,8 +44,18 @@ await co.getByRole("button", { name: "+ New studio" }).click();
 await co.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound");
 await co.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("1 Way, Newark NJ");
 await co.getByRole("button", { name: "Add studio" }).click();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 await co.locator(".publishwrap .btn").click();
 await co.waitForTimeout(900);
+await closeLive(co);
 
 // --- a member who follows them
 const c2 = await b.newContext({ viewport: { width: 390, height: 844 } });
@@ -65,7 +75,7 @@ await m.getByRole("heading", { name: "Add a photo." }).waitFor();
 await m.getByRole("button", { name: "Continue" }).click();
 await m.locator("#wLocation").fill("Jersey City, NJ");
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 await m.goto(BASE + "/carina");
 await m.locator(".profacts .followpill").waitFor();
 await m.waitForTimeout(500);
@@ -74,10 +84,11 @@ await m.locator(".profacts .followpill", { hasText: "Following" }).waitFor();
 console.log("member follows the coach ok");
 
 // --- the member adds a class, so the block has something to clean up
-await m.goto(BASE + "/feed");
-await m.locator(".feedagenda .swiperow").first().waitFor();
+await m.goto(BASE + "/week");
+await m.locator(".trayitem", { hasText: "Carina" }).click();
+await m.locator(".peeksheet .swiperow").first().waitFor();
 {
-  const row = m.locator(".feedagenda .swiperow").first();
+  const row = m.locator(".peeksheet .swiperow").first();
   const box = await row.boundingBox();
   const y = box.y + box.height / 2;
   const from = box.x + box.width - 20;
@@ -85,12 +96,15 @@ await m.locator(".feedagenda .swiperow").first().waitFor();
   await m.mouse.down();
   for (const step of [35, 70, 100, 120]) await m.mouse.move(from - step, y, { steps: 3 });
   await m.mouse.up();
-  await row.locator(".ps-event.goingon").waitFor();
+  await row.locator(".peekadd.on").waitFor();
 }
+await m.locator(".peekclose").click();
 console.log("member added a class ok");
 
 // --- BEFORE: Discover lists the coach, the page loads
 await m.goto(BASE + "/discover");
+// Classes lead the directory; Coaches is where a coach is listed.
+await m.locator(".dissearchrow").waitFor();
 await m.locator(".disrow").first().waitFor();
 if (!(await m.locator(".disrow", { hasText: "Carina" }).count()))
   fail("Discover doesn't list the coach before the block, so the after isn't a test");
@@ -120,26 +134,29 @@ for (const path of ["/carina/about", "/carina/contact", "/carina/schedule"]) {
 console.log("every profile tab is simply not there ok");
 
 await m.goto(BASE + "/discover");
+await m.locator(".dissearchrow").waitFor();
 await m.waitForTimeout(800);
 if (await m.locator(".disrow", { hasText: "Carina" }).count())
   fail("Discover still lists a coach who blocked this member");
 console.log("Discover drops the coach ok");
 
-await m.goto(BASE + "/feed");
+// The face goes with the follow: a block clears the subscriber row, so the
+// circle it drew has nothing behind it.
+await m.goto(BASE + "/week");
 await m.waitForTimeout(900);
-if ((await m.locator(".ps-event").count()) !== 0)
-  fail("the blocked coach's classes are still in the merged week");
-console.log("the merged week loses their classes ok");
+if (await m.locator(".trayitem", { hasText: "Carina" }).count())
+  fail("the blocked coach is still a circle on the member's calendar");
+console.log("the tray loses their face ok");
 
 // The follow row went with the block, and so did the mark on their class.
 await m.goto(BASE + "/week");
 await m.waitForTimeout(800);
-if ((await m.locator(".weekrow").count()) !== 0)
+if ((await m.locator(".ps-erow").count()) !== 0)
   fail("a class the blocked member had added is still in their week");
 console.log("their added class is cleared ok");
 
 // Nothing on the member's side names it. The word must not appear anywhere.
-for (const path of ["/feed", "/discover", "/you", "/week"]) {
+for (const path of ["/discover", "/you", "/week"]) {
   await m.goto(BASE + path);
   await m.waitForTimeout(500);
   const txt = (await m.locator("body").innerText()).toLowerCase();
@@ -179,7 +196,15 @@ const classId = shareUrl.match(
 )?.[0];
 if (!classId) fail(`couldn't get a class id out of the share link: ${shareUrl}`);
 
-const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+// Seven days back from the date the share itself named, not from Date.now():
+// the shared row is one weekday's row, and from 8pm Eastern the UTC clock is
+// already tomorrow, so now-minus-seven lands on the wrong weekday and the
+// sheet falls forward to the next occurrence instead of a past one.
+const sharedD = shareUrl.match(/d=(\d{4}-\d{2}-\d{2})/)?.[1];
+if (!sharedD) fail(`the share link carries no date: ${shareUrl}`);
+const weekAgo = new Date(new Date(`${sharedD}T00:00:00Z`).getTime() - 7 * 864e5)
+  .toISOString()
+  .slice(0, 10);
 await m.goto(`${BASE}/carina/${classId}?d=${weekAgo}`);
 await m.getByText("This one has already run.").waitFor();
 if (await m.locator(".ovcta-save").count())

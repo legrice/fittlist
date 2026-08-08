@@ -22,7 +22,7 @@ await page.getByPlaceholder("Your name").fill("Coach");
 await page.getByRole("button", { name: "Claim it" }).click();
 await page.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(page);
-await page.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await page.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 // public class
 await page.getByRole("button", { name: "Add your first class" }).click();
@@ -35,11 +35,23 @@ await page.getByPlaceholder("e.g. Palisade Barbell").fill("Ironbound Strength");
 await page.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("143 Newark Ave, Jersey City");
 await page.getByRole("button", { name: "Add studio" }).click();
 await page.getByText("Added to the studio directory").waitFor();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 await page.locator(".publishwrap .btn").click();
 await page.getByText("Your page is live").waitFor();
+await closeLive(page);
 
 // private class: no studio, free location
-await page.getByRole("button", { name: "Add class" }).click();
+await page.locator(".caladd").click();
+await page.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+await page.locator(".sheet .setrow", { hasText: "coaching" }).click();
 await page.getByRole("heading", { name: "New class" }).waitFor();
 await page.getByRole("button", { name: "Private", exact: true }).click();
 await page.getByPlaceholder("e.g. Barbell Strength").fill("PT with Sarah");

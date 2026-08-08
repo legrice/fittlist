@@ -39,7 +39,7 @@ export function ShiftsPublicToggle({
   return (
     <button className="setrow" onClick={toggle} aria-pressed={on}>
       <span className="setrow-ic">
-        <Icon name={on ? "calendar_month" : "public_off"} size={22} />
+        <Icon name={on ? "calendar_month" : "public_off"} size={24} />
       </span>
       <span className="setrow-txt">
         <span className="t">Gym shifts on your page</span>

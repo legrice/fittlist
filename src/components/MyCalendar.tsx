@@ -5,7 +5,7 @@ import { myCalendarUrl } from "@/app/actions/calfeed";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
-// Your week in the calendar you already use: the classes you saved, and the
+// Your week in the calendar you already use: the classes you added, and the
 // shifts you're on at a gym.
 //
 // Subscribing beats exporting: the feed is live, so when a class moves from
@@ -47,16 +47,16 @@ export function MyCalendar({ hasShifts = false }: { hasShifts?: boolean }) {
   return (
     <>
       <button className="setrow" onClick={() => setOpen(!open)}>
-        <span className="setrow-ic"><Icon name="calendar_month" size={22} /></span>
+        <span className="setrow-ic"><Icon name="calendar_month" size={24} /></span>
         <span className="setrow-txt">
           <span className="t">Your week in your calendar</span>
           <span className="s">
             {hasShifts
-              ? "The shifts you're on and the classes you saved"
-              : "The classes you saved, kept up to date"}
+              ? "The shifts you're on and the classes you added"
+              : "The classes you added, kept up to date"}
           </span>
         </span>
-        <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+        <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
       </button>
       {open && (
         <div className="installhow">

@@ -1,9 +1,20 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { sendWelcome } from "@/lib/notifier";
 import { addNotification } from "@/lib/notify";
+
+// A follow changes what two screens hold, and neither of them is the one the
+// tap happened on. Without this the router serves the copy of Following it
+// already had, so the coach you just followed isn't on it: exactly the promise
+// FollowHint makes when it links you straight there. The pill's own state is
+// local, which is why the profile itself needs nothing.
+const followChanged = () => {
+  revalidatePath("/feed");
+  revalidatePath("/following");
+};
 
 export async function subscribe(
   handle: string,
@@ -90,10 +101,10 @@ export async function followTrainer(
 ): Promise<{ ok: boolean; error?: string; requested?: boolean }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Log in first." };
+  if (!me) return { ok: false, error: "Sign in first." };
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!trainer) return { ok: false, error: "Page not found." };
   if (trainer.id === userId) return { ok: false, error: "That's your own page." };
@@ -175,13 +186,14 @@ export async function followTrainer(
       console.error("follow notification failed", err);
     }
   }
+  followChanged();
   return { ok: true };
 }
 
 export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; error?: string }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   const [trainer] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
@@ -201,6 +213,7 @@ export async function unfollowTrainer(handle: string): Promise<{ ok: boolean; er
         eq(schema.followRequests.requesterUserId, userId),
       ),
     );
+  followChanged();
   return { ok: true };
 }
 
@@ -252,7 +265,7 @@ export async function answerFollowRequest(
 ): Promise<{ ok: boolean; error?: string }> {
   const { getSessionUserId } = await import("@/lib/session");
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [req] = await db
     .select()

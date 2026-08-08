@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "crypto";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
@@ -17,7 +18,9 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { getDb, schema } from "@/db";
+import { adminEmails } from "@/lib/admin";
 import { nextAvatarColor } from "@/lib/avatar-server";
+import { purgeUser } from "@/lib/purge";
 import { sendMessage } from "@/lib/mailer";
 import { createSession, destroySession, getSessionUserId } from "@/lib/session";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/password";
@@ -113,12 +116,12 @@ export async function setPassword(
   currentPassword: string = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const problem = passwordProblem(newPassword);
   if (problem) return { ok: false, error: problem };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (!user) return { ok: false, error: "Session expired. Sign in again." };
   if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
     return { ok: false, error: "Current password is incorrect." };
   }
@@ -134,12 +137,12 @@ export async function changeEmail(
   currentPassword: string = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const email = newEmailRaw.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "That doesn't look like an email address." };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Session expired. Log in again." };
+  if (!user) return { ok: false, error: "Session expired. Sign in again." };
   if (email === user.email) return { ok: true };
   if (user.passwordHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
     return { ok: false, error: "Enter your current password to change your email." };
@@ -289,10 +292,10 @@ export async function beginPasskeyRegistration(): Promise<
   { ok: true; options: PublicKeyCredentialCreationOptionsJSON } | { ok: false; error: string }
 > {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!user) return { ok: false, error: "Log in first." };
+  if (!user) return { ok: false, error: "Sign in first." };
   const existing = await db
     .select()
     .from(schema.credentials)
@@ -320,7 +323,7 @@ export async function finishPasskeyRegistration(
   label: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const challenge = await takeChallenge();
   if (!challenge) return { ok: false, error: "That took too long. Try again." };
   const { rpID, origin } = await rpInfo();
@@ -403,10 +406,10 @@ export async function finishPasskeyLogin(
 // has no schedule behind it. Reversible from /you, which offers coaching.
 export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
   // A claimed handle means they're already a coach with a live page; don't
   // quietly demote them.
   if (me.handle) return { ok: false, error: "You already have a page." };
@@ -418,14 +421,62 @@ export async function chooseFan(): Promise<{ ok: boolean; error?: string }> {
 // switch is how ghost inventory got in: anyone could flip it and publish.
 // Becoming a coach is an approval now; this files the ask and tells the admin,
 // and adminSetKind is the only thing that flips the flag.
+/**
+ * "I teach too", the switch.
+ *
+ * Turning it on adds the Calendar tab and lists you in Discover. Turning it
+ * off takes both away. Same account, same profile, no second signup: a coach
+ * is not a different kind of person here, only somebody whose account carries
+ * a calendar, and that is what makes this a decision rather than a migration.
+ *
+ * It used to be an ask. `requestCoaching` filed it and an admin answered on
+ * the People tab, because public classes were coach-only and the wall was
+ * holding back a real leak: beta members were recreating their gym's whole
+ * schedule under their own name, since publishing was the only way to get a
+ * week into the app at all. That motivation is gone with the member calendar,
+ * and Matt's call is that converting should be one tap.
+ *
+ * The tradeoff is real and worth naming rather than discovering: anybody can
+ * now declare themselves a coach and publish public classes, so the leak is
+ * possible again. What catches it is the admin's Reports tab, which lists the
+ * same studio and time under two accounts, and that is a cleanup rather than a
+ * gate. `requestCoaching` and `adminAnswerCoachRequest` stay for the requests
+ * already in flight.
+ *
+ * Turning it off is deliberately gentle: it never deletes a class. The tab
+ * goes, the listing goes, and the week is still there if they turn it back on,
+ * because a switch that quietly threw away somebody's work would be a switch
+ * nobody could risk touching.
+ */
+export async function setTeaching(on: boolean): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
+  // A gym account is not a person and must never be flipped by one.
+  if (me.kind === "gym") return { ok: false, error: "That is a studio account." };
+  if (on && !me.handle) {
+    return { ok: false, error: "Pick your link first, so your page has somewhere to live." };
+  }
+  await db
+    .update(schema.users)
+    .set({ kind: on ? "coach" : "fan", discoverable: on ? true : me.discoverable })
+    .where(eq(schema.users.id, userId));
+  revalidatePath("/settings");
+  revalidatePath("/calendar");
+  revalidatePath("/feed");
+  return { ok: true };
+}
+
 export async function requestCoaching(
   noteRaw = "",
 ): Promise<{ ok: boolean; pending?: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
-  if (!me) return { ok: false, error: "Session expired. Log in again." };
+  if (!me) return { ok: false, error: "Session expired. Sign in again." };
   if (me.kind !== "fan") return { ok: true }; // already a coach; nothing to ask
   if (!me.handle) {
     return { ok: false, error: "Set up your profile first, so your page has a link." };
@@ -481,7 +532,7 @@ export async function claimProfile(
   as: "coach" | "fan" = "coach",
 ): Promise<{ ok: boolean; handle?: string; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Session expired. Log in again." };
+  if (!userId) return { ok: false, error: "Session expired. Sign in again." };
   const name = nameRaw.trim();
   if (!name) return { ok: false, error: "Enter your name." };
   // Growth-loop attribution: signup arrived through a public page's footer.
@@ -529,6 +580,42 @@ export async function claimProfile(
 export async function logout() {
   await destroySession();
   redirect("/");
+}
+
+/**
+ * Delete your own account, and everything it owns.
+ *
+ * Session-derived and takes no id, deliberately: this is exported from a
+ * `"use server"` file, so an id parameter would be an endpoint anybody could
+ * post somebody else's account to. The same reasoning `myStaffStudios`
+ * carries, with a great deal more at stake.
+ *
+ * Both app stores require an account this app let somebody create to be
+ * deletable from inside it, which is why this exists rather than a note
+ * asking people to write in. It runs the same teardown the admin panel does,
+ * because the ordering of those deletes is load-bearing and a second copy
+ * would rot.
+ *
+ * A gym's account has no login and so cannot arrive here, and the admin is
+ * refused: this account is how a locked-out studio gets fixed, and deleting
+ * it from a phone is not a thing to make one tap away.
+ */
+export async function deleteMyAccount(): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Sign in first." };
+  const db = await getDb();
+  const [me] = await db
+    .select({ email: schema.users.email, kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me) return { ok: false, error: "That account is already gone." };
+  if (adminEmails().includes(me.email.toLowerCase()))
+    return { ok: false, error: "An admin account can't be deleted from here." };
+  if (me.kind === "gym")
+    return { ok: false, error: "That's a studio's account. Remove the studio instead." };
+  await purgeUser(db, userId);
+  await destroySession();
+  return { ok: true };
 }
 
 // SimpleWebAuthn's transport union; kept local so callers stay untyped-JSON.

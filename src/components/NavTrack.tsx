@@ -46,7 +46,7 @@ export function pageBeneath(): string | null {
  * off any of them rather than pushing another entry onto the pile.
  */
 export function samePage(a: string, b: string): boolean {
-  const bare = (u: string) => u.replace(/\/(schedule|about|studios|contact)$/, "") || "/";
+  const bare = (u: string) => u.replace(/\/(schedule|about|studios|coaches|contact)$/, "") || "/";
   return a === b || bare(a) === bare(b);
 }
 

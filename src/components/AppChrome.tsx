@@ -1,11 +1,10 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { adminNewActivityCount } from "@/lib/adminactivity";
 import { adminEmails } from "@/lib/admin";
+import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { avatarColor } from "@/lib/avatar";
-import { fansVisible } from "@/lib/flags";
+import { fansVisible, landingHref } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
-import { weekCount } from "@/lib/week";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
 import type { NavTab } from "@/lib/nav";
@@ -21,10 +20,22 @@ import type { NavTab } from "@/lib/nav";
 export async function AppChrome({
   userId,
   bar = false,
+  headerNav,
   active,
+  gear = true,
 }: {
   userId: string;
   bar?: boolean;
+  /** The settings gear in the header's corner. On by default: the header is
+   *  the same on every signed-in screen, or the corner reads as unreliable. */
+  gear?: boolean;
+  /** The tabs as header links too, for the width where the bottom bar hides.
+   *  Follows `bar` by default, because a screen with tabs has to keep them at
+   *  every width: above 940px the bottom bar is gone and without these there
+   *  is no navigation at all. The one opt-out is a profile, whose header
+   *  floats over a photograph in white, where a row of ink links is a row
+   *  nobody can read. */
+  headerNav?: boolean;
   /** Light a tab the pathname alone can't name: your own profile is You. */
   active?: NavTab;
 }) {
@@ -36,7 +47,9 @@ export async function AppChrome({
       name: schema.users.name,
       email: schema.users.email,
       photo: schema.users.photo,
+      photoThumb: schema.users.photoThumb,
       avatarColor: schema.users.avatarColor,
+      adminActivityAt: schema.users.adminActivityAt,
       id: schema.users.id,
     })
     .from(schema.users)
@@ -44,17 +57,23 @@ export async function AppChrome({
   if (!me) return null;
 
   const isCoach = me.kind !== "fan" && !!me.handle;
+  // The admin's own pulse rides the header beside the bell, for the one or
+  // two accounts that have /admin at all: the same activity list the admin
+  // screen shows, one tap from anywhere.
   const isAdmin = adminEmails().includes(me.email.toLowerCase());
-  const [unread, week, adminNew] = await Promise.all([
-    unreadNotifications(userId),
-    weekCount(userId),
-    isAdmin ? adminNewActivityCount(userId) : Promise.resolve(null),
-  ]);
-  // A coach's You is their public page, so the tab shows them what the link
-  // shows everyone else.
-  const youHref = isCoach ? `/${me.handle}` : "/you";
+  const fans = await fansVisible();
+  const unread = await unreadNotifications(userId);
+  // One calendar, at one address. This forked by kind for months, back when a
+  // coach's was /app and a member had their own at /week; a member has no
+  // calendar at all now, and the tab is not drawn for them. Left as it was, it
+  // quietly overrode the Calendar tab's href on every screen outside the tabs
+  // layout, which is most of them.
+  const scheduleHref = "/calendar";
+  // Profile is your own page. It falls back to /you (a redirect) for an
+  // account still mid-signup, which has no handle to point at yet.
+  const profileHref = me.handle ? `/${me.handle}` : "/you";
   const face = {
-    photo: me.photo,
+    photo: me.photoThumb ?? me.photo,
     color: avatarColor(me),
     initial: ((me.name.trim() || me.email).charAt(0) || "?").toUpperCase(),
   };
@@ -62,20 +81,34 @@ export async function AppChrome({
   const header = (
     <AppHeader
       unread={unread}
-      weekCount={week}
-      adminNew={adminNew}
-      // The logo goes to Following for everyone with the member side. It used
-      // to send a coach to /app, which since the one-shell change is the bare
-      // editable schedule: a page with no identity that read as showing up at
-      // random.
-      home={(await fansVisible()) ? "/feed" : "/app"}
+      // The logo goes to the landing tab for everyone with the member side.
+      // It used to send a coach to /app, which since the one-shell change is
+      // the bare editable schedule: a page with no identity that read as
+      // showing up at random.
+      home={fans ? await landingHref() : "/app"}
+      // The magnifier, opening the directory as a sheet. Nobody to find in
+      // the coaches-only shell, so it is off there.
+      find={fans}
+      // The gear only where there is no member side at all: the coaches-only
+      // mode has no tab bar, so it is the one door to the account.
+      settings={fans ? undefined : "/settings"}
+      adminActivity={isAdmin}
+      adminActivityNew={isAdmin && (await adminActivityFreshSince(me.adminActivityAt))}
+      gear={gear}
+      nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />
   );
   if (!bar) return header;
   return (
     <>
       {header}
-      <NavBar coach={isCoach} face={face} youHref={youHref} active={active} />
+      <NavBar
+        coach={isCoach}
+        scheduleHref={scheduleHref}
+        profileHref={profileHref}
+        active={active}
+        face={face}
+      />
     </>
   );
 }

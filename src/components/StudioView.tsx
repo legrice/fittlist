@@ -2,7 +2,7 @@ import { and, eq, inArray, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { fansVisible } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { viewerLook } from "@/lib/look";
@@ -13,6 +13,8 @@ import { AppChrome } from "@/components/AppChrome";
 import { backToFor } from "@/lib/nav";
 import { ContactSheet } from "@/components/ContactSheet";
 import { Icon } from "@/components/Icon";
+import { InviteCoach } from "@/components/InviteCoach";
+import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
@@ -25,7 +27,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /** One section per URL, the same shape a person's profile uses. Contact left
  *  the tabs and became the pill on the header, exactly as it did for a coach;
  *  /s/{slug}/contact still resolves and lands on the page with the pill. */
-export type StudioTab = "schedule" | "about" | "contact";
+export type StudioTab = "schedule" | "about" | "coaches" | "contact";
 
 // Slug is the address; the id still resolves, so links made before slugs (and
 // anything holding a raw id) keep working.
@@ -102,6 +104,35 @@ export async function StudioView({
           and(eq(schema.classes.userId, s.accountUserId), eq(schema.classes.studioId, s.id)),
         )
     ).filter((c) => c.isPublic);
+    // Who is coaching, when the studio says so: the standing coach from the
+    // rota, with that date's cover winning over the class, the same rule the
+    // rota itself lives by. Off, the week lists classes without names, which
+    // some gyms prefer; on is the default for a verified studio.
+    let coachOf = new Map<string, { name: string; photo: string | null; color: string }>();
+    let covers: (typeof schema.shiftCovers.$inferSelect)[] = [];
+    if (s.showCoaches && rows.length) {
+      covers = await db
+        .select()
+        .from(schema.shiftCovers)
+        .where(inArray(schema.shiftCovers.classId, rows.map((c) => c.id)));
+      const ids = [
+        ...new Set(
+          [...rows.map((c) => c.coachUserId), ...covers.map((cv) => cv.coachUserId)].filter(
+            (x): x is string => !!x,
+          ),
+        ),
+      ];
+      if (ids.length) {
+        const people = await db
+          .select()
+          .from(schema.users)
+          .where(inArray(schema.users.id, ids));
+        coachOf = new Map(
+          people.map((u) => [u.id, { name: u.name, photo: u.photo, color: avatarColor(u) }]),
+        );
+      }
+    }
+    const coverBy = new Map(covers.map((cv) => [`${cv.classId}|${cv.occurrenceDate}`, cv.coachUserId]));
     const start = new Date(`${todayIso()}T00:00:00Z`);
     for (let i = 0; i < 7; i++) {
       const dt = new Date(start);
@@ -110,22 +141,125 @@ export async function StudioView({
       const dow = (dt.getUTCDay() + 6) % 7;
       const items = rows
         .filter((c) => runsOn(c, iso, dow))
+        // Been and gone comes off here too: a schedule is what's still coming.
+        .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
         .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-        .map((c) => ({
+        .map((c) => {
+          const key = `${c.id}|${iso}`;
+          const onIt = coverBy.has(key) ? coverBy.get(key) : c.coachUserId;
+          const who = s.showCoaches && onIt ? coachOf.get(onIt) : undefined;
+          return {
+            id: c.id,
+            name: c.name,
+            startTime: c.startTime,
+            durationMin: c.durationMin,
+            coachName: who?.name ?? null,
+            coachPhoto: who?.photo ?? null,
+            coachColor: who?.color ?? null,
+          };
+        });
+      if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
+    }
+  }
+  // The commons builds the week before the studio arrives: an unclaimed
+  // studio's schedule is drawn from the public classes coaches list here and
+  // the entries members have added with this studio picked. Deduped on name
+  // and time, never attributed (a member's entry surfaces the class's facts
+  // and nothing about the member; the personal adder says so under its studio
+  // field, which is the consent), and gone the moment somebody claims the
+  // page: from then on what it says is theirs to say.
+  let community = false;
+  if (!s.accountUserId && !access.claimed) {
+    const [pubAll, own] = await Promise.all([
+      db.select().from(schema.classes).where(eq(schema.classes.studioId, s.id)),
+      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.studioId, s.id)),
+    ]);
+    const pub = pubAll.filter((c) => c.isPublic);
+    const owners = pub.length
+      ? await db
+          .select({
+            id: schema.users.id,
+            handle: schema.users.handle,
+            name: schema.users.name,
+            photo: schema.users.photo,
+            avatarColor: schema.users.avatarColor,
+          })
+          .from(schema.users)
+          .where(inArray(schema.users.id, [...new Set(pub.map((c) => c.userId))]))
+      : [];
+    const handleOf = new Map(owners.map((o) => [o.id, o.handle]));
+    // Their face and colour, so the coach line on these rows is the one
+    // Following draws rather than a name in the added-tag's clothes.
+    const faceOf = new Map(owners.map((o) => [o.id, { photo: o.photo, color: avatarColor(o) }]));
+    // Who put this class here. An unclaimed page is built by the people who
+    // train at the place, and whoever runs it had no way to ask anybody about
+    // a listing they did not recognise. A coach's name is already public on
+    // the class it names, so this shows nothing that was not already showing.
+    const nameOf = new Map(owners.map((o) => [o.id, o.name]));
+    const start = new Date(`${todayIso()}T00:00:00Z`);
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(start);
+      dt.setUTCDate(start.getUTCDate() + i);
+      const iso = dt.toISOString().slice(0, 10);
+      const dow = (dt.getUTCDay() + 6) % 7;
+      const seen = new Set<string>();
+      const items: StudioDay["items"] = [];
+      // Coaches' own listings first: they have real pages, so on a collision
+      // the row that can be opened wins.
+      for (const c of pub) {
+        if (!runsOn(c, iso, dow)) continue;
+        if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+        const base = handleOf.get(c.userId);
+        if (!base) continue;
+        const key = `${c.name.trim().toLowerCase()}|${c.startTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push({
           id: c.id,
           name: c.name,
           startTime: c.startTime,
           durationMin: c.durationMin,
-        }));
+          base,
+          coachName: nameOf.get(c.userId) ?? null,
+          coachPhoto: faceOf.get(c.userId)?.photo ?? null,
+          coachColor: faceOf.get(c.userId)?.color ?? null,
+          where: c.location,
+        });
+      }
+      for (const p of own) {
+        if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
+        if (occurrenceEnded(iso, p.startTime, p.durationMin)) continue;
+        const key = `${p.name.trim().toLowerCase()}|${p.startTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        // Still nobody's name on it: the consent under the personal adder's
+        // studio field is that the class joins this page, not that they do.
+        items.push({
+          id: p.id,
+          name: p.name,
+          startTime: p.startTime,
+          durationMin: p.durationMin,
+          plain: true,
+          where: p.location,
+        });
+      }
+      items.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       if (items.length) days.push({ iso, label: fmtDayHeader(iso), items });
     }
+    community = days.length > 0;
   }
-  const hasSchedule = !!s.accountUserId;
-  const tab: StudioTab = wanted === "auto" ? (hasSchedule ? "schedule" : "about") : wanted;
-  // Without a schedule there are no tabs, so there is nothing to divide the
-  // page into: it stays the single sectioned page it has always been, which is
-  // what almost every row in the directory is and should remain.
-  const show = (section: StudioTab) => !hasSchedule || tab === section;
+
+  const hasSchedule = !!s.accountUserId || community;
+  // The viewer's going marks used to load here so each row's ribbon could
+  // say Added. The ribbon left every list when plans did, and the new rows
+  // carry no add at all, so the query went with it: a query nobody reads is
+  // one that gets slower without anybody noticing.
+  // Every studio page wears the same three tabs now, whatever it holds:
+  // Schedule leads (it is what the link is for, and an empty one is the
+  // pitch), Info is the categories and the words, Coaches is who teaches
+  // here. One layout to learn, however small the studio.
+  const tab: StudioTab = wanted === "auto" ? "schedule" : wanted;
+  const show = (section: StudioTab) => tab === section;
 
   const backTo = backToFor(from, signedIn);
 
@@ -163,42 +297,69 @@ export async function StudioView({
   const base = `/s/${s.slug ?? s.id}`;
 
   return (
-    <div className={`pub profile${signedIn ? " hasnav" : ""}`} data-mode={await viewerLook()}>
+    <div
+      className={`pub profile${signedIn ? " hasnav" : ""}${s.photo ? " pub-hero" : ""}`}
+      data-mode={await viewerLook()}
+    >
       <div className="profwrap">
         {/* A stranger gets the wordmark and one way in, same as they do on a
             person's page. This page had neither, so a shared studio link was a
             dead end for anyone without an account. */}
-        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar />}
+        {signedIn && viewerId ? <AppChrome userId={viewerId} /> : <PublicTopBar next={`/s/${s.slug ?? s.id}`} />}
         {/* The same header a person wears. A studio is a place rather than a
             face, but it is the same kind of page: a photograph, a badge, a
             name, where it is, and the two things you can do about it. */}
         <ProfileTabs
           base={base}
           tab={tab}
-          tabs={
-            hasSchedule
-              ? [
-                  { key: "schedule", label: "Schedule" },
-                  { key: "about", label: "Info" },
-                ]
-              : []
-          }
+          tabs={[
+            {
+              key: "schedule",
+              label: "Schedule",
+              // The commons' week explains itself from an info dot beside the
+              // tab: the note was a paragraph over the list, read once and
+              // scrolled past forever after. Its sheet carries the same Own
+              // this page ask the badge's does.
+              info: community ? <CommunityNote studioId={s.id} name={s.name} /> : undefined,
+            },
+            { key: "about", label: "Info" },
+            { key: "coaches", label: "Coaches" },
+          ]}
           name={s.name}
           title=""
           location={s.address}
-          photo={s.photo}
-          color={avatarColor({ id: s.id })}
-          backTo={backTo}
-          avail={
-            <div className="profhero-tags">
-              <span className="kindtag">Studio</span>
-              {/* Said once, quietly: it explains why the pencil is gone for
-                  everyone else, and it is the thing that makes the page worth
-                  trusting. Tapping it says so in full, and offers the way in to
-                  anyone who runs a place of their own. */}
-              {access.claimed && <VerifiedBadge studioId={s.id} name={s.name} />}
-            </div>
+          // The same full-bleed hero a coach's page wears, by Matt's call:
+          // one design for every profile. A photo-less studio keeps the
+          // coloured banner below, because a place has no face to fall back
+          // to a circle of.
+          heroPhoto={s.photo}
+          // A studio's photo is a place, not a face, so it comes as the wide
+          // rectangle its old page led with: a circle crops a room down to a
+          // porthole, and the rectangle is also what tells a studio apart
+          // from a person at a glance. No photo keeps the coloured circle
+          // face; a full-width empty rectangle is a wall.
+          avatar={
+            /* One layout whether or not there is a photo: the banner space
+               is always there, filled by the picture or by the studio's own
+               colour (the same one its directory row derives), so a page
+               without a photo is not a different page. */
+            <span className="profbanner-wrap">
+              {s.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="profbanner" src={s.photo} alt={s.name} />
+              ) : (
+                <span
+                  className="profbanner profbanner-empty"
+                  style={{ background: avatarColor({ id: s.id }) }}
+                  aria-hidden="true"
+                />
+              )}
+            </span>
           }
+          backTo={backTo}
+          // Above the name on every skin, hero and banner alike; the white
+          // pill already reads over a photograph.
+          badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />}
           ownerTop={
             /* Everything you can do with a studio, behind one set of dots:
                share, suggest, report, and for coaches the edit. */
@@ -222,6 +383,10 @@ export async function StudioView({
             />
           }
           actions={
+            /* Nothing to offer, no row: an empty pills row still spends its
+               margin, which read as stray space between the address and the
+               tabs on a studio with no contact ways. */
+            !hasContact ? null : (
             <div className="profacts">
               {/* The same pill a person's page carries, opening the same
                   sheet. Nobody is messaged on fittlist here: a studio has no
@@ -241,17 +406,29 @@ export async function StudioView({
                   }}
                 />
               )}
-              {/* The way into the rota, for the people who run the place. */}
-              {access.isManager && s.accountUserId && (
-                <Link className="actpill" href={`${base}/manage`}>
-                  <Icon name="calendar_month" size={16} /> The schedule
-                </Link>
-              )}
+              {/* No share circle up here any more: the dots carry Share
+                  this studio, and one door beats two. */}
             </div>
+            )
           }
         >
 
-        {hasSchedule && tab === "schedule" && <StudioSchedule slug={s.slug ?? s.id} days={days} />}
+        {tab === "schedule" &&
+          (hasSchedule ? (
+            <StudioSchedule
+              slug={s.slug ?? s.id}
+              days={days}
+              accent={avatarColor({ id: s.id })}
+            />
+          ) : (
+            <div className="empty-block">
+              <h2>No classes listed yet</h2>
+              <p>
+                The schedule fills in as coaches who teach here add their classes, or when
+                the studio takes the page and runs its own.
+              </p>
+            </div>
+          ))}
 
         {/* What kind of place this is, first thing under the tabs: it is the
             answer to "is this for me", and it used to sit above the photo
@@ -283,7 +460,7 @@ export async function StudioView({
             rel="noopener nofollow"
           >
             <span className="profstudio-ic">
-              <Icon name="place" size={20} />
+              <Icon name="place" size={22} />
             </span>
             <span className="profstudio-txt">
               <span className="nm">{s.address}</span>
@@ -293,9 +470,20 @@ export async function StudioView({
         </div>
         )}
 
-        {show("about") && coaches.length > 0 && (
-          <div className="profstudios studsec">
-            <h2 className="prof-sec-h">Coaches here</h2>
+        {show("coaches") &&
+          (coaches.length === 0 ? (
+            <>
+              <div className="empty-block">
+                <h2>Nobody listed yet</h2>
+                <p>
+                  Coaches appear here when they add {s.name} as a place they teach, or put a
+                  class on at it.
+                </p>
+              </div>
+              {signedIn && <InviteCoach studioName={s.name} />}
+            </>
+          ) : (
+          <div className="profstudios coachlist">
             {coaches.map((c) => (
               <Link key={c.id} className="coachstudio" href={`/${c.handle}`}>
                 {c.photo ? (
@@ -315,12 +503,16 @@ export async function StudioView({
                   {c.title && <span className="ad">{c.title}</span>}
                 </span>
                 <span className="coachstudio-chev">
-                  <Icon name="chevron_right" size={18} />
+                  <Icon name="chevron_right" size={20} />
                 </span>
               </Link>
             ))}
+            {/* The list fills in by word of mouth, and the person most
+                likely to bring a coach in is somebody standing in their
+                class. */}
+            {signedIn && <InviteCoach studioName={s.name} />}
           </div>
-        )}
+          ))}
 
         </ProfileTabs>
 

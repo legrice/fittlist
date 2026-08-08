@@ -5,8 +5,11 @@ import { getDb, schema } from "@/db";
 import { fmtDateLong, fmtTime, occurrenceEnded, runsOn, siteOrigin, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { isBlocked } from "@/lib/blocks";
+import { shiftCoach, shiftNaming } from "@/lib/coachweek";
+import { sendableAt, type Sendable } from "@/lib/rota";
 import { floatingEnd, floatingStart, weeklyRule } from "@/lib/ics";
 import { fansVisible } from "@/lib/flags";
+import { currentAdmin } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { studioPath } from "@/lib/studio";
 
@@ -22,9 +25,15 @@ export type ClassDetail = {
   coachName: string;
   coachPhoto: string | null;
   coachColor: string;
+  /** Whose page the "Coached by" row taps through to, or null for no row.
+   *  Not derived from `handle`, which is the base the *class* lives under: a
+   *  gym's class is addressed under the studio while the person on it has a
+   *  page of their own. Null is a gym class with nobody we may name on it. */
+  coachHandle: string | null;
   name: string;
   classType: string | null;
   description: string | null;
+  image: string | null;
   whenIso: string;
   dateLong: string;
   time: string;
@@ -43,15 +52,27 @@ export type ClassDetail = {
   /** Whether this viewer can add it: signed in, not theirs, and public. */
   canAdd: boolean;
   added: boolean;
+  /** Whether that mark is one the viewer's followers can see. Null when
+   *  there is no mark to have an opinion about. The moment of adding used to
+   *  be the only place this could be set, which meant it could not be changed
+   *  afterwards at all; the sheet the class already opens in is where it can
+   *  be both seen and changed. */
+  addedPublic: boolean | null;
   /** It's been and gone: say so rather than showing a button that fails. */
   past: boolean;
+  /** The viewer is the admin: the sheet offers to change the picture. A beta
+   *  power for filling in the catalog; it touches the photo and nothing else. */
+  adminPhoto: boolean;
+  /** The admin may hand this class a booking link, because it has none. */
+  adminLink: boolean;
+  /** The admin may repair the listing (words, time, length) or take it
+   *  down: reported classes need managing, and the report lands on them. */
+  adminEdit: boolean;
+  /** "HH:MM", for the admin editor's time input; `time` is for the eye. */
+  startRaw: string;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
-  /** The owner is a gym, not a person. Nothing here is "coached by" anybody:
-   *  whether a coach's name is ever shown is the gym's own switch, and it is
-   *  off. The studio row below says where, which is the whole truth of it. */
-  ownerIsGym: boolean;
   /** A gym's class, seen by somebody who could be on it. Null on a coach's own
    *  class, and for anyone with no standing at the studio. */
   shift: {
@@ -61,6 +82,9 @@ export type ClassDetail = {
     canGiveUp: boolean;
     /** Nobody is on it and the viewer coaches here. */
     canClaim: boolean;
+    /** Who this date can be handed straight to: the gym's shift list, minus
+     *  the viewer. Only filled when the viewer is the one on it. */
+    sendable: Sendable[];
   } | null;
 };
 
@@ -103,6 +127,11 @@ export async function classDetail(
 
   const viewerId = await getSessionUserId();
   const isOwner = viewerId === user.id;
+  const isAdminViewer = !isOwner && !!(await currentAdmin());
+  const adminPhoto = isAdminViewer;
+  // The link power is fill-the-blanks only, so the door only exists where
+  // the blank does.
+  const adminLink = isAdminViewer && c.links.length === 0;
   if (!c.isPublic && !isOwner) return null;
   // Blocked: as far as they're concerned this class doesn't exist.
   if (await isBlocked(user.id, viewerId)) return null;
@@ -147,9 +176,10 @@ export async function classDetail(
   const canAdd =
     !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
   let added = false;
+  let addedPublic: boolean | null = null;
   if (canAdd) {
     const [row] = await db
-      .select({ id: schema.attendances.id })
+      .select({ id: schema.attendances.id, isPublic: schema.attendances.isPublic })
       .from(schema.attendances)
       .where(
         and(
@@ -159,6 +189,7 @@ export async function classDetail(
         ),
       );
     added = !!row;
+    if (row) addedPublic = row.isPublic !== false;
   }
 
   // The coach's roster for this occurrence. These people marked Going at this
@@ -233,11 +264,18 @@ export async function classDetail(
         teachesHere = !!picked || !!taught;
       }
     }
+    // The gym's shift list, so the coach on this date can hand it straight to
+    // somebody rather than only opening it up and hoping. Managers name the
+    // list, because anyone may say they coach here and not everyone who does
+    // takes these classes.
+    // The same list the staff screen's own Transfer sheet offers, from the
+    // one loader: two sheets from two doors onto one act.
+    const sendable: Sendable[] = on === viewerId ? await sendableAt(c.studioId, viewerId) : [];
     // Only shown to somebody it means something to: the person on it, or a
     // coach here looking at a slot with nobody on. A member sees none of this,
     // and no name: whether a coach is listed is a separate switch.
     if (on === viewerId || (!on && teachesHere))
-      shift = { onName, canGiveUp: on === viewerId, canClaim: !on && teachesHere };
+      shift = { onName, canGiveUp: on === viewerId, canClaim: !on && teachesHere, sendable };
   }
 
   // The viewer's handle rides the share once they've saved, so the link
@@ -271,15 +309,26 @@ export async function classDetail(
   if (locationText) gcalParams.set("location", locationText);
   if (!c.specificDate) gcalParams.set("recur", weeklyRule(c.dayOfWeek, c.endsOn));
 
+  // Who to put on the row. A gym owns its classes, so the owner is the place;
+  // the person is on the rota, and only where they show their shifts. Resolved
+  // apart from the `shift` block above, which is the rota's controls and only
+  // exists for a signed-in viewer on a future date: who taught a class is not
+  // a question that should depend on either.
+  const onDuty =
+    user.kind === "gym" ? shiftCoach(await shiftNaming([c.id]), c.id, whenIso) : null;
+  const who = onDuty ?? user;
+
   return {
     id: c.id,
     handle: base,
-    coachName: user.name,
-    coachPhoto: user.photo,
-    coachColor: avatarColor(user),
+    coachName: who.name,
+    coachPhoto: who.photo,
+    coachColor: avatarColor(who),
+    coachHandle: who.kind === "gym" ? null : who.handle,
     name: c.name,
     classType: c.classType,
     description: c.description,
+    image: c.image,
     whenIso,
     dateLong: fmtDateLong(whenIso),
     time: fmtTime(c.startTime),
@@ -299,9 +348,13 @@ export async function classDetail(
     myHandle,
     canAdd,
     added,
+    addedPublic,
     past,
     roster,
-    ownerIsGym: user.kind === "gym",
+    adminPhoto,
+    adminLink,
+    adminEdit: isAdminViewer,
+    startRaw: c.startTime,
     shift,
   };
 }

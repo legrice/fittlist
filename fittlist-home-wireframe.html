@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FittList — Home screen wireframe</title>
+<style>
+  :root{
+    --cloud:#F7F2E8;
+    --exhaust:#191502;
+    --sienna:#DD583A;
+    --sand:#D6D1B3;
+    --tacha:#CBD665;
+    --sky:#92A6A7;
+    --olive:#6B7A3A;
+    --gold:#B08A2E;
+    --line:rgba(25,21,2,.10);
+    --muted:rgba(25,21,2,.52);
+    --card:#FFFDF8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:#E7E2D6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--exhaust);
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px 0 40px;
+  }
+
+  /* ---------- prototype chrome (outside the phone) ---------- */
+  .proto-bar{
+    width:min(430px,100%);padding:0 14px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  }
+  .proto-label{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:rgba(25,21,2,.5);margin-right:2px}
+  .seg{display:inline-flex;background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{
+    border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--muted);
+    padding:6px 14px;border-radius:999px;cursor:pointer
+  }
+  .seg button[aria-pressed="true"]{background:var(--exhaust);color:var(--cloud)}
+
+  /* ---------- phone ---------- */
+  .phone{
+    width:min(430px,100%);height:min(880px,88vh);
+    background:var(--cloud);border-radius:34px;overflow:hidden;
+    display:flex;flex-direction:column;position:relative;
+    box-shadow:0 24px 60px rgba(25,21,2,.22);
+  }
+  .status{display:flex;justify-content:space-between;padding:12px 24px 2px;font-size:13px;font-weight:700}
+  .status .r{opacity:.75;letter-spacing:.08em}
+
+  header.app{
+    display:flex;align-items:center;gap:10px;padding:10px 20px 12px;border-bottom:1px solid var(--line);
+  }
+  .mark{width:20px;height:20px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:2px}
+  .mark i{background:var(--exhaust);border-radius:1px;display:block}
+  .mark i:nth-child(2),.mark i:nth-child(5){opacity:0}
+  .wordmark{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .beta{background:var(--sienna);color:#fff;font-size:9px;font-weight:800;letter-spacing:.10em;padding:3px 7px;border-radius:999px}
+  .header-spacer{flex:1}
+  .hicon{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--exhaust);opacity:.8}
+
+  /* place chip row */
+  .place{
+    display:flex;align-items:center;gap:8px;padding:12px 20px 4px;
+  }
+  .place .where{font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px}
+  .place .when{font-size:13px;color:var(--muted)}
+
+  .scroll{flex:1;overflow-y:auto;padding-bottom:20px}
+  .scroll::-webkit-scrollbar{display:none}
+
+  section{padding:20px 0 4px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;padding:0 20px 10px}
+  .sec-title{font-size:19px;font-weight:800;letter-spacing:-.02em}
+  .sec-sub{font-size:12px;color:var(--muted);padding:0 20px 12px;margin-top:-8px}
+  .see{font-size:13px;font-weight:700;color:var(--muted)}
+
+  /* horizontal rails */
+  .rail{display:flex;gap:12px;overflow-x:auto;padding:2px 20px 6px;scroll-snap-type:x mandatory}
+  .rail::-webkit-scrollbar{display:none}
+  .rail>*{scroll-snap-align:start;flex:0 0 auto}
+
+  .card{
+    width:250px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;
+    display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden
+  }
+  .card .spine{position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 3px 3px 0}
+  .card .pad{padding-left:8px;display:flex;flex-direction:column;gap:8px}
+  .kicker{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .card h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .meta{font-size:13px;color:var(--muted);line-height:1.35}
+  .row{display:flex;align-items:center;gap:8px}
+  .av{width:22px;height:22px;border-radius:50%;background:var(--sand);flex:0 0 auto;display:grid;place-items:center;font-size:10px;font-weight:800;color:rgba(25,21,2,.6)}
+  .when-pill{
+    align-self:flex-start;font-size:12px;font-weight:800;background:var(--exhaust);color:var(--cloud);
+    padding:5px 10px;border-radius:999px;letter-spacing:.01em
+  }
+  .when-pill.soon{background:var(--sienna)}
+
+  /* image-led cards for events/clubs */
+  .imgcard{width:250px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+  .thumb{height:112px;display:grid;place-items:center;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(25,21,2,.30)}
+  .imgcard .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px}
+  .datechip{
+    position:absolute;margin:10px;background:var(--cloud);border-radius:10px;padding:5px 8px;text-align:center;line-height:1
+  }
+  .datechip b{display:block;font-size:16px;font-weight:800}
+  .datechip span{font-size:9px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+  .thumbwrap{position:relative}
+
+  /* list rows */
+  .list{padding:0 20px}
+  .lrow{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .lrow:last-child{border-bottom:0}
+  .sq{width:44px;height:44px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;font-weight:800;color:#fff;font-size:16px}
+  .lrow .txt{flex:1;min-width:0}
+  .lrow h4{margin:0;font-size:16px;font-weight:800;letter-spacing:-.01em}
+  .lrow p{margin:2px 0 0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .followbtn{border:1.5px solid var(--exhaust);background:none;font:inherit;font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;cursor:pointer}
+  .followbtn.ghost{border-color:var(--line);color:var(--muted)}
+  .vbadge{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--olive);background:rgba(107,122,58,.12);padding:3px 7px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+
+  /* coach avatar rail */
+  .coachrail{display:flex;gap:16px;overflow-x:auto;padding:2px 20px 8px}
+  .coachrail::-webkit-scrollbar{display:none}
+  .coach{width:88px;flex:0 0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px}
+  .coach .big{width:68px;height:68px;border-radius:50%;background:var(--sand);display:grid;place-items:center;font-weight:800;font-size:22px;color:rgba(25,21,2,.45)}
+  .coach .nm{font-size:13px;font-weight:700;line-height:1.2}
+  .coach .sub{font-size:11px;color:var(--muted);line-height:1.2}
+  .mini-follow{font-size:11px;font-weight:800;border:1.5px solid var(--exhaust);border-radius:999px;padding:4px 10px;background:none;cursor:pointer}
+
+  /* category grid (variant B) */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 20px 6px}
+  .tile{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;min-height:88px;
+    display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden
+  }
+  .tile .dot{width:10px;height:10px;border-radius:50%}
+  .tile b{font-size:16px;font-weight:800;letter-spacing:-.01em}
+  .tile span{font-size:12px;color:var(--muted)}
+  .tile.wide{grid-column:1 / -1;min-height:0;flex-direction:row;align-items:center;gap:10px}
+
+  .divider{height:1px;background:var(--line);margin:18px 20px 0}
+
+  /* bottom nav */
+  nav.tabs{
+    display:flex;border-top:1px solid var(--line);background:var(--cloud);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button{
+    flex:1;border:0;background:none;font:inherit;cursor:pointer;padding:7px 2px 6px;border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:700
+  }
+  nav.tabs button .ico{display:grid;place-items:center;width:46px;height:32px;border-radius:11px}
+  nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  nav.tabs button[aria-current="page"]{color:var(--exhaust)}
+  nav.tabs button[aria-current="page"] .ico{background:rgba(221,88,58,.18)}
+
+  .stub{padding:60px 30px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+  .hidden{display:none}
+
+  .note{width:min(430px,100%);padding:14px 18px 0;font-size:12.5px;line-height:1.55;color:rgba(25,21,2,.62)}
+  .note b{color:var(--exhaust)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:8px}
+  .legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:12px}
+  .legend i s{width:14px;height:4px;border-radius:2px;text-decoration:none}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span class="proto-label">Layout</span>
+  <div class="seg" role="group">
+    <button id="btnA" aria-pressed="true" onclick="setVariant('A')">A · Time-first</button>
+    <button id="btnB" aria-pressed="false" onclick="setVariant('B')">B · Type-first</button>
+  </div>
+  <span class="proto-label">Scope</span>
+  <div class="seg" role="group">
+    <button id="btnNow" aria-pressed="true" onclick="setScope('now')">Today</button>
+    <button id="btnFull" aria-pressed="false" onclick="setScope('full')">+ Events &amp; clubs</button>
+  </div>
+  <span class="proto-label">Upcoming</span>
+  <div class="seg" role="group">
+    <button id="btnPlanned" aria-pressed="true" onclick="setUpcoming('planned')">Has plans</button>
+    <button id="btnEmpty" aria-pressed="false" onclick="setUpcoming('empty')">Empty</button>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="status"><span>10:25</span><span class="r">▮▮▮ ⌁ 74</span></div>
+
+  <header class="app">
+    <div class="mark"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <span class="wordmark">FittList</span>
+    <span class="beta">BETA</span>
+    <span class="header-spacer"></span>
+    <span class="hicon"></span>
+  </header>
+
+  <!-- ================= HOME ================= -->
+  <div class="scroll" id="page-home">
+
+    <div class="place">
+      <span class="where">Jersey City ▾</span>
+      <span class="when">Sunday, Aug 3</span>
+    </div>
+
+    <!-- ---------- VARIANT B: category tiles ---------- -->
+    <section id="tiles" class="hidden" style="padding-top:14px">
+      <div class="grid">
+        <div class="tile"><span class="dot" style="background:var(--sienna)"></span><div><b>Classes</b><br><span>412 this week</span></div></div>
+        <div class="tile"><span class="dot" style="background:var(--gold)"></span><div><b>Coaches</b><br><span>38 in your area</span></div></div>
+        <div class="tile"><span class="dot" style="background:var(--olive)"></span><div><b>Studios</b><br><span>26 listed</span></div></div>
+        <div class="tile later"><span class="dot" style="background:var(--tacha)"></span><div><b>Events</b><br><span>7 coming up</span></div></div>
+        <div class="tile wide later"><span class="dot" style="background:var(--sky)"></span><div><b>Clubs</b> <span>&nbsp;· 5 crews meeting weekly</span></div></div>
+      </div>
+    </section>
+
+    <!-- ---------- Starting soon ---------- -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-title">Upcoming</span>
+        <span class="see">Schedule →</span>
+      </div>
+      <p class="sec-sub">Classes you're going to, next 7 days</p>
+      <div class="rail" id="upcoming-rail">
+        <div class="card">
+          <span class="spine" style="background:var(--sienna)"></span>
+          <div class="pad">
+            <span class="when-pill soon">Today · 11:00 AM</span>
+            <h3>Guns, Buns, and Lungs</h3>
+            <div class="row"><span class="av">CC</span><span class="meta">Carina Clores · Ironbound</span></div>
+            <span class="meta">0.4 mi · 50 min</span>
+            <div class="row"><span class="av" style="background:var(--sky)">EC</span><span class="av" style="background:var(--tacha)">LH</span><span class="meta">Erin and 2 others going</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="spine" style="background:var(--sienna)"></span>
+          <div class="pad">
+            <span class="when-pill">Tomorrow · 7:00 AM</span>
+            <h3>Soul Flow Yoga</h3>
+            <div class="row"><span class="av">EC</span><span class="meta">Erin Clyne · Asana Soul</span></div>
+            <span class="meta">0.9 mi · 45 min</span>
+            <div class="row"><span class="av" style="background:var(--sand)">MK</span><span class="meta">Marcus going</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="spine" style="background:var(--sienna)"></span>
+          <div class="pad">
+            <span class="when-pill">Wed · 6:00 PM</span>
+            <h3>Move Fast</h3>
+            <div class="row"><span class="av">SR</span><span class="meta">Sarah Reppert · Stretch+</span></div>
+            <span class="meta">1.2 mi · 50 min</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="spine" style="background:var(--sienna)"></span>
+          <div class="pad">
+            <span class="when-pill">Sat · 9:00 AM</span>
+            <h3>Barbell Club</h3>
+            <div class="row"><span class="av">AA</span><span class="meta">Ashley Allen · Alpha Fit</span></div>
+            <span class="meta">0.6 mi · 60 min</span>
+            <div class="row"><span class="av" style="background:var(--tacha)">LM</span><span class="meta">Lauren going</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="upcoming-empty" class="hidden" style="padding:0 20px">
+        <div style="background:var(--card);border:1px dashed rgba(25,21,2,.22);border-radius:16px;padding:20px">
+          <h3 style="margin:0 0 6px;font-size:16px;font-weight:800">Nothing planned yet</h3>
+          <p class="meta" style="margin:0 0 14px">Mark a class as going and it shows up here.</p>
+          <button class="followbtn" style="background:var(--exhaust);color:var(--cloud);border-color:var(--exhaust)">Find a class</button>
+        </div>
+      </div>
+    </section>
+    <section class="later">
+      <div class="sec-head">
+        <span class="sec-title">Events</span>
+        <span class="see">All →</span>
+      </div>
+      <p class="sec-sub">Workshops, expos and one-offs around Jersey City</p>
+      <div class="rail">
+        <div class="imgcard">
+          <div class="thumbwrap">
+            <div class="thumb" style="background:var(--tacha)">Event photo</div>
+            <div class="datechip"><b>09</b><span>Aug</span></div>
+          </div>
+          <div class="body">
+            <span class="kicker">Workshop</span>
+            <h3 style="font-size:16px;margin:0;font-weight:800">Handstand Fundamentals</h3>
+            <span class="meta">Sat 10:00 AM · CULTR Fit Club · $35</span>
+          </div>
+        </div>
+        <div class="imgcard">
+          <div class="thumbwrap">
+            <div class="thumb" style="background:var(--sand)">Event photo</div>
+            <div class="datechip"><b>16</b><span>Aug</span></div>
+          </div>
+          <div class="body">
+            <span class="kicker">Free · Outdoors</span>
+            <h3 style="font-size:16px;margin:0;font-weight:800">Saturday Park Sweat</h3>
+            <span class="meta">Sat 9:00 AM · Liberty State Park</span>
+          </div>
+        </div>
+        <div class="imgcard">
+          <div class="thumbwrap">
+            <div class="thumb" style="background:var(--sky)">Event photo</div>
+            <div class="datechip"><b>23</b><span>Aug</span></div>
+          </div>
+          <div class="body">
+            <span class="kicker">Expo</span>
+            <h3 style="font-size:16px;margin:0;font-weight:800">JC Fitness Fest</h3>
+            <span class="meta">Sat 11:00 AM · Exchange Place</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Clubs ---------- -->
+    <section class="later">
+      <div class="sec-head">
+        <span class="sec-title">Clubs near you</span>
+        <span class="see">All →</span>
+      </div>
+      <p class="sec-sub">Crews that meet on a regular schedule</p>
+      <div class="rail">
+        <div class="card" style="width:230px">
+          <span class="spine" style="background:var(--sky)"></span>
+          <div class="pad">
+            <span class="kicker">Run club</span>
+            <h3>Hoboken Harbor Run</h3>
+            <span class="meta">Next: Tue 6:30 AM · Pier A</span>
+            <div class="row"><span class="av">+</span><span class="av">+</span><span class="av">+</span><span class="meta">128 members</span></div>
+          </div>
+        </div>
+        <div class="card" style="width:230px">
+          <span class="spine" style="background:var(--sky)"></span>
+          <div class="pad">
+            <span class="kicker">Lifting crew</span>
+            <h3>6AM Iron Society</h3>
+            <span class="meta">Next: Mon 6:00 AM · Alpha Fit</span>
+            <div class="row"><span class="av">+</span><span class="av">+</span><span class="meta">41 members</span></div>
+          </div>
+        </div>
+        <div class="card" style="width:230px">
+          <span class="spine" style="background:var(--sky)"></span>
+          <div class="pad">
+            <span class="kicker">Ride club</span>
+            <h3>Wheels &amp; Waffles</h3>
+            <span class="meta">Next: Sun 8:00 AM · Grove PATH</span>
+            <div class="row"><span class="av">+</span><span class="av">+</span><span class="meta">63 members</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- New coaches ---------- -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-title">People near you</span>
+        <span class="see">All →</span>
+      </div>
+      <div class="coachrail">
+        <div class="coach"><span class="big">AA</span><span class="nm">Ashley Allen</span><span class="sub">Coach · 4 classes</span><button class="mini-follow">Follow</button></div>
+        <div class="coach"><span class="big" style="background:var(--tacha)">LM</span><span class="nm">Lauren Marlowe</span><span class="sub">Coach · 6 classes</span><button class="mini-follow">Follow</button></div>
+        <div class="coach"><span class="big" style="background:var(--sky)">MK</span><span class="nm">Marcus K</span><span class="sub">Goes to Alpha Fit</span><button class="mini-follow">Follow</button></div>
+        <div class="coach"><span class="big" style="background:var(--sand)">LH</span><span class="nm">Lara H</span><span class="sub">Goes to CKO, BODYBY</span><button class="mini-follow">Follow</button></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ---------- Studios ---------- -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-title">Studios</span>
+        <span class="see">All →</span>
+      </div>
+      <div class="list">
+        <div class="lrow">
+          <span class="sq" style="background:var(--olive)">A</span>
+          <span class="txt"><h4>Alpha Fit Club <span class="vbadge">✓ Verified</span></h4><p>10 Provost St · 9 coaches · 31 classes/wk</p></span>
+          <button class="followbtn">Follow</button>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--gold)">B</span>
+          <span class="txt"><h4>BODYBY JC</h4><p>372 9th St · added by 4 coaches</p></span>
+          <button class="followbtn ghost">View</button>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--sienna)">C</span>
+          <span class="txt"><h4>CKO Jersey City</h4><p>150 Bay St · added by 6 coaches</p></span>
+          <button class="followbtn ghost">View</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ---------- Activity ---------- -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-title">Activity</span>
+        <span class="see">Following →</span>
+      </div>
+      <div class="list">
+        <div class="lrow">
+          <span class="sq" style="background:var(--gold)">SR</span>
+          <span class="txt"><h4>Sarah posted next week</h4><p>6 classes at Stretch+ and Alpha Fit</p></span>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--sky)">EC</span>
+          <span class="txt"><h4>Erin added 2 classes</h4><p>New location: CULTR Fit Club · Thu, Sun</p></span>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--sky)">EC</span>
+          <span class="txt"><h4>Erin is going to Move Fast</h4><p>Wed 6:00 PM · Stretch+ · with 3 others</p></span>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--sand);color:rgba(25,21,2,.5)">LH</span>
+          <span class="txt"><h4>Lara went to Soul Flow Yoga</h4><p>Asana Soul Practice · yesterday</p></span>
+        </div>
+        <div class="lrow later">
+          <span class="sq" style="background:var(--sky)">MK</span>
+          <span class="txt"><h4>Marcus joined Hoboken Harbor Run</h4><p>Meets Tue 6:30 AM · Pier A</p></span>
+        </div>
+        <div class="lrow">
+          <span class="sq" style="background:var(--tacha);color:rgba(25,21,2,.5)">LM</span>
+          <span class="txt"><h4>Lauren is going to Barbell Club</h4><p>Sat 9:00 AM · Alpha Fit · with 5 others</p></span>
+        </div>
+      </div>
+    </section>
+
+    <div style="padding:8px 20px 24px">
+      <p class="meta" style="font-size:12px">Only public actions appear here. Anything marked Personal stays private.</p>
+    </div>
+
+  </div>
+
+  <!-- ================= stub pages ================= -->
+  <div class="scroll hidden" id="page-following"><div class="stub">Following<br><br>Your existing feed, unchanged. Classes from the coaches you follow, grouped by day, with the avatar filter row on top.</div></div>
+  <div class="scroll hidden" id="page-search"><div class="stub">Search<br><br><span class="now">The directory you already built. People · Studios today, with room for Events and Clubs later.</span><span class="later">The directory you already built. Tabs become People · Studios · Events · Clubs, sharing the same type colors as the home screen.</span></div></div>
+  <div class="scroll hidden" id="page-schedule"><div class="stub">Schedule<br><br>Unchanged. All · Teaching · Going · Personal.</div></div>
+  <div class="scroll hidden" id="page-you"><div class="stub">You<br><br>Unchanged. Profile, share cards, QR, beta link.</div></div>
+
+  <nav class="tabs">
+    <button aria-current="page" onclick="go('home',this)">
+      <span class="ico"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span>Home</button>
+    <button onclick="go('following',this)">
+      <span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M17 8.5a3 3 0 0 1 0 5.5"/></svg></span>Following</button>
+    <button onclick="go('search',this)">
+      <span class="ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></span>Search</button>
+    <button onclick="go('schedule',this)">
+      <span class="ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>Schedule</button>
+    <button onclick="go('you',this)">
+      <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg></span>You</button>
+  </nav>
+</div>
+
+<div class="note">
+  <b>Type colors</b> carry from the home screen into the directory filters and the schedule spine, so a color always means the same kind of thing.
+  <div class="legend">
+    <i><s style="background:var(--sienna)"></s>Class</i>
+    <i class="later"><s style="background:var(--tacha)"></s>Event</i>
+    <i class="later"><s style="background:var(--sky)"></s>Club</i>
+    <i><s style="background:var(--gold)"></s>Coach</i>
+    <i><s style="background:var(--olive)"></s>Studio</i>
+  </div>
+</div>
+
+<script>
+  function go(id, btn){
+    ['home','following','search','schedule','you'].forEach(p=>{
+      document.getElementById('page-'+p).classList.toggle('hidden', p!==id);
+    });
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.removeAttribute('aria-current'));
+    btn.setAttribute('aria-current','page');
+  }
+  function setUpcoming(s){
+    document.getElementById('upcoming-rail').classList.toggle('hidden', s!=='planned');
+    document.getElementById('upcoming-empty').classList.toggle('hidden', s!=='empty');
+    document.getElementById('btnPlanned').setAttribute('aria-pressed', s==='planned');
+    document.getElementById('btnEmpty').setAttribute('aria-pressed', s==='empty');
+  }
+
+  function setScope(s){
+    document.querySelectorAll('.later').forEach(el=>el.classList.toggle('hidden', s!=='full'));
+    document.querySelectorAll('.now').forEach(el=>el.classList.toggle('hidden', s!=='now'));
+    document.getElementById('btnNow').setAttribute('aria-pressed', s==='now');
+    document.getElementById('btnFull').setAttribute('aria-pressed', s==='full');
+  }
+  setScope('now');
+
+  function setVariant(v){
+    const tiles = document.getElementById('tiles');
+    tiles.classList.toggle('hidden', v!=='B');
+    document.getElementById('btnA').setAttribute('aria-pressed', v==='A');
+    document.getElementById('btnB').setAttribute('aria-pressed', v==='B');
+  }
+</script>
+</body>
+</html>

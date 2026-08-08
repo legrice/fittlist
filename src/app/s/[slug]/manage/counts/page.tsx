@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Shifts worked, counted from the rota. Manager only, same door as the rota.
+// The shift counter, counted from the rota. Manager only, reached from the
+// studio's shifts screen.
 export default async function CountsPage({
   params,
   searchParams,
@@ -45,7 +46,7 @@ export default async function CountsPage({
   return (
     <GymCountsView
       studioName={studio.name}
-      backHref={base}
+      backHref={`/s/${studio.slug ?? studio.id}/shifts`}
       countsBase={`${base}/counts`}
       counts={counts}
     />

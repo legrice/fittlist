@@ -13,6 +13,16 @@ import { skipSetup } from "./lib/wizard.mjs";
 const BASE = "http://localhost:3000";
 const OUT = process.env.SMOKE_OUT ?? ".";
 const fail = (m) => { throw new Error("SERIES FAIL: " + m); };
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
+
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const c = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await c.newPage();
@@ -28,10 +38,15 @@ await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Sarah");
 await p.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p);
-await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 async function addClass({ name, days, time, studio, first = false }) {
-  await p.getByRole("button", { name: first ? "Add your first class" : "Add class" }).click();
+  if (first) await p.getByRole("button", { name: "Add your first class" }).click();
+  else {
+    await p.locator(".caladd").click();
+    await p.getByRole("heading", { name: "Add to your calendar" }).waitFor();
+    await p.locator(".sheet .setrow", { hasText: "coaching" }).click();
+  }
   await p.getByRole("heading", { name: "New class" }).waitFor();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(name);
   for (const d of days) await p.getByRole("button", { name: d, exact: true }).click();
@@ -49,6 +64,7 @@ async function addClass({ name, days, time, studio, first = false }) {
   await p.locator(".studio-sel .nm", { hasText: studio }).waitFor();
   await p.locator(".publishwrap .btn").click();
   await p.waitForTimeout(900);
+  await closeLive(p);
 }
 
 /** Every distinct "name @ studio @ time" currently on the schedule. */
@@ -56,8 +72,18 @@ async function shapes() {
   await p.goto(BASE + "/app");
   await p.locator(".ps-event").first().waitFor();
   await p.waitForTimeout(400);
-  const rows = await p.locator(".ps-event").allInnerTexts();
-  return [...new Set(rows.map((r) => r.split("\n").slice(0, 3).join(" @ ")))].sort();
+  // The name and the one meta line (time, length, place), read as elements
+  // rather than sliced out of the row's text. Splitting innerText broke the
+  // moment the card put a face in front of the words: the avatar's initial is
+  // a text node too, so it took a slot and pushed the studio out of the key,
+  // and two Stretch+ classes at two studios collapsed into one shape.
+  const rows = await p.locator(".ps-event").evaluateAll((els) =>
+    els.map((e) => [
+      e.querySelector(".ps-enm")?.textContent?.trim() ?? "",
+      e.querySelector(".ps-emeta")?.textContent?.trim() ?? "",
+    ].join(" @ ")),
+  );
+  return [...new Set(rows)].sort();
 }
 
 await addClass({ name: "Stretch+", days: ["Mo", "We"], time: "06:00", studio: "Verona Stretch", first: true });
@@ -81,6 +107,7 @@ await p.getByRole("heading", { name: /Edit class|New class/ }).waitFor();
 await p.locator("#fDesc").fill("Bring a mat.");
 await p.locator(".publishwrap .btn").click();
 await p.waitForTimeout(1200);
+await closeLive(p);
 
 const after = await shapes();
 console.log("after: ", JSON.stringify(after));
@@ -121,7 +148,10 @@ await p.waitForTimeout(1400);
 const left = await shapes();
 console.log("after delete:", JSON.stringify(left));
 if (left.some((s) => s.includes("Montclair Move"))) fail("the deleted series is still there");
-if (!left.some((s) => s.includes("Stretch+ @ Verona Stretch")))
+// Name and studio checked as parts, not as one string: the key is
+// "name @ time, length, place" and gluing the two ends together in an
+// assertion couples it to a format that has already changed once.
+if (!left.some((s) => s.startsWith("Stretch+ @") && s.includes("Verona Stretch")))
   fail("deleting one series took the same-named class at the other studio with it");
 if (!left.some((s) => s.includes("Move Fast"))) fail("deleting a series took an unrelated class");
 console.log("deleting a series takes that series only ok");

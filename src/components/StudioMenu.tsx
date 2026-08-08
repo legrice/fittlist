@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
 import { StudioFeedback } from "@/components/StudioFeedback";
 import { StudioOwnerBar, type StudioEditProps } from "@/components/StudioOwnerBar";
@@ -27,7 +28,7 @@ export function StudioMenu({
   const [menuOpen, setMenuOpen] = useState(false);
   const [mindfulOpen, setMindfulOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [feedback, setFeedback] = useState<null | "report" | "suggest">(null);
+  const [feedback, setFeedback] = useState<null | "report" | "suggest" | "optout" | "claim">(null);
   const [toastMsg, toastOn, toast] = useToast();
 
   const share = async () => {
@@ -47,10 +48,20 @@ export function StudioMenu({
 
   return (
     <>
+      {/* No pencil out in the open any more, by Matt's call: an Edit button
+          on the page read as an invitation to everybody, and it took over
+          the corner. Editing lives in the dots, behind the word about care;
+          a door you have to open on purpose is opened by the people who
+          mean it. */}
       <button className="ownermore" aria-label="More" onClick={() => setMenuOpen(true)}>
-        <Icon name="more_horiz" size={20} />
+        <Icon name="more_horiz" size={22} />
       </button>
 
+      {/* Everything from here down portals out: this menu renders in the
+          pinned head's corner slot, and sticky makes a stacking context on
+          mobile, so a sheet drawn in place paints behind the card that
+          slides over the head. Same trap and same fix as ProfileOwnerBar. */}
+      <BodyPortal>
       {menuOpen && (
         <div
           className="sheet-scrim"
@@ -60,18 +71,24 @@ export function StudioMenu({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setMenuOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2 style={{ marginTop: 10 }}>{studio.name}</h2>
-            <div className="ownermenu">
+            {/* settingslist, not a bare list: it is what carries the dividers
+                between rows and the flush left edge, so the icons line up
+                under the studio's name like every other button sheet. */}
+            <div className="settingslist ownermenu">
               <button className="setrow" onClick={share}>
-                <span className="setrow-ic"><Icon name="ios_share" size={22} /></span>
+                <span className="setrow-ic"><Icon name="ios_share" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share this studio</span>
                   <span className="s">Hand its page to someone</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
+              {/* The one door to the editor, for anyone allowed through it:
+                  a manager on a claimed page, any coach on the commons. The
+                  word about care comes first either way. */}
               {canEdit && (
                 <button
                   className="setrow"
@@ -80,12 +97,28 @@ export function StudioMenu({
                     setMindfulOpen(true);
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="edit" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="edit" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Edit studio</span>
                     <span className="s">Fix or fill in its details</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+                </button>
+              )}
+              {!claimed && (
+                <button
+                  className="setrow"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setFeedback("claim");
+                  }}
+                >
+                  <span className="setrow-ic"><Icon name="verified" size={24} /></span>
+                  <span className="setrow-txt">
+                    <span className="t">Claim this studio</span>
+                    <span className="s">Run it? Take the keys to this page</span>
+                  </span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
               <button
@@ -95,7 +128,7 @@ export function StudioMenu({
                   setFeedback("suggest");
                 }}
               >
-                <span className="setrow-ic"><Icon name="chat_bubble" size={22} /></span>
+                <span className="setrow-ic"><Icon name="chat_bubble" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Suggest an edit</span>
                   <span className="s">
@@ -104,7 +137,7 @@ export function StudioMenu({
                       : "Tell us what’s wrong or missing"}
                   </span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {signedIn && (
                 <button
@@ -114,14 +147,31 @@ export function StudioMenu({
                     setFeedback("report");
                   }}
                 >
-                  <span className="setrow-ic"><Icon name="flag" size={22} /></span>
+                  <span className="setrow-ic"><Icon name="flag" size={24} /></span>
                   <span className="setrow-txt">
                     <span className="t">Report this studio</span>
                     <span className="s">Closed, wrong, or not real</span>
                   </span>
-                  <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                  <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
                 </button>
               )}
+              {/* The way out, for the people who run the place. A coach adding
+                  a studio put it here; that is not the studio agreeing to be
+                  here, and nobody is kept on the app against their wishes. */}
+              <button
+                className="setrow"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setFeedback("optout");
+                }}
+              >
+                <span className="setrow-ic"><Icon name="public_off" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Take this page down</span>
+                  <span className="s">Run this studio and don&rsquo;t want it listed?</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
             </div>
           </div>
         </div>
@@ -171,6 +221,7 @@ export function StudioMenu({
         onDone={toast}
       />
       <Toast msg={toastMsg} on={toastOn} />
+      </BodyPortal>
     </>
   );
 }

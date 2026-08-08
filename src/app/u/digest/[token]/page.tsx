@@ -42,7 +42,7 @@ export default async function DigestUnsubscribePage({
               You&rsquo;re still following your coaches. Their classes are always waiting in your
               week. We just won&rsquo;t email you about them.
             </p>
-            <Link className="btn" href="/feed">
+            <Link className="btn" href="/week">
               Open your week
             </Link>
           </>

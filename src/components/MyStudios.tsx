@@ -90,7 +90,7 @@ export function MyStudios() {
             disabled={pending}
             onClick={() => remove(s)}
           >
-            <Icon name="close" size={14} />
+            <Icon name="close" size={16} />
           </button>
         </div>
       ))}
@@ -117,7 +117,7 @@ export function MyStudios() {
             <span className="nm">{s.name}</span>
             <span className="u">{s.address}</span>
           </span>
-          <Icon name="add" size={18} />
+          <Icon name="add" size={20} />
         </button>
       ))}
       {q.trim() && !newOpen && (

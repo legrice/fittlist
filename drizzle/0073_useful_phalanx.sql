@@ -1,0 +1,1 @@
+ALTER TABLE "studio_classes" ADD COLUMN "duration_min" integer;

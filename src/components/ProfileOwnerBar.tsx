@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { myWeekText } from "@/app/actions/weektext";
 import { ChipsField } from "@/components/ChipsField";
-import { TypePicker } from "@/components/TypePicker";
+import { TypeMultiSelect } from "@/components/TypePicker";
 import { LinksField, type ProfileLink } from "@/components/LinksField";
 import { MyStudios } from "@/components/MyStudios";
 import { AVATAR_COLORS, avatarColor } from "@/lib/avatar";
+import { BodyPortal } from "@/components/BodyPortal";
 import { Icon } from "@/components/Icon";
+import { readPhotoPair } from "@/lib/photo";
 import { LocationInput } from "@/components/LocationInput";
 import { QrSheet } from "@/components/QrSheet";
+import { ShareCardSheet } from "@/components/ShareCardSheet";
 import { ShareWeekSheet } from "@/components/ShareWeekSheet";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -82,40 +85,22 @@ export function ProfileOwnerBar({
   // A link typed but not yet "+ Add"ed when Save is tapped. See LinksField.
   const pendingLink = useRef<ProfileLink | null>(null);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [pColor, setPColor] = useState<string | null>(avatarColorProp ?? null);
   const [colorOpen, setColorOpen] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const shownColor = avatarColor({ id: userId, avatarColor: pColor });
   const [saving, startSaving] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Resize the picked image to a small JPEG data URL before storing it.
-  const pickPhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 640;
-        let { width, height } = img;
-        if (width > height && width > max) {
-          height = (height * max) / width;
-          width = max;
-        } else if (height > max) {
-          width = (width * max) / height;
-          height = max;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+  const pickPhoto = (file: File) =>
+    readPhotoPair(file, (full, thumb) => {
+      setPPhoto(full);
+      setPThumb(thumb);
+    });
 
   // ?edit=1 arrives from the account tile's Edit profile — open straight into
   // the editor rather than making them find the button again.
@@ -141,6 +126,7 @@ export function ProfileOwnerBar({
     setPWhatsapp(whatsapp);
     setPLinks(profileLinks);
     setPPhoto(photo);
+    setPThumb(null);
     setPColor(avatarColorProp ?? null);
     setEditOpen(true);
   };
@@ -163,6 +149,7 @@ export function ProfileOwnerBar({
         whatsapp: pWhatsapp,
         profileLinks: links,
         photo: pPhoto,
+        photoThumb: pThumb ?? undefined,
         avatarColor: pColor,
       });
       if (!res.ok) {
@@ -214,6 +201,11 @@ export function ProfileOwnerBar({
         </button>
       </div>
 
+      {/* Everything from here down is an overlay or a toast: fixed layers
+          that must escape the pinned head they render inside (sticky makes
+          a stacking context on mobile, and trapped there they paint under
+          the card and the tab bar). One portal moves the lot. */}
+      <BodyPortal>
       {shareMenu && (
         <div
           className="sheet-scrim"
@@ -227,7 +219,7 @@ export function ProfileOwnerBar({
               aria-label="Close"
               onClick={() => setShareMenu(false)}
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Share your page</h2>
             <div className="settingslist ownermenu">
@@ -238,20 +230,20 @@ export function ProfileOwnerBar({
                   setShareOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="campaign" size={22} /></span>
+                <span className="setrow-ic"><Icon name="campaign" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Share your schedule</span>
                   <span className="s">A story image with your link</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button className="setrow" onClick={copyLink}>
-                <span className="setrow-ic"><Icon name="link" size={22} /></span>
+                <span className="setrow-ic"><Icon name="link" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy your link</span>
                   <span className="s">Straight to your page</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               <button
                 className="setrow"
@@ -260,22 +252,40 @@ export function ProfileOwnerBar({
                   setQrOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="qr_code_2" size={22} /></span>
+                <span className="setrow-ic"><Icon name="qr_code_2" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Your QR code</span>
                   <span className="s">A scannable code that opens your page</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
+              </button>
+              {/* The square one: your face and your name rather than your
+                  week. It lost its door when the avatar circle came off the
+                  hero, and a made image with no way to reach it is the same as
+                  no image. */}
+              <button
+                className="setrow"
+                onClick={() => {
+                  setShareMenu(false);
+                  setCardOpen(true);
+                }}
+              >
+                <span className="setrow-ic"><Icon name="auto_awesome" size={24} /></span>
+                <span className="setrow-txt">
+                  <span className="t">Your profile card</span>
+                  <span className="s">A square image for a post</span>
+                </span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
               {/* The story image is for a story. This is for the group chat,
                   where an image is no use and a coach ends up typing it out. */}
               <button className="setrow" onClick={copyWeek}>
-                <span className="setrow-ic"><Icon name="content_copy" size={22} /></span>
+                <span className="setrow-ic"><Icon name="content_copy" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">Copy your week</span>
                   <span className="s">As text, ready to paste</span>
                 </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={20} /></span>
+                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
               </button>
             </div>
           </div>
@@ -289,6 +299,17 @@ export function ProfileOwnerBar({
         onToast={toast}
       />
       <QrSheet handle={handle} open={qrOpen} onClose={() => setQrOpen(false)} onToast={toast} />
+      {cardOpen && (
+        <ShareCardSheet
+          path={`/api/card/${handle}`}
+          fileName={`fittlist-${handle}-card.png`}
+          title="Share your card"
+          lead="A square image of your profile, made for a post or a story. Your page is one tap from the link on it."
+          alt="Your profile card"
+          onClose={() => setCardOpen(false)}
+          onToast={toast}
+        />
+      )}
 
       {editOpen && (
         <div
@@ -299,7 +320,7 @@ export function ProfileOwnerBar({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEditOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Edit profile</h2>
             <div className="editphoto">
@@ -331,7 +352,7 @@ export function ProfileOwnerBar({
                     aria-expanded={colorOpen}
                     onClick={() => setColorOpen((v) => !v)}
                   >
-                    {colorOpen ? "Done" : "Or pick a colour"}
+                    {colorOpen ? "Done" : "Or pick a color"}
                   </button>
                 )}
               </div>
@@ -405,14 +426,22 @@ export function ProfileOwnerBar({
                 flip when your books change, not something you edit alongside
                 your bio, and it was the only control in here that changed what
                 a visitor could do rather than what they read. */}
-            <label className="flabel">
-              Certifications <span>· optional</span>
-            </label>
+            {/* Each section is its label, its field, then its tags below the
+                field. The Certifications label sat stranded above this block
+                for a while, two headings deep from its own input. */}
             <label className="flabel">
               What you teach <span>· up to four, and it&rsquo;s how people find you</span>
             </label>
-            <TypePicker value={pDisciplines} onChange={setPDisciplines} max={4} />
-
+            <TypeMultiSelect
+              value={pDisciplines}
+              onChange={setPDisciplines}
+              max={4}
+              placeholder="Pick up to four"
+              title="What you teach"
+            />
+            <label className="flabel">
+              Certifications <span>· optional</span>
+            </label>
             <ChipsField value={pCerts} onChange={setPCerts} placeholder="e.g. NASM CPT" maxLen={40} max={12} />
             <label className="flabel">
               Coaching focus <span>· a few short descriptors</span>
@@ -505,6 +534,7 @@ export function ProfileOwnerBar({
       )}
 
       <Toast msg={toastMsg} on={toastOn} />
+      </BodyPortal>
     </>
   );
 }

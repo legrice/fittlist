@@ -31,7 +31,7 @@ export function ProfileShare({ path, name }: { path: string; name: string }) {
   return (
     <>
       <button className="evback profshare-btn" aria-label={`Share ${name}`} onClick={share}>
-        <Icon name="ios_share" size={19} />
+        <Icon name="ios_share" size={21} />
       </button>
       <Toast msg={toastMsg} on={toastOn} />
     </>

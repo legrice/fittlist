@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { getStoryPrefs, setStoryPrefs } from "@/app/actions/profile";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { putImage } from "@/lib/shareimage";
+import { StoryPreview } from "@/components/StoryPreview";
 
 // The "Share your week" bottom sheet: a story image of the coach's schedule
 // (week or today) in a pickable on-brand theme, saved or shared via the native
@@ -22,8 +24,7 @@ export function ShareWeekSheet({
   const [span, setSpan] = useState<"week" | "day">("week");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [styleOpen, setStyleOpen] = useState(false);
-  const [canShareFiles, setCanShareFiles] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [busy, setBusy] = useState(false);
   // A fresh cache-buster per open: CDNs and phones hold story PNGs cached
   // under the old year-long header, so the bare URL can serve a stale image.
   // A new query param gives every open a clean cache key.
@@ -56,42 +57,18 @@ export function ShareWeekSheet({
     setBust(Date.now());
   };
 
-  useEffect(() => {
-    setCanShareFiles(
-      typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof navigator.canShare === "function",
-    );
-  }, []);
-
   if (!open) return null;
 
   const storyUrl = `/api/story/${handle}?span=${span}&theme=${themeId}&v=${bust}`;
   const storyFileName = `fittlist-${handle}-${span}-${themeId}.png`;
 
-  const shareStory = async () => {
-    if (sharing) return;
-    setSharing(true);
-    try {
-      if (canShareFiles) {
-        const res = await fetch(storyUrl);
-        if (res.ok) {
-          const file = new File([await res.blob()], storyFileName, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-            return;
-          }
-        }
-      }
-      const a = document.createElement("a");
-      a.href = storyUrl;
-      a.download = storyFileName;
-      a.click();
-    } catch (err) {
-      if ((err as Error)?.name !== "AbortError") onToast("Couldn't share the image");
-    } finally {
-      setSharing(false);
-    }
+  // The system sheet, which is where Save Image lives too: one button,
+  // because a second one opening the same sheet was the same act twice.
+  const share = async () => {
+    if (busy) return;
+    setBusy(true);
+    if (!(await putImage(storyUrl, storyFileName))) onToast("Couldn't share the image");
+    setBusy(false);
   };
 
   return (
@@ -100,7 +77,7 @@ export function ShareWeekSheet({
         <div className="adderhead">
           <h2>Share your schedule</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
         <div className="share-toggles">
@@ -111,7 +88,7 @@ export function ShareWeekSheet({
         </div>
         <div className="storycustom">
           <label className="flabel" htmlFor="stTheme">
-            Style <span>· colours for your image</span>
+            Style <span>· colors for your image</span>
           </label>
           <div className="stylepick">
             <button
@@ -126,7 +103,7 @@ export function ShareWeekSheet({
                 style={{ background: STORY_THEMES[themeId].bg, borderColor: STORY_THEMES[themeId].accent }}
               />
               <span className="stylepick-lbl">{STORY_THEMES[themeId].label}</span>
-              <Icon name="expand_more" size={18} />
+              <Icon name="expand_more" size={20} />
             </button>
             {styleOpen && (
               <div className="stylepick-menu" role="listbox" aria-label="Style">
@@ -144,7 +121,7 @@ export function ShareWeekSheet({
                     >
                       <span className="swd" style={{ background: t.bg, borderColor: t.accent }} />
                       <span className="stylepick-lbl">{t.label}</span>
-                      {id === themeId && <Icon name="check" size={16} />}
+                      {id === themeId && <Icon name="check" size={18} />}
                     </button>
                   ),
                 )}
@@ -176,15 +153,15 @@ export function ShareWeekSheet({
             </button>
           )}
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="storyimg" src={storyUrl} alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`} />
+        <StoryPreview
+          src={storyUrl}
+          alt={`Story image of ${span === "week" ? "this week's" : "today's"} classes`}
+          bg={STORY_THEMES[themeId].bg}
+        />
         <div className="publishwrap">
-          {canShareFiles ? (
-            <button className="btn" disabled={sharing} onClick={shareStory}>{sharing ? "Opening…" : "Save image"}</button>
-          ) : (
-            <a className="btn" href={storyUrl} download={storyFileName}>Save image</a>
-          )}
-          <button className="btn ghost" style={{ marginTop: 8 }} disabled={sharing} onClick={shareStory}>Share image</button>
+          <button className="btn" disabled={busy} onClick={share}>
+            {busy ? "Opening…" : "Share image"}
+          </button>
         </div>
       </div>
     </div>

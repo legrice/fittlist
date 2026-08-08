@@ -5,10 +5,10 @@
 // means serving one account's schedule to whoever opens the app next. It
 // touches nothing but the fonts and the icons: static, public, and the only
 // things worth having ready before the network answers.
-const VERSION = "fittlist-v2";
+const VERSION = "fittlist-v3";
 const SHELL = [
   "/fonts/delight-400.woff2",
-  "/fonts/delight-700.woff2",
+  "/fonts/delight-600.woff2",
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",

@@ -6,6 +6,7 @@ import { getSessionUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
 import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function RequestsPage() {
     .from(schema.users)
     .where(eq(schema.users.id, userId));
   // A member has no public page to be asked through, so no room to show them.
-  if (me?.kind === "fan") redirect("/you");
+  if (me?.kind === "fan") redirect("/settings");
 
   // kind, not just the coach id: the admin is a coach too, and their feedback
   // threads live in this same table. Those are not requests.
@@ -66,12 +67,12 @@ export default async function RequestsPage() {
   for (const m of msgs) if (!m.fromCoach && !theirs.has(m.threadId)) theirs.set(m.threadId, m.body);
 
   return (
-    <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={lookMode(me?.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/app?acct=1" label="Back to your account">
-            <Icon name="arrow_back" size={21} />
+          <BackLink className="evback" href="/settings" label="Back to settings">
+            <Icon name="arrow_back" size={23} />
           </BackLink>
         </div>
         <div className="admintop">
@@ -104,12 +105,12 @@ export default async function RequestsPage() {
                 <p className="reqcard-msg">{theirs.get(t.id) ?? ""}</p>
                 <div className="reqcard-ways">
                   <a className="reqway" href={`mailto:${t.requesterEmail}`}>
-                    <Icon name="mail" size={15} />
+                    <Icon name="mail" size={17} />
                     {t.requesterEmail}
                   </a>
                   {t.requesterPhone && (
                     <a className="reqway" href={`tel:${t.requesterPhone.replace(/[^\d+]/g, "")}`}>
-                      <Icon name="call" size={15} />
+                      <Icon name="call" size={17} />
                       {t.requesterPhone}
                     </a>
                   )}

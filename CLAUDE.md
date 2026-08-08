@@ -103,6 +103,14 @@ rm -rf .data/pglite
 INVITE_ONLY=false FANS_ENABLED=true ADMIN_EMAILS=matt@example.com \
   npm run start > server.log 2>&1 &
 node scripts/gym-smoke.mjs        # the gym's rota: claim, assign, swap, count
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/plans-smoke.mjs      # your plans: the shared rows, your own class
+
+rm -rf .data/pglite
+INVITE_ONLY=false FANS_ENABLED=true npm run start > server.log 2>&1 &
+node scripts/share-smoke.mjs      # the composer: both canvases, the picker, empty
 ```
 
 One reset per script, not per group: each claims the same handles and emails,
@@ -191,6 +199,22 @@ today during that window, which is a legal end date, not a passed one. A
 timezone per coach or per viewer is the real fix someday, and it lands in
 those three functions.
 
+**A class that has ended is off every schedule.** `occurrenceEnded()` drops
+the been-and-gone occurrence from the public page, the studio page (the
+gym's week and the community one), both You calendars, Following and a
+member's week; a schedule is what's still coming. The class page itself
+stays reachable by dated link and says "This one has already run", because
+an old shared link has to land somewhere real, and the bare URL falls
+forward to the next date it runs. The share images deliberately keep the
+whole range they were asked to draw: a poster of the week is a record, not
+a schedule. The one deliberate exception is your own calendar looking
+back: the Month grid dims past days rather than dropping them, and Day
+view shows any date at all (see the calendar's views below), because a
+record of what you did is a thing a calendar owes its owner. The List used
+to scroll up into them too and no longer does; that is a decision about
+where the past lives rather than whether it survives. Every public
+surface keeps the rule.
+
 **The story image has three levels of detail, and the sums have to match the
 paint.** The canvas is a fixed 1080x1920 with no scroll, and the routes used to
 draw rows until they ran out of it: eight classes clipped a real coach's poster
@@ -226,10 +250,58 @@ follow shows through is mutual: two members who follow *each other* see each
 other on shared rows in Your week (`alsoGoing` in `myWeek`) and each other's
 upcoming week on their profiles (`sharedWeek`, real public classes only, never
 `personal_classes`). One-way follows surface nothing, which is what makes
-tapping Follow on a person safe; agreeing to each other is the consent. A
+tapping Follow on a person safe; agreeing to each other is the consent.
+
+**A week is open unless its owner has approve-first on, and that is the whole
+rule.** `canSeeWeek()` is the one answer: your own always, anybody's if
+`users.approveFollowers` is off, and only an approved follower's if it is on.
+It took a mutual follow for a build, which meant somebody had to follow you
+back before you could see when they train, and that is a handshake nobody asked
+for on a schedule. This is a scheduling app: knowing who is going where and
+when is the point, so the default is that you can see it.
+
+The switch is the one already in settings, which is what makes this simple
+rather than a second privacy model: gating who may follow now also gates what
+they see, the way a private account works everywhere else. Turned on, a
+stranger gets "Follow to see Erin's schedule" in as many words, saying the same
+thing whatever the week holds so it cannot be read for whether there is
+anything behind it. A signed-out viewer counts as following nobody, which is
+right, because they cannot have been approved.
+
+The week carries personal entries as well as marks, so it says things like
+"Private with Kia, Client's home". That is the cost of the open default and it
+is worth naming: an open account's week is readable by anyone with the link,
+and approve-first is the answer for anybody who does not want that. A coach's
+page carries the same list behind a Teaching/Going segment
+(`ProfileWeekSwitch`, the share editor's `.seg` rather than a second row of
+`.pubtab` underlines), drawn only for a viewer who can see the second half. A
+coach's **teaching** week is never gated by this: that page is the product, and
+hiding it would break the one thing a link is for. Personal entries reach a
+fortnight rather than the calendar's nine weeks, because this is somebody
+else's page and two weeks answers "what are they up to" without handing over
+two months of a person's movements.
+
+The add sheet says which is which in a word rather than a sentence each:
+Public for a class you coach, Shared for one you are going to, Private for
+anything else. Three sentences of subtext on a sheet whose whole job is one tap
+is three things to read; the tags line up so the three can be compared at a
+glance. A
 coach separately sees who marked Going on *their own* classes (`roster` in
 `classDetail`, owner-only): the mark was made at that coach, so the coach
 seeing it is what the mark meant, and it never shows where else anyone trains.
+
+**A Going mark shows to your followers by default, and the moment of marking
+is where the choice lives.** This is the Home spec's one deliberate change to
+the privacy line, made by Matt in `homescreenspec.md`: Activity and the "also
+going" lines are made of these marks, and a feed of nobody doing anything is
+no feed at all. `attendances.isPublic` (default true) is the switch; the note
+that answers every add ("Added. Followers can see it.") carries "Make it
+private" (`setGoingVisibility`), so the way off is offered in the moment
+rather than buried in settings. Off never touches where the mark always
+showed: the coach's roster and your own week keep it. The audience is still
+only people who follow you, it never shows where else you train beyond the
+marked class, and Personal rows never reach any of it: there is deliberately
+no column that could make one public.
 
 **A follow can be gated.** `users.approveFollowers` turns Follow into an ask:
 the tap writes a `follow_requests` row (unique per trainer+requester, its own
@@ -247,15 +319,35 @@ migration nobody needs yet; everything a person reads says member. Not
 "follower": that names a relationship rather than a population, and a coach
 who follows two coaches is one too, so it can't be counted.
 
-**The tabbed shell is a layout, not per-page.** `/feed`, `/discover` and
-`/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
+**The tabbed shell is a layout, not per-page.** `/week`, `/feed`, `/discover`
+and `/you` live in the `(tabs)` route group; its `layout.tsx` renders the header
 and the tab bar once, and `loading.tsx` sits under it so a tab that's still
 loading keeps its chrome. Put them back in the pages and the bar unmounts on
-every navigation, which is the thing the layout exists to prevent.
+every navigation, which is the thing the layout exists to prevent. A new tab
+moves into the group for that reason: `/week` was its own route with its own
+copy of the shell, and left there it would have rebuilt the header and the bar
+on every tap of Plans.
 
-**One vocabulary for what a place offers and what a person teaches.**
-`STUDIO_TYPES` was the studio editor's list; `users.disciplines` picks from the
-same one, capped at four and validated against it in `updateProfile`, so a
+**One vocabulary for what a place offers, what a person teaches, and what a
+class is.** `STUDIO_TYPES` was the studio editor's list; `users.disciplines`
+picks from the same one, capped at four and validated against it in
+`updateProfile`, and `CLASS_TYPES` is now that same list re-exported from
+`format.ts` under the name that reads right at the call site. It was its own
+shorter thirteen words for a long time, and the split broke the rule quietly:
+"Kettlebell" found the kettlebell gyms and the kettlebell coaches and could
+not be put on a kettlebell class at all, because the class picker had never
+heard of it, so Discover drew its chips from two vocabularies for one idea and
+a word that narrowed one half could not narrow another. Merging them is what
+makes a class as findable as the people and places around it. Four words only
+ever lived in the class list and `drizzle/0071_one_vocabulary.sql` lands them:
+"Cycle" and "Run" rename to their shared-list synonyms, "Other" drops to null
+because the picker already offers "No type" and a category meaning "none of
+these" said twice is one too many, and "Conditioning" joined the shared list
+instead of moving, since a gym can be a conditioning gym as easily as a class
+can be a conditioning class. Every table that stores a type is migrated, or a
+catalog pull puts the old word straight back. Leaving them would have made
+orphans a coach could never pick again and drawn a "Cycle" chip beside a
+"Cycling" one, which is the exact drift one vocabulary exists to prevent. So a
 coach's "Yoga" is the same word as a studio's. That is what lets one filter in
 Discover narrow both halves. Free text would be a hundred spellings and a
 filter nobody could use, which is why `certifications` (free chips, a
@@ -263,25 +355,185 @@ credential) and `disciplines` (a pick, a category) are different fields.
 `TypePicker` renders it for both, and "accepting clients" is a filter for free
 because `users.availability` already says it.
 
-**Discover has two halves, and only one of them is people.** A People/Studios
-segment above one row of controls: the search box, and the city filter across
-from it. The box says which half it's searching. Studios are not followable and
+**Discover is one list: the coaches.** It had three halves for a while, then
+two, and it is one by Matt's call. Classes went first (a dated list of
+occurrences is a schedule, and it muddied what somebody is on this screen to
+do), then Studios (a place is not somebody you follow, so a directory of them
+answers a question nobody has yet). What is left is the act every other surface
+waits on: the circles tray, Activity and a new member's week are all empty
+until a follow happens, so the screen that makes one is the whole screen. No tabs, no
+counts, no page title.
+
+Nothing is hidden by that, which is what makes it safe: `/search` still answers
+for all three, with People, Studios and Classes as headed sections, and the
+studio rows there are the same `StudioRow` the directory drew. The chip rail
+stays, built from `users.disciplines` and led by All, because narrowing a list
+of people by what they teach is the one filter that helps you pick one.
+`discoverable = false` and blocks in either direction still mean not listed, and
+the quality bar (a schedule, or enough profile) is still a coach's.
+
+The page stopped loading what the departed halves needed: the classes call, the
+attendance marks, the gym rotas and the whole studio query are gone from it. A
+query nobody reads is one that gets slower without anybody noticing. `?half=`
+is read and ignored, so every old link still lands somewhere real.
+
+**Search is one box over all three halves; Discover is a segment you pick
+first.** `/search` sits behind the header's magnifier and shows People,
+Studios and Classes as headed sections at once, because you don't know which
+half the thing you want is in: type "Stacey" and you want Stacey, and
+Stacey's gym, on the same screen. A heading only exists when its section has
+something in it, so a search that finds only places says "Studios" once and
+nothing about people.
+Both rows are the directory's own (`PersonRow`, `StudioRow` in
+`DirectoryRows.tsx`, shared with `DiscoverList`): the Coach badge, the
+availability dot, the classes-this-week line and the corner chevron have to
+mean the same thing on both screens, and a second copy would drift where
+nobody was looking. Neither row carries a Follow control: the pill came off
+(a column of pills fighting a column of names was most of the screen
+shouting), following is the profile's decision, and a row you already follow
+says "· Following" quietly at the end of its sub-line instead.
+
+`searchAll` runs on the server rather than filtering a list the page already
+shipped. Discover no longer filters by text at all: its box is a door
+(`.dissearch-door`), drawn like the field it opens (the placeholder span
+carries the input's vertical padding, or the box collapses to one line), and
+tapping it lands on `/search`, where the box already holds the caret and the
+empty state offers no door back to Discover, because that would be a circle.
+The header's corner carries the magnifier again (the plans ribbon's leaving
+made the room), and the Discover tab went back to the compass so the same
+glyph isn't drawn twice on one screen: browsing is the tab, searching is the
+corner and the box. A directory has to arrive whole; a
+search is a question, and sending every account to every device so the answer
+can be computed there stops being reasonable well before it stops working. It
+keeps two rules and they are why it can't be a plain LIKE: blocked in either
+direction is not in the results, and `discoverable = false` is not either,
+because that switch means delisted with the page still public and a search
+that ignored it would make the setting a lie. Discover's *other* filter (a
+coach needs a schedule or a bio to be worth listing) is deliberately not
+applied here: that is a quality bar for a list somebody is browsing, and you
+asked for this person by name. There is no separate place field for now (it
+shipped and came back out; the one box already matches towns through
+`users.location` and a studio's address), so a city is typed where a name
+is. A tag word has to answer in every half or it answers in none:
+`users.disciplines` is searched alongside the name, the handle and the title,
+because it is picked from `STUDIO_TYPES`, the same vocabulary a studio's
+types come from, and "kettlebell" was already finding the kettlebell gyms
+and stopping short of the kettlebell coaches, which is the half somebody
+typing it most wants. `certifications` stays out on purpose: a credential is
+not a category, and searching free chips for a category word only works by
+coincidence. The known gap is one vocabulary short of the doctrine above it:
+`CLASS_TYPES` (what the adder's Type dropdown offers) is a different, shorter
+list than `STUDIO_TYPES`, so a class cannot be tagged Kettlebell at all and
+is only found by that word through its name or description. Merging them is
+the fix and it is its own commit, because it changes a shipped picker and
+Discover's two type filters read from the two lists separately.
+Recent (`fl-recent-searches`, localStorage, this device only) holds the
+rows that were tapped, not the strings that were typed: "iron" was only ever
+a way of reaching Ironbound, and offering the half-typed guess back is
+offering the work instead of the answer. Each entry is the person or place
+itself and links straight there; clearing the box is what brings them back,
+and Clear empties the list. Two characters
+is the floor, and the number lives twice (the action and `SearchScreen`)
+because a `"use server"` file can only export async functions. Each keystroke's request carries a sequence
+number and only the newest may paint, or a slow "st" lands after "stacey" and
+the results go backwards while you type.
+
+**A class is searchable by its own words, and that is the answer to
+"subcategories" for now.** Somebody asked to pick Yoga and then add Vinyasa
+or Rocket so their class could be found by style. A field of free-text
+subcategories is the `certifications`/`disciplines` split falling the wrong
+way: a hundred spellings of one word and a filter nobody can use, which is
+exactly why `disciplines` is a pick from `STUDIO_TYPES` rather than a box.
+Coaches already write the style down, in the class's name or in their
+description, so search reads it there. `classMatches()` in
+`discoverclasses.ts` is the one definition of what a class matches on: its
+name, its `classType` and its description, and deliberately nothing borrowed
+from whoever teaches it. A class that matched its coach's name would be the
+same answer twice under two headings, and People is already the heading that
+answers it. The name and the type match anywhere in them and the description
+only at the start of a word, which is the difference between a label and
+prose: a name is short and chosen, so a substring of one is what you meant,
+while in a paragraph a two-letter needle lands inside words that have nothing
+to do with it. Searching "om" for a yoga studio returned every class whose
+description said "room" or "welcome". The section is dated occurrences like Discover's, capped at
+`CLASS_LIMIT` (40), and the fortnight it searches is the fortnight Discover
+loads, because it is the same `buildDiscoverClasses` call over the same rows.
+`searchAll` runs `publicSchedules` over every listable person rather than the
+ones whose name matched, or a class would only be findable through its coach.
+Two structural rules come with it. `ClassResults` is the shared component
+both Discover's Classes half and search render, for the reason
+`DirectoryRows` is shared: the ribbon has to mean the same thing on both
+screens. And `groupClassDays` lives inside that component rather than beside
+`DirClass`, because `discoverclasses.ts` reaches `@/db` and importing a
+*value* from it into a `"use client"` file drags `pg` into the browser
+bundle; the type import is erased and stays. `/search` calls `useBandTop()`
+for the same reason Discover does: a `.callist` day band sticks at
+`--dayband-top`, and a screen that draws one without publishing it pins the
+band at a guessed offset in the middle of a row.
+
+**A screen with the bottom bar needs the header links too.** `AppChrome`'s
+`headerNav` follows `bar` by default: above 940px the bottom bar hides and
+`HeaderNav` is the only navigation left, so a screen that had tabs at 390px
+and none at 1280px is a dead end. The single opt-out is a profile
+(`headerNav={false}`), whose header floats over a photograph in white, where a
+row of ink links is a row nobody can read.
+
+**Discover has three halves: the classes, the coaches and the places.**
+Members listed alongside coaches for a while, by Matt's call, because a
+directory of six coaches said the room was empty. Classes say the room is
+lived-in honestly now, so the half is Coaches again and members leave it:
+a coach directory half full of people who teach nothing is a worse answer
+to "who can I train with" than a shorter one. Nobody is hidden by that,
+which is what makes it safe: search covers both kinds. The Coaches rail's chips are what they teach
+(`users.disciplines`), All leading filled-in, multiselect, from the same
+vocabulary the studios' chips use, so one word narrows either half. The
+quality bar (a schedule, or enough profile) is a coach's and always was. `discoverable = false` and blocks in either
+direction still mean not listed. Studios are not followable and
 never will be by this control, because you follow a person and a gym is a
 place; the row is the whole link to `/s/{slug}` and carries no pill. They also
 carry no city filter: a studio has a free-text `address` and nothing normalised
 to group by, so searching the address is how you find a town. Studios list in
 name order, not schedule-first: a directory of places shouldn't rank them by
 whether they signed up, and the Schedule tag says which have a week to see.
-`.disrow` keeps 96px clear on the name line for the Follow pill, so a studio
-row has to take it back or long gym names truncate into empty space.
 
-**A studio with no photo wears a face, not a pin.** `avatarColor({ id })` and
-`initialOf(name)` are the same pair a coach without a photo uses, so a studio
-gets one of the same sixty colours, derived from its id and therefore identical
-in the directory row and on its own page. A grey placeholder pin on every row
-was unreadable for exactly the reason a page of identical orange circles was.
-There is no `studios.avatarColor`: a studio has no picker, so the derived
-colour is the only one it can have.
+**Nobody is listed against their wishes.** The studio dots carry "Take this
+page down" (`StudioFeedback`'s `optout` mode, open to everyone signed in or
+not, because the owner probably has no account): a coach adding the place
+they teach is not the studio agreeing to be here, and the ask rides the same
+`suggestStudioEdit` pipe as a correction with "Take this page down." as its
+first line, so it lands in front of the admin unmistakably. It requires an
+email and an owner/manager claim, because an ask that can't be answered or
+verified can't be honoured. This is the ethos said as a button: never
+addicting also means never held.
+
+**A studio's photo is a rectangle, and that is how you tell it from a
+person.** The banner (`.profbanner`, 16:9, capped at 280px tall) is the
+treatment the studio page led with before the one header unified everybody,
+and it came back because a place reads as a room where a person reads as a
+face: a circle crops the room to a porthole, and two page kinds that looked
+identical above the name were worth telling apart. It runs full bleed now,
+to both edges and up under the header (`.profbanner-wrap` swallows the
+page's top padding with a negative margin), with no radius and no shadow: a
+photograph running edge to edge is its own frame. Verified overlays the
+picture's bottom-left, above the name, on a white pill so it reads over a
+photograph. The corner controls and the badge sit on the picture at the
+content gutter (`:has(.profbanner)` drops them to the photo's top, left and
+right 0 against the content box): the photo bleeds past the gutter, so an
+inset of their own put them deeper than every row below, which read as
+stray padding. A studio with no photo keeps the same
+rectangle, filled with its own derived colour (`.profbanner-empty`): both
+layouts are one layout, the badge overlays either, and the space is the
+photo's invitation.
+
+**A studio with no photo wears its colour, not a pin.** `avatarColor({ id })`
+derives one of the same sixty colours a coach draws from, identical in the
+directory row (with `initialOf(name)`) and on its own page (the colour-filled
+banner). A grey placeholder pin on every row was unreadable for exactly the
+reason a page of identical orange circles was. There is no
+`studios.avatarColor`: a studio has no picker, so the derived colour is the
+only one it can have. In the directory the shape rule holds at row size too:
+`.disrow-studio .disrow-av` is a rounded rectangle where a person's stays a
+circle.
 
 **Locations are one string per place.** Discover groups by the exact value, so
 `normalizeLocation` canonicalizes to "City, ST" on save and the field suggests
@@ -289,31 +541,72 @@ the cities already in use. A bare city snaps onto its only match; with two
 matches it asks which, and with none it asks for the state. Adding another
 place that writes `users.location` means passing `knownLocations()` in too.
 
-**Discover's controls read top down: search, then which half, then filter.**
-The box is first because searching is what people came to do; it says just
-"Search", since the segment under it already names the half and saying it twice
-was two voices for one fact. The filter is the floating pill a
-class uses for Book and Save, because the one control you reach for while
-scrolling belongs where your thumb is rather than in a row you have already
-scrolled past. It is lighter and smaller than the pill it borrows from: that
-one is the point of a class page, this one floats over a list somebody is
-reading. It says "Filter people" or "Filter studios" and wears the count.
-Nothing is on by default: a filter you didn't set is a list you can't explain.
-The pill is `.classoverlay-cta.disfilterpill`, two classes deep on purpose,
-because the base rule is defined later in the file and wins on a tie. A fixed
-pill floats over whatever is under it, so `.dislist` carries bottom margin to
-clear it, and above 940px the pill drops to a normal offset because there is no
-tab bar up there to sit above. Without both, the last coach in the directory
-was a row nobody could tap.
+**Discover's top is one stack: the search door, the halves as underline
+tabs, and the chip rail under them, led by All. All three halves wear
+that same rail, at the same size.** The People/Studios
+segment is the same underline tabs a profile's sections wear (`.pubtabs
+.distabs`), and the rail (`.dischips`, scrolling off the edge) is the whole
+filter now. All leads it, filled in by default: the one selected chip is
+what says the others can be selected, and tapping it clears every pick. On
+Coaches the chips after it are what they teach; on Studios they are the
+place's types. Both are multiselect, where picking two means either, not
+both. Any pick takes All off.
+The Available-for-clients chip and the discipline chips left the People
+half when members joined the list; they come back the day the filters
+earn a sheet. There is no Filters chip and no sheet for now; both return
+the day there are enough filters (the city among them) to need one, which
+is also why `cities` stays a prop the component ignores. Nothing is on by
+default: a filter you didn't set is a list you can't explain.
 
-**A filter is only offered where it can narrow something.** Discover's What
-chips are built from what the lens in front of you actually holds: coaches'
-`disciplines` on People, `studios.types` on Studios. Pooling both offered
-People the studios' vocabulary, and every chip there filtered to nobody,
-because coaches haven't started saying what they teach yet. The section shows
-up on its own the day they do, and switching lens drops the pick, since the
-other half can't honour a word it doesn't use. Same rule as the city picker,
-which only appears on People.
+**A filter is only offered where it can narrow something.** Discover's type
+chips are built from what the lens in front of you actually holds:
+`studios.types` on Studios, `users.disciplines` on Coaches, the types the
+fortnight actually carries on Classes. Pooling the halves once offered the
+coaches the studios' vocabulary, and every chip there filtered to nobody.
+The rail is not drawn at all where nothing has a word yet.
+
+**But the pick itself survives the lens.** Switching halves used to drop it,
+because the two vocabularies were genuinely different lists and the other
+half could not honour a word it did not use. `drizzle/0071_one_vocabulary.sql`
+ended that: `CLASS_TYPES` is `STUDIO_TYPES` re-exported, so a word one half
+can honour the others can too, and somebody thinking "yoga" should pick it
+once rather than once per half. One `types` selection now drives all three.
+The rail still offers only the words the half in front of you can narrow by,
+*plus* anything carried in, because a pick that still filters the list with no
+chip to un-pick it is a list narrowed by something invisible; All is the way
+off, from whichever half you are standing on. The cost is real and worth
+saying: a half can look empty because of a word picked on a different one,
+and the carried chip sitting there selected is the whole explanation.
+
+**The halves are three words and nothing else.** Each carried a count of what
+it held for the pick in front of you (`.pubtab-cnt`, a brand pill with white
+text, reading `shown`/`shownClasses`/`shownStudios` and never the total), which
+answered "is there any yoga on the other side" without switching to look. They
+came off by Matt's call: three numbers across the top of a screen whose whole
+job is browsing is a directory that is honestly small saying so three times
+before anybody has looked, and the halves are a place to go rather than a
+scoreboard. The lists still compute those three numbers to render, so putting a
+count back is one span; it should have to earn it. `.pubtab-cnt` is still
+live on the studio's shifts screen, where My shifts, Open and Requests are a
+queue and the number is the point.
+
+Anything addressing these tabs still matches with `hasText` scoped to the tab
+row rather than an exact match on the bare word. That was forced when the
+counts made the accessible name "Coaches 12 listed", and it stays because it is
+right either way.
+
+**The rail is busiest first, and one size on every half.** `rankByUse` in
+`DiscoverList` counts what is behind each word on the screen in front of you
+(occurrences per class type, coaches per discipline, studios per type) and
+orders by it. A rail is read left to right and only its first few chips are
+seen without a swipe, so the ones in front are the ones with the most behind
+them; alphabetical put Barre ahead of Yoga for no reason anybody could name.
+The chips are the Classes filter's old 38px pill on all three halves now:
+`.dischips .chip` was the base 12px `.chip` while the two class filters were
+38px, and at that size a filter reads as decoration on a screen whose whole
+job is finding somebody. The height is fixed rather than padded for the same
+reason `.clspill`'s was: a padded chip grows the rail the moment anything in
+it is taller than the line box.
 
 **A profile carries no tab bar, and the arrow is the way off it.** Three layers
 of chrome stacked at the bottom of a schedule (the bar, the floating Add class,
@@ -375,100 +668,129 @@ stat on the account. A lid over two buttons is where things go to be forgotten.
 the panel under it, and a coach, a member and a studio all render through it:
 same photograph, same badge above the name, same two pills on the picture, same
 tabs. It takes a `base` (`/matt`, or `/s/ironbound`) and a list of tabs rather
-than a handle, because a studio's URL has a prefix and a member has no tab row
-at all. An empty `tabs` means no row, which is right for a page with one
-section; the studio already worked that way and the member now does too. The
-badge says which: Coach, Member, Studio. What used to be three headers is one,
-and three headers is how a member's page ended up looking like a lesser version
-of a coach's.
+than a handle, because a studio's URL has a prefix. A member wears two tabs
+now (Schedule and Info, `/{handle}` and `/{handle}/about`): the Schedule is
+the classes they're going to, still gated on the mutual follow, and a
+stranger's empty state says the same words whatever the week holds so it
+can't be used to guess it; Info is the about, empty state and all. What used
+to be three headers is one, and three headers is how a member's page ended up
+looking like a lesser version of a coach's.
 
-**The profile leads with the photo, full bleed.** `.profhero` runs to both
-edges and up under the app bar at 65vh, with the tags, name, tagline, city and
-both action pills stacked left along the bottom over it. The scrim exists only
-where there's a photograph to read against, and only across the bottom 42% of
-it, under the words: dimming the whole frame made every photograph look like
-stock behind a caption, and the face and the room stay as they were shot. A
-flat `avatarColor` gets no scrim at all, because it already clears white text.
-The pills are white
-because they're on the picture: Contact filled, Follow an outline, and
-following fills Follow in with a short spring (`folpop`, skipped under
-`prefers-reduced-motion`). There is no avatar circle any more, so `AvatarZoom`
-is gone from this page, which is why availability moved with it: it was a dot
-on that circle and words in its overlay, and it is now a second tag beside
-Coach in `.profhero-tags`. A status nobody can read is the same as no status.
+**A profile reads left, top to bottom, like everything under it.** The
+full-bleed photo hero shipped and came back out: a screen of photograph
+before any schedule said editorial when the product says calendar. Then the
+centred head went too: it was the one centred block on a left-reading
+screen. `.pubhead` starts everything at the gutter (face, name, one
+`.profmeta` line of what and where, the two big pills), with top padding
+clearing the corner circles; a studio's banner drops the padding entirely,
+because the photo runs up under the header and the circles sit on it. Then the tabs as underlines: the selected one is ink over an
+ink rule, the row carries the one divider, and nothing fills. They were pills
+for a moment, and stacked under the action pills over the card list it was
+pills on pills.
+The big picture still exists one tap away: the avatar is `AvatarZoom`, which
+blows the photo up over the blurred page with Follow, Share, Copy link and QR
+under it (the owner gets their card there too). There is no Coach/Member/
+Studio tag and no availability tag; the only badge left is a studio's
+Verified, in `badges` beside the name. The share card image follows the same
+rule: it wore a Coach or Member pill above the name and dropped it, because
+the card is the page said as a picture. Contact is the filled pill and the
+bottom sheet; Follow is the outline that turns green (`--go`) when it's a
+yes, same green as a Going mark.
 
-**Everything floating on a profile's photograph is the same light glass.** The
-back arrow, the share circle, the settings pill, a studio's dots and every
-badge above the name: white at 80% with a backdrop blur and ink on top, the
-same as the two action pills. A slab of ink over a photograph is a hole in it,
-and two treatments side by side read as two unrelated sets of controls. The
-hierarchy between the pills is fill weight rather than colour now: the one you
-came to do is nearly solid, the other is half of it with a white edge. The two
-badges that mean something (availability, Verified studio) keep their colour in
-the ink, because a pale tag can't say it with its fill.
+**Signing in puts you back where you were.** `src/lib/afterauth.ts` is one pair
+of functions over one sessionStorage key: `rememberAfterAuth` on the way in,
+`takeAfterAuth` once, at the end. The header pill on a profile carries
+`?next=/{handle}`, `AuthFlow` reads it on mount, and whichever ending the flow
+has (straight through, or three steps of the wizard) consumes it there. It is
+not a query string all the way down because the way in is a sheet, a passkey
+prompt and sometimes a wizard, and the first step that forgot to pass it on
+would drop somebody silently. The word is "Sign in", everywhere, including the
+errors: it covers coming back and arriving for the first time, and two words
+for one door is two doors.
 
-**Everybody can hand a profile on.** `ProfileShare` sits at the right of
-`.profhero-actrow`, across from the two action pills rather than up in the
-corner: it is a thing you do about this person, like the other two, and the
-corner is for the owner's own controls. It is `navigator.share` with a
-copy-the-link fallback, and it exists on all three profiles because until it
-did, the only way a visitor could send somebody a coach was to copy the address
-bar. An owner's Share pill under the name is a different thing and stays: that
-one carries the story image, the QR code and the week as text.
+**A bottom sheet is a surface, not a tray for cards, and it is solid.**
+`.sheet` is plain white (`--card`, flipping with dark mode): it tried the
+class overlay's glass and the rows and their dividers went muddy against the
+tint, and a sheet is a thing you read and act on, so legibility beat the hint
+of the page beneath. The scrim already says where you came from. A
+`.settingslist` inside one drops its own white block: rows sit straight on
+the sheet and the dividers do the separating, because a white card inside a
+white card is a box drawn for its own sake.
 
-**The floating action buttons are glass, not slabs.** Add class, Discover's
-filter and the two pills on a profile's photograph are all white with a
-backdrop blur rather than solid: a block of colour over a photograph is a hole
-in it, and the brand orange isn't spent on a control that sits permanently over
-a schedule. The primary one is white at 80%, the secondary at 20% with a white
-border, and following fills to match. Change one and change the rest, or they
-stop reading as the same kind of thing.
+**Handing a profile on lives behind the face, not in a row of circles.**
+A person's share/copy/QR actions sit under the blown-up photo in `AvatarZoom`;
+a studio has no face to blow up, so `ProfileShare` (native share, copy
+fallback) rides with its pills instead.
 
-**The Verified studio badge explains itself.** `VerifiedBadge` is a button, and
-tapping it says what the badge means (the people who run the place keep the
-page, which is why nobody else can edit it) and offers the way in for somebody
-who runs a studio of their own. That way in is the Suggest an edit sheet that
-already exists, whose relation field starts with "I own it": that is how a
-studio actually gets claimed today, so this points at it rather than inventing
-a second door. A badge nobody can ask about is a claim taken on faith.
+**Add class is brand orange with white words; Discover's filter stays glass.**
+The one button that makes a coach's page exist gets the one loud colour, by
+request, after a glass version read as furniture. The filter pill keeps the
+glass: it floats over a list somebody is reading and is not the point of the
+screen.
 
-**The header floats over a profile's photograph, it doesn't sit above it.**
-`.pub .brandbar` and `.pub .pubtop` are `position: absolute` at the top of
-`.profwrap` with no background and no border, their wordmark and icons in
-white, and the picture runs full bleed underneath. `.profhero-topscrim` is what
-makes them readable, and like the one at the bottom it only exists over a real
-photograph: a band of grey across a flat `avatarColor` is just a band. The
-wordmark's colour is an inline style, so no class can reach it; `--wm-ink` on
-the header is the way in, and adding a prop for every surface it lands on is
-the thing that variable exists to avoid.
+**Every studio page wears a badge, and both badges explain themselves.**
+`VerifiedBadge` renders Verified or Unverified (the word alone, no "studio":
+the page it sits on already says what kind of thing this is), and tapping
+either opens a sheet saying what it means: Verified, that the people who run
+the place keep the page, which is why nobody else can edit it; Unverified,
+that the page is a shared entry the community keeps, and what verifying
+would hand the owner. Both offer the same way in for somebody who runs a
+studio: the Own this page sheet (`StudioFeedback`'s `claim` mode), an ask to
+take the keys rather than the corrections form, requiring an email and an
+owner or manager claim and riding the same `suggestStudioEdit` pipe with "I
+want to own this page." as its first line, the way the opt-out marks itself.
+A badge nobody can ask about is a claim taken on faith, and an absence
+nobody can ask about is worse.
 
-**On a profile, the name and the tabs are the only thing that pins.** The app
-header is absolute there rather than sticky, so it scrolls away with the
-picture: two stacked bars over a schedule is most of a phone screen
-spent on chrome, and the row that says whose week this is has more claim on the
-top than the wordmark. `.pubstick` therefore sticks at 0 and measures nothing.
-It used to read the brandbar's height on mount and hold that much space, which
-against a header that no longer pins would have left a band of paper under the
-tabs. If anything ever pins above it again, that measurement comes back.
+**On a profile the header sits above the page again, and only the name and
+tabs pin.** `.pubstick` sticks under the app header, measuring the brandbar's
+height on mount (a stranger has no app header, so it measures zero and owns
+the top). Once the big head scrolls away it grows the small copy of the name
+and the compact Follow.
 
-**The hero's two corner slots must not own a stacking layer.** `.profback` and
-`.ownertop` are positioned but carry no `z-index`, on purpose. They hold
+**The head's two corner slots must not own a stacking layer.** `.profback`
+and `.ownertop` are positioned but carry no `z-index`, on purpose. They hold
 arbitrary controls, and a control that opens a sheet needs that sheet at z-46
 over the z-45 tab bar; a `z-index: 2` on the slot trapped it in a layer of its
 own, and the studio's dots opened an editor whose Save button could not be
-tapped. DOM order already paints both slots over the picture. This is the same
-trap the account view has, where the fix is to portal instead.
+tapped. This is the same trap the account view has, where the fix is to
+portal instead.
 
-**Settings live on the page they're about, and only once.** The gear sits in `.ownertop` on a
-coach's own profile and nowhere else, and it carries the words "Profile
-settings" rather than being a circle to guess at: `AppHeader` carries none on any screen.
-Their profile is the You tab, so it is one tap from anywhere, and a member's
-settings were always `/you`, which the tab bar already is. `?acct=1` is the URL
-the gear links to and the only door into the account view, which is why a suite
-opening settings navigates there rather than clicking a gear. `.ownermore`
-means the studio page's dots; the profile's gear is `.ownergear` and they share
-only the circle in CSS, because an existing selector broke the moment they
-shared a class name.
+**Your own profile keeps the tab bar; somebody else's has none.** Theirs is
+a page you visited, and the arrow is its way off. Yours is one tap from the
+You tab, and it keeps the bar so the way back stays under your thumb.
+`.ownbar` is what puts the bar's room back at the bottom of the page and
+lifts the floating Add class button over it.
+
+**The Schedule tab is the calendar and nothing else; the tools live on
+You.** The calendar and the identity shared one screen for a while (the
+`.schedtools` rail rode across the calendar's top), and before that the You
+tab pointed at the public profile and the working screen ended up behind a
+gear, which was bad enough to reverse. The rule that holds both lessons: the
+calendar is a top-level tab, one tap from anywhere and behind nothing, and
+it carries nothing that isn't the week. The room this makes is for the
+full-size calendar that is coming. The coach chip only rides the Going
+rows, where the face answers whose class it is. The rows carry no corner
+share circle any more; handing a class on goes through the class sheet, or
+the floating Share pill for the whole week.
+
+**You is the person, and it is the settings.** `/you` renders for both
+kinds: a member's `MemberAccount` rows, a coach's `ProfileSheet` with
+`page`, the same account screen that was an overlay on the schedule for
+months, now in the flow of the tabs layout (`.acct-page` unfixes it; sub
+-sheets still ride over the z-45 bar). The coach's screen holds the face row
+into the public page, the stats, the share cards (schedule story, profile
+card, QR), the invite, the settings groups, and the week-as-text copy
+(`myWeekText`, a server action, because this screen holds no class rows).
+There is no gear anywhere the tab bar renders: the You tab is the door, and
+a second door in the corner said it twice. The one gear left is the
+coaches-only mode (`AppHeader`'s `settings` prop), which has no tab bar to
+hold the account; it links to `/you`. `/app?acct=1` redirects there, because
+that URL was the gear's href for months and old links have to land. The
+Google OAuth callback lands on `/you?gcal=...` for the same reason: the
+Google Calendar row lives there, and `ProfileSheet` owns the verdict toast.
+`.ownermore` means the studio page's dots; nothing on a person's profile
+opens settings any more.
 
 **Contact is a thing you do, not a section you read.** It was a tab; it is now
 the pill beside Follow and one sheet (`ContactSheet`). Message on fittlist
@@ -525,22 +847,38 @@ list changes. Icons are generated by `npx tsx scripts/make-icons.mjs`
 from `brandIcon()` and committed, favicon included, so the home screen and the
 header can't drift. Run it only when the mark changes.
 
-**Stacking contexts.** The account view is a positioned `z-40` layer and the tab
-bar is `z-45`, so a sheet rendered inside the account view sits *under* the tab
-bar and its bottom button can't be tapped. Portal such sheets to `document.body`
-(see `InviteFriends.tsx`).
+**Stacking contexts.** As an overlay (the coaches-only mode) the account view
+is a positioned `z-40` layer and the tab bar is `z-45`, so a sheet rendered
+inside it sits *under* the bar and its bottom button can't be tapped. Portal
+such sheets to `document.body` (see `InviteFriends.tsx`). As the You tab
+(`.acct-page`) the wrapper is static and makes no stacking context, so sheets
+get their natural z-46 over the bar; the portal stays because it has to work
+in both skins.
 
 **Tapping Follow says what just happened, but only for a coach.** A follow shows
-`FollowHint`: a bar reading that their classes are on your Following week, a
-link straight to it, and a Don't show again that means it. Following a *member*
+`FollowHint`: a bar naming the circle it just put at the top of your schedule, a
+link straight to that screen, and a Don't show again that means it. The words
+changed when following stopped delivering classes: the bar used to promise the
+coach's classes were "on your Following week", which is now false twice over,
+and somebody who goes looking for classes that were never added concludes the
+follow failed. Following a *member*
 shows nothing, because the bar would be promising a week they don't have: what
 that follow buys is quiet and mutual, and until it can be said in a sentence it
 says nothing. It renders from the profile pill
-(`NotifyCta`) and from Discover's mini pill, because that's where most follows
-actually happen, and a button whose effect is invisible teaches nobody what the
-app is for. The dismissal is localStorage (`fl-follow-hint`), which is
+(`NotifyCta`), which is the only Follow control left now that the directory
+rows carry none, and a button whose effect is invisible teaches nobody what
+the app is for. The dismissal is localStorage (`fl-follow-hint`), which is
 per-device and unlike the invites banner's column on the account; a column is
 the fix if that starts to matter.
+
+**The invite card is the last thing on the way out.** It led the You tab for a
+while, sitting above Your studios and the settings, which is where an ask reads
+as an ad: it was the first thing on a screen somebody opened to do something
+else. It sits under the settings and above the footer links now, so the work
+comes first and the favour is what you pass on the way out. The pair of buttons
+above it reads Preview profile and Share: "page" was the word when a coach's
+public page was the only thing behind it, and profile is what everybody calls
+the thing it opens.
 
 **The invites banner is announced once, then never again.**
 `invitesBannerCount()` returns 0 unless the beta gate is up, they're onboarded,
@@ -570,9 +908,9 @@ a blank circle for months.
 construction.** Beta members recreated their gyms' real classes because it was
 the only way to get their week into the app, so `publishClasses` now refuses a
 public class from a `kind === "fan"` account, and members get
-`personal_classes` instead: name, weekday, time, place and a free-text coach
-name, living only in their own week. There is deliberately no column that
-could make one public, so the wall can't be left open. Becoming a coach is an
+`personal_classes` instead, living only in their own week. There is
+deliberately no column that could make one public, so the wall can't be left
+open. Becoming a coach is an
 ask, not a switch: `requestCoaching` files it, the admin's People tab answers
 it, and `adminSetKind`/`adminAnswerCoachRequest` are the only things that flip
 `users.kind`. The named coach is an
@@ -580,6 +918,81 @@ invite lead ("Is Jenny on fittlist?"), not a users reference: naming your
 coach is not putting them on the platform. The admin Reports tab lists
 same-studio-same-time classes under two accounts, which is what the old leak
 looks like from above.
+
+**Publishing a class ends on the share moment.** A brand new public class
+closes the Adder onto `ClassLiveSheet`: the class is live, and the two ways
+to hand it on sit right there instead of a hunt through menus later. They
+are both "share" and they are different acts, so the rows say the
+difference: Share the link (the class URL, to a person, anywhere you
+message) and Share a picture (the class card, `ShareCardSheet`, for a story
+or a post). Only a brand new public coach class earns it: an edit is not
+news, a private class has no page to hand anyone, and gym and personal rows
+have their own flows. `save()` returns the first inserted row's `id` so the
+sheet can point at the class without a second lookup, and the suites close
+the sheet through their `closeLive` helpers after every publish it rides.
+
+**A class you go to is filled in with the same form as a class you teach.**
+It was five fields in a sheet of its own, so the thing you booked through
+ClassPass arrived with no studio, no description and no picture, and the next
+person to add it got none of that either. `Adder` takes a `personal` prop now
+and `personal_classes` carries what `classes` carries (studio, type,
+description, image, links, a one-off `specificDate` or a weekly slot with
+`endsOn`), field for field, so `runsOn` reads one without translation. What it
+still has no column for is being published.
+
+**One of your own writes your own catalog, so the second one is a tap.**
+The people this is for have schedules that are all over the place and
+still repeat: ten clients, ten places, every week. `addPersonalClass` and
+`updatePersonalClass` upsert a `class_templates` row the same way
+publishing does (one per `(userId, name)`, latest wins), with
+`isPublic: false`, which is what that column on that table has always
+meant: yours, on your own schedule, on nobody's public page. Typing
+"Training with Kia" a second time offers it back under Yours, ahead of
+the studio's shared rows and winning the name outright, and filling it
+brings the place, the description, the length, the time and who it's with
+(`class_templates.withWho`, the one column this needed: the entry has it
+and the memory would be a worse memory without it). The studio catalog
+cannot serve this case at all, because a 1:1 at a client's home has no
+studio to have a catalog. This is the seam the private-training side will
+be built on when it is asked for: a client following one calendar,
+booking and cancelling against it. Not yet, and nothing here assumes it.
+
+Two things travel out of that table and nothing else does. The class joins the
+studio's shared catalog, so the next person gets the details and a studio
+that isn't here yet arrives in the directory with a real class on it; and that
+write only happens **when a studio was picked**, because "Powerflow has a
+Vinyasa at six" is a fact about the studio while a 1:1 in somebody's garage is
+not. Nothing rendered anywhere says who wrote a catalog row. The form says so
+out loud under the studio field, which is the consent. The coach path keeps
+its own version of this rule by refusing to log a private session at all.
+
+**A coach adding to their calendar is asked which hat, by the plus.** Both
+are true for them: the class at their own gym might be theirs to teach. The
+sheet behind `.fab-plus` asks first and passes `personal.canCoach: false` to
+the form, so the Adder's in-form chair question (which still exists for any
+caller that doesn't pre-answer) never shows twice. "Going to" writes a
+personal row; "coaching" opens the publishing form, toggle and all. A member
+is never asked: one answer is not a question.
+
+**The admin can put a picture on any class, and only a picture.**
+`adminSetClassImage` (behind `currentAdmin()`) writes `classes.image` for
+every class with that title under the same owner, not just the tapped series:
+a coach teaching the same class at two studios has two series that are one
+class, and a photo on one left its twin bare. It also lands on the owner's
+`class_templates` row (so re-adding the class brings the picture back) and on
+each touched studio's `studio_classes` row, so the next person to pull the
+class in gets it. It stops at the owner, because two coaches can both teach a
+"Yoga Flow" that are different classes. Remove clears all of the same rows,
+or the old picture comes straight back on the next catalog pull. The door is the class sheet's overflow menu, admin only
+(`classDetail().adminPhoto`), offering add, change and remove. It is a
+beta-era power for filling in a catalog typed before pictures existed, and it
+deliberately cannot reach a word of anybody's class: times, names and
+descriptions stay the coach's own. `adminSetClassLink` is the same power for
+the booking door, with one harder rule: fill-the-blanks only. It writes a
+link (labelled by `detectProvider`) onto the same-title classes and the
+owner's template, and only where the links array is empty, because a link
+the coach set is their word. The door (`classDetail().adminLink`, in the
+sheet's overflow) only exists where the blank does.
 
 **A class report points at the `seriesId`, not a class row.** `class_reports`
 is how someone flags a class that isn't right, and a report keyed on a class
@@ -656,20 +1069,90 @@ out: the token feed already carries shifts, and syncing them too would double
 them for anyone using both.
 
 **A coach works their own half of the rota, and the manager only hears about
-it.** `giveUpShift` and `claimShift` in `gym.ts` are the coach-side pair, and
-unlike everything else there they run on a session rather than `actingFor()`:
-giving up needs only that you are the one on that date, taking needs only that
-you coach at that studio. Both write the same `shift_covers` row a manager's
-`setShiftCover` would, so a swap is a swap however it happened. Handing a date
-back opens the slot (`coachUserId` null) and tells the managers **and** every
-coach at the studio, because a dropped class needs a taker and that notice is
-what the lost text message was for; taking one tells the managers only, since
-everyone else was told so that one of them would do exactly this. It is a
-notice, not a request: nobody asks permission, and nobody finds out too late.
+it.** `giveUpShift`, `claimShift` and `sendShiftTo` in `gym.ts` are the
+coach-side set, and unlike everything else there they run on a session rather
+than `actingFor()`: giving up or handing on needs only that you are the one on
+that date, taking needs only that you coach at that studio. All write the same
+`shift_covers` row a manager's `setShiftCover` would, so a swap is a swap
+however it happened. Handing a date back opens the slot (`coachUserId` null)
+and tells the managers **and** every coach at the studio, because a dropped
+class needs a taker and that notice is what the lost text message was for;
+taking one tells the managers only, since everyone else was told so that one
+of them would do exactly this. Handing a date *to* somebody writes the cover
+straight onto them and tells them and the managers: the swap was agreed over
+the counter, and this is the writing-down.
 
-Both controls live on the class itself, offered by `classDetail().shift`,
-which is null for anyone it means nothing to. A member sees no trace of the
-rota, and no name: whether a coach is listed is still the gym's switch.
+**But taking or handing on a shift now asks first, by default.**
+`studios.approveShiftChanges` defaults true, per the staff spec, and it
+reverses the rule above for the two acts that give somebody a shift: a pickup
+and a hand-over become rows in `shift_requests`, and a manager answers them on
+the studio's shifts screen. The old behaviour is the switch turned off, which
+some studios will want, and the doctrine it rested on ("a notice, not a
+request: nobody asks permission, and nobody finds out too late") is now the
+argument for offering that setting rather than for the default.
+
+Releasing is deliberately **not** part of this. Handing a date back opens the
+slot immediately whatever the setting says: a class nobody is on, sitting in a
+queue waiting for permission to be uncovered, is the failure the whole
+coverage story is about.
+
+One rule makes approvals safe, and anything added here has to keep it: **a
+pending change never writes `shift_covers`.** The cover is written at the
+moment of approval and not before, so until a manager answers, no public page,
+no feed, no `.ics` and nobody's own calendar says the shift has moved. Two
+cases skip the queue because they restore the rota rather than change it:
+taking back a date you gave up yourself, and handing one back to whoever
+normally teaches it.
+
+`claimShift` and `sendShiftTo` return `pending` so a screen can say which
+thing happened. That is not cosmetic: the class sheet toasted "It's yours"
+after an ask for one build, which tells a coach a class is theirs when the
+studio has not agreed, and turning up to it is the consequence.
+
+**Who a shift can be handed to is the gym's list, not the directory's.**
+Anyone may say they coach at a gym (the directory runs on trust), and not
+everyone listed teaches the group classes, so `studio_rota_coaches` is the
+managers naming the pool: the Shift list sheet on the rota screen
+(`rotaPool`/`setRotaCoach`, manager-only) toggles coaches from the same union
+`gymCoaches` offers. `sendShiftTo` refuses anyone not on it, and
+`classDetail().shift.sendable` is that list minus the viewer, so the sheet
+and the action can't disagree. An empty list just leaves the hand-back. Both
+directions clear in `adminDeleteUser`, and `adminDeleteStudio` clears the
+studio's rows.
+
+The staff screen's own rows offer it too. A coach's shifts are listed there and
+the only thing beside them was Give up, so "can you take my Thursday" still
+meant finding the class and opening it. Transfer sits next to Give up now, off
+the same list and the same action: `staffView` returns `sendable` once for the
+screen (the studio's shift list minus the viewer) rather than once per row,
+because it is the same answer for every date at the same studio, and the row
+only draws the control when that list has somebody on it. Both steps are the
+class sheet's, for its reasons: the names first, because eight names under one
+verb read as eight options, then a confirm, because the notice goes out the
+moment it runs.
+
+One control on the row, not two. Transfer and Give up sat side by side across
+from the class name for a build, which is two things to read and a date that
+truncates to make room for them; they are behind a dot (`.staffmenu`) that
+opens a sheet saying each act in full. An open shift keeps its own Pick up
+button, because taking one is a single act rather than a choice between two.
+The named buttons above the tabs read All shifts and Staff: "Coaches" was the
+narrower word for a list that is really everybody who works here.
+
+On the class itself, a coach's own shift puts Manage shift on the floating
+pill (the spot a member's Book and Add live, because the date is theirs to
+manage, not to book) and a sheet behind it holds two rows: Give up this
+shift, and one Transfer shift door that opens the gym's list as a second
+sheet, because eight names under one verb read as eight options. The
+Transfer row only exists when the list has somebody on it, and the old boxed
+"I can't make this one" CTA is gone. Both acts confirm first (the same
+`.confirmsheet` shape removing a plan uses: what happens, the doing button,
+Keep it), because the notice goes out the moment they run and a single tap
+was texting the whole gym. An open slot
+seen by a coach here keeps the box ("Open shift", I'll take it). All of it is
+offered by `classDetail().shift`, which is null for anyone it means nothing
+to. A member sees no trace of the rota, and no name: whether a coach is
+listed is still the gym's switch.
 
 **A gym is a place, not a face.** `classDetail` returns `ownerIsGym`, and the
 sheet drops the "Coached by" row entirely for one: the gym has no page at
@@ -735,26 +1218,88 @@ nobody does: the private feed adds the covered dates to the regular coach's
 EXDATE list and emits a one-off event for whoever took it. The rota screen is a
 real dated week (`?w=` offsets from this Monday) because a swap is about a date.
 
-**A studio running a schedule wears the same tabs a person does.** `/s/{slug}`
-is the schedule and `/s/{slug}/about` the rest; `/s/{slug}/schedule` resolves
-too, and `/s/{slug}/contact` permanently redirects onto the page, because
-contact became the header pill and a sheet here exactly as it did for a coach.
-The sheet carries no fittlist row: a studio has no account to be written to, so
+**Every studio page wears the same three tabs: Schedule, Info, Coaches.**
+`/s/{slug}` is the schedule, `/s/{slug}/about` the categories and the words,
+`/s/{slug}/coaches` whoever teaches there (the same union "Where I coach"
+uses, from the other end); `/s/{slug}/schedule` resolves too, and
+`/s/{slug}/contact` permanently redirects onto the page, because contact
+became the header pill and a sheet here exactly as it did for a coach. The
+sheet carries no fittlist row: a studio has no account to be written to, so
 `ContactSheet` takes an optional handle and `canMessage` false. What kind of
-place it is (`studios.types`) is the first thing in About, where it answers "is
-this for me"; above the photo it read as a caption on the name. The schedule leads for the same reason it
-does on a coach's page: it's what the link is for. A directory entry with no
-schedule has nothing to divide, so it keeps the single sectioned page it always
-had (`show()` in `StudioView`), which is almost every row in the table and
-should stay that way. `samePage()` already collapses the suffixes, so back
-pops. A gym's class lives at `/s/{slug}/{classId}`, because its account has no
-handle; `classDetail()` takes a handle **or** a studio slug and scopes the
-lookup either way.
+place it is (`studios.types`) is the first thing in Info, where it answers
+"is this for me". The schedule leads for the same reason it does on a
+coach's page: it's what the link is for, and on a studio with nothing
+listed its empty state is the pitch. The tabs are there whatever the studio
+holds (the single sectioned page for directory-only rows is gone): one
+layout to learn, however small the place. `samePage()` collapses all the
+suffixes, so back pops. A gym's class lives at `/s/{slug}/{classId}`,
+because its account has no handle; `classDetail()` takes a handle **or** a
+studio slug and scopes the lookup either way.
 
 **A handle is not "has a page you can link to".** `week.ts` dropped any saved
 class whose owner had no handle, which silently emptied a member's plans of
 every gym class the moment gyms existed. Anything building a class URL wants
 the base (`handle`, or `s/{slug}` for a gym), not the handle.
+
+**An unclaimed studio's schedule is built by the commons too.** The page
+draws a seven-day week from the public classes coaches list there and from
+members' personal entries that named the studio (`community` in
+`StudioView`), deduped on name and time, coach rows first because they have
+real pages to open. A coach's row names the coach: the page is built by the
+people who train at the place, whoever runs it had no way to ask anybody
+about a listing they did not recognise, and the name is already public on
+the class it names. A member's entry surfaces as a plain row: name, time,
+length, no link, and never one word about the member; the consent is the
+line under the personal adder's studio field, which says the class joins
+this page, not that they do. Both carry the class's own `location` when it
+has one, which is a room or a floor rather than the studio, because the
+studio is the page. The
+week explains itself from an info dot beside the Schedule tab
+(`CommunityNote`, rendered through `TabDef.info` as a sibling of the tab
+link, never inside it; it rides the tab's own 3px rule and inks in with it,
+sits tight to the word so it stops reading as a fourth tab, and is drawn in
+brand orange as the one thing on that row with something behind it): the sheet says the page is built by the people who
+train here and carries the same Own this page ask the badge's sheet does.
+It was a paragraph over the list (`.commnote`), read once and scrolled past
+forever after. The moment the studio is
+claimed the community week is gone: from then on what the page says is
+theirs to say, and a gym account replaces it with the real rota. This is
+the inventory building itself, and it is also the pitch: a studio arriving
+finds its page already worth keeping.
+
+**Running a studio is reached from the You tab and nowhere else.** It floated
+on the studio's own public page for a while (`StudioAdminSheet` where a
+member's Book and a coach's plus live), on the argument that on your own gym's
+page the thing you came to do is run the place. That was wrong about which page
+you are on: `/s/{slug}` is the page strangers read, and a manager's tools
+drawn on top of it are tools in the shop window. Your studios is a group of
+rows on You, the same place your own page and your own settings are, and each
+row opens `/s/{slug}/shifts`, which is the working screen. Its close points at
+`/you` and never at the studio's own page: one way in means one way out, and
+closing onto a public page a manager never asked for left them somewhere with
+no route back to the screen they were working on. It stays a `BackLink`, so it
+pops when You is genuinely beneath and pushes for a shifts URL opened cold.
+
+`StudioAdminSheet` survives as the overflow on that screen rather than a
+floating pill: the two things a manager does weekly are named buttons (All
+shifts, Coaches) and the rest is behind `.staffmore` at the end of the row,
+which holds the shift counter, the studio editor, the share and the page's view
+count.
+
+**Every screen under the shifts screen closes back onto it.** The rota, the
+shift counter and the coaches list are all opened from there and nowhere else,
+so all three point their close at `/s/{slug}/shifts` rather than at the studio's
+public page. The rota carries no doors of its own any more: it had Shifts worked
+and Staff across its top, which was the screen you arrived from offering you the
+way you came. One way in, one way out, and the whole stack behaves like a
+full-screen sheet over the screen that opened it. "Shifts worked" is the shift
+counter now, in the overflow row and on its own heading: what it counts is
+shifts, and what it is is a counter, so the old name read like a record of work
+done rather than a tally you check before a pay run. The rows that need the gym account only appear once it exists. Views
+are tracked against `studios.accountUserId` through the same `page_visits`
+rollup a coach's page uses (main landing only, no managers, no bots, recorded
+in `/s/[slug]/page.tsx`), so the number means the same thing everywhere it
+appears.
 
 **A studio is the commons until somebody claims it.** The directory has always
 run on trust: any coach can correct any entry, because a row nobody owns is
@@ -762,7 +1307,7 @@ better kept right by the people who teach there than left wrong. One
 `studio_managers` row changes that. From the first manager on, the studio is
 claimed: only its managers (and `currentAdmin()`, who must be able to fix a gym
 that locks itself out) may edit, everyone else gets the Suggest an edit door
-they already had, and the page says "Verified studio" so the missing pencil
+they already had, and the page says "Verified" so the missing pencil
 has a reason. `studioAccess()` in `src/lib/studioaccess.ts` is the one answer
 both the page and `updateStudio` ask, so the button and the action can't
 disagree. It's a join table rather than a column because a gym is a place of
@@ -776,6 +1321,22 @@ the account owns and de-attributes shared ones, in an order the foreign keys
 allow; a new reference that isn't listed there makes deleting any user fail
 outright. `notifications.actor_user_id` is de-attributed rather than deleted,
 so "someone followed your schedule" survives its subject leaving.
+
+**On desktop the header belongs to the window, and the column belongs to the
+reading.** Above 940px `.brandbar` bleeds to both window edges and sits its
+contents 64px in from them, in both shells (`.screen.hasnav` and `.appshell`)
+off one rule: wordmark hard left, the search and bell hard right, the tab
+links centred. It used to pad back to the 660px column, which put the whole
+lockup in a huddle in the middle of a 1440px screen with the rule running out
+past it on both sides, and a header that lines up with the paragraph width is
+a header pretending to be content. The links are absolutely centred rather
+than left to `space-between`: the wordmark and the icon cluster are different
+widths, so with three flex children the middle one is only ever centred by
+accident. Absolute is safe because the bar is sticky and so a containing
+block, and because the three never meet (at 940px the sides take about 240px
+of the 812px between the paddings). Below the breakpoint nothing changes: the
+links are `display: none`, the nav goes back to `static`, and the bar keeps
+the page's own 18px gutter.
 
 **Desktop chrome is pointer-gated, not width-gated.** The bottom bar hides at
 940px and `HeaderNav` takes over; the coach-rail arrows key off
@@ -805,6 +1366,28 @@ profile header and the Request private session button under Contact. A coach
 whose books are full still wants the question about Tuesday's class, so "full"
 must not mean "unreachable".
 
+**A class can carry a picture, and it is the thing the share card is made of.**
+`classes.image` is a small data URL like every other photo here, optional
+forever, and it rides along on `class_templates` and `studio_classes` too: a
+picture belongs to the class rather than to whoever wrote it down first, so
+pulling a class in from the studio's catalog brings it. Every picker in the app
+resizes through `readPhoto` in `src/lib/photo.ts` now. There were four copies of
+that routine and a class photo would have been the fifth; four copies of the
+thing that decides how big every image in the database is, drifting apart, is
+how one screen starts storing megabytes. The member editor is the one that
+stays its own: it centre-crops to a square because a member's picture is only
+ever shown in a circle.
+
+**One card sheet, two subjects.** `ShareCardSheet` takes a route and its words
+rather than a handle, so `/api/card/{handle}` and `/api/card/class/{classId}`
+share the theme picker, the share-a-file dance and the download fallback. The
+class card leads with the photo behind the same two scrims a profile wears, and
+falls back to the owner's `avatarColor` without one, so a class with no picture
+still makes something worth sending. Satori lays an absolute child out against
+the **padding** box, so the frame carries no padding and the content column
+inside it does: a picture inset by the padding and still 1080 wide hangs off
+the edge.
+
 **A class opens as a sheet from a list, and as a page from a link.**
 `ClassSheet` pulls up over whatever list you tapped, so adding reads as picking
 something up rather than going somewhere; `/{handle}/{classId}` stays because a
@@ -814,17 +1397,758 @@ points at exactly that. A server-rendered list keeps real `href`s and wraps in
 `classDetail()` is the one loader both use, so the occurrence rule (`?d=`, then
 the next date it runs) can't drift between them.
 
-**Your week is a shortlist, not a calendar.** `/week`, behind the header icon,
-lists only the classes someone added, from today forward, and empties itself as
-the week passes. Three things keep it from reading as "fittlist wants to be your
-calendar now": it is short and partial, every row can leave, and the bottom of
-it offers Share my week rather than a calendar export (the `.ics` feed lives on
-the account page until the Google Calendar work lands). Don't add a month grid,
-empty days, or a time gutter. The badge counts what's still ahead
-(`weekCount()`), not everything ever added: a number that only grows is a
-scoreboard rather than something you can act on. Following is everything from
-the coaches you follow; Your week is the ones you picked. Those have to stay
-legibly different.
+**The class overlay scrolls inside a layer, never on itself.** The overlay's
+backdrop blur makes it the containing block for every `position: fixed`
+descendant, so when the overlay was its own scroller, the back and share
+circles and the bottom pill all rode away with the content. The scroll lives
+in `.classoverlay-scroll` now (ClassSheet and PlanSheet both), and the fixed
+chrome stays put, which is what "floating" meant. The class photo runs to the
+very top edge of the screen (`.classoverlay-img` swallows the body's top
+padding and the safe area with a negative margin), and the circles sit on the
+picture rather than in a band of paper above it. While any overlay or bottom
+sheet is up, `ScrollLock` freezes the page behind it (`body.sheet-open`,
+watching `.sheet-scrim`, `.classoverlay` and `.avoverlay`): a background that
+scrolls under an overlay breaks sticky footers and loses the list you came
+from.
+
+**The word is "add", never "save".** A class goes into your plans, the pill
+says Add, the note says Added, and the row that offers the calendar feed says
+"the classes you added". "Saved" is what a form does and what happens to an
+image, and using it for a class made the list sound like a folder rather than
+a plan.
+
+**The control that puts a class in your plans is a ribbon, not a heart.**
+A heart says favourite and means "I like this"; the tap puts the class on a
+list called Plans, and the glyph is the bookmark ribbon, because the ribbon is
+the one mark everybody already reads as "keep this". It was a calendar for a
+week, which said the right thing to nobody at a glance. The word stays Add
+(never save; see below), the pill is an empty ribbon that fills in solid, and
+the sheet's pill, the card's corner button and the swipe all wear the same
+pair, because one idea gets one glyph.
+
+`bookmark_added` in `Icon.tsx` is hand-drawn: the filled ribbon carried a
+tick cut out of it for a while (the same evenodd-hole construction
+`event_added` still uses), and the tick came off, because solid against the
+outline at rest already says in or out and the hole was one mark too many
+at row size. Still one `currentColor` path, so it reads on the dark pill,
+the card and the tab bar alike.
+
+**The ribbon on a row carries its word.** A glyph alone is a mark people
+have to be taught, and the one action the whole member side turns on cannot
+be the thing nobody recognises: the row now reads an outline ribbon and
+Add, filling to a solid ribbon and Added on the tap. It is the label that
+changes as well as the fill, because Add is an offer and Added is a state,
+and the note that answers already says the same word. The cost is a word
+repeated down a long list, and it is worth it while nobody has learned the
+mark; when everybody has, the word is what comes off, not the glyph.
+`.evcard-add` is an auto-width hit area rather than a fixed circle, and the
+row's first line reserves room for it (`:has(.evcard-add)` on the coach chip
+and on a bare `.ps-enm`, which is what a gym's row leads with, since a gym
+has no coach to name). The gate matters: a coach's own teaching rows carry
+no such button and must not reserve the space. The spoken name contains the
+visible one on all three call sites ("Added to your plans", not "In your
+plans"), or saying "click Added" reaches nothing.
+
+**Every schedule is the same flat row now.** Following (`.feedagenda`),
+both calendars, a coach's public page and a studio's page (`.callist`)
+strip the card skin from the shared `.ps-event` row: transparent ground, a
+hairline under each row, a rule under each date heading, and the bar down
+the left carrying the colour that matters there (the coach's own on
+Following and their public page, the same one their avatar's ring wears
+when picked on the strip via `--avring`, with the All circle ringing in
+ink; the kind's on the calendars; the studio's derived colour on its own
+page). The row is bottom-aligned: the name and location sit on the
+duration's shelf, however many lines each side carries. Whose a row is
+rides its own line above the name (`.ps-shifttop`), the spot the coach
+chip takes on a Going row: Shift in the brand wash (`.ps-tag-shift`,
+`--si-tint` under `--si-ink`), Added by you on personal rows in the
+personal slate's wash with ink text (`.ps-tag-added`), each tag wearing
+its kind's colour quietly enough that the name stays loudest. The Add
+ribbon rides the top-right corner as the bare glyph (no circle: the
+button's box is only the hit area), sitting level with the coach chip's
+line, and fills in ink when the class is in; the
+member's remove X takes that corner on their week. Both are
+siblings of the row, never children, because a button inside a link is not
+a thing. The share circle came off every row (sharing lives on the class
+sheet, where one class has the whole screen), so the ribbon is a row's one
+action. On your own schedule a Going row wears the filled ribbon too, and
+tapping it removes the class, with Undo in the toast rather than a
+confirm: the way back is cheaper than the question. On the public page the pair loads the viewer's marks server-side so
+the ribbon starts right; a photo per row was tried and read as a poster
+wall, so the overlay and the share card keep the photo, where one class
+has the whole screen. The public page's rows name the coach above the
+class, redundant on purpose (the header already says who), so the row is
+Following's row exactly. The `.evcards` card skin has no schedule left to
+dress (the rota keeps its own dense rows: a working surface where density
+is the point).
+
+**A day is a band, and it wins on the opposite axis to the class names under
+it.** The heading used to be the same visual species as the classes it
+introduced: large, bold, dark, left-aligned, the same weight. A heading that
+competes on the axis its own contents own doesn't read as a level above
+them, it reads as another entry, and making it bigger only sharpens the
+fight. So `DayBand` (`src/components/Agenda.tsx`) goes the other way: small,
+wide-tracked, uppercase, the day name left and the date right
+(`dayBandParts` in `format.ts`, which is where Today and Tomorrow are
+decided). Splitting them is what keeps the right-hand column aligned down a
+long scroll, and it is why the calendars carry no em dash.
+
+The band has no ground of its own and no top rule, only the words and the
+line under them. It was `--card` between two hairlines for a while: a
+darker cream sank into the page and turned the list earthy, and the white
+strip that replaced it read as a box drawn around a heading rather than a
+heading, three edges for one idea. The bottom rule alone does the
+sectioning, and it runs the full width of the screen, which is what makes
+it read as a break at all. It also stays out of the colour doctrine's way: the
+brand orange, the green and the blue already mean teaching, going and
+personal, and a band tinted any of them would be a fourth claim on a taken
+meaning. Today's name in `--si` is the list's one spot of brand.
+
+It pins wherever the list scrolls under chrome: both calendars, Following and
+Discover's Classes half (`.callist` and `.feedagenda`, `top:
+var(--dayband-top)`). `publishBandTop` is the single writer of that number
+and `useBandTop` the only way to keep it current, watched with a
+`ResizeObserver` because both the header and the chrome change height with
+the view. A calendar passes its own pinned block (`CalSticky`); Following and
+Discover pass nothing, because everything above their lists scrolls away and
+only the app header is left. Sticky is bounded by the day group, so the last
+band lets go at the end of its own day instead of riding the scroll to the
+bottom. A profile and a studio page (`.pub`) have their own pinned name row
+and set it back to `static`.
+
+**Every screen that renders sticky bands has to call `useBandTop()`**, and
+this is the trap: the variable lives on `documentElement`, so a screen that
+doesn't set it inherits whatever the last screen did, and the CSS fallback
+is a guess. Discover shipped without the call and its bands pinned halfway
+down the phone, through the middle of a class row. A new list that wears
+`.callist` and forgets this looks broken in exactly that way.
+
+The scroll landings key off the same measured number
+(`.callist .ps-daygroup` and `.monthblock` both take `--dayband-top` plus
+8px). They were hardcoded at 165 and 190, and the header has changed height
+twice since, each time leaving a gap over whatever Today landed on. A
+constant that has to track a measured thing is a constant that will be
+wrong again.
+
+The band bleeds by 18px, the same pull `.calsticky` uses directly above it,
+and deliberately not by the page gutter: the list's wrapper keeps its 18px
+at the desktop breakpoint while `.pad` widens to 38, so bleeding by the
+gutter ran the band 20px past the column on each side.
+
+The band is the day and its date, and today wears a dot. It carried a count of
+the day's classes across from the name for a while, and that came off by Matt's
+call: it answered a question nobody opens this screen to ask, because the rows
+underneath are the answer and they are right there, so a number beside every
+heading down a long scroll is arithmetic the list is doing at you.
+`.ps-daycount` renders nowhere now and `DayBand` takes no `count`.
+
+What replaced it is a 6px brand-orange dot before today's label, and nothing
+else on the list has one. Today is the heading somebody is looking for when
+they open the app, and the word alone meant reading headings to find the place
+you already meant to be. It cannot be read as one of the relationship colours,
+because nothing else in a band is coloured at all.
+
+The weekday abbreviates ("Wed — Aug 6"): three letters carry the day as well as
+nine at this size, and a band running to "Wednesday" pushes its own date toward
+the edge at 390px. The relative words lead their date rather than replacing it,
+and the weekday they displace joins the date ("Today — Wed, Aug 5"), or Today is
+the one band not saying which day it is. `dayBandLabel` is the single definition
+and `fmtDayHeaderRel` just calls it, so a heading and a band can't word one day
+differently. That dash is the date label's own, the same exemption
+`fmtDayHeader` carries, and it needs the `check-copy-ignore` pragma or the build
+fails.
+
+`AgendaDay.label` is the casualty and is now written everywhere and read
+nowhere. Removing it touches eight files and is its own commit; until then,
+editing it changes nothing on screen.
+
+**A member's add ends on the share moment, one tap later.** Publishing a
+class ends a coach on `ClassLiveSheet` because that is when the thing became
+worth handing on; a member's add ended on nothing, and the poster of their
+week sat behind a small pill between two controls that only change how you
+are looking. Landing on `/week` from an add (the `?hl=` "See it" carries)
+offers it: the same `.folhint` note the personal add already uses, Share my
+week and Not now. It is deliberately not a second link in the note the add
+itself puts up, which is transient, already carries two things, and pops on
+somebody else's profile where a poster of your own week is a jump; here the
+picture is about what is on the screen. It is gated on `bare` (offering a
+picture of an empty week is the app talking to itself) and on
+`fl-week-share` in localStorage, which either button sets: taken once,
+answered forever, per device the way the follow hint's is. The coach's
+`/app` is deliberately untouched, because their Share is a different sheet
+and their share moment already exists.
+
+**"See it" points at the class it means.** The note that answers an add
+offers a way to the week it joined, and a week is a long list: arriving at
+the top of it and hunting for the row you just added is the work the note was
+meant to save. The link carries `?hl={classId}.{iso}` and `HighlightOnLand`
+lights that occurrence for three seconds and scrolls it into view. It works
+off the DOM (`data-cid`/`data-d`, which the rows already carry for
+ClassOpener) rather than threading state through the list, because the
+highlight is a moment rather than something the week owns. Two things it
+learned the hard way: the row is not painted on the first frame after a
+client-side tap, so it waits for the row and gives up after four seconds
+rather than checking once; and a coach's calendar builds its own markup, so
+those rows had to be given the two keys or the highlight went blind on
+`/app`. The `/week` route carries `hl` through its redirect to `/app` for the
+same reason.
+
+**The note no longer offers the private option, by Matt's call.** This
+reverses the rule above it: the moment of marking was where the choice lived,
+and now nothing offers it. `setGoingVisibility` still exists and
+`attendances.isPublic` still means what it meant, but no surface calls it, so
+a mark is public to your followers with no way off. That is a gap rather than
+a decision that has landed somewhere: the setting needs a home (the class
+sheet's own row, or Privacy and reach) before this can be called finished.
+
+**One class row, on every list of them.** `src/components/Agenda.tsx` is the
+day headings, the `.ps-erow` wrapper and the `.ps-event` row itself, and both
+calendars render it. It was written when Following and Your plans had drifted
+into two designs for one idea: a card with the coach's face and the time down
+the right on one tab, a flat sub-line with no face at all on the other, and a
+member flipping between them was reading two apps. Following is gone and the
+lesson is not: what wraps a row still differs, which is why the caller passes a
+render function rather than a flag. `SwipeGoing` went with the merged week to
+the peek, where saving now happens; the member's week puts the remove X beside
+the row. The X is a sibling and not a child because a button inside a link is
+not a thing.
+
+**Following buys a face, and the face is the door.** `myCircles()`
+(`src/lib/circles.ts`) is the tray at the top of both calendars: everyone you
+follow, fresh-first then alphabetical, with `fresh` computed from
+`classes.createdAt > subscribers.peekedAt` and a null `peekedAt` counting as
+new, because somebody you just followed has by definition everything to show
+you. `coachPeek()` (`src/app/actions/peek.ts`) is one coach's fortnight behind
+that face, and saving from it is the only thing that puts their class on your
+calendar.
+
+That inversion is the whole of v4 and the reason the tray is load-bearing
+rather than decoration. Under the old model a follow poured a coach's week onto
+your schedule, so saving barely changed the screen, which is a terrible way to
+find out whether anybody saves.
+
+Five things about it are decisions, not details.
+
+*The peek asks `publicSchedules()`*, the same loader the coach's own page and
+both digests ask, so a coach's week can never say one thing in the peek and
+another on their page. A shift's base is `s/{slug}` because the gym owns the
+class; the header still names the coach whose circle was tapped, never whoever
+the rota has on the first row, because this sheet answers what Erin has on
+rather than who is working.
+
+*The ring goes out when the peek opens, not when it closes.* The ring promises
+there is something in here, and that is kept the moment somebody is looking.
+Firing on close loses it to a reload or a back swipe, and a ring lit over
+classes already read is one nobody believes twice.
+
+*The tray renders on an empty calendar*, outside the `bare` gate that strips
+the rest of the chrome, because a week with nothing on it and five circles
+above it is the exact state where the tray is the thing to tap. It renders not
+at all for an account that follows nobody: a rail with one plus and no faces
+reads as broken.
+
+*Both calendars wear it.* A coach follows coaches, and a coach who follows five
+people and sees no faces would conclude the button does nothing.
+
+*A peek row opens a sheet, not a page, and the swipe beats the sheet.* Every
+other list in the app opens a class over what you were reading; as bare links
+these rows threw the peek away, so you tapped one class out of a fortnight and
+landed somewhere with no way back to the other thirteen. `ClassOpener` sits
+**inside** `SwipeGoing` rather than around the list: both catch the click in
+the capture phase, so the outer one goes first, and with the opener around the
+list every completed swipe also opened the class it had just saved.
+
+`scripts/tray-smoke.mjs` walks the whole loop. If it goes red, following, the
+app's core action, does nothing visible.
+
+**One of your own can be opened, changed and handed on as a picture.** A
+personal class had no page behind it and so no way in at all: a row somebody
+had typed out in full was grey text they could only delete. `PlanSheet` wears
+the class overlay (same gesture, same kind of row, so they ought to feel alike)
+and offers the two things there are: `Adder` again with `personal.editId` set,
+and the same `ShareCardSheet` a public class uses, pointed at
+`/api/card/plan/{id}`. That route is the one thing that can leave, and it
+leaves as a file: it is drawn only behind the owner's session, there is no URL
+anyone else can open, and posting the picture afterwards is theirs to decide,
+which is the same deal as a photo out of the camera roll. The card itself is
+drawn in `src/lib/cardimage.tsx` rather than in either route, because a coach's
+class and one of your own make the same picture from a different row.
+
+An edit is one row moving, not a set being rewritten: `updatePersonalClass`
+takes the first day picked and the pills go single-select, the same way a gym's
+rota slot behaves and for the same reason. Nothing points at a personal row the
+way a Going mark points at a class, so there is no delete-and-reinsert here.
+
+**And taking one off is `PlanSheet`'s job too, for the reason it is that
+sheet's job to open one.** For months there was no way at all on a coach's
+calendar: the editor's delete link renders on `isEdit`, which is
+`prefill?.classId`, and a personal row is edited with `personal.editId`, so the
+link never drew and `doDelete` would have bailed on its first line anyway. The
+only remove wired anywhere was the member's X on `/week`. Both calendars
+already open `PlanSheet` for a personal row, so one remove there is a remove on
+both, and the X is a shortcut to the same act rather than the only door. It
+takes a confirm where a Going mark takes an Undo in the toast: a mark comes
+back from the coach's page, and a row somebody typed comes back only by typing
+it again. `removePersonalClass` revalidates `/app` as well as `/week`, or the
+coach's own screen keeps the row it just deleted.
+
+This is the fourth bug of one shape: a capability built on the member side and
+never wired on the coach side, invisible because the two screens look alike.
+Anything a personal row can do has to be checked from `/app` as well as
+`/week`.
+
+**Schedule is everybody's calendar, and the rows say which hat.** A coach's
+is `/app` and a member's is `/week`, and both hold everything the person is
+actually doing: the classes they teach, the shifts a gym has them on, the
+classes they added, and their own private entries, one day list in time
+order. `myWeek()` in `src/lib/week.ts` is the added-and-own half for both
+(weekly personal entries expand across a nine-week horizon now, because a
+recurring entry that only showed its next date read as a class that
+stopped); `mySchedule()` is the coaching half. The calendar pages pass
+`myWeek` a `pastDays` window (`CAL_PAST_DAYS` in `format.ts`, eight weeks)
+so the Month grid's dimmed days have data under them; every other caller takes the
+default of none, which is why the share poster's starting day stays a
+future one. Every row wears its
+relationship as its colour (see the colour doctrine below), and tapping
+does what the row is (a teaching row opens the editor, a shift or a Going
+row opens the class sheet, a personal row opens `PlanSheet`). The List view
+holds only what is real: no empty days, no time gutter, and no View more:
+it runs the whole horizon its data covers (nine weeks, which is what
+`myWeek` expands personal entries across, so both halves of the calendar
+agree how far forward goes). A calendar you have to ask for more of is a
+calendar you fight. It still stretches past that silently when a day
+tapped in the Month grid lies beyond it. The public profile keeps its
+View more, because a stranger's page is a pitch rather than a tool. Following is
+everyone you follow; Schedule is you. Those stay legibly different.
+
+**An empty calendar has no chrome at all.** `CalEmpty` in `CalendarBits.tsx`
+is the whole screen when there is nothing on it: the figure, one line, and two
+buttons. The month title, the view button, the filter, Share, Today and the
+orange Add all come off, because every one of them is a way of looking at
+something and there is nothing to look at; a view switcher between three empty
+views and a filter that can only hide nothing teach somebody the screen is
+complicated before it has done anything for them. Both calendars render it, and
+what differs is only the words and which button leads: a member looks first
+("Add classes you like to attend, or discover classes already on the
+schedule", Discover filled), a coach publishes first ("Add the classes you
+coach", Add your first class filled), because a coach with an empty week has a
+public page that does not work yet and sending them browsing would be the wrong
+instruction. The one that leads is drawn first as well as loudest; a filled
+button under an outline one is a sentence read backwards. `bare` is computed
+from the raw rows, never from the filtered ones: a kind switched off is a way
+of looking, and "nothing coming up" is a week that has run its course and keeps
+its chrome. It reuses Following's illustration deliberately, until there is a
+second one.
+
+**The calendar has views, and the month is its name.** `CalendarBits.tsx`
+is the chrome both calendars share: the month as the title at the gutter,
+then the header's right cluster of three, the view button, the filter
+button and the orange plus. The view button (`.calmenu`) wears the current
+view's own glyph (the list lines, a single-day calendar, the month grid)
+and opens the view sheet; it says what you're looking at, not that a menu
+exists, which is why the hamburger went. The views are List, Day and Month
+(Week is deliberately not built yet).
+The view is a preference (`fl-cal-view`, localStorage) and survives
+arrival, unlike the filters.
+Day is one day as an hour grid (`DayGrid`): rules per hour, each event a
+wash in its kind's colour placed by when it is, overlaps splitting into
+lanes rather than stacking, the window an hour either side of what the day
+holds, bounded to a sane training day. The selected day's week rides the
+sticky chrome as a week strip (`DayStrip`, chevrons walking whole
+weeks, today ringed, the pick filled orange). Every week the app draws as
+a grid (the Month scroll, the mini calendar, the day strip) starts on
+Sunday and ends on Saturday, the US week, by Matt's call; it was
+Monday-led for a day and read wrong against every paper calendar. Tapping an event does what
+its list row would: a teaching row opens the editor, a shift or Going row
+the class sheet (`DayGridEvent` carries `onTap`, or `data-cid`/`data-d`/
+`data-base` for a wrapping `ClassOpener`), a personal row `PlanSheet`.
+Entering Day resets the scroll (`scrollCalTop`), because the List leaves
+its scroller deep in the compensated past and a shorter view inherits that
+offset as a random landing; Today in Day view re-picks today rather than
+scrolling.
+The month title is a door too (`.calhead-door`, the title alone: it wore
+a chevron for a day, and the glyph was saying what the tap already says):
+it drops `MiniCalPicker` from the sticky header the way Google Calendar's
+does, one compact month with chevrons walking months, a dot under any day
+that holds something (the same `monthItems` map the Month grid draws
+from), and a click-away scrim. A picked date jumps the view that's open:
+Day moves its selection, Month scrolls to that month, the List scrolls to
+the day, and a past date picked from the List opens Day instead, because
+Day is the one view that can show any date while the List only grows into
+the past as the scroll asks for it. The stacked `hm`/`ap` clock a `WeekItem` carries says "PM"
+uppercase, so anything folding it back to minutes compares
+case-insensitively; a `=== "pm"` put every evening class at dawn on the
+grid. Month is one continuous scroll of months
+(`MonthScroll`, this month first in view, `MONTHS_BACK` behind it and
+`MONTHS_AHEAD` ahead, no chevrons), each block naming itself while the
+sticky title follows whichever month is under the header and the weekday
+initials pin with the chrome (`MonthHeadRow`); a colour pill per class,
+today filled, past days dimmed rather than dropped, because a grid you
+can look back across is a record.
+A tap on a future day lands on that day in the List (`day-{iso}` ids on
+the day groups are the landing spots), and picking List from the view
+sheet lands at today, because the month scroll can be months deep. The
+grid's plans data comes from
+`myWeek`'s nine-week horizon, so months beyond it show teaching rows only.
+The List's dates are heading rows, everywhere, each with a hairline rule
+under it and real weight (`.callist`/`.feedagenda .ps-daycol`, 700 where
+the base rule reads 500): a left
+date rail was tried for a night and came back out, because one list
+grammar across Following and the calendars beat the grid-flavoured margin.
+The two nearest days head their sections as words, Today and Tomorrow
+(`fmtDayHeaderRel`), the same words Following already used; the dates
+resume from there.
+
+**The calendar's header sticks, and the List starts at today.**
+`CalSticky` pins the month row under the app header (it measures the
+brandbar, which is itself sticky, for its offset), plus whatever the view
+adds beneath it, the Month grid's weekday initials or the Day view's week
+strip; the list slides beneath the chrome.
+
+The List used to walk backwards: `usePastReveal` put a sentinel above it and
+prepended a slice of past days each time the top came into view, compensating
+the scroll so the screen didn't jump. It is gone, by Matt's call, and the
+reason is the circles tray that now sits above the list. The faces are the top
+of Schedule and the whole of what a follow buys, so a list that grows over them
+puts them a mile up a scroll nobody wants to make, which makes the walk back
+not worth taking either. Deleting it is deleting the wrong door, not the room:
+the Month grid still dims past days rather than dropping them and Day view
+still shows any date, so both reach what has been without a scroll at all, and
+the past will get a home of its own when one is designed.
+
+The loaders are untouched on purpose. `myWeek` still takes its `pastDays`
+window (`CAL_PAST_DAYS`, eight weeks) because the Month grid draws its dimmed
+days from exactly that data; only the List stopped rendering it. A standing
+weekly class still extrapolates into that window without a start bound: eight
+weeks of "your Tuesday class ran on Tuesdays" is almost always true, and the
+honest alternative (bounding on `createdAt`) breaks the moment an edit
+reinserts the rows.
+
+**Share is in the header's cluster; Add and Today float at the bottom.**
+The top right of the calendar carries three controls of one drawing
+(`.calmenu`, `.calfilter`, `.calshare`, all 40px, white, their edge a shadow
+rather than a stroke): the view button wearing the current view's own glyph,
+the filter's tune slider, and Share. Share is the one of the three that does
+something rather than changing how you are looking, which is why it is the
+only one wearing a word; its sparkle carries the brand colour
+(`.calshare-ic`) while the pill stays white, so it reads as part of the
+cluster rather than a fourth kind of thing.
+
+`CalBottomBar` floats the other two over every view on both calendars, also
+strokeless pills whose edge is their shadow: Today bottom left, and Add bottom
+right in the brand orange, wearing the plus and its word. Today lands on the
+first not-past day (`scrollToToday`, which knows the coach shell scrolls its
+`.stage` where the tabs layout scrolls the body).
+
+These two have traded places three times and this is where they have settled,
+so the argument is worth keeping rather than relitigating. Add is under the
+thumb because adding is the thing somebody opens this screen to do, and the top
+right corner is the one part of a phone a thumb cannot reach. Share went the
+other way for a build on the argument that a plus needs no word and no reach,
+so it costs nothing as a small circle up there; that lost, because the loud
+colour should follow the primary action and the primary action here is putting
+something on the calendar. Share is occasional and deliberate, it needs its
+word, and the header is where a thing you do once a week belongs. Take it as
+settled unless the screen's job changes.
+
+The row's gap is 10px and not 12px,
+and that number is load-bearing: at twelve, "September" lost its last
+letters to the ellipsis by six pixels. The title is also the thing that
+yields (`.calhead` truncates, the controls never shrink), because a month
+in another year carries one ("September 2027") and the cluster it would
+otherwise shove off the edge is the way out of the screen. Changing the
+pill's width or the gap means measuring the longest ordinary month again.
+The Add button asks which kind first: both
+calendars open the same sheet and pre-answer the form, so the Adder's own
+chair question never shows from here: a coach's offers three rows (a class
+you're coaching, a class you're going to, anything else), a member's the
+last two. "Anything else" is not a new form: `personal.event` on `Adder`
+is the same personal row with the class-shaped parts put away. No studio
+picker (a free-text Where instead, riding the existing `location` column),
+no type, no photo, and Description reads Notes; because no studio can be
+picked, nothing an event says ever reaches a studio's catalog. It lands
+under the Personal slice wearing no badge, like every personal row, and
+its CTA and toast say calendar rather than plans, because a physio
+appointment is not a plan you train by. Editing an existing personal row
+keeps the full class form: the row doesn't record which flavor typed it,
+and hiding filled-in fields would eat data.
+
+**The colour is the badge: the accent bar says your relationship to the
+row, and the checkmarks are the legend.** Teaching wears the brand orange
+(`--si`), Going the same green a yes always is (`--go`), Personal a bright
+blue (#3b82cc; it was a purplish slate and read as mud beside the other
+two), on the calendars' flat rows (`.callist`, the same flat treatment
+Following wears, with the bar coloured by `ev-*` on `.ps-event`) and as
+tinted washes on the Month grid's pills (`.monthpill`, the colour at 16%
+with its own darker ink). A full card fill shipped for a night and read as
+a poster wall, which is the lesson the photo cards taught first; the bar
+says the same thing at a glance without shouting. The corner badges
+(`.ps-corner`, `.ps-goingtag`) said it in words and are gone. The filters
+live behind the header's filter glyph now (`.calfilter`, the tune slider):
+`KindFilterSheet` is a bottom sheet of switches, one row per kind the
+calendar holds, each wearing its colour as a dot (`.kindfilter-dot`), so
+the sheet is the legend and the filter at once. Everything is on by
+default and off resets on arrival (a filter is a way of looking, not a
+fact worth storing); the rows narrow live behind the sheet, and the pill
+rail they replaced (`KindChecks`) is gone. The glyph renders whatever the
+calendar holds, and a sheet with one row still explains the one colour. Colour by
+relationship is three meanings, three colours, stable everywhere. Shift
+rides its own line above the name (which kind of yours it is comes before
+what it is); Private and Duplicate stay on the name line, facts about the
+class rather than about why it's yours. Saved is still not a word a class
+wears.
+
+**The poster covers a range you choose, one day to seven, and it starts where
+your plans do.** It used to be the seven days from today and to draw only the
+Going marks, so a member whose only class was nine days out shared a blank
+image with nothing to tell them why, and a member whose week was all their own
+entries shared an empty one every time. `/api/story/me` takes `from` and
+`days` (clamped to 1..7) and draws both halves of a week; `ShareMyWeekSheet`
+defaults `from` to the first day the list actually holds something, which is
+what stops the empty poster being the first one anybody sees. Seven is the
+ceiling because the canvas is fixed and `planStory` has to fit it; one is the
+floor because "I'm at this tonight" is a real thing to post. The kicker names
+the range it drew rather than the day it was made.
+
+**Share is the calendar's own button, not a tab.** `/share` is the editor, and
+the one control that opens it is `CalShare` in the top right of the Schedule
+screen, on both calendars. It was the middle of the tab bar for a stretch,
+raised and filled, then flat and outlined; it came off entirely by Matt's call,
+and the reason is the one the bar keeps teaching: Share is an act rather than a
+place, and a bottom bar is for the screens you move between. An act belongs on
+the screen it is about, which is the week it draws.
+
+The cost is real and worth writing down: an empty calendar drops its whole
+chrome (`CalEmpty`), the Share button with it, so somebody with nothing on
+their week has no route to the editor at all. That is defensible, because a
+picture of nothing is not worth making and the empty calendar's own job is to
+get a class onto it, but it means the editor's empty state now only catches the
+case where the *range* is bare and the calendar is not.
+
+The editor is a full screen that opens *over* the app and carries no tab bar,
+which is why `/share` sits outside the `(tabs)` group. The X is the way off, and
+it is a `BackLink` with `anywhere`, so it pops to whatever is beneath and falls
+back to the feed for a URL opened cold.
+
+**It is the coach's old "Share your schedule" sheet, promoted.** A full-screen
+composer shipped first: preview on top, controls in a drawer that collapsed, a
+Story/Square picker in the header, a derived headline with an Edit beside it,
+one Share with Save quiet underneath. Matt preferred the sheet, and it is the
+better answer for the reason it usually is: everything fits in one scroll, so
+nothing is behind a pull, the picture is a thing you scroll to rather than a
+thing you uncover, and there is no state to be in. `ShareComposer` renders that
+sheet's own furniture (`.adderhead`, `.share-toggles`, `.storycustom`,
+`.stylepick`, `.storyimg`, `.publishwrap`) rather than a second set of controls
+that would drift from it; the page sets `--pad-b` because `.publishwrap` pulls
+itself down by it and a sheet was the only thing that used to.
+
+Three things came off in the move and one came with it. **My week / Today is
+gone**, and the Classes picker stands where it was: a range was the wrong
+question, because the answer is this coming week nearly every time, and what
+people actually want to change is which classes are on the picture. `SPAN_DAYS`
+is 7 and there is no control for it. **The headline field is gone**; it maps
+from the hat (`HEADLINE`), and the editor sends it explicitly on every request
+rather than letting the route fall back to `storyPrefs`, because a coach who
+typed one into the old sheet still has it stored and inheriting it would put
+Coaching words over a Going picture. **Story/Square is gone** from the header;
+the square canvas still renders at `/api/story/compose?fmt=square` and
+`share-smoke` holds it there so it cannot rot while it waits for a control to
+offer it again, which makes it a thing to finish rather than a thing that is
+finished. What came with it is the Coaching/Going segment, which the sheet never
+had: a member has one hat and gets no segment at all, and without it they would
+have no way to share.
+
+The poster is sized by height rather than width (`min(44vh, 420px)`), because
+what it has to fit inside is the room the controls and the sticky footer leave.
+At the sheet's 250px it ran under the buttons and the last day of the week was
+something you had to scroll for.
+
+**One loader and one paint behind every share image.** `shareWeek()` in
+`src/lib/shareweek.ts` is what goes on a picture for a range and a hat, and both
+the image route and the screen ask it: the picker says "3 of 5 showing" and the
+picture has to be those three, which two queries were never going to keep true.
+`renderStory()` in `src/lib/storyimage.tsx` is the paint, shared by all three
+routes (`/api/story/[handle]`, `/api/story/me`, `/api/story/compose`). There were
+two copies of that tree before the composer and they had already drifted; a third
+was the point at which a fix to one stopped being a fix to any. What differs
+between them is which rows they load and what the footer says, which is data, so
+the data is the argument.
+
+**The classes sheet adds as well as picks, and that is the point of the whole
+screen.** Choosing what goes on the picture and keeping your calendar current
+are the same list, so doing one does the other: `+ Add a class` at the foot of
+the sheet opens the ordinary `Adder`, which is why `/share` loads the studio
+directory, the templates and the type list the way `/week` does. A class typed
+there lands on the calendar, and when a studio was named it lands in that
+studio's catalog too, so the next person to add it gets the details already
+filled in and a studio that isn't here yet arrives in the directory with a real
+class on it. Somebody making a picture of their own week fills the inventory in
+behind them, which is the growth argument for this screen and the reason the
+form has to be one tap from the picture rather than a trip to another tab and
+back. The hat decides the form: Going gets the personal adder, Coaching gets
+the publishing one, and the segment above has already answered the chair
+question so the form never asks it again. An add changes the week without
+changing a single control, so the picture has no reason of its own to redraw
+and `bust` is that reason.
+
+The composer's state lives entirely in the query string, so the preview redraws
+without a round trip and the thing that gets shared is the thing that was on
+screen. `hide` is a list of `{classId}.{iso}` keys: a class row id alone is not
+enough, because one weekly class is one row on several dates and hiding Tuesday
+must not hide Thursday. Hiding is the image's business only and the sheet says so
+in as many words, because without that line people read a checkbox as a delete
+and stop touching the control.
+
+**Two hats, never merged.** A coach promoting the classes they teach and a coach
+showing where they train are two different posts with two different asks, so
+there is no combined view. A member has one hat, so the segment is removed rather
+than disabled: a control with one option is a control that teaches somebody the
+screen is more complicated than it is. The two hats keep separate hide sets,
+because a key hidden from one list means nothing in the other.
+
+**Square is a real second canvas, not a crop.** 1080x1080 against the story's
+1080x1920. `storyPadding()` and `listBudget()` both take the format, so the sums
+and the paint agree on either; a square is a little over half the height, so the
+same week summarises sooner on it and the furniture scales with it.
+
+**The margins are ordinary margins, by Matt's call.** They were 240 top and 280
+bottom for a while, held apart to clear Instagram's profile row and its reply
+bar, on the argument that the lockup is the acquisition channel and the last
+thing that should be covered. They are 104 and 104 again, which is what they
+were before that change: at the wider numbers a light week read as a band of
+content floating in a lot of nothing, and the composer shows the whole canvas,
+so that emptiness is what somebody sees while deciding whether to post at all.
+The cost is written down rather than left to be discovered: posted to Stories,
+the footer now sits inside the reply bar's zone and can be partly covered.
+`PAD_BOTTOM` in `storyplan.ts` is the one line back, and everything follows it
+because `listBudget` and `storyPadding` both read from there.
+
+**Not built, on purpose.** No stickers, drawing or freeform text: Instagram's
+editor is better than anything here and people decorate there anyway, and the
+value is that the output is automatically correct and on brand. No custom colour
+picker, no custom fonts, and the logo does not come off.
+
+**The tabs are two: Discover and Schedule.** Following was the third and is
+gone. It was a merged week across every coach you followed, and a follow no
+longer delivers a week: it delivers a face at the top of Schedule, and the
+classes behind that face reach a calendar only when somebody saves them. A tab
+pointing at a screen whose whole content has moved into another tab is a second
+door onto one room, and it was worse than redundant here, because the merged
+week answered "what are my coaches up to" first and for free, which is exactly
+why saving used to change nothing you could see.
+
+`/feed` survives as a redirect rather than a 404. It was the front door for
+months: it is in old emails, in bookmarks, in `?from=following` links out in
+the world, and on the home screen of anybody who installed the app while it was
+the landing. `activeTab` maps it to Schedule so it lights the tab it lands on.
+The merged week's own renderer (`FeedAgenda`) is deleted; the screen is in git
+at the commit that replaced it, and if saves per member stay flat in the beta,
+`v4-brief-two.md` says the answer is a "New from your coaches" strip under the
+circles rather than bringing it back.
+
+`landingHref()` answers per kind now, `/app` for a coach and `/week` for a
+member, rather than leaning on the two calendars' redirects: that would put a
+hop on every sign-in and every OAuth callback for half the app.
+
+Home was built and dark-launched behind `homeVisible()` for a while and is also
+parked: the route, the screen and `home.ts` are gone. `landingHref()` stays a
+function because the answer has now changed three times and every caller asks
+rather than assuming. The concept is kept, not lost:
+`homescreenspec.md` and its wireframe are still here, and the one part of Home
+that outlived it (Activity) moved to `src/lib/activity.ts` and `/activity`.
+A client can't ask who is an admin, so `AuthFlow`
+and `OnboardingWizard` still take the landing as a prop from their server
+parent rather than guessing.
+
+The tab is Discover and it wears the magnifier. It carried the compass
+while the header's corner held a magnifier of its own, because the same
+glyph must never be drawn twice on one screen; the corner is your face
+now, so the mark comes back to the tab that means finding something, and
+the `/search` box screen is still behind the directory's own search door.
+Plans is gone as a word in the chrome, and nothing counts a badge, because
+a number that only grows is a scoreboard. Schedule is your own calendar.
+
+**You is the face in the header's top right, not a tab.** It was the last
+tab, carrying your photo instead of a glyph, and it came off with Share by
+Matt's call: a person is not a place either, and the corner is where a
+profile door lives in every app anybody already uses. `AppHeader`'s
+`avatar` takes an `href` and the tabs layout passes `/you`; the magnifier
+that used to sit there came off in the same move, since Discover's tab
+wears that glyph again. On desktop the bottom bar hides and `HeaderNav`
+takes over, but the face is in the header at every width, so You is never
+the dead end that rule exists to prevent. The coaches-only shell has no
+member side and so no face: it keeps the gear, which is its one door to
+the account. `navTabs()` in `src/lib/nav.ts` is the one list both bars
+render, and it takes the Home flag rather than reading it, because both
+bars are client components and the answer is the server's. `/week` stays in the `(tabs)` route group and lights Schedule for
+a member; a coach landing on it is redirected to `/app`, and a member
+landing on `/app` is redirected to `landingHref()`. That second direction
+was missing for months and it was not a stray-URL problem: the installed
+app's `start_url` is `/app`, so every member who put fittlist on their home
+screen opened the coach's calendar on every launch, offering to add a class
+to a public page they cannot have and saying "add the classes you coach" to
+somebody who coaches none. The two redirects are one rule, and neither kind
+can arrive on the other's calendar. In `?from=`
+tokens and `backToFor`, "home" is no longer a destination and the Following
+feed says `from=following`; the class page honours both. The band's words are title case at 15px/500 (`.ps-dayname`, everywhere a band
+is drawn: Following, both calendars, a profile, a studio). It was uppercase and
+tracked at 800, then at 400, and neither was the point: what makes this a level
+above the rows is the rule under it and the count across from it, not the case
+or the weight. Size does the separating now and weight steps back out of the
+way: a point larger than the rows under it, a step lighter than a heading, which
+reads as a level above without shouting.
+`dayBandLabel` already produces "Today, Aug 5" in title case, so
+the CSS just got out of its way; the .13em tracking went with the capitals,
+because that is spacing for capitals and reads as gaps between letters in a
+word anybody can lowercase. Today's name is no longer brand orange either: the
+band says "Today" in words, which is the same claim said twice with a colour
+that means teaching everywhere else in the app.
+
+The current tab
+marks itself in the brand colour and nothing else: `.navtab.on` sets
+`--si` and every glyph is `currentColor`, so the icon and the word both
+take it, the way Airbnb marks Explore. It was a light orange wash behind
+the glyph, which is a second shape to read on a row whose whole job is
+five equals; before that it was a white capsule behind the whole tab,
+which was louder still. The rule holds in the browser bar and the
+installed app's glass pill alike: the bar is a different shape there,
+not a different way of saying where you are. Every header icon
+fills in on its own screen (`HeaderIconLink`); the fill is CSS on the
+first SVG path only, because the bell's clapper is an open stroke and
+filling it paints shapes nobody drew. A hamburger is deliberately not
+built: a lid over an empty shelf is where things go to be forgotten.
+
+**Home is parked, and Activity is what survived it.** `homescreenspec.md`
+(with its wireframe) is still the spec, and it is worth keeping: the reasoning
+about Upcoming, the people rail, the studios and the privacy line is the
+thinking, not the code. What shipped was the whole screen behind a flag only an
+admin could open, which is a screen nobody was using and a loader nobody was
+reading. It is deleted rather than left dark, because a dark screen still has
+to be kept working by everybody who changes anything under it.
+
+Activity is the exception and it moved out whole: `activityFeed()` in
+`src/lib/activity.ts`, rendered by `/activity`. The rules came with it, and
+they are the ones worth restating: only public acts reach it, a Going mark is
+public by default and a personal row has no column that could make one public,
+it groups by `seriesId` so a weekly class counts once, and coach posts lead
+because a coach putting next week up is the one thing there that regenerates
+without the follow graph growing.
+
+**Activity has no door, and that is a decision waiting rather than a decision
+made.** It sat behind a heartbeat in the header for a build; the icon came off
+by Matt's call, because the header is the search and the bell and a third glyph
+next to them was a screen asking to be visited rather than answering anything.
+The route, the loader and `activity-smoke` are all still here and still green,
+reached by typing the URL. That is exactly the dark screen the paragraph above
+argues against, and it is on purpose for now: what Activity needs is a home
+that is somebody's habit (a section on Following, most likely, where the people
+you follow already are), not a fifth icon. Until it gets one, this is a thing to
+finish, not a thing that is finished.
+
+The `.hm-*` classes in `globals.css` are Activity's now. Some of them only ever
+dressed Home and are dead; they are left alone deliberately, because guessing
+which is which by eye is how a live rule gets deleted, and a sweep is its own
+commit.
 
 **Feedback rides on the inquiry tables.** `inquiry_threads.kind` is `"inquiry"`
 (a visitor asking a coach about private sessions) or `"feedback"` (someone

@@ -35,18 +35,6 @@ export async function GET() {
           fontFamily: "Delight",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 1200,
-            height: 18,
-            background: t.accent,
-            display: "flex",
-          }}
-        />
-
         {/* the words, on the left */}
         <div
           style={{

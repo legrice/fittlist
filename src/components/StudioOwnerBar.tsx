@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateStudio } from "@/app/actions/studios";
 import { Icon } from "@/components/Icon";
+import { readPhoto } from "@/lib/photo";
 import { TypePicker } from "@/components/TypePicker";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -43,31 +44,7 @@ export function StudioOwnerBar({
   const [pWebsite, setPWebsite] = useState(props.website);
   const [pInstagram, setPInstagram] = useState(props.instagram);
 
-  // Resize the picked image to a small JPEG data URL before storing it.
-  const pickPhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 640;
-        let { width, height } = img;
-        if (width > height && width > max) {
-          height = (height * max) / width;
-          width = max;
-        } else if (height > max) {
-          width = (width * max) / height;
-          height = max;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
+  const pickPhoto = (file: File) => readPhoto(file, setPPhoto);
 
   // Fresh fields every time the sheet opens: the page may have changed
   // under us since the last look.
@@ -129,7 +106,7 @@ export function StudioOwnerBar({
                 aria-label="Close"
                 onClick={onClose}
               >
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
             </div>
 

@@ -6,7 +6,6 @@ import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 import {
   beginPasskeyLogin,
   beginPasskeyRegistration,
-  chooseFan,
   claimProfile,
   finishPasskeyLogin,
   finishPasskeyRegistration,
@@ -14,11 +13,12 @@ import {
   requestMagicLink,
 } from "@/app/actions/auth";
 import { requestInvite } from "@/app/actions/invites";
+import { rememberAfterAuth, takeAfterAuth } from "@/lib/afterauth";
 import { slug } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Wordmark } from "@/components/Wordmark";
 
-type Stage = "landing" | "sent" | "role" | "claim";
+type Stage = "landing" | "sent" | "claim";
 type SheetMode = "signup" | "login";
 
 const GoogleG = () => (
@@ -46,8 +46,9 @@ export function AuthFlow({
   inviter = null,
   claimAs = "coach",
   fans = false,
+  landing = "/week",
 }: {
-  startStage: "email" | "role" | "claim";
+  startStage: "email" | "claim";
   via?: string | null;
   providers?: { google: boolean; apple: boolean };
   inviteOnly?: boolean;
@@ -65,11 +66,15 @@ export function AuthFlow({
    *  it from users.kind; the client can't, on a fresh load. */
   claimAs?: "coach" | "fan";
   fans?: boolean;
+  /** Where a finished sign-in lands. The server computes it (Home is
+   *  dark-launched, so it is Following for everyone but an admin), because a
+   *  client can't ask who is an admin. */
+  landing?: string;
 }) {
   const router = useRouter();
   const search = useSearchParams();
   const [stage, setStage] = useState<Stage>(
-    startStage === "claim" ? "claim" : startStage === "role" ? "role" : "landing",
+    startStage === "claim" ? "claim" : "landing",
   );
   const [sheet, setSheet] = useState<SheetMode | null>(null);
   // Fan side (flag-gated): who's signing up — a coach or someone following one.
@@ -104,11 +109,15 @@ export function AuthFlow({
     setPasskeyable(typeof window !== "undefined" && !!window.PublicKeyCredential);
   }, []);
   // Arriving from a coach's page with a door already chosen: "?join=login"
-  // opens the log-in sheet, "?join=signup" the sign-up one. Tapping Log in on
+  // opens the sign-in sheet, "?join=signup" the sign-up one. Tapping Sign in on
   // a profile and landing on the marketing page would just be a second tap.
   useEffect(() => {
     const join = search.get("join");
     if (join === "login" || join === "signup") setSheet(join);
+    // The page they left, kept for the far side of the flow. It goes into
+    // storage now because the flow from here is a sheet, a passkey prompt and
+    // sometimes a three-step wizard, and none of those carry a query string.
+    rememberAfterAuth(search.get("next"));
     // Read once on arrival; changing the sheet afterwards is the user's job.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -123,14 +132,19 @@ export function AuthFlow({
     pendingFan.current = fan;
     if (fan) setRole("fan");
     if (needsProfile) setStage("claim");
-    else router.push(fans || fan ? "/feed" : "/app");
+    // Somebody who tapped Follow on a coach's page came here to do that, not
+    // to read their own feed. The wizard consumes it instead when there's one
+    // still to come, so this only reads it when the flow ends here.
+    else router.push(takeAfterAuth() ?? (fans || fan ? landing : "/app"));
   };
 
   const submitPassword = () => {
     if (!email.trim() || !password) return;
     setError("");
     startTransition(async () => {
-      const res = await passwordAuth(email, password, fans && sheet === "signup" && role === "fan");
+      // Everyone signs up as a member: "do you teach" is the wizard's
+      // first page now, and setTeaching flips the account there.
+      const res = await passwordAuth(email, password, fans && sheet === "signup");
       if (!res.ok) {
         setError(res.error ?? "Something went wrong.");
         return;
@@ -240,7 +254,7 @@ export function AuthFlow({
   return (
     <section className="screen ob">
       <div className="pad">
-        <Wordmark variant="ink" className="mark" beta />
+        <Wordmark variant="ink" className="mark" />
 
         {stage === "landing" && (
           <>
@@ -325,7 +339,7 @@ export function AuthFlow({
                 here to do, so they sit together. Everything else is a fallback
                 and lives below them. */}
             <button className="obloginlink" onClick={() => { setError(""); setSheet("login"); }}>
-              Already have an account? <b>Log in</b>
+              Already have an account? <b>Sign in</b>
             </button>
             {/* Asking for an invite is a real action with a form behind it, so
                 it gets a button rather than a second line of link text.
@@ -334,7 +348,7 @@ export function AuthFlow({
               <div className="obalts" style={{ marginTop: 16 }}>
                 {inviteOnly && !invited && !inviter && (
                   <button className="obalt obrequest" onClick={openRequest}>
-                    <Icon name="mail" size={18} /> Request an invite
+                    <Icon name="mail" size={20} /> Request an invite
                   </button>
                 )}
                 {providers.google && (
@@ -378,42 +392,6 @@ export function AuthFlow({
           </>
         )}
 
-        {stage === "role" && (
-          <>
-            <h1>How will you use fittlist?</h1>
-            <p>
-              You can change this later. Following is free either way, and you can add a page of
-              your own whenever you want one.
-            </p>
-            <button className="btn" onClick={() => setStage("claim")} disabled={pending}>
-              I coach classes
-            </button>
-            <button
-              className="obalt"
-              style={{ marginTop: 12 }}
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const res = await chooseFan();
-                  if (!res.ok) {
-                    setError(res.error ?? "Something went wrong.");
-                    return;
-                  }
-                  setRole("fan");
-                  pendingFan.current = true;
-                  setStage("claim");
-                })
-              }
-            >
-              <Icon name="groups" size={19} /> I&rsquo;m here to train
-            </button>
-            {error && <div className="errorcopy">{error}</div>}
-            <div className="microcopy">
-              Coaches get a page at fittlist.co/yourname. Everyone else gets one week across every
-              coach they follow.
-            </div>
-          </>
-        )}
 
         {stage === "claim" && (
           <>
@@ -457,30 +435,20 @@ export function AuthFlow({
         )}
       </div>
 
-      {/* email + password bottom sheet (sign up or log in) */}
+      {/* email + password bottom sheet (sign up or sign in) */}
       {sheet && (
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}>
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>
               {sheet === "signup"
                 ? invited || inviter
                   ? "Claim your invite"
                   : "Sign up with email"
-                : "Log in"}
+                : "Sign in"}
             </h2>
-            {fans && sheet === "signup" && (
-              <div className="seg roleseg">
-                <button className={role === "coach" ? "sel" : ""} onClick={() => setRole("coach")}>
-                  I coach classes
-                </button>
-                <button className={role === "fan" ? "sel" : ""} onClick={() => setRole("fan")}>
-                  I&rsquo;m here to train
-                </button>
-              </div>
-            )}
             {/* Two sentences, built rather than picked: what this role gets,
                 then how to get in. The old chain let the beta gate swallow the
                 role copy, so someone who tapped "I'm here to train" was never
@@ -496,9 +464,7 @@ export function AuthFlow({
                     : "Use the email your invite was sent to. Pick a password you'll remember."
                   : [
                       fans
-                        ? role === "fan"
-                          ? "Follow your coaches and see their whole week in one place."
-                          : "Your classes across every studio, behind one link."
+                        ? "One account, whether you coach or you're here to train."
                         : null,
                       inviteOnly && !inviter
                         ? "Invite-only beta: use your invited email."
@@ -538,11 +504,11 @@ export function AuthFlow({
                 password, not footnotes about it. */}
             <div className="obalts" style={{ marginTop: 14 }}>
               <button className="obalt" onClick={() => sendLink(false)} disabled={pending}>
-                <Icon name="auto_awesome" size={19} /> Email me a magic link
+                <Icon name="auto_awesome" size={21} /> Email me a magic link
               </button>
               {sheet === "login" && passkeyable && (
                 <button className="obalt" onClick={usePasskeyLogin} disabled={pending}>
-                  <Icon name="fingerprint" size={19} /> Use a passkey
+                  <Icon name="fingerprint" size={21} /> Use a passkey
                 </button>
               )}
             </div>
@@ -554,10 +520,10 @@ export function AuthFlow({
             )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={submitPassword} disabled={pending}>
-                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Log in"}
+                {pending ? "One sec…" : sheet === "signup" ? "Create account" : "Sign in"}
               </button>
             </div>
-            {/* The other door, under the button. Someone who opened Log in from
+            {/* The other door, under the button. Someone who opened Sign in from
                 a coach's page and has never been here before had nothing to tap
                 but the close button: the way to sign up was back where they
                 came from. Each sheet names the one it isn't. */}
@@ -570,7 +536,7 @@ export function AuthFlow({
             >
               {sheet === "signup" ? (
                 <>
-                  Already have an account? <b>Log in</b>
+                  Already have an account? <b>Sign in</b>
                 </>
               ) : (
                 <>
@@ -589,7 +555,7 @@ export function AuthFlow({
             <div className="bioicon"><Icon name="fingerprint" size={30} /></div>
             <h2>Sign in faster next time?</h2>
             <p className="lead">
-              Add Face ID, Touch ID, or your fingerprint and skip the password next time you log in.
+              Add Face ID, Touch ID, or your fingerprint and skip the password next time you sign in.
             </p>
             <div className="publishwrap">
               <button className="btn si" onClick={enrollBiometric} disabled={pending}>
@@ -613,7 +579,7 @@ export function AuthFlow({
         <div className="sheet-scrim" onClick={(e) => { if (e.target === e.currentTarget) setRequestOpen(false); }}>
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setRequestOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             {reqSent ? (
               <>
