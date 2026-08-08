@@ -70,9 +70,9 @@ export type StoryModel = {
   /** Nothing in range: the picture still has to be worth looking at. */
   empty: boolean;
   emptyLine: string;
-  /** The page's own address, said right under the headline, by Matt's
-   *  call: it used to sit in the footer with the city up here, and the
-   *  URL is the thing the poster exists to hand on. */
+  /** The page's own address, in the footer under "See my schedule at":
+   *  the URL is the thing the poster exists to hand on. It rode under the
+   *  headline for a build and went back down, by Matt's call. */
   url: string;
   /** The headline's Font, and only the headline's, by Matt's call: the
    *  body is Delight, always. Null or Delight means no guest font. */
@@ -102,8 +102,6 @@ export function renderStory(model: StoryModel) {
   const framed = deco === "frame" || deco === "framed";
   const divided = deco === "dividers" || deco === "framed";
   const guest = typeface?.file ? typeface : null;
-  /** "fittlist.co", however the caller spelled the path after it. */
-  const host = url.split("/")[0];
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
   const square = format === "square";
@@ -267,22 +265,9 @@ export function renderStory(model: StoryModel) {
           {line2 && <span>{line2}</span>}
         </div>
 
-        {/* The page's own URL, right under the words, by Matt's call: it
-            lived in the footer with the city here, and the address is the
-            one thing the poster exists to hand on, so it rides the
-            headline. The footer keeps the general invitation. */}
-        <div
-          style={{
-            display: "flex",
-            fontWeight: 600,
-            fontSize: px(38),
-            color: t.muted,
-            marginTop: px(-58),
-            marginBottom: px(34),
-          }}
-        >
-          {url}
-        </div>
+        {/* No line under the headline any more: the URL rode here for a
+            build and went back to the footer, by Matt's call, under "See
+            my schedule at". The headline opens straight onto the week. */}
 
         {plan.lifted && (
           <div style={{ display: "flex", fontSize: px(36), color: t.faint, marginBottom: px(30) }}>
@@ -468,9 +453,12 @@ export function renderStory(model: StoryModel) {
             alignItems: "center",
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: px(34), color: t.faint }}>
-            Find more on {host}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontWeight: 600, fontSize: px(30), color: t.faint, letterSpacing: 1 }}>
+              See my schedule at
+            </span>
+            <span style={{ fontWeight: 600, fontSize: px(40) }}>{url}</span>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={px(56)} height={px(57)} />
