@@ -38,13 +38,24 @@ for (const comp of imported)
   if (!new RegExp(`\\b${comp}\\b`).test(lucideIndex))
     fail(`${comp} is imported but not in lucide-react`);
 
+// The Material sweep split the file in two: MAT holds a path string per
+// name (the whole set), and ICONS is the escape hatch for the survivors
+// (search, by Matt's call, plus anything hand-drawn that returns).
 const icons = [
   ...grab("const ICONS: Record<string,").matchAll(/^\s{2}([a-z_0-9]+):\s*([A-Za-z][A-Za-z0-9]*),/gm),
 ].map(([, name, comp]) => ({ name, comp }));
+const matNames = [...grab("const MAT: Record<string, string>").matchAll(/^\s{2}([a-z_0-9]+):$/gm)].map(
+  ([, n]) => n,
+);
 
-if (icons.length < 50) fail("expected the whole map, parsed " + icons.length);
+if (matNames.length + icons.length < 60)
+  fail("expected the whole map, parsed " + (matNames.length + icons.length));
 
 const seen = new Set();
+for (const name of matNames) {
+  if (seen.has(name)) fail("two entries claim the name " + name);
+  seen.add(name);
+}
 for (const { name, comp } of icons) {
   if (seen.has(name)) fail("two entries claim the name " + name);
   seen.add(name);
@@ -73,5 +84,5 @@ for (const f of walk("src").filter((f) => /\.tsx?$/.test(f))) {
 }
 if (missing.size) fail("these names render a blank circle: " + [...missing].join(", "));
 
-console.log(`${icons.length} glyphs, all present in the package`);
+console.log(`${matNames.length} Material paths + ${icons.length} exceptions, all present`);
 console.log("ICONS OK");
