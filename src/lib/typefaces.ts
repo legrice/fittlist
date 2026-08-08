@@ -29,11 +29,15 @@ export type TypeFace = {
   file: string | null;
   /** The headline leans: Elder millennial is Lora's italic. */
   italic?: boolean;
+  /** Tracking in ems, for a face whose natural fit reads loose at poster
+   *  size. Unset means the face's own spacing. */
+  track?: number;
 };
 
 export const TYPEFACES: TypeFace[] = [
   { id: "standard", label: "The standard", family: "Delight", file: null },
-  { id: "elder", label: "Elder millennial", family: "Lora", file: "lora-italic.ttf", italic: true },
+  // -2% by Matt's call: Lora's italic sits loose at headline size.
+  { id: "elder", label: "Elder millennial", family: "Lora", file: "lora-italic.ttf", italic: true, track: -0.02 },
   { id: "anchor", label: "News anchor", family: "DM Serif Display", file: "dm-serif-display.ttf" },
   { id: "psycho", label: "Psycho", family: "Barriecito", file: "barriecito.ttf" },
   { id: "friendly", label: "Overly friendly", family: "Bagel Fat One", file: "bagel-fat-one.ttf" },

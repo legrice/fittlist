@@ -64,20 +64,19 @@ export type StoryModel = {
   line1: string;
   line2: string;
   headlineSize: number;
-  /** Said once under the headline rather than on every row. */
-  city: string;
   /** A data URL, or null for no face. */
   photo: string | null;
   plan: StoryPlan;
   /** Nothing in range: the picture still has to be worth looking at. */
   empty: boolean;
   emptyLine: string;
-  /** The small line above the URL: "Full schedule at", "Join me". */
-  verb: string;
+  /** The page's own address, said right under the headline, by Matt's
+   *  call: it used to sit in the footer with the city up here, and the
+   *  URL is the thing the poster exists to hand on. */
   url: string;
   /** The headline's Font, and only the headline's, by Matt's call: the
    *  body is Delight, always. Null or Delight means no guest font. */
-  typeface?: { family: string; file: string | null; italic?: boolean } | null;
+  typeface?: { family: string; file: string | null; italic?: boolean; track?: number } | null;
   /** The dressing: a frame, day dividers, both, or nothing. */
   deco?: DecoId;
 };
@@ -90,19 +89,21 @@ export function renderStory(model: StoryModel) {
     line1,
     line2,
     headlineSize: hSize,
-    city,
     photo,
     plan,
     empty,
     emptyLine,
-    verb,
     url,
     typeface,
-    deco = "none",
+    // On by default, by Matt's call: the thick brand stripe is back on
+    // every share image, and Clean is the pick that takes it off.
+    deco = "top",
   } = model;
   const framed = deco === "frame" || deco === "framed";
   const divided = deco === "dividers" || deco === "framed";
   const guest = typeface?.file ? typeface : null;
+  /** "fittlist.co", however the caller spelled the path after it. */
+  const host = url.split("/")[0];
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
   const square = format === "square";
@@ -139,10 +140,24 @@ export function renderStory(model: StoryModel) {
           fontFamily: "Delight",
         }}
       >
-        {/* No eyebrow up here any more, by Matt's call: the accent bar
-            went first, then the range kicker, because each day heading
-            carries its own date now and a range over dated headings said
-            everything twice. The headline opens the poster. */}
+        {/* The original thick brand stripe, back as a Decoration and the
+            default one. Not content, so it bleeds to the very edge and
+            costs the rows nothing. */}
+        {deco === "top" && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              // Both canvases are 1080 wide. Not "100%": satori resolves
+              // that against the content box and the bar stops 172px short.
+              width: 1080,
+              height: 26,
+              background: t.accent,
+              display: "flex",
+            }}
+          />
+        )}
         {/* The frames: absolute layers inside the canvas padding, so they
             never touch the text. The photo sits at the padding line too,
             inside the frame's inset. */}
@@ -230,10 +245,12 @@ export function renderStory(model: StoryModel) {
             lineHeight: 0.98,
             // Delight's own tight tracking; a guest face keeps its natural
             // fit, because -3 was tuned to one font and crushes a serif.
+            // Unless the face names its own track (Lora's italic sits
+            // loose, so Elder millennial pulls in 2%).
             // No case transform any more, by Matt's call: the headline
             // renders as typed, sentence case by default, and ALL CAPS is
             // the writer's own key to press.
-            letterSpacing: guest ? 0 : -3,
+            letterSpacing: guest ? Math.round((guest.track ?? 0) * hSize) : -3,
             // The one place the picked Font speaks, by Matt's call: the
             // whole-poster version shipped for a day, and the body went
             // back to Delight.
@@ -250,19 +267,22 @@ export function renderStory(model: StoryModel) {
           {line2 && <span>{line2}</span>}
         </div>
 
-        {city && (
-          <div
-            style={{
-              display: "flex",
-              fontSize: px(38),
-              color: t.faint,
-              marginTop: px(-58),
-              marginBottom: px(34),
-            }}
-          >
-            {city}
-          </div>
-        )}
+        {/* The page's own URL, right under the words, by Matt's call: it
+            lived in the footer with the city here, and the address is the
+            one thing the poster exists to hand on, so it rides the
+            headline. The footer keeps the general invitation. */}
+        <div
+          style={{
+            display: "flex",
+            fontWeight: 600,
+            fontSize: px(38),
+            color: t.muted,
+            marginTop: px(-58),
+            marginBottom: px(34),
+          }}
+        >
+          {url}
+        </div>
 
         {plan.lifted && (
           <div style={{ display: "flex", fontSize: px(36), color: t.faint, marginBottom: px(30) }}>
@@ -448,12 +468,9 @@ export function renderStory(model: StoryModel) {
             alignItems: "center",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontWeight: 600, fontSize: px(30), color: t.faint, letterSpacing: 1 }}>
-              {verb}
-            </span>
-            <span style={{ fontWeight: 600, fontSize: px(40) }}>{url}</span>
-          </div>
+          <span style={{ fontWeight: 600, fontSize: px(34), color: t.faint }}>
+            Find more on {host}
+          </span>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={px(56)} height={px(57)} />

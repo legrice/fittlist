@@ -98,28 +98,24 @@ const SQ_PAD_BOTTOM = 92;
  */
 const PAD_TOP = 104;
 const PAD_BOTTOM = 104;
-/** The verb, the url and the lockup along the bottom. */
+/** "Find more on fittlist.co" and the lockup along the bottom. One line
+ *  now: the page's own URL moved up under the headline, by Matt's call,
+ *  and the verb's 46px went to the rows with it. */
 const FOOTER_H = 76;
-/** "Full schedule at", the small line above the url. */
-const VERB_H = 46;
-/** The city under the headline, when the profile has one. */
-const CITY_H = 52;
+/** The URL under the headline. It took the city's slot and its height. */
+const URL_H = 52;
 
 /**
  * How much room the list gets, once the furniture has taken its share. The
  * headline is the one part that changes size with the coach's own words, so
  * the caller measures that and passes it in.
  */
-export function listBudget(
-  headlineHeight: number,
-  hasCity = false,
-  format: StoryFormat = "story",
-): number {
+export function listBudget(headlineHeight: number, format: StoryFormat = "story"): number {
   const [h, top, bottom] =
     format === "square" ? [SQUARE_H, SQ_PAD_TOP, SQ_PAD_BOTTOM] : [CANVAS_H, PAD_TOP, PAD_BOTTOM];
   // The kicker's 71px came off with the kicker itself: the day headings
   // carry their dates now, and the freed room goes to the rows.
-  return h - top - bottom - headlineHeight - FOOTER_H - VERB_H - (hasCity ? CITY_H : 0);
+  return h - top - bottom - headlineHeight - FOOTER_H - URL_H;
 }
 
 /** The padding the canvas is drawn with, so the route and the sums can't

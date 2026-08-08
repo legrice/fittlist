@@ -61,10 +61,6 @@ export async function GET(
   const prefs = user.storyPrefs ?? {};
   const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Train", "with me."]);
   const showPhoto = prefs.showPhoto !== false && !!user.photo;
-  // "Ironbound Performance Athletics" means nothing two towns over, so the
-  // city is said once, from the profile. The studios on the rows say where in
-  // town; this says which town.
-  const city = (user.location ?? "").trim();
 
   // How much detail the week can carry: everything if it fits, the same rows
   // tighter if it doesn't, and a line a day when even that is too much.
@@ -77,7 +73,7 @@ export async function GET(
         where: (c.studioId && studioName.get(c.studioId)) || c.location || "",
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city) / y.rowScale,
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78) / y.rowScale,
   );
 
   return renderStory({
@@ -87,12 +83,10 @@ export async function GET(
     line1,
     line2,
     headlineSize: hSize,
-    city,
     photo: showPhoto ? user.photo : null,
     plan,
     empty: byDay.length === 0,
     emptyLine: "Nothing on the calendar yet.",
-    verb: "Full schedule at",
     url: `fittlist.co/${user.handle ?? handle}`,
   });
 }

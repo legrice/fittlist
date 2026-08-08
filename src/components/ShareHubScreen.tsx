@@ -95,8 +95,9 @@ export function ShareHubScreen({
   // room of their own. Off by default, by Matt's call: the headline owns
   // the top now, and the face is the opt-in.
   const [photo, setPhoto] = useState(false);
-  // The dressing: frames and day dividers. See decorations.ts.
-  const [decoId, setDecoId] = useState<DecoId>("none");
+  // The dressing: the top bar (the default), frames and day dividers.
+  // See decorations.ts.
+  const [decoId, setDecoId] = useState<DecoId>("top");
   const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "deco">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -369,7 +370,7 @@ export function ShareHubScreen({
                 <button className="shctrl" onClick={() => setPick("deco")}>
                   <span className="shctrl-k">Decoration</span>
                   <span className="shctrl-v">
-                    {DECOS.find((d) => d.id === decoId)?.label ?? "Clean"}
+                    {DECOS.find((d) => d.id === decoId)?.label ?? "Top bar"}
                   </span>
                 </button>
                 {hasPhoto && (

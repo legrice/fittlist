@@ -4,14 +4,18 @@
 // headings already keep, two pixels each, which the bottom padding's slack
 // absorbs without the planner's sums moving.
 
-export type DecoId = "none" | "frame" | "double" | "dividers" | "framed";
+export type DecoId = "top" | "none" | "frame" | "double" | "dividers" | "framed";
 
 export type Deco = {
   id: DecoId;
   label: string;
 };
 
+// The top bar leads and is the default, by Matt's call: it is the original
+// thick brand stripe the poster wore before the decorations existed, back
+// on every share image unless somebody picks it off.
 export const DECOS: Deco[] = [
+  { id: "top", label: "Top bar" },
   { id: "none", label: "Clean" },
   { id: "frame", label: "Thin frame" },
   { id: "double", label: "Double frame" },

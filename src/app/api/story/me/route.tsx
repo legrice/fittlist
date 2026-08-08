@@ -36,7 +36,6 @@ export async function GET(req: Request) {
   const prefs = me.storyPrefs ?? {};
   const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Come train", "with me."]);
   const showPhoto = prefs.showPhoto !== false && !!me.photo;
-  const city = (me.location ?? "").trim();
   const myHandle = (me.handle ?? "").trim();
 
   const plan = planStory(
@@ -44,7 +43,7 @@ export async function GET(req: Request) {
       day,
       items: items.map((c) => ({ time: c.time, name: c.name, where: c.where, who: c.who })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city) / y.rowScale,
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78) / y.rowScale,
   );
 
   return renderStory({
@@ -54,12 +53,10 @@ export async function GET(req: Request) {
     line1,
     line2,
     headlineSize: hSize,
-    city,
     photo: showPhoto ? me.photo : null,
     plan,
     empty: byDay.length === 0,
     emptyLine: "Nothing marked yet this week.",
-    verb: "Join me",
     url: myHandle ? `fittlist.co/${myHandle}` : "fittlist.co",
   });
 }

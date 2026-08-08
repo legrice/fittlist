@@ -59,7 +59,6 @@ export async function GET(req: Request) {
   const showPhoto =
     (photoParam ? photoParam !== "0" : prefs.showPhoto !== false) && !!me.photo;
   const showStudio = qs.get("studios") !== "0";
-  const city = qs.get("city") === "0" ? "" : (me.location ?? "").trim();
   const handle = (me.handle ?? "").trim();
 
   // The slider's loudness knob, over a 1.4 baseline, by Matt's call: the
@@ -82,7 +81,7 @@ export async function GET(req: Request) {
         who: c.who,
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city, format) / y.rowScale,
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, format) / y.rowScale,
   );
 
   return renderStory({
@@ -92,12 +91,10 @@ export async function GET(req: Request) {
     line1,
     line2,
     headlineSize: hSize,
-    city,
     photo: showPhoto ? me.photo : null,
     plan,
     empty: byDay.length === 0,
     emptyLine: "Nothing on the calendar for these days yet.",
-    verb: "Full schedule at",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
     // The headline's Font, picked by personality on the hub; the body
     // stays Delight.
