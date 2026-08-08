@@ -342,22 +342,52 @@ export async function adminSendMagicLink(
   return { ok: true, url, emailed: true };
 }
 
-// Hand a studio's page to the people who run it. The first one claims it: from
-// then on the directory's open-to-any-coach rule stops applying and only these
-// people (and an admin) may edit. Adding a second is how an owner and a manager
-// both get the keys without either being able to lock the other out.
-export async function adminAddStudioManager(
-  studioId: string,
-  emailRaw: string,
-): Promise<{ ok: boolean; error?: string }> {
+/** ADMIN — the accounts a query matches, for handing keys by account
+ *  rather than by remembered email: name, handle or email, any of them,
+ *  because whichever one you know is the one you should get to type. The
+ *  gym accounts stay out; a place cannot run a place. */
+export async function adminSearchAccounts(qRaw: string): Promise<
+  { id: string; name: string; handle: string | null; email: string; photo: string | null }[]
+> {
   const admin = await currentAdmin();
-  if (!admin) return { ok: false, error: "Not authorized." };
-  const email = emailRaw.trim().toLowerCase();
-  if (!email) return { ok: false, error: "Enter their email." };
+  if (!admin) return [];
+  const q = qRaw.trim().toLowerCase();
+  if (q.length < 2) return [];
   const db = await getDb();
+  const rows = await db
+    .select({
+      id: schema.users.id,
+      name: schema.users.name,
+      handle: schema.users.handle,
+      email: schema.users.email,
+      photo: schema.users.photoThumb,
+      photoFull: schema.users.photo,
+      kind: schema.users.kind,
+    })
+    .from(schema.users)
+    .where(
+      sql`${schema.users.kind} != 'gym' and (lower(${schema.users.name}) like ${"%" + q + "%"} or lower(coalesce(${schema.users.handle}, '')) like ${"%" + q + "%"} or lower(${schema.users.email}) like ${"%" + q + "%"})`,
+    )
+    .limit(6);
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name.trim() || r.email.split("@")[0],
+    handle: r.handle,
+    email: r.email,
+    photo: r.photo ?? r.photoFull,
+  }));
+}
 
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
-  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+// The keys themselves, shared by both doors below.
+async function handKeys(
+  studioId: string,
+  userId: string,
+  adminId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) return { ok: false, error: "No such account." };
+  if (user.kind === "gym") return { ok: false, error: "A place cannot run a place." };
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
   if (!studio) return { ok: false, error: "Studio not found." };
 
@@ -374,7 +404,7 @@ export async function adminAddStudioManager(
 
   await db
     .insert(schema.studioManagers)
-    .values({ studioId, userId: user.id, addedByUserId: admin.id });
+    .values({ studioId, userId: user.id, addedByUserId: adminId });
   // Being handed the keys is not something to discover by accident.
   await addNotification(user.id, {
     type: "studio_manager",
@@ -385,6 +415,34 @@ export async function adminAddStudioManager(
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath("/admin");
   return { ok: true };
+}
+
+/** ADMIN — hand the keys to an account picked from the search above. */
+export async function adminAddStudioManagerById(
+  studioId: string,
+  userId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  return handKeys(studioId, userId, admin.id);
+}
+
+// Hand a studio's page to the people who run it. The first one claims it: from
+// then on the directory's open-to-any-coach rule stops applying and only these
+// people (and an admin) may edit. Adding a second is how an owner and a manager
+// both get the keys without either being able to lock the other out.
+export async function adminAddStudioManager(
+  studioId: string,
+  emailRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return { ok: false, error: "Enter their email." };
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+  return handKeys(studioId, user.id, admin.id);
 }
 
 // Give a claimed studio its own account, which is what lets it run a schedule.

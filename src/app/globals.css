@@ -6435,6 +6435,30 @@ a.clspeek-by:active { opacity: .6; }
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
+/* The admin's hand-the-keys search: account rows under the box, each a
+   tap. The email door survives underneath for whoever isn't here yet. */
+.adminfind { display: flex; flex-direction: column; gap: 6px; }
+.adminfind-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border-radius: 12px; background: var(--shell);
+  text-align: left; cursor: pointer;
+}
+.adminfind-row:active { background: var(--cl); }
+.adminfind-av {
+  width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0;
+  object-fit: cover; display: inline-flex; align-items: center; justify-content: center;
+}
+.adminfind-av-empty { background: var(--ol); color: #fff; font-size: 13px; font-weight: 600; }
+.adminfind-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.adminfind-txt .nm { font-weight: 600; font-size: 14px; color: var(--ink); }
+.adminfind-txt .em {
+  font-size: 12px; color: var(--ol);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.adminfind-go { flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--si); }
+.adminfind-doors { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.adminfind-doors .btn { width: 100%; }
+
 /* The Decoration picker's swatches: a frame you can see beats a frame you
    can only read about. Little poster-shaped chips, each wearing its own
    dressing. */

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AdminPushToggle } from "@/components/AdminPushToggle";
 import { adminMarkActivitySeen } from "@/app/actions/admin";
 import { createPortal } from "react-dom";
@@ -9,6 +9,8 @@ import {
   adminActOnRequest,
   adminAddStudio,
   adminAddStudioManager,
+  adminAddStudioManagerById,
+  adminSearchAccounts,
   adminDeleteStudio,
   adminEnableStudioSchedule,
   adminRemoveStudioManager,
@@ -1244,19 +1246,65 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
   const [pending, start] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [email, setEmail] = useState("");
+  // One box, two doors: type a name or handle and their account row is a
+  // tap; type an email nobody has and the invite is the fallback. Only the
+  // newest lookup may paint, or a slow "st" lands after "stacey".
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<
+    { id: string; name: string; handle: string | null; email: string; photo: string | null }[]
+  >([]);
+  const seq = useRef(0);
+  useEffect(() => {
+    if (!adding) return undefined;
+    const query = q.trim();
+    if (query.length < 2) {
+      setHits([]);
+      return undefined;
+    }
+    const mine = ++seq.current;
+    const t = setTimeout(async () => {
+      const rows = await adminSearchAccounts(query);
+      if (mine === seq.current) setHits(rows);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q, adding]);
+  const looksEmail = /.+@.+\..+/.test(q.trim());
   const removable = s.coachCount === 0 && s.classCount === 0;
 
-  const addManager = () =>
+  const addById = (userId: string) =>
     start(async () => {
-      const res = await adminAddStudioManager(s.id, email);
+      const res = await adminAddStudioManagerById(s.id, userId);
       if (!res.ok) {
         toast(res.error ?? "Couldn't add them");
         return;
       }
-      setEmail("");
+      setQ("");
+      setHits([]);
       setAdding(false);
       toast("They run this page now");
+    });
+
+  const addByEmail = () =>
+    start(async () => {
+      const res = await adminAddStudioManager(s.id, q);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't add them");
+        return;
+      }
+      setQ("");
+      setHits([]);
+      setAdding(false);
+      toast("They run this page now");
+    });
+
+  const emailInvite = () =>
+    start(async () => {
+      const res = await adminSendMagicLink(q);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that");
+        return;
+      }
+      toast("Sign-in link sent. Hand them the keys once they're in.");
     });
 
   const enableSchedule = () =>
@@ -1320,20 +1368,65 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
         )}
         {s.hasAccount && <span className="adminmgr-em">runs its own schedule</span>}
         {adding ? (
-          <div className="adminaddform-row" style={{ marginTop: 8 }}>
-            <input
-              className="input"
-              type="email"
-              placeholder="their@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button className="btn si" disabled={pending || !email.trim()} onClick={addManager}>
-              {pending ? "Adding…" : "Add"}
-            </button>
-            <button className="linktoggle" disabled={pending} onClick={() => setAdding(false)}>
-              Cancel
-            </button>
+          <div className="adminfind" style={{ marginTop: 8 }}>
+            <div className="adminaddform-row">
+              <input
+                className="input"
+                placeholder="Name, handle or email"
+                value={q}
+                autoFocus
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <button
+                className="linktoggle"
+                disabled={pending}
+                onClick={() => {
+                  setAdding(false);
+                  setQ("");
+                  setHits([]);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+            {hits.map((h) => (
+              <button
+                key={h.id}
+                className="adminfind-row"
+                disabled={pending}
+                onClick={() => addById(h.id)}
+              >
+                {h.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="adminfind-av" src={h.photo} alt="" />
+                ) : (
+                  <span className="adminfind-av adminfind-av-empty">
+                    {(h.name.charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <span className="adminfind-txt">
+                  <span className="nm">{h.name}</span>
+                  <span className="em">
+                    {h.handle ? `@${h.handle} · ` : ""}
+                    {h.email}
+                  </span>
+                </span>
+                <span className="adminfind-go">Hand keys</span>
+              </button>
+            ))}
+            {/* Nobody found and it reads as an email: the old door, kept.
+                An exact account match adds directly; a stranger gets the
+                sign-in link, and the keys wait until they exist. */}
+            {hits.length === 0 && looksEmail && (
+              <div className="adminfind-doors">
+                <button className="btn si" disabled={pending} onClick={addByEmail}>
+                  {pending ? "Adding…" : "Add by email"}
+                </button>
+                <button className="btn ghost" disabled={pending} onClick={emailInvite}>
+                  Email a sign-in link
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button className="linktoggle" onClick={() => setAdding(true)}>
