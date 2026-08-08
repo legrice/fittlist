@@ -4,6 +4,7 @@ import { storyLook } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { typeFaceOf } from "@/lib/typefaces";
+import { decoOf } from "@/lib/decorations";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
 import { shareRange, shareWeek } from "@/lib/shareweek";
 
@@ -101,5 +102,6 @@ export async function GET(req: Request) {
     // The headline's Font, picked by personality on the hub; the body
     // stays Delight.
     typeface: typeFaceOf(qs.get("type")),
+    deco: decoOf(qs.get("deco")),
   });
 }

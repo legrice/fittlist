@@ -4,6 +4,7 @@ import { ImageResponse } from "next/og";
 import { brandIcon } from "@/lib/brand";
 import type { StoryStyle, StoryTheme } from "@/lib/format";
 import { storyPadding, type StoryFormat, type StoryPlan } from "@/lib/storyplan";
+import type { DecoId } from "@/lib/decorations";
 
 // One paint for every share image.
 //
@@ -77,6 +78,8 @@ export type StoryModel = {
   /** The headline's Font, and only the headline's, by Matt's call: the
    *  body is Delight, always. Null or Delight means no guest font. */
   typeface?: { family: string; file: string | null; italic?: boolean } | null;
+  /** The dressing: a frame, day dividers, both, or nothing. */
+  deco?: DecoId;
 };
 
 export function renderStory(model: StoryModel) {
@@ -95,7 +98,10 @@ export function renderStory(model: StoryModel) {
     verb,
     url,
     typeface,
+    deco = "none",
   } = model;
+  const framed = deco === "frame" || deco === "framed";
+  const divided = deco === "dividers" || deco === "framed";
   const guest = typeface?.file ? typeface : null;
   const markUri = iconUri(t.lockupAccent ?? t.accent);
   const pad = storyPadding(format);
@@ -137,6 +143,60 @@ export function renderStory(model: StoryModel) {
             went first, then the range kicker, because each day heading
             carries its own date now and a range over dated headings said
             everything twice. The headline opens the poster. */}
+        {/* The frames: absolute layers inside the canvas padding, so they
+            never touch the text. The photo sits at the padding line too,
+            inside the frame's inset. */}
+        {framed && (
+          <div
+            style={{
+              position: "absolute",
+              top: px(40),
+              left: px(40),
+              right: px(40),
+              bottom: px(40),
+              display: "flex",
+              borderWidth: 3,
+              borderStyle: "solid",
+              borderColor: t.fg,
+              borderRadius: 8,
+            }}
+          />
+        )}
+        {/* Two sibling conditionals, not one fragment: satori flattens a
+            fragment's absolute children into the flow and drew the double
+            frame as a strikethrough. */}
+        {deco === "double" && (
+          <div
+            style={{
+              position: "absolute",
+              top: px(36),
+              left: px(36),
+              right: px(36),
+              bottom: px(36),
+              display: "flex",
+              borderWidth: 3,
+              borderStyle: "solid",
+              borderColor: t.fg,
+              borderRadius: 10,
+            }}
+          />
+        )}
+        {deco === "double" && (
+          <div
+            style={{
+              position: "absolute",
+              top: px(52),
+              left: px(52),
+              right: px(52),
+              bottom: px(52),
+              display: "flex",
+              borderWidth: 2,
+              borderStyle: "solid",
+              borderColor: t.faint,
+              borderRadius: 6,
+            }}
+          />
+        )}
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           // 216, up from 172 by Matt's call: the face is most of why a
@@ -265,8 +325,20 @@ export function renderStory(model: StoryModel) {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {plan.days.map(({ day, rows }) => (
-              <div key={day} style={{ display: "flex", flexDirection: "column" }}>
+            {plan.days.map(({ day, rows }, di) => (
+              // The divider rides the gap the day heading already keeps
+              // (its own top margin), so it costs two pixels a day, which
+              // the bottom padding's slack absorbs.
+              <div
+                key={day}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  ...(divided && di > 0
+                    ? { borderTopWidth: 2, borderTopStyle: "solid", borderTopColor: `${t.faint}66` }
+                    : {}),
+                }}
+              >
                 <div
                   style={{
                     display: "flex",

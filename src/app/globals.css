@@ -6435,6 +6435,31 @@ a.clspeek-by:active { opacity: .6; }
 /* The headline's loudness slider: the platform's own control in the brand
    colour, full width under its label. */
 .shslider { width: 100%; margin: 8px 0 4px; accent-color: var(--si); }
+/* The Decoration picker's swatches: a frame you can see beats a frame you
+   can only read about. Little poster-shaped chips, each wearing its own
+   dressing. */
+.decochip {
+  flex-shrink: 0; width: 34px; height: 48px; border-radius: 6px;
+  background: var(--shell);
+}
+.decochip-frame { box-shadow: inset 0 0 0 3px var(--shell), inset 0 0 0 5px var(--ink); }
+.decochip-double {
+  box-shadow: inset 0 0 0 2px var(--shell), inset 0 0 0 4px var(--ink),
+    inset 0 0 0 6px var(--shell), inset 0 0 0 7px var(--ol);
+}
+.decochip-dividers {
+  background-image: linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
+  background-size: 60% 2px, 60% 2px;
+  background-repeat: no-repeat;
+  background-position: center 35%, center 65%;
+}
+.decochip-framed {
+  box-shadow: inset 0 0 0 3px var(--shell), inset 0 0 0 5px var(--ink);
+  background-image: linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
+  background-size: 50% 2px, 50% 2px;
+  background-repeat: no-repeat;
+  background-position: center 35%, center 65%;
+}
 /* The Type picker's rows: the label is the sample, drawn big in its own
    face, because a personality name set in Helvetica is a claim with no
    evidence. */

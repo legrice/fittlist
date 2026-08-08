@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { TYPEFACES, typeFaceOf, type TypeFaceId } from "@/lib/typefaces";
+import { DECOS, type DecoId } from "@/lib/decorations";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -93,7 +94,9 @@ export function ShareHubScreen({
   // that toggles in place rather than opening a sheet: two states need no
   // room of their own.
   const [photo, setPhoto] = useState(true);
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "type">(null);
+  // The dressing: frames and day dividers. See decorations.ts.
+  const [decoId, setDecoId] = useState<DecoId>("none");
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "type" | "deco">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -125,7 +128,7 @@ export function ShareHubScreen({
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
     `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
-    `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}` +
+    `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
@@ -366,6 +369,12 @@ export function ShareHubScreen({
                   <span className="shctrl-k">Font</span>
                   <span className="shctrl-v">{typeFaceOf(typeId).label}</span>
                 </button>
+                <button className="shctrl" onClick={() => setPick("deco")}>
+                  <span className="shctrl-k">Decoration</span>
+                  <span className="shctrl-v">
+                    {DECOS.find((d) => d.id === decoId)?.label ?? "Clean"}
+                  </span>
+                </button>
                 {hasPhoto && (
                   <button className="shctrl" onClick={() => setPhoto((v) => !v)}>
                     <span className="shctrl-k">Photo</span>
@@ -528,6 +537,50 @@ export function ShareHubScreen({
                       >
                         {f.label}
                       </span>
+                    </span>
+                    {on && (
+                      <span className="setrow-ic">
+                        <Icon name="check" size={20} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "deco" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Decoration</h2>
+            {/* Each row carries a little swatch of what it does: a frame
+                you can see beats a frame you can only read about. */}
+            <div className="settingslist">
+              {DECOS.map((d) => {
+                const on = d.id === decoId;
+                return (
+                  <button
+                    key={d.id}
+                    className="setrow"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setDecoId(d.id);
+                      setPick(null);
+                    }}
+                  >
+                    <span className={`decochip decochip-${d.id}`} aria-hidden="true" />
+                    <span className="setrow-txt">
+                      <span className="t">{d.label}</span>
                     </span>
                     {on && (
                       <span className="setrow-ic">
