@@ -65,8 +65,14 @@ export function navTabs(
       : []),
     // Everyone's now, by Matt's call: it came off the member's bar while a
     // member had nothing to give, and the hub is where they build the week
-    // they're going to before handing it on, so the tab is the way in.
-    { id: "share", href: "/membershare", icon: "arrow_outward", label: "Share" },
+    // they're going to before handing it on, so the tab is the way in. One
+    // screen, an address per kind, and the routes bounce a wrong arrival.
+    {
+      id: "share",
+      href: coach ? "/coachshare" : "/membershare",
+      icon: "arrow_outward",
+      label: "Share",
+    },
     // Who you are, which is your page: the tab opens the profile everybody
     // else sees rather than a settings screen wearing your name. Settings are
     // the gear on it, and the studios and the rota are rows in there. A tab
@@ -94,9 +100,15 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // the profile itself passes `active` explicitly, because a handle is not a
   // pathname anything here can recognise.
   if (pathname.startsWith("/you") || pathname.startsWith("/settings")) return "you";
-  // The hub is /membershare, by Matt's call; /share is the old composer and
-  // /sharehub the hub's first address, both still landing somewhere real.
-  if (pathname.startsWith("/membershare") || pathname.startsWith("/share")) return "share";
+  // The hub is /membershare or /coachshare by kind, by Matt's call; /share
+  // is the old composer and /sharehub the hub's first address, both still
+  // landing somewhere real.
+  if (
+    pathname.startsWith("/membershare") ||
+    pathname.startsWith("/coachshare") ||
+    pathname.startsWith("/share")
+  )
+    return "share";
   return "none";
 }
 

@@ -14,7 +14,12 @@ export const dynamic = "force-dynamic";
 // the hub is where they add the classes they're going to, and the picture is
 // what the adding was for. It lives in the tabs group so the bar stays under
 // it; Share is a place you go, not a sheet that visits.
-export default async function ShareHubPage() {
+//
+// One screen, two addresses, by Matt's call: a member's is /membershare and
+// a coach's is /coachshare, and each kind is bounced to its own, the same
+// rule that keeps /app and /week apart. This builder is the whole page and
+// both routes call it, so there is nothing here to drift.
+export async function hubPage(address: "member" | "coach") {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
@@ -33,6 +38,8 @@ export default async function ShareHubPage() {
   if (!me?.handle) redirect("/you");
 
   const coach = me.kind !== "fan";
+  if (coach && address === "member") redirect("/coachshare");
+  if (!coach && address === "coach") redirect("/membershare");
   // A fortnight of what the picture could hold, for the Dates and Classes
   // pickers: the range moves client-side, so the screen gets the whole
   // window and filters. Same loader as the image route, so the picker and
@@ -111,4 +118,8 @@ export default async function ShareHubPage() {
       lastUsed={lastUsed}
     />
   );
+}
+
+export default async function MemberSharePage() {
+  return hubPage("member");
 }

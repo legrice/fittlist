@@ -102,7 +102,7 @@ await coach.locator(".clline").first().waitFor();
   if (await coach.locator(".wkshare").count()) fail("the floating Share pill should be gone");
 }
 await coach.locator('.navtab[data-tab="share"]').click();
-await coach.waitForURL(/\/membershare/);
+await coach.waitForURL(/\/coachshare/);
 if (await coach.locator(".shedit").count()) fail("the hub should carry no editor link");
 // The composer survives at its route with nothing linking to it; the rest
 // of this suite holds it there so it cannot rot unnoticed.
