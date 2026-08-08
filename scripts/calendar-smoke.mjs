@@ -100,7 +100,7 @@ await p.locator(".clline").first().waitFor();
   const share = p.locator(".calbar-share");
   if (!(await share.count())) fail("Share should ride the title row");
   const href = await share.getAttribute("href");
-  if (href !== "/sharehub") fail("Share opens the hub, got " + href);
+  if (href !== "/membershare") fail("Share opens the hub, got " + href);
   const sbox = await share.boundingBox();
   const seg = await p.locator(".calseg").boundingBox();
   if (!(sbox.x > seg.x + seg.width - 4)) fail("Share sits right of the toggle");
@@ -385,7 +385,7 @@ if (await p.locator(".navfind").count()) fail("the dock's search circle should b
 if (!(await p.locator(".findbtn:visible").count()))
   fail("the header magnifier should be back on a phone");
 await p.locator('.navtab[data-tab="share"]').click();
-await p.waitForURL(/\/sharehub/);
+await p.waitForURL(/\/membershare/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
 // A coach's hub: Week leads and is selected, the colours redraw the
 // preview, and the QR segment carries the code card and the copy link.

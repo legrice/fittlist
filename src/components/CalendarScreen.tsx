@@ -219,7 +219,7 @@ export function CalendarScreen({
               {/* Share rides the title row now, white beside the toggle;
                   Add moved to the floating button under the thumb, the spot
                   Following's search wears. */}
-              <a className="calbar-share" href="/sharehub" aria-label="Share">
+              <a className="calbar-share" href="/membershare" aria-label="Share">
                 <Icon name="arrow_outward" size={20} />
               </a>
             </div>
@@ -295,7 +295,7 @@ export function CalendarScreen({
               <Icon name="calendar_view_month" size={21} />
             </button>
           </div>
-          <a className="calbar-share" href="/sharehub" aria-label="Share">
+          <a className="calbar-share" href="/membershare" aria-label="Share">
             <Icon name="arrow_outward" size={20} />
           </a>
         </ScrollHead>

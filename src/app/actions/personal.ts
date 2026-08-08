@@ -265,7 +265,7 @@ export async function addPersonalClass(input: {
   }
 
   revalidatePath("/week");
-  revalidatePath("/sharehub");
+  revalidatePath("/membershare");
   return { ok: true, id: written.length === 1 ? written[0].id : undefined };
 }
 
@@ -460,7 +460,7 @@ export async function updatePersonalClass(
   }
 
   revalidatePath("/week");
-  revalidatePath("/sharehub");
+  revalidatePath("/membershare");
   return { ok: true };
 }
 
@@ -475,6 +475,6 @@ export async function removePersonalClass(id: string): Promise<{ ok: boolean; er
   // entries lived only on /app and survived every removal for want of this.
   revalidatePath("/week");
   revalidatePath("/app");
-  revalidatePath("/sharehub");
+  revalidatePath("/membershare");
   return { ok: true };
 }
