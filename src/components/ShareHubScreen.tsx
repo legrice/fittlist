@@ -523,7 +523,7 @@ export function ShareHubScreen({
                         className="typerow-sample"
                         style={{
                           fontFamily: `'${f.family}'`,
-                          fontStyle: f.headlineItalic ? "italic" : undefined,
+                          fontStyle: f.italic ? "italic" : undefined,
                         }}
                       >
                         {f.label}

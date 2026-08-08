@@ -11,7 +11,6 @@
 /* The poster's guest faces (the Type picker's personalities): the same TTFs
    satori draws with, so the picker's sample rows show the truth. Loaded
    lazily by font-display: swap; only the picker and nothing else uses them. */
-@font-face { font-family: 'Lora'; src: url('/fonts/lora.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Lora'; src: url('/fonts/lora-italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: 'DM Serif Display'; src: url('/fonts/dm-serif-display.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Barriecito'; src: url('/fonts/barriecito.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }

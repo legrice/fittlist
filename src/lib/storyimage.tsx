@@ -74,15 +74,9 @@ export type StoryModel = {
   /** The small line above the URL: "Full schedule at", "Join me". */
   verb: string;
   url: string;
-  /** The poster's Font: the whole picture wears the guest face (Delight
-   *  as fallback, the lockup exempt: a logo does not change fonts). Null
-   *  or Delight means no guest font to load. */
-  typeface?: {
-    family: string;
-    file: string | null;
-    headlineFile?: string;
-    headlineItalic?: boolean;
-  } | null;
+  /** The headline's Font, and only the headline's, by Matt's call: the
+   *  body is Delight, always. Null or Delight means no guest font. */
+  typeface?: { family: string; file: string | null; italic?: boolean } | null;
 };
 
 export function renderStory(model: StoryModel) {
@@ -136,10 +130,7 @@ export function renderStory(model: StoryModel) {
           background: t.bg,
           color: t.fg,
           padding: `${pad.top}px ${pad.side}px ${pad.bottom}px`,
-          // The whole poster wears the picked Font, by Matt's call: one
-          // voice per picture, not a guest headline over a Delight body.
-          // Delight stays the fallback for any glyph the guest lacks.
-          fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
+          fontFamily: "Delight",
         }}
       >
         {/* No eyebrow up here any more, by Matt's call: the accent bar
@@ -183,7 +174,11 @@ export function renderStory(model: StoryModel) {
             // renders as typed, sentence case by default, and ALL CAPS is
             // the writer's own key to press.
             letterSpacing: guest ? 0 : -3,
-            fontStyle: guest?.headlineItalic ? "italic" : "normal",
+            // The one place the picked Font speaks, by Matt's call: the
+            // whole-poster version shipped for a day, and the body went
+            // back to Delight.
+            fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
+            fontStyle: guest?.italic ? "italic" : "normal",
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
           }}
@@ -411,13 +406,7 @@ export function renderStory(model: StoryModel) {
       width: 1080,
       height: square ? 1080 : 1920,
       fonts: guest
-        ? [
-            ...loadStoryFonts(),
-            loadTypeFace(guest.family, guest.file!),
-            ...(guest.headlineFile
-              ? [loadTypeFace(guest.family, guest.headlineFile, "italic")]
-              : []),
-          ]
+        ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!, guest.italic ? "italic" : "normal")]
         : loadStoryFonts(),
       headers: { "Cache-Control": "no-store" },
     },

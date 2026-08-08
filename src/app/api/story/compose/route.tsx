@@ -98,8 +98,8 @@ export async function GET(req: Request) {
     emptyLine: "Nothing on the calendar for these days yet.",
     verb: "Full schedule at",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
-    // The poster's Font, picked by personality on the hub: the whole
-    // picture wears it, with Delight as fallback and the lockup exempt.
+    // The headline's Font, picked by personality on the hub; the body
+    // stays Delight.
     typeface: typeFaceOf(qs.get("type")),
   });
 }
