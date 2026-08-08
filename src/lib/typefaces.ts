@@ -1,10 +1,9 @@
-// The poster's Type: the headline's voice, picked by personality rather
-// than by font name, by Matt's call. Nobody outside this trade knows what
-// DM Serif Display is; everybody knows whether they are a news anchor.
+// The poster's Font: its voice, picked by personality rather than by font
+// name, by Matt's call. Nobody outside this trade knows what DM Serif
+// Display is; everybody knows whether they are a news anchor.
 //
-// The face applies to the headline only. The rows stay Delight, because
-// the story planner's budgets are sums over Delight's metrics and a wider
-// body face would put the footer on Thursday.
+// The face applies to the whole poster (Delight underneath as fallback,
+// the lockup exempt: a logo does not change fonts).
 //
 // The files live in public/fonts, serving both sides: satori reads them
 // off disk for the poster, and @font-face in globals.css shows each row

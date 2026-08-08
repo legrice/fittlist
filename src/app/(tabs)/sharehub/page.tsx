@@ -22,6 +22,7 @@ export default async function ShareHubPage() {
       handle: schema.users.handle,
       name: schema.users.name,
       storyPrefs: schema.users.storyPrefs,
+      photo: schema.users.photo,
     })
     .from(schema.users)
     .where(eq(schema.users.id, userId));
@@ -59,6 +60,7 @@ export default async function ShareHubPage() {
       defaultFrom={defaultFrom}
       today={today}
       savedHeadline={me.storyPrefs?.headline ?? ""}
+      hasPhoto={!!me.photo}
     />
   );
 }

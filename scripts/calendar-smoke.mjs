@@ -434,8 +434,8 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
 {
   // innerText reports the CSS-uppercased label, so compare in lower case.
   const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
-  if (keys.join("|") !== "dates|classes|message|type")
-    fail("the rail is Dates, Classes, Message, Type: " + keys.join("|"));
+  if (keys.join("|") !== "dates|classes|message|font")
+    fail("the rail is Dates, Classes, Message, Font: " + keys.join("|"));
   const a = await p.locator(".shctrl").first().boundingBox();
   const b2 = await p.locator(".shctrl").nth(1).boundingBox();
   if (Math.abs(a.y - b2.y) > 2) fail("the chips share a row");

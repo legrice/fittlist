@@ -48,6 +48,7 @@ export function ShareHubScreen({
   defaultFrom,
   today,
   savedHeadline,
+  hasPhoto,
 }: {
   /** A coach gets the Week segment; a member's page has no schedule to draw. */
   coach: boolean;
@@ -67,6 +68,9 @@ export function ShareHubScreen({
    *  one, so the Message chip never claims the default while the picture
    *  draws something else. */
   savedHeadline: string;
+  /** Whether there is a face to offer: the Photo chip only renders when
+   *  turning it on could show something. */
+  hasPhoto: boolean;
 }) {
   const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
@@ -77,8 +81,12 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
-  // The headline's voice, picked by personality: see typefaces.ts.
+  // The poster's voice, picked by personality: see typefaces.ts.
   const [typeId, setTypeId] = useState<TypeFaceId>("standard");
+  // The face on the poster, offered only to somebody who has one. A chip
+  // that toggles in place rather than opening a sheet: two states need no
+  // room of their own.
+  const [photo, setPhoto] = useState(true);
   const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "type">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -110,7 +118,7 @@ export function ShareHubScreen({
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
   const weekImgUrl =
-    `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=1` +
+    `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
@@ -349,9 +357,15 @@ export function ShareHubScreen({
                   <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("type")}>
-                  <span className="shctrl-k">Type</span>
+                  <span className="shctrl-k">Font</span>
                   <span className="shctrl-v">{typeFaceOf(typeId).label}</span>
                 </button>
+                {hasPhoto && (
+                  <button className="shctrl" onClick={() => setPhoto((v) => !v)}>
+                    <span className="shctrl-k">Photo</span>
+                    <span className="shctrl-v">{photo ? "On" : "Off"}</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -489,7 +503,7 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Type</h2>
+            <h2>Font</h2>
             {/* Each row wears its own face: the label is the sample, and
                 naming the personality instead of the font is the point. */}
             <div className="settingslist typelist">

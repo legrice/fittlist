@@ -76,9 +76,9 @@ export type StoryModel = {
   /** The small line above the URL: "Full schedule at", "Join me". */
   verb: string;
   url: string;
-  /** The headline's Type: a guest face for the two big lines only. The rows
-   *  stay Delight, because the planner's budgets are sums over Delight's
-   *  metrics. Null or Delight means no guest font to load. */
+  /** The poster's Font: the whole picture wears the guest face (Delight
+   *  as fallback, the lockup exempt: a logo does not change fonts). Null
+   *  or Delight means no guest font to load. */
   typeface?: { family: string; file: string | null } | null;
 };
 
@@ -134,7 +134,10 @@ export function renderStory(model: StoryModel) {
           background: t.bg,
           color: t.fg,
           padding: `${pad.top}px ${pad.side}px ${pad.bottom}px`,
-          fontFamily: "Delight",
+          // The whole poster wears the picked Font, by Matt's call: one
+          // voice per picture, not a guest headline over a Delight body.
+          // Delight stays the fallback for any glyph the guest lacks.
+          fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
         }}
       >
         {/* The accent bar across the top came off, by Matt's call: the
@@ -186,9 +189,10 @@ export function renderStory(model: StoryModel) {
             lineHeight: 0.98,
             // Delight's own tight tracking; a guest face keeps its natural
             // fit, because -3 was tuned to one font and crushes a serif.
+            // No case transform any more, by Matt's call: the headline
+            // renders as typed, sentence case by default, and ALL CAPS is
+            // the writer's own key to press.
             letterSpacing: guest ? 0 : -3,
-            fontFamily: guest ? guest.family : "Delight",
-            textTransform: "uppercase",
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
           }}
@@ -392,7 +396,17 @@ export function renderStory(model: StoryModel) {
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={markUri} alt="" width={px(56)} height={px(57)} />
-            <span style={{ fontWeight: 800, fontSize: px(50), color: t.fg, letterSpacing: -2 }}>
+            <span
+              style={{
+                // The lockup is the logo, and a logo does not change fonts
+                // with the poster's voice.
+                fontFamily: "Delight",
+                fontWeight: 800,
+                fontSize: px(50),
+                color: t.fg,
+                letterSpacing: -2,
+              }}
+            >
               FittList
             </span>
           </div>

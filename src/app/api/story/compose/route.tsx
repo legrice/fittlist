@@ -61,6 +61,11 @@ export async function GET(req: Request) {
   const city = qs.get("city") === "0" ? "" : (me.location ?? "").trim();
   const handle = (me.handle ?? "").trim();
 
+  // No photo means the headline owns the corner too, so it grows a step,
+  // by Matt's call. The budget below reads the grown size, or the extra
+  // height would come out of the rows without the sums knowing.
+  const hSize = showPhoto ? size : Math.round(size * 1.16);
+
   const plan = planStory(
     byDay.map(({ day, items }) => ({
       day,
@@ -73,7 +78,7 @@ export async function GET(req: Request) {
         who: c.who,
       })),
     })),
-    listBudget(size * 0.98 * (line2 ? 2 : 1) + 78, !!city, format) / y.rowScale,
+    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, !!city, format) / y.rowScale,
   );
 
   return renderStory({
@@ -83,7 +88,7 @@ export async function GET(req: Request) {
     kicker: shareKicker(from, days),
     line1,
     line2,
-    headlineSize: size,
+    headlineSize: hSize,
     city,
     photo: showPhoto ? me.photo : null,
     plan,
@@ -91,8 +96,8 @@ export async function GET(req: Request) {
     emptyLine: "Nothing on the calendar for these days yet.",
     verb: "Full schedule at",
     url: handle ? `fittlist.co/${handle}` : "fittlist.co",
-    // The headline's Type, picked by personality on the hub: a guest face
-    // for the two big lines, Delight for everything else.
+    // The poster's Font, picked by personality on the hub: the whole
+    // picture wears it, with Delight as fallback and the lockup exempt.
     typeface: typeFaceOf(qs.get("type")),
   });
 }
