@@ -6,9 +6,9 @@ import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import { DECOS, type DecoId } from "@/lib/decorations";
 import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
-import type { PersonalMatch } from "@/app/actions/personal";
+import { personalDetail, type PersonalMatch } from "@/app/actions/personal";
 import { setGoing } from "@/app/actions/going";
-import { Adder } from "@/components/Adder";
+import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -32,8 +32,16 @@ type Seg = "week" | "profile" | "qr" | "text";
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
  *  `where` rides along for the text version, which says the studio the way
- *  the poster does. */
-export type HubItem = { key: string; iso: string; time: string; name: string; where: string };
+ *  the poster does. `own` marks a member's own entry, the only kind the
+ *  sheet can offer to edit: a mark points at somebody else's class. */
+export type HubItem = {
+  key: string;
+  iso: string;
+  time: string;
+  name: string;
+  where: string;
+  own?: boolean;
+};
 
 const short = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -128,6 +136,42 @@ export function ShareHubScreen({
   const [addOpen, setAddOpen] = useState(false);
   const [match, setMatch] = useState<{ m: PersonalMatch; again: () => void } | null>(null);
   const [matchBusy, setMatchBusy] = useState(false);
+  // Editing one of your own from the Classes sheet: the same form, opened
+  // on the row's saved details.
+  const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
+
+  const openEdit = async (it: HubItem) => {
+    if (editBusy) return;
+    setEditBusy(true);
+    const d = await personalDetail(it.key.split(".")[0]);
+    setEditBusy(false);
+    if (!d) {
+      toast("That class isn't there any more");
+      refreshWeek();
+      return;
+    }
+    setPick(null);
+    setEdit({
+      id: d.id,
+      prefill: {
+        name: d.name,
+        classType: d.classType,
+        description: d.description,
+        image: d.image,
+        startTime: d.startTime,
+        durationMin: d.durationMin,
+        studioId: d.studioId,
+        location: d.location,
+        withWho: d.withWho,
+        links: d.links,
+        days: [d.dayOfWeek],
+        dayOfWeek: d.dayOfWeek,
+        endsOn: d.endsOn,
+        specificDate: d.specificDate,
+      },
+    });
+  };
   const [toastMsg, toastOn, toast] = useToast();
 
   // A server change (an add, a mark) has to reach both the list and the
@@ -721,29 +765,45 @@ export function ShareHubScreen({
               {inRange.map((it) => {
                 const off = hide.has(it.key);
                 return (
-                  <button
-                    key={it.key}
-                    className="setrow"
-                    aria-pressed={!off}
-                    onClick={() =>
-                      setHide((cur) => {
-                        const next = new Set(cur);
-                        if (next.has(it.key)) next.delete(it.key);
-                        else next.add(it.key);
-                        return next;
-                      })
-                    }
-                  >
-                    <span className={`shtick${off ? "" : " on"}`} aria-hidden="true">
-                      {!off && <Icon name="check" size={15} />}
-                    </span>
-                    <span className="setrow-txt">
-                      <span className="t">{it.name}</span>
-                      <span className="s">
-                        {wday(it.iso)}, {short(it.iso)} · {it.time}
+                  // The tick and the edit are two buttons in one row, and
+                  // siblings on purpose: a button inside a button is not a
+                  // thing. The edit only exists on the member's own rows; a
+                  // mark points at somebody else's class, which the coach
+                  // keeps.
+                  <div key={it.key} className="shpick-row">
+                    <button
+                      className="setrow"
+                      aria-pressed={!off}
+                      onClick={() =>
+                        setHide((cur) => {
+                          const next = new Set(cur);
+                          if (next.has(it.key)) next.delete(it.key);
+                          else next.add(it.key);
+                          return next;
+                        })
+                      }
+                    >
+                      <span className={`shtick${off ? "" : " on"}`} aria-hidden="true">
+                        {!off && <Icon name="check" size={15} />}
                       </span>
-                    </span>
-                  </button>
+                      <span className="setrow-txt">
+                        <span className="t">{it.name}</span>
+                        <span className="s">
+                          {wday(it.iso)}, {short(it.iso)} · {it.time}
+                        </span>
+                      </span>
+                    </button>
+                    {it.own && (
+                      <button
+                        className="shpick-editbtn"
+                        aria-label={`Edit ${it.name}`}
+                        disabled={editBusy}
+                        onClick={() => openEdit(it)}
+                      >
+                        <Icon name="edit" size={18} />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -796,6 +856,31 @@ export function ShareHubScreen({
             // `again` still holds everything they typed.
             setAddOpen(false);
             setMatch({ m, again });
+          }}
+        />
+      )}
+
+      {edit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach: false, editId: edit.id }}
+          prefill={edit.prefill}
+          onClose={() => setEdit(null)}
+          onToast={toast}
+          onPublished={() => {
+            setEdit(null);
+            toast("Saved");
+            refreshWeek();
+          }}
+          onDeleted={(msg) => {
+            setEdit(null);
+            toast(msg);
+            refreshWeek();
           }}
         />
       )}

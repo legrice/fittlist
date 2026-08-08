@@ -33,6 +33,9 @@ export type ShareItem = {
   where: string;
   /** A coach's first name, on a member's picture. "" on a coach's own. */
   who: string;
+  /** One of the member's own entries: the hub offers an edit for these,
+   *  and only these, because a mark points at somebody else's class. */
+  own?: boolean;
 };
 
 export type ShareDay = { iso: string; day: string; items: ShareItem[] };
@@ -150,6 +153,7 @@ export async function shareWeek(
             name: p.name,
             where: (p.studioId && names.get(p.studioId)) || p.location || "",
             who: p.withWho || "",
+            own: true,
           },
           p.id,
         );

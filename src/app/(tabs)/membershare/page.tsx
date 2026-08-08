@@ -49,7 +49,7 @@ export async function hubPage(address: "member" | "coach") {
   let defaultFrom = today;
   const days = await shareWeek(userId, defaultFrom, 14);
   const items: HubItem[] = days.flatMap((d) =>
-    d.items.map((it) => ({ key: it.key, iso: it.iso, time: it.time, name: it.name, where: it.where })),
+    d.items.map((it) => ({ key: it.key, iso: it.iso, time: it.time, name: it.name, where: it.where, own: it.own })),
   );
   // Start where the week has something: the empty poster should never be
   // the first one anybody sees.

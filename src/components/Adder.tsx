@@ -10,6 +10,7 @@ import {
 import { addGymClass, deleteGymClass, updateGymClass } from "@/app/actions/gym";
 import {
   addPersonalClass,
+  removePersonalClass,
   updatePersonalClass,
   type PersonalMatch,
 } from "@/app/actions/personal";
@@ -571,6 +572,23 @@ export function Adder({
         timeZone: "UTC",
       })
     : "";
+
+  // One of your own is one row and nothing points at it, so removing it is
+  // one call. For months this link only drew for a coach's class (isEdit is
+  // prefill.classId, and a personal row edits by personal.editId), which is
+  // the fourth-bug shape the doctrine warns about: built one side, invisible
+  // on the other.
+  const doDeletePersonal = () => {
+    if (!personal?.editId) return;
+    startTransition(async () => {
+      const res = await removePersonalClass(personal.editId!);
+      if (!res.ok) {
+        onToast(res.error ?? "Something went wrong");
+        return;
+      }
+      onDeleted("Removed");
+    });
+  };
 
   const doDelete = (scope: "occurrence" | "one" | "all") => {
     if (!prefill?.classId) return;
@@ -1201,10 +1219,10 @@ export function Adder({
               </button>
             </div>
 
-            {isEdit && (
+            {(isEdit || isPersonalEdit) && (
               <div className="dangerzone">
                 <button className="deletelink" onClick={() => setConfirmDelete(true)}>
-                  {gym ? "Take it off the week" : "Delete this class"}
+                  {gym ? "Take it off the week" : isPersonalEdit ? "Remove this class" : "Delete this class"}
                 </button>
               </div>
             )}
@@ -1393,7 +1411,17 @@ export function Adder({
           onClick={(e) => { if (e.target === e.currentTarget && !pending) setConfirmDelete(false); }}
         >
           <div className="confirm-modal" role="dialog" aria-modal="true">
-            {occurrence ? (
+            {isPersonalEdit ? (
+              // One of your own: a confirm rather than an undo, because a
+              // row somebody typed comes back only by typing it again.
+              <>
+                <h3>Remove it?</h3>
+                <p>It comes off your week and your profile. It comes back only by typing it again.</p>
+                <button className="btn si" disabled={pending} onClick={doDeletePersonal}>
+                  {pending ? "Removing…" : "Yes, remove it"}
+                </button>
+              </>
+            ) : occurrence ? (
               // A standing class, opened on one date. Three intentions, widest
               // last: this one day off, this weekday for good, the whole set.
               <>

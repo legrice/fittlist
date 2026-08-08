@@ -4811,6 +4811,17 @@ button.ps-card { cursor: pointer; }
    picks, and the door reads as a row of its own under the list. */
 .shpick-add { display: block; margin: 10px 0 2px; font-size: 14.5px; }
 
+/* A row of the classes sheet: the tick button and, on the member's own
+   entries, the edit beside it. Siblings, never nested. */
+.shpick-row { display: flex; align-items: center; gap: 4px; }
+.shpick-row .setrow { flex: 1; min-width: 0; }
+.shpick-editbtn {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--ol); cursor: pointer;
+}
+.shpick-editbtn:active { background: var(--shell); }
+
 /* The member hub's start block: in place of an empty poster, so the one
    button that fixes the emptiness is never below the fold. */
 .shstart { padding: 34px 10px 20px; text-align: center; }
