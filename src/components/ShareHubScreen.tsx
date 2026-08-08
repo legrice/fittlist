@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
-import { TYPEFACES, typeFaceOf, type TypeFaceId } from "@/lib/typefaces";
+import { TYPEFACES, type TypeFaceId } from "@/lib/typefaces";
 import { DECOS, type DecoId } from "@/lib/decorations";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -92,11 +92,12 @@ export function ShareHubScreen({
   const [slider, setSlider] = useState(100);
   // The face on the poster, offered only to somebody who has one. A chip
   // that toggles in place rather than opening a sheet: two states need no
-  // room of their own.
-  const [photo, setPhoto] = useState(true);
+  // room of their own. Off by default, by Matt's call: the headline owns
+  // the top now, and the face is the opt-in.
+  const [photo, setPhoto] = useState(false);
   // The dressing: frames and day dividers. See decorations.ts.
   const [decoId, setDecoId] = useState<DecoId>("none");
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "type" | "deco">(null);
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "deco">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -362,12 +363,8 @@ export function ShareHubScreen({
                   </span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("message")}>
-                  <span className="shctrl-k">Message</span>
+                  <span className="shctrl-k">Headline</span>
                   <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
-                </button>
-                <button className="shctrl" onClick={() => setPick("type")}>
-                  <span className="shctrl-k">Font</span>
-                  <span className="shctrl-v">{typeFaceOf(typeId).label}</span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
                   <span className="shctrl-k">Decoration</span>
@@ -500,57 +497,6 @@ export function ShareHubScreen({
         </div>
       )}
 
-      {pick === "type" && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPick(null);
-          }}
-        >
-          <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Font</h2>
-            {/* Each row wears its own face: the label is the sample, and
-                naming the personality instead of the font is the point. */}
-            <div className="settingslist typelist">
-              {TYPEFACES.map((f) => {
-                const on = f.id === typeId;
-                return (
-                  <button
-                    key={f.id}
-                    className="setrow"
-                    aria-pressed={on}
-                    onClick={() => {
-                      setTypeId(f.id);
-                      setPick(null);
-                    }}
-                  >
-                    <span className="setrow-txt">
-                      <span
-                        className="typerow-sample"
-                        style={{
-                          fontFamily: `'${f.family}'`,
-                          fontStyle: f.italic ? "italic" : undefined,
-                        }}
-                      >
-                        {f.label}
-                      </span>
-                    </span>
-                    {on && (
-                      <span className="setrow-ic">
-                        <Icon name="check" size={20} />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
       {pick === "deco" && (
         <div
           className="sheet-scrim"
@@ -606,8 +552,8 @@ export function ShareHubScreen({
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
               <Icon name="close" size={18} />
             </button>
-            <h2>Message</h2>
-            <p className="lead">The words at the top of the picture.</p>
+            <h2>Headline</h2>
+            <p className="lead">The words at the top of the picture, how loud, and their voice.</p>
             <label className="flabel" htmlFor="shMsg">
               Your words
             </label>
@@ -638,6 +584,23 @@ export function ShareHubScreen({
               onKeyUp={() => setHsize(slider)}
               onTouchEnd={() => setHsize(slider)}
             />
+            {/* The voice, as a plain dropdown, by Matt's call: the sheet
+                of sample rows folded in here with the words it dresses. */}
+            <label className="flabel" htmlFor="shFont">
+              Font
+            </label>
+            <select
+              id="shFont"
+              className="typeselect"
+              value={typeId}
+              onChange={(e) => setTypeId(e.target.value as TypeFaceId)}
+            >
+              {TYPEFACES.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done

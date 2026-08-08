@@ -62,13 +62,13 @@ export async function GET(req: Request) {
   const city = qs.get("city") === "0" ? "" : (me.location ?? "").trim();
   const handle = (me.handle ?? "").trim();
 
-  // Two scalers on the headline, multiplied. The slider's (hs, percent,
-  // clamped to a range that can neither vanish nor swallow the poster) is
-  // the writer's own loudness knob; the photo-off bump is the layout's.
-  // The budget below reads the final size, or the extra height would come
-  // out of the rows without the sums knowing.
+  // The slider's loudness knob, over a 1.4 baseline, by Matt's call: the
+  // default poster wears what used to be 140%, and the slider moves
+  // relative to that. The old photo-off auto-bump left with it (one knob,
+  // not two fighting). The budget below reads the final size, or the
+  // extra height would come out of the rows without the sums knowing.
   const hs = Math.max(60, Math.min(180, parseInt(qs.get("hs") ?? "100", 10) || 100)) / 100;
-  const hSize = Math.round(size * hs * (showPhoto ? 1 : 1.16));
+  const hSize = Math.round(size * hs * 1.4);
 
   const plan = planStory(
     byDay.map(({ day, items }) => ({

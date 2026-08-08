@@ -434,14 +434,14 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
 {
   // innerText reports the CSS-uppercased label, so compare in lower case.
   const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
-  if (keys.join("|") !== "dates|classes|message|font|decoration")
-    fail("the rail is Dates, Classes, Message, Font, Decoration: " + keys.join("|"));
+  if (keys.join("|") !== "dates|classes|headline|decoration")
+    fail("the rail is Dates, Classes, Headline, Decoration: " + keys.join("|"));
   const a = await p.locator(".shctrl").first().boundingBox();
   const b2 = await p.locator(".shctrl").nth(1).boundingBox();
   if (Math.abs(a.y - b2.y) > 2) fail("the chips share a row");
   // The Message chip rewrites the poster's words, and the picture is asked
   // for exactly what was typed.
-  await p.locator(".shctrl", { hasText: "Message" }).click();
+  await p.locator(".shctrl", { hasText: "Headline" }).click();
   await p.locator("#shMsg").fill("Fall schedule is live");
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
   const srcMsg = await p.locator(".shprev-week").getAttribute("src");

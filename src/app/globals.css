@@ -6460,10 +6460,6 @@ a.clspeek-by:active { opacity: .6; }
   background-repeat: no-repeat;
   background-position: center 35%, center 65%;
 }
-/* The Type picker's rows: the label is the sample, drawn big in its own
-   face, because a personality name set in Helvetica is a claim with no
-   evidence. */
-.typerow-sample { font-size: 24px; line-height: 1.25; color: var(--ink); }
 /* The week as words, previewed before the copy: the same monospace-free
    type as everything, on its own quiet card so it reads as a block. */
 .shtext {
