@@ -65,6 +65,11 @@ export type ClassDetail = {
   adminPhoto: boolean;
   /** The admin may hand this class a booking link, because it has none. */
   adminLink: boolean;
+  /** The admin may repair the listing (words, time, length) or take it
+   *  down: reported classes need managing, and the report lands on them. */
+  adminEdit: boolean;
+  /** "HH:MM", for the admin editor's time input; `time` is for the eye. */
+  startRaw: string;
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
@@ -348,6 +353,8 @@ export async function classDetail(
     roster,
     adminPhoto,
     adminLink,
+    adminEdit: isAdminViewer,
+    startRaw: c.startTime,
     shift,
   };
 }

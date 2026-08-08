@@ -1,6 +1,6 @@
 "use client";
 
-import { ClassRowMenu } from "@/components/ClassRowMenu";
+import { ClassRowMenu, type ClassRowMenuProps } from "@/components/ClassRowMenu";
 
 /**
  * One list of classes, for every screen that draws one.
@@ -47,9 +47,10 @@ export type WeekRow = {
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
-  /** The dots in the row's corner: share, add to calendar, report. A
-   *  sibling of the row, never a child, so the row link stays a link. */
-  menu?: { classId: string; base: string; iso: string; canReport?: boolean };
+  /** The dots in the row's corner: details, the people and places, share,
+   *  add to calendar, report. A sibling of the row, never a child, so the
+   *  row link stays a link. */
+  menu?: Omit<ClassRowMenuProps, "name">;
 };
 
 export type WeekDayRows = {

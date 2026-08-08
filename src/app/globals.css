@@ -6610,7 +6610,13 @@ a.clspeek-by:active { opacity: .6; }
    is a column's own. */
 .clline-by, .clline-tag { grid-column: 1 / -1; }
 .clline-t, .clline-dur { grid-column: 1; }
-.clline-nm, .clline-w { grid-column: 2; min-width: 0; }
+/* One line each, by Matt's call: "Ironbound Performance Athletics"
+   wrapping under a long class name made every busy row two heights.
+   The ellipsis is the honest cut, and the class page has the rest. */
+.clline-nm, .clline-w {
+  grid-column: 2; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 /* No dividers between rows any more: each row is its own box and the gap
    between boxes is the break. Every box says its own time, even beside
    another at the same hour: a box with a blank time column read as a box
@@ -6622,7 +6628,12 @@ a.clspeek-by:active { opacity: .6; }
    loop, so the dots are on the row where somebody reading a wrong listing
    actually is. */
 .clrow { position: relative; }
-.clrow > .clline { padding-right: 48px; }
+/* The dots reserve only the line they sit on, by Matt's call: a 48px
+   gutter down the whole card squeezed the name and the studio into
+   wrapping. The by-line clears them when there is one; otherwise the
+   name does; the lines below run the full width. */
+.clrow .clline-by { padding-right: 38px; }
+.clrow .clline:not(:has(.clline-by)):not(:has(.clline-tag)) .clline-nm { padding-right: 38px; }
 .clmore {
   position: absolute; top: 8px; right: 6px;
   width: 36px; height: 36px; border-radius: 999px;

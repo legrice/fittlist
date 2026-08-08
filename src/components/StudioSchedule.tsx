@@ -144,7 +144,16 @@ export function StudioSchedule({
                     >
                       {inner}
                     </a>
-                    <ClassRowMenu classId={c.id} base={base} iso={d.iso} name={c.name} />
+                    {/* No studio row: where it is is the page you are
+                        standing on. The coach row only where the commons
+                        knows one with a page. */}
+                    <ClassRowMenu
+                      classId={c.id}
+                      base={base}
+                      iso={d.iso}
+                      name={c.name}
+                      coach={c.coachName && c.base ? { name: c.coachName, href: `/${c.base}` } : null}
+                    />
                   </div>
                 );
               })}

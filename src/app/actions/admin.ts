@@ -42,6 +42,49 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // person to pull the class in gets it too. It stops at the owner: two coaches
 // can both teach a "Yoga Flow" that are different classes, and one must not
 // inherit the other's photograph.
+/** ADMIN — repair a reported listing in place: the words, the time, the
+ *  length, the room. Every row of the series moves together (one weekly
+ *  class is one row per weekday), and it is an UPDATE, never a delete and
+ *  reinsert, so Going marks and shift covers are never at risk. The days
+ *  and the studio stay the coach's own: those reshape the series, and a
+ *  repair is not a rewrite. */
+export async function adminUpdateClass(
+  classId: string,
+  input: {
+    name: string;
+    description: string;
+    startTime: string;
+    durationMin: number;
+    location: string;
+  },
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not allowed." };
+  const name = input.name.trim().replace(/\s+/g, " ").slice(0, 80);
+  if (!name) return { ok: false, error: "The class needs a name." };
+  if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Invalid start time." };
+  const durationMin = Math.round(input.durationMin);
+  if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return { ok: false, error: "That class isn't there any more." };
+  await db
+    .update(schema.classes)
+    .set({
+      name,
+      description: input.description.trim().slice(0, 500) || null,
+      startTime: input.startTime,
+      durationMin,
+      // Only meaningful where no studio names the place; a studio class's
+      // location is a room or a floor and free text either way.
+      location: input.location.trim().slice(0, 120) || null,
+    })
+    .where(and(eq(schema.classes.userId, c.userId), eq(schema.classes.seriesId, c.seriesId)));
+  revalidatePath("/admin");
+  revalidatePath("/feed");
+  return { ok: true };
+}
+
 export async function adminSetClassImage(
   classId: string,
   image: string | null,

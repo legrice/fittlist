@@ -181,6 +181,9 @@ export function FollowingScreen({
                   base: i.base,
                   iso: i.iso,
                   canReport: i.coachId !== meId,
+                  onDetails: () => setPeek(peekOf(i, c ?? null)),
+                  coach: c ? { name: c.name, href: `/${c.handle}` } : null,
+                  studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
                 },
               };
             }),

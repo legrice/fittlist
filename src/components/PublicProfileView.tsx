@@ -386,7 +386,15 @@ export async function PublicProfileView({
                     return (
                       <div key={`${d.iso}-${c.id}`} className="clrow">
                         {row}
-                        <ClassRowMenu classId={c.id} base={base} iso={d.iso} name={c.name} />
+                        {/* No coach row: whose class it is is the page you
+                            are standing on. */}
+                        <ClassRowMenu
+                          classId={c.id}
+                          base={base}
+                          iso={d.iso}
+                          name={c.name}
+                          studio={s ? { name: s.name, href: `/s/${s.slug}` } : null}
+                        />
                       </div>
                     );
                   })}

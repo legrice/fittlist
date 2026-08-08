@@ -16,13 +16,7 @@ import { reportClass } from "@/app/actions/reports";
 // It is a sibling of the row, never a child, because a button inside a link
 // is not a thing (the remove X learned this first). Callers wrap both in
 // `.clrow` so the dots have a corner to sit in.
-export function ClassRowMenu({
-  classId,
-  base,
-  iso,
-  name,
-  canReport = true,
-}: {
+export type ClassRowMenuProps = {
   classId: string;
   /** The class page's base: a handle, or `s/{slug}` for a gym's class. */
   base: string;
@@ -31,7 +25,26 @@ export function ClassRowMenu({
   /** Off on your own rows: reporting your own class is a button that can
    *  only ever answer with an error. */
   canReport?: boolean;
-}) {
+  /** Opens the class over the list (Following's peek). Without it the
+   *  details row navigates to the class page, which is the same answer on
+   *  a screen with no sheet of its own. */
+  onDetails?: () => void;
+  /** Whose class it is, where that isn't the page you're already on. */
+  coach?: { name: string; href: string } | null;
+  /** Where it is, where that isn't the page you're already on. */
+  studio?: { name: string; href: string } | null;
+};
+
+export function ClassRowMenu({
+  classId,
+  base,
+  iso,
+  name,
+  canReport = true,
+  onDetails,
+  coach,
+  studio,
+}: ClassRowMenuProps) {
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [pending, start] = useTransition();
@@ -116,6 +129,55 @@ export function ClassRowMenu({
             </button>
             <h2>{name}</h2>
             <div className="settingslist">
+              {/* The places first, then the acts: what this is and whose,
+                  then what to do with it. */}
+              {onDetails ? (
+                <button
+                  className="setrow"
+                  onClick={() => {
+                    setOpen(false);
+                    onDetails();
+                  }}
+                >
+                  <span className="setrow-ic">
+                    <Icon name="event" size={20} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Class details</span>
+                  </span>
+                </button>
+              ) : (
+                <a className="setrow" href={pagePath}>
+                  <span className="setrow-ic">
+                    <Icon name="event" size={20} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Class details</span>
+                  </span>
+                </a>
+              )}
+              {coach && (
+                <a className="setrow" href={coach.href}>
+                  <span className="setrow-ic">
+                    <Icon name="account_circle" size={20} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Coach&rsquo;s profile</span>
+                    <span className="s">{coach.name}</span>
+                  </span>
+                </a>
+              )}
+              {studio && (
+                <a className="setrow" href={studio.href}>
+                  <span className="setrow-ic">
+                    <Icon name="place" size={20} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Studio page</span>
+                    <span className="s">{studio.name}</span>
+                  </span>
+                </a>
+              )}
               <button className="setrow" onClick={share}>
                 <span className="setrow-ic">
                   <Icon name="share" size={20} />

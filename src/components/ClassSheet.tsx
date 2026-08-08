@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { adminSetClassImage, adminSetClassLink } from "@/app/actions/admin";
+import { adminSetClassImage, adminSetClassLink, adminUpdateClass } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
+import { deleteClass } from "@/app/actions/classes";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
@@ -81,6 +82,51 @@ export function ClassSheet({
   // The admin's link door, same shape as the photo one: paste, save, done.
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  // The admin's repair kit for a reported class: the listing's words, time
+  // and length edited in place, and the way to take the whole thing down.
+  const [editOpen, setEditOpen] = useState(false);
+  const [ed, setEd] = useState({ name: "", description: "", startTime: "", durationMin: 50, location: "" });
+  const [confirmKill, setConfirmKill] = useState(false);
+  const openAdminEdit = () => {
+    if (!c) return;
+    setEd({
+      name: c.name,
+      description: c.description ?? "",
+      startTime: c.startRaw,
+      durationMin: c.durationMin,
+      location: c.location ?? "",
+    });
+    setEditOpen(true);
+  };
+  const saveAdminEdit = () => {
+    if (!c || pending) return;
+    start(async () => {
+      const res = await adminUpdateClass(c.id, ed);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't save that");
+        return;
+      }
+      setEditOpen(false);
+      toast("Saved");
+      const fresh = await classDetail(lookupKey, classId, c.whenIso);
+      if (fresh) setC(fresh);
+      onChanged?.(added);
+    });
+  };
+  const adminKill = () => {
+    if (!c || pending) return;
+    start(async () => {
+      const res = await deleteClass(c.id, "all");
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't delete that");
+        return;
+      }
+      setConfirmKill(false);
+      toast("Class deleted. Whoever marked it has been told.");
+      onChanged?.(false);
+      onClose();
+    });
+  };
   const saveAdminLink = () => {
     if (!c || shifting) return;
     startShift(async () => {
@@ -371,6 +417,32 @@ export function ClassSheet({
                   }}
                 >
                   <Icon name="link" size={19} /> Add a booking link
+                </button>
+              )}
+              {/* The repair kit, admin only: a reported listing managed on
+                  the class itself, where the report's link lands. */}
+              {c.adminEdit && (
+                <button
+                  className="ovmenu-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openAdminEdit();
+                  }}
+                >
+                  <Icon name="edit" size={19} /> Edit class
+                </button>
+              )}
+              {c.adminEdit && (
+                <button
+                  className="ovmenu-item ovmenu-quiet"
+                  role="menuitem"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    setConfirmKill(true);
+                  }}
+                >
+                  <Icon name="delete" size={19} /> Delete class
                 </button>
               )}
               {c.adminPhoto && c.image && (
@@ -903,6 +975,96 @@ export function ClassSheet({
           onClose={() => setCardOpen(false)}
           onToast={(m) => toast(m)}
         />
+      )}
+      {editOpen && c && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditOpen(false);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEditOpen(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>Edit class</h2>
+            <p className="lead">
+              A repair, in place: the days and the studio stay the coach&rsquo;s own.
+            </p>
+            <label className="flabel" htmlFor="aeName">Name</label>
+            <input
+              id="aeName"
+              className="editinput"
+              value={ed.name}
+              maxLength={80}
+              onChange={(e) => setEd({ ...ed, name: e.target.value })}
+            />
+            <label className="flabel" htmlFor="aeTime">Starts</label>
+            <input
+              id="aeTime"
+              className="editinput"
+              type="time"
+              value={ed.startTime}
+              onChange={(e) => setEd({ ...ed, startTime: e.target.value })}
+            />
+            <label className="flabel" htmlFor="aeDur">Length <span>· minutes</span></label>
+            <input
+              id="aeDur"
+              className="editinput"
+              type="number"
+              min={10}
+              max={360}
+              value={ed.durationMin}
+              onChange={(e) => setEd({ ...ed, durationMin: Number(e.target.value) })}
+            />
+            <label className="flabel" htmlFor="aeLoc">Room or place <span>· optional</span></label>
+            <input
+              id="aeLoc"
+              className="editinput"
+              value={ed.location}
+              maxLength={120}
+              onChange={(e) => setEd({ ...ed, location: e.target.value })}
+            />
+            <label className="flabel" htmlFor="aeDesc">Description</label>
+            <textarea
+              id="aeDesc"
+              className="abouttext"
+              rows={4}
+              maxLength={500}
+              value={ed.description}
+              onChange={(e) => setEd({ ...ed, description: e.target.value })}
+            />
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pending} onClick={saveAdminEdit}>
+                {pending ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmKill && c && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmKill(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Delete this class?</h2>
+            <p className="lead">
+              The whole series comes off {c.coachName}&rsquo;s page, and anyone who marked a
+              date gets told it&rsquo;s cancelled.
+            </p>
+            <div className="publishwrap nostick">
+              <button className="btn si" disabled={pending} onClick={adminKill}>
+                {pending ? "Deleting…" : "Delete class"}
+              </button>
+            </div>
+            <button className="confirm-keep" disabled={pending} onClick={() => setConfirmKill(false)}>
+              Keep it
+            </button>
+          </div>
+        </div>
       )}
       {reportOpen && (
         <div

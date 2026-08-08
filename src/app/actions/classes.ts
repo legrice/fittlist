@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import { storeImage } from "@/lib/storage";
 import type { BookingLink } from "@/db/schema";
+import { currentAdmin } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate, todayIso } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
@@ -445,13 +446,18 @@ export async function deleteClass(
   const [row] = await db
     .select()
     .from(schema.classes)
-    .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
+    .where(eq(schema.classes.id, classId));
   if (!row) return { ok: true, count: 0 };
+  // The admin can act on a reported class; everyone else only on their own.
+  // Everything below acts as the owner, so the cancellation notice still
+  // goes out under the coach's name, which is whose class it is.
+  if (row.userId !== userId && !(await currentAdmin())) return { ok: true, count: 0 };
+  const ownerId = row.userId;
 
   const [coach] = await db
     .select({ name: schema.users.name })
     .from(schema.users)
-    .where(eq(schema.users.id, userId));
+    .where(eq(schema.users.id, ownerId));
   let where = row.location;
   if (row.studioId) {
     const [st] = await db
@@ -529,7 +535,7 @@ export async function deleteClass(
         after(() => notifyCancelled(about, told));
       }
     }
-    syncGoogleAfter(userId);
+    syncGoogleAfter(ownerId);
     revalidatePath("/app");
     return { ok: true, count: 1 };
   }
@@ -541,7 +547,7 @@ export async function deleteClass(
       .from(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, userId),
+          eq(schema.classes.userId, ownerId),
           eq(schema.classes.seriesId, row.seriesId),
           isNull(schema.classes.specificDate),
         ),
@@ -551,7 +557,7 @@ export async function deleteClass(
       .delete(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, userId),
+          eq(schema.classes.userId, ownerId),
           eq(schema.classes.seriesId, row.seriesId),
           isNull(schema.classes.specificDate),
         ),
@@ -565,7 +571,7 @@ export async function deleteClass(
     if (told.length) after(() => notifyCancelled(about, told));
   }
 
-  syncGoogleAfter(userId);
+  syncGoogleAfter(ownerId);
   revalidatePath("/app");
   return { ok: true, count };
 }
