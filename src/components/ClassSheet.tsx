@@ -967,6 +967,7 @@ export function ClassSheet({
       )}
       {cardOpen && c && (
         <ShareCardSheet
+          noThemes={!!c.image}
           path={`/api/card/class/${c.id}`}
           fileName={`fittlist-${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"

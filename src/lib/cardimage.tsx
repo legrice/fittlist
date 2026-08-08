@@ -35,8 +35,6 @@ export type ClassCard = {
   /** Behind the photo, and instead of it: the owner's colour. */
   fallback: string;
   theme: StoryTheme;
-  /** The word in the corner: Weekly, One off, In my plans. */
-  kind: string;
   /** "Wednesday, July 24 · 6:00pm", already formatted. Empty for a class that
    *  has stopped running. */
   when: string;
@@ -114,36 +112,13 @@ export function classCard(c: ClassCard) {
           position: "relative",
         }}
       >
-        {/* The mark at the top, and across from it the one word that says what
-            kind of thing this is. */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={iconUri(ink)} alt="" width={44} height={45} />
-            <span style={{ fontWeight: 800, fontSize: 40, letterSpacing: -1.5 }}>FittList</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              background: c.theme.accent,
-              color: "#191502",
-              padding: "10px 26px",
-              borderRadius: 999,
-              fontSize: 24,
-              fontWeight: 700,
-              letterSpacing: 6,
-              textTransform: "uppercase",
-            }}
-          >
-            {c.kind}
-          </div>
+        {/* The mark at the top, alone: the Weekly/One off pill came off, by
+            Matt's call. The card is an invitation, and which recurrence
+            bucket the row lives in is bookkeeping nobody posts about. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={iconUri(ink)} alt="" width={44} height={45} />
+          <span style={{ fontWeight: 800, fontSize: 40, letterSpacing: -1.5 }}>FittList</span>
         </div>
 
         {/* The class, at the bottom where the scrim is darkest. */}
@@ -156,7 +131,9 @@ export function classCard(c: ClassCard) {
                 fontWeight: 700,
                 letterSpacing: 5,
                 textTransform: "uppercase",
-                color: c.theme.accent,
+                // White over a photograph, by Matt's call: the accent read
+                // fine on a flat colour and vanished into a busy picture.
+                color: c.image ? "rgba(255,255,255,.92)" : c.theme.accent,
               }}
             >
               {c.when}

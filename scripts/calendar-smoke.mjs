@@ -393,8 +393,8 @@ if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it i
 await p.locator(".shseg").waitFor();
 {
   const pills = (await p.locator(".shseg-pill").allInnerTexts()).map((t) => t.trim());
-  if (pills.join("|") !== "Week|Profile|QR code|Plain text")
-    fail("a coach's segments are Week, Profile, QR code, Plain text: " + pills.join("|"));
+  if (pills.join("|") !== "Week|Profile|QR code|Text")
+    fail("a coach's segments are Week, Profile, QR code, Text: " + pills.join("|"));
   if (!(await p.locator(".shseg-pill.on", { hasText: "Week" }).count()))
     fail("Week should lead selected");
   if ((await p.locator(".shswatch").count()) !== 16) fail("sixteen colours");
@@ -418,7 +418,7 @@ if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
 // and the copy landing in the toast. It was a rail chip for a day and
 // moved up beside Profile and QR code, by Matt's call: a different thing
 // to send, not a knob on the picture.
-await p.locator(".shseg-pill", { hasText: "Plain text" }).click();
+await p.locator(".shseg-pill", { hasText: "Text" }).click();
 {
   await p.locator(".shtext").waitFor();
   const txt = (await p.locator(".shtext").innerText()).trim();

@@ -47,7 +47,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       image: p.image,
       fallback: me ? avatarColor(me) : "#191502",
       theme: t,
-      kind: p.specificDate ? "One off" : "Weekly",
       when: iso ? `${fmtDateLong(iso)} · ${fmtTime(p.startTime)}` : "",
       name: p.name,
       meta: [p.withWho ? `with ${p.withWho}` : "", studio?.name ?? p.location ?? ""],

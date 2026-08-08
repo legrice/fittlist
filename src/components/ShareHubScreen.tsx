@@ -186,7 +186,7 @@ export function ShareHubScreen({
     // The week as words is a subject of its own, by Matt's call: it sat on
     // the rail as a chip and reads better beside Profile and QR code,
     // because it is a different thing to send, not a knob on the picture.
-    ...(coach ? [{ id: "text" as const, label: "Plain text" }] : []),
+    ...(coach ? [{ id: "text" as const, label: "Text" }] : []),
   ];
   // The next fortnight of start days on offer, whether or not each holds
   // anything: "from Saturday" is a real ask on a week that starts quiet.

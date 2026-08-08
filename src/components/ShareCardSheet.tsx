@@ -19,6 +19,7 @@ export function ShareCardSheet({
   alt,
   onClose,
   onToast,
+  noThemes = false,
 }: {
   /** The image route, without its query: "/api/card/matt". */
   path: string;
@@ -28,6 +29,9 @@ export function ShareCardSheet({
   alt: string;
   onClose: () => void;
   onToast: (m: string) => void;
+  /** A class with a photo: the card is the photo with white words, so a
+   *  colour picker only offers shades of unreadable, by Matt's call. */
+  noThemes?: boolean;
 }) {
   // Ink by default: the card leads with a photo, and photos sit best on dark.
   const [themeId, setThemeId] = useState<StoryThemeId>("iron");
@@ -85,6 +89,7 @@ export function ShareCardSheet({
         <p className="lead" style={{ marginTop: 0 }}>
           {lead}
         </p>
+        {!noThemes && (
         <div className="storycustom">
           <label className="flabel" htmlFor="cardTheme">
             Style <span>· colors for the card</span>
@@ -128,6 +133,7 @@ export function ShareCardSheet({
             )}
           </div>
         </div>
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="cardimg" src={cardUrl} alt={alt} />
         {/* Share leads, save is the quiet one. See ShareComposer: the filled

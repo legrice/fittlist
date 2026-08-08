@@ -219,6 +219,7 @@ export function PlanSheet({
 
       {cardOpen && p && (
         <ShareCardSheet
+          noThemes={!!p.image}
           path={`/api/card/plan/${p.id}`}
           fileName={`fittlist-${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`}
           title="Share this class"

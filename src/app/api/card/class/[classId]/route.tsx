@@ -56,7 +56,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ classId:
       image: c.image,
       fallback: avatarColor(owner),
       theme: t,
-      kind: c.specificDate ? "One off" : "Weekly",
       when: iso ? `${fmtDateLong(iso)} · ${fmtTime(c.startTime)}` : "",
       name: c.name,
       meta: [isGym ? "" : `with ${owner.name}`, studio?.name ?? c.location ?? ""],
