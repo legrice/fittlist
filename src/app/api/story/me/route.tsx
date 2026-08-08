@@ -34,7 +34,7 @@ export async function GET(req: Request) {
 
 
   const prefs = me.storyPrefs ?? {};
-  const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Come train", "with me."]);
+  const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Come", "with me."]);
   const showPhoto = prefs.showPhoto !== false && !!me.photo;
   const myHandle = (me.handle ?? "").trim();
 

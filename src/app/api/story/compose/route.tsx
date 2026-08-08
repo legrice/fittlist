@@ -20,8 +20,9 @@ import { shareRange, shareWeek } from "@/lib/shareweek";
 export const dynamic = "force-dynamic";
 
 /** Never a blank field. One week per kind: a coach's picture invites people
- *  to train with them, a member's invites people along. */
-const FALLBACK: [string, string] = ["Come train", "with me."];
+ *  to train with them, a member's invites people along. "Train with me.",
+ *  by Matt's call: the longer "Come train with me." read as two asks. */
+const FALLBACK: [string, string] = ["Train", "with me."];
 const FALLBACK_FAN: [string, string] = ["Come", "with me."];
 
 export async function GET(req: Request) {

@@ -440,7 +440,7 @@ export function ShareHubScreen({
                 <button className="shctrl" onClick={() => setPick("message")}>
                   <span className="shctrl-k">Headline</span>
                   <span className="shctrl-v">
-                    {headline.trim() || (coach ? "Come train with me." : "Come with me.")}
+                    {headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
@@ -641,7 +641,7 @@ export function ShareHubScreen({
               className="editinput"
               value={headline}
               maxLength={44}
-              placeholder="Come train with me."
+              placeholder={coach ? "Train with me." : "Come with me."}
               onChange={(e) => setHeadline(e.target.value)}
             />
             {/* How loud: a slider, by Matt's call, for taking up the room a
