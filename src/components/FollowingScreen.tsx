@@ -36,6 +36,16 @@ export type FeedItem = {
   durationMin: number;
   /** For sorting inside a day, since "6:00" sorts badly as a string. */
   mins: number;
+  /** The sheet's depth, carried on the row so the peek paints whole on its
+   *  first frame: the About text arriving a beat late grew the sheet after
+   *  it was already up, which reads as a jump. The photo deliberately stays
+   *  behind the fetch (legacy images are data URLs, and a feed carrying one
+   *  per row is a feed that weighs megabytes). */
+  about: string | null;
+  classType: string | null;
+  links: { label: string; url: string }[];
+  /** The studio's street address, the sub-line under the place fact. */
+  studioAddress: string | null;
 };
 
 /**
@@ -372,5 +382,11 @@ function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
     // class, which is why the row carries it rather than the coach doing.
     base: i.base,
     mine: false,
+    preview: {
+      description: i.about,
+      classType: i.classType,
+      links: i.links,
+      studioAddress: i.studioAddress,
+    },
   };
 }

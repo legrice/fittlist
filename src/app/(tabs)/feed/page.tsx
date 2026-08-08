@@ -100,6 +100,10 @@ export default async function FollowingPage() {
           ap: t.ap,
           durationMin: c.durationMin,
           mins: timeToMinutes(c.startTime),
+          about: c.description ?? null,
+          classType: c.classType ?? null,
+          links: c.links,
+          studioAddress: st?.address ?? null,
         });
       }
     }

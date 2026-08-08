@@ -47,6 +47,17 @@ export type PeekClass = {
   base?: string;
   /** Your own class only. */
   repeats?: string | null;
+  /** The depth the row already knows, painted on the first frame so the
+   *  sheet opens at its full height instead of growing when the fetch
+   *  lands: the About text arriving late bumped the sheet after it was
+   *  up. The fetch still runs (the photo and the rota live there); these
+   *  just stop the jump. */
+  preview?: {
+    description?: string | null;
+    classType?: string | null;
+    links?: { label: string; url: string }[];
+    studioAddress?: string | null;
+  };
   /**
    * A gym's class that you are on the rota for.
    *
@@ -258,7 +269,11 @@ export function ClassPeek({
       onToast("Couldn't share that");
     }
   };
-  const bookLinks = !cls.mine ? (full?.links ?? []) : [];
+  // The row's carried depth paints first and the fetch confirms it: the
+  // sheet must not grow a paragraph after it is already up.
+  const description = full?.description ?? cls.preview?.description ?? null;
+  const classType = full?.classType ?? cls.preview?.classType ?? null;
+  const bookLinks = !cls.mine ? (full?.links ?? cls.preview?.links ?? []) : [];
   const [bookOpen, setBookOpen] = useState(false);
 
   const run = (scope: "occurrence" | "all") =>
@@ -296,7 +311,7 @@ export function ClassPeek({
         )}
         {!full?.image && <span className="clspeek-grab" aria-hidden="true" />}
 
-        {full?.classType && <p className="clsfull-kick">{full.classType}</p>}
+        {classType && <p className="clsfull-kick">{classType}</p>}
         <h2 className="clspeek-nm">{cls.name}</h2>
         {cls.coach && <CoachBy coach={cls.coach} />}
 
@@ -328,7 +343,9 @@ export function ClassPeek({
                 ) : (
                   <span className="t">{cls.studio}</span>
                 )}
-                {full?.studioAddress && <span className="s">{full.studioAddress}</span>}
+                {(full?.studioAddress ?? cls.preview?.studioAddress) && (
+                  <span className="s">{full?.studioAddress ?? cls.preview?.studioAddress}</span>
+                )}
               </span>
             </div>
           )}
@@ -345,10 +362,10 @@ export function ClassPeek({
           )}
         </div>
 
-        {full?.description && (
+        {description && (
           <div className="clsfull-about">
             <h3>About</h3>
-            <p>{full.description}</p>
+            <p>{description}</p>
           </div>
         )}
 
