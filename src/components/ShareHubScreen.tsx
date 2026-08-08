@@ -460,6 +460,19 @@ export function ShareHubScreen({
                 )}
               </div>
             )}
+            {/* Said out loud, by Matt's call: this side of the tab is being
+                tried, and the people trying it should know that and have a
+                door to say whether it earns its place. The door is the same
+                feedback thread the settings rows open. */}
+            {!coach && (
+              <div className="shexp">
+                <p>
+                  This is an experiment. Build the week you&rsquo;re going to and share it with
+                  your people; we want to know whether it&rsquo;s worth keeping.
+                </p>
+                <a href="/feedback">Tell us what you think</a>
+              </div>
+            )}
           </>
         )}
 

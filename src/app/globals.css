@@ -4811,6 +4811,13 @@ button.ps-card { cursor: pointer; }
    picks, and the door reads as a row of its own under the list. */
 .shpick-add { display: block; margin: 10px 0 2px; font-size: 14.5px; }
 
+/* The experiment note under the member hub's buttons: quiet, honest, and
+   carrying the one door that decides whether the experiment stays. The
+   bottom margin is what lets it scroll clear of the fixed tab bar. */
+.shexp { margin: 18px 2px 96px; text-align: center; }
+.shexp p { font-size: 13px; line-height: 1.5; color: var(--ol); margin: 0 0 6px; }
+.shexp a { font-size: 13px; font-weight: 600; color: var(--si); text-decoration: none; }
+
 /* the photo picker inside the member profile sheet */
 .mepho { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 16px 0 4px; }
 .mepho-img { width: 92px; height: 92px; border-radius: 999px; object-fit: cover; display: block; background: #f0ebdd; }
