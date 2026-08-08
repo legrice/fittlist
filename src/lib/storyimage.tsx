@@ -59,9 +59,7 @@ export type StoryModel = {
    *  controls, where one merged picker would be eighty swatches to scan. */
   style: StoryStyle;
   format: StoryFormat;
-  /** The range it actually drew, never the day it was made. */
-  kicker: string;
-  /** Split in two, the second line in the accent. The second may be empty. */
+  /** Split in two for the line break; one colour. The second may be empty. */
   line1: string;
   line2: string;
   headlineSize: number;
@@ -87,7 +85,6 @@ export function renderStory(model: StoryModel) {
     theme: t,
     style: y,
     format,
-    kicker,
     line1,
     line2,
     headlineSize: hSize,
@@ -140,22 +137,10 @@ export function renderStory(model: StoryModel) {
           fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
         }}
       >
-        {/* The accent bar across the top came off, by Matt's call: the
-            brand stopped using the edge stripe anywhere else, and the
-            poster was the last place carrying it. */}
-        <div
-          style={{
-            display: "flex",
-            fontWeight: 700,
-            fontSize: px(34),
-            letterSpacing: 5,
-            textTransform: "uppercase",
-            color: t.muted,
-            marginBottom: px(30),
-          }}
-        >
-          {kicker}
-        </div>
+        {/* No eyebrow up here any more, by Matt's call: the accent bar
+            went first, then the range kicker, because each day heading
+            carries its own date now and a range over dated headings said
+            everything twice. The headline opens the poster. */}
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           // 216, up from 172 by Matt's call: the face is most of why a

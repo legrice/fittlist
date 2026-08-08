@@ -98,8 +98,6 @@ const SQ_PAD_BOTTOM = 92;
  */
 const PAD_TOP = 104;
 const PAD_BOTTOM = 104;
-/** "Week of Jul 31" and its margin. */
-const KICKER_H = 71;
 /** The verb, the url and the lockup along the bottom. */
 const FOOTER_H = 76;
 /** "Full schedule at", the small line above the url. */
@@ -119,7 +117,9 @@ export function listBudget(
 ): number {
   const [h, top, bottom] =
     format === "square" ? [SQUARE_H, SQ_PAD_TOP, SQ_PAD_BOTTOM] : [CANVAS_H, PAD_TOP, PAD_BOTTOM];
-  return h - top - bottom - KICKER_H - headlineHeight - FOOTER_H - VERB_H - (hasCity ? CITY_H : 0);
+  // The kicker's 71px came off with the kicker itself: the day headings
+  // carry their dates now, and the freed room goes to the rows.
+  return h - top - bottom - headlineHeight - FOOTER_H - VERB_H - (hasCity ? CITY_H : 0);
 }
 
 /** The padding the canvas is drawn with, so the route and the sums can't

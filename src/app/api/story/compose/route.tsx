@@ -5,7 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { headlineOf, renderStory } from "@/lib/storyimage";
 import { typeFaceOf } from "@/lib/typefaces";
 import { listBudget, planStory, type StoryFormat } from "@/lib/storyplan";
-import { shareKicker, shareRange, shareWeek } from "@/lib/shareweek";
+import { shareRange, shareWeek } from "@/lib/shareweek";
 
 // The composer's picture. One route for both hats and both canvases, because
 // the composer is one screen: a second route per combination is four routes
@@ -88,7 +88,6 @@ export async function GET(req: Request) {
     theme: t,
     style: y,
     format,
-    kicker: shareKicker(from, days),
     line1,
     line2,
     headlineSize: hSize,

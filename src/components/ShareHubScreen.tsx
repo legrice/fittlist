@@ -397,13 +397,6 @@ export function ShareHubScreen({
 
         {seg === "text" && (
           <>
-            {/* The why, said out loud: without it this reads as a lesser
-                copy of the picture rather than the format group chats
-                actually want. */}
-            <p className="shtext-why">
-              For group chats and DMs, where a pasted week is handier than a picture and anyone
-              can forward it. Same days, same classes as the image.
-            </p>
             <div className="shcta">
               <button className="btn si" onClick={copyText}>
                 Copy text

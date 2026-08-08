@@ -123,33 +123,12 @@ export async function shareWeek(
     .filter((iso) => (byDate.get(iso) ?? []).length > 0)
     .map((iso) => ({
       iso,
-      day: DAYS[dowOf(iso)],
+      // "Wed Aug 6", no comma, by Matt's call: the kicker range came off
+      // the poster, so each day heading carries its own date.
+      day: `${DAYS[dowOf(iso)]} ${new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`,
       items: (byDate.get(iso) ?? []).sort(
         (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
       ),
     }));
 }
 
-/** The label over the picture. A single day names itself, a Monday-led seven
- *  is a week, and anything else names both of its ends. */
-export function shareKicker(from: string, days: number): string {
-  const short = (iso: string) =>
-    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-  const dates = rangeDates(from, days);
-  const last = dates[dates.length - 1];
-  if (days === 1)
-    return new Date(`${from}T00:00:00Z`).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-  // Sunday is the app's first day of the week everywhere it draws a grid, so
-  // a seven starting on one is "the week" and anything else is a range.
-  if (days === 7 && new Date(`${from}T00:00:00Z`).getUTCDay() === 0) return `Week of ${short(from)}`;
-  return `${short(from)} to ${short(last)}`;
-}

@@ -32,23 +32,6 @@ export async function GET(req: Request) {
   const { from, days } = shareRange(qs.get("from"), qs.get("days"));
   const byDay = await shareWeek(userId, from, days);
 
-  // The kicker this sheet has always drawn: a range that starts today is still
-  // "my week", and anything else names both of its ends.
-  const shortDate = (iso: string) =>
-    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-  const last = new Date(Date.parse(`${from}T00:00:00Z`) + (days - 1) * 864e5)
-    .toISOString()
-    .slice(0, 10);
-  const kicker =
-    days === 1
-      ? shortDate(from)
-      : from === todayIsoNow()
-        ? `My week of ${shortDate(from)}`
-        : `${shortDate(from)} to ${shortDate(last)}`;
 
   const prefs = me.storyPrefs ?? {};
   const { line1, line2, size: hSize } = headlineOf(prefs.headline ?? "", ["Come train", "with me."]);
@@ -68,7 +51,6 @@ export async function GET(req: Request) {
     theme: t,
     style: y,
     format: "story",
-    kicker,
     line1,
     line2,
     headlineSize: hSize,

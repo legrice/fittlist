@@ -44,7 +44,10 @@ export async function GET(
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length) {
       items.forEach((c) => c.studioId && usedStudioIds.add(c.studioId));
-      byDay.push({ day: DAYS[dow], items });
+      byDay.push({
+        day: `${DAYS[dow]} ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`,
+        items,
+      });
     }
   }
   const studioRows = usedStudioIds.size
@@ -81,10 +84,6 @@ export async function GET(
     theme: t,
     style: y,
     format: "story",
-    kicker:
-      span === "week"
-        ? `Week of ${new Date(`${todayIso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
-        : "Today",
     line1,
     line2,
     headlineSize: hSize,

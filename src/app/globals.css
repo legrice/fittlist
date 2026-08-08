@@ -6439,9 +6439,6 @@ a.clspeek-by:active { opacity: .6; }
    face, because a personality name set in Helvetica is a claim with no
    evidence. */
 .typerow-sample { font-size: 24px; line-height: 1.25; color: var(--ink); }
-/* The why above the words: without it the text half reads as a lesser
-   copy of the picture rather than the format group chats want. */
-.shtext-why { margin: 18px 0 0; font-size: 15px; line-height: 1.5; color: var(--ol); }
 /* The week as words, previewed before the copy: the same monospace-free
    type as everything, on its own quiet card so it reads as a block. */
 .shtext {
