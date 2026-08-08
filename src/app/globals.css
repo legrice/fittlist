@@ -6161,6 +6161,11 @@ button.ps-card { cursor: pointer; }
   display: block; width: 44px; height: 5px; border-radius: 999px;
   background: var(--line); margin: 0 auto 18px;
 }
+/* The full class sheet with no photo: the grab handle is all that stands
+   between the sheet's top and the title, and it is not tall enough to
+   clear the floating X, which sat on the end of any long class name. The
+   photo case needs nothing, because the photo pushes the title down. */
+.clsfull .clspeek-grab { margin-bottom: 44px; }
 .clspeek-head { display: flex; align-items: flex-start; gap: 14px; }
 .clspeek-titles { flex: 1; min-width: 0; }
 /* The name leads. The date was a tracked eyebrow above it for a build and is a
@@ -6273,9 +6278,12 @@ a.clspeek-by:active { opacity: .6; }
    preview that changes when a swatch is tapped explains the swatches better
    than any words beside them.
    --------------------------------------------------------------------------- */
-.shtitle { margin-top: 12px; }
-.shsub { margin: 4px 0 0; font-size: 16px; color: var(--ol); }
-.shseg { display: flex; gap: 8px; margin-top: 16px; }
+/* The hub carries no title and no gradient, by Matt's call: the segments
+   say what there is, the picture is the screen, and the plain ground is
+   what makes the poster's own colours read. The marker class is on the
+   hub's cardwrap because the gradient lives on the layout's .screen. */
+.screen.hasnav:has(.shpage) { background: var(--ground); }
+.shseg { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .shseg-pill {
   /* White with no stroke, by Matt's call: on the hub's gray the fill is
      the edge, the same treatment the class boxes wear. */
@@ -6385,11 +6393,14 @@ a.clspeek-by:active { opacity: .6; }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
+/* The why above the words: without it the text half reads as a lesser
+   copy of the picture rather than the format group chats want. */
+.shtext-why { margin: 18px 0 0; font-size: 15px; line-height: 1.5; color: var(--ol); }
 /* The week as words, previewed before the copy: the same monospace-free
    type as everything, on its own quiet card so it reads as a block. */
 .shtext {
-  margin: 10px 0 0; padding: 14px 16px; border-radius: 14px;
-  background: var(--shell); color: var(--ink);
+  margin: 14px 0 0; padding: 16px 18px; border-radius: 16px;
+  background: var(--card); color: var(--ink);
   font-family: inherit; font-size: 14.5px; line-height: 1.5;
   white-space: pre-wrap; overflow-wrap: anywhere;
   max-height: 40vh; overflow-y: auto;

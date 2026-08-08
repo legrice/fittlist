@@ -20,19 +20,13 @@ import { Toast, useToast } from "@/components/Toast";
 // read as two posters. The renderer still honours a StoryStyle, so a real
 // style axis can return, but a row of thumbnails over one layout would be
 // a picker of lies.
-type Seg = "week" | "profile" | "qr";
+type Seg = "week" | "profile" | "qr" | "text";
 
 /** One occurrence the picture could hold, from the same loader the image
  *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
  *  `where` rides along for the text version, which says the studio the way
  *  the poster does. */
 export type HubItem = { key: string; iso: string; time: string; name: string; where: string };
-
-const WORDS: Record<Seg, { title: string; sub: string }> = {
-  week: { title: "Share the week", sub: "Straight to your story." },
-  profile: { title: "Share your profile", sub: "Your card, wherever people ask for it." },
-  qr: { title: "Your QR code", sub: "Hold it up after class. They land on your page." },
-};
 
 const short = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -86,7 +80,7 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "text">(null);
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -178,7 +172,6 @@ export function ShareHubScreen({
     try {
       await navigator.clipboard.writeText(weekText);
       toast("Copied, ready to paste");
-      setPick(null);
     } catch {
       toast("Couldn't copy");
     }
@@ -198,18 +191,22 @@ export function ShareHubScreen({
     ...(coach ? [{ id: "week" as const, label: "Week" }] : []),
     { id: "profile" as const, label: "Profile" },
     { id: "qr" as const, label: "QR code" },
+    // The week as words is a subject of its own, by Matt's call: it sat on
+    // the rail as a chip and reads better beside Profile and QR code,
+    // because it is a different thing to send, not a knob on the picture.
+    ...(coach ? [{ id: "text" as const, label: "Plain text" }] : []),
   ];
-  const words = WORDS[seg];
   // The next fortnight of start days on offer, whether or not each holds
   // anything: "from Saturday" is a real ask on a week that starts quiet.
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
 
   return (
     <>
-      <div className="cardwrap">
-        <h1 className="calbar-t shtitle">{words.title}</h1>
-        <p className="shsub">{words.sub}</p>
-
+      {/* No title and no lead, by Matt's call: the segments say what there
+          is and the picture is most of the screen, so two lines of words
+          above them were room spent saying what the eye already sees.
+          `shpage` is the marker the gradient opt-out keys on. */}
+      <div className="cardwrap shpage">
         <div className="shseg" role="tablist" aria-label="What to share">
           {segs.map((s) => (
             <button
@@ -224,7 +221,7 @@ export function ShareHubScreen({
           ))}
         </div>
 
-        {seg !== "qr" && (
+        {(seg === "week" || seg === "profile") && (
           <>
             {/* The picture leads, the way Spotify's share sheet leads with
                 the card, by Matt's call: the poster is the point of the
@@ -287,10 +284,6 @@ export function ShareHubScreen({
                   <span className="shctrl-k">Message</span>
                   <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
                 </button>
-                <button className="shctrl" onClick={() => setPick("text")}>
-                  <span className="shctrl-k">Text</span>
-                  <span className="shctrl-v">For the group chat</span>
-                </button>
               </div>
             )}
 
@@ -310,6 +303,24 @@ export function ShareHubScreen({
                   Save image
                 </a>
               )}
+            </div>
+          </>
+        )}
+
+        {seg === "text" && (
+          <>
+            {/* The why, said out loud: without it this reads as a lesser
+                copy of the picture rather than the format group chats
+                actually want. */}
+            <p className="shtext-why">
+              For group chats and DMs, where a pasted week is handier than a picture and anyone
+              can forward it. Same days, same classes as the image.
+            </p>
+            <pre className="shtext">{weekText}</pre>
+            <div className="shcta">
+              <button className="btn si" onClick={copyText}>
+                Copy text
+              </button>
             </div>
           </>
         )}
@@ -408,35 +419,6 @@ export function ShareHubScreen({
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {pick === "text" && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setPick(null);
-          }}
-        >
-          <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>The week as text</h2>
-            {/* The why, said out loud: without it this reads as a lesser
-                copy of the picture rather than the format group chats
-                actually want. */}
-            <p className="lead">
-              For group chats and DMs, where a pasted week is handier than a picture and anyone
-              can forward it. Same days, same classes as the image.
-            </p>
-            <pre className="shtext">{weekText}</pre>
-            <div className="publishwrap nostick">
-              <button className="btn si" onClick={copyText}>
-                Copy text
               </button>
             </div>
           </div>
