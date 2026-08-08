@@ -220,7 +220,7 @@ export function CalendarScreen({
                   Add moved to the floating button under the thumb, the spot
                   Following's search wears. */}
               <a className="calbar-share" href="/sharehub" aria-label="Share">
-                <Icon name="share" size={20} />
+                <Icon name="arrow_outward" size={20} />
               </a>
             </div>
           )}
@@ -296,7 +296,7 @@ export function CalendarScreen({
             </button>
           </div>
           <a className="calbar-share" href="/sharehub" aria-label="Share">
-            <Icon name="share" size={20} />
+            <Icon name="arrow_outward" size={20} />
           </a>
         </ScrollHead>
       )}
