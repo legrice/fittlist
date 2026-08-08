@@ -519,7 +519,13 @@ export function ShareHubScreen({
                     }}
                   >
                     <span className="setrow-txt">
-                      <span className="typerow-sample" style={{ fontFamily: `'${f.family}'` }}>
+                      <span
+                        className="typerow-sample"
+                        style={{
+                          fontFamily: `'${f.family}'`,
+                          fontStyle: f.headlineItalic ? "italic" : undefined,
+                        }}
+                      >
                         {f.label}
                       </span>
                     </span>

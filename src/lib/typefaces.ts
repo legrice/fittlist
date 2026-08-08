@@ -26,11 +26,16 @@ export type TypeFace = {
   family: string;
   /** The file under public/fonts. Null for Delight, which is always loaded. */
   file: string | null;
+  /** A second file when the voice splits: Elder millennial speaks Lora
+   *  italic in the headline and Lora regular in the body. */
+  headlineFile?: string;
+  /** The headline leans; the body stands. */
+  headlineItalic?: boolean;
 };
 
 export const TYPEFACES: TypeFace[] = [
   { id: "standard", label: "The standard", family: "Delight", file: null },
-  { id: "elder", label: "Elder millennial", family: "Anybody", file: "anybody.ttf" },
+  { id: "elder", label: "Elder millennial", family: "Lora", file: "lora.ttf", headlineFile: "lora-italic.ttf", headlineItalic: true },
   { id: "anchor", label: "News anchor", family: "DM Serif Display", file: "dm-serif-display.ttf" },
   { id: "psycho", label: "Psycho", family: "Barriecito", file: "barriecito.ttf" },
   { id: "friendly", label: "Overly friendly", family: "Bagel Fat One", file: "bagel-fat-one.ttf" },

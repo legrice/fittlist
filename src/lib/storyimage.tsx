@@ -37,13 +37,13 @@ export function loadStoryFonts() {
 /** The picked Type's own file, cached per path the way the base four are:
  *  the poster only ever carries Delight plus at most one guest face. */
 const extraFonts = new Map<string, Buffer>();
-function loadTypeFace(family: string, file: string) {
+function loadTypeFace(family: string, file: string, style: "normal" | "italic" = "normal") {
   let data = extraFonts.get(file);
   if (!data) {
     data = font(file);
     extraFonts.set(file, data);
   }
-  return { name: family, data, weight: 400 as const };
+  return { name: family, data, weight: 400 as const, style };
 }
 
 /** The block mark as a base64 SVG. It is recoloured only when it would vanish
@@ -77,7 +77,12 @@ export type StoryModel = {
   /** The poster's Font: the whole picture wears the guest face (Delight
    *  as fallback, the lockup exempt: a logo does not change fonts). Null
    *  or Delight means no guest font to load. */
-  typeface?: { family: string; file: string | null } | null;
+  typeface?: {
+    family: string;
+    file: string | null;
+    headlineFile?: string;
+    headlineItalic?: boolean;
+  } | null;
 };
 
 export function renderStory(model: StoryModel) {
@@ -178,6 +183,7 @@ export function renderStory(model: StoryModel) {
             // renders as typed, sentence case by default, and ALL CAPS is
             // the writer's own key to press.
             letterSpacing: guest ? 0 : -3,
+            fontStyle: guest?.headlineItalic ? "italic" : "normal",
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
           }}
@@ -405,7 +411,13 @@ export function renderStory(model: StoryModel) {
       width: 1080,
       height: square ? 1080 : 1920,
       fonts: guest
-        ? [...loadStoryFonts(), loadTypeFace(guest.family, guest.file!)]
+        ? [
+            ...loadStoryFonts(),
+            loadTypeFace(guest.family, guest.file!),
+            ...(guest.headlineFile
+              ? [loadTypeFace(guest.family, guest.headlineFile, "italic")]
+              : []),
+          ]
         : loadStoryFonts(),
       headers: { "Cache-Control": "no-store" },
     },
