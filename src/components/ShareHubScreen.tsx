@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { STORY_THEMES, type StoryThemeId } from "@/lib/format";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -68,10 +68,6 @@ export function ShareHubScreen({
   savedHeadline: string;
 }) {
   const [seg, setSeg] = useState<Seg>(coach ? "week" : "profile");
-  // The preview redraws server-side on every knob (theme, dates, classes),
-  // and a story takes a second or two to paint: the spinner is what says
-  // the wait is the picture coming rather than a dead control.
-  const [imgLoading, setImgLoading] = useState(true);
   const [themeId, setThemeId] = useState<StoryThemeId>("paper");
   const [from, setFrom] = useState(defaultFrom);
   const [days, setDays] = useState(7);
@@ -108,20 +104,16 @@ export function ShareHubScreen({
   const shown = inRange.filter((it) => !hide.has(it.key)).length;
 
   const hideParam = [...hide].join(",");
-  const imgUrl =
-    seg === "week"
-      ? `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=1` +
-        `&headline=${encodeURIComponent(headline)}` +
-        `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`
-      : `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
+  // Both pictures at once now, because both slides are on screen: the
+  // carousel is what makes swiping between them a thing.
+  const weekImgUrl =
+    `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=1` +
+    `&headline=${encodeURIComponent(headline)}` +
+    `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
+  const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
+  const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
   const fileName =
     seg === "week" ? `fittlist-${handle}-week.png` : `fittlist-${handle}-card.png`;
-
-  // Every knob that changes the url restarts the wait; a cached picture
-  // fires onLoad immediately and the spinner never registers.
-  useEffect(() => {
-    setImgLoading(true);
-  }, [imgUrl]);
   const qrUrl = `/api/qr/${handle}`;
   const qrFileName = `fittlist-${handle}-qr.png`;
 
@@ -200,6 +192,50 @@ export function ShareHubScreen({
   // anything: "from Saturday" is a real ask on a week that starts quiet.
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
 
+  // The carousel: the slides scroll-snap, a swipe lands on the next one and
+  // the controls below follow, and a pill tap rides the same scroll. The
+  // segment state stays the one truth; the scroll handler only reads which
+  // slide is nearest the middle, measured rather than divided, so a peeking
+  // neighbour never throws the arithmetic.
+  const slidesRef = useRef<HTMLDivElement>(null);
+  // A pill tap animates the scroll; the handler stays quiet until the ride
+  // ends, or the controls would flick through every segment passed over.
+  const rideTo = useRef<number | null>(null);
+  const nearestSlide = (el: HTMLDivElement) => {
+    const mid = el.scrollLeft + el.clientWidth / 2;
+    let best = 0;
+    let bd = Infinity;
+    [...el.children].forEach((k, idx) => {
+      const kid = k as HTMLElement;
+      const d = Math.abs(kid.offsetLeft + kid.offsetWidth / 2 - mid);
+      if (d < bd) {
+        bd = d;
+        best = idx;
+      }
+    });
+    return best;
+  };
+  const goSeg = (id: Seg) => {
+    setSeg(id);
+    const el = slidesRef.current;
+    const i = segs.findIndex((s) => s.id === id);
+    const kid = el?.children[i] as HTMLElement | undefined;
+    if (!el || !kid) return;
+    rideTo.current = i;
+    el.scrollTo({ left: kid.offsetLeft - (el.clientWidth - kid.offsetWidth) / 2, behavior: "smooth" });
+  };
+  const onSlides = () => {
+    const el = slidesRef.current;
+    if (!el) return;
+    const i = nearestSlide(el);
+    if (rideTo.current !== null) {
+      if (i === rideTo.current) rideTo.current = null;
+      return;
+    }
+    const id = segs[i]?.id;
+    if (id && id !== seg) setSeg(id);
+  };
+
   return (
     <>
       {/* No title and no lead, by Matt's call: the segments say what there
@@ -214,30 +250,55 @@ export function ShareHubScreen({
               role="tab"
               aria-selected={seg === s.id}
               className={`shseg-pill${seg === s.id ? " on" : ""}`}
-              onClick={() => setSeg(s.id)}
+              onClick={() => goSeg(s.id)}
             >
               {s.label}
             </button>
           ))}
         </div>
 
+        {/* The slides, one per segment, swiped between the way Spotify's
+            share sheet swipes between the song card and the lyrics, by
+            Matt's call: the next card peeks in from the edge, which is
+            what says a swipe exists. A grab mid-ride cancels the pill
+            tap's claim on the scroll. */}
+        <div
+          className="shslides"
+          ref={slidesRef}
+          onScroll={onSlides}
+          onTouchStart={() => (rideTo.current = null)}
+        >
+          {coach && (
+            <div className="shslide">
+              <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
+            </div>
+          )}
+          <div className="shslide">
+            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
+          </div>
+          <div className="shslide">
+            {/* The card the mock drew: name, the code on white, the address.
+                A bare code is anybody's; this one says whose. */}
+            <div className="qrcard">
+              <div className="qrcard-nm">{name}</div>
+              <div className="qrframe">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
+              </div>
+              <div className="qrurl">
+                {pageHost}/{handle}
+              </div>
+            </div>
+          </div>
+          {coach && (
+            <div className="shslide">
+              <pre className="shtext">{weekText}</pre>
+            </div>
+          )}
+        </div>
+
         {(seg === "week" || seg === "profile") && (
           <>
-            {/* The picture leads, the way Spotify's share sheet leads with
-                the card, by Matt's call: the poster is the point of the
-                screen, so it comes before every knob that changes it. */}
-            <div className="shprev-wrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className={`shprev${seg === "profile" ? " shprev-sq" : ""}${imgLoading ? " loading" : ""}`}
-                src={imgUrl}
-                alt={seg === "week" ? "Your week as a story image" : "Your profile card"}
-                onLoad={() => setImgLoading(false)}
-                onError={() => setImgLoading(false)}
-              />
-              {imgLoading && <span className="shspin" aria-label="Drawing the picture" />}
-            </div>
-
             {/* The colours right under the picture, bare circles, centred:
                 tapping one redraws the picture above it, and the picture is
                 the label, so the word "Colors" said nothing. */}
@@ -316,7 +377,6 @@ export function ShareHubScreen({
               For group chats and DMs, where a pasted week is handier than a picture and anyone
               can forward it. Same days, same classes as the image.
             </p>
-            <pre className="shtext">{weekText}</pre>
             <div className="shcta">
               <button className="btn si" onClick={copyText}>
                 Copy text
@@ -327,20 +387,6 @@ export function ShareHubScreen({
 
         {seg === "qr" && (
           <>
-            {/* The card the mock drew: name, the ask, the code on white, the
-                address. A bare code is anybody's; this one says whose. */}
-            <div className="qrcard">
-              {/* The name alone: "scan for my week" under it said what a QR
-                  code already says by existing, and came off by Matt's call. */}
-              <div className="qrcard-nm">{name}</div>
-              <div className="qrframe">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
-              </div>
-              <div className="qrurl">
-                {pageHost}/{handle}
-              </div>
-            </div>
             <div className="shcta">
               {canShareFiles ? (
                 <button
@@ -517,5 +563,31 @@ export function ShareHubScreen({
 
       <Toast msg={toastMsg} on={toastOn} />
     </>
+  );
+}
+
+/** One picture in the carousel, with its own spinner: the preview redraws
+ *  server-side on every knob and takes a second or two to paint, and the
+ *  spinner is what says the wait is the picture coming rather than a dead
+ *  control. Per slide, because two pictures are on screen at once now. */
+function SlideImg({ cls, src, alt }: { cls: string; src: string; alt: string }) {
+  const [loading, setLoading] = useState(true);
+  // Every knob that changes the url restarts the wait; a cached picture
+  // fires onLoad immediately and the spinner never registers.
+  useEffect(() => {
+    setLoading(true);
+  }, [src]);
+  return (
+    <div className="shprev-wrap">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className={`${cls}${loading ? " loading" : ""}`}
+        src={src}
+        alt={alt}
+        onLoad={() => setLoading(false)}
+        onError={() => setLoading(false)}
+      />
+      {loading && <span className="shspin" aria-label="Drawing the picture" />}
+    </div>
   );
 }

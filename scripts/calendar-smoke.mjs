@@ -398,9 +398,9 @@ await p.locator(".shseg").waitFor();
   if (!(await p.locator(".shseg-pill.on", { hasText: "Week" }).count()))
     fail("Week should lead selected");
   if ((await p.locator(".shswatch").count()) !== 16) fail("sixteen colours");
-  const before = await p.locator(".shprev").getAttribute("src");
+  const before = await p.locator(".shprev-week").getAttribute("src");
   await p.locator(".shswatch").nth(3).click();
-  const after = await p.locator(".shprev").getAttribute("src");
+  const after = await p.locator(".shprev-week").getAttribute("src");
   if (before === after) fail("a swatch should redraw the preview");
   // Copy-as-text came back as the rail's Text chip, by Matt's call: group
   // chats want a pasted week. It is a chip and a sheet now, never the old
@@ -444,20 +444,20 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   await p.locator(".shctrl", { hasText: "Message" }).click();
   await p.locator("#shMsg").fill("Fall schedule is live");
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
-  const srcMsg = await p.locator(".shprev").getAttribute("src");
+  const srcMsg = await p.locator(".shprev-week").getAttribute("src");
   if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
     fail("the message should reach the picture: " + srcMsg);
   await p.locator(".shctrl", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();
-  const src1 = await p.locator(".shprev").getAttribute("src");
+  const src1 = await p.locator(".shprev-week").getAttribute("src");
   if (!/days=3/.test(src1 ?? "")) fail("the range should reach the picture: " + src1);
   await p.locator(".shctrl", { hasText: "Classes" }).click();
   const first = p.locator(".shpick .setrow").first();
   if (await first.count()) {
     await first.click();
     await p.locator(".shpick .btn", { hasText: "Done" }).click();
-    const src2 = await p.locator(".shprev").getAttribute("src");
+    const src2 = await p.locator(".shprev-week").getAttribute("src");
     if (!/hide=/.test(src2 ?? "")) fail("a hidden class should reach the picture: " + src2);
   } else {
     await p.locator(".shpick .btn", { hasText: "Done" }).click();

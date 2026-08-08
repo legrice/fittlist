@@ -6393,6 +6393,22 @@ a.clspeek-by:active { opacity: .6; }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
+/* The carousel: one slide per segment, snapped, the neighbour peeking in
+   from the edge because the peek is what says a swipe exists. Full bleed
+   so the swipe lands anywhere on the row. */
+.shslides {
+  display: flex; gap: 14px; align-items: flex-start;
+  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  margin: 6px calc(50% - 50vw) 0; padding: 12px max(7vw, calc(50vw - 280px)) 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.shslides::-webkit-scrollbar { display: none; }
+.shslide {
+  flex: 0 0 min(86vw, 560px); scroll-snap-align: center;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.shslide .qrcard { width: min(100%, 340px); }
+.shslide .shtext { width: min(100%, 340px); margin-top: 0; }
 /* The why above the words: without it the text half reads as a lesser
    copy of the picture rather than the format group chats want. */
 .shtext-why { margin: 18px 0 0; font-size: 15px; line-height: 1.5; color: var(--ol); }
