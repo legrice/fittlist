@@ -26,6 +26,9 @@ const importBlock = src.match(/import \{([\s\S]*?)\} from "lucide-react";/);
 if (!importBlock) fail("could not find the lucide-react import");
 const imported = new Set(importBlock[1].split(",").map((s) => s.trim()).filter(Boolean));
 const handDrawn = new Set([...src.matchAll(/^function ([A-Za-z]+)\(/gm)].map(([, n]) => n));
+// The Material Symbols come in as `const MatX = mat("...")`: drawn here too,
+// just through the factory rather than a function declaration.
+for (const [, n] of src.matchAll(/^const ([A-Za-z]+) = mat\(/gm)) handDrawn.add(n);
 
 // And the imports have to be real: lucide-react re-exports every icon from
 // its ESM index, so a component missing from there was renamed out of the

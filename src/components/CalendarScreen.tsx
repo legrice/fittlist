@@ -173,7 +173,9 @@ export function CalendarScreen({
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
         <div className="calbar">
-          <h1 className="calbar-t">Calendar</h1>
+          {/* "Schedule", with the tab, by Matt's call: the word of a
+              management tool. */}
+          <h1 className="calbar-t">Schedule</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
@@ -182,7 +184,7 @@ export function CalendarScreen({
               screen reader. */}
           {!bare && (
             <div className="calbar-tools">
-              <div className="calseg" role="tablist" aria-label="Calendar view">
+              <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"
                   aria-label="List"
@@ -196,7 +198,7 @@ export function CalendarScreen({
                     setView("list");
                   }}
                 >
-                  <Icon name="list" size={21} />
+                  <Icon name="calendar_view_day" size={21} />
                 </button>
                 <button
                   role="tab"
@@ -211,7 +213,7 @@ export function CalendarScreen({
                     setView("month");
                   }}
                 >
-                  <Icon name="calendar_month" size={21} />
+                  <Icon name="calendar_view_month" size={21} />
                 </button>
               </div>
               {/* Share rides the title row now, white beside the toggle;
@@ -267,7 +269,7 @@ export function CalendarScreen({
           }
           sub={view === "month" ? <MonthHeadRow /> : undefined}
         >
-          <div className="calseg" role="tablist" aria-label="Calendar view, overlay">
+          <div className="calseg" role="tablist" aria-label="Schedule view, overlay">
             <button
               role="tab"
               aria-label="List"
@@ -278,7 +280,7 @@ export function CalendarScreen({
                 setView("list");
               }}
             >
-              <Icon name="list" size={21} />
+              <Icon name="calendar_view_day" size={21} />
             </button>
             <button
               role="tab"
@@ -290,7 +292,7 @@ export function CalendarScreen({
                 setView("month");
               }}
             >
-              <Icon name="calendar_month" size={21} />
+              <Icon name="calendar_view_month" size={21} />
             </button>
           </div>
           <a className="calbar-share" href="/sharehub" aria-label="Share">

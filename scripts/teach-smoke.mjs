@@ -33,7 +33,7 @@ const tabs = async () =>
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
 if (t.length !== 2) fail("a member gets two tabs, got " + t.join());
-if (!t[0].includes("Follow") || t.some((x) => /Share|Calendar/.test(x)))
+if (!t[0].includes("Follow") || t.some((x) => /Share|Schedule/.test(x)))
   fail("a member's bar is Follow and Profile only: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
@@ -95,19 +95,19 @@ await row.click();
 // Wait for the tab, not for a stopwatch. The switch flips optimistically and
 // the bar redraws on router.refresh(), which is a round trip: a fixed sleep
 // passes on a warm server and fails on a cold one, and it did.
-await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ timeout: 15000 });
+await p.locator(".navtab", { hasText: "Schedule" }).waitFor({ timeout: 15000 });
 if (!(await row.locator(".switch.on").count())) fail("the switch should read on");
 // No reload. The bar is rendered by the layout above this screen, so a switch
 // that adds a tab and leaves the bar alone until the next navigation has
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 4 || !t[0].includes("Follow") || !t[1].includes("Calendar") || !t[2].includes("Share"))
+if (t.length !== 4 || !t[0].includes("Follow") || !t[1].includes("Schedule") || !t[2].includes("Share"))
   fail("expected Follow, Calendar, Share, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.
-await p.locator(".navtab", { hasText: "Calendar" }).click();
+await p.locator(".navtab", { hasText: "Schedule" }).click();
 await p.waitForURL(/\/calendar/);
 await p.locator(".wkempty-t", { hasText: "Your calendar is empty" }).waitFor();
 console.log("the Calendar tab opens a real, empty week");
@@ -115,7 +115,7 @@ console.log("the Calendar tab opens a real, empty week");
 // Turn it off again: the tab goes, and nothing else is harmed.
 await p.goto(BASE + "/settings");
 await p.locator(".setrow", { hasText: "I teach too" }).click();
-await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
+await p.locator(".navtab", { hasText: "Schedule" }).waitFor({ state: "detached", timeout: 15000 });
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
 if (t.length !== 2) fail("turning it off should take Calendar and Share away, got " + t.join());

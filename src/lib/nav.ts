@@ -48,7 +48,7 @@ export function navTabs(
     // screen where the calendar is the working one.
     // "Following" again, by Matt's call: it wore the shorter "Follow" for a
     // stretch, and the longer word names the place rather than the act.
-    { id: "following", href: "/feed", icon: "groups", label: "Following" },
+    { id: "following", href: "/feed", icon: "group", label: "Following" },
     // Only for somebody who teaches: the calendar, and the hub for sharing
     // it. Share was in every bar for a build and came off the member's, by
     // Matt's call: until a member has a way to add things and a reason to,
@@ -57,12 +57,15 @@ export function navTabs(
     ...(coach
       ? [
           {
+            // "Schedule", by Matt's call: the word of a management tool,
+            // not a wall calendar. The route stays /calendar; a URL out in
+            // the world is not worth breaking for a label.
             id: "schedule" as const,
             href: scheduleHref ?? "/calendar",
-            icon: "calendar_today",
-            label: "Calendar",
+            icon: "calendar_month",
+            label: "Schedule",
           },
-          { id: "share" as const, href: "/sharehub", icon: "share", label: "Share" },
+          { id: "share" as const, href: "/sharehub", icon: "arrow_outward", label: "Share" },
         ]
       : []),
     // Who you are, which is your page: the tab opens the profile everybody
