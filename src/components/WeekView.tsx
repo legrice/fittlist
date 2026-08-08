@@ -1,5 +1,7 @@
 "use client";
 
+import { ClassRowMenu } from "@/components/ClassRowMenu";
+
 /**
  * One list of classes, for every screen that draws one.
  *
@@ -45,6 +47,9 @@ export type WeekRow = {
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
+  /** The dots in the row's corner: share, add to calendar, report. A
+   *  sibling of the row, never a child, so the row link stays a link. */
+  menu?: { classId: string; base: string; iso: string; canReport?: boolean };
 };
 
 export type WeekDayRows = {
@@ -89,9 +94,16 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
         <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
           <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
-            {d.rows.map((r) => (
-              <ClassLine key={r.key} row={r} />
-            ))}
+            {d.rows.map((r) =>
+              r.menu ? (
+                <div key={r.key} className="clrow">
+                  <ClassLine row={r} />
+                  <ClassRowMenu {...r.menu} name={r.name} />
+                </div>
+              ) : (
+                <ClassLine key={r.key} row={r} />
+              ),
+            )}
           </div>
         </section>
       ))}

@@ -917,7 +917,10 @@ export function ClassSheet({
               This goes to fittlist, not to the coach. If it checks out, nothing changes.
             </p>
             <div className="reportreasons">
-              {["Not a real class", "Wrong time or place", "Not at this gym", "Something else"].map(
+              {/* The same four the row menu offers: two lists for one act
+                  drift. "No longer running" took "Not at this gym"'s seat
+                  because stale inventory is what reports actually catch. */}
+              {["Not a real class", "No longer running", "Wrong time or place", "Something else"].map(
                 (r) => (
                   <button
                     key={r}

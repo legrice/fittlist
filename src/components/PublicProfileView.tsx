@@ -13,6 +13,7 @@ import { followingList } from "@/lib/circles";
 
 import { AgendaAvatar } from "@/components/Agenda";
 import { AvatarZoom } from "@/components/AvatarZoom";
+import { ClassRowMenu } from "@/components/ClassRowMenu";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
 import { FollowList } from "@/components/FollowList";
@@ -357,8 +358,9 @@ export async function PublicProfileView({
                     // studio. Pointing it at this handle would 404: the class
                     // is not this coach's to serve.
                     const at = classAddress(c, handle, s?.slug);
-                    const href = `/${at?.base ?? handle}/${c.id}?d=${d.iso}`;
-                    return (
+                    const base = at?.base ?? handle;
+                    const href = `/${base}/${c.id}?d=${d.iso}`;
+                    const row = (
                       <a
                         key={`${d.iso}-${c.id}`}
                         className="clline"
@@ -376,6 +378,16 @@ export async function PublicProfileView({
                           <span className="clline-w">{where}</span>
                         )}
                       </a>
+                    );
+                    // The dots ride a visitor's rows only: the owner's tap
+                    // already opens the editor, and reporting your own class
+                    // is a button that can only answer with an error.
+                    if (isOwner) return row;
+                    return (
+                      <div key={`${d.iso}-${c.id}`} className="clrow">
+                        {row}
+                        <ClassRowMenu classId={c.id} base={base} iso={d.iso} name={c.name} />
+                      </div>
                     );
                   })}
                 </div>

@@ -6580,6 +6580,22 @@ a.clspeek-by:active { opacity: .6; }
    another at the same hour: a box with a blank time column read as a box
    missing something rather than as a second thing at six. */
 .clline:active { opacity: .6; }
+/* A row with the dots: the wrapper holds both as siblings (a button inside
+   a link is not a thing), the row gives its corner up, and the dots sit in
+   it. Share, add to calendar, report; the report is the stale-inventory
+   loop, so the dots are on the row where somebody reading a wrong listing
+   actually is. */
+.clrow { position: relative; }
+.clrow > .clline { padding-right: 48px; }
+.clmore {
+  position: absolute; top: 8px; right: 6px;
+  width: 36px; height: 36px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ol);
+}
+.clmore:active { background: var(--cl); }
+/* The dots' sheet: the class name as the title, then the three rows. */
+.rowmenu h2 { margin: 4px 0 6px; padding-right: 40px; }
 /* The time cell: the clock on the name's baseline, at the name's weight (by
    Matt's call: one voice at two sizes), the length in gray on the studio's
    line under it. */

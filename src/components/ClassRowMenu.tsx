@@ -1,0 +1,196 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { Icon } from "@/components/Icon";
+import { Toast } from "@/components/Toast";
+import { reportClass } from "@/app/actions/reports";
+
+// The dots on a class row, everywhere one is listed: Following, a coach's
+// page, a studio's page. Three things a reader does with somebody else's
+// class: hand it on, put it on their own device calendar, and say it isn't
+// right. The last one is the stale-inventory loop: a directory kept by the
+// people reading it, which is the commons' whole deal, and the reason the
+// button is on the row rather than buried in the class sheet where nobody
+// browsing a wrong listing would find it.
+//
+// It is a sibling of the row, never a child, because a button inside a link
+// is not a thing (the remove X learned this first). Callers wrap both in
+// `.clrow` so the dots have a corner to sit in.
+export function ClassRowMenu({
+  classId,
+  base,
+  iso,
+  name,
+  canReport = true,
+}: {
+  classId: string;
+  /** The class page's base: a handle, or `s/{slug}` for a gym's class. */
+  base: string;
+  iso: string;
+  name: string;
+  /** Off on your own rows: reporting your own class is a button that can
+   *  only ever answer with an error. */
+  canReport?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [pending, start] = useTransition();
+  // Not useToast: that renders its element permanently, and this component
+  // is on every row of a long list, which put a fixed-position live region
+  // per class in the DOM (and broke every suite that locates ".toast" as a
+  // single thing). The element mounts only while it speaks.
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastOn, setToastOn] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const toast = (m: string) => {
+    timers.current.forEach(clearTimeout);
+    setToastMsg(m);
+    setToastOn(true);
+    timers.current = [
+      setTimeout(() => setToastOn(false), 2600),
+      setTimeout(() => setToastMsg(""), 3300),
+    ];
+  };
+
+  // The ics route addresses a gym's class by the bare slug; the /s/ prefix
+  // belongs to the page URL, not the lookup.
+  const icsBase = base.startsWith("s/") ? base.slice(2) : base;
+  const pagePath = `/${base}/${classId}?d=${iso}`;
+
+  const share = async () => {
+    const url = `${window.location.origin}${pagePath}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ url });
+        setOpen(false);
+        return;
+      }
+      throw new Error("no tray");
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast("Link copied, ready to paste");
+      } catch {
+        toast(url);
+      }
+      setOpen(false);
+    }
+  };
+
+  const sendReport = (reason: string) => {
+    if (pending) return;
+    start(async () => {
+      const res = await reportClass(classId, reason);
+      setReporting(false);
+      setOpen(false);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that");
+        return;
+      }
+      toast("Thanks. We'll take a look.");
+    });
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className="clmore"
+        aria-label={`More for ${name}`}
+        onClick={() => setOpen(true)}
+      >
+        <Icon name="more_horiz" size={20} />
+      </button>
+
+      {open && !reporting && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="sheet rowmenu">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>{name}</h2>
+            <div className="settingslist">
+              <button className="setrow" onClick={share}>
+                <span className="setrow-ic">
+                  <Icon name="share" size={20} />
+                </span>
+                <span className="setrow-txt">
+                  <span className="t">Share the link</span>
+                </span>
+              </button>
+              <a
+                className="setrow"
+                href={`/api/cal/${icsBase}/${classId}`}
+                download
+                onClick={() => setOpen(false)}
+              >
+                <span className="setrow-ic">
+                  <Icon name="event_added" size={20} />
+                </span>
+                <span className="setrow-txt">
+                  <span className="t">Add to calendar</span>
+                  <span className="s">Apple, Google or Outlook, as a calendar file.</span>
+                </span>
+              </a>
+              {canReport && (
+                <button className="setrow" onClick={() => setReporting(true)}>
+                  <span className="setrow-ic">
+                    <Icon name="flag" size={20} />
+                  </span>
+                  <span className="setrow-txt">
+                    <span className="t">Report this class</span>
+                    <span className="s">Not running any more, or listed wrong.</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {open && reporting && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setReporting(false);
+              setOpen(false);
+            }
+          }}
+        >
+          {/* The same words the class sheet's report uses, because it is the
+              same act: this goes to fittlist, and a report that checks out is
+              how a class a coach walked away from comes off the shelf. */}
+          <div className="sheet confirmsheet">
+            <h2>What&rsquo;s wrong with it?</h2>
+            <p className="lead">
+              This goes to fittlist, not to the coach. If it checks out, nothing changes.
+            </p>
+            <div className="reportreasons">
+              {["Not a real class", "No longer running", "Wrong time or place", "Something else"].map(
+                (r) => (
+                  <button
+                    key={r}
+                    className="btn ghost reportreason"
+                    disabled={pending}
+                    onClick={() => sendReport(r)}
+                  >
+                    {r}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toastMsg && <Toast msg={toastMsg} on={toastOn} />}
+    </>
+  );
+}

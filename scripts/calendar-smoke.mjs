@@ -401,8 +401,11 @@ await p.locator(".shtitle", { hasText: "Share the week" }).waitFor();
   await p.locator(".shswatch").nth(3).click();
   const after = await p.locator(".shprev").getAttribute("src");
   if (before === after) fail("a swatch should redraw the preview");
+  // Copy-as-text came back as the rail's Text chip, by Matt's call: group
+  // chats want a pasted week. It is a chip and a sheet now, never the old
+  // "Copy your week" settings row.
   if (await p.locator(".setrow", { hasText: "Copy your week" }).count())
-    fail("copy-week-as-text is gone, by Matt's call");
+    fail("the old copy-week row should not return; Text is a rail chip");
 }
 // The QR segment: the named card, the code, and the link beside it.
 await p.locator(".shseg-pill", { hasText: "QR code" }).click();
@@ -410,15 +413,35 @@ await p.locator(".qrcard .qrimg").waitFor();
 if (!(await p.locator(".qrcard-nm").innerText()).trim()) fail("the QR card names its owner");
 if (!(await p.locator(".shcta .btn", { hasText: "Copy link" }).count()))
   fail("the copy link lives with the QR code");
-// The week segment carries Dates and Classes side by side, and the pickers
-// really move the picture: fewer days, and a hidden class comes off the
-// count and the compose URL alike.
+// The week segment carries the rail: Dates, Classes, Message, Text, one
+// scrolling row of chips under the colours, and the pickers really move
+// the picture: fewer days, and a hidden class comes off the count and the
+// compose URL alike.
 await p.locator(".shseg-pill", { hasText: "Week" }).click();
 {
-  if ((await p.locator(".shctrl").count()) !== 2) fail("Dates and Classes sit side by side");
+  // innerText reports the CSS-uppercased label, so compare in lower case.
+  const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
+  if (keys.join("|") !== "dates|classes|message|text")
+    fail("the rail is Dates, Classes, Message, Text: " + keys.join("|"));
   const a = await p.locator(".shctrl").first().boundingBox();
   const b2 = await p.locator(".shctrl").nth(1).boundingBox();
-  if (Math.abs(a.y - b2.y) > 2) fail("the two controls share a row");
+  if (Math.abs(a.y - b2.y) > 2) fail("the chips share a row");
+  // The Message chip rewrites the poster's words, and the picture is asked
+  // for exactly what was typed.
+  await p.locator(".shctrl", { hasText: "Message" }).click();
+  await p.locator("#shMsg").fill("Fall schedule is live");
+  await p.locator(".shpick .btn", { hasText: "Done" }).click();
+  const srcMsg = await p.locator(".shprev").getAttribute("src");
+  if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
+    fail("the message should reach the picture: " + srcMsg);
+  // The Text chip says why it exists and previews the same week; the copy
+  // ends in the toast.
+  await p.locator(".shctrl", { hasText: "Text" }).click();
+  await p.locator(".shtext").waitFor();
+  const txt = (await p.locator(".shtext").innerText()).trim();
+  if (!/Full schedule:/.test(txt)) fail("the text ends on the page link");
+  await p.locator(".shpick .btn", { hasText: "Copy text" }).click();
+  await p.locator(".toast.on", { hasText: "Copied" }).waitFor();
   await p.locator(".shctrl", { hasText: "Dates" }).click();
   await p.locator(".shday", { hasText: /^3$/ }).click();
   await p.locator(".shpick .btn", { hasText: "Done" }).click();

@@ -1,5 +1,6 @@
 import { clockParts, fmtDayHeaderRel, todayIso } from "@/lib/format";
 import { ClassOpener } from "@/components/ClassOpener";
+import { ClassRowMenu } from "@/components/ClassRowMenu";
 
 export type StudioDay = {
   iso: string;
@@ -126,20 +127,25 @@ export function StudioSchedule({
                     </div>
                   );
                 }
-                const href = c.base
-                  ? `/${c.base}/${c.id}?d=${d.iso}`
-                  : `/s/${slug}/${c.id}?d=${d.iso}`;
+                const base = c.base ?? `s/${slug}`;
+                const href = `/${base}/${c.id}?d=${d.iso}`;
                 return (
-                  <a
-                    key={`${d.iso}-${c.id}`}
-                    className={rowCls}
-                    href={href}
-                    data-cid={c.id}
-                    data-d={d.iso}
-                    data-base={c.base ?? undefined}
-                  >
-                    {inner}
-                  </a>
+                  // The dots are a sibling of the link, inside the same
+                  // corner, on every row with a real page behind it. The
+                  // report row is how a class nobody teaches any more comes
+                  // off this page.
+                  <div key={`${d.iso}-${c.id}`} className="clrow">
+                    <a
+                      className={rowCls}
+                      href={href}
+                      data-cid={c.id}
+                      data-d={d.iso}
+                      data-base={c.base ?? undefined}
+                    >
+                      {inner}
+                    </a>
+                    <ClassRowMenu classId={c.id} base={base} iso={d.iso} name={c.name} />
+                  </div>
                 );
               })}
             </div>

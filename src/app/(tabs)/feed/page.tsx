@@ -143,5 +143,13 @@ export default async function FollowingPage() {
   // a coach rides their own week here, so the rail is never empty for them,
   // and "the people you follow have not put anything up" to somebody who
   // follows nobody blamed people who do not exist.
-  return <FollowingScreen items={items} coaches={rail} follows={followed.length} todayIso={today} />;
+  return (
+    <FollowingScreen
+      items={items}
+      coaches={rail}
+      follows={followed.length}
+      todayIso={today}
+      meId={userId}
+    />
+  );
 }

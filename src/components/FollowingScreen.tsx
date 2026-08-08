@@ -56,6 +56,7 @@ export function FollowingScreen({
   coaches,
   follows,
   todayIso,
+  meId,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
@@ -63,6 +64,9 @@ export function FollowingScreen({
    *  fork on this, because `coaches` carries a coach's own week too. */
   follows: number;
   todayIso: string;
+  /** The viewer: their own rows (a coach's own week rides this feed) skip
+   *  the report row, which could only ever answer with an error. */
+  meId?: string;
 }) {
   const [focus, setFocus] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
@@ -162,6 +166,12 @@ export function FollowingScreen({
                   ? { id: c.id, name: c.name, color: c.color, photo: c.photo }
                   : null,
                 onTap: () => setPeek(peekOf(i, c ?? null)),
+                menu: {
+                  classId: i.classId,
+                  base: i.base,
+                  iso: i.iso,
+                  canReport: i.coachId !== meId,
+                },
               };
             }),
         };
