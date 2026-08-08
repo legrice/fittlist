@@ -137,11 +137,16 @@ export function renderStory(model: StoryModel) {
         </div>
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
+          // 216, up from 172 by Matt's call: the face is most of why a
+          // poster reads as somebody's. The headline's maxWidth below
+          // yields the difference, and the rows never reach this corner
+          // (the header block the budget reserves is taller than the
+          // photo at its smallest).
           <img
             src={photo}
             alt=""
-            width={px(172)}
-            height={px(172)}
+            width={px(216)}
+            height={px(216)}
             style={{
               position: "absolute",
               top: pad.top - 8,
@@ -164,7 +169,7 @@ export function renderStory(model: StoryModel) {
             letterSpacing: -3,
             textTransform: "uppercase",
             marginBottom: px(78),
-            maxWidth: photo ? 690 : 908,
+            maxWidth: photo ? 646 : 908,
           }}
         >
           <span>{line1}</span>

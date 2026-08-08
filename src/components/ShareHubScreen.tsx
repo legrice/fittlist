@@ -23,8 +23,10 @@ import { Toast, useToast } from "@/components/Toast";
 type Seg = "week" | "profile" | "qr";
 
 /** One occurrence the picture could hold, from the same loader the image
- *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on. */
-export type HubItem = { key: string; iso: string; time: string; name: string };
+ *  route reads: key is `{classId}.{iso}`, which is what hiding is keyed on.
+ *  `where` rides along for the text version, which says the studio the way
+ *  the poster does. */
+export type HubItem = { key: string; iso: string; time: string; name: string; where: string };
 
 const WORDS: Record<Seg, { title: string; sub: string }> = {
   week: { title: "Share the week", sub: "Straight to your story." },
@@ -84,7 +86,7 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
-  const [pick, setPick] = useState<null | "dates" | "classes" | "message">(null);
+  const [pick, setPick] = useState<null | "dates" | "classes" | "message" | "text">(null);
   const [canShareFiles, setCanShareFiles] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [pageHost, setPageHost] = useState("fittlist.co");
@@ -114,7 +116,7 @@ export function ShareHubScreen({
   const hideParam = [...hide].join(",");
   const imgUrl =
     seg === "week"
-      ? `/api/story/compose?theme=${themeId}&from=${from}&days=${days}` +
+      ? `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=1` +
         `&headline=${encodeURIComponent(headline)}` +
         `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`
       : `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
@@ -154,6 +156,31 @@ export function ShareHubScreen({
       if ((err as Error)?.name !== "AbortError") toast(`Couldn't share the ${failWord}`);
     } finally {
       setSharing(false);
+    }
+  };
+
+  // The week as words, matching the picture exactly: same range, same hide
+  // set, same studio names. Ends on the page link, because the text is a
+  // door as well as an answer.
+  const weekText = useMemo(() => {
+    const kept = inRange.filter((it) => !hide.has(it.key));
+    const byDay = new Map<string, HubItem[]>();
+    for (const it of kept) byDay.set(it.iso, [...(byDay.get(it.iso) ?? []), it]);
+    const blocks = [...byDay.entries()].map(
+      ([iso, list]) =>
+        `${wday(iso)}, ${short(iso)}\n` +
+        list.map((it) => `${it.time} ${it.name}${it.where ? ` · ${it.where}` : ""}`).join("\n"),
+    );
+    return [`My week, ${rangeLabel}`, ...blocks, `Full schedule: ${pageHost}/${handle}`].join("\n\n");
+  }, [inRange, hide, rangeLabel, pageHost, handle]);
+
+  const copyText = async () => {
+    try {
+      await navigator.clipboard.writeText(weekText);
+      toast("Copied, ready to paste");
+      setPick(null);
+    } catch {
+      toast("Couldn't copy");
     }
   };
 
@@ -260,6 +287,10 @@ export function ShareHubScreen({
                   <span className="shctrl-k">Message</span>
                   <span className="shctrl-v">{headline.trim() || "Come train with me."}</span>
                 </button>
+                <button className="shctrl" onClick={() => setPick("text")}>
+                  <span className="shctrl-k">Text</span>
+                  <span className="shctrl-v">For the group chat</span>
+                </button>
               </div>
             )}
 
@@ -333,6 +364,17 @@ export function ShareHubScreen({
               <Icon name="close" size={18} />
             </button>
             <h2>Dates</h2>
+            {/* The one preset worth a chip: "I'm at this tonight" is a real
+                post, and it was a dropdown plus a number away. */}
+            <button
+              className={`shday shtoday${from === today && days === 1 ? " on" : ""}`}
+              onClick={() => {
+                setFrom(today);
+                setDays(1);
+              }}
+            >
+              Today only
+            </button>
             {/* A dropdown, not a list of rows: fourteen rows was a scroll for
                 a one-word answer, and the native picker is the control
                 everybody's thumb already knows. */}
@@ -366,6 +408,35 @@ export function ShareHubScreen({
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pick === "text" && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPick(null);
+          }}
+        >
+          <div className="sheet shpick">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setPick(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>The week as text</h2>
+            {/* The why, said out loud: without it this reads as a lesser
+                copy of the picture rather than the format group chats
+                actually want. */}
+            <p className="lead">
+              For group chats and DMs, where a pasted week is handier than a picture and anyone
+              can forward it. Same days, same classes as the image.
+            </p>
+            <pre className="shtext">{weekText}</pre>
+            <div className="publishwrap nostick">
+              <button className="btn si" onClick={copyText}>
+                Copy text
               </button>
             </div>
           </div>

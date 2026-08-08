@@ -6382,6 +6382,18 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15.5px; font-weight: 600;
 }
 .shday.on { background: var(--si); border-color: var(--si); color: #fff; }
+/* The Today preset in the Dates sheet: the shday's own drawing at its
+   natural width, above the dropdown it saves a trip through. */
+.shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
+/* The week as words, previewed before the copy: the same monospace-free
+   type as everything, on its own quiet card so it reads as a block. */
+.shtext {
+  margin: 10px 0 0; padding: 14px 16px; border-radius: 14px;
+  background: var(--shell); color: var(--ink);
+  font-family: inherit; font-size: 14.5px; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  max-height: 40vh; overflow-y: auto;
+}
 /* The tick that says a class is on the picture: filled when showing, an
    empty ring when hidden, sitting where a setrow's icon would. */
 .shtick {

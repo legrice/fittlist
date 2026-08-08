@@ -49,7 +49,13 @@ export async function GET(req: Request) {
   const typed = qs.get("headline") ?? prefs.headline ?? "";
   const { line1, line2, size } = headlineOf(typed, FALLBACK);
 
-  const showPhoto = qs.get("photo") !== "0" && prefs.showPhoto !== false && !!me.photo;
+  // An explicit param wins over the saved preference: the hub always asks
+  // for the photo (photo=1, by Matt's call), and a coach who turned it off
+  // in the old composer should not have that survive a screen that no
+  // longer offers the switch.
+  const photoParam = qs.get("photo");
+  const showPhoto =
+    (photoParam ? photoParam !== "0" : prefs.showPhoto !== false) && !!me.photo;
   const showStudio = qs.get("studios") !== "0";
   const city = qs.get("city") === "0" ? "" : (me.location ?? "").trim();
   const handle = (me.handle ?? "").trim();

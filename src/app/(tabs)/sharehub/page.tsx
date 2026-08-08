@@ -43,7 +43,7 @@ export default async function ShareHubPage() {
   if (coach) {
     const days = await shareWeek(userId, defaultFrom, 14);
     items = days.flatMap((d) =>
-      d.items.map((it) => ({ key: it.key, iso: it.iso, time: it.time, name: it.name })),
+      d.items.map((it) => ({ key: it.key, iso: it.iso, time: it.time, name: it.name, where: it.where })),
     );
     // Start where the week has something: the empty poster should never be
     // the first one anybody sees.
