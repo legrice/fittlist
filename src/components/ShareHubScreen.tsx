@@ -162,6 +162,16 @@ export function ShareHubScreen({
   }, [items, from, days]);
   const shown = inRange.filter((it) => !hide.has(it.key)).length;
 
+  // The range follows an add it doesn't cover: a class added for a date
+  // past the picked window redrew a poster it wasn't on, and the only way
+  // to see it was a reload recomputing the start day. Same rule the page's
+  // own defaultFrom applies: nothing in range while the week holds
+  // something means start where the week does.
+  useEffect(() => {
+    if (coach) return;
+    if (items.length > 0 && inRange.length === 0) setFrom(items[0].iso);
+  }, [coach, items, inRange.length]);
+
   const hideParam = [...hide].join(",");
   // Both pictures at once now, because both slides are on screen: the
   // carousel is what makes swiping between them a thing.
