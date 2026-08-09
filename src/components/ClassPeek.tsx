@@ -40,7 +40,16 @@ export type PeekClass = {
   /** Absent on your own class: the sheet you are looking at is yours. It
    *  carries a face because it is a by-line now rather than a row in the
    *  facts, and a by-line without a face is a name in a list. */
-  coach?: { name: string; handle: string | null; photo?: string | null; color?: string } | null;
+  coach?: {
+    name: string;
+    handle: string | null;
+    photo?: string | null;
+    color?: string;
+    /** Whether the viewer already favorited them, when the caller knows:
+     *  set at all is what draws the star. A class is how you discover a
+     *  coach, so the peek is where the relationship starts. */
+    favorited?: boolean;
+  } | null;
   /** Where the fuller detail is loaded from: a handle, or `s/{slug}` for a
    *  gym's class. Without it the sheet stays a summary, which is all a row
    *  built from a calendar the viewer already owns needs. */
@@ -73,6 +82,34 @@ export type PeekClass = {
 /** The by-line: their face and their name, and a door to their week when they
  *  have a page. A coach with no handle is a gym's account, which is a place
  *  rather than a person and has nothing to open. */
+/** The star beside the coach's name: favorite them without leaving the
+ *  class. The same action the profile pill runs; the peek is just the
+ *  moment of intent. */
+function PeekStar({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
+  const [on, setOn] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      className={`peekstar${on ? " on" : ""}`}
+      disabled={busy}
+      aria-pressed={on}
+      aria-label={on ? `Unfavorite ${name}` : `Favorite ${name}`}
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (busy) return;
+        setBusy(true);
+        const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
+        const res = on ? await unfollowTrainer(handle) : await followTrainer(handle);
+        setBusy(false);
+        if (res.ok) setOn(!on);
+      }}
+    >
+      <Icon name={on ? "star_filled" : "star"} size={22} />
+    </button>
+  );
+}
+
 function CoachBy({ coach }: { coach: NonNullable<PeekClass["coach"]> }) {
   const face = (
     <>
@@ -313,7 +350,14 @@ export function ClassPeek({
 
         {classType && <p className="clsfull-kick">{classType}</p>}
         <h2 className="clspeek-nm">{cls.name}</h2>
-        {cls.coach && <CoachBy coach={cls.coach} />}
+        {cls.coach && (
+          <span className="clspeek-byrow">
+            <CoachBy coach={cls.coach} />
+            {cls.coach.handle && cls.coach.favorited !== undefined && (
+              <PeekStar handle={cls.coach.handle} name={cls.coach.name} initial={cls.coach.favorited} />
+            )}
+          </span>
+        )}
 
         {/* The facts, the classic way: a glyph, the fact, its detail under
             it. The date leads because which day is the first thing checked. */}

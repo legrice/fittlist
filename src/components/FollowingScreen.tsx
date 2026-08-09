@@ -186,13 +186,13 @@ export function FollowingScreen({
                 coach: c
                   ? { id: c.id, name: c.name, color: c.color, photo: c.photo }
                   : null,
-                onTap: () => setPeek(peekOf(i, c ?? null)),
+                onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
                 menu: {
                   classId: i.classId,
                   base: i.base,
                   iso: i.iso,
                   canReport: i.coachId !== meId,
-                  onDetails: () => setPeek(peekOf(i, c ?? null)),
+                  onDetails: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
                   coach: c ? { name: c.name, href: `/${c.handle}` } : null,
                   studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
                 },
@@ -457,7 +457,7 @@ function groupBusyPlaces(
   return out;
 }
 
-function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
+function peekOf(i: FeedItem, coach: FeedCoach | null, favorited?: boolean): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside
   // "6:00 pm" and "Ironbound Performance Athletics", not above them.
@@ -472,7 +472,7 @@ function peekOf(i: FeedItem, coach: FeedCoach | null): PeekClass {
     studio: i.where,
     studioHref: i.whereHref,
     coach: coach
-      ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color }
+      ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited }
       : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
     // class, which is why the row carries it rather than the coach doing.

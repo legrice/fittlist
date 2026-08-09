@@ -5999,6 +5999,17 @@ button.ps-card { cursor: pointer; }
 }
 .catpill.on { background: var(--ink); color: var(--paper); }
 
+/* The by-row: the coach and, on Discover, the star that favorites them
+   without leaving the class. A class is how you discover a coach. */
+.clspeek-byrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.peekstar {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--ol); cursor: pointer;
+}
+.peekstar.on { color: var(--si); }
+.peekstar[disabled] { opacity: .55; }
+
 /* The peek. A bottom sheet rather than the class overlay: this is a list you
    skim and act on several times before closing, and the overlay's shape says
    one thing, whole screen. */
