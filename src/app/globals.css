@@ -7039,15 +7039,11 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
 
-/* Discover's copy of the flat rows. The structure lives on `.clline`
-   itself now (the calendars flattened onto the same grammar, by Matt's
-   call); what stays Discover's own is the coach with no face, in the
-   studio line's voice, because your coaches already have faces at the top
-   of the screen. The rail and the peek are where a person leads; this
-   list is where a class does. */
+/* Discover's copy of the flat rows: the calendar's grammar exactly, face
+   and all, by Matt's call. It dropped the face for a build and the face
+   came back the moment the calendar wore one: two lists of the same rows
+   saying who differently is two apps. */
 .disflat { display: flex; flex-direction: column; margin-top: 2px; }
-.disflat .clline-by { margin-top: 2px; font-size: 15px; font-weight: 400; }
-.disflat .clline-av { display: none; }
 
 /* The Following tab on a profile: the directory's own rows, so a person
    reads the same way everywhere. A touch of top air before the first

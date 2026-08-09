@@ -2266,8 +2266,8 @@ Both calendars wear the
 flat grammar now, by Matt's call: the structure lives on `.clline`
 itself (time and length down the left, the class, the place and the
 attribution stacked beside them, a hairline between rows), the boxes
-are gone, and Discover's `.disflat` scope keeps only its own
-difference, the coach with no face. The member week's rows moved off
+are gone, and Discover's rows are the calendar's exactly, the coach's
+small face included, by Matt's call. The member week's rows moved off
 `Agenda`/`ClassRow` onto the same `ClassLine`, which grew `href` and an
 `extra` slot for the also-going line. Add opens on Discover (a browse
 list with inline Save, the same feed), the coaching form one segment
