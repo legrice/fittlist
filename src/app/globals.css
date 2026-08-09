@@ -6955,10 +6955,13 @@ a.clspeek-by:active { opacity: .6; }
 .disflat .clline-w { grid-row: 2; }
 .disflat .clline-by {
   grid-column: 2; grid-row: 3;
-  margin: 7px 0 0; font-size: 14.5px; font-weight: 500; color: var(--ol);
-  gap: 6px;
+  margin: 2px 0 0; font-size: 15px; font-weight: 400; color: var(--ol);
 }
-.disflat .clline-av { width: 22px; height: 22px; font-size: 9px; }
+/* No face on the row, by Matt's call: the class is the emphasis here and
+   the coach is a caption in the studio's own voice, because your coaches
+   already have faces at the top of the screen. The rail and the peek are
+   where a person leads; this list is where a class does. */
+.disflat .clline-av { display: none; }
 /* The dots ride the row's top line here, so the name clears them and the
    by-line (now the bottom line) runs full width. */
 .disflat .clrow .clline-by { padding-right: 0; }
