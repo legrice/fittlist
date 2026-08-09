@@ -194,12 +194,14 @@ export function FollowingScreen({
   }, [items, todayIso]);
 
   // The selected day's rows alone, in the flat grammar: the tab is the day
-  // heading now, so the list carries no bands of its own.
+  // heading now, so the list carries no bands of its own. Every class lists
+  // itself, by Matt's call: a busy place folded into one studio row for a
+  // while, and on a young list that hides the very volume the screen is
+  // trying to show. The fold can come back the day a single gym's Monday
+  // actually drowns everything around it.
   const dayRows: WeekRow[] = useMemo(() => {
     const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
-    return groupBusyPlaces(list, coachById, router).map((r) => {
-      if (r.group) return r.row;
-      const i = r.item;
+    return list.map((i) => {
       const c = coachById.get(i.coachId);
       return {
         key: i.key,
@@ -221,7 +223,7 @@ export function FollowingScreen({
         },
       };
     });
-  }, [shown, day, coachById, favIds, meId, router]);
+  }, [shown, day, coachById, favIds, meId]);
 
   // The feed is everyone now, so it is only ever empty when nothing is
   // listed near you at all: the one state a brand-new region sees. No
@@ -497,61 +499,6 @@ function tabLabel(iso: string): string {
 
 /** The tapped occurrence, as the sheet wants it. Somebody else's class, so it
  *  names the coach and offers their week rather than an edit. */
-/**
- * A busy place folds into one row, per the brief: three or more classes at
- * one studio on one day become the place, the time range, the count and
- * the coaches, opening the studio's page. This is what stops an expo or a
- * loaded gym Monday from taking over the feed. Classes with no studio page
- * never group; there is nothing to open.
- */
-function groupBusyPlaces(
-  list: FeedItem[],
-  coachById: Map<string, FeedCoach>,
-  router: { push: (href: string) => void },
-): ({ group: true; row: import("@/components/WeekView").WeekRow } | { group?: false; item: FeedItem })[] {
-  const byPlace = new Map<string, FeedItem[]>();
-  for (const i of list) {
-    if (!i.whereHref) continue;
-    byPlace.set(i.whereHref, [...(byPlace.get(i.whereHref) ?? []), i]);
-  }
-  const grouped = new Set<string>();
-  for (const [href, items] of byPlace) if (items.length >= 3) grouped.add(href);
-  const emitted = new Set<string>();
-  const out: ({ group: true; row: import("@/components/WeekView").WeekRow } | { group?: false; item: FeedItem })[] = [];
-  for (const i of list) {
-    if (!i.whereHref || !grouped.has(i.whereHref)) {
-      out.push({ item: i });
-      continue;
-    }
-    if (emitted.has(i.whereHref)) continue;
-    emitted.add(i.whereHref);
-    const items = byPlace.get(i.whereHref)!;
-    const first = items[0];
-    const last = items[items.length - 1];
-    const names = [
-      ...new Set(
-        items
-          .map((x) => coachById.get(x.coachId)?.name.split(/\s+/)[0])
-          .filter((n): n is string => !!n),
-      ),
-    ];
-    const who = names.length > 2 ? `${names.slice(0, 2).join(", ")} +${names.length - 2}` : names.join(", ");
-    const href = i.whereHref;
-    out.push({
-      group: true,
-      row: {
-        key: `grp|${first.iso}|${href}`,
-        name: first.where ?? "A busy day",
-        where: `${items.length} classes \u00b7 ${first.hm}${first.ap.toLowerCase()} to ${last.hm}${last.ap.toLowerCase()}${who ? ` \u00b7 ${who}` : ""}`,
-        hm: first.hm,
-        ap: first.ap,
-        onTap: () => router.push(href),
-      },
-    });
-  }
-  return out;
-}
-
 function peekOf(i: FeedItem, coach: FeedCoach | null, favorited?: boolean): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside

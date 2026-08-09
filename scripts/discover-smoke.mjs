@@ -31,8 +31,8 @@ const mk = async (email, name, member) => {
   return p;
 };
 
-// One coach, three Monday classes at one studio (the grouped row) and one
-// Tuesday class (a plain row).
+// One coach, three Monday classes at one studio and one Tuesday class:
+// every one lists itself, however many share a place.
 const coach = await mk(`dc${stamp}@example.com`, `Drew ${stamp.slice(-3)}`, false);
 const addClass = async (nm, day, t, firstStudio) => {
   await coach.goto(BASE + "/calendar");
@@ -94,17 +94,19 @@ const pickDay = async (page, needle) => {
   fail("no day tab shows what the suite wants");
 };
 
-// The grouped row: three classes at one place on one day fold into one.
-await pickDay(m, (p) => p.getByText(/3 classes ·/).count());
-if (await m.getByText("Noon Lift").count()) fail("grouped classes must not also list singly");
+// A busy Monday lists every class, by Matt's call: no studio fold, so the
+// day says how much is actually on.
+await pickDay(m, (p) => p.getByText("Dawn Lift").count());
+for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift"])
+  if (!(await m.getByText(nm).count())) fail(nm + " must list itself");
+if (await m.getByText(/3 classes ·/).count()) fail("no grouped studio row any more");
 if (!(await m.locator(".disflat .clline").count())) fail("the day's rows are the flat grammar");
-console.log("a busy Monday folds into one flat row");
+console.log("a busy Monday lists all three");
 
 // The time filter narrows within the day: Evening leaves only the six
-// o'clock, which also un-groups the place (two classes is no crowd).
+// o'clock.
 await m.locator(".catpill", { hasText: "Evening" }).click();
 await m.getByText("Dusk Lift").first().waitFor();
-if (await m.getByText(/3 classes ·/).count()) fail("a filtered day regroups honestly");
 if (await m.getByText("Dawn Lift").count()) fail("Evening must drop the six a.m.");
 await m.locator(".catpill", { hasText: "Evening" }).click();
 console.log("the time chips narrow the day");

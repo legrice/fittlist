@@ -2195,8 +2195,11 @@ you favorite a coach instead, a shortcut to a person rather than a
 subscription that fills a feed. The tab is Discover (route stays /feed):
 classes near you from every listable coach, deduped to one row per class
 (same name, start, place, day, however many accounts list it), category
-pills from the types the list holds, and three-plus classes at one place
-on one day folding into one row that opens the place. The rail on top is
+pills from the types the list holds, and every class listing itself: a
+busy place folded into one studio row for a while, and on a young list
+that hides the very volume the screen is trying to show, so the fold came
+off by Matt's call and can return the day one gym's Monday actually
+drowns everything around it. The rail on top is
 the favorites alone, soonest class first; tapping a face opens that
 coach's fortnight (CoachPeek) with the favorite star in its head, and the
 class peek carries the same star beside the coach's name, because a class
