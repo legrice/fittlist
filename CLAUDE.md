@@ -2256,6 +2256,11 @@ and the shortcut deselects itself. On the image, coaching rows carry
 hats: a poster that is all teaching rows stays exactly what it was, and
 saved rows keep the coach's first name, which is a fact rather than a tag.
 
+`discoverspec.md` is the populated page's spec: what the top rail does,
+said in one place, and members favoriting members (the rail becomes
+favorites of any kind, a member's peek is their visible marks behind
+`canSeeWeek`, personal rows never reach it). Specced, not built.
+
 Still open from the brief: its own open items only (cancelled saved
 classes, ending a repeating save, push for a favorite's new classes,
 analytics names).
