@@ -84,8 +84,21 @@ await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");
 await m.locator(".trayitem", { hasText: "Your week" }).waitFor();
 await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
-if ((await m.locator(".fchips .catpill").count()) !== 4) fail("four filter chips");
+if ((await m.locator(".fchips .catpill").count()) !== 5)
+  fail("the leading Filters chip plus the four questions");
 if (await m.locator(".fchip-clear").count()) fail("Clear only appears once something is set");
+
+// The leading chip opens everything at once and stays open while you set
+// it; picking inside marks the chip with the count.
+await m.locator(".fchip-lead").click();
+await m.locator(".fsheet h2", { hasText: "Filters" }).waitFor();
+await m.locator(".fsec-h", { hasText: "Time of day" }).waitFor();
+await m.locator(".fopt", { hasText: "Morning, before 11" }).click();
+if (!(await m.locator(".fsheet").count())) fail("the everything sheet stays open on a pick");
+await m.locator(".fsheet-foot .btn.si", { hasText: "Done" }).click();
+await m.locator(".fchip-lead.on", { hasText: "1" }).waitFor();
+await m.locator(".fchip-clear").click();
+console.log("the leading chip opens all filters and wears the count");
 
 // The dates run left to right again, by Matt's call, leading with Today.
 await m.locator(".daytabs").waitFor();

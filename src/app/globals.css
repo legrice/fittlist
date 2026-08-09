@@ -2064,12 +2064,14 @@ button.ps-card { cursor: pointer; }
 
 /* Inbox button in the schedule header */
 .brandbar-actions { display: flex; align-items: center; gap: 6px; }
-/* Bare glyphs, all the same ink and size. The white circles made three
-   buttons read as three different controls, and the header is not a place
-   that needs its furniture outlined. */
+/* The white circle, by Matt's call: with the magnifier and the gear gone
+   the corner is down to the bell, and one circled control reads as a
+   button where a bare glyph read as decoration. (Three circles once read
+   as three different controls; there are not three any more.) */
 .brandbar-actions .iconbtn {
   width: 38px; height: 38px; border-radius: 999px;
-  background: none; border: 0; color: var(--ink);
+  background: var(--card); border: 0; color: var(--ink);
+  box-shadow: 0 1px 4px rgba(17, 17, 17, .08);
   /* the unread badge overhangs — don't let .iconbtn's clip cut it */
   overflow: visible;
 }
@@ -6035,8 +6037,20 @@ button.ps-card { cursor: pointer; }
 .catpill.fchip-clear {
   background: transparent; border: 1.5px dashed var(--line); color: var(--ol);
 }
-/* A filter sheet: one question, its options as rows, the pick marked. */
+/* The leading chip: the slider glyph and the count of what is set, the
+   door to everything at once. */
+.fchip-lead { display: inline-flex; align-items: center; gap: 5px; padding: 0 12px; }
+/* A filter sheet: one question, its options as rows, the pick marked. The
+   everything sheet stacks the questions under small headings and scrolls. */
 .fsheet h2 { margin: 4px 0 4px; }
+.fsheet { max-height: 82vh; overflow-y: auto; overscroll-behavior: contain; }
+.fsec-h {
+  margin: 18px 0 2px; font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ol);
+}
+.fsec-h:first-child { margin-top: 4px; }
+.fsheet-foot { display: flex; flex-direction: column; gap: 8px; }
+.fsheet-foot .btn.ghost { margin: 0; }
 .fopt {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   width: 100%; text-align: left; padding: 15px 2px;

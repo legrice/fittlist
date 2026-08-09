@@ -139,7 +139,7 @@ export function FollowingScreen({
   meKind: "coach" | "member";
 }) {
   const [f, setF] = useState<Filters>(NO_FILTERS);
-  const [sheet, setSheet] = useState<null | "time" | "dist" | "cat" | "place">(null);
+  const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
   // One day at a time, back by Matt's call: the date tabs run left to
   // right and the list under them is that day alone. Lands on today, or
   // the first day that holds anything when today is quiet.
@@ -243,7 +243,7 @@ export function FollowingScreen({
   // nothing coming up hides the block entirely.
   const railShows = follows === 0 || myRail.length >= RAIL_MIN_PEOPLE;
 
-  const pickDist = (v: Filters["dist"]) => {
+  const pickDist = (v: Filters["dist"], close: boolean) => {
     if (v !== "any" && !geo && typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -251,8 +251,90 @@ export function FollowingScreen({
       );
     }
     setF((cur) => ({ ...cur, dist: v }));
-    setSheet(null);
+    if (close) setSheet(null);
   };
+
+  const activeCount =
+    (f.time !== "any" ? 1 : 0) +
+    (f.dist !== "any" ? 1 : 0) +
+    (f.cat !== "any" ? 1 : 0) +
+    (f.place !== "any" ? 1 : 0);
+
+  // The option rows, shared by the single-question sheets and the
+  // everything sheet behind the leading chip: one renderer, so the two
+  // can never offer different answers. `close` is the single-question
+  // behavior; the everything sheet stays open while you set several.
+  const timeOpts = (close: boolean) =>
+    TIMES.map(([v, label]) => (
+      <button
+        key={v}
+        className="fopt"
+        aria-pressed={f.time === v}
+        onClick={() => {
+          setF((cur) => ({ ...cur, time: v }));
+          if (close) setSheet(null);
+        }}
+      >
+        {label}
+        {f.time === v && <Icon name="check" size={19} />}
+      </button>
+    ));
+  const distOpts = (close: boolean) =>
+    DISTS.map(([v, label]) => (
+      <button key={v} className="fopt" aria-pressed={f.dist === v} onClick={() => pickDist(v, close)}>
+        {label}
+        {f.dist === v && <Icon name="check" size={19} />}
+      </button>
+    ));
+  const catOpts = (close: boolean) =>
+    ["any", ...cats].map((v) => (
+      <button
+        key={v}
+        className="fopt"
+        aria-pressed={f.cat === v}
+        onClick={() => {
+          setF((cur) => ({ ...cur, cat: v }));
+          if (close) setSheet(null);
+        }}
+      >
+        {v === "any" ? "All types" : v}
+        {f.cat === v && <Icon name="check" size={19} />}
+      </button>
+    ));
+  const placeOpts = () => (
+    <>
+      <button
+        className="fopt"
+        aria-pressed={f.place === "any"}
+        onClick={() => setF((cur) => ({ ...cur, place: "any" }))}
+      >
+        All places
+        {f.place === "any" && <Icon name="check" size={19} />}
+      </button>
+      {placeNames.map((n) => {
+        const on = f.place !== "any" && (f.place as string[]).includes(n);
+        return (
+          <button
+            key={n}
+            className="fopt"
+            aria-pressed={on}
+            onClick={() =>
+              setF((cur) => {
+                const sel = cur.place === "any" ? [] : [...(cur.place as string[])];
+                const at = sel.indexOf(n);
+                if (at > -1) sel.splice(at, 1);
+                else sel.push(n);
+                return { ...cur, place: sel.length ? sel : "any" };
+              })
+            }
+          >
+            {n}
+            {on && <Icon name="check" size={19} />}
+          </button>
+        );
+      })}
+    </>
+  );
 
   const chipLabel = (k: "time" | "dist" | "cat" | "place"): string => {
     if (k === "time") return TIMES.find(([v]) => v === f.time)![1].split(",")[0];
@@ -324,6 +406,18 @@ export function FollowingScreen({
       <div className="nearhead">
         <span className="nearlbl">Upcoming near you</span>
         <div className="catpills fchips">
+          {/* The leading chip opens everything at once, wearing the count
+              of what is set, by Matt's call: the single-question chips
+              answer one ask each, and this is the door for somebody
+              setting several. */}
+          <button
+            className={`catpill fchip-lead${activeCount ? " on" : ""}`}
+            aria-label={`Filters${activeCount ? `, ${activeCount} set` : ""}`}
+            onClick={() => setSheet("all")}
+          >
+            <Icon name="tune" size={17} />
+            {activeCount > 0 && <span>{activeCount}</span>}
+          </button>
           {(
             [
               ["time", f.time !== "any"],
@@ -446,97 +540,61 @@ export function FollowingScreen({
               <Icon name="close" size={18} />
             </button>
             <h2>
-              {sheet === "time"
-                ? "Time of day"
-                : sheet === "dist"
-                  ? "Distance"
-                  : sheet === "cat"
-                    ? "Type"
-                    : "Places"}
+              {sheet === "all"
+                ? "Filters"
+                : sheet === "time"
+                  ? "Time of day"
+                  : sheet === "dist"
+                    ? "Distance"
+                    : sheet === "cat"
+                      ? "Type"
+                      : "Places"}
             </h2>
             <div className="fopts">
-              {sheet === "time" &&
-                TIMES.map(([v, label]) => (
-                  <button
-                    key={v}
-                    className="fopt"
-                    aria-pressed={f.time === v}
-                    onClick={() => {
-                      setF((cur) => ({ ...cur, time: v }));
-                      setSheet(null);
-                    }}
-                  >
-                    {label}
-                    {f.time === v && <Icon name="check" size={19} />}
-                  </button>
-                ))}
-              {sheet === "dist" &&
-                DISTS.map(([v, label]) => (
-                  <button
-                    key={v}
-                    className="fopt"
-                    aria-pressed={f.dist === v}
-                    onClick={() => pickDist(v)}
-                  >
-                    {label}
-                    {f.dist === v && <Icon name="check" size={19} />}
-                  </button>
-                ))}
-              {sheet === "cat" &&
-                ["any", ...cats].map((v) => (
-                  <button
-                    key={v}
-                    className="fopt"
-                    aria-pressed={f.cat === v}
-                    onClick={() => {
-                      setF((cur) => ({ ...cur, cat: v }));
-                      setSheet(null);
-                    }}
-                  >
-                    {v === "any" ? "All types" : v}
-                    {f.cat === v && <Icon name="check" size={19} />}
-                  </button>
-                ))}
-              {sheet === "place" && (
+              {sheet === "time" && timeOpts(true)}
+              {sheet === "dist" && distOpts(true)}
+              {sheet === "cat" && catOpts(true)}
+              {sheet === "place" && placeOpts()}
+              {sheet === "all" && (
                 <>
-                  <button
-                    className="fopt"
-                    aria-pressed={f.place === "any"}
-                    onClick={() => setF((cur) => ({ ...cur, place: "any" }))}
-                  >
-                    All places
-                    {f.place === "any" && <Icon name="check" size={19} />}
-                  </button>
-                  {placeNames.map((n) => {
-                    const on = f.place !== "any" && (f.place as string[]).includes(n);
-                    return (
-                      <button
-                        key={n}
-                        className="fopt"
-                        aria-pressed={on}
-                        onClick={() =>
-                          setF((cur) => {
-                            const sel = cur.place === "any" ? [] : [...(cur.place as string[])];
-                            const at = sel.indexOf(n);
-                            if (at > -1) sel.splice(at, 1);
-                            else sel.push(n);
-                            return { ...cur, place: sel.length ? sel : "any" };
-                          })
-                        }
-                      >
-                        {n}
-                        {on && <Icon name="check" size={19} />}
-                      </button>
-                    );
-                  })}
+                  {/* Everything at once, staying open while you set it:
+                      the single chips answer one question each, this one
+                      answers them all before the list redraws behind. */}
+                  <p className="fsec-h">Time of day</p>
+                  {timeOpts(false)}
+                  <p className="fsec-h">Distance</p>
+                  {distOpts(false)}
+                  {cats.length > 0 && (
+                    <>
+                      <p className="fsec-h">Type</p>
+                      {catOpts(false)}
+                    </>
+                  )}
+                  {placeNames.length > 0 && (
+                    <>
+                      <p className="fsec-h">Places</p>
+                      {placeOpts()}
+                    </>
+                  )}
                 </>
               )}
             </div>
-            {sheet === "place" && (
-              <div className="publishwrap nostick">
+            {(sheet === "place" || sheet === "all") && (
+              <div className="publishwrap nostick fsheet-foot">
                 <button className="btn si" onClick={() => setSheet(null)}>
                   Done
                 </button>
+                {sheet === "all" && anyFilter && (
+                  <button
+                    className="btn ghost"
+                    onClick={() => {
+                      setF(NO_FILTERS);
+                      setSheet(null);
+                    }}
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
             )}
           </div>

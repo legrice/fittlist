@@ -2234,7 +2234,9 @@ reach it.
 
 The filters are four dropdown chips, each a sheet, each displaying its
 current value ("Within 1 mile", not "Distance"), inverting when set,
-with a dashed Clear appearing when anything is. Time is before 11, 11 to
+with a dashed Clear appearing when anything is, and a leading chip
+(the tune glyph wearing the count of what is set) opening every
+question in one sheet that stays open while you answer them. Time is before 11, 11 to
 4, after 4; distance is 1, 3 or 5 miles from browser geolocation against
 `studios.lat/lng` (asked only when a distance is picked; a class with no
 pin, or a viewer without one, passes rather than vanishing); type is the
