@@ -6014,6 +6014,39 @@ button.ps-card { cursor: pointer; }
 .catpill.on { background: var(--ink); color: var(--paper); }
 .calpills { padding: 2px 18px 10px; }
 .calpills .catpill { background: var(--paper); border: 1px solid var(--line); }
+/* The hairline between the two filter axes on Discover's rail: what the
+   class is, then when in the day it runs. */
+.catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
+
+/* Discover's date rail: one day at a time, left to right, by Matt's call.
+   Underline tabs rather than pills, because the row sits over a list and a
+   second row of pills under the filter pills was pills on pills. It pins
+   under the header (`--dayband-top`, the same measured number the day bands
+   read, published by the screen's own useBandTop call) while the rail above
+   scrolls away, so the day you are reading is always named. */
+.daytabs {
+  position: sticky; top: var(--dayband-top, 0px); z-index: 6;
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  margin: 4px -18px 0; padding: 0 10px;
+  background: var(--band); border-bottom: 1px solid var(--div);
+}
+.daytabs::-webkit-scrollbar { display: none; }
+.daytab {
+  flex: 0 0 auto; padding: 10px 12px 11px; margin-bottom: -1px;
+  border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px; font-weight: 500; color: var(--ol); white-space: nowrap;
+}
+.daytab.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+/* Why Today isn't selected, said once, in the quiet gray a notice wears. */
+.daynote {
+  text-align: center; font-size: 13.5px; color: var(--ol);
+  background: var(--cl); border-radius: 10px; padding: 9px 12px; margin: 10px 0 0;
+}
+/* A quiet day is a line, not a screenful: the tabs right above it are the
+   way to a louder one. */
+.dayempty { text-align: center; font-size: 14.5px; color: var(--ol); padding: 46px 0; }
 .calpills .catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
 /* RSVP's two lines on the class sheet: the count once somebody is in,
@@ -6900,6 +6933,37 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 15px; color: var(--ol); min-width: 0;
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
+
+/* Discover's list, out of the containers, by Matt's call: the boxes read
+   as furniture on a screen whose whole job is scanning a day, and the flat
+   grammar (time and length down the left, the class, place and coach
+   stacked beside them, a hairline between rows) is the booking-app shape
+   everybody already reads. Scoped to Discover: the calendars keep their
+   boxes, which is the shape Matt picked for them, and this screen is a
+   different act (browsing, not owning). The coach drops to a caption line
+   under the place, face and all, because on this list the class leads and
+   whose it is is the third fact, not the headline. */
+.disflat { display: flex; flex-direction: column; margin-top: 2px; }
+.disflat .clline {
+  background: transparent; border-radius: 0;
+  padding: 17px 0; border-bottom: 1px solid var(--div);
+  grid-template-rows: auto auto auto;
+}
+.disflat .clline-t { grid-row: 1; }
+.disflat .clline-dur { grid-row: 2; }
+.disflat .clline-nm { grid-row: 1; }
+.disflat .clline-w { grid-row: 2; }
+.disflat .clline-by {
+  grid-column: 2; grid-row: 3;
+  margin: 7px 0 0; font-size: 14.5px; font-weight: 500; color: var(--ol);
+  gap: 6px;
+}
+.disflat .clline-av { width: 22px; height: 22px; font-size: 9px; }
+/* The dots ride the row's top line here, so the name clears them and the
+   by-line (now the bottom line) runs full width. */
+.disflat .clrow .clline-by { padding-right: 0; }
+.disflat .clrow .clline .clline-nm { padding-right: 38px; }
+.disflat .clrow .clmore { top: 10px; right: -6px; }
 
 /* The Following tab on a profile: the directory's own rows, so a person
    reads the same way everywhere. A touch of top air before the first

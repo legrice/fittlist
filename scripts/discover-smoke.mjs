@@ -76,12 +76,41 @@ if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two
 await m.locator(".nearlbl", { hasText: "Upcoming classes" }).waitFor();
 console.log("fresh member: full feed without a single favorite");
 
+// One day at a time now: the date rail leads with Today and the list under
+// it is flat rows, out of the containers.
+await m.locator(".daytabs").waitFor();
+if ((await m.locator(".daytab").first().innerText()) !== "Today") fail("the rail leads with Today");
+
+// Walk the rail to the day that holds the thing we're looking for: the
+// suite runs on any weekday, so which tab is which is not ours to hardcode.
+const pickDay = async (page, needle) => {
+  const tabs = page.locator(".daytab");
+  const n = await tabs.count();
+  for (let i = 0; i < n; i++) {
+    await tabs.nth(i).click();
+    if (await page.locator(".disflat, .dayempty").first().waitFor().then(() => needle(page)))
+      return;
+  }
+  fail("no day tab shows what the suite wants");
+};
+
 // The grouped row: three classes at one place on one day fold into one.
-await m.getByText(/3 classes ·/).first().waitFor();
+await pickDay(m, (p) => p.getByText(/3 classes ·/).count());
 if (await m.getByText("Noon Lift").count()) fail("grouped classes must not also list singly");
-console.log("a busy Monday folds into one row");
+if (!(await m.locator(".disflat .clline").count())) fail("the day's rows are the flat grammar");
+console.log("a busy Monday folds into one flat row");
+
+// The time filter narrows within the day: Evening leaves only the six
+// o'clock, which also un-groups the place (two classes is no crowd).
+await m.locator(".catpill", { hasText: "Evening" }).click();
+await m.getByText("Dusk Lift").first().waitFor();
+if (await m.getByText(/3 classes ·/).count()) fail("a filtered day regroups honestly");
+if (await m.getByText("Dawn Lift").count()) fail("Evening must drop the six a.m.");
+await m.locator(".catpill", { hasText: "Evening" }).click();
+console.log("the time chips narrow the day");
 
 // A class is how you discover a coach: the peek's star favorites them.
+await pickDay(m, (p) => p.getByText("Tuesday Flow").count());
 await m.getByText("Tuesday Flow").first().click();
 await m.locator(".peekstar").waitFor();
 if (await m.locator(".peekstar.on").count()) fail("the star starts empty");

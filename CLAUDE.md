@@ -2203,6 +2203,23 @@ class peek carries the same star beside the coach's name, because a class
 is how you discover a coach. `buildDiscoverFeed` in discoverfeed.ts is
 the one builder, shared with the Add screen's browse list.
 
+Discover reads one day at a time, by Matt's call: a date rail of underline
+tabs (Today, then "Mon 10" on) pins under the header, and the list beneath
+is that day alone, because a three-week scroll of everything was unwieldy
+in exactly the way a booking app's day rail is not. Landing skips to the
+first day holding anything when today is quiet, and says so in one line.
+The rows are flat, out of the containers, also by Matt's call: time and
+length down the left, the class, the place and the coach stacked beside
+them, a hairline between rows (`.disflat`, an override scope on the shared
+`.clline`; the calendars keep their boxes, which is the shape Matt picked
+for owning a week, where this screen is browsing one). The coach is the
+row's third line, face and all: on this list the class leads. Beside the
+category pills sit Morning / Afternoon / Evening (before noon, noon to
+five, five on), a second axis on the same rail behind a hairline divider.
+There is deliberately no distance filter: nothing stores a coordinate
+(locations are "City, ST" strings, addresses free text), and a distance
+computed from a guess would be a lie with units on it.
+
 The vocabulary is two words plus one special case: Saved (you intend to
 go; the ribbon, the toasts), Coaching (you lead it; the calendar pill,
 the attribution), and RSVP (a save the organizer can see: classes.rsvp
@@ -2217,6 +2234,12 @@ coach's chip, Added by you, or You're coaching. Add opens on Discover (a
 browse list with inline Save, the same feed), the coaching form one
 segment away for coaches only. discover-smoke is the branch's suite;
 following-smoke retired with the semantics it tested.
+
+A member's hub is the full sheet now, by Matt's call: Week, Profile, QR
+code and Text, the same four segments a coach gets, because the week they
+build there is a real thing to share and their card and code always were.
+The one member state without the segments is the start block, whose whole
+job is the first add.
 
 The share hub carries both hats now: `shareWeek`'s coach branch loads the
 saved half (marks and personal rows) beside the teaching week, each item

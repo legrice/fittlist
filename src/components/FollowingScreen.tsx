@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScrollHead, useBandTop, useTopDayLabel } from "@/components/CalendarBits";
+import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { ClassRowMenu } from "@/components/ClassRowMenu";
 import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { fmtDayHeaderRel } from "@/lib/format";
-import { DayList, WeekEmpty, initials, type WeekDayRows } from "@/components/WeekView";
+import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -90,6 +90,24 @@ export function FollowingScreen({
 }) {
   const [focus, setFocus] = useState<string | null>(null);
   const [cat, setCat] = useState<string | null>(null);
+  // When in the day, on top of what: before noon, noon to five, five on.
+  // A single toggle beside the categories, because "can I train before
+  // work" is the other question a list of times gets asked.
+  const [time, setTime] = useState<null | "morning" | "afternoon" | "evening">(null);
+  // One day at a time now, by Matt's call: the date tabs run left to right
+  // and the list under them is that day alone. A three-week scroll of
+  // everything was unwieldy in exactly the way a booking app's day rail is
+  // not. Lands on today, or the first day that holds anything when today
+  // is quiet, which is the same grace the hub's defaultFrom applies.
+  const [day, setDay] = useState<string>(() => {
+    if (items.some((i) => i.iso === todayIso)) return todayIso;
+    let first: string | null = null;
+    for (const i of items) if (i.iso > todayIso && (!first || i.iso < first)) first = i.iso;
+    return first ?? todayIso;
+  });
+  // Where the auto-landing went, so the note under the tabs can say why
+  // Today isn't selected; it only ever names this one day.
+  const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   // A face on the rail opens that coach's fortnight, the peek the v4 tray
   // carried, back per Matt's call with the star riding its head.
@@ -107,10 +125,6 @@ export function FollowingScreen({
   // and pins them halfway down the phone, through the middle of a row. That
   // has shipped once already, on Discover.
   useBandTop();
-
-  // The overlay header's words: the day under the top of the viewport. At
-  // rest no day has reached it, the label is empty, and the bar stays away.
-  const topDay = useTopDayLabel();
 
   // Following somebody in the sheet is the whole reason the sheet exists, and
   // the week behind it is a server render: closing is where it catches up. The
@@ -155,57 +169,59 @@ export function FollowingScreen({
   }, [coaches, favIds]);
 
   const shown = useMemo(
-    () => items.filter((i) => (!focus || i.coachId === focus) && (!cat || i.classType === cat)),
-    [items, focus, cat],
+    () =>
+      items.filter(
+        (i) =>
+          (!focus || i.coachId === focus) &&
+          (!cat || i.classType === cat) &&
+          (!time || timeOfDay(i.mins) === time),
+      ),
+    [items, focus, cat, time],
   );
 
-  const days: WeekDayRows[] = useMemo(() => {
-    const byIso = new Map<string, FeedItem[]>();
-    for (const i of shown) {
-      const list = byIso.get(i.iso) ?? [];
-      list.push(i);
-      byIso.set(i.iso, list);
+  // The rail of days: as far ahead as the feed itself looks, every day
+  // drawn whether or not it holds anything, because a gap in the dates
+  // reads as a broken calendar rather than a quiet Tuesday.
+  const dayTabs = useMemo(() => {
+    let last = todayIso;
+    for (const i of items) if (i.iso > last) last = i.iso;
+    const out: { iso: string; label: string }[] = [];
+    for (let iso = todayIso, n = 0; iso <= last || n < 14; iso = plusDays(iso, 1), n++) {
+      out.push({ iso, label: n === 0 ? "Today" : tabLabel(iso) });
+      if (n > 30) break;
     }
-    return [...byIso.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([iso, list]) => {
-        return {
-          iso,
-          // "Today", "Tomorrow", then the date. The same words the rest of the
-          // app uses for a day, so one day is never named two ways.
-          label: fmtDayHeaderRel(iso, todayIso),
-          today: iso === todayIso,
-          rows: groupBusyPlaces(list.sort((a, b) => a.mins - b.mins), coachById, router).map((r) => {
-            if (r.group) return r.row;
-            const i = r.item;
-            return ((i) => {
-              const c = coachById.get(i.coachId);
-              return {
-                key: i.key,
-                name: i.name,
-                where: i.where,
-                hm: i.hm,
-                ap: i.ap,
-                dur: `${i.durationMin} min`,
-                coach: c
-                  ? { id: c.id, name: c.name, color: c.color, photo: c.photo }
-                  : null,
-                onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-                menu: {
-                  classId: i.classId,
-                  base: i.base,
-                  iso: i.iso,
-                  canReport: i.coachId !== meId,
-                  onDetails: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-                  coach: c ? { name: c.name, href: `/${c.handle}` } : null,
-                  studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
-                },
-              };
-            })(i);
-          }),
-        };
-      });
-  }, [shown, coachById, todayIso, router]);
+    return out;
+  }, [items, todayIso]);
+
+  // The selected day's rows alone, in the flat grammar: the tab is the day
+  // heading now, so the list carries no bands of its own.
+  const dayRows: WeekRow[] = useMemo(() => {
+    const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
+    return groupBusyPlaces(list, coachById, router).map((r) => {
+      if (r.group) return r.row;
+      const i = r.item;
+      const c = coachById.get(i.coachId);
+      return {
+        key: i.key,
+        name: i.name,
+        where: i.where,
+        hm: i.hm,
+        ap: i.ap,
+        dur: `${i.durationMin} min`,
+        coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
+        onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
+        menu: {
+          classId: i.classId,
+          base: i.base,
+          iso: i.iso,
+          canReport: i.coachId !== meId,
+          onDetails: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
+          coach: c ? { name: c.name, href: `/${c.handle}` } : null,
+          studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
+        },
+      };
+    });
+  }, [shown, day, coachById, favIds, meId, router]);
 
   // The feed is everyone now, so it is only ever empty when nothing is
   // listed near you at all: the one state a brand-new region sees. No
@@ -244,11 +260,8 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* The overlay header: nothing at rest, and the day under it once
-          you're deep, so the scroll is never unlabelled. */}
-      <ScrollHead on={!!topDay} label={topDay} />
-      {/* The rail is chrome, and it scrolls away with the page now: the
-          overlay header is what stays. */}
+      {/* The rail is chrome, and it scrolls away with the page: the date
+          tabs are what pin. */}
       <div className="tray" ref={trayRef}>
         {/* The rail is your favorites and only them, per the brief: a
             shortcut to the people you go to most, never what fills the list
@@ -302,32 +315,71 @@ export function FollowingScreen({
         )}
       </div>
 
-      {/* Near you, with the category pills: the one filter that helps you
-          pick a class, from the words the list actually holds. Any pick
-          takes All off; All is the way back. */}
+      {/* The filters: the category pills (the words the list actually
+          holds), then the time of day. Two axes on one rail, kept apart by
+          a hairline: what the class is, then when in the day it runs. Any
+          category pick takes All off; All is the way back. No distance
+          filter, deliberately: nothing here stores a coordinate, and a
+          distance sorted from a guessed one would be a lie with units. */}
       <div className="nearhead">
         <span className="nearlbl">Upcoming classes</span>
-        {cats.length > 0 && (
-          <div className="catpills">
-            <button
-              className={`catpill${cat === null ? " on" : ""}`}
-              aria-pressed={cat === null}
-              onClick={() => setCat(null)}
-            >
-              All
-            </button>
-            {cats.map((t) => (
+        <div className="catpills">
+          {cats.length > 0 && (
+            <>
               <button
-                key={t}
-                className={`catpill${cat === t ? " on" : ""}`}
-                aria-pressed={cat === t}
-                onClick={() => setCat(cat === t ? null : t)}
+                className={`catpill${cat === null ? " on" : ""}`}
+                aria-pressed={cat === null}
+                onClick={() => setCat(null)}
               >
-                {t}
+                All
               </button>
-            ))}
-          </div>
-        )}
+              {cats.map((t) => (
+                <button
+                  key={t}
+                  className={`catpill${cat === t ? " on" : ""}`}
+                  aria-pressed={cat === t}
+                  onClick={() => setCat(cat === t ? null : t)}
+                >
+                  {t}
+                </button>
+              ))}
+              <span className="catpill-div" aria-hidden="true" />
+            </>
+          )}
+          {(
+            [
+              ["morning", "Morning"],
+              ["afternoon", "Afternoon"],
+              ["evening", "Evening"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              className={`catpill${time === id ? " on" : ""}`}
+              aria-pressed={time === id}
+              onClick={() => setTime(time === id ? null : id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* The dates, left to right, by Matt's call: one day at a time
+          beats a three-week scroll. The row pins under the header while
+          the list under it changes in place. */}
+      <div className="daytabs" role="tablist" aria-label="Day">
+        {dayTabs.map((t) => (
+          <button
+            key={t.iso}
+            role="tab"
+            aria-selected={day === t.iso}
+            className={`daytab${day === t.iso ? " on" : ""}`}
+            onClick={() => setDay(t.iso)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* The card starts under the faces: the rail is chrome, the week is
@@ -355,29 +407,35 @@ export function FollowingScreen({
           );
         })()}
 
-      {/* No week stepper here, on purpose. Your calendar is a week you flip
-          through, because you are working on it; this is a list of what is
-          coming, because you are reading it and "when can I train next" is not
-          a question any week boundary answers.
+      {/* Why Today isn't the selected tab, said once: the landing skipped
+          ahead to the first day holding anything, and a rail that opens on
+          Wednesday with no word reads as a rail that lost its place. */}
+      {landed.current !== todayIso && day === landed.current && (
+        <p className="daynote">No classes today, showing {tabLabel(landed.current)}</p>
+      )}
 
-          No heading either. "Coming up" was a 32px title saying what the date
-          headings underneath it already say, and the line under it counted
-          the classes and the coaches, which is arithmetic the list is doing
-          at you: the rows are the answer and they are right there. Both came
-          off, so the faces are followed by the first day rather than by two
-          lines about the faces. */}
-      {days.length === 0 ? (
-        <WeekEmpty
-          first
-          title={focus ? "Nothing from them coming up" : "Nothing coming up"}
-          body={
-            focus
-              ? "Tap All coaches to see the rest."
-              : "The people you follow have not put anything up yet."
-          }
-        />
+      {/* The day's list, flat, by Matt's call: time and length down the
+          left, the class, the place and the coach stacked beside them, a
+          hairline between rows and no containers. The boxes read as
+          furniture on a screen whose whole job is scanning a day. */}
+      {dayRows.length === 0 ? (
+        <p className="dayempty">
+          Nothing on {day === todayIso ? "today" : tabLabel(day)}
+          {cat || time || focus ? " with these filters" : ""}.
+        </p>
       ) : (
-        <DayList days={days} />
+        <div className="disflat">
+          {dayRows.map((r) =>
+            r.menu ? (
+              <div key={r.key} className="clrow">
+                <ClassLine row={r} />
+                <ClassRowMenu {...r.menu} name={r.name} />
+              </div>
+            ) : (
+              <ClassLine key={r.key} row={r} />
+            ),
+          )}
+        </div>
       )}
       </div>
 
@@ -419,6 +477,22 @@ export function FollowingScreen({
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
+}
+
+/** Which stretch of the day a start time falls in: before noon, noon to
+ *  five, five on. The evening starts at five because a 5:30 is an
+ *  after-work class to everybody who takes one. */
+function timeOfDay(mins: number): "morning" | "afternoon" | "evening" {
+  return mins < 720 ? "morning" : mins < 1020 ? "afternoon" : "evening";
+}
+
+const plusDays = (iso: string, n: number) =>
+  new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+
+/** "Mon 10": the weekday and the date, the way a booking rail says a day. */
+function tabLabel(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
 }
 
 /** The tapped occurrence, as the sheet wants it. Somebody else's class, so it

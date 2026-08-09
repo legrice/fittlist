@@ -71,8 +71,10 @@ export function ShareHubScreen({
   customTypes,
   lastUsed,
 }: {
-  /** A coach's picture is the week they teach, beside their card and QR
-   *  code; a member gets the Week alone and builds it right here. */
+  /** Both kinds get the full sheet: the week, the card, the QR code and
+   *  the text. What `coach` still decides is the week's subject (teaching
+   *  against saved), the fallback headline, and whether the hub carries
+   *  the build flow, which is a member's. */
   coach: boolean;
   handle: string;
   /** On the QR card, above the code: the code is a thing you hold up, and a
@@ -337,22 +339,20 @@ export function ShareHubScreen({
     }
   };
 
-  // A member gets the Week alone, by Matt's call: no profile card, no QR
-  // code, none of the extra stuff. Their tab is for building the week
-  // they're going to and handing it on, and one segment is no segment row
-  // at all, because a control with one option teaches somebody the screen
-  // is more complicated than it is.
-  const segs: { id: Seg; label: string }[] = coach
-    ? [
-        { id: "week", label: "Week" },
-        { id: "profile", label: "Profile" },
-        { id: "qr", label: "QR code" },
-        // The week as words is a subject of its own, by Matt's call: it sat
-        // on the rail as a chip and reads better beside Profile and QR code,
-        // because it is a different thing to send, not a knob on the picture.
-        { id: "text", label: "Text" },
-      ]
-    : [{ id: "week", label: "Week" }];
+  // Everyone gets the full sheet now, by Matt's call: a member's week is a
+  // real thing to share since they build it here, and their profile card,
+  // QR code and week-as-words are as real as a coach's. The only member
+  // state without the segments is the start block, whose one job is the
+  // first add.
+  const segs: { id: Seg; label: string }[] = [
+    { id: "week", label: "Week" },
+    { id: "profile", label: "Profile" },
+    { id: "qr", label: "QR code" },
+    // The week as words is a subject of its own, by Matt's call: it sat
+    // on the rail as a chip and reads better beside Profile and QR code,
+    // because it is a different thing to send, not a knob on the picture.
+    { id: "text", label: "Text" },
+  ];
   // The next fortnight of start days on offer, whether or not each holds
   // anything: "from Saturday" is a real ask on a week that starts quiet.
   const startDays = useMemo(() => Array.from({ length: 14 }, (_, i) => plusDays(today, i)), [today]);
@@ -424,7 +424,7 @@ export function ShareHubScreen({
             </button>
           </div>
         )}
-        {segs.length > 1 && (
+        {!building && (
           <div className="shseg" role="tablist" aria-label="What to share">
             {segs.map((s) => (
               <button
@@ -455,32 +455,26 @@ export function ShareHubScreen({
           <div className="shslide">
             <SlideImg cls="shprev shprev-week" src={weekImgUrl} alt="Your week as a story image" />
           </div>
-          {coach && (
-            <div className="shslide">
-              <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
-            </div>
-          )}
-          {coach && (
-            <div className="shslide">
-              {/* The card the mock drew: name, the code on white, the address.
-                  A bare code is anybody's; this one says whose. */}
-              <div className="qrcard">
-                <div className="qrcard-nm">{name}</div>
-                <div className="qrframe">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
-                </div>
-                <div className="qrurl">
-                  {pageHost}/{handle}
-                </div>
+          <div className="shslide">
+            <SlideImg cls="shprev shprev-sq" src={cardImgUrl} alt="Your profile card" />
+          </div>
+          <div className="shslide">
+            {/* The card the mock drew: name, the code on white, the address.
+                A bare code is anybody's; this one says whose. */}
+            <div className="qrcard">
+              <div className="qrcard-nm">{name}</div>
+              <div className="qrframe">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="qrimg" src={qrUrl} alt="QR code that opens your fittlist page" />
+              </div>
+              <div className="qrurl">
+                {pageHost}/{handle}
               </div>
             </div>
-          )}
-          {coach && (
-            <div className="shslide">
-              <pre className="shtext">{weekText}</pre>
-            </div>
-          )}
+          </div>
+          <div className="shslide">
+            <pre className="shtext">{weekText}</pre>
+          </div>
         </div>
         )}
 
