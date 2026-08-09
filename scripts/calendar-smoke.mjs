@@ -53,6 +53,16 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .wkfab").first().click();
+  // The fab opens the segmented Add screen now (the empty CTA still goes
+  // straight to the form); the coaching segment is the old door.
+  const seg = p.locator(".addseg button", { hasText: /coaching/ });
+  if (await seg.count().then((n) => n > 0).catch(() => false)) await seg.click();
+  else {
+    await p
+      .locator(".addseg button", { hasText: /coaching/ })
+      .click({ timeout: 3000 })
+      .catch(() => {});
+  }
   await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);
@@ -434,8 +444,8 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
 {
   // innerText reports the CSS-uppercased label, so compare in lower case.
   const keys = (await p.locator(".shctrl .shctrl-k").allInnerTexts()).map((t) => t.trim().toLowerCase());
-  if (keys.join("|") !== "dates|classes|headline|decoration")
-    fail("the rail is Dates, Classes, Headline, Decoration: " + keys.join("|"));
+  if (keys.join("|") !== "classes|dates|headline|decoration")
+    fail("the rail leads with Classes, per the brief: " + keys.join("|"));
   const a = await p.locator(".shctrl").first().boundingBox();
   const b2 = await p.locator(".shctrl").nth(1).boundingBox();
   if (Math.abs(a.y - b2.y) > 2) fail("the chips share a row");
@@ -465,7 +475,7 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
 }
 // No door to the old composer any more: the hub is the whole share screen.
 if (await p.locator(".shedit").count()) fail("the editor link should be gone");
-if (!(await p.locator(".shcta .btn", { hasText: "Share image" }).count() + await p.locator(".shcta a", { hasText: "Save image" }).count()))
+if (!(await p.locator(".shcta .btn", { hasText: "Share" }).count() + await p.locator(".shcta a", { hasText: "Save" }).count()))
   fail("the week segment should offer its image");
 console.log("the Share tab lands on the hub, and the hub is the whole screen");
 // The magnifier still opens the directory, from the corner.
