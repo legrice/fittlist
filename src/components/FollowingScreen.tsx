@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { setGoing } from "@/app/actions/going";
 import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
-import { ClassRowMenu } from "@/components/ClassRowMenu";
 import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, DayBand, initials, type WeekRow } from "@/components/WeekView";
+import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -23,9 +23,9 @@ export type FeedCoach = {
   next: string | null;
 };
 
-/** One circle on the This week rail: somebody you follow whose week was
- *  touched in the last seven days. The ring is the freshness signal and the
- *  circle is a name and a ring, nothing else, per the updates brief. */
+/** One circle on the This week rail: somebody you follow with something
+ *  actually coming up, a class they coach or one they are going to. The
+ *  circle is a name and a ring, nothing else. */
 export type RailPerson = {
   id: string;
   name: string;
@@ -34,8 +34,8 @@ export type RailPerson = {
   color: string;
   /** Their week changed since you last opened it: the ring is orange. */
   fresh: boolean;
-  /** When their week was last touched, for the order behind the fresh ones. */
-  activityAt: number;
+  /** When their next thing is, for the soonest-first order. */
+  nextAt: string;
 };
 
 export type FeedItem = {
@@ -70,14 +70,14 @@ export type FeedItem = {
    *  distance: a class with no pin should widen a search, not vanish. */
   lat: number | null;
   lng: number | null;
+  /** The viewer already saved this occurrence: the corner ribbon starts
+   *  filled. */
+  saved: boolean;
 };
 
-/** The brief says hide the rail below about three people with fresh weeks,
- *  because an empty story rail reads as a dead app. A fresh week is one
- *  touched inside the seven-day window (the rail's own membership rule); a
- *  seen week stays on the rail with a grey ring. Three hides the rail for
- *  nearly every account at current density and takes the peek with it, so
- *  the floor here is one; raise it when density does. */
+/** The brief says hide the rail below about three people; the floor here is
+ *  one, because three hides the rail for nearly every account at current
+ *  density and takes the peek with it. Raise it when density does. */
 const RAIL_MIN_PEOPLE = 1;
 
 const TIMES = [
@@ -104,12 +104,12 @@ const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any"
 /**
  * Discover: the search door, the This week rail, and Upcoming near you.
  *
- * The rail is the people you follow, coaches and members mixed, each circle
- * a name and a ring: solid orange when their week changed since you last
- * opened it, grey once seen. Tapping one opens their week as a live
- * calendar (CoachPeek) with working ribbons. The list below is everyone
- * near you whether you follow anybody or not; a follow is how you see
- * someone's week, never what fills a calendar or this feed.
+ * The rail is the people you follow who actually have something coming up,
+ * soonest first, each circle a name and a ring: solid orange when their
+ * week changed since you last opened it, grey once seen. The list below is
+ * every listable coach's classes, one day at a time behind the date rail,
+ * whether or not you follow anybody: a follow is how you see someone's
+ * week, never what fills this feed.
  */
 export function FollowingScreen({
   items,
@@ -131,8 +131,8 @@ export function FollowingScreen({
   /** How many people they follow: the rail's teaching state forks on this. */
   follows: number;
   todayIso: string;
-  /** The viewer: their own rows (a coach's own week rides this feed) skip
-   *  the report row, which could only ever answer with an error. */
+  /** The viewer: their own rows carry no Save, because setGoing refuses a
+   *  mark on your own class and a button that fails is worse than none. */
   meId?: string;
   myRail: RailPerson[];
   /** Where the Your week circle points: the hub is per kind. */
@@ -140,6 +140,18 @@ export function FollowingScreen({
 }) {
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "time" | "dist" | "cat" | "place">(null);
+  // One day at a time, back by Matt's call: the date tabs run left to
+  // right and the list under them is that day alone. Lands on today, or
+  // the first day that holds anything when today is quiet.
+  const [day, setDay] = useState<string>(() => {
+    if (items.some((i) => i.iso === todayIso)) return todayIso;
+    let first: string | null = null;
+    for (const i of items) if (i.iso > todayIso && (!first || i.iso < first)) first = i.iso;
+    return first ?? todayIso;
+  });
+  // Where the auto-landing went, so the note under the tabs can say why
+  // Today isn't selected; it only ever names this one day.
+  const landed = useRef(day);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [peekPerson, setPeekPerson] = useState<RailPerson | null>(null);
   const [find, setFind] = useState(false);
@@ -150,7 +162,7 @@ export function FollowingScreen({
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
 
-  // The day bands pin under the app header. `--dayband-top` lives on
+  // The date tabs pin under the app header. `--dayband-top` lives on
   // documentElement, so a screen that pins and forgets this inherits
   // whatever the last screen set. That has shipped once already.
   useBandTop();
@@ -187,26 +199,33 @@ export function FollowingScreen({
     return true;
   };
 
-  // Filter, then collapse: a recurring class appears once, at its next
-  // occurrence. Collapse after the filters so an evening pick lands on
-  // the series' next evening date rather than losing the whole series to
-  // a hidden morning one. Without the collapse an open-ended list is the
-  // same class repeating down the feed forever. It said Weekly on the
-  // place line for a build and the tag came off by Matt's call; the class
-  // page still says the pattern.
-  const days = useMemo(() => {
-    const kept = items.filter(passes).sort((a, b) =>
-      a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
-    );
-    const seen = new Set<string>();
-    const rows: (WeekRow & { iso: string })[] = [];
-    for (const i of kept) {
-      const k = `${i.name.trim().toLowerCase()}|${i.where ?? ""}|${i.mins}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
+  const shown = useMemo(
+    () => items.filter(passes),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, f, geo],
+  );
+
+  // The rail of days: as far ahead as the feed itself looks, every day
+  // drawn whether or not it holds anything, because a gap in the dates
+  // reads as a broken calendar rather than a quiet Tuesday.
+  const dayTabs = useMemo(() => {
+    let last = todayIso;
+    for (const i of items) if (i.iso > last) last = i.iso;
+    const out: { iso: string; label: string }[] = [];
+    for (let iso = todayIso, n = 0; iso <= last || n < 14; iso = plusDays(iso, 1), n++) {
+      out.push({ iso, label: n === 0 ? "Today" : tabLabel(iso) });
+      if (n > 30) break;
+    }
+    return out;
+  }, [items, todayIso]);
+
+  // The selected day's rows, flat, each carrying its Save in the corner.
+  const dayRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
+    const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
+    return list.map((i) => {
       const c = coachById.get(i.coachId);
-      rows.push({
-        iso: i.iso,
+      return {
+        item: i,
         key: i.key,
         name: i.name,
         where: i.where,
@@ -215,30 +234,13 @@ export function FollowingScreen({
         dur: `${i.durationMin} min`,
         coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
         onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-        menu: {
-          classId: i.classId,
-          base: i.base,
-          iso: i.iso,
-          canReport: i.coachId !== meId,
-          onDetails: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-          coach: c ? { name: c.name, href: `/${c.handle}` } : null,
-          studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
-        },
-      });
-    }
-    const byIso = new Map<string, WeekRow[]>();
-    for (const r of rows) byIso.set(r.iso, [...(byIso.get(r.iso) ?? []), r]);
-    return [...byIso.entries()].map(([iso, list]) => ({
-      iso,
-      label: bandLabel(iso, todayIso),
-      rows: list,
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, f, geo, coachById, favIds, meId, todayIso]);
+      };
+    });
+  }, [shown, day, coachById, favIds]);
 
-  // Hide the rail rather than draw it dead, per the brief: following nobody
-  // keeps the teaching state (ghosts and one line), following only people
-  // whose weeks have gone quiet hides the block entirely.
+  // Hide the rail rather than draw it dead: following nobody keeps the
+  // teaching state (ghosts and one line), following only people with
+  // nothing coming up hides the block entirely.
   const railShows = follows === 0 || myRail.length >= RAIL_MIN_PEOPLE;
 
   const pickDist = (v: Filters["dist"]) => {
@@ -272,10 +274,10 @@ export function FollowingScreen({
         </Link>
       </div>
 
-      {/* This week: the people you follow, coaches and members mixed, no
-          captions and no badges. A circle is a name and a ring, the ring is
-          the freshness signal, and tapping one opens their week. Your week
-          leads it (the door to the Share tab) and Add ends it. */}
+      {/* This week: the people you follow with something coming up, soonest
+          first, no captions and no badges. A circle is a name and a ring,
+          the ring is the freshness signal, and tapping one opens their
+          week. Your week leads it and Add ends it. */}
       {railShows && (
         <div className="tray">
           <p className="nearlbl railbl">This week</p>
@@ -323,10 +325,9 @@ export function FollowingScreen({
         </div>
       )}
 
-      {/* Upcoming near you: open-ended, as far forward as there is data,
-          because coverage is thin and an expo three weeks out is exactly
-          what somebody wants to find. The four chips say their current
-          value, which is what lets one row replace five pills. */}
+      {/* Upcoming near you: every listable coach's classes, not only the
+          people you follow. The four chips say their current value, which
+          is what lets one row replace five pills. */}
       <div className="nearhead">
         <span className="nearlbl">Upcoming near you</span>
         <div className="catpills fchips">
@@ -355,19 +356,39 @@ export function FollowingScreen({
         </div>
       </div>
 
+      {/* The dates, left to right: one day at a time beats a three-week
+          scroll. The row pins under the header while the list under it
+          changes in place. */}
+      <div className="daytabs" role="tablist" aria-label="Day">
+        {dayTabs.map((t) => (
+          <button
+            key={t.iso}
+            role="tab"
+            aria-selected={day === t.iso}
+            className={`daytab${day === t.iso ? " on" : ""}`}
+            onClick={() => setDay(t.iso)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="cardwrap">
-        {days.length === 0 ? (
+        {/* Why Today isn't the selected tab, said once: the landing skipped
+            ahead to the first day holding anything. */}
+        {landed.current !== todayIso && day === landed.current && (
+          <p className="daynote">No classes today, showing {tabLabel(landed.current)}</p>
+        )}
+
+        {dayRows.length === 0 ? (
           anyFilter ? (
             // The empty state knows why it is empty: never "nobody has
             // added classes" when the truth is the filter.
-            <div className="wkempty">
-              <h2 className="wkempty-t">Nothing matches</h2>
-              <p className="wkempty-b">Try widening the time or distance.</p>
-              <button className="btn si wkempty-cta" onClick={() => setF(NO_FILTERS)}>
-                Clear filters
-              </button>
-            </div>
-          ) : (
+            <p className="dayempty">
+              Nothing matches on {day === todayIso ? "today" : tabLabel(day)}. Try widening
+              the time or distance.
+            </p>
+          ) : items.length === 0 ? (
             <div className="wkempty">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -386,25 +407,31 @@ export function FollowingScreen({
                 Find people
               </button>
             </div>
+          ) : (
+            <p className="dayempty">
+              Nothing on {day === todayIso ? "today" : tabLabel(day)}.
+            </p>
           )
         ) : (
-          days.map((d) => (
-            <section key={d.iso} className="dayblock">
-              <DayBand label={d.label} today={d.iso === todayIso} />
-              <div className="disflat">
-                {d.rows.map((r) =>
-                  r.menu ? (
-                    <div key={r.key} className="clrow">
-                      <ClassLine row={r} />
-                      <ClassRowMenu {...r.menu} name={r.name} />
-                    </div>
-                  ) : (
-                    <ClassLine key={r.key} row={r} />
-                  ),
+          <div className="disflat">
+            {dayRows.map((r) => (
+              <div key={r.key} className="clrow">
+                <ClassLine row={r} />
+                {/* Save in the corner, not a dots menu, by Matt's call: the
+                    one act this list turns on is the row's one control. A
+                    sibling of the row, never a child. Your own class
+                    carries none, because setGoing would refuse it. */}
+                {r.item.coachId !== meId && (
+                  <SaveCorner
+                    classId={r.item.classId}
+                    iso={r.item.iso}
+                    name={r.item.name}
+                    initial={r.item.saved}
+                  />
                 )}
               </div>
-            </section>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
@@ -550,13 +577,49 @@ export function FollowingScreen({
   );
 }
 
-/** "Today, Aug 9", then the date: the same words the calendars use. */
-function bandLabel(iso: string, today: string): string {
+/** The corner ribbon: the one act this list turns on. Optimistic, so the
+ *  ribbon fills on the tap rather than the round trip. */
+function SaveCorner({
+  classId,
+  iso,
+  name,
+  initial,
+}: {
+  classId: string;
+  iso: string;
+  name: string;
+  initial: boolean;
+}) {
+  const [on, setOn] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      className={`rowsave${on ? " on" : ""}`}
+      aria-pressed={on}
+      aria-label={on ? `Saved: ${name}` : `Save ${name}`}
+      disabled={busy}
+      onClick={async () => {
+        if (busy) return;
+        setBusy(true);
+        setOn(!on);
+        const res = await setGoing(classId, iso, !on);
+        if (!res.ok) setOn(on);
+        setBusy(false);
+      }}
+    >
+      <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
+      <span>{on ? "Saved" : "Save"}</span>
+    </button>
+  );
+}
+
+const plusDays = (iso: string, n: number) =>
+  new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+
+/** "Mon 10": the weekday and the date, the way a booking rail says a day. */
+function tabLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
-  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-  if (iso === today) return `Today, ${md}`;
-  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-  return `${wd}, ${md}`;
+  return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
 }
 
 /** Miles between two pins, the haversine way, close enough for a filter. */

@@ -2196,26 +2196,32 @@ relationship word, Follow, for coaches and members alike, no stars
 anywhere, and following someone lets you see their week and never puts a
 class on your calendar. The tab is Discover (route stays /feed): the
 search door, the This week rail, and Upcoming near you, which is classes
-from every listable coach, deduped to one row per class, open-ended
-rather than bounded to a week, with series collapse: a recurring class
-appears once, at its next occurrence (collapse runs after the filters,
-so an evening pick lands on the series' next evening date; it said
-Weekly on the place line for a build and the tag came off by Matt's
-call). Every class lists itself; the studio fold
-came off by Matt's call and can return the day one gym's Monday drowns
-everything around it. `buildDiscoverFeed` in discoverfeed.ts is the one
-builder, shared with the Add screen's browse list.
+from every listable coach, never only the people you follow, deduped to
+one row per class, one day at a time behind a date rail of underline
+tabs (Today, then "Mon 10" on, back by Matt's call after the open-ended
+scroll tried and lost; landing skips to the first day holding anything
+and says so in one line). Every class lists itself; the studio fold came
+off and can return the day one gym's Monday drowns everything around it.
+Each row's one control is Save in the corner, ribbon and word filling to
+the going green, not a dots menu, by Matt's call: the row's saved state
+loads with the feed so the ribbons start right, and your own rows carry
+none because setGoing would refuse the mark. `buildDiscoverFeed` in
+discoverfeed.ts is the one builder, shared with the Add screen's browse
+list. Everything on the screen sits on the one 18px gutter: the rail
+label, the section label, the chips, the tabs and the rows.
 
-The rail is This week: the people you follow, coaches and members mixed,
-each circle a name and a ring and nothing else, no captions, no badges.
-The ring is the freshness signal: brand orange when their week changed
-since you last opened it, grey once seen (`subscribers.peekedAt`, written
-when the peek opens, because the ring's promise is kept the moment
-somebody is looking). A week untouched for seven days drops the person
-off the rail, and a rail with nobody active on it hides entirely (the
-addendum says below about three; the floor is one until density earns
-three, or the feature buries itself). Your week leads the rail, a dashed
-circle into the Share tab, and Add ends it, into People near you.
+The rail is This week: the people you follow who actually have something
+to share, by Matt's call, meaning a face is only there when the peek
+behind it holds something, a class they coach or one they are going to
+inside the fortnight, and the person whose next thing is soonest leads.
+Each circle is a name and a ring and nothing else, no captions, no
+badges. The ring is the freshness signal: brand orange when their week
+changed since you last opened it, grey once seen (`subscribers.peekedAt`,
+written when the peek opens, because the ring's promise is kept the
+moment somebody is looking). A rail with nobody on it hides entirely
+(the addendum says below about three; the floor is one until density
+earns three, or the feature buries itself). Your week leads the rail, a
+dashed circle into the Share tab, and Add ends it, into People near you.
 Tapping a circle opens the peek: their week as a live calendar, header
 carrying "Week of" and Follow / Following, everything they coach (a
 Coaching tag, the one place coach and member differ) plus everything
@@ -2251,8 +2257,12 @@ the leader reads names, a door list, no check-in and no capacity on
 purpose). Four tabs for everyone: Discover,
 Calendar (a member's is /week, a coach's /calendar, each kind bounced to
 its own), Share, Profile. The coach calendar holds both halves behind
-All/Saved/Coaching pills, every row wearing one attribution slot: the
-coach's chip, Added by you, or You're coaching. Both calendars wear the
+All/Saved/Coaching pills, standing where the word "Calendar" stood, by
+Matt's call: the tab already names the screen, and the corner's Share
+arrow came off with it (too much up there, and nobody could say what it
+did; the Share tab is the way to the hub). Every row wears one
+attribution slot: the coach's chip, Added by you, or You're coaching.
+Both calendars wear the
 flat grammar now, by Matt's call: the structure lives on `.clline`
 itself (time and length down the left, the class, the place and the
 attribution stacked beside them, a hairline between rows), the boxes

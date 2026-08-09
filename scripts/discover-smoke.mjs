@@ -86,18 +86,37 @@ await m.locator(".trayitem", { hasText: "Your week" }).waitFor();
 await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
 if ((await m.locator(".fchips .catpill").count()) !== 4) fail("four filter chips");
 if (await m.locator(".fchip-clear").count()) fail("Clear only appears once something is set");
-if (await m.locator(".daytabs").count()) fail("the date tabs are gone");
-console.log("the landing: door, rail, chips");
 
-// Series collapse: each weekly class once, at its next occurrence, under
-// a day band. No Weekly tag, by Matt's call.
-await m.locator(".dayband").first().waitFor();
-for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift", "Tuesday Flow"]) {
-  const n = await m.locator(".clline-nm", { hasText: nm }).count();
-  if (n !== 1) fail(`${nm} should list exactly once, got ${n}`);
-}
-if (await m.locator(".clline-w", { hasText: "Weekly" }).count()) fail("the Weekly tag is gone");
-console.log("the open list collapses each series to its next date");
+// The dates run left to right again, by Matt's call, leading with Today.
+await m.locator(".daytabs").waitFor();
+if ((await m.locator(".daytab").first().innerText()) !== "Today") fail("the rail leads with Today");
+console.log("the landing: door, rail, chips, date tabs");
+
+// Walk the rail to the day that holds the thing we're looking for: the
+// suite runs on any weekday, so which tab is which is not ours to hardcode.
+const pickDay = async (page, needle) => {
+  const tabs = page.locator(".daytab");
+  const n = await tabs.count();
+  for (let i = 0; i < n; i++) {
+    await tabs.nth(i).click();
+    if (await needle(page)) return;
+  }
+  fail("no day tab shows what the suite wants");
+};
+
+// A busy Monday lists every class, and each row's one control is Save in
+// the corner: no dots menu on Discover, by Matt's call.
+await pickDay(m, (p) => p.getByText("Dawn Lift").count());
+for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift"])
+  if (!(await m.locator(".clline-nm", { hasText: nm }).count())) fail(nm + " must list itself");
+if (await m.locator(".clmore").count()) fail("no dots menu on Discover rows");
+const firstSave = m.locator(".rowsave").first();
+if (!(await firstSave.count())) fail("every row wears Save in the corner");
+await firstSave.click();
+await m.locator(".rowsave.on", { hasText: "Saved" }).first().waitFor();
+await m.locator(".rowsave.on").first().click();
+await m.waitForFunction(() => !document.querySelector(".rowsave.on"), null, { timeout: 10000 });
+console.log("the corner Save fills and empties in place");
 
 // The time chip: value-showing, and Evening leaves only the six o'clock.
 await m.locator(".fchips .catpill", { hasText: "Any time" }).click();

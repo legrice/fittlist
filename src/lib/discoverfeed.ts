@@ -26,10 +26,9 @@ export type DiscoverFeed = {
   myRail: RailPerson[];
 };
 
-/** A week counts as touched by its newest public act: a class listed, or a
- *  class saved. Seven days, per the brief: a rail of stale rings reads as a
- *  dead app, so quiet weeks drop off entirely. */
-const RAIL_ACTIVE_DAYS = 7;
+/** How far ahead a face has to have something for the rail to carry it:
+ *  the peek's own fortnight, so a circle never opens onto nothing. */
+const RAIL_AHEAD_DAYS = 14;
 
 export async function buildDiscoverFeed(
   userId: string,
@@ -80,6 +79,18 @@ export async function buildDiscoverFeed(
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
   const today = todayIso();
+  // What the viewer already saved, so the row ribbons start right.
+  const mineMarks = new Set(
+    (
+      await db
+        .select({
+          classId: schema.attendances.classId,
+          occurrenceDate: schema.attendances.occurrenceDate,
+        })
+        .from(schema.attendances)
+        .where(eq(schema.attendances.userId, userId))
+    ).map((m) => `${m.classId}|${m.occurrenceDate}`),
+  );
   const items: FeedItem[] = [];
   for (let w = 0; w <= WEEKS_AHEAD; w++) {
     for (const iso of weekDates(w, today)) {
@@ -122,6 +133,7 @@ export async function buildDiscoverFeed(
           // coordinates passes any distance rather than vanishing.
           lat: st?.lat ?? null,
           lng: st?.lng ?? null,
+          saved: mineMarks.has(`${c.id}|${iso}`),
         });
       }
     }
@@ -206,16 +218,18 @@ export async function buildDiscoverFeed(
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
   const cats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
 
-  // The This week rail: everyone you follow, whatever their kind, whether
-  // or not Discover would list them. Freshness is the newest public act on
-  // their week (a class listed, a class saved), the ring is that act being
-  // newer than your last peek, and a week untouched for seven days drops
-  // the person off the rail entirely.
+  // The This week rail: the people you follow who actually have something
+  // to share, by Matt's call. A face is only there when tapping it opens
+  // onto a week with something on it, either classes they coach or classes
+  // they are going to, and the person whose next thing is soonest leads.
+  // The ring stays the freshness signal: their newest public act (a class
+  // listed, a class saved) being newer than your last peek.
   const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
   const followedUsers = followed.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
     : [];
-  const [theirClasses, theirMarks] = await Promise.all([
+  const followedCoaches = followedUsers.filter((u) => u.kind !== "fan" && u.kind !== "gym");
+  const [theirClasses, theirMarks, theirSchedules] = await Promise.all([
     followed.length
       ? db
           .select({ userId: schema.classes.userId, createdAt: schema.classes.createdAt })
@@ -225,7 +239,11 @@ export async function buildDiscoverFeed(
       : Promise.resolve([]),
     followed.length
       ? db
-          .select({ userId: schema.attendances.userId, createdAt: schema.attendances.createdAt })
+          .select({
+            userId: schema.attendances.userId,
+            occurrenceDate: schema.attendances.occurrenceDate,
+            createdAt: schema.attendances.createdAt,
+          })
           .from(schema.attendances)
           .where(
             and(
@@ -235,15 +253,43 @@ export async function buildDiscoverFeed(
           )
           .orderBy(desc(schema.attendances.createdAt))
       : Promise.resolve([]),
+    followedCoaches.length ? publicSchedules(followedCoaches) : Promise.resolve([]),
   ]);
   const activityAt = new Map<string, number>();
   for (const r of [...theirClasses, ...theirMarks]) {
     const at = r.createdAt?.getTime() ?? 0;
     if (at > (activityAt.get(r.userId) ?? 0)) activityAt.set(r.userId, at);
   }
-  const cutoff = Date.now() - RAIL_ACTIVE_DAYS * 864e5;
+  // When their next thing is: the soonest teaching occurrence or the
+  // soonest saved date inside the peek's own fortnight. No entry means the
+  // face stays off the rail, because a circle that opens onto an empty
+  // week teaches people to stop tapping circles.
+  const nextAt = new Map<string, string>();
+  const consider = (userId: string, at: string) => {
+    const had = nextAt.get(userId);
+    if (!had || at < had) nextAt.set(userId, at);
+  };
+  const lastRail = new Date(Date.parse(`${today}T00:00:00Z`) + (RAIL_AHEAD_DAYS - 1) * 864e5)
+    .toISOString()
+    .slice(0, 10);
+  const publicTheirs = theirSchedules.filter((c) => c.isPublic);
+  for (let n = 0; n < RAIL_AHEAD_DAYS; n++) {
+    const d = new Date(Date.parse(`${today}T00:00:00Z`) + n * 864e5);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = (d.getUTCDay() + 6) % 7;
+    for (const c of publicTheirs) {
+      if (nextAt.has(c.ownerUserId)) continue;
+      if (!runsOn(c, iso, dow)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
+    }
+  }
+  for (const m of theirMarks) {
+    if (m.occurrenceDate >= today && m.occurrenceDate <= lastRail)
+      consider(m.userId, `${m.occurrenceDate}T9999`);
+  }
   const myRail: RailPerson[] = followedUsers
-    .filter((u) => (activityAt.get(u.id) ?? 0) >= cutoff)
+    .filter((u) => nextAt.has(u.id))
     .map((u) => {
       const peeked = peekedByTrainer.get(u.id)?.getTime() ?? 0;
       return {
@@ -253,11 +299,12 @@ export async function buildDiscoverFeed(
         photo: u.photoThumb ?? u.photo,
         color: avatarColor(u),
         fresh: (activityAt.get(u.id) ?? 0) > peeked,
-        activityAt: activityAt.get(u.id) ?? 0,
+        nextAt: nextAt.get(u.id)!,
       };
     })
-    // Unseen first, per the brief, then the most recently touched week.
-    .sort((a, b) => Number(b.fresh) - Number(a.fresh) || b.activityAt - a.activityAt);
+    // Soonest first, by Matt's call: the face in front is the person whose
+    // next thing is nearest.
+    .sort((a, b) => (a.nextAt < b.nextAt ? -1 : a.nextAt > b.nextAt ? 1 : 0));
 
   return { items, rail, favIds: [...favSet], cats, follows: followed.length, today, myRail };
 }

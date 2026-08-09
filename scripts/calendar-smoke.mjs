@@ -100,24 +100,20 @@ await add("Barbell Club", "Fr", "06:30", "Rae's Room");
 await p.goto(BASE + "/calendar");
 await p.locator(".clline").first().waitFor();
 
-// Add floats bottom right (Following's search spot and dress), and the
-// title row's corner carries the white Share door to the hub instead.
+// Add floats bottom right (Following's search spot and dress). The title
+// row carries the All/Saved/Coaching segment where the word Calendar
+// stood, and no Share door anywhere: the Share tab is the way to the hub.
 {
   const fab = p.locator(".wkfab");
   if (!(await fab.count())) fail("Add should float bottom right once there is a week");
   const fbox = await fab.boundingBox();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
-  const share = p.locator(".calbar-share");
-  if (!(await share.count())) fail("Share should ride the title row");
-  const href = await share.getAttribute("href");
-  if (href !== "/coachshare") fail("Share opens the hub, got " + href);
-  const sbox = await share.boundingBox();
-  const seg = await p.locator(".calseg").boundingBox();
-  if (!(sbox.x > seg.x + seg.width - 4)) fail("Share sits right of the toggle");
-  if (Math.abs(sbox.y - seg.y) > 2) fail("Share and the toggle sit on one line");
-  const sbg = await share.evaluate((e) => getComputedStyle(e).backgroundColor);
-  if (sbg !== "rgb(255, 255, 255)") fail("Share is the white circle, got " + sbg);
-  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| white Share beside the toggle");
+  if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
+  if (await p.locator(".calbar-t").count()) fail("the word Calendar gave its spot to the segment");
+  const pills = (await p.locator(".calbar-pills .catpill").allInnerTexts()).map((t) => t.trim());
+  if (pills.join("|") !== "All|Saved|Coaching")
+    fail("the segment reads All | Saved | Coaching, got " + pills.join("|"));
+  console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| the segment holds the title row");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });
 
@@ -144,7 +140,7 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
 // somebody to page through a thing they can scroll.
 {
   if (await p.locator(".wkarrow").count()) fail("the week stepper should be gone");
-  await p.locator(".calbar-t", { hasText: "Calendar" }).waitFor();
+  await p.locator(".calbar-pills").waitFor();
   // Two glyphs rather than two words, so the label is the accessible name and
   // the check reads that: a shape says which view it is better than a word
   // does, and a screen reader gets nothing from a shape.
@@ -203,8 +199,8 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
     fail("the overlay should name the day under it, got " + named);
   if ((await p.locator(".scrollhead .calseg button").count()) !== 2)
     fail("the overlay carries the view toggle");
-  if (!(await p.locator(".scrollhead .calbar-share").count()))
-    fail("the overlay carries the Share door");
+  if (await p.locator(".scrollhead .calbar-share").count())
+    fail("no Share door on the overlay either");
   const blur = await p
     .locator(".scrollhead")
     .evaluate((e) => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter || "");

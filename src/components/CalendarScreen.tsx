@@ -223,10 +223,27 @@ export function CalendarScreen({
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
         <div className="calbar">
-          {/* "Calendar", with the tab, per the Discover brief's vocabulary;
-              it was "Schedule" for a stretch. The old note: the word of a
-              management tool. */}
-          <h1 className="calbar-t">Calendar</h1>
+          {/* The All / Saved / Coaching segment where the word "Calendar"
+              stood, by Matt's call: the tab under your thumb already says
+              which screen this is, and the segment is the one control the
+              title row owed a coach. */}
+          {!bare ? (
+            <div className="catpills calpills calbar-pills" role="tablist" aria-label="Which of your things">
+              {(["all", "saved", "coaching"] as const).map((k) => (
+                <button
+                  key={k}
+                  role="tab"
+                  aria-selected={pill === k}
+                  className={`catpill${pill === k ? " on" : ""}`}
+                  onClick={() => setPill(k)}
+                >
+                  {k === "all" ? "All" : k === "saved" ? "Saved" : "Coaching"}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <h1 className="calbar-t">Calendar</h1>
+          )}
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels
@@ -267,33 +284,12 @@ export function CalendarScreen({
                   <Icon name="calendar_view_month" size={21} />
                 </button>
               </div>
-              {/* Share rides the title row now, white beside the toggle;
-                  Add moved to the floating button under the thumb, the spot
-                  Following's search wears. */}
-              <a className="calbar-share" href="/coachshare" aria-label="Share">
-                <Icon name="arrow_outward" size={20} />
-              </a>
+              {/* No Share door here any more, by Matt's call: an arrow in
+                  the corner was one thing too many and nobody could say
+                  what it did. The Share tab is the way to the hub. */}
             </div>
           )}
         </div>
-        {/* All / Saved / Coaching, per the brief. Coaches only: a member's
-            calendar is one kind, and two of three pills showing the same
-            list is a control that teaches the screen is complicated. */}
-        {!bare && view === "list" && (
-          <div className="catpills calpills" role="tablist" aria-label="Which of your things">
-            {(["all", "saved", "coaching"] as const).map((k) => (
-              <button
-                key={k}
-                role="tab"
-                aria-selected={pill === k}
-                className={`catpill${pill === k ? " on" : ""}`}
-                onClick={() => setPill(k)}
-              >
-                {k === "all" ? "All" : k === "saved" ? "Saved" : "Coaching"}
-              </button>
-            ))}
-          </div>
-        )}
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 
@@ -364,9 +360,6 @@ export function CalendarScreen({
               <Icon name="calendar_view_month" size={21} />
             </button>
           </div>
-          <a className="calbar-share" href="/coachshare" aria-label="Share">
-            <Icon name="arrow_outward" size={20} />
-          </a>
         </ScrollHead>
       )}
 
