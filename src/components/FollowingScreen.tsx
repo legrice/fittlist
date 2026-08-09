@@ -250,12 +250,6 @@ export function FollowingScreen({
             shortcut to the people you go to most, never what fills the list
             below. The caption under each face is when their next class is,
             so the rail answers "who can I train with next" unopened. */}
-        <div className="traylbl">
-          <span>Your coaches{rail.some((c) => c.next) ? " \u00b7 next up" : ""}</span>
-          <button className="traylbl-all" onClick={() => setFind(true)}>
-            See all
-          </button>
-        </div>
         <div className="tray-scroll">
           {rail.map((c) => {
             const on = focus === c.id;
@@ -277,7 +271,6 @@ export function FollowingScreen({
                   )}
                 </span>
                 <span className="trayitem-nm">{c.name.split(/\s+/)[0]}</span>
-                {c.next && <span className="trayitem-next">{c.next}</span>}
               </button>
             );
           })}
@@ -309,7 +302,7 @@ export function FollowingScreen({
           pick a class, from the words the list actually holds. Any pick
           takes All off; All is the way back. */}
       <div className="nearhead">
-        <span className="nearlbl">Near you</span>
+        <span className="nearlbl">Upcoming classes</span>
         {cats.length > 0 && (
           <div className="catpills">
             <button
