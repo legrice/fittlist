@@ -27,14 +27,19 @@ await p.waitForURL("**/feed");
 const tabs = async () =>
   (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 
-// A member: three tabs, by Matt's call. Share is theirs now too, because
-// the hub is where they build the week they're going to; Schedule stays a
-// coach's. The Profile tab wears their face rather than a glyph.
+// Five tabs for everyone, by Matt's call: Home is Discover, then Calendar,
+// Search (finding things earns its own place as the app fills in), Share,
+// and Profile wearing the viewer's face.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 4) fail("everyone gets four tabs, got " + t.join());
-if (!t[0].includes("Discover") || !t[1].includes("Calendar") || !t[2].includes("Share"))
-  fail("the bar is Discover, Calendar, Share, Profile: " + t.join());
+if (t.length !== 5) fail("everyone gets five tabs, got " + t.join());
+if (
+  !t[0].includes("Discover") ||
+  !t[1].includes("Calendar") ||
+  !t[2].includes("Search") ||
+  !t[3].includes("Share")
+)
+  fail("the bar is Discover, Calendar, Search, Share, Profile: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
@@ -49,13 +54,16 @@ await p.getByRole("button", { name: "Add a class" }).waitFor();
 if (await p.locator(".shseg").count()) fail("a member's hub has one subject and no segment row");
 console.log("a member’s /membershare opens on the start block");
 
-// The Profile tab opens your page, not a list of switches. Settings are the
-// gear on it, which is the only door to them there is.
+// The Profile tab opens your page, not a list of switches. Settings are
+// the white circle in the corner the back button takes on somebody else's
+// page, by Matt's call; the header carries no gear any more.
 await p.locator(".navtab[data-tab='you']").click();
 await p.waitForURL(/\/kiabright/);
 await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
-await p.locator('.brandbar-actions [aria-label="Settings"]').click();
+if (await p.locator('.brandbar-actions [aria-label="Settings"]').count())
+  fail("the header carries no gear any more");
+await p.locator('.profback [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".setrow", { hasText: "I coach classes" }).waitFor();
 console.log("Profile opens your page, and the gear slides settings up over it");
@@ -105,8 +113,8 @@ if (!(await row.locator(".switch.on").count())) fail("the switch should read on"
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 4 || !t[0].includes("Discover") || !t[1].includes("Calendar") || !t[2].includes("Share"))
-  fail("expected Discover, Calendar, Share, got " + t.join());
+if (t.length !== 5 || !t[0].includes("Discover") || !t[1].includes("Calendar") || !t[2].includes("Search") || !t[3].includes("Share"))
+  fail("expected Discover, Calendar, Search, Share, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.
@@ -123,8 +131,8 @@ await p.locator(".setrow", { hasText: "I coach classes" }).click();
 await p.waitForTimeout(2500);
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 4 || !t[1].includes("Calendar"))
-  fail("turning it off keeps four tabs, got " + t.join());
+if (t.length !== 5 || !t[1].includes("Calendar"))
+  fail("turning it off keeps five tabs, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");

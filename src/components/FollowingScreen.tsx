@@ -265,15 +265,8 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* The search bar leads, drawn as the field it opens: the one door to
-          /search, which covers people, studios and classes at once. */}
-      <div className="dissearchrow dishome-search">
-        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
-          <Icon name="search" size={21} className="dissearch-ic" />
-          <span className="dissearch-ph">Search coaches, classes, studios</span>
-        </Link>
-      </div>
-
+      {/* No search bar up here any more, by Matt's call: Search is a tab
+          now, and one act gets one door. Home is the rail and the list. */}
       {/* This week: the people you follow with something coming up, soonest
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their
@@ -435,12 +428,8 @@ export function FollowingScreen({
         )}
       </div>
 
-      {/* Finding people is this button and the rail's Add, and they open
-          the same screen. */}
-      <button className="wkfab wkfab-find" aria-label="Find people" onClick={() => setFind(true)}>
-        <Icon name="search" size={26} />
-      </button>
-
+      {/* No floating search circle either: the Search tab took the act.
+          People near you stays one tap away behind the rail's Add. */}
       {find && <DiscoverSheet onClose={closeFind} />}
 
       {/* The filter sheets. The places one stays open while you tick,

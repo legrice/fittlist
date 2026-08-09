@@ -22,10 +22,14 @@ import { ProfileSheet } from "@/components/ProfileSheet";
  * the pinned head and sticky is a stacking context on mobile: rendered in
  * place, the overlay would paint under the card that slides over the chrome.
  */
-export function SettingsGear({ header = false }: {
-  /** Drawn as one of the header's icon buttons rather than the profile
-   *  head's floating circle: the corner is where the gear lives now. */
+export function SettingsGear({ header = false, corner = false }: {
+  /** Drawn as one of the header's icon buttons (the coaches-only shell). */
   header?: boolean;
+  /** Drawn as the white circle in the profile head's corner, the spot the
+   *  back button takes on somebody else's page, by Matt's call: the tab
+   *  bar is where the acting happens now, so the header thinned and your
+   *  own page carries the one door to settings. */
+  corner?: boolean;
 }) {
   const [data, setData] = useState<SettingsSheetData | null>(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +53,7 @@ export function SettingsGear({ header = false }: {
   return (
     <>
       <button
-        className={header ? "iconbtn inboxbtn" : "profgear"}
+        className={corner ? "evback" : header ? "iconbtn inboxbtn" : "profgear"}
         aria-label="Settings"
         onClick={openSheet}
       >

@@ -3,7 +3,7 @@
 // light up on the same routes, so neither owns the list.
 
 /** "none" is a screen off the tabs: updates, a class page. */
-export type NavTab = "following" | "discover" | "share" | "schedule" | "you" | "none";
+export type NavTab = "following" | "discover" | "search" | "share" | "schedule" | "you" | "none";
 
 export type NavItem = {
   id: NavTab;
@@ -52,6 +52,11 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
+    // Search is a tab now, by Matt's call: as the app fills in, everything
+    // you act on lives in the bottom bar, and finding things earns a place
+    // of its own rather than a field on Home. The magnifier left the
+    // header and Home's search bar with it: one act, one door.
+    { id: "search", href: "/search", icon: "search", label: "Search" },
     // Everyone's now, by Matt's call: it came off the member's bar while a
     // member had nothing to give, and the hub is where they build the week
     // they're going to before handing it on, so the tab is the way in. One
@@ -78,7 +83,9 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // Discover is not a tab any more: it is the search button on Following and
   // the plus at the end of the rail, both opening the same sheet. The routes
   // stay reachable, and light Following, because that is where they open from.
-  if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "following";
+  if (pathname.startsWith("/discover")) return "following";
+  // Search is its own tab now, by Matt's call.
+  if (pathname.startsWith("/search")) return "search";
   if (pathname.startsWith("/feed")) return "following";
   // The Calendar tab: a coach's is /calendar (and /app), a member's /week.
   if (

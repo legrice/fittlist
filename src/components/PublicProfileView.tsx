@@ -24,6 +24,7 @@ import { ProfileOwnerBar } from "@/components/ProfileOwnerBar";
 import { AppChrome } from "@/components/AppChrome";
 import { ClassOpener } from "@/components/ClassOpener";
 import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
+import { SettingsGear } from "@/components/SettingsGear";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -478,6 +479,11 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           trackHandle={handle}
           backTo={backTo}
+          // Your own page carries the door to settings in the corner the
+          // back button takes on somebody else's, by Matt's call: the
+          // header thinned to the wordmark and the bell, so the page is
+          // where the one remaining door lives.
+          corner={isOwner ? <SettingsGear corner /> : undefined}
           // The full-bleed hero for everybody, by Matt's call: the photo
           // when there is one, the person's own colour when there isn't,
           // the same rule the member page follows, so no photo is never a

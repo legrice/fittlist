@@ -22,13 +22,9 @@ export async function AppChrome({
   bar = false,
   headerNav,
   active,
-  gear = true,
 }: {
   userId: string;
   bar?: boolean;
-  /** The settings gear in the header's corner. On by default: the header is
-   *  the same on every signed-in screen, or the corner reads as unreliable. */
-  gear?: boolean;
   /** The tabs as header links too, for the width where the bottom bar hides.
    *  Follows `bar` by default, because a screen with tabs has to keep them at
    *  every width: above 940px the bottom bar is gone and without these there
@@ -86,15 +82,13 @@ export async function AppChrome({
       // the bare editable schedule: a page with no identity that read as
       // showing up at random.
       home={fans ? await landingHref() : "/app"}
-      // The magnifier, opening the directory as a sheet. Nobody to find in
-      // the coaches-only shell, so it is off there.
-      find={fans}
-      // The gear only where there is no member side at all: the coaches-only
-      // mode has no tab bar, so it is the one door to the account.
+      // No magnifier and no gear, by Matt's call: Search is a tab and
+      // settings are the circle on your own profile. The gear survives only
+      // where there is no member side at all: the coaches-only mode has no
+      // tab bar, so it is the one door to the account.
       settings={fans ? undefined : "/settings"}
       adminActivity={isAdmin}
       adminActivityNew={isAdmin && (await adminActivityFreshSince(me.adminActivityAt))}
-      gear={gear}
       nav={(headerNav ?? bar) ? { coach: isCoach, scheduleHref, profileHref, active } : undefined}
     />
   );

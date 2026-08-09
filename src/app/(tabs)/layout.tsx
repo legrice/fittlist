@@ -68,11 +68,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
             (await adminActivityFreshSince(me.adminActivityAt))
           }
           home={landing}
-          // The magnifier is the corner. Your face went to the Profile tab,
-          // which opens the same page the corner used to, and a second door
-          // to somewhere that already has one is a door too many.
-          find
-          gear
+          // No magnifier and no gear up here any more, by Matt's call: as
+          // the app fills in, everything you act on lives in the bottom
+          // bar. Search is a tab, and settings are the circle on your own
+          // profile. The header is identity and the bell.
           nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

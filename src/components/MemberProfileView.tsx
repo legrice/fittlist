@@ -16,6 +16,7 @@ import { Icon } from "@/components/Icon";
 import { FollowMemberButton } from "@/components/FollowMemberButton";
 import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
+import { SettingsGear } from "@/components/SettingsGear";
 import { PublicTopBar } from "@/components/PublicTopBar";
 
 // A member's public profile. Deliberately not the coach page: there's no
@@ -187,6 +188,7 @@ export async function MemberProfileView({
             />
           }
           backTo={backTo}
+          corner={isOwner ? <SettingsGear corner /> : undefined}
           // Nothing above the name; see PublicProfileView.
           badges={null}
           // The gear lives in the app header now (AppChrome's `gear`), same

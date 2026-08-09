@@ -51,6 +51,7 @@ export function ProfileTabs({
   badges,
   ownerTop,
   backTo,
+  corner,
   stickAction,
   children,
 }: {
@@ -93,6 +94,10 @@ export function ProfileTabs({
   ownerTop?: ReactNode;
   /** Where a back control should go, when they got here from a list. */
   backTo?: { href: string; label: string } | null;
+  /** The owner's corner: what sits where the back button goes on somebody
+   *  else's page. Your own page has no back (the tab bar is the way off),
+   *  so the slot holds the settings circle instead, by Matt's call. */
+  corner?: React.ReactNode;
   /** A compact copy of the Follow control, across from the small name in the
    *  stuck bar, so scrolling never carries someone away from the yes. */
   stickAction?: ReactNode;
@@ -199,7 +204,7 @@ export function ProfileTabs({
         {/* The corner slots come after the picture on purpose: neither owns a
             z-index (see the stacking note in the CSS), so DOM order is what
             paints them on top, and a studio's banner is positioned now. */}
-        {backTo && (
+        {backTo ? (
           <div className="profback">
             <BackLink
               className="evback"
@@ -211,7 +216,11 @@ export function ProfileTabs({
               <Icon name="arrow_back" size={23} />
             </BackLink>
           </div>
-        )}
+        ) : corner ? (
+          // The owner's page has no back (the tab bar is the way off), so
+          // the same corner holds the settings circle, by Matt's call.
+          <div className="profback">{corner}</div>
+        ) : null}
         {ownerTop && <div className="ownertop">{ownerTop}</div>}
         {/* The badge sits above the name, by Matt's call: the claim leads
             the identity it speaks for. */}

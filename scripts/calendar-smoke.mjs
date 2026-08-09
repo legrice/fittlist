@@ -293,9 +293,13 @@ await p.waitForURL(/\/raebell/);
 await p.locator(".profname", { hasText: "Rae Bell" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
 {
-  // No arrow: the tab is how you got here, so there is nothing behind it, and
-  // a control offering to undo a tap nobody made is a control in the way.
-  if (await p.locator(".profback").count()) fail("your own profile carries no back arrow");
+  // No arrow: the tab is how you got here, so there is nothing behind it.
+  // The corner holds the settings circle instead, by Matt's call: the spot
+  // the back button takes on somebody else's page.
+  if (await p.locator('.profback [aria-label*="Back"]').count())
+    fail("your own profile carries no back arrow");
+  if (!(await p.locator('.profback [aria-label="Settings"]').count()))
+    fail("the corner carries the settings circle");
   // No Add class either. The plus lives on the calendar, next to the week it
   // adds to; a second door here meant two screens both claiming to be where
   // classes come from.
@@ -368,9 +372,11 @@ await p.goto(BASE + "/raebell");
     fail(`the bands should pin under the tab row: ${varTop} vs ${stickH}`);
   console.log("profile head pins at " + top + ", tab row pins at " + stickH + ", tabs are wash pills");
 }
-// The gear slides settings up over the profile, the same move Edit profile
-// makes, and closing lands you back where you were: no navigation at all.
-await p.locator('.brandbar-actions [aria-label="Settings"]').click();
+// The corner circle slides settings up over the profile, the same move
+// Edit profile makes, and closing lands you back where you were: no
+// navigation at all. It sits where the back button goes on somebody
+// else's page; the header carries no gear.
+await p.locator('.profback [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 if (!/\/raebell$/.test(new URL(p.url()).pathname)) fail("the gear should not navigate, at " + p.url());
@@ -381,15 +387,14 @@ console.log("Profile opens your page, and the gear slides settings up over it");
 await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
-// The Share tab is a place now: it lands on the hub screen of big tiles,
-// with the bar still underneath. Search is Following's floating circle
-// again, and the header's magnifier stays at every width with it.
+// The Share tab is a place now: it lands on the hub screen with the bar
+// still underneath. Search is a tab of its own, by Matt's call, and the
+// header's magnifier left with the move: one act, one door.
 await p.goto(BASE + "/calendar");
-if (await p.locator('.navtab[data-tab="find"]').count())
-  fail("the Search tab should be gone from the bar");
-if (await p.locator(".navfind").count()) fail("the dock's search circle should be gone again");
-if (!(await p.locator(".findbtn:visible").count()))
-  fail("the header magnifier should be back on a phone");
+if (!(await p.locator('.navtab[data-tab="search"]').count()))
+  fail("Search should be a tab in the bar");
+if (await p.locator(".findbtn:visible").count())
+  fail("the header magnifier is gone: Search is the tab");
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/coachshare/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
@@ -474,13 +479,13 @@ if (await p.locator(".shedit").count()) fail("the editor link should be gone");
 if (!(await p.locator(".shcta .btn", { hasText: "Share" }).count() + await p.locator(".shcta a", { hasText: "Save" }).count()))
   fail("the week segment should offer its image");
 console.log("the Share tab lands on the hub, and the hub is the whole screen");
-// The magnifier still opens the directory, from the corner.
+// The Search tab opens the search screen, tab lit.
 await p.goto(BASE + "/calendar");
-await p.locator(".findbtn:visible").click();
-await p.locator(".dissheet").waitFor();
-await p.locator(".dissheet .sheetclose").click();
-await p.locator(".dissheet").waitFor({ state: "detached", timeout: 10000 });
-console.log("the header magnifier opens the directory over the calendar");
+await p.locator('.navtab[data-tab="search"]').click();
+await p.waitForURL(/\/search/);
+console.log("the Search tab opens the search screen");
+await p.goto(BASE + "/calendar");
+await p.locator(".dayblock").first().waitFor();
 
 // A landing from the month grid puts the day's band near the top of the
 // viewport, under the overlay header rather than behind it: the scroll

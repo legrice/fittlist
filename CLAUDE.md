@@ -2254,9 +2254,14 @@ save the organizer can see: classes.rsvp flags it, the mechanism stays
 attendances, the ribbon becomes an RSVP button with "your name goes to
 whoever runs it" said before the tap, the count never ships empty, and
 the leader reads names, a door list, no check-in and no capacity on
-purpose). Four tabs for everyone: Discover,
+purpose). Five tabs for everyone, by Matt's call: Discover,
 Calendar (a member's is /week, a coach's /calendar, each kind bounced to
-its own), Share, Profile. The coach calendar holds both halves behind
+its own), Search (its own place as the app fills in; the magnifier left
+the header and Home's search bar with it, one act one door), Share,
+Profile. The Profile tab lands on your public page, and settings are a
+white circle in the corner the back button takes on somebody else's page
+(`SettingsGear corner` in the `profback` slot); the header thinned to
+the wordmark and the bell. The coach calendar holds both halves behind
 All/Saved/Coaching pills, standing where the word "Calendar" stood, by
 Matt's call: the tab already names the screen, and the corner's Share
 arrow came off with it (too much up there, and nobody could say what it
