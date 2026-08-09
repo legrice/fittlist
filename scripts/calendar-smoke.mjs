@@ -134,7 +134,7 @@ console.log("/app lands on the calendar, and no row carries a ribbon or a bar");
 // somebody to page through a thing they can scroll.
 {
   if (await p.locator(".wkarrow").count()) fail("the week stepper should be gone");
-  await p.locator(".calbar-t", { hasText: "Schedule" }).waitFor();
+  await p.locator(".calbar-t", { hasText: "Calendar" }).waitFor();
   // Two glyphs rather than two words, so the label is the accessible name and
   // the check reads that: a shape says which view it is better than a word
   // does, and a screen reader gets nothing from a shape.

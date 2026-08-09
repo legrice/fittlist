@@ -16,6 +16,9 @@ export type FeedCoach = {
   handle: string;
   photo: string | null;
   color: string;
+  /** When their next class is ("Today 6:00p"), under the face on the rail:
+   *  the rail answers "who can I train with next" before a single tap. */
+  next: string | null;
 };
 
 export type FeedItem = {
@@ -64,14 +67,20 @@ export type FeedItem = {
 export function FollowingScreen({
   items,
   coaches,
+  favIds,
+  cats,
   follows,
   todayIso,
   meId,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
-  /** How many people they actually follow: the empty state's two wordings
-   *  fork on this, because `coaches` carries a coach's own week too. */
+  /** Who the viewer favorited: the rail is these and only these. The feed
+   *  underneath is everyone, which is what makes this screen Discover. */
+  favIds: string[];
+  /** The category pills, from what the list actually holds. */
+  cats: string[];
+  /** How many favorites: the rail's empty state forks on this. */
   follows: number;
   todayIso: string;
   /** The viewer: their own rows (a coach's own week rides this feed) skip
@@ -79,6 +88,7 @@ export function FollowingScreen({
   meId?: string;
 }) {
   const [focus, setFocus] = useState<string | null>(null);
+  const [cat, setCat] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [find, setFind] = useState(false);
   // The class sheet's copy fallback speaks through this: it was a no-op
@@ -136,13 +146,13 @@ export function FollowingScreen({
   // that is quiet this week: the arrow is right there, and the empty state
   // says so.
   const rail = useMemo(() => {
-    const has = new Set(items.map((i) => i.coachId));
-    return coaches.filter((c) => has.has(c.id));
-  }, [coaches, items]);
+    const fav = new Set(favIds);
+    return coaches.filter((c) => fav.has(c.id));
+  }, [coaches, favIds]);
 
   const shown = useMemo(
-    () => items.filter((i) => !focus || i.coachId === focus),
-    [items, focus],
+    () => items.filter((i) => (!focus || i.coachId === focus) && (!cat || i.classType === cat)),
+    [items, focus, cat],
   );
 
   const days: WeekDayRows[] = useMemo(() => {
@@ -191,17 +201,13 @@ export function FollowingScreen({
       });
   }, [shown, coachById, todayIso]);
 
-  // Nobody followed at all is a different screen from a quiet week, and it is
-  // the one that matters: this tab is empty until a follow happens, so the
-  // empty state is the whole screen and it points at the one way out.
-  if (!rail.length) {
+  // The feed is everyone now, so it is only ever empty when nothing is
+  // listed near you at all: the one state a brand-new region sees. No
+  // favorites is not an empty screen any more, because a favorite was never
+  // what filled it.
+  if (!items.length) {
     return (
       <>
-        {/* Two different nothings, and they want different words. Following
-            nobody is a screen with one thing to do; following people who have
-            not put anything up is a screen where the app is fine and the week
-            is just quiet, and telling somebody to find coaches there would be
-            answering a question they did not ask. */}
         <div className="cardwrap">
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -212,26 +218,16 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">
-              {follows ? "Nothing up yet" : "Start by following a coach"}
-            </h2>
+            <h2 className="wkempty-t">Nothing near you yet</h2>
             <p className="wkempty-b">
-              {follows
-                ? "The people you follow have not put any classes up. This fills in as they do."
-                : "Once you follow someone, every class they post will show up here."}
+              Classes show up here as coaches list them. Find a coach to favorite in the
+              meantime; their next class will lead your Discover.
             </p>
-            {/* One CTA, and it is this screen's own act: finding somebody.
-                Nothing here about adding classes, which is the calendar's
-                sentence, not Following's. */}
             <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-              Find a coach
+              Find coaches
             </button>
           </div>
         </div>
-        {/* The same floating search the full screen carries, by Matt's call:
-            the CTA and the circle open one sheet, but the circle is where a
-            thumb already expects the act to live, and an empty screen is the
-            last place to hide it. */}
         <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
           <Icon name="search" size={26} />
         </button>
@@ -248,19 +244,17 @@ export function FollowingScreen({
       {/* The rail is chrome, and it scrolls away with the page now: the
           overlay header is what stays. */}
       <div className="tray" ref={trayRef}>
-        <div className="tray-scroll">
-          <button
-            className="trayitem"
-            onClick={() => setFocus(null)}
-            aria-pressed={focus === null}
-          >
-            {/* The Following tab's own glyph, not the word: the circle means
-                "everyone on this rail", which is what the tab means too. */}
-            <span className={`trayav trayav-all${focus === null ? " sel" : ""}`}>
-              <Icon name="groups" size={34} />
-            </span>
-            <span className="trayitem-nm">All coaches</span>
+        {/* The rail is your favorites and only them, per the brief: a
+            shortcut to the people you go to most, never what fills the list
+            below. The caption under each face is when their next class is,
+            so the rail answers "who can I train with next" unopened. */}
+        <div className="traylbl">
+          <span>Your coaches{rail.some((c) => c.next) ? " \u00b7 next up" : ""}</span>
+          <button className="traylbl-all" onClick={() => setFind(true)}>
+            See all
           </button>
+        </div>
+        <div className="tray-scroll">
           {rail.map((c) => {
             const on = focus === c.id;
             return (
@@ -281,18 +275,60 @@ export function FollowingScreen({
                   )}
                 </span>
                 <span className="trayitem-nm">{c.name.split(/\s+/)[0]}</span>
+                {c.next && <span className="trayitem-next">{c.next}</span>}
               </button>
             );
           })}
-          {/* The way to lengthen the rail, at the end of it, never one of the
-              faces: it keeps its full opacity when a face is picked. */}
+          {/* The way to lengthen the rail, at the end of it, never one of
+              the faces. With no favorites yet it gets two dashed
+              placeholders for company and a line saying what the rail is
+              for, per the brief: the shape of the thing sells the thing. */}
           <button className="trayitem" onClick={() => setFind(true)}>
             <span className="trayav trayav-add">
               <Icon name="add" size={28} />
             </span>
-            <span className="trayitem-nm">Find</span>
+            <span className="trayitem-nm">Add</span>
           </button>
+          {rail.length === 0 && (
+            <>
+              <span className="trayav trayav-ghost" aria-hidden="true" />
+              <span className="trayav trayav-ghost" aria-hidden="true" />
+            </>
+          )}
         </div>
+        {rail.length === 0 && (
+          <p className="trayhint">
+            Add the coaches you go to most. Their next class always shows here.
+          </p>
+        )}
+      </div>
+
+      {/* Near you, with the category pills: the one filter that helps you
+          pick a class, from the words the list actually holds. Any pick
+          takes All off; All is the way back. */}
+      <div className="nearhead">
+        <span className="nearlbl">Near you</span>
+        {cats.length > 0 && (
+          <div className="catpills">
+            <button
+              className={`catpill${cat === null ? " on" : ""}`}
+              aria-pressed={cat === null}
+              onClick={() => setCat(null)}
+            >
+              All
+            </button>
+            {cats.map((t) => (
+              <button
+                key={t}
+                className={`catpill${cat === t ? " on" : ""}`}
+                aria-pressed={cat === t}
+                onClick={() => setCat(cat === t ? null : t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* The card starts under the faces: the rail is chrome, the week is

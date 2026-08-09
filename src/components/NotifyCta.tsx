@@ -58,12 +58,14 @@ export function NotifyCta({
   const [toastMsg, toastOn, toast] = useToast();
 
   const firstName = trainerName.trim().split(/\s+/)[0] || trainerName;
+  // Favorite, per the brief: a shortcut to a person, not a subscription.
+  // Requested survives it (approve-first still gates who may favorite).
   const label = account
     ? following
-      ? "Following"
+      ? "Favorited"
       : requested
         ? "Requested"
-        : "Follow"
+        : "Favorite"
     : subscribed
       ? "On the list"
       : "Subscribe";

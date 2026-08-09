@@ -5962,6 +5962,42 @@ button.ps-card { cursor: pointer; }
   font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none;
   max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* Discover's rail furniture: the label row over the faces, the next-class
+   caption under each, the dashed ghosts that give a bare rail its shape,
+   and the line that says what the rail is for. */
+.traylbl {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 4px 18px 8px;
+}
+.traylbl span {
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ol);
+}
+.traylbl-all {
+  border: none; background: none; cursor: pointer; padding: 0;
+  font-size: 13px; font-weight: 600; color: var(--si);
+}
+.trayitem-next { font-size: 11.5px; color: var(--ol); white-space: nowrap; }
+.trayav-ghost {
+  flex-shrink: 0; width: 64px; height: 64px; border-radius: 999px;
+  border: 1.5px dashed var(--line); align-self: flex-start; margin-top: 0;
+}
+.trayhint { margin: 6px 18px 2px; font-size: 12.5px; color: var(--ol); }
+
+/* Near you: the label and the category pills between the rail and the list. */
+.nearhead { padding: 16px 18px 2px; }
+.nearlbl {
+  display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ol); margin-bottom: 10px;
+}
+.catpills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px 4px; }
+.catpills::-webkit-scrollbar { display: none; }
+.catpill {
+  flex-shrink: 0; height: 36px; padding: 0 15px; border-radius: 999px;
+  border: none; background: var(--card); color: var(--ink); cursor: pointer;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
+}
+.catpill.on { background: var(--ink); color: var(--paper); }
 
 /* The peek. A bottom sheet rather than the class overlay: this is a list you
    skim and act on several times before closing, and the overlay's shape says

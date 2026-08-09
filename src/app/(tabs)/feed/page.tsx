@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
@@ -43,17 +43,22 @@ export default async function FollowingPage() {
   const followed = followRows
     .map((r) => r.trainerUserId)
     .filter((id) => id !== userId && !hidden.has(id));
-  // A coach's own week belongs here too. Following answers "when can I train",
-  // and what they teach is part of that.
-  const isCoach = me.kind !== "fan" && !!me.handle;
-  const trainerIds = [...new Set(isCoach ? [...followed, userId] : followed)];
-
-  const coachRows = trainerIds.length
-    ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
-    : [];
+  // Discover, per the brief: the list is classes near you, from every
+  // listable coach, whether or not anybody favorited them. A favorite is a
+  // shortcut to a person (the rail on top), not a subscription that fills
+  // this feed; the feed is full on day one because it never waited on one.
+  // Delisted (discoverable off) and blocked stay out; your own classes ride
+  // along because they are also near you, and true.
+  const everyoneRows = await db
+    .select()
+    .from(schema.users)
+    .where(and(isNotNull(schema.users.handle), eq(schema.users.discoverable, true)));
+  const coachRows = everyoneRows.filter(
+    (u) => u.kind !== "fan" && u.kind !== "gym" && (u.id === userId || !hidden.has(u.id)),
+  );
   // The same loader the coach's own page and the digests ask, so following
   // somebody shows the week their page shows and not a shorter one.
-  const allClassRows = trainerIds.length ? await publicSchedules(coachRows) : [];
+  const allClassRows = coachRows.length ? await publicSchedules(coachRows) : [];
   const classRows = allClassRows.filter((c) => c.isPublic);
   const coaches = coachRows.filter((c) => !!c.handle);
   const coachById = new Map(coaches.map((c) => [c.id, c]));
@@ -126,6 +131,25 @@ export default async function FollowingPage() {
     const had = soonest.get(i.coachId);
     if (!had || at < had) soonest.set(i.coachId, at);
   }
+  // The rail is the favorites alone, soonest class first, each face
+  // carrying when that class is: the rail answers "who can I train with
+  // next" before a single tap.
+  const favSet = new Set(followed);
+  const nextLabel = (id: string): string | null => {
+    const at = soonest.get(id);
+    if (!at) return null;
+    const iso = at.slice(0, 10);
+    const item = items.find((i) => i.coachId === id && i.iso === iso);
+    if (!item) return null;
+    const day =
+      iso === today
+        ? "Today"
+        : new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+            weekday: "short",
+            timeZone: "UTC",
+          });
+    return `${day} ${item.hm}${item.ap.toLowerCase()}`;
+  };
   const rail: FeedCoach[] = coaches
     .map((c) => ({
       id: c.id,
@@ -133,6 +157,7 @@ export default async function FollowingPage() {
       handle: c.handle!,
       photo: c.photoThumb ?? c.photo,
       color: avatarColor(c),
+      next: nextLabel(c.id),
     }))
     .sort((a, b) => {
       const x = soonest.get(a.id);
@@ -143,6 +168,12 @@ export default async function FollowingPage() {
       return a.name.localeCompare(b.name);
     });
 
+  // The category pills, from what the fortnight actually holds: a filter is
+  // only offered where it can narrow something.
+  const catCount = new Map<string, number>();
+  for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
+  const cats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+
   // The empty state's two wordings fork on real follows, not on the rail:
   // a coach rides their own week here, so the rail is never empty for them,
   // and "the people you follow have not put anything up" to somebody who
@@ -151,6 +182,8 @@ export default async function FollowingPage() {
     <FollowingScreen
       items={items}
       coaches={rail}
+      favIds={[...favSet]}
+      cats={cats}
       follows={followed.length}
       todayIso={today}
       meId={userId}

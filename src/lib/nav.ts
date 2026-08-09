@@ -43,23 +43,20 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    // Everyone you follow, as one week, and it leads now, by Matt's call:
-    // it is the only screen a member has, and for a coach it is the reading
-    // screen where the calendar is the working one.
-    // "Following" again, by Matt's call: it wore the shorter "Follow" for a
-    // stretch, and the longer word names the place rather than the act.
-    { id: "following", href: "/feed", icon: "group", label: "Following" },
-    // Only for somebody who teaches: the calendar.
+    // Discover, per the Following-to-Discover brief: the tab stopped being
+    // a feed of the people you follow and became classes near you, with
+    // your favorite coaches as a rail on top. The route stays /feed; a URL
+    // out in the world is not worth breaking for a label.
+    { id: "following", href: "/feed", icon: "explore", label: "Discover" },
+    // Only for somebody who coaches: the calendar. "Calendar" again, per
+    // the brief's vocabulary.
     ...(coach
       ? [
           {
-            // "Schedule", by Matt's call: the word of a management tool,
-            // not a wall calendar. The route stays /calendar; a URL out in
-            // the world is not worth breaking for a label.
             id: "schedule" as const,
             href: scheduleHref ?? "/calendar",
             icon: "calendar_month",
-            label: "Schedule",
+            label: "Calendar",
           },
         ]
       : []),

@@ -173,9 +173,10 @@ export function CalendarScreen({
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
         <div className="calbar">
-          {/* "Schedule", with the tab, by Matt's call: the word of a
+          {/* "Calendar", with the tab, per the Discover brief's vocabulary;
+              it was "Schedule" for a stretch. The old note: the word of a
               management tool. */}
-          <h1 className="calbar-t">Schedule</h1>
+          <h1 className="calbar-t">Calendar</h1>
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the
               shapes are the answer, where "List" and "Month" are two labels

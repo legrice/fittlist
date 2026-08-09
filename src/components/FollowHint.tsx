@@ -50,10 +50,10 @@ export function FollowHint({
   return (
     <div className="folhint" role="status" aria-live="polite">
       <p className="folhint-t">
-        {name} is on your schedule now. Tap their circle to see their week.
+        {name} leads your Discover now. Their next class shows under their face.
       </p>
       <div className="folhint-row">
-        <Link className="folhint-go" href="/week" onClick={onClose}>
+        <Link className="folhint-go" href="/feed" onClick={onClose}>
           See it
         </Link>
         <button
