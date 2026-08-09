@@ -5,7 +5,7 @@ import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { publicSchedules } from "@/lib/coachweek";
-import { runsOn, todayIso } from "@/lib/format";
+import { clockParts, occurrenceEnded, runsOn, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { DirPerson } from "@/components/DirectoryRows";
 
@@ -77,6 +77,27 @@ export async function discoverPeople(): Promise<DiscoverData> {
   const requested = new Set(askRows.map((r) => r.trainerUserId));
   const joinedAt = new Map(rows.map((r) => [r.id, r.createdAt?.getTime() ?? 0]));
 
+  // The soonest class per coach, for People near you's rows: "Today 6:00p".
+  // A fortnight is far enough; a coach with nothing in it gets no line.
+  const soonest = new Map<string, string>();
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = (d.getUTCDay() + 6) % 7;
+    for (const c of classRows) {
+      if (soonest.has(c.ownerUserId)) continue;
+      if (!runsOn(c, iso, dow)) continue;
+      if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+      const t = clockParts(c.startTime);
+      const day =
+        i === 0
+          ? "Today"
+          : d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+      soonest.set(c.ownerUserId, `${day} ${t.hm}${t.ap.toLowerCase()}`);
+    }
+  }
+
   const people: DirPerson[] = rows
     // The quality bar is a coach's: their page has to be worth opening (a
     // schedule, or enough profile). A member's row is just the person, which
@@ -101,6 +122,7 @@ export async function discoverPeople(): Promise<DiscoverData> {
       availability: r.kind === "fan" ? null : r.availability,
       disciplines: r.disciplines,
       color: avatarColor(r),
+      next: r.kind === "fan" ? null : (soonest.get(r.id) ?? null),
     }))
     // Newest first: the list doubles as "who just joined", and the fresh face
     // at the top is the reason to keep opening it.

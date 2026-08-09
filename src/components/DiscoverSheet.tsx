@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { discoverPeople, type DiscoverData } from "@/app/actions/discover";
 import { searchAll } from "@/app/actions/search";
 import { ClassResults } from "@/components/ClassResults";
-import { DiscoverList } from "@/components/DiscoverList";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { Icon } from "@/components/Icon";
+import { initials } from "@/components/WeekView";
 import type { DirClass } from "@/lib/discoverclasses";
 import { todayIso } from "@/lib/format";
 
@@ -38,6 +39,9 @@ const MIN = 2;
  */
 export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<DiscoverData | null>(null);
+  // Everyone or Coaches only: the one place coaches and members are told
+  // apart, because here it is useful. The updates brief's segment.
+  const [who, setWho] = useState<"all" | "coach">("all");
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
@@ -102,7 +106,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="sheet sheet-full dissheet">
         <div className="adderhead">
-          <h2>Discover</h2>
+          <h2>People near you</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
@@ -176,14 +180,32 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
             </div>
           )
         ) : data ? (
-          <DiscoverList
-            people={data.people}
-            cities={data.cities}
-            myCity={data.myCity}
-            backHref="/feed"
-            hideBack
-            hideSearch
-          />
+          <>
+            {/* The one place coach and member rows differ: a Coach tag and
+                a next-class line on theirs, nothing on a member's. Follow
+                on every row, unlimited. */}
+            <div className="modetoggle addseg whoseg">
+              <button aria-pressed={who === "all"} onClick={() => setWho("all")}>
+                Everyone
+              </button>
+              <button aria-pressed={who === "coach"} onClick={() => setWho("coach")}>
+                Coaches only
+              </button>
+            </div>
+            <p className="whoseg-sub">
+              Follow as many as you like. Their week shows up first on Discover.
+            </p>
+            <div className="nearlist">
+              {data.people
+                .filter((p) => who === "all" || p.kind === "coach")
+                .map((p) => (
+                  <PeopleRow key={p.id} p={p} />
+                ))}
+              {data.people.length === 0 && (
+                <p className="dissheet-wait">Nobody listed near you yet.</p>
+              )}
+            </div>
+          </>
         ) : (
           // Nothing dramatic while it loads: the sheet is already up and the
           // list is the only thing in it, so a spinner would be a second
@@ -193,5 +215,67 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
       </div>
     </div>,
     document.body,
+  );
+}
+
+/** One person: the row opens their page, the pill follows them without
+ *  leaving the list. Siblings, never nested, because a button inside a
+ *  link is not a thing. */
+function PeopleRow({ p }: { p: DirPerson }) {
+  const [state, setState] = useState<"off" | "following" | "requested">(
+    p.following ? "following" : p.requested ? "requested" : "off",
+  );
+  const [busy, setBusy] = useState(false);
+  const toggle = async () => {
+    if (busy) return;
+    setBusy(true);
+    const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
+    if (state === "off") {
+      const res = await followTrainer(p.handle);
+      if (res.ok) setState(res.requested ? "requested" : "following");
+    } else {
+      // Unfollow also withdraws a pending ask, so Requested is the cancel.
+      const res = await unfollowTrainer(p.handle);
+      if (res.ok) setState("off");
+    }
+    setBusy(false);
+  };
+  return (
+    <div className="nearrow">
+      <Link className="nearrow-go" href={`/${p.handle}?from=following`}>
+        <span className="nearrow-av">
+          {p.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.photo} alt="" />
+          ) : (
+            <span className="nearrow-ini" style={{ background: p.color }}>
+              {initials(p.name)}
+            </span>
+          )}
+        </span>
+        <span className="nearrow-txt">
+          <span className="nearrow-nm">
+            {p.name}
+            {p.kind === "coach" && <span className="nearrow-tag">Coach</span>}
+          </span>
+          <span className="nearrow-sub">
+            {[
+              p.kind === "coach" ? p.title || p.location : p.location,
+              p.kind === "coach" && p.next ? `next ${p.next}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        </span>
+      </Link>
+      <button
+        className={`peekfollow${state !== "off" ? " on" : ""}`}
+        aria-pressed={state !== "off"}
+        disabled={busy}
+        onClick={toggle}
+      >
+        {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
+      </button>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { classAddress, publicSchedules } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso, WEEKS_AHEAD, weekDates } from "@/lib/format";
-import type { FeedCoach, FeedItem } from "@/components/FollowingScreen";
+import type { FeedCoach, FeedItem, RailPerson } from "@/components/FollowingScreen";
 
 // The Discover feed, built once for everything that shows it: the tab's
 // page, and the Add screen's browse list. Classes near you from every
@@ -13,12 +13,23 @@ import type { FeedCoach, FeedItem } from "@/components/FollowingScreen";
 
 export type DiscoverFeed = {
   items: FeedItem[];
+  /** Every listable coach with their soonest class, for naming rows and the
+   *  Add screen's browse list. Not the rail: the rail is `myRail`. */
   rail: FeedCoach[];
   favIds: string[];
   cats: string[];
   follows: number;
   today: string;
+  /** The This week rail: the people you follow, coaches and members mixed,
+   *  each carrying the freshness ring's state. Only people whose week was
+   *  touched in the last seven days make it on at all. */
+  myRail: RailPerson[];
 };
+
+/** A week counts as touched by its newest public act: a class listed, or a
+ *  class saved. Seven days, per the brief: a rail of stale rings reads as a
+ *  dead app, so quiet weeks drop off entirely. */
+const RAIL_ACTIVE_DAYS = 7;
 
 export async function buildDiscoverFeed(
   userId: string,
@@ -29,7 +40,10 @@ export async function buildDiscoverFeed(
   // before signing in still counts once the address has an account.
   const [followRows, hidden] = await Promise.all([
     db
-      .select({ trainerUserId: schema.subscribers.trainerUserId })
+      .select({
+        trainerUserId: schema.subscribers.trainerUserId,
+        peekedAt: schema.subscribers.peekedAt,
+      })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     hiddenFrom(userId),
@@ -103,6 +117,11 @@ export async function buildDiscoverFeed(
           classType: c.classType ?? null,
           links: c.links,
           studioAddress: st?.address ?? null,
+          // The studio's coordinates, for the distance filter: geocoded at
+          // save, best-effort, null when the lookup missed. A class with no
+          // coordinates passes any distance rather than vanishing.
+          lat: st?.lat ?? null,
+          lng: st?.lng ?? null,
         });
       }
     }
@@ -187,5 +206,58 @@ export async function buildDiscoverFeed(
   for (const i of items) if (i.classType) catCount.set(i.classType, (catCount.get(i.classType) ?? 0) + 1);
   const cats = [...catCount.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
 
-  return { items, rail, favIds: [...favSet], cats, follows: followed.length, today };
+  // The This week rail: everyone you follow, whatever their kind, whether
+  // or not Discover would list them. Freshness is the newest public act on
+  // their week (a class listed, a class saved), the ring is that act being
+  // newer than your last peek, and a week untouched for seven days drops
+  // the person off the rail entirely.
+  const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
+  const followedUsers = followed.length
+    ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
+    : [];
+  const [theirClasses, theirMarks] = await Promise.all([
+    followed.length
+      ? db
+          .select({ userId: schema.classes.userId, createdAt: schema.classes.createdAt })
+          .from(schema.classes)
+          .where(and(inArray(schema.classes.userId, followed), eq(schema.classes.isPublic, true)))
+          .orderBy(desc(schema.classes.createdAt))
+      : Promise.resolve([]),
+    followed.length
+      ? db
+          .select({ userId: schema.attendances.userId, createdAt: schema.attendances.createdAt })
+          .from(schema.attendances)
+          .where(
+            and(
+              inArray(schema.attendances.userId, followed),
+              eq(schema.attendances.isPublic, true),
+            ),
+          )
+          .orderBy(desc(schema.attendances.createdAt))
+      : Promise.resolve([]),
+  ]);
+  const activityAt = new Map<string, number>();
+  for (const r of [...theirClasses, ...theirMarks]) {
+    const at = r.createdAt?.getTime() ?? 0;
+    if (at > (activityAt.get(r.userId) ?? 0)) activityAt.set(r.userId, at);
+  }
+  const cutoff = Date.now() - RAIL_ACTIVE_DAYS * 864e5;
+  const myRail: RailPerson[] = followedUsers
+    .filter((u) => (activityAt.get(u.id) ?? 0) >= cutoff)
+    .map((u) => {
+      const peeked = peekedByTrainer.get(u.id)?.getTime() ?? 0;
+      return {
+        id: u.id,
+        name: u.name.trim() || u.email.split("@")[0],
+        handle: u.handle,
+        photo: u.photoThumb ?? u.photo,
+        color: avatarColor(u),
+        fresh: (activityAt.get(u.id) ?? 0) > peeked,
+        activityAt: activityAt.get(u.id) ?? 0,
+      };
+    })
+    // Unseen first, per the brief, then the most recently touched week.
+    .sort((a, b) => Number(b.fresh) - Number(a.fresh) || b.activityAt - a.activityAt);
+
+  return { items, rail, favIds: [...favSet], cats, follows: followed.length, today, myRail };
 }

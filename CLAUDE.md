@@ -2189,47 +2189,65 @@ account; no account means no door, and the settings row hides.
 
 ## The Discover rearrangement (the discover-favorites branch)
 
-The Following-to-Discover brief, built on its own branch and not on main
-until Matt says merge. The change in one paragraph: following is removed;
-you favorite a coach instead, a shortcut to a person rather than a
-subscription that fills a feed. The tab is Discover (route stays /feed):
-classes near you from every listable coach, deduped to one row per class
-(same name, start, place, day, however many accounts list it), category
-pills from the types the list holds, and every class listing itself: a
-busy place folded into one studio row for a while, and on a young list
-that hides the very volume the screen is trying to show, so the fold came
-off by Matt's call and can return the day one gym's Monday actually
-drowns everything around it. The rail on top is
-the favorites alone, soonest class first; tapping a face opens that
-coach's fortnight (CoachPeek) with the favorite star in its head, and the
-class peek carries the same star beside the coach's name, because a class
-is how you discover a coach. `buildDiscoverFeed` in discoverfeed.ts is
-the one builder, shared with the Add screen's browse list.
+The Following-to-Discover brief plus `discoverupdates.md` (the addendum;
+where they disagree, the addendum wins), built on its own branch and not
+on main until Matt says merge. The change in one paragraph: there is one
+relationship word, Follow, for coaches and members alike, no stars
+anywhere, and following someone lets you see their week and never puts a
+class on your calendar. The tab is Discover (route stays /feed): the
+search door, the This week rail, and Upcoming near you, which is classes
+from every listable coach, deduped to one row per class, open-ended
+rather than bounded to a week, with series collapse: a recurring class
+appears once, at its next occurrence, marked Weekly on the place line
+(collapse runs after the filters, so an evening pick lands on the
+series' next evening date). Every class lists itself; the studio fold
+came off by Matt's call and can return the day one gym's Monday drowns
+everything around it. `buildDiscoverFeed` in discoverfeed.ts is the one
+builder, shared with the Add screen's browse list.
 
-Discover reads one day at a time, by Matt's call: a date rail of underline
-tabs (Today, then "Mon 10" on) pins under the header, and the list beneath
-is that day alone, because a three-week scroll of everything was unwieldy
-in exactly the way a booking app's day rail is not. Landing skips to the
-first day holding anything when today is quiet, and says so in one line.
-The rows are flat, out of the containers, also by Matt's call: time and
-length down the left, the class, the place and the coach stacked beside
-them, a hairline between rows (`.disflat`, an override scope on the shared
-`.clline`; the calendars keep their boxes, which is the shape Matt picked
-for owning a week, where this screen is browsing one). The coach is the
-row's third line, face and all: on this list the class leads. Beside the
-category pills sit Morning / Afternoon / Evening (before noon, noon to
-five, five on), a second axis on the same rail behind a hairline divider.
-There is deliberately no distance filter: nothing stores a coordinate
-(locations are "City, ST" strings, addresses free text), and a distance
-computed from a guess would be a lie with units on it.
+The rail is This week: the people you follow, coaches and members mixed,
+each circle a name and a ring and nothing else, no captions, no badges.
+The ring is the freshness signal: brand orange when their week changed
+since you last opened it, grey once seen (`subscribers.peekedAt`, written
+when the peek opens, because the ring's promise is kept the moment
+somebody is looking). A week untouched for seven days drops the person
+off the rail, and a rail with nobody active on it hides entirely (the
+addendum says below about three; the floor is one until density earns
+three, or the feature buries itself). Your week leads the rail, a dashed
+circle into the Share tab, and Add ends it, into People near you.
+Tapping a circle opens the peek: their week as a live calendar, header
+carrying "Week of" and Follow / Following, everything they coach (a
+Coaching tag, the one place coach and member differ) plus everything
+they saved, with "You saved this too" on any row you share and "You have
+N of these on your week" leading the sheet. The overlap marker is the
+point: it is how "you're going to that, I'm going to that" happens
+without anyone declaring anything beyond a save. The saved half rides
+behind `canSeeWeek` and `attendances.isPublic`; personal rows never
+reach it.
 
-The vocabulary is two words plus one special case: Saved (you intend to
-go; the ribbon, the toasts), Coaching (you lead it; the calendar pill,
-the attribution), and RSVP (a save the organizer can see: classes.rsvp
-flags it, the mechanism stays attendances, the ribbon becomes an RSVP
-button with "your name goes to whoever runs it" said before the tap, the
-count never ships empty, and the leader reads names, a door list, no
-check-in and no capacity on purpose). Four tabs for everyone: Discover,
+The filters are four dropdown chips, each a sheet, each displaying its
+current value ("Within 1 mile", not "Distance"), inverting when set,
+with a dashed Clear appearing when anything is. Time is before 11, 11 to
+4, after 4; distance is 1, 3 or 5 miles from browser geolocation against
+`studios.lat/lng` (asked only when a distance is picked; a class with no
+pin, or a viewer without one, passes rather than vanishing); type is the
+categories the list holds; places multi-selects with the sheet staying
+open. The empty state knows why it is empty: filters active says so with
+a clear button, never "nobody has added classes here".
+
+People near you (the rail's Add, and the search fab) is where coaches
+and members are told apart, because there it is useful: an Everyone /
+Coaches only segment, a Coach tag and next-class time on coach rows,
+neither on a member's, and Follow on every row, unlimited.
+
+The vocabulary is four terms, each with one job: Follow (a person whose
+week you can see), Saved (you intend to go; the ribbon, the toasts),
+Coaching (you lead it; the calendar pill, the attribution), and RSVP (a
+save the organizer can see: classes.rsvp flags it, the mechanism stays
+attendances, the ribbon becomes an RSVP button with "your name goes to
+whoever runs it" said before the tap, the count never ships empty, and
+the leader reads names, a door list, no check-in and no capacity on
+purpose). Four tabs for everyone: Discover,
 Calendar (a member's is /week, a coach's /calendar, each kind bounced to
 its own), Share, Profile. The coach calendar holds both halves behind
 All/Saved/Coaching pills, every row wearing one attribution slot: the
@@ -2256,14 +2274,18 @@ and the shortcut deselects itself. On the image, coaching rows carry
 hats: a poster that is all teaching rows stays exactly what it was, and
 saved rows keep the coach's first name, which is a fact rather than a tag.
 
-`discoverspec.md` is the populated page's spec: what the top rail does,
-said in one place, and members favoriting members (the rail becomes
-favorites of any kind, a member's peek is their visible marks behind
-`canSeeWeek`, personal rows never reach it). Specced, not built.
+`discoverspec.md` predates the addendum and is superseded where they
+disagree (it says favorite and star; the word is Follow and there are no
+stars). Its privacy lines still hold and are built: members on the rail,
+their peek their visible marks behind `canSeeWeek`, personal rows never
+reaching it.
 
-Still open from the brief: its own open items only (cancelled saved
-classes, ending a repeating save, push for a favorite's new classes,
-analytics names).
+Still open from the addendum, deliberately: instrumentation (outbound
+booking-link taps per class, segmented by social connection), and the
+push story for a followed week's new classes. Two of its open questions
+landed as the addendum leaned: publishing your week is implicit (the
+existing privacy switches are the gate), and a save survives an
+unfollow, which the mechanics already guaranteed.
 
 ## Not yet, and deliberately
 

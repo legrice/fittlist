@@ -42,6 +42,9 @@ export type DirPerson = {
   /** What they teach, from the same list a studio picks its types from. */
   disciplines: string[];
   color: string;
+  /** A coach's soonest class ("Today 6:00p"), for People near you's rows.
+   *  Null for members, and for a coach with nothing in the fortnight. */
+  next?: string | null;
 };
 
 /** A place in the directory. Not followable: you follow a person, and a gym

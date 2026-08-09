@@ -27,6 +27,8 @@ export default async function DiscoverPage() {
       follows={feed.follows}
       todayIso={feed.today}
       meId={userId}
+      myRail={feed.myRail}
+      meKind={me.kind === "fan" ? "member" : "coach"}
     />
   );
 }

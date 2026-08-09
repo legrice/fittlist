@@ -2,34 +2,33 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { coachPeek, type Peek } from "@/app/actions/peek";
+import { personPeek, type Peek } from "@/app/actions/peek";
 import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
-import { PeekStar } from "@/components/ClassPeek";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { initialOf } from "@/lib/avatar";
 
 /**
- * One coach's fortnight, opened from their circle, and the place you save from.
+ * One person's week, opened from their circle, and the place you save from.
  *
- * The pull model rests on this sheet: nothing a coach publishes reaches your
- * calendar until you put it there, so this is the only door and it has to be
- * one tap deep from the face. It wears the bottom sheet rather than the class
- * overlay because it is a list you skim and act on several times before
- * closing, and the overlay's shape says "one thing, whole screen".
+ * Everything they coach plus everything they saved, in time order, as a
+ * live calendar rather than an image: the same rows as anywhere else, with
+ * ribbons that work. Classes they lead carry a Coaching tag, which is the
+ * only place in the app where coach and member differ. Anything you have
+ * also saved is marked "You saved this too": the overlap marker is the
+ * point of the whole feature, "you're going to that, I'm going to that"
+ * without anyone declaring anything beyond a save.
  *
- * Rows are the calendar's own `ClassCard`, not a second design: a class has to
- * look the same wherever it is offered, or saving one teaches you nothing about
- * the screen you land back on.
+ * The header carries Follow / Following, because a week worth peeking at is
+ * the moment of intent. No stars anywhere: Follow is the one relationship
+ * word, per the updates brief.
  */
 export function CoachPeek({
   id,
   name,
   photo,
   color,
-  handle,
-  favorited,
   onClose,
 }: {
   id: string;
@@ -38,10 +37,6 @@ export function CoachPeek({
   name: string;
   photo: string | null;
   color: string;
-  /** For the star: favoriting them from their own week, without leaving
-   *  it. Both set is what draws it, so it never opens lying. */
-  handle?: string;
-  favorited?: boolean;
   onClose: () => void;
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
@@ -49,10 +44,19 @@ export function CoachPeek({
   // The mark, locally, so the ribbon fills on the tap rather than on the
   // round trip. Keyed the way the loader keys it.
   const [marks, setMarks] = useState<Record<string, boolean>>({});
+  const [follow, setFollow] = useState<null | "following" | "requested" | "off">(null);
+  const [followBusy, setFollowBusy] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    coachPeek(id).then((res) => (res ? setPeek(res) : setMissing(true)));
+    personPeek(id).then((res) => {
+      if (!res) {
+        setMissing(true);
+        return;
+      }
+      setPeek(res);
+      setFollow(res.following ? "following" : "off");
+    });
   }, [id]);
 
   const save = (classId: string, iso: string, on: boolean) => {
@@ -66,6 +70,21 @@ export function CoachPeek({
     });
   };
 
+  const toggleFollow = async () => {
+    if (!peek?.handle || followBusy || follow === null) return;
+    setFollowBusy(true);
+    const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
+    if (follow === "off") {
+      const res = await followTrainer(peek.handle);
+      if (res.ok) setFollow(res.requested ? "requested" : "following");
+    } else {
+      // Unfollow also withdraws a pending ask, so Requested is the cancel.
+      const res = await unfollowTrainer(peek.handle);
+      if (res.ok) setFollow("off");
+    }
+    setFollowBusy(false);
+  };
+
   return (
     <div
       className="sheet-scrim"
@@ -74,10 +93,8 @@ export function CoachPeek({
       }}
     >
       <div className="sheet sheet-full peeksheet">
-        {/* The face and the name are the heading. There is no second title row
-            above them: the sheet said the name once in a bar and again beside
-            the photograph, which is one name too many on a sheet whose whole
-            job is to say whose week this is. */}
+        {/* The face and the name are the heading, "Week of <date>" under
+            them, and Follow across from both. */}
         <div className="peekhead">
           <span className="peekav">
             {photo ? (
@@ -91,27 +108,47 @@ export function CoachPeek({
           </span>
           <div className="peekhead-txt">
             <h2 className="peekhead-nm">{name}</h2>
-            {peek?.handle && (
-              <Link className="peekhead-go" href={`/${peek.handle}`}>
-                See their page
-                <Icon name="chevron_right" size={18} />
-              </Link>
-            )}
+            {peek && <p className="peekhead-wk">{peek.weekOf}</p>}
           </div>
-          {handle && favorited !== undefined && (
-            <PeekStar handle={handle} name={name} initial={favorited} />
+          {peek?.handle && follow !== null && (
+            <button
+              className={`peekfollow${follow !== "off" ? " on" : ""}`}
+              aria-pressed={follow !== "off"}
+              disabled={followBusy}
+              onClick={toggleFollow}
+            >
+              {follow === "following" ? "Following" : follow === "requested" ? "Requested" : "Follow"}
+            </button>
           )}
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
         </div>
 
+        {/* Their page, one line under the head: the pill took the spot the
+            link had, and both belong here. */}
+        {peek?.handle && (
+          <Link className="peekhead-go peekhead-pg" href={`/${peek.handle}`}>
+            See their page
+            <Icon name="chevron_right" size={18} />
+          </Link>
+        )}
+
         {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
+
+        {/* The overlap, said once at the top: it is the thing this sheet
+            exists to surface. */}
+        {peek && peek.shared > 0 && (
+          <p className="peeklead">
+            You have {peek.shared} of these on your week.
+          </p>
+        )}
 
         {peek && !peek.days.length && (
           <p className="peekempty">
-            {name} has nothing up for the next couple of weeks. Their circle lights up when they
-            do.
+            {peek.gated
+              ? `Follow ${name} to see their week.`
+              : `${name} has nothing up for the next couple of weeks. Their circle lights up when they do.`}
           </p>
         )}
 
@@ -123,22 +160,16 @@ export function CoachPeek({
               const on = marks[key] ?? it.saved;
               return (
                 // The swipe came with the merged week it used to live on. It
-                // belongs here for the same reason the tray does: saving is
+                // belongs here for the same reason the rail does: saving is
                 // the act this release turns on, and the cheapest version of
                 // it is one drag without aiming at a button.
                 <SwipeGoing key={key} going={on} onToggle={() => save(it.classId, it.iso, !on)}>
                 {/* A class opens as a sheet from a list and as a page from a
                     link, and a peek is a list. Left as a bare href the row
-                    navigated, which threw the peek away: you tapped one class
-                    out of a fortnight and landed somewhere with no way back to
-                    the other thirteen.
+                    navigated, which threw the peek away.
 
-                    Inside the swipe, not around it. Both catch the click in
-                    the capture phase, so the outer one goes first: with
-                    ClassOpener around the list, every completed swipe also
-                    opened the class it had just saved. The gesture is the
-                    ancestor now, so its stopPropagation lands before this
-                    ever sees the event. */}
+                    Inside the swipe, not around it: both catch the click in
+                    the capture phase, so the outer one goes first. */}
                 <ClassOpener handle="">
                 <div className="peekrow">
                   <Link
@@ -155,6 +186,14 @@ export function CoachPeek({
                       {it.durationMin} min
                       {it.where ? ` · ${it.where}` : ""}
                     </span>
+                    {/* Which hat, and the overlap: the tags only draw when
+                        they have something to say. */}
+                    {(it.coaching || on) && (
+                      <span className="peekrow-tags">
+                        {it.coaching && <span className="peektag">Coaching</span>}
+                        {on && <span className="peektag peektag-you">You saved this too</span>}
+                      </span>
+                    )}
                   </Link>
                   <button
                     className={`peekadd${on ? " on" : ""}`}
@@ -171,6 +210,10 @@ export function CoachPeek({
             })}
           </div>
         ))}
+
+        {peek && peek.days.length > 0 && (
+          <p className="peekfoot">Ribbon anything here to put it on your own week.</p>
+        )}
       </div>
     </div>
   );

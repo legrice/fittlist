@@ -5999,6 +5999,108 @@ button.ps-card { cursor: pointer; }
 .trayhint { margin: 6px 18px 2px; font-size: 12.5px; color: var(--ol); }
 
 /* Near you: the label and the category pills between the rail and the list. */
+/* ---------- The This week rail, the filter chips, the peek's follow ---------- */
+/* The ring is the freshness signal and the whole message: solid brand when
+   that person's week changed since you last opened it, grey once seen. The
+   circle is a name and a ring, per the updates brief: no captions, no
+   badges, no next-class times. */
+.trayav-ring { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
+.trayav-ring.seen { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--line); }
+/* Your week, leading the rail: dashed like Add, because both are doors
+   rather than people. */
+.trayav-you {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1.5px dashed var(--line); color: var(--ol);
+}
+.railbl { margin: 6px 0 8px; }
+
+/* The four dropdown chips, each showing its current value: "Within 1 mile",
+   not "Distance", which is what lets one row replace five pills. Active
+   chips invert; Clear is dashed and only there when something is set. */
+.fchips .catpill { display: inline-flex; align-items: center; gap: 3px; }
+.fchips .catpill .icon { margin-right: -3px; }
+.catpill.fchip-clear {
+  background: transparent; border: 1.5px dashed var(--line); color: var(--ol);
+}
+/* A filter sheet: one question, its options as rows, the pick marked. */
+.fsheet h2 { margin: 4px 0 4px; }
+.fopt {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; text-align: left; padding: 15px 2px;
+  border: none; border-bottom: 1px solid var(--line); background: none;
+  font-family: inherit; font-size: 15.5px; color: var(--ink); cursor: pointer;
+}
+.fopt[aria-pressed="true"] { font-weight: 600; color: var(--si); }
+.fopt .icon { flex-shrink: 0; color: var(--si); }
+
+/* Follow, in a peek's head and on a People near you row: the outline pill
+   that fills in ink when it is a yes. One relationship word, no stars. */
+.peekfollow {
+  flex-shrink: 0; border: 1px solid var(--ink); background: var(--card);
+  border-radius: 999px; padding: 8px 15px; cursor: pointer;
+  font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink);
+}
+.peekfollow.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.peekhead-wk { margin: 2px 0 0; font-size: 13px; color: var(--ol); }
+.peekhead-pg { display: inline-flex; margin: -8px 0 12px; }
+/* The overlap, said once at the top, and the footer that teaches the
+   ribbon: both quiet, because the rows are the content. */
+.peeklead { margin: 0 0 10px; font-size: 13.5px; color: var(--ol); }
+.peekfoot { margin: 14px 0 4px; font-size: 12.5px; color: var(--ol); }
+/* Which hat a row is, and the overlap marker: Coaching in the quiet gray,
+   You saved this too in the brand's own ink, because the overlap is the
+   point of the whole feature. */
+.peekrow-tags { display: flex; gap: 6px; margin-top: 5px; }
+.peektag {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  background: var(--cl); color: var(--ol); white-space: nowrap;
+}
+.peektag-you { background: var(--si-tint); color: var(--si-ink); }
+
+/* People near you: the segment, the line under it, and the rows. The row
+   opens the page; the pill follows without leaving the list. */
+.whoseg { margin: 0 0 4px; }
+.whoseg-sub { margin: 8px 2px 4px; font-size: 13px; color: var(--ol); }
+.nearrow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.nearrow-go {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px;
+  text-decoration: none; color: var(--ink);
+}
+.nearrow-av {
+  width: 46px; height: 46px; border-radius: 999px; overflow: hidden; flex-shrink: 0;
+  background: var(--cl);
+}
+.nearrow-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nearrow-ini {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  color: #fff; font-size: 17px; font-weight: 600;
+}
+.nearrow-txt { min-width: 0; }
+.nearrow-nm {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 15.5px; font-weight: 600;
+}
+.nearrow-tag {
+  display: inline-block; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  background: var(--cl); color: var(--ol);
+}
+.nearrow-sub {
+  display: block; margin-top: 1px; font-size: 13px; color: var(--ol);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Save in the peek's footer: the going green, because green is what a yes
+   wears everywhere. Saved flips to the quiet outline so the loud state is
+   the offer, not the receipt. */
+.clsfull-btn.save { background: var(--go); color: #fff; }
+.clsfull-btn.save.on { background: var(--card); color: var(--go); box-shadow: inset 0 0 0 1.5px var(--go); }
+.clspeek-rsvpnote { margin: 10px 0 0; font-size: 12.5px; color: var(--ol); }
+
 .nearhead { padding: 16px 18px 2px; }
 .nearlbl {
   display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em;

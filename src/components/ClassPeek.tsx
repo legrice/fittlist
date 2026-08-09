@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClass } from "@/app/actions/classes";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
+import { setGoing } from "@/app/actions/going";
 import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { Icon } from "@/components/Icon";
 
@@ -82,30 +83,38 @@ export type PeekClass = {
 /** The by-line: their face and their name, and a door to their week when they
  *  have a page. A coach with no handle is a gym's account, which is a place
  *  rather than a person and has nothing to open. */
-/** The star beside the coach's name: favorite them without leaving the
- *  class. The same action the profile pill runs; the peek is just the
- *  moment of intent. */
-export function PeekStar({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
-  const [on, setOn] = useState(initial);
+/** Follow, beside the coach's name: the same action the profile pill runs;
+ *  the peek is just the moment of intent. It was a star for a build, and the
+ *  updates brief ended that: one relationship word, Follow, no stars
+ *  anywhere. Requested is what a gated account answers with. */
+export function PeekFollow({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
+  const [state, setState] = useState<"off" | "following" | "requested">(
+    initial ? "following" : "off",
+  );
   const [busy, setBusy] = useState(false);
   return (
     <button
-      className={`peekstar${on ? " on" : ""}`}
+      className={`peekfollow${state !== "off" ? " on" : ""}`}
       disabled={busy}
-      aria-pressed={on}
-      aria-label={on ? `Unfavorite ${name}` : `Favorite ${name}`}
+      aria-pressed={state !== "off"}
+      aria-label={state === "off" ? `Follow ${name}` : `Unfollow ${name}`}
       onClick={async (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (busy) return;
         setBusy(true);
         const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
-        const res = on ? await unfollowTrainer(handle) : await followTrainer(handle);
+        if (state === "off") {
+          const res = await followTrainer(handle);
+          if (res.ok) setState(res.requested ? "requested" : "following");
+        } else {
+          const res = await unfollowTrainer(handle);
+          if (res.ok) setState("off");
+        }
         setBusy(false);
-        if (res.ok) setOn(!on);
       }}
     >
-      <Icon name={on ? "star_filled" : "star"} size={22} />
+      {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
     </button>
   );
 }
@@ -159,6 +168,11 @@ export function ClassPeek({
   // that; this way the sheet is instant and the detail is one tap behind it.
   const [full, setFull] = useState<ClassDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  // The viewer's mark, locally, so the button flips on the tap rather than
+  // the round trip. Null until touched; the loaded detail is the truth
+  // before that.
+  const [savedNow, setSavedNow] = useState<boolean | null>(null);
+  const [saveBusy, setSaveBusy] = useState(false);
 
   // The rota's own controls, loaded from the same place the depth is: whether
   // this date can be given up, and who it can be handed to, are the gym's
@@ -354,7 +368,11 @@ export function ClassPeek({
           <span className="clspeek-byrow">
             <CoachBy coach={cls.coach} />
             {cls.coach.handle && cls.coach.favorited !== undefined && (
-              <PeekStar handle={cls.coach.handle} name={cls.coach.name} initial={cls.coach.favorited} />
+              <PeekFollow
+                handle={cls.coach.handle}
+                name={cls.coach.name}
+                initial={cls.coach.favorited}
+              />
             )}
           </span>
         )}
@@ -434,9 +452,14 @@ export function ClassPeek({
           </>
         )}
 
+        {/* RSVP says where the name goes before the tap, never after. */}
+        {full?.canAdd && full.rsvp && (
+          <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
+        )}
+
         {/* The footer, pinned to the sheet's bottom edge: Share in ink on
-            the left, Book in the brand colour on the right when the class
-            has a booking door, and Share alone when it doesn't. */}
+            the left, Save (or RSVP) in the going green when the class can
+            be saved, Book when it has a booking door. */}
         <div className="clsfull-cta">
           <button className="clsfull-btn dark" onClick={share}>
             Share
@@ -446,6 +469,28 @@ export function ClassPeek({
               {loading ? "Opening…" : "Manage shift"}
             </button>
           )}
+          {full?.canAdd &&
+            (() => {
+              const on = savedNow ?? full.added;
+              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Saved" : "Save";
+              return (
+                <button
+                  className={`clsfull-btn save${on ? " on" : ""}`}
+                  disabled={saveBusy}
+                  onClick={async () => {
+                    if (saveBusy) return;
+                    setSaveBusy(true);
+                    setSavedNow(!on);
+                    const res = await setGoing(cls.id, cls.iso, !on);
+                    if (!res.ok) setSavedNow(on);
+                    setSaveBusy(false);
+                    onChanged();
+                  }}
+                >
+                  {word}
+                </button>
+              );
+            })()}
           {bookLinks.length > 0 && (
             <button className="clsfull-btn book" onClick={() => setBookOpen(true)}>
               Book

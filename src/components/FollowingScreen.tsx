@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useBandTop } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
@@ -9,7 +10,7 @@ import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
+import { ClassLine, DayBand, initials, type WeekRow } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -17,9 +18,24 @@ export type FeedCoach = {
   handle: string;
   photo: string | null;
   color: string;
-  /** When their next class is ("Today 6:00p"), under the face on the rail:
-   *  the rail answers "who can I train with next" before a single tap. */
+  /** When their next class is ("Today 6:00p"): the Add screen's browse list
+   *  and People near you still say it. The rail deliberately does not. */
   next: string | null;
+};
+
+/** One circle on the This week rail: somebody you follow whose week was
+ *  touched in the last seven days. The ring is the freshness signal and the
+ *  circle is a name and a ring, nothing else, per the updates brief. */
+export type RailPerson = {
+  id: string;
+  name: string;
+  handle: string | null;
+  photo: string | null;
+  color: string;
+  /** Their week changed since you last opened it: the ring is orange. */
+  fresh: boolean;
+  /** When their week was last touched, for the order behind the fresh ones. */
+  activityAt: number;
 };
 
 export type FeedItem = {
@@ -50,20 +66,50 @@ export type FeedItem = {
   links: { label: string; url: string }[];
   /** The studio's street address, the sub-line under the place fact. */
   studioAddress: string | null;
+  /** The studio's coordinates, for the distance filter. Null passes any
+   *  distance: a class with no pin should widen a search, not vanish. */
+  lat: number | null;
+  lng: number | null;
 };
 
+/** The brief says hide the rail below about three people with fresh weeks,
+ *  because an empty story rail reads as a dead app. A fresh week is one
+ *  touched inside the seven-day window (the rail's own membership rule); a
+ *  seen week stays on the rail with a grey ring. Three hides the rail for
+ *  nearly every account at current density and takes the peek with it, so
+ *  the floor here is one; raise it when density does. */
+const RAIL_MIN_PEOPLE = 1;
+
+const TIMES = [
+  ["any", "Any time"],
+  ["am", "Morning, before 11"],
+  ["mid", "Midday, 11 to 4"],
+  ["pm", "Evening, after 4"],
+] as const;
+const DISTS = [
+  ["any", "Any distance"],
+  ["1", "Within 1 mile"],
+  ["3", "Within 3 miles"],
+  ["5", "Within 5 miles"],
+] as const;
+
+type Filters = {
+  time: "any" | "am" | "mid" | "pm";
+  dist: "any" | "1" | "3" | "5";
+  cat: string;
+  place: "any" | string[];
+};
+const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
+
 /**
- * Everyone you follow, as one week.
+ * Discover: the search door, the This week rail, and Upcoming near you.
  *
- * The rail is the filter and the only one there is. Tapping a face narrows the
- * week to that coach; tapping it again, or All, gives everyone back. It is
- * single-select on purpose: a multi-select rail is a set of checkboxes wearing
- * photographs, and the question this screen answers is "what has Nadia got on",
- * which has one subject.
- *
- * There is nothing to save here. A member has no calendar of their own, so a
- * class opens to say when, where and whose, and offers the way to that coach's
- * page. The relationship is reading, not collecting.
+ * The rail is the people you follow, coaches and members mixed, each circle
+ * a name and a ring: solid orange when their week changed since you last
+ * opened it, grey once seen. Tapping one opens their week as a live
+ * calendar (CoachPeek) with working ribbons. The list below is everyone
+ * near you whether you follow anybody or not; a follow is how you see
+ * someone's week, never what fills a calendar or this feed.
  */
 export function FollowingScreen({
   items,
@@ -73,79 +119,41 @@ export function FollowingScreen({
   follows,
   todayIso,
   meId,
+  myRail,
+  meKind,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
-  /** Who the viewer favorited: the rail is these and only these. The feed
-   *  underneath is everyone, which is what makes this screen Discover. */
+  /** Who the viewer follows, for the class peek's Follow pill state. */
   favIds: string[];
-  /** The category pills, from what the list actually holds. */
+  /** The type filter's options, from what the list actually holds. */
   cats: string[];
-  /** How many favorites: the rail's empty state forks on this. */
+  /** How many people they follow: the rail's teaching state forks on this. */
   follows: number;
   todayIso: string;
   /** The viewer: their own rows (a coach's own week rides this feed) skip
    *  the report row, which could only ever answer with an error. */
   meId?: string;
+  myRail: RailPerson[];
+  /** Where the Your week circle points: the hub is per kind. */
+  meKind: "coach" | "member";
 }) {
-  const [focus, setFocus] = useState<string | null>(null);
-  const [cat, setCat] = useState<string | null>(null);
-  // When in the day, on top of what: before noon, noon to five, five on.
-  // A single toggle beside the categories, because "can I train before
-  // work" is the other question a list of times gets asked.
-  const [time, setTime] = useState<null | "morning" | "afternoon" | "evening">(null);
-  // One day at a time now, by Matt's call: the date tabs run left to right
-  // and the list under them is that day alone. A three-week scroll of
-  // everything was unwieldy in exactly the way a booking app's day rail is
-  // not. Lands on today, or the first day that holds anything when today
-  // is quiet, which is the same grace the hub's defaultFrom applies.
-  const [day, setDay] = useState<string>(() => {
-    if (items.some((i) => i.iso === todayIso)) return todayIso;
-    let first: string | null = null;
-    for (const i of items) if (i.iso > todayIso && (!first || i.iso < first)) first = i.iso;
-    return first ?? todayIso;
-  });
-  // Where the auto-landing went, so the note under the tabs can say why
-  // Today isn't selected; it only ever names this one day.
-  const landed = useRef(day);
+  const [f, setF] = useState<Filters>(NO_FILTERS);
+  const [sheet, setSheet] = useState<null | "time" | "dist" | "cat" | "place">(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
-  // A face on the rail opens that coach's fortnight, the peek the v4 tray
-  // carried, back per Matt's call with the star riding its head.
-  const [peekCoach, setPeekCoach] = useState<FeedCoach | null>(null);
+  const [peekPerson, setPeekPerson] = useState<RailPerson | null>(null);
   const [find, setFind] = useState(false);
-  // The class sheet's copy fallback speaks through this: it was a no-op
-  // for a while, so on a browser with no share tray the link was copied
-  // and nothing said so, which reads as a dead button.
+  // The viewer's pin, asked for the first time a distance is picked and
+  // never before: a screen that asks for location on arrival is a screen
+  // people say no to.
+  const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
   const router = useRouter();
 
-  // The bands pin under the app header and nothing else: the coach rail above
-  // them scrolls away. `--dayband-top` lives on documentElement, so a screen
-  // that draws bands and forgets this inherits whatever the last screen set
-  // and pins them halfway down the phone, through the middle of a row. That
-  // has shipped once already, on Discover.
+  // The day bands pin under the app header. `--dayband-top` lives on
+  // documentElement, so a screen that pins and forgets this inherits
+  // whatever the last screen set. That has shipped once already.
   useBandTop();
-
-  // Following somebody in the sheet is the whole reason the sheet exists, and
-  // the week behind it is a server render: closing is where it catches up. The
-  // action revalidates /feed, but nothing re-renders a page that is already on
-  // screen, so without this you would follow three people, close, and find the
-  // same empty rail you opened.
-  // The tray pins under the header, part of the chrome the card slides over:
-  // its sticky top is the pinned header's own height, which is a measured
-  // number because the safe area moves it (a constant that has to track a
-  // measured thing is a constant that will be wrong again).
-  const trayRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const el = trayRef.current;
-    const bar = document.querySelector<HTMLElement>(".brandbar");
-    if (!el || !bar) return undefined;
-    const set = () => el.style.setProperty("--tray-top", `${bar.offsetHeight}px`);
-    set();
-    const ro = new ResizeObserver(set);
-    ro.observe(bar);
-    return () => ro.disconnect();
-  }, []);
 
   const closeFind = () => {
     setFind(false);
@@ -154,59 +162,58 @@ export function FollowingScreen({
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
 
-  // Only the people who actually have something in the range. The rail filters
-  // the week, so a face with nothing behind it is a chip that can only ever
-  // empty the screen. They stay followed; they are just not on the rail.
-  //
-  // Across all three weeks rather than the visible one, on purpose. Scoped to
-  // the week the rail would rearrange itself every time you tapped an arrow,
-  // and a face moving out from under a thumb between taps is worse than a face
-  // that is quiet this week: the arrow is right there, and the empty state
-  // says so.
-  const rail = useMemo(() => {
-    const fav = new Set(favIds);
-    return coaches.filter((c) => fav.has(c.id));
-  }, [coaches, favIds]);
-
-  const shown = useMemo(
-    () =>
-      items.filter(
-        (i) =>
-          (!focus || i.coachId === focus) &&
-          (!cat || i.classType === cat) &&
-          (!time || timeOfDay(i.mins) === time),
-      ),
-    [items, focus, cat, time],
+  const placeNames = useMemo(
+    () => [...new Set(items.map((i) => i.where).filter((w): w is string => !!w))].sort(),
+    [items],
   );
 
-  // The rail of days: as far ahead as the feed itself looks, every day
-  // drawn whether or not it holds anything, because a gap in the dates
-  // reads as a broken calendar rather than a quiet Tuesday.
-  const dayTabs = useMemo(() => {
-    let last = todayIso;
-    for (const i of items) if (i.iso > last) last = i.iso;
-    const out: { iso: string; label: string }[] = [];
-    for (let iso = todayIso, n = 0; iso <= last || n < 14; iso = plusDays(iso, 1), n++) {
-      out.push({ iso, label: n === 0 ? "Today" : tabLabel(iso) });
-      if (n > 30) break;
-    }
-    return out;
-  }, [items, todayIso]);
+  const anyFilter =
+    f.time !== "any" || f.dist !== "any" || f.cat !== "any" || f.place !== "any";
 
-  // The selected day's rows alone, in the flat grammar: the tab is the day
-  // heading now, so the list carries no bands of its own. Every class lists
-  // itself, by Matt's call: a busy place folded into one studio row for a
-  // while, and on a young list that hides the very volume the screen is
-  // trying to show. The fold can come back the day a single gym's Monday
-  // actually drowns everything around it.
-  const dayRows: WeekRow[] = useMemo(() => {
-    const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
-    return list.map((i) => {
+  const passes = (i: FeedItem): boolean => {
+    if (f.cat !== "any" && i.classType !== f.cat) return false;
+    if (f.place !== "any" && !(f.place as string[]).includes(i.where ?? "")) return false;
+    if (f.time !== "any") {
+      const h = i.mins / 60;
+      if (f.time === "am" && h >= 11) return false;
+      if (f.time === "mid" && (h < 11 || h >= 16)) return false;
+      if (f.time === "pm" && h < 16) return false;
+    }
+    if (f.dist !== "any" && geo && i.lat !== null && i.lng !== null) {
+      // A class with no pin, or a viewer without one, passes: a distance
+      // filter that can't be computed must widen, never silently hide.
+      if (milesBetween(geo, { lat: i.lat, lng: i.lng }) > Number(f.dist)) return false;
+    }
+    return true;
+  };
+
+  // Filter, then collapse: a recurring class appears once, at its next
+  // occurrence, marked Weekly. Collapse after the filters so an evening
+  // pick lands on the series' next evening date rather than losing the
+  // whole series to a hidden morning one. Without the collapse an
+  // open-ended list is the same class repeating down the feed forever.
+  const days = useMemo(() => {
+    const kept = items.filter(passes).sort((a, b) =>
+      a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
+    );
+    const count = new Map<string, number>();
+    for (const i of kept) {
+      const k = `${i.name.trim().toLowerCase()}|${i.where ?? ""}|${i.mins}`;
+      count.set(k, (count.get(k) ?? 0) + 1);
+    }
+    const seen = new Set<string>();
+    const rows: (WeekRow & { iso: string })[] = [];
+    for (const i of kept) {
+      const k = `${i.name.trim().toLowerCase()}|${i.where ?? ""}|${i.mins}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const weekly = (count.get(k) ?? 0) > 1;
       const c = coachById.get(i.coachId);
-      return {
+      rows.push({
+        iso: i.iso,
         key: i.key,
         name: i.name,
-        where: i.where,
+        where: i.where ? `${i.where}${weekly ? " · Weekly" : ""}` : weekly ? "Weekly" : null,
         hm: i.hm,
         ap: i.ap,
         dur: `${i.durationMin} min`,
@@ -221,285 +228,355 @@ export function FollowingScreen({
           coach: c ? { name: c.name, href: `/${c.handle}` } : null,
           studio: i.where && i.whereHref ? { name: i.where, href: i.whereHref } : null,
         },
-      };
-    });
-  }, [shown, day, coachById, favIds, meId]);
+      });
+    }
+    const byIso = new Map<string, WeekRow[]>();
+    for (const r of rows) byIso.set(r.iso, [...(byIso.get(r.iso) ?? []), r]);
+    return [...byIso.entries()].map(([iso, list]) => ({
+      iso,
+      label: bandLabel(iso, todayIso),
+      rows: list,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, f, geo, coachById, favIds, meId, todayIso]);
 
-  // The feed is everyone now, so it is only ever empty when nothing is
-  // listed near you at all: the one state a brand-new region sees. No
-  // favorites is not an empty screen any more, because a favorite was never
-  // what filled it.
-  if (!items.length) {
-    return (
-      <>
-        <div className="cardwrap">
-          <div className="wkempty">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="wkempty-fig"
-              src="/illustrations/following-empty.png"
-              alt=""
-              width={356}
-              height={600}
-            />
-            <h2 className="wkempty-t">Nothing near you yet</h2>
-            <p className="wkempty-b">
-              Classes show up here as coaches list them. Find a coach to favorite in the
-              meantime; their next class will lead your Discover.
-            </p>
-            <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-              Find coaches
-            </button>
-          </div>
-        </div>
-        <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
-          <Icon name="search" size={26} />
-        </button>
-        {find && <DiscoverSheet onClose={closeFind} />}
-      </>
-    );
-  }
+  // Hide the rail rather than draw it dead, per the brief: following nobody
+  // keeps the teaching state (ghosts and one line), following only people
+  // whose weeks have gone quiet hides the block entirely.
+  const railShows = follows === 0 || myRail.length >= RAIL_MIN_PEOPLE;
+
+  const pickDist = (v: Filters["dist"]) => {
+    if (v !== "any" && !geo && typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => toast("Distance needs your location. Everything shows meanwhile."),
+      );
+    }
+    setF((cur) => ({ ...cur, dist: v }));
+    setSheet(null);
+  };
+
+  const chipLabel = (k: "time" | "dist" | "cat" | "place"): string => {
+    if (k === "time") return TIMES.find(([v]) => v === f.time)![1].split(",")[0];
+    if (k === "dist") return DISTS.find(([v]) => v === f.dist)![1];
+    if (k === "cat") return f.cat === "any" ? "All types" : f.cat;
+    if (f.place === "any") return "All places";
+    const p = f.place as string[];
+    return p.length === 1 ? p[0] : `${p.length} places`;
+  };
 
   return (
     <>
-      {/* The rail is chrome, and it scrolls away with the page: the date
-          tabs are what pin. */}
-      <div className="tray" ref={trayRef}>
-        {/* The rail is your favorites and only them, per the brief: a
-            shortcut to the people you go to most, never what fills the list
-            below. The caption under each face is when their next class is,
-            so the rail answers "who can I train with next" unopened. */}
-        <div className="tray-scroll">
-          {rail.map((c) => {
-            const on = focus === c.id;
-            return (
-              <button
-                key={c.id}
-                className={`trayitem${focus && !on ? " dim" : ""}`}
-                aria-pressed={on}
-                onClick={() => setPeekCoach(c)}
-              >
-                <span className={`trayav${on ? " sel" : ""}`}>
-                  {c.photo ? (
+      {/* The search bar leads, drawn as the field it opens: the one door to
+          /search, which covers people, studios and classes at once. */}
+      <div className="dissearchrow dishome-search">
+        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
+          <Icon name="search" size={21} className="dissearch-ic" />
+          <span className="dissearch-ph">Search coaches, classes, studios</span>
+        </Link>
+      </div>
+
+      {/* This week: the people you follow, coaches and members mixed, no
+          captions and no badges. A circle is a name and a ring, the ring is
+          the freshness signal, and tapping one opens their week. Your week
+          leads it (the door to the Share tab) and Add ends it. */}
+      {railShows && (
+        <div className="tray">
+          <p className="nearlbl railbl">This week</p>
+          <div className="tray-scroll">
+            <Link className="trayitem" href={meKind === "coach" ? "/coachshare" : "/membershare"}>
+              <span className="trayav trayav-you">
+                <Icon name="arrow_outward" size={22} />
+              </span>
+              <span className="trayitem-nm">Your week</span>
+            </Link>
+            {myRail.map((p) => (
+              <button key={p.id} className="trayitem" onClick={() => setPeekPerson(p)}>
+                <span className={`trayav trayav-ring${p.fresh ? "" : " seen"}`}>
+                  {p.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.photo} alt="" />
+                    <img src={p.photo} alt="" />
                   ) : (
-                    <span className="trayav-ini" style={{ background: c.color }}>
-                      {initials(c.name)}
+                    <span className="trayav-ini" style={{ background: p.color }}>
+                      {initials(p.name)}
                     </span>
                   )}
                 </span>
-                <span className="trayitem-nm">{c.name.split(/\s+/)[0]}</span>
+                <span className="trayitem-nm">{p.name.split(/\s+/)[0]}</span>
               </button>
-            );
-          })}
-          {/* The way to lengthen the rail, at the end of it, never one of
-              the faces. With no favorites yet it gets two dashed
-              placeholders for company and a line saying what the rail is
-              for, per the brief: the shape of the thing sells the thing. */}
-          <button className="trayitem" onClick={() => setFind(true)}>
-            <span className="trayav trayav-add">
-              <Icon name="add" size={28} />
-            </span>
-            <span className="trayitem-nm">Add</span>
-          </button>
-          {rail.length === 0 && (
-            <>
-              <span className="trayav trayav-ghost" aria-hidden="true" />
-              <span className="trayav trayav-ghost" aria-hidden="true" />
-            </>
+            ))}
+            <button className="trayitem" onClick={() => setFind(true)}>
+              <span className="trayav trayav-add">
+                <Icon name="add" size={28} />
+              </span>
+              <span className="trayitem-nm">Add</span>
+            </button>
+            {follows === 0 && (
+              <>
+                <span className="trayav trayav-ghost" aria-hidden="true" />
+                <span className="trayav trayav-ghost" aria-hidden="true" />
+              </>
+            )}
+          </div>
+          {follows === 0 && (
+            <p className="trayhint">
+              Follow the coaches you go to most and the friends you train with. Their week
+              shows up here.
+            </p>
           )}
         </div>
-        {rail.length === 0 && (
-          <p className="trayhint">
-            Add the coaches you go to most. Their next class always shows here.
-          </p>
+      )}
+
+      {/* Upcoming near you: open-ended, as far forward as there is data,
+          because coverage is thin and an expo three weeks out is exactly
+          what somebody wants to find. The four chips say their current
+          value, which is what lets one row replace five pills. */}
+      <div className="nearhead">
+        <span className="nearlbl">Upcoming near you</span>
+        <div className="catpills fchips">
+          {(
+            [
+              ["time", f.time !== "any"],
+              ["dist", f.dist !== "any"],
+              ["cat", f.cat !== "any"],
+              ["place", f.place !== "any"],
+            ] as const
+          ).map(([k, on]) => (
+            <button
+              key={k}
+              className={`catpill${on ? " on" : ""}`}
+              aria-pressed={on}
+              onClick={() => setSheet(k)}
+            >
+              {chipLabel(k)} <Icon name="expand_more" size={16} />
+            </button>
+          ))}
+          {anyFilter && (
+            <button className="catpill fchip-clear" onClick={() => setF(NO_FILTERS)}>
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="cardwrap">
+        {days.length === 0 ? (
+          anyFilter ? (
+            // The empty state knows why it is empty: never "nobody has
+            // added classes" when the truth is the filter.
+            <div className="wkempty">
+              <h2 className="wkempty-t">Nothing matches</h2>
+              <p className="wkempty-b">Try widening the time or distance.</p>
+              <button className="btn si wkempty-cta" onClick={() => setF(NO_FILTERS)}>
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="wkempty">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="wkempty-fig"
+                src="/illustrations/following-empty.png"
+                alt=""
+                width={356}
+                height={600}
+              />
+              <h2 className="wkempty-t">Nothing near you yet</h2>
+              <p className="wkempty-b">
+                Classes show up here as coaches list them. Find people to follow in the
+                meantime; their week will lead your Discover.
+              </p>
+              <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
+                Find people
+              </button>
+            </div>
+          )
+        ) : (
+          days.map((d) => (
+            <section key={d.iso} className="dayblock">
+              <DayBand label={d.label} today={d.iso === todayIso} />
+              <div className="disflat">
+                {d.rows.map((r) =>
+                  r.menu ? (
+                    <div key={r.key} className="clrow">
+                      <ClassLine row={r} />
+                      <ClassRowMenu {...r.menu} name={r.name} />
+                    </div>
+                  ) : (
+                    <ClassLine key={r.key} row={r} />
+                  ),
+                )}
+              </div>
+            </section>
+          ))
         )}
       </div>
 
-      {/* The filters: the category pills (the words the list actually
-          holds), then the time of day. Two axes on one rail, kept apart by
-          a hairline: what the class is, then when in the day it runs. Any
-          category pick takes All off; All is the way back. No distance
-          filter, deliberately: nothing here stores a coordinate, and a
-          distance sorted from a guessed one would be a lie with units. */}
-      <div className="nearhead">
-        <span className="nearlbl">Upcoming classes</span>
-        <div className="catpills">
-          {cats.length > 0 && (
-            <>
-              <button
-                className={`catpill${cat === null ? " on" : ""}`}
-                aria-pressed={cat === null}
-                onClick={() => setCat(null)}
-              >
-                All
-              </button>
-              {cats.map((t) => (
-                <button
-                  key={t}
-                  className={`catpill${cat === t ? " on" : ""}`}
-                  aria-pressed={cat === t}
-                  onClick={() => setCat(cat === t ? null : t)}
-                >
-                  {t}
-                </button>
-              ))}
-              <span className="catpill-div" aria-hidden="true" />
-            </>
-          )}
-          {(
-            [
-              ["morning", "Morning"],
-              ["afternoon", "Afternoon"],
-              ["evening", "Evening"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              className={`catpill${time === id ? " on" : ""}`}
-              aria-pressed={time === id}
-              onClick={() => setTime(time === id ? null : id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* The dates, left to right, by Matt's call: one day at a time
-          beats a three-week scroll. The row pins under the header while
-          the list under it changes in place. */}
-      <div className="daytabs" role="tablist" aria-label="Day">
-        {dayTabs.map((t) => (
-          <button
-            key={t.iso}
-            role="tab"
-            aria-selected={day === t.iso}
-            className={`daytab${day === t.iso ? " on" : ""}`}
-            onClick={() => setDay(t.iso)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* The card starts under the faces: the rail is chrome, the week is
-          content, and the card edge is what says so. */}
-      <div className="cardwrap">
-      {/* Who the rail has narrowed to, and the way to them.
-          A filtered list looks exactly like a quiet week: five faces, one of
-          them ringed, and a shorter list underneath. This says which coach in
-          words, so the state is readable rather than inferred, and it carries
-          the one thing you want next after "what has Emdilger got on", which
-          is Emdilger. It is only drawn when a face is picked: with everyone
-          showing there is nothing to name and no single profile to open. */}
-      {focus &&
-        (() => {
-          const c = coachById.get(focus);
-          if (!c) return null;
-          return (
-            <div className="focusbar">
-              <span className="focusbar-t">Classes with {c.name.split(/\s+/)[0]}</span>
-              <a className="focusbar-a" href={`/${c.handle}?from=following`}>
-                View profile
-                <Icon name="chevron_right" size={19} />
-              </a>
-            </div>
-          );
-        })()}
-
-      {/* Why Today isn't the selected tab, said once: the landing skipped
-          ahead to the first day holding anything, and a rail that opens on
-          Wednesday with no word reads as a rail that lost its place. */}
-      {landed.current !== todayIso && day === landed.current && (
-        <p className="daynote">No classes today, showing {tabLabel(landed.current)}</p>
-      )}
-
-      {/* The day's list, flat, by Matt's call: time and length down the
-          left, the class, the place and the coach stacked beside them, a
-          hairline between rows and no containers. The boxes read as
-          furniture on a screen whose whole job is scanning a day. */}
-      {dayRows.length === 0 ? (
-        <p className="dayempty">
-          Nothing on {day === todayIso ? "today" : tabLabel(day)}
-          {cat || time || focus ? " with these filters" : ""}.
-        </p>
-      ) : (
-        <div className="disflat">
-          {dayRows.map((r) =>
-            r.menu ? (
-              <div key={r.key} className="clrow">
-                <ClassLine row={r} />
-                <ClassRowMenu {...r.menu} name={r.name} />
-              </div>
-            ) : (
-              <ClassLine key={r.key} row={r} />
-            ),
-          )}
-        </div>
-      )}
-      </div>
-
-      {/* Discovery is this button and the plus on the rail, and they open the
-          same sheet. The dock carried a search circle for a build and Matt
-          reverted it after living with it: the floating orange circle over
-          the one list the act is about is the shape that stays. */}
-      <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
+      {/* Finding people is this button and the rail's Add, and they open
+          the same screen. */}
+      <button className="wkfab wkfab-find" aria-label="Find people" onClick={() => setFind(true)}>
         <Icon name="search" size={26} />
       </button>
 
       {find && <DiscoverSheet onClose={closeFind} />}
 
-      {peekCoach && (
+      {/* The filter sheets. The places one stays open while you tick,
+          because multi-select through a closing sheet is miserable. */}
+      {sheet && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSheet(null);
+          }}
+        >
+          <div className="sheet fsheet">
+            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setSheet(null)}>
+              <Icon name="close" size={18} />
+            </button>
+            <h2>
+              {sheet === "time"
+                ? "Time of day"
+                : sheet === "dist"
+                  ? "Distance"
+                  : sheet === "cat"
+                    ? "Type"
+                    : "Places"}
+            </h2>
+            <div className="fopts">
+              {sheet === "time" &&
+                TIMES.map(([v, label]) => (
+                  <button
+                    key={v}
+                    className="fopt"
+                    aria-pressed={f.time === v}
+                    onClick={() => {
+                      setF((cur) => ({ ...cur, time: v }));
+                      setSheet(null);
+                    }}
+                  >
+                    {label}
+                    {f.time === v && <Icon name="check" size={19} />}
+                  </button>
+                ))}
+              {sheet === "dist" &&
+                DISTS.map(([v, label]) => (
+                  <button
+                    key={v}
+                    className="fopt"
+                    aria-pressed={f.dist === v}
+                    onClick={() => pickDist(v)}
+                  >
+                    {label}
+                    {f.dist === v && <Icon name="check" size={19} />}
+                  </button>
+                ))}
+              {sheet === "cat" &&
+                ["any", ...cats].map((v) => (
+                  <button
+                    key={v}
+                    className="fopt"
+                    aria-pressed={f.cat === v}
+                    onClick={() => {
+                      setF((cur) => ({ ...cur, cat: v }));
+                      setSheet(null);
+                    }}
+                  >
+                    {v === "any" ? "All types" : v}
+                    {f.cat === v && <Icon name="check" size={19} />}
+                  </button>
+                ))}
+              {sheet === "place" && (
+                <>
+                  <button
+                    className="fopt"
+                    aria-pressed={f.place === "any"}
+                    onClick={() => setF((cur) => ({ ...cur, place: "any" }))}
+                  >
+                    All places
+                    {f.place === "any" && <Icon name="check" size={19} />}
+                  </button>
+                  {placeNames.map((n) => {
+                    const on = f.place !== "any" && (f.place as string[]).includes(n);
+                    return (
+                      <button
+                        key={n}
+                        className="fopt"
+                        aria-pressed={on}
+                        onClick={() =>
+                          setF((cur) => {
+                            const sel = cur.place === "any" ? [] : [...(cur.place as string[])];
+                            const at = sel.indexOf(n);
+                            if (at > -1) sel.splice(at, 1);
+                            else sel.push(n);
+                            return { ...cur, place: sel.length ? sel : "any" };
+                          })
+                        }
+                      >
+                        {n}
+                        {on && <Icon name="check" size={19} />}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+            {sheet === "place" && (
+              <div className="publishwrap nostick">
+                <button className="btn si" onClick={() => setSheet(null)}>
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {peekPerson && (
         <CoachPeek
-          id={peekCoach.id}
-          name={peekCoach.name}
-          photo={peekCoach.photo}
-          color={peekCoach.color}
-          handle={peekCoach.handle}
-          favorited={favIds.includes(peekCoach.id)}
+          id={peekPerson.id}
+          name={peekPerson.name}
+          photo={peekPerson.photo}
+          color={peekPerson.color}
           onClose={() => {
-            setPeekCoach(null);
-            // Saves and star flips happened server-side behind the sheet;
-            // closing is where the list catches up.
+            setPeekPerson(null);
+            // The ring went out and follows may have flipped behind the
+            // sheet; closing is where the rail catches up.
             router.refresh();
           }}
         />
       )}
 
       {peek && (
-        <ClassPeek
-          cls={peek}
-          onClose={() => setPeek(null)}
-          onToast={toast}
-          onChanged={() => {}}
-        />
+        <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={toast} onChanged={() => {}} />
       )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }
 
-/** Which stretch of the day a start time falls in: before noon, noon to
- *  five, five on. The evening starts at five because a 5:30 is an
- *  after-work class to everybody who takes one. */
-function timeOfDay(mins: number): "morning" | "afternoon" | "evening" {
-  return mins < 720 ? "morning" : mins < 1020 ? "afternoon" : "evening";
+/** "Today, Aug 9", then the date: the same words the calendars use. */
+function bandLabel(iso: string, today: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  if (iso === today) return `Today, ${md}`;
+  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  return `${wd}, ${md}`;
 }
 
-const plusDays = (iso: string, n: number) =>
-  new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
-
-/** "Mon 10": the weekday and the date, the way a booking rail says a day. */
-function tabLabel(iso: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+/** Miles between two pins, the haversine way, close enough for a filter. */
+function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const rad = (x: number) => (x * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
 /** The tapped occurrence, as the sheet wants it. Somebody else's class, so it
  *  names the coach and offers their week rather than an edit. */
-function peekOf(i: FeedItem, coach: FeedCoach | null, favorited?: boolean): PeekClass {
+function peekOf(i: FeedItem, coach: FeedCoach | null, following?: boolean): PeekClass {
   const d = new Date(`${i.iso}T00:00:00Z`);
   // Title case, because it is a value in the facts list now and reads beside
   // "6:00 pm" and "Ironbound Performance Athletics", not above them.
@@ -514,7 +591,7 @@ function peekOf(i: FeedItem, coach: FeedCoach | null, favorited?: boolean): Peek
     studio: i.where,
     studioHref: i.whereHref,
     coach: coach
-      ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited }
+      ? { name: coach.name, handle: coach.handle, photo: coach.photo, color: coach.color, favorited: following }
       : null,
     // Where the depth is loaded from: a handle, or `s/{slug}` for a gym's
     // class, which is why the row carries it rather than the coach doing.
