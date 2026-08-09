@@ -2252,9 +2252,16 @@ purpose). Four tabs for everyone: Discover,
 Calendar (a member's is /week, a coach's /calendar, each kind bounced to
 its own), Share, Profile. The coach calendar holds both halves behind
 All/Saved/Coaching pills, every row wearing one attribution slot: the
-coach's chip, Added by you, or You're coaching. Add opens on Discover (a
-browse list with inline Save, the same feed), the coaching form one
-segment away for coaches only. discover-smoke is the branch's suite;
+coach's chip, Added by you, or You're coaching. Both calendars wear the
+flat grammar now, by Matt's call: the structure lives on `.clline`
+itself (time and length down the left, the class, the place and the
+attribution stacked beside them, a hairline between rows), the boxes
+are gone, and Discover's `.disflat` scope keeps only its own
+difference, the coach with no face. The member week's rows moved off
+`Agenda`/`ClassRow` onto the same `ClassLine`, which grew `href` and an
+`extra` slot for the also-going line. Add opens on Discover (a browse
+list with inline Save, the same feed), the coaching form one segment
+away for coaches only. discover-smoke is the branch's suite;
 following-smoke retired with the semantics it tested.
 
 A member's hub is the full sheet now, by Matt's call: Week, Profile, QR

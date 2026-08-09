@@ -10,7 +10,7 @@ import {
 } from "@/app/actions/personal";
 import { AddBrowse } from "@/components/AddBrowse";
 import { Adder, type AdderPrefill } from "@/components/Adder";
-import { Agenda, ClassRow } from "@/components/Agenda";
+import { ClassLine, DayBand, type WeekRow } from "@/components/WeekView";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import {
   CalBottomBar,
@@ -423,102 +423,108 @@ export function WeekScreen({
           </ClassOpener>
         ) : (
           <>
-            {/* The same rows Following draws. A member flipping between the two
-                tabs is looking at one list of one kind of thing, and it used to
-                be two designs. ClassOpener catches the tap on a real class; a
-                personal one has no page, so it opens its own sheet. */}
+            {/* The same flat rows Following and the coach calendar draw, by
+                Matt's call: one grammar for a list of classes, wherever it
+                is. ClassOpener catches the tap on a real class; a personal
+                one has no page, so it opens its own sheet. */}
             <ClassOpener handle="">
-              <Agenda
-                className="callist"
-                today={todayIso}
-                dimBefore={todayIso}
-                days={[...pastShown, ...shown].map((d) => ({
-                  iso: d.iso,
-                  // "Today", "Tomorrow", then the dated header the loader
-                  // wrote.
-                  label: fmtDayHeaderRel(d.iso, todayIso),
-                  items: d.items.map((i) => ({
-                    key: rowKey(i),
-                    name: i.name,
-                    hm: i.hm,
-                    ap: i.ap,
-                    durationMin: i.durationMin,
-                    where: i.where,
-                    coachName: i.coachName,
-                    coachPhoto: i.coachPhoto,
-                    coachColor: i.coachColor,
-                    // The colour is the badge now: green for a class you
-                    // added, slate for your own entries. The chips above are
-                    // the legend.
-                    kind: i.personal ? ("private" as const) : ("added" as const),
-                    // No green ring here: on this screen every row is one they
-                    // added, and a mark on all of them says nothing.
-                    on: false,
-                    href: i.personal ? null : `/${i.handle}/${i.classId}?d=${i.iso}&from=week`,
-                    classId: i.personal ? undefined : i.classId,
-                    iso: i.iso,
-                    base: i.personal ? undefined : i.handle,
-                  })),
-                }))}
-                row={(item) => {
-                  const src = byKey[item.key];
-                  return (
-                    <>
-                      <ClassRow
-                        item={item}
-                        onClick={src.personal ? () => setPlan(src.id) : undefined}
-                      >
-                        {/* People you both follow, going to the same one. The
-                            whole payoff of following a member. */}
-                        {src.alsoGoing && src.alsoGoing.length > 0 && (
-                          <span className="weekrow-also">
-                            {src.alsoGoing.slice(0, 3).map((p, idx) =>
-                              p.photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img key={idx} className="weekrow-alsoav" src={p.photo} alt="" />
-                              ) : (
-                                <span
-                                  key={idx}
-                                  className="weekrow-alsoav weekrow-alsoav-empty"
-                                  style={{ background: p.color }}
-                                  aria-hidden="true"
-                                >
-                                  {(p.name.charAt(0) || "?").toUpperCase()}
+              <div className="callist wkflat">
+                {[...pastShown, ...shown].map((d) => (
+                  <section
+                    key={d.iso}
+                    id={`day-${d.iso}`}
+                    className={`dayblock${d.iso < todayIso ? " dayblock-past" : ""}`}
+                  >
+                    <DayBand label={fmtDayHeaderRel(d.iso, todayIso)} today={d.iso === todayIso} />
+                    <div className="dayrows">
+                      {d.items.map((i) => {
+                        const key = rowKey(i);
+                        const src = byKey[key];
+                        const row: WeekRow = {
+                          key,
+                          name: i.name,
+                          where: i.where,
+                          hm: i.hm,
+                          ap: i.ap,
+                          dur: `${i.durationMin} min`,
+                          coach:
+                            !i.personal && i.coachName
+                              ? {
+                                  id: "",
+                                  name: i.coachName,
+                                  color: i.coachColor ?? "var(--cl)",
+                                  photo: i.coachPhoto ?? null,
+                                }
+                              : null,
+                          // A personal entry's bottom line: who it is with
+                          // when they wrote one down, Added by you when not.
+                          tag: i.personal ? i.coachName?.trim() || "Added by you" : undefined,
+                          href: i.personal
+                            ? null
+                            : `/${i.handle}/${i.classId}?d=${i.iso}&from=week`,
+                          classId: i.personal ? undefined : i.classId,
+                          iso: i.iso,
+                          base: i.personal ? undefined : i.handle,
+                          onTap: i.personal ? () => setPlan(i.id) : undefined,
+                          // People you both follow, going to the same one.
+                          // The whole payoff of following a member.
+                          extra:
+                            src?.alsoGoing && src.alsoGoing.length > 0 ? (
+                              <span className="weekrow-also">
+                                {src.alsoGoing.slice(0, 3).map((p, idx) =>
+                                  p.photo ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img key={idx} className="weekrow-alsoav" src={p.photo} alt="" />
+                                  ) : (
+                                    <span
+                                      key={idx}
+                                      className="weekrow-alsoav weekrow-alsoav-empty"
+                                      style={{ background: p.color }}
+                                      aria-hidden="true"
+                                    >
+                                      {(p.name.charAt(0) || "?").toUpperCase()}
+                                    </span>
+                                  ),
+                                )}
+                                <span className="weekrow-alsotxt">
+                                  {src.alsoGoing.length === 1
+                                    ? `${src.alsoGoing[0].name.split(/\s+/)[0]} is going too`
+                                    : `${src.alsoGoing[0].name.split(/\s+/)[0]} and ${
+                                        src.alsoGoing.length - 1
+                                      } more are going too`}
                                 </span>
-                              ),
-                            )}
-                            <span className="weekrow-alsotxt">
-                              {src.alsoGoing.length === 1
-                                ? `${src.alsoGoing[0].name.split(/\s+/)[0]} is going too`
-                                : `${src.alsoGoing[0].name.split(/\s+/)[0]} and ${
-                                    src.alsoGoing.length - 1
-                                  } more are going too`}
-                            </span>
-                          </span>
-                        )}
-                      </ClassRow>
-                      {/* Every row can leave. A calendar's entries don't; a
-                          list's do, and that difference is most of what keeps
-                          this from reading as one. */}
-                      <button
-                        className="weekrow-x"
-                        aria-label={`Remove ${src.name}`}
-                        onClick={() =>
-                          setConfirm({
-                            classId: src.classId,
-                            iso: src.iso,
-                            key: item.key,
-                            name: src.name,
-                            personalId: src.personal ? src.id : undefined,
-                          })
-                        }
-                      >
-                        <Icon name="close" size={18} />
-                      </button>
-                    </>
-                  );
-                }}
-              />
+                              </span>
+                            ) : undefined,
+                        };
+                        return (
+                          <div key={key} className="clrow">
+                            <ClassLine row={row} />
+                            {/* Every row can leave. A calendar's entries
+                                don't; a list's do, and that difference is
+                                most of what keeps this from reading as
+                                one. */}
+                            <button
+                              className="weekrow-x"
+                              aria-label={`Remove ${src.name}`}
+                              onClick={() =>
+                                setConfirm({
+                                  classId: src.classId,
+                                  iso: src.iso,
+                                  key,
+                                  name: src.name,
+                                  personalId: src.personal ? src.id : undefined,
+                                })
+                              }
+                            >
+                              <Icon name="close" size={18} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </ClassOpener>
             {namedCoach && (
               <button className="weekinvite" onClick={() => setInviteOpen(true)}>

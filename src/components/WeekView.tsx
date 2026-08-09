@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ClassRowMenu, type ClassRowMenuProps } from "@/components/ClassRowMenu";
 
 /**
@@ -47,6 +48,15 @@ export type WeekRow = {
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
+  /** Rendered as a real link when set, for a wrapping ClassOpener to catch
+   *  and for the modified click; the keys ride along for the opener and
+   *  the landing highlight. Wins over onTap. */
+  href?: string | null;
+  classId?: string;
+  iso?: string;
+  base?: string;
+  /** Anything the row says under its own lines, like who else is going. */
+  extra?: ReactNode;
   /** The dots in the row's corner: details, the people and places, share,
    *  add to calendar, report. A sibling of the row, never a child, so the
    *  row link stays a link. */
@@ -149,8 +159,22 @@ export function ClassLine({ row }: { row: WeekRow }) {
       {row.where && (
         <span className="clline-w">{row.where}</span>
       )}
+      {row.extra && <span className="clline-extra">{row.extra}</span>}
     </>
   );
+  if (row.href)
+    return (
+      <a
+        className="clline"
+        href={row.href}
+        data-cid={row.classId}
+        data-d={row.iso}
+        data-base={row.base}
+        onClick={row.onTap}
+      >
+        {inner}
+      </a>
+    );
   if (!row.onTap) return <div className="clline">{inner}</div>;
   return (
     <button className="clline" onClick={row.onTap}>

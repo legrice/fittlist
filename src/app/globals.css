@@ -6905,25 +6905,21 @@ a.clspeek-by:active { opacity: .6; }
    untouched. */
 .dayblock + .dayblock { margin-top: 18px; }
 
-/* The day's classes, each in a light container of its own with the date
-   title outside them: Matt tried the rows every other way (cards, flat with
-   rules, one shared box with dividers) and this is the keeper. The ground
-   is the header's own shell gray, by Matt's call, so the boxes and the
-   chrome read as one material. */
+/* The day's classes, flat under the date, by Matt's call: the boxes came
+   off everywhere once the Discover list proved the grammar. Time and
+   length down the left, the class, the place and whose it is stacked
+   beside them, a hairline between rows. */
 .dayrows {
   /* Tight under its date (the two are one section); the room between days
      lives on .dayblock, not here. */
-  display: flex; flex-direction: column; gap: 8px; margin-top: 2px;
+  display: flex; flex-direction: column; margin-top: 2px;
 }
 
 /* One row. A grid rather than a flex row, so every time in the list shares one
-   column edge however long the class names beside them run.
-
-   The cells are direct grid children now, each naming its column, and the
-   rows align by baseline: the time shares a line with the class name and
-   the length shares one with the studio, by Matt's call. The old shape (two
-   column stacks) could not say that: the by-line inside the class column
-   pushed the name down while the time stayed at the top of its own stack. */
+   column edge however long the class names beside them run. The time shares
+   a baseline with the name and the length with the place; the attribution
+   (whose class, or which kind of yours) is the bottom line, the way the
+   booking-app grammar puts it. */
 .clline {
   /* The time column sized to the widest ordinary clock and a tighter gap:
      84 and 12 left a gutter of dead air between the time and the name. */
@@ -6931,19 +6927,16 @@ a.clspeek-by:active { opacity: .6; }
   align-items: baseline;
   width: 100%; text-align: left; font: inherit; color: var(--ink);
   cursor: pointer;
-  padding: 16px 18px; text-decoration: none;
-  /* Its own box, not a shared one with dividers, by Matt's call: two
-     classes on a day are two containers. No outline and no shadow: white
-     on the warm ground is the whole treatment, the Health card. The
-     shadow was tried alongside the flat-gray experiment and came off
-     with it; the gradient is the depth now. */
-  background: var(--card); border-radius: 20px;
+  padding: 17px 0; text-decoration: none;
+  background: none; border-radius: 0; border-bottom: 1px solid var(--div);
 }
-/* Which cell lives where. The by-line and the shift tag span both columns
-   (whose row this is reads over the time, not beside it); everything else
-   is a column's own. */
-.clline-by, .clline-tag { grid-column: 1 / -1; }
-.clline-t, .clline-dur { grid-column: 1; }
+/* Which cell lives where: the clock's column and the class's, with the
+   attribution line under both of the class's. */
+.clline-t { grid-column: 1; grid-row: 1; }
+.clline-dur { grid-column: 1; grid-row: 2; }
+.clline-nm { grid-row: 1; }
+.clline-w { grid-row: 2; }
+.clline-by, .clline-tag { grid-column: 2; grid-row: 3; justify-self: start; }
 /* One line each, by Matt's call: "Ironbound Performance Athletics"
    wrapping under a long class name made every busy row two heights.
    The ellipsis is the honest cut, and the class page has the rest. */
@@ -6951,25 +6944,23 @@ a.clspeek-by:active { opacity: .6; }
   grid-column: 2; min-width: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* No dividers between rows any more: each row is its own box and the gap
-   between boxes is the break. Every box says its own time, even beside
-   another at the same hour: a box with a blank time column read as a box
-   missing something rather than as a second thing at six. */
 .clline:active { opacity: .6; }
+/* Under the row's own lines: who else is going, and anything like it. */
+.clline-extra { grid-column: 2; grid-row: 4; margin-top: 6px; min-width: 0; }
+/* The member week's look back: past days dim rather than drop, because a
+   record of what you did is a thing a calendar owes its owner. */
+.dayblock-past { opacity: .55; }
 /* A row with the dots: the wrapper holds both as siblings (a button inside
    a link is not a thing), the row gives its corner up, and the dots sit in
    it. Share, add to calendar, report; the report is the stale-inventory
    loop, so the dots are on the row where somebody reading a wrong listing
    actually is. */
 .clrow { position: relative; }
-/* The dots reserve only the line they sit on, by Matt's call: a 48px
-   gutter down the whole card squeezed the name and the studio into
-   wrapping. The by-line clears them when there is one; otherwise the
-   name does; the lines below run the full width. */
-.clrow .clline-by { padding-right: 38px; }
-.clrow .clline:not(:has(.clline-by)):not(:has(.clline-tag)) .clline-nm { padding-right: 38px; }
+/* The dots ride the row's first line, so the name clears them and the
+   lines below run the full width. */
+.clrow .clline-nm { padding-right: 38px; }
 .clmore {
-  position: absolute; top: 8px; right: 6px;
+  position: absolute; top: 10px; right: -6px;
   width: 36px; height: 36px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
   color: var(--ol);
@@ -6992,31 +6983,24 @@ a.clspeek-by:active { opacity: .6; }
   font-size: 16.5px; font-weight: 600; color: var(--ink); white-space: nowrap;
 }
 .clline-ap { font-size: 11.5px; font-weight: 500; }
-/* Whose class it is, above the name: which kind of row this is comes before
-   what the row says. Following only. */
-/* Lighter than the class name under it. Both sat at the old bold, which made
-   a Following row two headings stacked; whose class it is is a caption on
-   what the class is, not a second title. */
+/* Whose class it is, as the row's bottom line: a small face and the name,
+   in the caption's own gray, because the class leads on this grammar and
+   whose it is is the third fact. */
 .clline-by {
-  /* 16 under the by-line, by Matt's call (from 7, then 9, then 12):
-     whose row it is gets a full breath before what the row says. */
-  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-  /* Up from 14.5/500, by Matt's call: whose class it is earns real weight
-     on Following, where every row is somebody's. */
-  font-size: 16px; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; gap: 7px; margin-top: 6px;
+  font-size: 14.5px; font-weight: 500; color: var(--ol);
 }
 .clline-av {
-  width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
+  width: 20px; height: 20px; border-radius: 999px; flex-shrink: 0; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .02em;
+  color: #fff; font-size: 9px; font-weight: 600; letter-spacing: .02em;
 }
 .clline-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Which kind of yours a row is, above the name: an assigned shift wears the
-   word in the brand's wash, quiet enough that the name stays loudest. */
+/* Which kind of yours a row is, on the same bottom line: plain ink at
+   weight, the prototype's own treatment, because a pill down every row of
+   a calendar that is all yours is a legend of one. */
 .clline-tag {
-  justify-self: start; margin-bottom: 7px; padding: 3px 9px; border-radius: 999px;
-  background: color-mix(in srgb, var(--si) 13%, transparent); color: var(--si);
-  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
 /* The loudest thing on the screen, and the tracking is ordinary. The display
    type was set at -.025em, which is a headline's tracking applied to a list of
@@ -7036,39 +7020,15 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
 
-/* Discover's list, out of the containers, by Matt's call: the boxes read
-   as furniture on a screen whose whole job is scanning a day, and the flat
-   grammar (time and length down the left, the class, place and coach
-   stacked beside them, a hairline between rows) is the booking-app shape
-   everybody already reads. Scoped to Discover: the calendars keep their
-   boxes, which is the shape Matt picked for them, and this screen is a
-   different act (browsing, not owning). The coach drops to a caption line
-   under the place, face and all, because on this list the class leads and
-   whose it is is the third fact, not the headline. */
+/* Discover's copy of the flat rows. The structure lives on `.clline`
+   itself now (the calendars flattened onto the same grammar, by Matt's
+   call); what stays Discover's own is the coach with no face, in the
+   studio line's voice, because your coaches already have faces at the top
+   of the screen. The rail and the peek are where a person leads; this
+   list is where a class does. */
 .disflat { display: flex; flex-direction: column; margin-top: 2px; }
-.disflat .clline {
-  background: transparent; border-radius: 0;
-  padding: 17px 0; border-bottom: 1px solid var(--div);
-  grid-template-rows: auto auto auto;
-}
-.disflat .clline-t { grid-row: 1; }
-.disflat .clline-dur { grid-row: 2; }
-.disflat .clline-nm { grid-row: 1; }
-.disflat .clline-w { grid-row: 2; }
-.disflat .clline-by {
-  grid-column: 2; grid-row: 3;
-  margin: 2px 0 0; font-size: 15px; font-weight: 400; color: var(--ol);
-}
-/* No face on the row, by Matt's call: the class is the emphasis here and
-   the coach is a caption in the studio's own voice, because your coaches
-   already have faces at the top of the screen. The rail and the peek are
-   where a person leads; this list is where a class does. */
+.disflat .clline-by { margin-top: 2px; font-size: 15px; font-weight: 400; }
 .disflat .clline-av { display: none; }
-/* The dots ride the row's top line here, so the name clears them and the
-   by-line (now the bottom line) runs full width. */
-.disflat .clrow .clline-by { padding-right: 0; }
-.disflat .clrow .clline .clline-nm { padding-right: 38px; }
-.disflat .clrow .clmore { top: 10px; right: -6px; }
 
 /* The Following tab on a profile: the directory's own rows, so a person
    reads the same way everywhere. A touch of top air before the first
