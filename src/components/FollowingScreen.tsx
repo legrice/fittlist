@@ -228,6 +228,13 @@ export function FollowingScreen({
             </button>
           </div>
         </div>
+        {/* The same floating search the full screen carries, by Matt's call:
+            the CTA and the circle open one sheet, but the circle is where a
+            thumb already expects the act to live, and an empty screen is the
+            last place to hide it. */}
+        <button className="wkfab wkfab-find" aria-label="Find coaches" onClick={() => setFind(true)}>
+          <Icon name="search" size={26} />
+        </button>
         {find && <DiscoverSheet onClose={closeFind} />}
       </>
     );
