@@ -488,15 +488,17 @@ export function ShareHubScreen({
                     + Add another class
                   </button>
                 )}
-                <button className="shctrl" onClick={() => setPick("dates")}>
-                  <span className="shctrl-k">Dates</span>
-                  <span className="shctrl-v">{rangeLabel}</span>
-                </button>
+                {/* Classes lead the rail, per the brief: what is on the picture
+                    is the first thing to change about it. */}
                 <button className="shctrl" onClick={() => setPick("classes")}>
                   <span className="shctrl-k">Classes</span>
                   <span className="shctrl-v">
                     {inRange.length === 0 ? "None in range" : `${shown} of ${inRange.length} showing`}
                   </span>
+                </button>
+                <button className="shctrl" onClick={() => setPick("dates")}>
+                  <span className="shctrl-k">Dates</span>
+                  <span className="shctrl-v">{rangeLabel}</span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("message")}>
                   <span className="shctrl-k">Headline</span>
@@ -530,11 +532,17 @@ export function ShareHubScreen({
                     shareImage(imgUrl, fileName, seg === "week" ? "picture" : "card")
                   }
                 >
-                  {sharing ? "Opening…" : "Share image"}
+                  {sharing ? (
+                    "Opening…"
+                  ) : (
+                    <>
+                      Share <Icon name="arrow_outward" size={18} />
+                    </>
+                  )}
                 </button>
               ) : (
                 <a className="btn si" href={imgUrl} download={fileName}>
-                  Save image
+                  Save
                 </a>
               )}
             </div>
