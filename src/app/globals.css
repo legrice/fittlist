@@ -5998,6 +5998,9 @@ button.ps-card { cursor: pointer; }
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13.5px;
 }
 .catpill.on { background: var(--ink); color: var(--paper); }
+.calpills { padding: 2px 18px 10px; }
+.calpills .catpill { background: var(--paper); border: 1px solid var(--line); }
+.calpills .catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
 /* The by-row: the coach and, on Discover, the star that favorites them
    without leaving the class. A class is how you discover a coach. */

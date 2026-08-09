@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { WeekDay as WeekDayData } from "@/lib/week";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import {
   CalSticky,
@@ -53,6 +54,7 @@ export function CalendarScreen({
   customTypes,
   lastUsed,
   subsCount,
+  savedDays = [],
   openAdder = false,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
@@ -65,12 +67,19 @@ export function CalendarScreen({
   customTypes: string[];
   lastUsed: LastUsed;
   subsCount: number;
+  /** The other half of the coach's calendar, per the brief: the classes
+   *  they saved and their own entries, from the same loader a member's
+   *  week reads. The pills above the list are what tell the halves apart. */
+  savedDays?: WeekDayData[];
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
+  // All / Saved / Coaching, per the brief. A filter is a way of looking,
+  // so it resets on arrival.
+  const [pill, setPill] = useState<"all" | "saved" | "coaching">("all");
   const [addOpen, setAddOpen] = useState(openAdder);
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
@@ -85,6 +94,20 @@ export function CalendarScreen({
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
+
+  /** Minutes from a row's clock, so the two halves sort as one day. */
+  const atOf = (r: { hm: string; ap: string }) => {
+    const [h, m] = r.hm.split(":").map(Number);
+    return ((h % 12) + (r.ap.toLowerCase() === "pm" ? 12 : 0)) * 60 + (m || 0);
+  };
+
+  // The saved half, keyed by date. myWeek hands occurrences already
+  // expanded and forward-only, so this is a lookup rather than a loader.
+  const savedByIso = useMemo(() => {
+    const m = new Map<string, WeekDayData["items"]>();
+    for (const d of savedDays) m.set(d.iso, d.items);
+    return m;
+  }, [savedDays]);
 
   /** Every date from today that holds something, with its rows in time order.
    *  Days with nothing on them never make a block, so a light week reads as a
@@ -115,15 +138,38 @@ export function CalendarScreen({
             dur: `${c.durationMin} min`,
             // An assigned shift says so above the name: which hat this row
             // is comes before what the class is.
-            tag: c.shift ? "Shift" : undefined,
+            // The one attribution slot, per the brief: which hat comes
+            // before what the class is.
+            tag: c.shift ? "Shift" : "You\u2019re coaching",
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
-      if (rows.length)
-        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows });
+      const savedRows =
+        pill === "coaching"
+          ? []
+          : (savedByIso.get(iso) ?? []).map((i) => ({
+              key: `sv|${i.personal ? i.id : i.classId}|${i.iso}`,
+              name: i.name,
+              where: i.where,
+              hm: i.hm,
+              ap: i.ap,
+              dur: `${i.durationMin} min`,
+              coach:
+                !i.personal && i.coachName
+                  ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
+                  : null,
+              tag: i.personal ? "Added by you" : undefined,
+              onTap: i.personal
+                ? undefined
+                : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}`),
+            }));
+      const coachingRows = pill === "saved" ? [] : rows;
+      const merged = [...coachingRows, ...savedRows].sort((a, b) => atOf(a) - atOf(b));
+      if (merged.length)
+        out.push({ iso, label: dayBandLabel(iso, todayIso), today: iso === todayIso, rows: merged });
     }
     return out;
-  }, [classes, todayIso, studioById]);
+  }, [classes, todayIso, studioById, pill, savedByIso, handle, router]);
 
   /** The month grid reads the same rows, over its own longer range: it is a
    *  different way of looking at the calendar, not a different calendar. */
@@ -226,6 +272,24 @@ export function CalendarScreen({
             </div>
           )}
         </div>
+        {/* All / Saved / Coaching, per the brief. Coaches only: a member's
+            calendar is one kind, and two of three pills showing the same
+            list is a control that teaches the screen is complicated. */}
+        {!bare && view === "list" && (
+          <div className="catpills calpills" role="tablist" aria-label="Which of your things">
+            {(["all", "saved", "coaching"] as const).map((k) => (
+              <button
+                key={k}
+                role="tab"
+                aria-selected={pill === k}
+                className={`catpill${pill === k ? " on" : ""}`}
+                onClick={() => setPill(k)}
+              >
+                {k === "all" ? "All" : k === "saved" ? "Saved" : "Coaching"}
+              </button>
+            ))}
+          </div>
+        )}
         {view === "month" && <MonthHeadRow />}
       </CalSticky>
 

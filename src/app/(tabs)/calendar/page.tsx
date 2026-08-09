@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
 import type { ClassDto, LastUsed, StudioDto, TemplateDto } from "@/lib/types";
 import { CalendarScreen } from "@/components/CalendarScreen";
+import { myWeek } from "@/lib/week";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +114,7 @@ export default async function CalendarPage({
 
   return (
     <CalendarScreen
+      savedDays={await myWeek(userId)}
       handle={me.handle}
       classes={classes}
       todayIso={todayIso()}
