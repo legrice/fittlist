@@ -347,8 +347,16 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* No search bar up here any more, by Matt's call: Search is a tab
-          now, and one act gets one door. Home is the rail and the list. */}
+      {/* The search bar leads, back by Matt's call: Home is where the
+          looking starts, and the bar is drawn as the field it opens. It is
+          a door to the Search tab's own screen, not a second search. */}
+      <div className="dissearchrow dishome-search">
+        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
+          <Icon name="search" size={21} className="dissearch-ic" />
+          <span className="dissearch-ph">Search coaches, classes, studios</span>
+        </Link>
+      </div>
+
       {/* This week: the people you follow with something coming up, soonest
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their

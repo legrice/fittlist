@@ -76,9 +76,9 @@ const m = await mk(`dm${stamp}@example.com`, `Demi ${stamp.slice(-3)}`, true);
 const tabs = (await m.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 if (!tabs[0].includes("Discover")) fail("Discover leads the bar: " + tabs.join("|"));
 
-// The landing: no search bar (Search is a tab now), the teaching rail
-// (following nobody), the value-showing chips, and the date tabs.
-if (await m.locator(".dissearch-door").count()) fail("Home carries no search bar: Search is a tab");
+// The landing: the search bar on top (a door to the Search tab's screen),
+// the teaching rail (following nobody), the chips, and the date tabs.
+await m.locator(".dissearch-door").waitFor();
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");
