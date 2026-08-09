@@ -481,9 +481,11 @@ export function ShareHubScreen({
                     A member's rail leads with the add in brand, by Matt's
                     call: growing the week is this screen's first action, so
                     the loud chip is the one that does it. */}
+                {/* "another", because this chip only exists once the first
+                    add has landed: the start block owns the first one. */}
                 {!coach && (
                   <button className="shctrl shctrl-add" onClick={() => setAddOpen(true)}>
-                    + Add a class
+                    + Add another class
                   </button>
                 )}
                 <button className="shctrl" onClick={() => setPick("dates")}>
