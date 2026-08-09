@@ -876,7 +876,7 @@ export function ShareHubScreen({
           onToast={toast}
           onPublished={() => {
             setAddOpen(false);
-            toast("Added to your week");
+            toast("Saved to your week");
             refreshWeek();
           }}
           onDeleted={(msg) => {
@@ -942,7 +942,7 @@ export function ShareHubScreen({
                   setMatchBusy(false);
                   setMatch(null);
                   if (res.ok) {
-                    toast("Added to your week");
+                    toast("Saved to your week");
                     refreshWeek();
                   } else {
                     toast(res.error ?? "Couldn't add it");

@@ -730,7 +730,7 @@ export function ClassSheet({
                     className={`ovcta-btn ovcta-save${added ? " on" : ""}`}
                     disabled={pending}
                     aria-pressed={added}
-                    aria-label={added ? "In your plans" : "Add to your plans"}
+                    aria-label={added ? "Saved" : "Save to your week"}
                     onClick={toggle}
                   >
                     {/* An empty ribbon, then the same ribbon with the tick
@@ -739,7 +739,7 @@ export function ClassSheet({
                         the control should look like the place it puts
                         things. */}
                     <Icon name={added ? "bookmark_added" : "bookmark"} size={21} />
-                    {!added && "Add"}
+                    {!added && "Save"}
                   </button>
                 )}
               </>
@@ -1069,7 +1069,7 @@ export function ClassSheet({
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
         <Icon name="bookmark_added" size={18} />
-        <span className="favtoast-t">Added. Followers can see it.</span>
+        <span className="favtoast-t">Saved. Followers can see it.</span>
         <Link
           className="favtoast-link"
           href={c ? `/week?hl=${encodeURIComponent(`${c.id}.${c.whenIso}`)}` : "/week"}

@@ -149,10 +149,10 @@ export function CoachPeek({
                   <button
                     className={`peekadd${on ? " on" : ""}`}
                     onClick={() => save(it.classId, it.iso, !on)}
-                    aria-label={on ? `Added to your plans: ${it.name}` : `Add ${it.name}`}
+                    aria-label={on ? `Saved: ${it.name}` : `Save ${it.name}`}
                   >
                     <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                    <span>{on ? "Added" : "Add"}</span>
+                    <span>{on ? "Saved" : "Save"}</span>
                   </button>
                 </div>
                 </ClassOpener>
