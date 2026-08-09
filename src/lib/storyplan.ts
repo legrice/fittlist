@@ -54,8 +54,11 @@ export type StoryPlan = {
 // The heights the renderers actually produce. They live next to the tiers
 // because the two have to agree: Satori can't measure, so the only way to know
 // something fits is to have counted it the same way it will be drawn.
-const T1 = { day: 92, row: 126, rowBare: 77 };
-const T2 = { day: 75, row: 109, rowBare: 66 };
+// Names run two pixels bigger (50/44) and truncate to one line now, so a
+// row's height is exact rather than hopeful: a wrapping name used to draw
+// taller than anything here counted.
+const T1 = { day: 92, row: 128, rowBare: 79 };
+const T2 = { day: 75, row: 111, rowBare: 68 };
 // At tier 3 each distinct class gets its own line: the name, then every time
 // it runs that day. Running them all onto one wrapped line was denser on paper
 // but not in fact, because an entry can't break in the middle, so a "line"

@@ -110,10 +110,12 @@ export function renderStory(model: StoryModel) {
   const s = square ? 0.82 : 1;
   const px = (n: number) => Math.round(n * s);
 
+  // Names at 50/44, up two by Matt's call, and they truncate to one line
+  // now instead of wrapping: T1/T2 in storyplan.ts carry the two pixels.
   const base =
     plan.tier === 1
-      ? { dayFs: 34, dayMt: 34, dayMb: 17, timeFs: 43, timeW: 172, gap: 34, nameFs: 48, subFs: 41, rowMb: 22, colW: 702 }
-      : { dayFs: 30, dayMt: 26, dayMb: 13, timeFs: 38, timeW: 150, gap: 30, nameFs: 42, subFs: 36, rowMb: 18, colW: 728 };
+      ? { dayFs: 34, dayMt: 34, dayMb: 17, timeFs: 43, timeW: 172, gap: 34, nameFs: 50, subFs: 41, rowMb: 22, colW: 702 }
+      : { dayFs: 30, dayMt: 26, dayMb: 13, timeFs: 38, timeW: 150, gap: 30, nameFs: 44, subFs: 36, rowMb: 18, colW: 728 };
   // The style scales the row, and the route has already divided the planner's
   // budget by `rowScale` so the taller ones still fit. Stacking the time frees
   // its column, so the name gets that width back.
@@ -408,9 +410,11 @@ export function renderStory(model: StoryModel) {
                         {r.time}
                       </span>
                     )}
-                    {/* Bounded, so a long class name wraps instead of running
-                        off the right edge. Satori won't wrap a flex child
-                        that has no width to wrap inside. */}
+                    {/* Bounded so the name has an edge to stop at, and it
+                        stops rather than wraps now, by Matt's call: one line
+                        with an ellipsis, because a name that broke onto a
+                        second line made one row twice the height the sums
+                        counted. lineClamp needs display block in satori. */}
                     <div
                       style={{
                         display: "flex",
@@ -421,6 +425,9 @@ export function renderStory(model: StoryModel) {
                     >
                       <span
                         style={{
+                          display: "block",
+                          lineClamp: 1,
+                          width: "100%",
                           fontSize: m.nameFs,
                           fontWeight: 700,
                           lineHeight: 1.15,
