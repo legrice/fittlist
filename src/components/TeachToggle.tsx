@@ -45,11 +45,11 @@ export function TeachToggle({ on: initial, canTurnOn }: { on: boolean; canTurnOn
     <>
       <button className="setrow" onClick={flip} aria-pressed={on}>
         <span className="setrow-txt">
-          <span className="t">I teach too</span>
+          <span className="t">I coach classes</span>
           <span className="s">
             {on
-              ? "Your Calendar tab is on, and people can find you in search."
-              : "Adds a Calendar tab for the classes you teach, and lists you so people can follow."}
+              ? "The Coaching pill is on your Calendar, and people can find you on Discover."
+              : "Adds coaching to your Calendar and Add screens, and lists you so people can favorite you."}
           </span>
         </span>
         <span className={`switch${on ? " on" : ""}`} aria-hidden="true">

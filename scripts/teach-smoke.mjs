@@ -57,7 +57,7 @@ await p.locator(".profname", { hasText: "Kia Bright" }).waitFor();
 if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab bar");
 await p.locator('.brandbar-actions [aria-label="Settings"]').click();
 await p.locator('.acctwrap[role="dialog"]').waitFor();
-await p.locator(".setrow", { hasText: "I teach too" }).waitFor();
+await p.locator(".setrow", { hasText: "I coach classes" }).waitFor();
 console.log("Profile opens your page, and the gear slides settings up over it");
 await p.locator(".acctclose").click();
 await p.locator('.acctwrap[role="dialog"]').waitFor({ state: "detached" });
@@ -91,7 +91,7 @@ await p.locator(".sheetclose").click();
 await p.locator(".sheet-scrim").waitFor({ state: "detached", timeout: 10000 });
 
 // Turn teaching on: the Calendar tab arrives without a reload.
-const row = p.locator(".setrow", { hasText: "I teach too" });
+const row = p.locator(".setrow", { hasText: "I coach classes" });
 await row.waitFor();
 if (await row.locator(".switch.on").count()) fail("a member starts with it off");
 await row.click();
@@ -117,7 +117,7 @@ console.log("the Calendar tab opens a real, empty week");
 
 // Turn it off again: the tab goes, and nothing else is harmed.
 await p.goto(BASE + "/settings");
-await p.locator(".setrow", { hasText: "I teach too" }).click();
+await p.locator(".setrow", { hasText: "I coach classes" }).click();
 // The Calendar tab stays (everyone has one now); only where it points
 // changes, so wait for the bar to settle rather than for a tab to leave.
 await p.waitForTimeout(2500);
