@@ -114,6 +114,25 @@ export default async function FollowingPage() {
     }
   }
 
+  // One class, one row, however many accounts list it. A studio's listing
+  // and the coach's own, or two coaches co-listing a slot, are the same
+  // class in the reader's terms: same name, same start, same place, same
+  // day. Discover is a reader's list, so the duplicate collapses here and
+  // the first row in wins (the loop walks coaches in a stable order). The
+  // pairing publicSchedules does covers gym-vs-coach per person; this is
+  // the reader-side net for everything that slips past it.
+  {
+    const seen = new Set<string>();
+    let w = 0;
+    for (const i of items) {
+      const key = `${i.iso}|${i.name.trim().toLowerCase()}|${i.mins}|${(i.where ?? "").toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items[w++] = i;
+    }
+    items.length = w;
+  }
+
   // Soonest first. The rail was alphabetical, which is an order about the
   // names rather than about the week: whoever is teaching in an hour was
   // wherever the alphabet put them, and a rail is read left to right with only
