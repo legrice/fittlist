@@ -8,6 +8,7 @@ import { markUpdatesSeen } from "@/app/actions/notifications";
 import { MarkSeen } from "@/components/MarkSeen";
 import { AppChrome } from "@/components/AppChrome";
 import { UpdatesScreen } from "@/components/UpdatesScreen";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export default async function UpdatesPage({
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
   return (
-    <section className="screen admin hasnav" data-mode={me?.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={lookMode(me?.look)}>
       <MarkSeen action={markUpdatesSeen} />
       <UpdatesScreen
         notifications={rows}

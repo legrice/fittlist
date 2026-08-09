@@ -54,14 +54,14 @@ export function NotificationPrefs() {
     <>
       <button className="setrow" onClick={() => setOpen(true)}>
         <span className="setrow-ic">
-          <Icon name="notifications" size={22} />
+          <Icon name="notifications" size={24} />
         </span>
         <span className="setrow-txt">
           <span className="t">Notifications</span>
           <span className="s">Which emails you get from fittlist</span>
         </span>
         <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
+          <Icon name="chevron_right" size={22} />
         </span>
       </button>
       {open && mounted &&
@@ -74,7 +74,7 @@ export function NotificationPrefs() {
           >
             <div className="sheet">
               <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
               <h2>Notifications</h2>
               <p className="lead">

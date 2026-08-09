@@ -2,7 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { recurrenceLines } from "@/lib/ics";
 import { decryptSecret } from "@/lib/crypto";
-import { mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
+import { appTz, mondayOfCurrentWeek, siteOrigin } from "@/lib/format";
 
 // One-way mirror: fittlist classes -> the trainer's Google Calendar. Weekly
 // classes become recurring events; one-offs single events. On every schedule
@@ -143,16 +143,12 @@ export async function syncUserToGoogle(userId: string): Promise<void> {
   }
   const auth = { authorization: `Bearer ${token}` };
 
-  // calendar timezone so floating "6:00a" lands in the trainer's local time
-  let tz = conn.timeZone;
-  if (!tz) {
-    try {
-      const cal = await fetch(CAL, { headers: auth }).then((r) => r.json());
-      tz = cal.timeZone || "UTC";
-    } catch {
-      tz = "UTC";
-    }
-  }
+  // The app's timezone, not the calendar's: a class's "18:00" means 6pm
+  // where the classes are (the app's clock, US Eastern by default). Asking
+  // the calendar for its zone shipped a 6pm class four hours early the
+  // moment that lookup fell back to UTC, and would misplace it just as
+  // surely for a coach whose Google calendar sits in another zone.
+  const tz = appTz();
 
   // clear the events we created last time
   for (const id of conn.syncedEventIds) {

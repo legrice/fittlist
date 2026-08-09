@@ -74,7 +74,6 @@ export function GymRota({
   const [covered, setCovered] = useState(false);
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
-
   const days = week?.days ?? [];
   const all = days.flatMap((d) => d.items);
   const openSlots = all.filter((c) => !c.onUserId).length;
@@ -117,8 +116,8 @@ export function GymRota({
             <h1>{studioName}</h1>
             <p className="adminsub">The schedule</p>
           </div>
-          <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio">
-            <Icon name="close" size={18} />
+          <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
+            <Icon name="close" size={20} />
           </BackLink>
         </div>
         <p className="adminempty" style={{ marginTop: 24 }}>
@@ -139,6 +138,7 @@ export function GymRota({
           name: cls.name,
           classType: cls.classType,
           description: cls.description,
+          image: cls.image,
           startTime: cls.startTime,
           durationMin: cls.durationMin,
           studioId,
@@ -173,16 +173,10 @@ export function GymRota({
                 (openSlots ? ` · ${openSlots} with nobody on` : "")}
           </p>
         </div>
-        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio">
-          <Icon name="close" size={18} />
+        <BackLink className="iconbtn acctclose" href={backHref} label="Back to the studio's shifts">
+          <Icon name="close" size={20} />
         </BackLink>
       </div>
-
-      {/* Counted from this schedule rather than tallied by hand, which is the
-          whole reason the rota is worth keeping here. */}
-      <Link className="btn ghost rotacounts" href={`${manageBase}/counts`}>
-        <Icon name="calendar_month" size={17} /> Shifts worked
-      </Link>
 
       {/* A real week, dates and all, because that's what the spreadsheet is
           and what a swap is about. */}
@@ -192,11 +186,11 @@ export function GymRota({
           href={`${manageBase}?w=${Math.max(0, (week?.offset ?? 0) - 1)}`}
           aria-disabled={!week || week.offset === 0}
         >
-          <Icon name="chevron_left" size={18} />
+          <Icon name="chevron_left" size={20} />
         </Link>
         <span className="rotaweek-lbl">{week?.label ?? ""}</span>
         <Link className="rotanav" href={`${manageBase}?w=${(week?.offset ?? 0) + 1}`}>
-          <Icon name="chevron_right" size={18} />
+          <Icon name="chevron_right" size={20} />
         </Link>
       </div>
 
@@ -206,7 +200,7 @@ export function GymRota({
             <div className="rotaday-h">
               <span>{day.label}</span>
               <button className="rotaadd" onClick={() => show(day.iso, d, null)}>
-                <Icon name="add" size={16} /> Add
+                <Icon name="add" size={18} /> Add
               </button>
             </div>
             {day.items.length === 0 ? (
@@ -227,7 +221,7 @@ export function GymRota({
                     {/* Where a class card says the place, the rota says the
                         person: on a gym's own page the place is a given. */}
                     <span className="ps-estudio">
-                      <Icon name="person_add" size={13} className="ps-estudio-ic" />
+                      <Icon name="person_add" size={15} className="ps-estudio-ic" />
                       {c.onName || "Nobody on it yet"}
                     </span>
                   </span>
@@ -244,6 +238,7 @@ export function GymRota({
           </div>
         ))}
       </div>
+
 
       {open && (
         <Adder
@@ -281,7 +276,7 @@ export function GymRota({
                 </select>
                 <p className="durnote" style={{ marginTop: 8, marginBottom: 18 }}>
                   {covered
-                    ? "Just this one. The standing rota is unchanged, and both of them have been told."
+                    ? "Just this one. The weekly slot is unchanged, and both of them have been told."
                     : "Changing this only changes this date. Whoever it moves to and from hears about it."}
                 </p>
               </>

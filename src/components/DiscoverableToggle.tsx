@@ -26,7 +26,7 @@ export function DiscoverableToggle({ initialOn }: { initialOn: boolean }) {
 
   return (
     <button className="setrow" onClick={toggle} aria-pressed={on}>
-      <span className="setrow-ic"><Icon name={on ? "travel_explore" : "public_off"} size={22} /></span>
+      <span className="setrow-ic"><Icon name={on ? "travel_explore" : "public_off"} size={24} /></span>
       <span className="setrow-txt">
         <span className="t">Listed in Discover</span>
         <span className="s">

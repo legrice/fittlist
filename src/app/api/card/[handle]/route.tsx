@@ -178,21 +178,6 @@ export async function GET(
             <div
               style={{
                 display: "flex",
-                background: t.accent,
-                color: t.bg.startsWith("linear") ? "#3b1c53" : t.bg,
-                padding: "12px 30px",
-                borderRadius: 999,
-                fontSize: 28,
-                fontWeight: 700,
-                letterSpacing: 7,
-                textTransform: "uppercase",
-              }}
-            >
-              {isCoach ? "Coach" : "Member"}
-            </div>
-            <div
-              style={{
-                display: "flex",
                 fontSize: nameSize,
                 fontWeight: 800,
                 letterSpacing: -2,

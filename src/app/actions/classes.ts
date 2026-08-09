@@ -5,7 +5,9 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getDb, schema } from "@/db";
+import { storeImage } from "@/lib/storage";
 import type { BookingLink } from "@/db/schema";
+import { currentAdmin } from "@/lib/admin";
 import { getSessionUserId } from "@/lib/session";
 import { detectProvider, dowOfDate, todayIso } from "@/lib/format";
 import { syncUserToGoogle } from "@/lib/gcal";
@@ -21,6 +23,7 @@ export type PublishInput = {
   name: string;
   classType?: string | null;
   description?: string | null;
+  image?: string | null;
   days: number[]; // 0 = Monday … 6 = Sunday
   // set = a one-off pinned to this ISO date; null/absent = standing weekly on `days`.
   specificDate?: string | null;
@@ -44,7 +47,7 @@ function cleanType(t: string | null | undefined): string | null {
 // picker so a coach reuses an existing class (with its type + description).
 export async function getStudioCatalog(
   studioId: string,
-): Promise<{ name: string; classType: string | null; description: string | null }[]> {
+): Promise<{ name: string; classType: string | null; description: string | null; image: string | null }[]> {
   const userId = await getSessionUserId();
   if (!userId) return [];
   const db = await getDb();
@@ -53,6 +56,7 @@ export async function getStudioCatalog(
       name: schema.studioClasses.name,
       classType: schema.studioClasses.classType,
       description: schema.studioClasses.description,
+      image: schema.studioClasses.image,
     })
     .from(schema.studioClasses)
     .where(eq(schema.studioClasses.studioId, studioId))
@@ -83,7 +87,9 @@ function cleanLinks(links: BookingLink[]): BookingLink[] {
     .map((l) => ({ label: detectProvider(l.url), url: l.url.trim() }));
 }
 
-type SaveResult = { ok: boolean; count?: number; error?: string };
+// `id` is the first inserted row, so the moment after publishing can offer
+// the class itself (its link, its card) without a second lookup.
+type SaveResult = { ok: boolean; count?: number; id?: string; error?: string };
 
 // Shared by publish (new rows) and edit (replaceClassId set: the original
 // row is swapped for rows on the selected days).
@@ -140,6 +146,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   const links = cleanLinks(input.links ?? []);
   const classType = cleanType(input.classType);
   const description = input.description?.trim().slice(0, 500) || null;
+  const image = await storeImage(input.image?.trim() || null, "class");
 
   // Cancelled single dates survive an edit: moving a class to 7:15 shouldn't
   // quietly put you back on the Friday you already said you were off.
@@ -257,10 +264,10 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // values used, so autofill always reflects the most recent version.
   const [template] = await db
     .insert(schema.classTemplates)
-    .values({ userId, name, classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
+    .values({ userId, name, classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links })
     .onConflictDoUpdate({
       target: [schema.classTemplates.userId, schema.classTemplates.name],
-      set: { classType, description, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
+      set: { classType, description, image, startTime: input.startTime, durationMin, studioId, location, isPublic, links, updatedAt: new Date() },
     })
     .returning();
 
@@ -278,6 +285,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       name,
       classType,
       description,
+      image,
       studioId,
       location,
       isPublic,
@@ -314,6 +322,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
           nameKey: name.toLowerCase(),
           classType,
           description,
+          image,
           createdByUserId: userId,
         })
         .onConflictDoUpdate({
@@ -322,6 +331,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
             name,
             ...(classType ? { classType } : {}),
             ...(description ? { description } : {}),
+            ...(image ? { image } : {}),
             updatedAt: new Date(),
           },
         });
@@ -405,7 +415,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
   // not a per-change email, so publishing just updates the page + Google sync.
   syncGoogleAfter(userId);
   revalidatePath("/app");
-  return { ok: true, count: days.length };
+  return { ok: true, count: days.length, id: inserted[0]?.id };
 }
 
 export async function publishClasses(input: PublishInput): Promise<SaveResult> {
@@ -417,7 +427,28 @@ export async function publishClasses(input: PublishInput): Promise<SaveResult> {
 export async function updateClass(classId: string, input: PublishInput): Promise<SaveResult> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
-  return save(userId, input, classId);
+  const db = await getDb();
+  const [row] = await db
+    .select({ userId: schema.classes.userId })
+    .from(schema.classes)
+    .where(eq(schema.classes.id, classId));
+  if (!row) return { ok: false, error: "Class not found." };
+  if (row.userId !== userId) {
+    // The admin can edit any coach's class with the coach's own editor, the
+    // same acting-as-owner bypass deleteClass carries: everything in save()
+    // keys on the owner, so the template, the catalog write and the Google
+    // sync all land on whose class it is. A gym's is the one refusal: its
+    // rows are one slot each, carrying swaps and marks, and save()'s
+    // delete-and-reinsert is exactly what the rota exists to avoid.
+    if (!(await currentAdmin())) return { ok: false, error: "Class not found." };
+    const [owner] = await db
+      .select({ kind: schema.users.kind })
+      .from(schema.users)
+      .where(eq(schema.users.id, row.userId));
+    if (owner?.kind === "gym")
+      return { ok: false, error: "A gym's class is managed on its rota." };
+  }
+  return save(row.userId, input, classId);
 }
 
 // A repeating class is one row per weekday sharing a template, so deleting is
@@ -436,13 +467,18 @@ export async function deleteClass(
   const [row] = await db
     .select()
     .from(schema.classes)
-    .where(and(eq(schema.classes.id, classId), eq(schema.classes.userId, userId)));
+    .where(eq(schema.classes.id, classId));
   if (!row) return { ok: true, count: 0 };
+  // The admin can act on a reported class; everyone else only on their own.
+  // Everything below acts as the owner, so the cancellation notice still
+  // goes out under the coach's name, which is whose class it is.
+  if (row.userId !== userId && !(await currentAdmin())) return { ok: true, count: 0 };
+  const ownerId = row.userId;
 
   const [coach] = await db
     .select({ name: schema.users.name })
     .from(schema.users)
-    .where(eq(schema.users.id, userId));
+    .where(eq(schema.users.id, ownerId));
   let where = row.location;
   if (row.studioId) {
     const [st] = await db
@@ -520,7 +556,7 @@ export async function deleteClass(
         after(() => notifyCancelled(about, told));
       }
     }
-    syncGoogleAfter(userId);
+    syncGoogleAfter(ownerId);
     revalidatePath("/app");
     return { ok: true, count: 1 };
   }
@@ -532,7 +568,7 @@ export async function deleteClass(
       .from(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, userId),
+          eq(schema.classes.userId, ownerId),
           eq(schema.classes.seriesId, row.seriesId),
           isNull(schema.classes.specificDate),
         ),
@@ -542,7 +578,7 @@ export async function deleteClass(
       .delete(schema.classes)
       .where(
         and(
-          eq(schema.classes.userId, userId),
+          eq(schema.classes.userId, ownerId),
           eq(schema.classes.seriesId, row.seriesId),
           isNull(schema.classes.specificDate),
         ),
@@ -556,7 +592,7 @@ export async function deleteClass(
     if (told.length) after(() => notifyCancelled(about, told));
   }
 
-  syncGoogleAfter(userId);
+  syncGoogleAfter(ownerId);
   revalidatePath("/app");
   return { ok: true, count };
 }

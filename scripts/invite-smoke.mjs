@@ -53,7 +53,7 @@ await admin.getByPlaceholder("Your name").fill("Matt Admin");
 await admin.getByRole("button", { name: "Claim it" }).click();
 await admin.getByRole("heading", { name: "Add a photo." }).waitFor();
 await skipSetup(admin);
-await admin.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await admin.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
 await admin.goto(BASE + "/admin");
 await admin.getByRole("heading", { name: "Admin" }).waitFor();
@@ -106,7 +106,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByPlaceholder("Password").fill("member-pass-123");
     await pg.getByRole("button", { name: "Create account" }).click();
     await pg.locator(".sheet .errorcopy", { hasText: /invite-only/i }).waitFor();
-    if (pg.url().includes("/feed")) fail("a non-invited member should not get an account");
+    if (/\/(week|app)/.test(pg.url())) fail("a non-invited member should not get an account");
     console.log("non-invited member signup blocked ok");
 
     // invite them (as admin), then the same signup goes through
@@ -117,7 +117,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
     await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
     await ad.getByPlaceholder("Password").fill("admin-pass-123");
-    await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
     await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
     await ad.goto(BASE + "/admin");
     await ad.getByRole("button", { name: "Invites", exact: true }).click();
@@ -141,14 +141,17 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.getByRole("button", { name: "Claim it" }).click();
     await pg.getByRole("heading", { name: "Add a photo." }).waitFor();
     await skipSetup(pg);
-    await pg.waitForURL("**/feed");
-    await pg.getByText("Nobody yet").waitFor();
+    await pg.waitForURL("**/week");
+    // Their own empty calendar. It was the Following feed's "You're not
+// following anyone" until that screen went: this one is theirs to fill, and
+// it offers both ways to do it.
+await pg.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
     console.log("invited member signup ok");
 
     // 5) Becoming a coach is an ask now, answered in admin: the self-serve
     // switch was how ghost inventory got into the directory.
     await pg.goto(BASE + "/you");
-    await pg.locator(".memberid").waitFor();
+    await pg.locator(".acctwho").waitFor();
     await pg.locator(".setrow", { hasText: "Become a coach" }).click();
     await pg.getByRole("heading", { name: "Become a coach" }).waitFor();
     await pg.locator("#crNote").fill("Kettlebells at Ironbound");
@@ -164,7 +167,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await ad2.locator(".obloginlink", { hasText: "Already have an account" }).click();
     await ad2.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
     await ad2.getByPlaceholder("Password").fill("admin-pass-123");
-    await ad2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+    await ad2.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
     await ad2.getByRole("button", { name: "Not now" }).click().catch(() => {});
     await ad2.goto(BASE + "/admin");
     await ad2.getByRole("heading", { name: "Wants to coach" }).waitFor();
@@ -177,12 +180,15 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
 
     // approved: the schedule side opens up
     await pg.goto(BASE + "/app");
-    await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
-    // the Schedule tab the modal promised is really there
+    await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
+    // the Schedule tab the modal promised is really there, and the way to
+    // their own page is the face in the corner rather than a tab
     {
       const tabs = (await pg.locator(".navtab").allInnerTexts()).map((t) => t.trim());
-      // The You tab reads as their initial over the label, so match loosely.
-      if (!tabs.some((t) => t.includes("You"))) fail(`no You tab after converting: ${tabs.join(",")}`);
+      if (!tabs.some((t) => t.includes("Schedule")))
+        fail(`no Schedule tab after converting: ${tabs.join(",")}`);
+      if (!(await pg.locator(".brandbar-actions .usericon").count()))
+        fail("the header should carry their face as the way to You");
     }
     // and the page they already had is still theirs, now with a schedule on it
     const claimed = await pg.request.get(`${BASE}/memberperson`);
@@ -252,17 +258,17 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.locator(".obloginlink", { hasText: "Already have an account" }).click();
   await pg.getByPlaceholder("you@example.com").fill("riley@example.com");
   await pg.getByPlaceholder("Password").fill("invited-pass-123");
-  await pg.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await pg.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
   await pg.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await pg.getByText("Pick your link.").waitFor();
   await pg.getByPlaceholder("Your name").fill("Riley Requestor");
   await pg.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(pg);
-  await pg.getByRole("heading", { name: "Your week is empty" }).waitFor();
+  await pg.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 
-  // The banner is how anyone finds out they can invite at all: the settings row
-  // has always been there and nobody goes looking in settings for a thing they
-  // don't know exists.
+  // The banner is how anyone finds out they can invite at all: the card on the
+  // account has always been there and nobody goes looking through settings for
+  // a thing they don't know exists.
   {
     const bar = pg.locator(".invbanner");
     await bar.waitFor();
@@ -283,11 +289,20 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await pg.goto(BASE + "/app?acct=1");
   await pg.locator(".acctwrap").waitFor();
   await pg.waitForTimeout(450); // the account slides up; clicking mid-flight misses
-  const row = pg.locator(".setrow", { hasText: "Invite people to the beta" });
+  // A coach's invite left the settings list for the tinted card on the account
+  // itself, so it is one tap rather than a scroll into settings. The same
+  // InviteSheet is behind it, which is why the heading below is unchanged.
+  const row = pg.locator(".acctinvite-btn");
   // centre it rather than letting scrollIntoViewIfNeeded park it under the tabs
   await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await row.click();
   await pg.getByRole("heading", { name: "Your invite link" }).waitFor();
+  // The link is fetched after the sheet is up, so the heading is not the
+  // signal that it is there. Reading straight after it gave an empty string
+  // often enough to look like a real failure twice.
+  await pg.waitForFunction(
+    () => /\/j\/[a-z0-9]{8}$/.test(document.querySelector(".joinlink-url")?.textContent?.trim() ?? ""),
+  );
   const joinUrl = (await pg.locator(".joinlink-url").innerText()).trim();
   if (!/\/j\/[a-z0-9]{8}$/.test(joinUrl)) fail(`that doesn't look like a share link: ${joinUrl}`);
   await pg.screenshot({ path: OUT + "/shot-invite-friend.png", fullPage: true });
@@ -323,10 +338,13 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     await pg.reload();
     await pg.locator(".acctwrap").waitFor();
     await pg.waitForTimeout(450);
-    const row2 = pg.locator(".setrow", { hasText: "Invite people to the beta" });
+    const row2 = pg.locator(".acctinvite");
     await row2.evaluate((el) => el.scrollIntoView({ block: "center" }));
-    await row2.locator(".s", { hasText: "1 person joined from your link" }).waitFor();
-    await row2.click();
+    await row2.locator(".acctinvite-btn").click();
+    // The card carries no count, so "1 person joined from your link" is gone
+    // from here on purpose and this no longer asserts it. Who joined is the
+    // stronger claim anyway, and the sheet still names them. If the card ever
+    // grows the spec's "65 have joined from your link", assert it here again.
     await pg.locator(".invjoined", { hasText: "Sam Stranger" }).waitFor();
     await pg.locator(".sheetclose").click();
     console.log("the inviter sees who joined from their link ok");
@@ -368,11 +386,11 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
     const op = await other.newPage();
     op.setDefaultTimeout(15000);
     await op.goto(BASE + "/");
-    await op.getByRole("button", { name: /Log in/i }).first().click();
+    await op.getByRole("button", { name: /Sign in/i }).first().click();
     await op.getByPlaceholder("you@example.com").fill("riley@example.com");
     await op.getByPlaceholder("Password").fill("invited-pass-123");
-    await op.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
-    await op.waitForURL(/\/feed/);
+    await op.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
+    await op.waitForURL(/\/app/);
     await op.waitForTimeout(900);
     if (await op.locator(".invbanner").count())
       fail("the dismissal stayed in the browser instead of on the account");
@@ -389,7 +407,7 @@ for (const em of ["riley@example.com", "coach2@example.com"]) {
   await ad.locator(".obloginlink", { hasText: "Already have an account" }).click();
   await ad.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
   await ad.getByPlaceholder("Password").fill("admin-pass-123");
-  await ad.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await ad.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
   await ad.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await ad.goto(BASE + "/admin");
   await ad.getByRole("button", { name: "Invites", exact: true }).click();

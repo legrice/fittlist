@@ -28,7 +28,7 @@ for (const [i, n] of names.entries()) {
   await p.getByPlaceholder("Your name").fill(n);
   await p.getByRole("button", { name: "Claim it" }).click();
   await skipSetup(p);
-  await p.getByRole("heading", { name: "Your week is empty" }).waitFor();
+  await p.getByRole("heading", { name: "Your week is wide open" }).waitFor();
   await p.getByRole("button", { name: "Add your first class" }).click();
   await p.getByPlaceholder("e.g. Barbell Strength").fill(`${n} Class`);
   for (const d of ["Mo", "Tu", "We", "Th", "Fr"]) {
@@ -71,11 +71,13 @@ await m.getByRole("button", { name: "Continue" }).click();
 await m.getByRole("heading", { name: "Tell people who you are." }).waitFor();
 await fillLocation(m);
 await m.getByRole("button", { name: "Finish setup" }).click();
-await m.waitForURL("**/feed");
+await m.waitForURL("**/week");
 for (const n of names) {
   // Following moved off the list and onto the profile: the row gets you to a
   // person, and the pill by their name is where the follow happens.
   await m.goto(`${BASE}/discover`);
+  // Classes lead the directory now; Coaches is one tap over.
+  await m.locator(".dislist").waitFor();
   // Exact name: the list orders newest-first now, so a substring match on
   // "Matt" lands on MattsWife, who joined after him and sits above him.
   const row = m.locator(".disrow", {
@@ -90,81 +92,109 @@ for (const n of names) {
 }
 console.log("followed all eight ok");
 
-await m.goto(BASE + "/feed");
-await m.locator(".feedstrip").waitFor();
+await m.goto(BASE + "/week");
+await m.locator(".tray").waitFor();
 await m.waitForTimeout(500);
 
 // the tabs, as header links, with the bottom bar gone
 {
   await m.locator(".headnav").waitFor({ state: "visible" });
   const labels = await m.locator(".headnav-l").allInnerTexts();
-  // The same three everyone gets; only where You points differs.
-  if (labels.join("|") !== "Following|Discover|You")
-    fail(`a member's header links should be Following, Discover and You, got ${labels}`);
+  // Two, the same everyone gets; only where Schedule points differs. You is
+  // the face in the corner on every width, so it is not one of these, and
+  // Following went with the merged week it pointed at.
+  if (labels.join("|") !== "Discover|Schedule")
+    fail(`the header links should be Discover and Schedule, got ${labels}`);
   if (await m.locator(".navbar").isVisible()) fail("the bottom bar is still showing on a desktop width");
   if ((await m.locator(".headnav-l svg").count()) !== 0) fail("the header links have icons");
   const on = await m.locator(".headnav-l.on").innerText();
-  if (on !== "Following") fail(`the lit link is "${on}", expected Following`);
+  if (on !== "Schedule") fail(`the lit link is "${on}", expected Schedule`);
   await m.locator(".headnav-l", { hasText: "Discover" }).click();
   await m.waitForURL(/\/discover/);
   await m.locator(".headnav-l.on", { hasText: "Discover" }).waitFor();
-  await m.locator(".headnav-l", { hasText: "Following" }).click();
-  await m.waitForURL(/\/feed/);
-  await m.locator(".headnav-l.on", { hasText: "Following" }).waitFor();
-  await m.locator(".feedav").first().waitFor();
+  await m.locator(".headnav-l", { hasText: "Schedule" }).click();
+  await m.waitForURL(/\/week/);
+  await m.locator(".headnav-l.on", { hasText: "Schedule" }).waitFor();
+  // Deliberately no assertion on what the page holds here. This block is
+  // about the links: where they go and which one lights. What arrives after a
+  // client-side navigation is Next's business, and the header's <Link>
+  // prefetches early enough that the payload can predate the follows below,
+  // which made this fail about a third of the time for reasons that had
+  // nothing to do with the header.
   console.log("header links navigate and light up ok");
 }
 
-// Nine avatars (All, plus the eight) is what makes the rail overflow, so a
-// missing arrow below should mean the arrow is broken, not the fixture.
+// The tray survives a desktop width, with every face on it.
 {
-  await m.locator(".feedav").first().waitFor();
-  const n = await m.locator(".feedav").count();
-  if (n !== names.length + 1)
-    fail(`expected ${names.length + 1} avatars in the rail, got ${n} at ${m.url()}`);
+  await m.goto(BASE + "/week");
+  await m.locator(".tray").waitFor();
+  const faces = await m.locator(".trayitem").count();
+  // Eight followed, plus the Add door at the end.
+  if (faces !== 9) fail(`expected eight faces and the Add door, got ${faces}`);
+  if (!(await m.locator(".trayitem", { hasText: "Add" }).count()))
+    fail("the rail should end in the way to lengthen it");
+  console.log("the tray carries every face on a desktop width ok");
 }
-const rightArrow = m.locator(".railarrow-r");
-if (!(await rightArrow.isVisible())) fail("no right arrow with a rail that overflows");
-if (await m.locator(".railarrow-l").isVisible().catch(() => false))
-  fail("left arrow showing at the start of the rail");
-await m.screenshot({ path: OUT + "/shot-rail-1-right.png" });
 
-const before = await m.locator(".feedstrip").evaluate((e) => e.scrollLeft);
-await rightArrow.click();
-await m.waitForTimeout(700);
-const after = await m.locator(".feedstrip").evaluate((e) => e.scrollLeft);
-if (after <= before) fail(`the arrow did not scroll (${before} -> ${after})`);
-console.log(`scrolled ${before} -> ${after} ok`);
-if (!(await m.locator(".railarrow-l").isVisible())) fail("left arrow missing after scrolling");
-await m.screenshot({ path: OUT + "/shot-rail-2-both.png" });
+// The rail's arrows, on the tray that replaced the feed's coach strip. Eight
+// faces plus the Add door is what makes it overflow, so a missing arrow here
+// means the arrow is broken rather than the fixture being too short.
+{
+  await m.goto(BASE + "/week");
+  await m.locator(".tray").waitFor();
+  await m.locator(".trayitem").first().waitFor();
+  await m.waitForTimeout(600);
+  // Right only, at rest: there is nothing to the left of the first face.
+  await m.locator(".railarrow-r").waitFor();
+  if (await m.locator(".railarrow-l").count())
+    fail("nothing is scrolled off to the left yet, so there should be no left arrow");
+  // It has to be the topmost thing at its own centre. The scroller is its
+  // sibling and comes after it in the DOM, so without a layer of its own an
+  // avatar paints straight over a button that is in the tree and visible.
+  const onTop = await m.locator(".railarrow-r").evaluate((a) => {
+    const r = a.getBoundingClientRect();
+    const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    return el ? el.className : null;
+  });
+  if (!/railarrow/.test(String(onTop)))
+    fail("something paints over the arrow: " + onTop);
+  const before = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  await m.locator(".railarrow-r").click();
+  await m.waitForTimeout(700);
+  const after = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  if (after <= before) fail(`the right arrow did not page the rail: ${before} -> ${after}`);
+  // ...and the left one turns up once there is something behind you.
+  await m.locator(".railarrow-l").click();
+  await m.waitForTimeout(700);
+  const back = await m.locator(".tray-scroll").evaluate((e) => e.scrollLeft);
+  if (back >= after) fail(`the left arrow did not page back: ${after} -> ${back}`);
+  console.log("tray arrows page the rail both ways ok");
+}
 
-// scroll to the end: the right arrow retires
-await m.locator(".feedstrip").evaluate((e) => e.scrollTo({ left: e.scrollWidth }));
-await m.waitForTimeout(600);
-if (await m.locator(".railarrow-r").isVisible().catch(() => false))
-  fail("right arrow still showing at the end of the rail");
-console.log("arrows retire at each end ok");
-await m.screenshot({ path: OUT + "/shot-rail-3-end.png" });
-
-// a phone gets none of this: it swipes. The gate is the pointer, not the
-// width, so this needs a context that actually reports a coarse one.
-const tc = await b.newContext({
-  viewport: { width: 390, height: 844 },
-  hasTouch: true,
-  isMobile: true,
-  storageState: await mc.storageState(),
-});
-const t = await tc.newPage();
-t.setDefaultTimeout(15000);
-await t.goto(BASE + "/feed");
-await t.locator(".feedstrip").waitFor();
-await t.waitForTimeout(500);
-if (!(await t.locator(".feedav").first().isVisible())) fail("the rail itself vanished on a phone");
-const shown = await t.locator(".railarrow").evaluateAll((els) =>
-  els.filter((e) => getComputedStyle(e).display !== "none").length,
-);
-if (shown !== 0) fail(`${shown} arrows rendered on a touch pointer`);
-console.log("no arrows on a touch pointer ok");
+// ...and never on a touch pointer, because a finger already swipes. The gate
+// is (hover: hover) and (pointer: fine): "can't swipe" is a property of the
+// pointer, and a width breakpoint would put arrows on a tablet.
+{
+  const tc = await b.newContext({
+    viewport: { width: 1024, height: 1200 },
+    hasTouch: true,
+    isMobile: true,
+    storageState: await mc.storageState(),
+  });
+  const t = await tc.newPage();
+  t.setDefaultTimeout(15000);
+  await t.goto(BASE + "/week");
+  await t.locator(".tray").waitFor();
+  await t.waitForTimeout(600);
+  if (!(await t.locator(".trayitem").first().isVisible()))
+    fail("the tray itself vanished on a touch pointer");
+  const shown = await t.locator(".railarrow").evaluateAll((els) =>
+    els.filter((e) => getComputedStyle(e).display !== "none").length,
+  );
+  if (shown !== 0) fail(`${shown} arrows rendered on a touch pointer`);
+  await tc.close();
+  console.log("no arrows on a touch pointer ok");
+}
 
 await b.close();
 console.log("DESKTOP CHECKS PASSED");

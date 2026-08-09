@@ -34,7 +34,7 @@ export function Roster({ people }: { people: RosterPerson[] }) {
             <Face p={p} />
             <span className="rosterrow-nm">{p.name}</span>
             <span className="rosterrow-chev">
-              <Icon name="chevron_right" size={16} />
+              <Icon name="chevron_right" size={18} />
             </span>
           </Link>
         ) : (

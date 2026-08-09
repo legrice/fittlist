@@ -82,7 +82,7 @@ export function QrSheet({
         <div className="adderhead">
           <h2>{ownerName ? `${ownerName.trim().split(/\s+/)[0]}'s QR code` : "Your QR code"}</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         </div>
         <p className="lead">
@@ -96,9 +96,13 @@ export function QrSheet({
         </div>
         <div className="qrurl">{pageUrl}</div>
         <div className="publishwrap">
+          {/* The word has to match the act: this branch opens the share sheet,
+              so it says share. The other one is a real download and says save.
+              Naming both "Save" is what the four story sheets did until the
+              filled button was found to be opening the iOS share sheet. */}
           {canShareFiles ? (
             <button className="btn" disabled={sharing} onClick={shareQr}>
-              {sharing ? "Opening…" : "Save QR code"}
+              {sharing ? "Opening…" : "Share QR code"}
             </button>
           ) : (
             <a className="btn" href={qrImgUrl} download={qrFileName}>Save QR code</a>

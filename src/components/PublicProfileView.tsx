@@ -4,14 +4,19 @@ import { getDb, schema } from "@/db";
 import { fansEnabled, fansVisible } from "@/lib/flags";
 import { viewerLook } from "@/lib/look";
 import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, runsOn, timeToMinutes, todayIso } from "@/lib/format";
+import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
 import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
+import { followingList } from "@/lib/circles";
 
+import { AgendaAvatar } from "@/components/Agenda";
+import { AvatarZoom } from "@/components/AvatarZoom";
+import { ClassRowMenu } from "@/components/ClassRowMenu";
 import { Icon } from "@/components/Icon";
 import { ContactSheet, type ContactWays } from "@/components/ContactSheet";
+import { FollowList } from "@/components/FollowList";
 import { FollowSync } from "@/components/FollowSync";
 import { NotifyCta } from "@/components/NotifyCta";
 import { ScheduleMore } from "@/components/ScheduleMore";
@@ -64,10 +69,10 @@ export async function PublicProfileView({
    *  rides along on the class links below. */
   from?: string;
 }) {
-  // A profile carries the header and no tab bar. Its way out is the arrow on
-  // the picture, which pops to whatever is underneath and names the front door
-  // for a page opened cold. The bar was three layers of chrome over a schedule
-  // once the pinned name and the floating button are counted with it.
+  // Somebody else's profile carries the header and no tab bar: its way out is
+  // the arrow on the picture, which pops to whatever is underneath and names
+  // the front door for a page opened cold. Your own keeps the bar, because it
+  // is the You tab and arriving on a tab must not take the tabs away.
   const handle = user.handle!;
   const db = await getDb();
 
@@ -116,18 +121,33 @@ export async function PublicProfileView({
     }
   }
 
-  const backTo = backToFor(from, !!viewerId);
+  // No arrow on your own page. It is what the Profile tab opens now, so
+  // there is nothing behind it to go back to: the bar underneath is the way
+  // on, and an arrow pointing at Following on a screen you reached from a tab
+  // is a control offering to undo a tap you did not make.
+  const backTo = isOwner ? undefined : backToFor(from, !!viewerId);
 
   // Their own classes, plus the shifts a gym has them on when they've said
   // those belong here. One loader, so the page, the share, the feed and the
-  // .ics can't answer this differently.
-  const classRows = (await publicSchedule(user)).filter((c) => c.isPublic);
-  // "Where I coach" is the union of studios the coach picked in setup and any
-  // studio they've published a class at.
-  const pickedRows = await db
-    .select({ studioId: schema.coachStudios.studioId })
-    .from(schema.coachStudios)
-    .where(eq(schema.coachStudios.userId, user.id));
+  // .ics can't answer this differently. "Where I coach" is the union of
+  // studios the coach picked in setup and any studio they've published a
+  // class at.
+  //
+  // These three have nothing to say to one another, so they go together
+  // rather than in a chain. This page is the link a coach hands out, which
+  // makes it the route worth being careful about. It is not visible in the
+  // local load check, and can't be: dev runs PGlite, a single-connection
+  // embedded Postgres that serializes what a pooled one overlaps. The win
+  // is three round trips becoming one on production's pool.
+  const [allClassRows, pickedRows, fansOn] = await Promise.all([
+    publicSchedule(user),
+    db
+      .select({ studioId: schema.coachStudios.studioId })
+      .from(schema.coachStudios)
+      .where(eq(schema.coachStudios.userId, user.id)),
+    fansVisible(),
+  ]);
+  const classRows = allClassRows.filter((c) => c.isPublic);
   const studioIds = [
     ...new Set([...classRows.map((c) => c.studioId), ...pickedRows.map((p) => p.studioId)]),
   ].filter((id): id is string => !!id);
@@ -142,8 +162,20 @@ export async function PublicProfileView({
   // group into chunks of seven POPULATED days, not seven calendar days, so a
   // Mon/Wed/Fri coach still shows a full week's worth of schedule before the
   // View more button, and each tap reveals seven more real days.
-  const start = new Date(`${todayIso()}T00:00:00Z`);
-  const days: { iso: string; label: string; week: number; items: typeof classRows }[] = [];
+  // The viewer's own going marks used to be loaded here, so each row's ribbon
+  // could say whether the class was already in their plans. Plans are gone: a
+  // member reads the week of the people they follow and has no calendar to add
+  // anything to, so the ribbon came off the row and the query went with it. A
+  // query nobody reads is one that gets slower without anybody noticing.
+
+  // Who they follow, only when that tab is the one being read: the other
+  // tabs have no use for it, and a query nobody reads gets slower without
+  // anybody noticing.
+  const follows = tab === "following" ? await followingList(user.email, viewerId) : [];
+
+  const today = todayIso();
+  const start = new Date(`${today}T00:00:00Z`);
+  const days: { iso: string; week: number; items: typeof classRows }[] = [];
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = new Date(start);
     d.setUTCDate(start.getUTCDate() + i);
@@ -151,9 +183,12 @@ export async function PublicProfileView({
     const dow = (d.getUTCDay() + 6) % 7;
     const items = classRows
       .filter((c) => runsOn(c, iso, dow))
+      // A class that has already ended is not something anyone can still go
+      // to, so no schedule shows it.
+      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
     if (items.length)
-      days.push({ iso, label: fmtDayHeader(iso), week: Math.floor(days.length / 7), items });
+      days.push({ iso, week: Math.floor(days.length / 7), items });
   }
 
   const about = (
@@ -226,7 +261,7 @@ export async function PublicProfileView({
               <span className="ad">{s.address}</span>
             </span>
             <span className="coachstudio-chev">
-              <Icon name="chevron_right" size={18} />
+              <Icon name="chevron_right" size={20} />
             </span>
           </Link>
         ))}
@@ -261,16 +296,36 @@ export async function PublicProfileView({
         ways.links.length
       ));
 
+  // The other hat used to be loaded here: the going week, behind a
+  // Teaching/Going segment on this tab, gated on `canSeeWeek`. Going marks are
+  // gone from the app, so there is one week on a coach's page and it is the
+  // one the link is for. `canSeeWeek` and `sharedWeek` still exist for a
+  // member's own profile, which is the other place they were read.
+
   const schedule = (
     <>
       {days.length === 0 ? (
-        <div className="empty-block">
-          <h2>Nothing on the calendar</h2>
-          <p>
-            {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
-            the moment they do.
-          </p>
-        </div>
+        // The owner reads their own page in the first person, with the way
+        // to fix it right there: the third-person copy told a coach on
+        // their own profile that "Anotherone hasn't posted classes yet",
+        // which is the app talking about them to them.
+        isOwner ? (
+          <div className="empty-block">
+            <h2>Nothing on your schedule</h2>
+            <p>Add the classes you coach and this page fills in.</p>
+            <Link className="btn si folfind" href="/calendar">
+              Add a class
+            </Link>
+          </div>
+        ) : (
+          <div className="empty-block">
+            <h2>Nothing on the calendar</h2>
+            <p>
+              {user.name} hasn&rsquo;t posted classes yet. Join the list and you&rsquo;ll get an email
+              the moment they do.
+            </p>
+          </div>
+        )
       ) : (
         // Server-rendered rows. For a visitor they're wrapped so an ordinary
         // tap opens the class from the bottom instead of navigating, with the
@@ -278,12 +333,23 @@ export async function PublicProfileView({
         // owner a tap opens the editor instead: this is your class, and the
         // one thing you'd do with it from here is change it.
         <MaybeOpener isOwner={isOwner} handle={handle}>
-        <div className="ps-week ps-agenda">
+        {/* The calendar's own rows, and the calendar's own day headings.
+            This drew `.ps-event` cards in a `.callist` while the calendar and
+            Following drew `.wkrow` on the ground, which is two designs for one
+            list: a coach flipping between their calendar and their page was
+            reading two apps. It is one row now, everywhere a class is listed.
+
+            The ribbon went with them. It put a class in your plans, and plans
+            are gone: a member reads the week of the people they follow, and
+            there is nothing to add it to. */}
+        <div className="daylist">
           {(() => {
             const renderDay = (d: (typeof days)[number]) => (
-              <div key={d.iso} className="ps-daygroup">
-                <div className="ps-daycol">{d.label}</div>
-                <div className="ps-daycards">
+              <section key={d.iso} id={`day-${d.iso}`} className="dayblock">
+                <div className="dayband">
+                  <span className="dayband-d">{fmtDayHeaderRel(d.iso, today)}</span>
+                </div>
+                <div className="dayrows">
                   {d.items.map((c) => {
                     const s = c.studioId ? studioById.get(c.studioId) : undefined;
                     const where = s ? s.name : c.location;
@@ -292,41 +358,48 @@ export async function PublicProfileView({
                     // studio. Pointing it at this handle would 404: the class
                     // is not this coach's to serve.
                     const at = classAddress(c, handle, s?.slug);
-                    return (
-                      <Link
+                    const base = at?.base ?? handle;
+                    const href = `/${base}/${c.id}?d=${d.iso}`;
+                    const row = (
+                      <a
                         key={`${d.iso}-${c.id}`}
-                        className="ps-event"
+                        className="clline"
+                        href={href}
                         data-cid={c.id}
                         data-d={d.iso}
                         data-base={at?.key}
-                        href={`/${at?.base ?? handle}/${c.id}?d=${d.iso}`}
                       >
-                        <span
-                          className="ps-accent"
-                          style={{ background: avatarColor(user) }}
-                          aria-hidden="true"
+                        <span className="clline-t">
+                          {start.hm}
+                          <span className="clline-ap">{start.ap.toUpperCase()}</span>
+                        </span>
+                        <span className="clline-nm">{c.name}</span>
+                        {where && (
+                          <span className="clline-w">{where}</span>
+                        )}
+                      </a>
+                    );
+                    // The dots ride a visitor's rows only: the owner's tap
+                    // already opens the editor, and reporting your own class
+                    // is a button that can only answer with an error.
+                    if (isOwner) return row;
+                    return (
+                      <div key={`${d.iso}-${c.id}`} className="clrow">
+                        {row}
+                        {/* No coach row: whose class it is is the page you
+                            are standing on. */}
+                        <ClassRowMenu
+                          classId={c.id}
+                          base={base}
+                          iso={d.iso}
+                          name={c.name}
+                          studio={s ? { name: s.name, href: `/s/${s.slug}` } : null}
                         />
-                        <span className="ps-ebody">
-                          <span className="ps-enm">{c.name}</span>
-                          {where && (
-                            <span className="ps-estudio">
-                              <Icon name="place" size={13} className="ps-estudio-ic" />
-                              {where}
-                            </span>
-                          )}
-                        </span>
-                        <span className="ps-etimecol">
-                          <span className="ps-etime">
-                            {start.hm}
-                            <span className="ps-ap">{start.ap}</span>
-                          </span>
-                          <span className="ps-edur">{c.durationMin} min</span>
-                        </span>
-                      </Link>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
+              </section>
             );
             // One week at a time: the first non-empty week renders now, and
             // the rest wait behind View more, revealed a week per tap. Empty
@@ -356,7 +429,7 @@ export async function PublicProfileView({
 
   return (
     <div
-      className={`pub profile${viewerId ? " hasnav" : ""}`}
+      className={`pub profile${viewerId ? " hasnav" : ""}${isOwner ? " ownbar" : ""} pub-hero`}
       data-theme={user.theme}
       data-mode={await viewerLook()}
     >
@@ -367,9 +440,18 @@ export async function PublicProfileView({
         {/* Your own page is the You tab, so it lights up here; the pathname is
             a handle, which the bar can't read on its own. */}
         {viewerId ? (
-          <AppChrome userId={viewerId} active={isOwner ? "you" : undefined} />
+          // The bar rides along on your own page and nowhere else: You is a
+          // tab, so landing on it must not take the tabs away. Somebody
+          // else's profile is a page you visited, and the arrow is its way
+          // off.
+          <AppChrome
+            userId={viewerId}
+            bar={isOwner}
+            headerNav={false}
+            active={isOwner ? "you" : undefined}
+          />
         ) : (
-          <PublicTopBar handle={handle} />
+          <PublicTopBar handle={handle} next={`/${handle}`} />
         )}
         {/* The Follow control renders twice below (the header pill and the
             sticky bar's compact copy); this provider is the one place the
@@ -388,6 +470,7 @@ export async function PublicProfileView({
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
+            { key: "following", label: "Following" },
           ]}
           name={user.name}
           title={user.title ?? ""}
@@ -395,8 +478,34 @@ export async function PublicProfileView({
           trackSchedule={!isOwner}
           trackHandle={handle}
           backTo={backTo}
-          photo={user.photo}
-          color={avatarColor(user)}
+          // The full-bleed hero for everybody, by Matt's call: the photo
+          // when there is one, the person's own colour when there isn't,
+          // the same rule the member page follows, so no photo is never a
+          // lesser layout. The owner's colour hero carries the image
+          // icon into the editor (?edit=1, which ProfileOwnerBar reads).
+          heroPhoto={user.photo}
+          heroColor={avatarColor(user)}
+          heroCta={
+            isOwner && !user.photo ? (
+              <Link className="herocta" href={`/${handle}?edit=1`} aria-label="Add a photo">
+                <Icon name="image" size={24} />
+              </Link>
+            ) : undefined
+          }
+          avatar={
+            <AvatarZoom
+              className="profav"
+              handle={handle}
+              name={user.name}
+              photo={user.photo}
+              color={avatarColor(user)}
+              follow={!isOwner && account ? account : null}
+              isOwner={isOwner}
+              availability={user.availability}
+              canMessage={canMessage}
+              signedIn={signedIn}
+            />
+          }
           // The same two slots for everybody. A visitor gets Message and
           // Follow; the owner gets Share and Edit profile, which are the two
           // things they came to do with their own page.
@@ -441,36 +550,12 @@ export async function PublicProfileView({
               </div>
             )
           }
-          // Settings, and only settings. Everything else a coach does to this
-          // page is on the two pills under the name; a corner menu on top of
-          // those was a lid over things that already had a button.
-          ownerTop={
-            isOwner ? (
-              // Named, not just drawn. A gear on its own is a guess, and the
-              // one thing behind it is worth saying out loud.
-              <Link className="ownergear" href="/app?acct=1">
-                <Icon name="settings" size={18} />
-                <span className="ownergear-lbl">Profile settings</span>
-              </Link>
-            ) : null
-          }
-          avail={
-            <div className="profhero-tags">
-              {/* Says which side of the app this person is on. Members have
-                  the same shape of page now, so the page itself no longer
-                  answers it. */}
-              <span className="kindtag">Coach</span>
-              {/* Whether they're taking private clients, back on the page
-                  itself. It used to be a dot on the profile photo with the
-                  words in the photo overlay, and the hero took both away;
-                  a status nobody can read is the same as no status. */}
-              {user.availability && (
-                <span className={`kindtag availtag availtag-${user.availability}`}>
-                  {user.availability === "accepting" ? "Open for clients" : "Waitlist"}
-                </span>
-              )}
-            </div>
-          }
+          // The gear moved up into the app header (AppChrome's `gear`), by
+          // Matt's call: floating on the photo it read as loose furniture,
+          // and the header's corner is both where every app keeps settings
+          // and easier to reach. The slot stays for a studio's dots.
+          ownerTop={null}
+          badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
           stickAction={
@@ -489,18 +574,37 @@ export async function PublicProfileView({
               to show means no tab) and Contact is a sheet now, so both fall
               back to the schedule rather than rendering an empty page under a
               tab that isn't there. */}
-          {tab === "about" ? about : tab === "studios" && studios ? studios : schedule}
+          {tab === "about" ? (
+            about
+          ) : tab === "following" ? (
+            /* Who they follow, the same list a member's page leads with:
+               a coach follows coaches too, and the tab means the same
+               thing on both kinds of page. */
+            <FollowList
+              rows={follows}
+              isOwner={isOwner}
+              firstName={user.name.trim().split(/\s+/)[0] || user.name}
+              signedIn={!!viewerId}
+            />
+          ) : tab === "studios" && studios ? (
+            studios
+          ) : (
+            /* One week on this tab: what they teach. It carried a
+               Teaching/Going segment, which was the other hat: the classes
+               this coach was going to. Going marks are gone from the app, so
+               the second half is empty by construction and a segment whose
+               other side can only ever be empty is a control that means
+               nothing. */
+            schedule
+          )}
         </ProfileTabs>
         </FollowSync>
-        {/* The primary action holds the thumb spot, in the same glass the
-            Discover filter wears; sharing sits up top as the tinted pill. Schedule section only:
-            About and Contact aren't places you add a class from. */}
-        {isOwner && tab === "schedule" && (
-          <Link className="fab" href="/app?add=1">
-            <Icon name="add" size={20} />
-            Add class
-          </Link>
-        )}
+        {/* No Add class here. This page is where you look at your week, and
+            the Calendar tab is where you work on it: the plus lives on the
+            calendar, under a thumb, next to the week it adds to. A second
+            door on the profile meant two screens both claiming to be where
+            classes come from, and this is the one that is really a page you
+            hand to somebody. */}
         {/* The growth loop is aimed at visitors — someone already signed in
             has an account, so it's noise on every page they open. */}
         {!isOwner && !signedIn && (

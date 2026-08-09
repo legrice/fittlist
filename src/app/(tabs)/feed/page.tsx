@@ -1,76 +1,63 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
-import { classAddress, publicSchedules } from "@/lib/coachweek";
-import { fansVisible } from "@/lib/flags";
-import { hiddenFrom } from "@/lib/blocks";
-import { getSessionUserId } from "@/lib/session";
-import { clockParts, fmtDayHeader, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
-import { FeedAgenda, type FeedDay } from "@/components/FeedAgenda";
 import { avatarColor } from "@/lib/avatar";
-import { SetPasswordPrompt } from "@/components/SetPasswordPrompt";
+import { hiddenFrom } from "@/lib/blocks";
+import { classAddress, publicSchedules } from "@/lib/coachweek";
+import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso, WEEKS_AHEAD, weekDates } from "@/lib/format";
+import { getSessionUserId } from "@/lib/session";
+import { FollowingScreen, type FeedCoach, type FeedItem } from "@/components/FollowingScreen";
 
 export const dynamic = "force-dynamic";
 
-const WINDOW_DAYS = 14; // two weeks out is plenty for "when can I train next"
-
-// The fan home: one merged agenda across every followed coach, today first.
-// Phase 3 adds discovery. Dark until FANS_ENABLED=true.
-export default async function FeedPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ setpw?: string }>;
-}) {
-  if (!(await fansVisible())) redirect("/");
-  const { setpw } = await searchParams;
+/**
+ * Following: the merged week of everyone you follow.
+ *
+ * This is the only screen a member has, and it is what a follow buys. It was
+ * deleted for a build while following delivered a face and a peek instead of a
+ * week, on the bet that saving would be the act worth measuring; the bet was
+ * dropped with a member's calendar, because there is nothing to save to now.
+ * A follow means their week joins yours to read. That is the whole
+ * relationship, and it is enough.
+ *
+ * The three weeks load at once and the client flips between them. It is 21
+ * days of one query rather than a round trip per arrow tap, and an arrow that
+ * waits on a server is an arrow nobody presses twice.
+ */
+export default async function FollowingPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
-  // A member has a handle too now, so the coach shell keys off `kind`.
-  const isCoach = me.kind !== "fan" && !!me.handle;
 
-  // Blocking drops the follow, so a blocked coach shouldn't be in here at all.
-  // Filtering anyway costs one query and covers the follow that was written
-  // between the block and its cleanup. In parallel with the follows and the
-  // marks: all three only need the viewer.
-  const [followRows, hidden, goingRows] = await Promise.all([
+  // By email, the way every other follow lookup does it: somebody who followed
+  // before signing in still counts once the address has an account.
+  const [followRows, hidden] = await Promise.all([
     db
       .select({ trainerUserId: schema.subscribers.trainerUserId })
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     hiddenFrom(userId),
-    db
-      .select({
-        classId: schema.attendances.classId,
-        occurrenceDate: schema.attendances.occurrenceDate,
-      })
-      .from(schema.attendances)
-      .where(eq(schema.attendances.userId, userId)),
   ]);
   const followed = followRows
     .map((r) => r.trainerUserId)
     .filter((id) => id !== userId && !hidden.has(id));
-  // A coach's own week belongs here too — Following answers "when can I train",
-  // and what they teach is part of that. They just can't mark themselves going.
-  const trainerIds = isCoach ? [...followed, userId] : followed;
-  // Coaches and their classes both key off the same id list, so they load
-  // together. Private sessions stay out of the classes: this is the
-  // member-facing week even when you're looking at your own — the full
-  // schedule, private included, lives behind the gear.
+  // A coach's own week belongs here too. Following answers "when can I train",
+  // and what they teach is part of that.
+  const isCoach = me.kind !== "fan" && !!me.handle;
+  const trainerIds = [...new Set(isCoach ? [...followed, userId] : followed)];
+
   const coachRows = trainerIds.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, trainerIds))
     : [];
-  // Their own classes, plus the gym shifts each has chosen to show. Same
-  // loader the coach's own page uses, so following someone shows the week
-  // their page shows and not a shorter one.
-  const allClassRows = await publicSchedules(coachRows);
-  const coaches = coachRows.filter((c) => !!c.handle);
-  coaches.sort((a, b) => a.name.localeCompare(b.name));
-  const coachById = new Map(coaches.map((c) => [c.id, c]));
+  // The same loader the coach's own page and the digests ask, so following
+  // somebody shows the week their page shows and not a shorter one.
+  const allClassRows = trainerIds.length ? await publicSchedules(coachRows) : [];
   const classRows = allClassRows.filter((c) => c.isPublic);
+  const coaches = coachRows.filter((c) => !!c.handle);
+  const coachById = new Map(coaches.map((c) => [c.id, c]));
+
   const studioIds = [...new Set(classRows.map((c) => c.studioId))].filter(
     (id): id is string => !!id,
   );
@@ -79,119 +66,94 @@ export default async function FeedPage({
     : [];
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
 
-  // Classes this member marked "I'm going" to — a personal note, not a booking.
-  const going = new Set(goingRows.map((g) => `${g.classId}|${g.occurrenceDate}`));
-
-  const start = new Date(`${todayIso()}T00:00:00Z`);
-  const days: FeedDay[] = [];
-  for (let i = 0; i < WINDOW_DAYS; i++) {
-    const d = new Date(start);
-    d.setUTCDate(start.getUTCDate() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const dow = (d.getUTCDay() + 6) % 7;
-    const items = classRows
-      .filter((c) => runsOn(c, iso, dow))
-      // Forward only, by the clock and not just the date: this answers "when
-      // can I train next", and this morning's class is not an answer. It also
-      // means every row on the list is one you can still add, which is the
-      // rule the swipe and the sheet both enforce on the way in.
-      .filter((c) => !occurrenceEnded(iso, c.startTime, c.durationMin))
-      .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
-      .flatMap((c) => {
-        // A shift is owned by the gym and shown under the coach, so the
-        // person this row is about is `ownerUserId`, never `userId`.
+  const today = todayIso();
+  const items: FeedItem[] = [];
+  for (let w = 0; w <= WEEKS_AHEAD; w++) {
+    for (const iso of weekDates(w, today)) {
+      const d = new Date(`${iso}T00:00:00Z`);
+      const dow = (d.getUTCDay() + 6) % 7;
+      for (const c of classRows) {
+        if (!runsOn(c, iso, dow)) continue;
+        // Been and gone is not an answer to "when can I train next".
+        if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
+        // A shift is owned by the gym and shown under the coach, so the person
+        // this row is about is ownerUserId, never userId.
         const coach = coachById.get(c.ownerUserId);
-        if (!coach?.handle) return [];
-        const s = c.studioId ? studioById.get(c.studioId) : undefined;
-        const at = classAddress(c, coach.handle, s?.slug);
-        if (!at) return [];
+        if (!coach?.handle) continue;
+        const st = c.studioId ? studioById.get(c.studioId) : undefined;
+        const at = classAddress(c, coach.handle, st?.slug);
+        if (!at) continue;
         const t = clockParts(c.startTime);
-        return [
-          {
-            classId: c.id,
-            coachId: coach.id,
-            handle: at.key,
-            coachName: coach.name,
-            coachPhoto: coach.photo,
-            coachColor: avatarColor(coach),
-            name: c.name,
-            hm: t.hm,
-            ap: t.ap,
-            durationMin: c.durationMin,
-            where: s ? s.name : c.location,
-            going: going.has(`${c.id}|${iso}`),
-          },
-        ];
-      });
-    if (items.length) {
-      const label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : fmtDayHeader(iso);
-      days.push({ iso, label, items });
+        items.push({
+          key: `${c.id}|${iso}`,
+          week: w,
+          iso,
+          classId: c.id,
+          base: at.key,
+          coachId: coach.id,
+          name: c.name,
+          where: st?.name ?? c.location ?? null,
+          // A studio has a page; a class's own free-text location names a
+          // room, which has nothing to open.
+          whereHref: st ? `/s/${st.slug}` : null,
+          hm: t.hm,
+          ap: t.ap,
+          durationMin: c.durationMin,
+          mins: timeToMinutes(c.startTime),
+          about: c.description ?? null,
+          classType: c.classType ?? null,
+          links: c.links,
+          studioAddress: st?.address ?? null,
+        });
+      }
     }
   }
 
-  // The rail filters the week, so a coach with nothing in it is a chip that
-  // can only ever empty the screen. They stay followed — just not on the rail.
-  const withClasses = new Set(days.flatMap((d) => d.items.map((i) => i.coachId)));
-
-  // The rail orders itself so the face you need is in the first few bubbles:
-  // whoever teaches soonest first, by the clock and not just the day (a 5pm
-  // today beats a 6pm today), then whoever you most recently marked Going
-  // with, then the alphabet. Nobody curates anything, and no bubble carries a
-  // "new" ring; the order can be smart, the faces stay quiet.
-  // Each day's items are already sorted by start time, so day index plus
-  // position within the day is exactly "who teaches soonest".
-  const firstMinute = new Map<string, number>();
-  days.forEach((d, idx) =>
-    d.items.forEach((i, pos) => {
-      if (!firstMinute.has(i.coachId)) firstMinute.set(i.coachId, idx * 10000 + pos);
-    }),
-  );
-  const classCoach = new Map(allClassRows.map((c) => [c.id, c.userId]));
-  const lastGoing = new Map<string, string>();
-  for (const g of goingRows) {
-    const coachId = classCoach.get(g.classId);
-    if (!coachId) continue;
-    const cur = lastGoing.get(coachId);
-    if (!cur || g.occurrenceDate > cur) lastGoing.set(coachId, g.occurrenceDate);
+  // Soonest first. The rail was alphabetical, which is an order about the
+  // names rather than about the week: whoever is teaching in an hour was
+  // wherever the alphabet put them, and a rail is read left to right with only
+  // its first few faces seen without a swipe. So the face in front is the one
+  // with the nearest class, and the question "who can I train with next" is
+  // answered by the order itself.
+  //
+  // Keyed on the date and the time together, because `mins` alone would put
+  // next Monday's 6am ahead of tonight's 6pm. A coach with nothing in the
+  // three weeks sorts last and is dropped by the rail anyway; they keep the
+  // alphabet among themselves so the tail is at least stable.
+  const soonest = new Map<string, string>();
+  for (const i of items) {
+    const at = `${i.iso}T${String(i.mins).padStart(4, "0")}`;
+    const had = soonest.get(i.coachId);
+    if (!had || at < had) soonest.set(i.coachId, at);
   }
-  const railCoaches = coaches
-    .filter((c) => withClasses.has(c.id))
-    .sort(
-      (a, b) =>
-        (firstMinute.get(a.id) ?? 1e9) - (firstMinute.get(b.id) ?? 1e9) ||
-        (lastGoing.get(b.id) ?? "").localeCompare(lastGoing.get(a.id) ?? "") ||
-        a.name.localeCompare(b.name),
-    );
+  const rail: FeedCoach[] = coaches
+    .map((c) => ({
+      id: c.id,
+      name: c.name.trim() || c.email.split("@")[0],
+      handle: c.handle!,
+      photo: c.photoThumb ?? c.photo,
+      color: avatarColor(c),
+    }))
+    .sort((a, b) => {
+      const x = soonest.get(a.id);
+      const y = soonest.get(b.id);
+      if (x && y && x !== y) return x < y ? -1 : 1;
+      if (x && !y) return -1;
+      if (!x && y) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
+  // The empty state's two wordings fork on real follows, not on the rail:
+  // a coach rides their own week here, so the rail is never empty for them,
+  // and "the people you follow have not put anything up" to somebody who
+  // follows nobody blamed people who do not exist.
   return (
-    <>
-        {/* "Nobody yet" is for an empty tab, not an empty week: someone who
-            follows coaches with nothing on gets the agenda's own message. */}
-        {railCoaches.length === 0 && followed.length === 0 ? (
-          <div className="empty-block">
-            <h2>Nobody yet</h2>
-            <p>
-              Follow a coach and their schedule lands here and in your weekly email. Browse
-              who&rsquo;s teaching near you, or open a page you were sent and tap Follow.
-            </p>
-            <Link className="btn" href="/discover">
-              Find coaches
-            </Link>
-          </div>
-        ) : (
-          <FeedAgenda
-            coaches={railCoaches.map((c) => ({
-              id: c.id,
-              handle: c.handle!,
-              name: c.name,
-              photo: c.photo,
-              color: avatarColor(c),
-            }))}
-            days={days}
-            meId={userId}
-          />
-        )}
-      {setpw === "1" && !me.passwordHash && <SetPasswordPrompt email={me.email} />}
-    </>
+    <FollowingScreen
+      items={items}
+      coaches={rail}
+      follows={followed.length}
+      todayIso={today}
+      meId={userId}
+    />
   );
 }

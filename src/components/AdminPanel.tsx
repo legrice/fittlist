@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AdminPushToggle } from "@/components/AdminPushToggle";
 import { adminMarkActivitySeen } from "@/app/actions/admin";
 import { createPortal } from "react-dom";
@@ -9,6 +9,8 @@ import {
   adminActOnRequest,
   adminAddStudio,
   adminAddStudioManager,
+  adminAddStudioManagerById,
+  adminSearchAccounts,
   adminDeleteStudio,
   adminEnableStudioSchedule,
   adminRemoveStudioManager,
@@ -236,26 +238,29 @@ export function AdminPanel({
   return (
     <section className="screen admin" data-mode={dark ? "dark" : undefined}>
       <div className="pad">
+        {/* The actions on their own row above the title, the way back first
+            on the left: three pills beside "Admin" scrunched both, and the
+            signed-in line wrapped letter by letter. */}
+        <div className="admintop-links adminacts-row">
+          <Link className="adminback" href="/week">
+            <Icon name="arrow_back" size={20} /> App
+          </Link>
+          <button className="adminback adminact" onClick={openActivity}>
+            <Icon name="bolt" size={20} /> Activity
+            {activityNew > 0 && !actSeen && (
+              <span className="inboxdot">{activityNew > 99 ? "99+" : activityNew}</span>
+            )}
+          </button>
+          {/* The mission, one tap from the numbers, so the numbers never
+              get to argue with it unsupervised. */}
+          <Link className="adminback" href="/ethos">
+            <Icon name="favorite" size={20} /> Ethos
+          </Link>
+        </div>
         <div className="admintop">
           <div>
             <h1>Admin</h1>
             <p className="adminsub">Signed in as {adminEmail}</p>
-          </div>
-          <div className="admintop-links">
-            <button className="adminback adminact" onClick={openActivity}>
-              <Icon name="bolt" size={18} /> Activity
-              {activityNew > 0 && !actSeen && (
-                <span className="inboxdot">{activityNew > 99 ? "99+" : activityNew}</span>
-              )}
-            </button>
-            {/* The mission, one tap from the numbers, so the numbers never
-                get to argue with it unsupervised. */}
-            <Link className="adminback" href="/ethos">
-              <Icon name="favorite" size={18} /> Ethos
-            </Link>
-            <Link className="adminback" href="/feed">
-              <Icon name="arrow_back" size={18} /> App
-            </Link>
           </div>
         </div>
 
@@ -292,7 +297,7 @@ export function AdminPanel({
                 setQ("");
               }}
             >
-              <Icon name={t.icon} size={20} />
+              <Icon name={t.icon} size={22} />
               {t.id === "reports" && reports.length + studioReports.length + studioSuggestions.length > 0 && (
                 <span className="inboxdot">
                   {reports.length + studioReports.length + studioSuggestions.length > 9
@@ -306,7 +311,7 @@ export function AdminPanel({
 
         {tab !== "message" && tab !== "reports" && (
         <div className="searchbox adminsearch">
-          <span className="mag"><Icon name="search" size={17} /></span>
+          <span className="mag"><Icon name="search" size={19} /></span>
           <input
             type="text"
             placeholder={searchPlaceholder}
@@ -327,7 +332,7 @@ export function AdminPanel({
                 phone. Same pill the Discover city picker uses. */}
             <label className="flabel" htmlFor="msgTo">To</label>
             <div className="discitysel msgto">
-              <Icon name="expand_more" size={18} className="discitysel-ic" />
+              <Icon name="expand_more" size={20} className="discitysel-ic" />
               <select
                 id="msgTo"
                 className="discitysel-in"
@@ -741,7 +746,7 @@ export function AdminPanel({
             <div className="adderhead">
               <h2>Activity</h2>
               <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={() => setActOpen(false)}>
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
             </div>
             <p className="lead">
@@ -751,7 +756,7 @@ export function AdminPanel({
             <div className="actlist">
               {activity.map((a, i) => (
                 <div key={i} className={`actrow${a.fresh && !actSeen ? " fresh" : a.fresh ? " fresh" : ""}`}>
-                  <span className="actrow-ic"><Icon name={a.icon} size={17} /></span>
+                  <span className="actrow-ic"><Icon name={a.icon} size={19} /></span>
                   <span className="actrow-txt">
                     <span className="t">{a.text}</span>
                     <span className="s">{a.when}</span>
@@ -918,7 +923,7 @@ function PersonCard({
         <Link className="admincard-h admincard-h-link" href={`/${c.handle}`} target="_blank">
           <span className="admincard-nm">{c.name}</span>
           <span className="admincard-tag">
-            /{c.handle} <Icon name="open_in_new" size={13} />
+            /{c.handle} <Icon name="open_in_new" size={15} />
           </span>
         </Link>
       ) : (
@@ -1205,7 +1210,7 @@ function InviteCard({ i, toast }: { i: Invite; toast: (m: string) => void }) {
             disabled={pending}
             onClick={removeInvite}
           >
-            <Icon name="close" size={16} />
+            <Icon name="close" size={18} />
           </button>
         )}
       </div>
@@ -1241,19 +1246,65 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
   const [pending, start] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [email, setEmail] = useState("");
+  // One box, two doors: type a name or handle and their account row is a
+  // tap; type an email nobody has and the invite is the fallback. Only the
+  // newest lookup may paint, or a slow "st" lands after "stacey".
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<
+    { id: string; name: string; handle: string | null; email: string; photo: string | null }[]
+  >([]);
+  const seq = useRef(0);
+  useEffect(() => {
+    if (!adding) return undefined;
+    const query = q.trim();
+    if (query.length < 2) {
+      setHits([]);
+      return undefined;
+    }
+    const mine = ++seq.current;
+    const t = setTimeout(async () => {
+      const rows = await adminSearchAccounts(query);
+      if (mine === seq.current) setHits(rows);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q, adding]);
+  const looksEmail = /.+@.+\..+/.test(q.trim());
   const removable = s.coachCount === 0 && s.classCount === 0;
 
-  const addManager = () =>
+  const addById = (userId: string) =>
     start(async () => {
-      const res = await adminAddStudioManager(s.id, email);
+      const res = await adminAddStudioManagerById(s.id, userId);
       if (!res.ok) {
         toast(res.error ?? "Couldn't add them");
         return;
       }
-      setEmail("");
+      setQ("");
+      setHits([]);
       setAdding(false);
       toast("They run this page now");
+    });
+
+  const addByEmail = () =>
+    start(async () => {
+      const res = await adminAddStudioManager(s.id, q);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't add them");
+        return;
+      }
+      setQ("");
+      setHits([]);
+      setAdding(false);
+      toast("They run this page now");
+    });
+
+  const emailInvite = () =>
+    start(async () => {
+      const res = await adminSendMagicLink(q);
+      if (!res.ok) {
+        toast(res.error ?? "Couldn't send that");
+        return;
+      }
+      toast("Sign-in link sent. Hand them the keys once they're in.");
     });
 
   const enableSchedule = () =>
@@ -1286,7 +1337,7 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
       <Link className="admincard-h admincard-h-link" href={`/s/${s.slug ?? s.id}`} target="_blank">
         <span className="admincard-nm">{s.name}</span>
         <span className="admincard-tag">
-          open <Icon name="open_in_new" size={13} />
+          open <Icon name="open_in_new" size={15} />
         </span>
       </Link>
       <div className="admincard-sub">{s.address}</div>
@@ -1317,20 +1368,65 @@ function StudioCard({ s, toast }: { s: Studio; toast: (m: string) => void }) {
         )}
         {s.hasAccount && <span className="adminmgr-em">runs its own schedule</span>}
         {adding ? (
-          <div className="adminaddform-row" style={{ marginTop: 8 }}>
-            <input
-              className="input"
-              type="email"
-              placeholder="their@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button className="btn si" disabled={pending || !email.trim()} onClick={addManager}>
-              {pending ? "Adding…" : "Add"}
-            </button>
-            <button className="linktoggle" disabled={pending} onClick={() => setAdding(false)}>
-              Cancel
-            </button>
+          <div className="adminfind" style={{ marginTop: 8 }}>
+            <div className="adminaddform-row">
+              <input
+                className="input"
+                placeholder="Name, handle or email"
+                value={q}
+                autoFocus
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <button
+                className="linktoggle"
+                disabled={pending}
+                onClick={() => {
+                  setAdding(false);
+                  setQ("");
+                  setHits([]);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+            {hits.map((h) => (
+              <button
+                key={h.id}
+                className="adminfind-row"
+                disabled={pending}
+                onClick={() => addById(h.id)}
+              >
+                {h.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="adminfind-av" src={h.photo} alt="" />
+                ) : (
+                  <span className="adminfind-av adminfind-av-empty">
+                    {(h.name.charAt(0) || "?").toUpperCase()}
+                  </span>
+                )}
+                <span className="adminfind-txt">
+                  <span className="nm">{h.name}</span>
+                  <span className="em">
+                    {h.handle ? `@${h.handle} · ` : ""}
+                    {h.email}
+                  </span>
+                </span>
+                <span className="adminfind-go">Hand keys</span>
+              </button>
+            ))}
+            {/* Nobody found and it reads as an email: the old door, kept.
+                An exact account match adds directly; a stranger gets the
+                sign-in link, and the keys wait until they exist. */}
+            {hits.length === 0 && looksEmail && (
+              <div className="adminfind-doors">
+                <button className="btn si" disabled={pending} onClick={addByEmail}>
+                  {pending ? "Adding…" : "Add by email"}
+                </button>
+                <button className="btn ghost" disabled={pending} onClick={emailInvite}>
+                  Email a sign-in link
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button className="linktoggle" onClick={() => setAdding(true)}>

@@ -211,3 +211,77 @@ export function classAddress(
   if (row.shift) return studioSlug ? { key: studioSlug, base: `s/${studioSlug}` } : null;
   return handle ? { key: handle, base: handle } : null;
 }
+
+/** Who to name on a gym's class, per date. */
+export type ShiftNaming = {
+  /** The coach who normally teaches a slot, keyed by class id. */
+  standing: Map<string, typeof schema.users.$inferSelect>;
+  /** A single date somebody else took, keyed `${classId}|${iso}`. Present and
+   *  null means the date is covered by nobody we may name: an open slot, or a
+   *  coach who does not show their shifts. It must not fall back to the
+   *  standing coach, who is not on that date. */
+  perDate: Map<string, typeof schema.users.$inferSelect | null>;
+};
+
+/**
+ * The person behind a gym's class, where they have said their shifts are
+ * theirs to show.
+ *
+ * A shift is a row the gym owns with a coach on it, so every surface built
+ * from `classes.userId` named the gym: a member's calendar drew "Ironbound"
+ * where the coach chip goes and "Ironbound" again as the place, and the coach
+ * they followed to find the class was nowhere on it. The person is on
+ * `classes.coachUserId`, with a `shift_covers` row winning for one date the
+ * way it does everywhere else.
+ *
+ * It is gated on that coach's own `shiftsPublic`, and that gate is the whole
+ * privacy argument. With it on they have already published the shift as
+ * theirs and it carries their name on their own public page, so naming them
+ * here says a fact they published in the place somebody is reading it. With
+ * it off, a gym's schedule naming them would be new information, and whether
+ * a gym's schedule names anybody is the gym's call rather than ours: the row
+ * stays the gym's, exactly as before.
+ */
+export async function shiftNaming(classIds: string[]): Promise<ShiftNaming> {
+  const empty: ShiftNaming = { standing: new Map(), perDate: new Map() };
+  if (!classIds.length) return empty;
+  const db = await getDb();
+  const [rows, covers] = await Promise.all([
+    db
+      .select({ id: schema.classes.id, coachUserId: schema.classes.coachUserId })
+      .from(schema.classes)
+      .where(inArray(schema.classes.id, classIds)),
+    db.select().from(schema.shiftCovers).where(inArray(schema.shiftCovers.classId, classIds)),
+  ]);
+  const ids = [
+    ...new Set(
+      [...rows.map((r) => r.coachUserId), ...covers.map((c) => c.coachUserId)].filter(
+        (x): x is string => !!x,
+      ),
+    ),
+  ];
+  if (!ids.length) return empty;
+  const people = await db.select().from(schema.users).where(inArray(schema.users.id, ids));
+  const nameable = new Map(people.filter((u) => u.shiftsPublic).map((u) => [u.id, u]));
+
+  const standing = new Map<string, typeof schema.users.$inferSelect>();
+  for (const r of rows) {
+    const u = r.coachUserId ? nameable.get(r.coachUserId) : undefined;
+    if (u) standing.set(r.id, u);
+  }
+  const perDate = new Map<string, typeof schema.users.$inferSelect | null>();
+  for (const c of covers) {
+    perDate.set(
+      `${c.classId}|${c.occurrenceDate}`,
+      (c.coachUserId ? nameable.get(c.coachUserId) : null) ?? null,
+    );
+  }
+  return { standing, perDate };
+}
+
+/** The coach to name on one date, or null to leave the row the gym's. */
+export function shiftCoach(n: ShiftNaming, classId: string, iso: string) {
+  const key = `${classId}|${iso}`;
+  if (n.perDate.has(key)) return n.perDate.get(key) ?? null;
+  return n.standing.get(classId) ?? null;
+}

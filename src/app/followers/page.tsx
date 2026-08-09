@@ -8,6 +8,7 @@ import { listFollowRequests } from "@/app/actions/subscribe";
 import { FollowersList, type FollowerRow } from "@/components/FollowersList";
 import { AppChrome } from "@/components/AppChrome";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -84,12 +85,12 @@ export default async function FollowersPage() {
   const pending = await listFollowRequests();
 
   return (
-    <section className="screen admin hasnav" data-mode={me.look === "dark" ? "dark" : undefined}>
+    <section className="screen admin hasnav" data-mode={lookMode(me.look)}>
       <div className="pad">
         <AppChrome userId={userId} bar />
         <div className="folback">
-          <BackLink className="evback" href="/app?acct=1" label="Back to your profile">
-            <Icon name="arrow_back" size={21} />
+          <BackLink className="evback" href="/settings" label="Back to settings">
+            <Icon name="arrow_back" size={23} />
           </BackLink>
         </div>
         <div className="admintop">

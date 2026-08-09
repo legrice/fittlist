@@ -1,503 +1,190 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { followTrainer, unfollowTrainer } from "@/app/actions/subscribe";
-import { initialOf } from "@/lib/avatar";
-import { FollowHint, followHintOff } from "@/components/FollowHint";
+import { ClassResults } from "@/components/ClassResults";
 import { Icon } from "@/components/Icon";
-import { LinkPending } from "@/components/LinkPending";
+import { PersonRow, type DirPerson } from "@/components/DirectoryRows";
 
-export type DiscoverCoach = {
-  id: string;
-  handle: string;
-  name: string;
-  /** Members list here too now; the badge is what tells them apart. */
-  kind: "coach" | "member";
-  photo: string | null;
-  title: string;
-  location: string;
-  classesThisWeek: number;
-  following: boolean;
-  /** A pending ask at a coach who approves their followers. */
-  requested: boolean;
-  /** Worn as a dot on the avatar, same as the profile photo. Coaches only. */
-  availability: string | null;
-  /** What they teach, from the same list a studio picks its types from. */
-  disciplines: string[];
-  color: string;
-};
+/**
+ * The date range filter is gone, and the whole fortnight is what you get.
+ *
+ * It was five answers in a bottom sheet (Today, Tomorrow, This weekend, Next
+ * 7, Next 14) sitting above a list that is already grouped by day and already
+ * says which day each group is. A range filter earns itself when a day holds
+ * more than a screen; at this density it was a control that mostly removed
+ * classes from a directory whose problem is having too few. The list scrolls,
+ * and the day bands are the range.
+ *
+ * When it comes back it comes back as a real date pick against a query, not a
+ * slice of a window the page happens to hold, which is the same note
+ * `buildDiscoverClasses` carries.
+ */
 
-// The row's corner control: a small Follow that flips green when it's a yes,
-// so following someone doesn't require the round trip through their page.
-// Same tri-state as the profile pill (a gated coach's tap reads Requested,
-// tapping again withdraws it), scoped to its own row.
-function FollowMini({
-  handle,
-  name,
-  isCoach,
-  following,
-  requested,
-}: {
-  handle: string;
-  name: string;
-  /** The hint promises a week on Following, which only a coach has. Following
-   *  a member buys something quieter and mutual, and what it means is still
-   *  being worked out, so the bar stays quiet until it can say something true. */
-  isCoach: boolean;
-  following: boolean;
-  requested: boolean;
-}) {
-  const [state, setState] = useState<"off" | "asked" | "on">(
-    following ? "on" : requested ? "asked" : "off",
-  );
-  // True only for a yes born of a tap, so the spring plays once at the moment
-  // it means something and a page of already-green pills loads still.
-  const [pop, setPop] = useState(false);
-  const [hint, setHint] = useState(false);
-  const [pending, start] = useTransition();
-  const tap = () =>
-    start(async () => {
-      if (state === "off") {
-        const res = await followTrainer(handle);
-        if (res.ok) {
-          setState(res.requested ? "asked" : "on");
-          setPop(!res.requested);
-          if (isCoach && !res.requested && !followHintOff()) setHint(true);
-        }
-      } else {
-        const res = await unfollowTrainer(handle);
-        if (res.ok) {
-          setState("off");
-          setPop(false);
-        }
-      }
-    });
-  return (
-    <>
-    <FollowHint name={name.trim().split(/\s+/)[0] || name} on={hint} onClose={() => setHint(false)} />
-    <button
-      className={`disfol${state === "on" ? " on" : ""}${pop ? " pop" : ""}`}
-      disabled={pending}
-      aria-pressed={state === "on"}
-      onClick={tap}
-    >
-      {state === "on" && <Icon name="check" size={13} />}
-      {state === "on" ? "Following" : state === "asked" ? "Requested" : "Follow"}
-    </button>
-    </>
-  );
+/**
+ * The words a rail offers, busiest first.
+ *
+ * All three halves rank their chips this way, so the rail means the same
+ * thing wherever it appears: the ones in front of you are the ones with the
+ * most behind them. It counts what is actually on the screen behind the rail
+ * (occurrences for classes, coaches for disciplines, studios for types), not
+ * the vocabulary, so a word nobody uses is never offered. Ties fall back to
+ * the alphabet, which keeps the order stable between renders.
+ */
+function rankByUse(values: (string | null | undefined)[]): string[] {
+  const n = new Map<string, number>();
+  for (const v of values) if (v) n.set(v, (n.get(v) ?? 0) + 1);
+  return [...n.keys()].sort((a, b) => (n.get(b)! - n.get(a)!) || a.localeCompare(b));
 }
 
-/** A place in the directory. Not followable: you follow a person, and a gym
- *  is not a person. Its page is where its week lives. */
-export type DiscoverStudio = {
-  id: string;
-  slug: string;
-  name: string;
-  address: string;
-  photo: string | null;
-  types: string[];
-  /** It runs its schedule here, so there's a week to see. */
-  hasSchedule: boolean;
-  /** Behind the initial when there's no photo, same sixty a coach draws from. */
-  color: string;
-};
-
-// Search over the directory, which has two halves: the people and the places.
-// One search box and one filter on a single row, and the tab above decides
-// what they're searching. The corner control follows from the row; the row's
-// main job is still to get you to a person, and the Coach badge across from
-// the name is what tells you who you're looking at, which is the distinction
-// that matters once members can appear in a list.
+/** Which of the directory's three halves is in front of you. */
+// The directory, which has three halves: the classes, the coaches and the
+// places. The box is a door to the universal search; the tabs pick a half;
+// and the chip rail under two of them is the whole filter: All leads,
+// filled in by default (the one selected chip is what says the others can
+// be selected). On Coaches the chips are what they teach, on Studios what
+// the place offers, and both come from one vocabulary so the same word
+// means the same thing on either. Classes brings its own two dropdowns
+// instead. The Filters sheet is gone for now; it returns when there are
+// enough filters to need one.
+//
+// Members left this half when Classes arrived. They were listed to make
+// the room look lived-in, and a directory with real classes on it does
+// that honestly; a coach directory that is half people who teach nothing
+// is a worse answer to "who can I train with". Nobody is hidden: search
+// covers both kinds, and Home's people rail still mixes them.
 export function DiscoverList({
-  coaches,
-  studios = [],
+  people,
   cities,
   myCity = null,
   backHref,
   hideBack = false,
+  hideSearch = false,
 }: {
-  coaches: DiscoverCoach[];
-  studios?: DiscoverStudio[];
+  people: DirPerson[];
   cities: string[];
   /** The viewer's own city, which is what "near you" means for now. */
   myCity?: string | null;
   backHref: string;
   hideBack?: boolean;
+  /** The sheet carries a live search box of its own above this list, so the
+   *  door here would be a second box saying the same thing. */
+  hideSearch?: boolean;
+  /** Which half to open on, for a link that means one of them. */
 }) {
-  const [tab, setTab] = useState<"people" | "studios">("people");
-  const [q, setQ] = useState("");
-  const [coachesOnly, setCoachesOnly] = useState(false);
+  // No useBandTop here, deliberately: this list draws no day bands any more
+  // (the Classes half is long gone), and it renders inside the DiscoverSheet
+  // too, where publishing zero would stamp on the calendar's own published
+  // height while the sheet is up over it.
+  // Coaches lead, per the Discover spec: a follow is what makes every other
+  // surface work (Following and Activity are both empty until one happens), so
+  // the act that unlocks the app is the whole screen.
   // Nothing on by default. Opening Discover should show the whole directory;
   // a filter you didn't set is a list you can't explain, and the count on the
-  // pill would be reporting a choice nobody made.
+  // Filters chip would be reporting a choice nobody made.
   void myCity;
-  const [city, setCity] = useState<string | null>(null);
-  const [discipline, setDiscipline] = useState<string | null>(null);
-  const [acceptingOnly, setAcceptingOnly] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  // The city filter left with the Filters sheet for now; `cities` stays a
+  // prop so it can come back the day there are enough filters to need a
+  // sheet again.
+  void cities;
+  const [types, setTypes] = useState<Set<string>>(new Set());
 
+
+  const toggleType = (t: string) =>
+    setTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
   const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return coaches.filter((c) => {
-      if (coachesOnly && c.kind !== "coach") return false;
-      if (city && c.location !== city) return false;
-      if (discipline && !c.disciplines.includes(discipline)) return false;
-      // Someone looking for a personal trainer is looking for a yes, not a
-      // waitlist. The coach already told us which they are.
-      if (acceptingOnly && c.availability !== "accepting") return false;
-      if (!needle) return true;
-      return (
-        c.name.toLowerCase().includes(needle) ||
-        c.title.toLowerCase().includes(needle) ||
-        c.location.toLowerCase().includes(needle)
-      );
-    });
-  }, [coaches, q, city, coachesOnly, discipline, acceptingOnly]);
+    return people
+      .filter((c) => c.kind === "coach")
+      .filter((c) => types.size === 0 || c.disciplines.some((d) => types.has(d)));
+  }, [people, types]);
 
-  // Studios have no city column, only a free-text address, so there is nothing
-  // honest to filter them by yet. The address carries the town, and searching
-  // it finds them.
-  const shownStudios = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return studios.filter((st) => {
-      // One vocabulary across the directory, so the same pick narrows both
-      // halves: the yoga teachers, and the places that offer yoga.
-      if (discipline && !st.types.includes(discipline)) return false;
-      if (!needle) return true;
-      return (
-        st.name.toLowerCase().includes(needle) ||
-        st.address.toLowerCase().includes(needle) ||
-        st.types.some((t) => t.toLowerCase().includes(needle))
-      );
-    });
-  }, [studios, q, discipline]);
+  // The row the Agenda hands back is the shared shape, so the ribbon's
+  // source (whose it is, whether it's already in) is looked up by key.
+  // All is the absence of picks, and it leads the rail already filled in:
+  // the one selected chip is what says the others can be selected.
+  const allOn = types.size === 0;
+  const clearAll = () => setTypes(new Set());
+  // What the list in front of you can actually be narrowed by, and nothing
+  // else: what these coaches say they teach. Busiest first, because a rail is
+  // read left to right and only its first few chips are seen without a swipe.
+  const railWords = useMemo(
+    () => rankByUse(people.filter((c) => c.kind === "coach").flatMap((c) => c.disciplines)),
+    [people],
+  );
 
-  // Only what this lens can actually narrow, so the sheet never offers a
-  // filter that would empty the list on principle.
-  const activeCount =
-    (tab === "studios" ? 0 : city ? 1 : 0) +
-    (discipline ? 1 : 0) +
-    (tab === "people" && coachesOnly ? 1 : 0) +
-    (tab === "people" && acceptingOnly ? 1 : 0);
-  const clearAll = () => {
-    setCity(null);
-    setDiscipline(null);
-    setCoachesOnly(false);
-    setAcceptingOnly(false);
-  };
-  // What the lens in front of you can actually be narrowed by, and nothing
-  // else. Pooling both halves offered People the studios' vocabulary, so every
-  // chip there filtered to nobody: coaches haven't started saying what they
-  // teach yet. The section appears on its own the day they do.
-  const disciplines = useMemo(() => {
-    const seen = new Set<string>();
-    if (tab === "people") for (const c of coaches) for (const d of c.disciplines) seen.add(d);
-    else for (const st of studios) for (const t of st.types) seen.add(t);
-    return [...seen].sort((a, b) => a.localeCompare(b));
-  }, [coaches, studios, tab]);
 
   return (
     <>
-      {/* The page title, with the coaches-only switch directly across from
-          it. Only when the list mixes kinds; all coaches leaves the switch
-          nothing to do. */}
-      {/* The box first, because searching is the thing people came to do, and
-          it searches whichever half the toggle below it is on. */}
+      {/* The box first, because searching is the thing people came to do. It
+          is a door now, not a filter: tapping it opens the universal search,
+          which covers both halves at once and the people you follow besides.
+          Two search behaviours behind one drawing of a box was the confusing
+          part; the magnifier left the header for this tab, so this is the one
+          place searching starts. */}
+      {!hideSearch && (
       <div className="dissearchrow">
-        <div className="dissearch">
-          <Icon name="search" size={19} className="dissearch-ic" />
-          <input
-            className="dissearch-in"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search"
-            aria-label={tab === "people" ? "Search people" : "Search studios"}
-          />
-          {q && (
-            <button
-              type="button"
-              className="dissearch-x"
-              onClick={() => setQ("")}
-              aria-label="Clear"
-            >
-              <Icon name="close" size={17} />
-            </button>
-          )}
-        </div>
+        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
+          <Icon name="search" size={21} className="dissearch-ic" />
+          {/* The door says what the field behind it says: it is drawn as that
+              field, and a door whose words change on opening is two doors. */}
+          <span className="dissearch-ph">Search coaches by name</span>
+        </Link>
       </div>
-
-      {/* No page title: the tab bar already says Discover, and the segment
-          says which half you're in. */}
-      <div className="seg disseg">
-        <button
-          className={tab === "people" ? "sel" : ""}
-          onClick={() => {
-            setTab("people");
-            setDiscipline(null);
-          }}
-        >
-          People
-        </button>
-        <button
-          className={tab === "studios" ? "sel" : ""}
-          onClick={() => {
-            setTab("studios");
-            setDiscipline(null);
-          }}
-        >
-          Studios
-        </button>
-      </div>
-
-      {/* The same floating pill a class uses for Book and Save: the one thing
-          you reach for over a long list, in the place your thumb already is. */}
-      <button
-        type="button"
-        className="classoverlay-cta disfilterpill"
-        onClick={() => setFiltersOpen(true)}
-      >
-        <span className="ovcta-btn">
-          <Icon name="tune" size={17} />
-          Filter {tab === "people" ? "people" : "studios"}
-          {activeCount > 0 && <span className="disfilterpill-n">{activeCount}</span>}
-        </span>
-      </button>
-
-      {filtersOpen && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setFiltersOpen(false);
-          }}
-        >
-          <div className="sheet">
-            <button
-              className="iconbtn sheetclose"
-              aria-label="Close"
-              onClick={() => setFiltersOpen(false)}
-            >
-              <Icon name="close" size={16} />
-            </button>
-            <h2>Filters</h2>
-
-            {/* A studio has a free-text address and nothing normalised to
-                group by, so the city only narrows people. */}
-            {tab === "people" && cities.length > 1 && (
-              <>
-                <label className="flabel" htmlFor="disCity">
-                  Where
-                </label>
-                <select
-                  id="disCity"
-                  className="editinput"
-                  value={city ?? ""}
-                  onChange={(e) => setCity(e.target.value || null)}
-                >
-                  <option value="">Anywhere</option>
-                  {cities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </>
-            )}
-
-            {disciplines.length > 0 && (
-              <>
-                <label className="flabel">
-                  What <span>· one thing, so the list still says something</span>
-                </label>
-                <div className="typepick">
-                  {disciplines.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      className={`chip${discipline === d ? " sel" : ""}`}
-                      aria-pressed={discipline === d}
-                      onClick={() => setDiscipline(discipline === d ? null : d)}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {tab === "people" && (
-              <div className="settingslist disfilterlist">
-                <button
-                  className="setrow"
-                  role="switch"
-                  aria-checked={acceptingOnly}
-                  onClick={() => setAcceptingOnly((v) => !v)}
-                >
-                  <span className="setrow-ic">
-                    <Icon name="event_available" size={22} />
-                  </span>
-                  <span className="setrow-txt">
-                    <span className="t">Taking new clients</span>
-                    <span className="s">Coaches with room for private sessions</span>
-                  </span>
-                  <span className={`switch${acceptingOnly ? " on" : ""}`} aria-hidden="true">
-                    <span className="switch-knob" />
-                  </span>
-                </button>
-                {coaches.some((c) => c.kind !== "coach") && (
-                  <button
-                    className="setrow"
-                    role="switch"
-                    aria-checked={coachesOnly}
-                    onClick={() => setCoachesOnly((v) => !v)}
-                  >
-                    <span className="setrow-ic">
-                      <Icon name="person_add" size={22} />
-                    </span>
-                    <span className="setrow-txt">
-                      <span className="t">Coaches only</span>
-                      <span className="s">Hide members from the list</span>
-                    </span>
-                    <span className={`switch${coachesOnly ? " on" : ""}`} aria-hidden="true">
-                      <span className="switch-knob" />
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            <div className="publishwrap nostick">
-              <button className="btn si" onClick={() => setFiltersOpen(false)}>
-                Show {tab === "people" ? shown.length : shownStudios.length}
-              </button>
-            </div>
-            {activeCount > 0 && (
-              <button className="tertiary tellsheet-done" onClick={clearAll}>
-                Clear filters
-              </button>
-            )}
-          </div>
-        </div>
       )}
 
-      {tab === "studios" ? (
-        shownStudios.length === 0 ? (
-          <div className="empty-block">
-            <h2>{q ? "No studios match that" : "No studios yet"}</h2>
-            <p>
-              {q
-                ? "Try another name or town."
-                : "Studios arrive as coaches add the places they teach."}
-            </p>
-          </div>
-        ) : (
-          <div className="dislist dislist-bare">
-            {shownStudios.map((st) => (
-              <Link key={st.id} className="disrow disrow-studio" href={`/s/${st.slug}?from=discover`}>
-                <span className="disrow-avwrap">
-                  {st.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="disrow-av" src={st.photo} alt="" />
-                  ) : (
-                    <span
-                      className="disrow-av disrow-av-empty"
-                      style={{ background: st.color }}
-                      aria-hidden="true"
-                    >
-                      {initialOf(st.name)}
-                    </span>
-                  )}
-                </span>
-                <span className="disrow-txt">
-                  <span className="disrow-nmline">
-                    <span className="nm">{st.name}</span>
-                    {st.hasSchedule && <span className="kindtag kindtag-sm">Schedule</span>}
-                  </span>
-                  <span className="disrow-sub">{st.address}</span>
-                </span>
-                <span className="disrow-chev">
-                  <Icon name="chevron_right" size={18} />
-                </span>
-              </Link>
-            ))}
-          </div>
-        )
-      ) : (
-      <>
+      {/* One rail, all three halves. All leads it, filled in by default: the
+          one selected chip is the hint that the rest can be selected. The
+          chips after it are multiselect and busiest first, and All is the way
+          back, which is why there is no Clear all anywhere. Classes had two
+          bottom sheets here instead; a sheet is a tap that hides the whole
+          filter, and the answer to a long type list is a rail that scrolls. */}
+      {railWords.length > 0 && (
+        <div className="dischips" aria-label="Filters">
+          <button
+            type="button"
+            className={`chip${allOn ? " sel" : ""}`}
+            aria-pressed={allOn}
+            onClick={clearAll}
+          >
+            All
+          </button>
+          {railWords.map((d) => {
+            const on = types.has(d);
+            return (
+              <button
+                key={d}
+                type="button"
+                className={`chip${on ? " sel" : ""}`}
+                aria-pressed={on}
+                onClick={() => toggleType(d)}
+              >
+                {d}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
 
       {shown.length === 0 ? (
         <div className="empty-block">
-          <h2>{city && !q ? `Nobody in ${city} yet` : "Nobody here yet"}</h2>
-          <p>
-            {q
-              ? "Nothing matches that. Try another name or city."
-              : city
-                ? "Nobody is listed there. Switch to All cities to see everyone."
-                : "The list fills up as people join and coaches publish their schedules."}
-          </p>
-          {city && !q && (
-            <button className="btn ghost" onClick={() => setCity(null)}>
-              Show all cities
-            </button>
-          )}
+          <h2>No coaches here yet</h2>
+          <p>The list fills up as coaches put their week on fittlist.</p>
         </div>
       ) : (
         <div className="dislist dislist-bare">
           {shown.map((c) => (
-            <div key={c.id} className="disrow">
-              <Link className="disrow-main" href={`/${c.handle}?from=discover`}>
-                <span className="disrow-avwrap">
-                  {c.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="disrow-av" src={c.photo} alt="" />
-                  ) : (
-                    <span
-                      className="disrow-av disrow-av-empty"
-                      style={{ background: c.color }}
-                      aria-hidden="true"
-                    >
-                      {(c.name.trim().charAt(0) || "?").toUpperCase()}
-                    </span>
-                  )}
-                  {c.availability && (
-                    <span className={`avphotodot avphotodot-${c.availability}`} aria-hidden="true" />
-                  )}
-                </span>
-                <span className="disrow-txt">
-                  {/* The tag rides right beside the name; the Follow pill
-                      is the row's corner control, pinned top-right. */}
-                  <span className="disrow-nmline">
-                    <span className="nm">{c.name}</span>
-                    {c.kind === "coach" && <span className="kindtag kindtag-sm">Coach</span>}
-                  </span>
-                  {/* The tagline only. The city came off the line: the filter
-                      above already speaks location, and the repeated city name
-                      crowded out the taglines it sat beside. */}
-                  <span className="sub">{c.title || `fittlist.co/${c.handle}`}</span>
-                  {c.kind === "coach" && (
-                    <span className="wk">
-                      {c.classesThisWeek
-                        ? `${c.classesThisWeek} ${c.classesThisWeek === 1 ? "class" : "classes"} this week`
-                        : "No classes posted yet"}
-                    </span>
-                  )}
-                </span>
-                <LinkPending />
-              </Link>
-              <FollowMini
-                handle={c.handle}
-                name={c.name}
-                isCoach={c.kind === "coach"}
-                following={c.following}
-                requested={c.requested}
-              />
-            </div>
+            // Coaches only on this half, so a Coach badge on every row is a
+            // word that never distinguishes anything. Search mixes kinds and
+            // keeps it.
+            <PersonRow key={c.id} person={c} from="discover" kindTag={false} follow />
           ))}
         </div>
-      )}
-      </>
       )}
 
       {/* Coaches have the bottom nav; fans need a way back. */}

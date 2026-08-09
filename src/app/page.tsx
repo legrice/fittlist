@@ -5,7 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { googleConfigured } from "@/lib/gcal";
 import { appleConfigured } from "@/lib/apple";
 import { inviteOnly } from "@/lib/invites";
-import { fansEnabled } from "@/lib/flags";
+import { fansEnabled, landingHref } from "@/lib/flags";
 import { avatarColor } from "@/lib/avatar";
 import { adminEmails } from "@/lib/admin";
 import { pendingInviter } from "@/lib/joinlink";
@@ -20,7 +20,12 @@ export default async function Home({
   const viaHandle = via?.trim() || null;
   // Arrived from a beta invite email rather than stumbling on the site.
   const wasInvited = invited === "1";
-  const providers = { google: googleConfigured(), apple: appleConfigured() };
+  // Google login is off the door for the beta, by Matt's call: the credentials
+  // are live in production for the Calendar sync, which is why "configured"
+  // stopped being the right gate. Flip this back to googleConfigured() when
+  // the beta opens up.
+  const providers = { google: false, apple: appleConfigured() };
+  void googleConfigured;
   // Or on somebody's share link, which /j/{code} left in a cookie on the way
   // through. Same gate, and this is who opened it for them. A link from the
   // admin lands as a plain "you're invited" with no name on it: a coach
@@ -42,7 +47,7 @@ export default async function Home({
     // land on /app, which since the one-shell change is the bare editable
     // schedule: every login and every visit to the root surfaced a page with
     // no identity, in what read as random places.
-    if (user?.handle) redirect(fansEnabled() ? "/feed" : "/app");
+    if (user?.handle) redirect(fansEnabled() ? await landingHref() : "/app");
     // Signed in but never claimed a handle. `kind` is "coach" by default — the
     // column default, not a choice anyone made — so when members can sign up,
     // ask which they are before demanding a URL. Someone who already answered
@@ -50,7 +55,7 @@ export default async function Home({
     if (user)
       return (
         <AuthFlow
-          startStage={fansEnabled() && user.kind !== "fan" ? "role" : "claim"}
+          startStage="claim"
           claimAs={user.kind === "fan" ? "fan" : "coach"}
           via={viaHandle}
           providers={providers}
@@ -59,6 +64,7 @@ export default async function Home({
           invitedByLink={viaAdmin && !wasInvited}
           inviter={inviter}
           fans={fansEnabled()}
+          landing={await landingHref()}
         />
       );
   }
@@ -72,6 +78,7 @@ export default async function Home({
       invitedByLink={viaAdmin && !wasInvited}
       inviter={inviter}
       fans={fansEnabled()}
+      landing={await landingHref()}
     />
   );
 }

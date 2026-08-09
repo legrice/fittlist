@@ -12,14 +12,14 @@ import { Toast, useToast } from "@/components/Toast";
 type Swatch = { name: string; token: string; hex: string; note: string; onDark?: boolean };
 
 const CORE: Swatch[] = [
-  { name: "Orange", token: "--si", hex: "#dd6a35", note: "The accent, and every primary action", onDark: true },
+  { name: "Orange", token: "--si", hex: "#C2410C", note: "The accent, and every primary action", onDark: true },
   { name: "Ink", token: "--ink", hex: "#191502", note: "Text, and dark surfaces", onDark: true },
-  { name: "Paper", token: "--paper", hex: "#faf8f2", note: "The ground everything scrolls on" },
+  { name: "Paper", token: "--paper", hex: "#fdfcf7", note: "The ground everything scrolls on" },
   { name: "Card", token: "--card", hex: "#ffffff", note: "What floats on the paper" },
 ];
 
 const SUPPORTING: Swatch[] = [
-  { name: "Cream", token: "--cl", hex: "#f4efe1", note: "Headers, tags, quiet fills" },
+  { name: "Cream", token: "--cl", hex: "#f7f4ea", note: "Headers, tags, quiet fills" },
   { name: "Cream, down one", token: "--cl-d", hex: "#e9e1cc", note: "Chips that need to read off the page" },
   { name: "Soft orange", token: "--si-soft", hex: "#f7e6d6", note: "A tint of the accent" },
   { name: "Sand", token: "--sa", hex: "#d6d1b3", note: "Muted fills" },
@@ -28,12 +28,17 @@ const SUPPORTING: Swatch[] = [
   { name: "Go", token: "--go", hex: "#3d8b53", note: "On, added, confirmed", onDark: true },
 ];
 
+// 600 is the ceiling. The scale went to 800 (and to 900 in the sheet, which
+// the family does not ship, so it rendered as 800), and a screen of class
+// names at that weight read as a shout. What works is the pairing the profile
+// head has always had: a 600 name over a 400 line of what and where, which is
+// the two middle rows here.
 const TYPE = [
-  { label: "Hero", size: 44, weight: 800, sample: "Find your fit" },
+  { label: "Hero", size: 44, weight: 600, sample: "Find your fit" },
   { label: "Heading", size: 26, weight: 600, sample: "Your week, one link" },
   { label: "Section", size: 18, weight: 600, sample: "What to expect" },
   { label: "Body", size: 15, weight: 400, sample: "Follow coaches and their whole week comes with them." },
-  { label: "Label", size: 13, weight: 600, sample: "Wednesday" },
+  { label: "Label", size: 13, weight: 500, sample: "Wednesday" },
   { label: "Caption", size: 12, weight: 400, sample: "6:00am · 45 min · Ironbound" },
 ];
 
@@ -77,7 +82,7 @@ export function BrandGuide({ mark }: { mark: string }) {
         <div className="brandmarks">
           <div className="brandmark on-si" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#ffffff"') }} />
           <div className="brandmark on-paper" dangerouslySetInnerHTML={{ __html: mark }} />
-          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#faf8f2"') }} />
+          <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#fdfcf7"') }} />
         </div>
         <p className="brandp brandp-tight">
           White on orange is the app icon. Orange on paper is the header lockup. Paper on ink is
@@ -87,7 +92,7 @@ export function BrandGuide({ mark }: { mark: string }) {
       </section>
 
       <section className="brandsec">
-        <h2 className="brandh">Core colour</h2>
+        <h2 className="brandh">Core color</h2>
         <p className="brandp">Tap any swatch to copy the hex.</p>
         <div className="brandsws">
           {CORE.map((s) => (

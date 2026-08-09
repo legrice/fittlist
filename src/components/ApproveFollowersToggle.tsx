@@ -26,11 +26,18 @@ export function ApproveFollowersToggle({ initialOn }: { initialOn: boolean }) {
 
   return (
     <button className="setrow" onClick={toggle} aria-pressed={on}>
-      <span className="setrow-ic"><Icon name="lock" size={22} /></span>
+      <span className="setrow-ic"><Icon name="lock" size={24} /></span>
       <span className="setrow-txt">
-        <span className="t">Approve followers</span>
+        {/* The word everybody already knows from every other app. "Approve
+            followers" named the mechanism, which meant reading the row to
+            find out what it did to your account; Public and Private are the
+            two states people arrive already understanding, and the mechanism
+            goes in the line underneath where it belongs. */}
+        <span className="t">Account privacy</span>
         <span className="s">
-          {on ? "People ask first, and you say yes in Followers" : "Off, anyone can follow you"}
+          {on
+            ? "Private, you approve who follows you"
+            : "Public, anyone can follow you and see your week"}
         </span>
       </span>
       <span className={`switch${on ? " on" : ""}`} aria-hidden="true">

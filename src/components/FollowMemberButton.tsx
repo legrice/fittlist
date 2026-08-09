@@ -71,7 +71,7 @@ export function FollowMemberButton({
       >
         {state === "following" ? (
           <>
-            <Icon name="check" size={17} /> Following
+            <Icon name="check" size={19} /> Following
           </>
         ) : state === "requested" ? (
           "Requested"

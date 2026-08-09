@@ -64,7 +64,7 @@ export function ContactSheet({
           setOpen(true);
         }}
       >
-        <Icon name="chat_bubble" size={17} /> Contact
+        <Icon name="chat_bubble" size={19} /> Contact
       </button>
 
       {/* Portalled to the body. The pill lives inside the hero, which is a
@@ -81,7 +81,7 @@ export function ContactSheet({
           >
             <div className="sheet">
               <button className="iconbtn sheetclose" aria-label="Close" onClick={close}>
-                <Icon name="close" size={16} />
+                <Icon name="close" size={18} />
               </button>
               {writing ? (
                 <>
@@ -106,17 +106,17 @@ export function ContactSheet({
                   <div className="contactlist">
                     {canMessage && handle && (
                       <button className="proflink proflink-first" onClick={() => setWriting(true)}>
-                        <Icon name="chat_bubble" size={18} /> Message on fittlist
+                        <Icon name="chat_bubble" size={20} /> Message on fittlist
                       </button>
                     )}
                     {ways.email && (
                       <a className="proflink" href={`mailto:${ways.email}`}>
-                        <Icon name="mail" size={18} /> Email
+                        <Icon name="mail" size={20} /> Email
                       </a>
                     )}
                     {ways.phone && (
                       <a className="proflink" href={`tel:${ways.phone.replace(/[^\d+]/g, "")}`}>
-                        <Icon name="call" size={18} /> Call
+                        <Icon name="call" size={20} /> Call
                       </a>
                     )}
                     {ways.whatsapp && (
@@ -126,7 +126,7 @@ export function ContactSheet({
                         target="_blank"
                         rel="noopener nofollow"
                       >
-                        <Icon name="chat" size={18} /> WhatsApp
+                        <Icon name="chat" size={20} /> WhatsApp
                       </a>
                     )}
                     {ways.instagram && (
@@ -146,7 +146,7 @@ export function ContactSheet({
                         target="_blank"
                         rel="noopener nofollow"
                       >
-                        <Icon name="public" size={18} /> Website
+                        <Icon name="public" size={20} /> Website
                       </a>
                     )}
                     {ways.links.map((l, i) => (
@@ -157,7 +157,7 @@ export function ContactSheet({
                         target="_blank"
                         rel="noopener nofollow"
                       >
-                        <Icon name="link" size={18} /> {l.label}
+                        <Icon name="link" size={20} /> {l.label}
                       </a>
                     ))}
                   </div>

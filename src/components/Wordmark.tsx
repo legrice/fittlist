@@ -1,8 +1,9 @@
 import { brandIcon } from "@/lib/brand";
 
-// The lockup: the block mark + "FittList" in Archivo Black. Monochrome - the
-// mark takes the same colour as the wordmark text (near-black on light
-// surfaces, off-white on dark).
+// The lockup: the block mark + "FittList", monochrome again: the F wore the
+// brand orange for a day and came back to ink, because orange is for the
+// loudest calls to action only. The cloud variant stays a fixed off-white on
+// dark heroes.
 export function Wordmark({
   variant = "ink",
   className = "wordmark",
@@ -27,7 +28,18 @@ export function Wordmark({
       aria-label={beta ? "FittList beta" : "FittList"}
       style={{ color }}
     >
-      <span className="wm-ico" aria-hidden="true" dangerouslySetInnerHTML={{ __html: brandIcon("currentColor") }} />
+      <span
+        className="wm-ico"
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{
+          // --wm-mark is the same escape hatch --wm-ink is, for the F: a
+          // surface floating over a photograph turns the whole lockup white
+          // by setting both on an ancestor. The default is the text's own
+          // ink again, by Matt's call: the F wore the brand orange for a
+          // day, and orange is for the loudest calls to action only.
+          __html: brandIcon(variant === "ink" ? "var(--wm-mark, currentColor)" : "currentColor"),
+        }}
+      />
       <span className="wm-text">FittList</span>
       {beta && <span className="wm-beta">beta</span>}
     </span>

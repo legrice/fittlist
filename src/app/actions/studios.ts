@@ -3,6 +3,8 @@
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import { geocodeAddress } from "@/lib/geocode";
+import { storeImage } from "@/lib/storage";
 import { currentAdmin, adminEmails } from "@/lib/admin";
 import { addNotification } from "@/lib/notify";
 import { getSessionUserId } from "@/lib/session";
@@ -49,9 +51,19 @@ export async function createStudio(
   if (!name) return { ok: false, error: "Enter the studio name." };
   if (!address) return { ok: false, error: "Enter the address." };
   const db = await getDb();
+  // A studio is a place, and a place has a point: one lookup at save,
+  // best-effort, null on a miss.
+  const geo = await geocodeAddress(address);
   const [studio] = await db
     .insert(schema.studios)
-    .values({ name, address, slug: await uniqueSlug(name), createdByUserId: userId })
+    .values({
+      name,
+      address,
+      lat: geo?.lat ?? null,
+      lng: geo?.lng ?? null,
+      slug: await uniqueSlug(name),
+      createdByUserId: userId,
+    })
     .returning();
   return {
     ok: true,
@@ -103,19 +115,26 @@ export async function updateStudio(
   const address = input.address.trim();
   if (!name) return { ok: false, error: "Enter the studio name." };
   if (!address) return { ok: false, error: "Enter the address." };
-  if (input.photo && (!input.photo.startsWith("data:image/") || input.photo.length > 900_000))
+  if (
+    input.photo &&
+    !/^https:\/\//.test(input.photo) &&
+    (!input.photo.startsWith("data:image/") || input.photo.length > 900_000)
+  )
     return { ok: false, error: "That image didn't work. Try a smaller one." };
 
   const [existing] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
   if (!existing) return { ok: false, error: "Studio not found." };
 
   // Only recompute the slug when the name actually moved, so a link to a studio
-  // survives unrelated edits.
+  // survives unrelated edits. Same rule for the point: the address moving is
+  // what makes the old coordinates wrong.
   const slug =
     existing.slug && existing.name.trim() === name ? existing.slug : await uniqueSlug(name, id);
+  const geo = existing.address.trim() === address ? null : await geocodeAddress(address);
 
   const types = input.types.filter((t) => (STUDIO_TYPES as readonly string[]).includes(t));
   const set: Partial<typeof schema.studios.$inferInsert> = {
+    ...(geo ? { lat: geo.lat, lng: geo.lng } : {}),
     name,
     address,
     slug,
@@ -126,7 +145,7 @@ export async function updateStudio(
     website: input.website.trim() || null,
     instagram: input.instagram.trim().replace(/^@/, "") || null,
   };
-  if (input.photo !== undefined) set.photo = input.photo || null;
+  if (input.photo !== undefined) set.photo = (await storeImage(input.photo || null, "studio")) || null;
 
   // The receipt. Anyone with the button can edit, so every save that changed
   // something writes who did what, in plain words the admin can read straight
@@ -166,6 +185,32 @@ export async function updateStudio(
   if (existing.slug && existing.slug !== slug) revalidatePath(`/s/${existing.slug}`);
   revalidatePath("/admin");
   return { ok: true, slug };
+}
+
+/** Whether the studio's public schedule names who is coaching each class.
+ *  A manager's call (the same door updateStudio guards), on by default. */
+export async function setStudioShowCoaches(
+  id: string,
+  on: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Session expired." };
+  const db = await getDb();
+  const [me] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  if (!me || me.kind === "fan") return { ok: false, error: "Only coaches can edit a studio." };
+  const access = await studioAccess(id, { id: userId, kind: me.kind });
+  // Stricter than editing on purpose: an unclaimed page has no rota and no
+  // schedule of its own, so only the people who run the place hold this.
+  if (!access.claimed || !access.canEdit)
+    return { ok: false, error: "Only the studio's managers can change this." };
+  const [st] = await db.select().from(schema.studios).where(eq(schema.studios.id, id));
+  if (!st) return { ok: false, error: "Studio not found." };
+  await db.update(schema.studios).set({ showCoaches: on }).where(eq(schema.studios.id, id));
+  if (st.slug) revalidatePath(`/s/${st.slug}`);
+  return { ok: true };
 }
 
 // ---- Places I coach. The picks live in coach_studios; the profile shows the
@@ -231,7 +276,7 @@ export async function reportStudio(
   noteRaw = "",
 ): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   const reason = reasonRaw.trim().slice(0, 60);
   const note = noteRaw.trim().slice(0, 300);
   if (!reason) return { ok: false, error: "Pick a reason." };

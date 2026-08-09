@@ -38,8 +38,18 @@ await p.getByRole("button", { name: "+ New studio" }).click();
 await p.getByPlaceholder("e.g. Palisade Barbell").fill("Verona Stretch");
 await p.getByPlaceholder("e.g. 501 Palisade Ave, Jersey City").fill("1 Bloomfield Ave, Verona NJ");
 await p.getByRole("button", { name: "Add studio" }).click();
+
+// The just-published share sheet rides every brand new public class now.
+// Close it when it appears so the flow underneath can carry on.
+const closeLive = async (pg) => {
+  const sheet = pg.locator(".sheet", { hasText: "Your class is live" });
+  try { await sheet.waitFor({ timeout: 4000 }); } catch { return; }
+  await sheet.locator(".sheetclose").click();
+  await pg.waitForFunction(() => !document.querySelector(".sheet-scrim"));
+};
 await p.locator(".publishwrap .btn").click();
 await p.waitForTimeout(900);
+await closeLive(p);
 console.log("coach fixture ok");
 
 // A visitor, arriving at the schedule the way anyone does: from a link. Each
@@ -98,7 +108,16 @@ console.log("the class page back arrow pops ok");
 const cold = await b.newContext({ viewport: { width: 390, height: 844 } });
 const r = await cold.newPage();
 r.setDefaultTimeout(15000);
-await q.goto(BASE + "/sarah/schedule");
+// One retry: under suite load the load event has been seen to straggle
+// past the timeout while the page itself is fine (same precedent as the
+// member suite's /you arrival). A second try that also hangs is a real
+// failure.
+try {
+  await q.goto(BASE + "/sarah/schedule");
+} catch {
+  console.log("goto /sarah/schedule straggled; retrying once");
+  await q.goto(BASE + "/sarah/schedule");
+}
 {
   const href = await q.locator(".ps-event").first().getAttribute("href");
   await q.goto(BASE + href);
@@ -129,7 +148,7 @@ console.log("a cold class page still gets to the profile ok");
   if (!(await coach.count())) fail("a class should name the coach it belongs to");
   await coach.click();
   await t.waitForURL(/\/sarah$/);
-  await t.locator(".profhero").waitFor();
+  await t.locator(".pubhead").waitFor();
   await t.waitForTimeout(500);
   await t.locator(".profback .evback").click();
   await t.waitForTimeout(1100);

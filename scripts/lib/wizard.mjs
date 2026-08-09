@@ -1,20 +1,28 @@
 // Getting through the setup wizard in a test.
 //
-// Location is required now, so "Skip for now" no longer finishes from the
-// photo step: it lands on the step that asks for a city and waits. Every suite
-// that just wanted a set-up account goes through here rather than each one
-// learning the wizard's shape again.
-export async function skipSetup(page, city = "Jersey City, NJ") {
-  const skip = page.getByRole("button", { name: "Skip for now" });
-  await skip.click();
-  const loc = page.locator("#wLocation");
-  if (await loc.isVisible().catch(() => false)) {
-    await loc.fill(city);
-    await skip.click();
-  }
+// The wizard is one shape for everyone now: Do you teach (the role question
+// moved here from the signup sheet), About you (the city is the one required
+// field), then Follow a few coaches (always drawn, empty state and all, so
+// this walk never has to guess whether the step exists). Every suite that
+// wants a set-up account goes through here rather than each one learning the
+// wizard's shape again.
+export async function skipSetup(page, city = "Jersey City, NJ", teach = true) {
+  await page
+    .locator(".teachcard", { hasText: teach ? "Yes, I teach" : "I just take classes" })
+    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.locator("#wLocation").fill(city);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByText("Follow a few coaches").waitFor();
+  await page.getByRole("button", { name: /find people later/ }).click();
+  // Wait for the wizard to actually be done, not just for the last click to
+  // land: finishing saves the profile, flips the teaching switch, writes
+  // onboardedAt and then navigates, all inside one transition, and a suite
+  // that raced that write once cost an afternoon.
+  await page.waitForURL((u) => !u.pathname.startsWith("/welcome"), { timeout: 20000 });
 }
 
-/** On the step that asks who you are, fill the one field that isn't optional. */
+/** On the About step, fill the one field that isn't optional. */
 export async function fillLocation(page, city = "Jersey City, NJ") {
   await page.locator("#wLocation").fill(city);
 }

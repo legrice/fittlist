@@ -29,3 +29,27 @@ export async function fansVisible(): Promise<boolean> {
   const { currentAdmin } = await import("@/lib/admin");
   return !!(await currentAdmin());
 }
+
+// Where signing in lands, and where the wordmark goes.
+//
+// A coach lands on their Calendar, because publishing their week is what they
+// are here for. Everybody else lands on Following, which is the only screen
+// they have: a member has no calendar of their own, they read the week of the
+// people they follow.
+//
+// It stays a function because the answer has now changed four times (/app,
+// /feed, the two calendars, and back to this) and every caller asks rather
+// than assuming.
+export async function landingHref(): Promise<string> {
+  const { getSessionUserId } = await import("@/lib/session");
+  const userId = await getSessionUserId();
+  if (!userId) return "/feed";
+  const { getDb, schema } = await import("@/db");
+  const { eq } = await import("drizzle-orm");
+  const db = await getDb();
+  const [me] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  return me && me.kind !== "fan" ? "/calendar" : "/feed";
+}

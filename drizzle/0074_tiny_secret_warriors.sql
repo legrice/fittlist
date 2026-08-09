@@ -1,0 +1,1 @@
+ALTER TABLE "subscribers" ADD COLUMN "peeked_at" timestamp with time zone;

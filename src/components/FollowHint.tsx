@@ -19,11 +19,19 @@ export function followHintOff(): boolean {
 /**
  * What a follow actually did, said once rather than assumed.
  *
- * "You're following Sam" reports the tap; it doesn't tell anyone where Sam's
- * classes went. This does, with the way to go and see. It stops when they say
- * so, because an instruction you already understand is just noise, and it says
- * the same thing on a profile and in Discover rather than each explaining a
- * follow in its own words.
+ * "You're following Sam" reports the tap; it doesn't say what changed. This
+ * does, with the way to go and see. It stops when they say so, because an
+ * instruction you already understand is just noise, and it says the same thing
+ * on a profile and in Discover rather than each explaining a follow in its own
+ * words.
+ *
+ * The words changed when following stopped delivering classes. It used to
+ * promise Sam's classes were "on your Following week", which was true and is
+ * now false twice over: there is no Following week, and a follow puts nothing
+ * on a calendar. It buys a face, and the face is the door, so the hint names
+ * the circle and points at the screen that holds it. Getting this wrong is
+ * worse than saying nothing: somebody who goes looking for classes that were
+ * never added concludes the follow failed.
  */
 export function FollowHint({
   name,
@@ -42,10 +50,10 @@ export function FollowHint({
   return (
     <div className="folhint" role="status" aria-live="polite">
       <p className="folhint-t">
-        {name}&rsquo;s classes are on your Following week now.
+        {name} is on your schedule now. Tap their circle to see their week.
       </p>
       <div className="folhint-row">
-        <Link className="folhint-go" href="/feed" onClick={onClose}>
+        <Link className="folhint-go" href="/week" onClick={onClose}>
           See it
         </Link>
         <button

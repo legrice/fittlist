@@ -1,12 +1,14 @@
-import { desc, eq, isNull, ne } from "drizzle-orm";
+import { desc, eq, isNull, notInArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { NON_PERSON_KINDS } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
 import { listDuplicateSlots, listReports } from "@/app/actions/reports";
 import { listStudioReports, listStudioSuggestions } from "@/app/actions/studios";
 import { adminActivity } from "@/lib/adminactivity";
 import { vapidPublicKey } from "@/lib/push";
 import { AdminPanel } from "@/components/AdminPanel";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,9 @@ export default async function AdminPage({
     db
       .select()
       .from(schema.users)
-      .where(ne(schema.users.kind, "gym"))
+      // Neither a gym's account nor a roster placeholder is a person, and
+      // this list is the people. Both are users rows that nobody signs into.
+      .where(notInArray(schema.users.kind, NON_PERSON_KINDS))
       .orderBy(desc(schema.users.createdAt)),
     db.select().from(schema.studios).orderBy(schema.studios.seq),
     db
@@ -286,7 +290,7 @@ export default async function AdminPage({
       activity={activity}
       activityNew={activityNew}
       activityOpen={activityParam === "1"}
-      dark={admin.look === "dark"}
+      dark={lookMode(admin.look) === "dark"}
     />
   );
 }

@@ -95,7 +95,7 @@ export function AdminPushToggle({ vapidKey }: { vapidKey: string }) {
         disabled={state === "busy" || state === "checking"}
         onClick={toggle}
       >
-        <Icon name="notifications" size={17} />
+        <Icon name="notifications" size={19} />
         {state === "on" ? "Signup pings on for this device" : "Ping this device on signups"}
         <span className={`switch${state === "on" ? " on" : ""}`} aria-hidden="true">
           <span className="switch-knob" />

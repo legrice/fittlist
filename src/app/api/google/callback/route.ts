@@ -8,7 +8,7 @@ import { createSession } from "@/lib/session";
 import { acceptInvite, signupAllowed } from "@/lib/invites";
 import { pushSignupPing } from "@/lib/push";
 import { siteOrigin } from "@/lib/format";
-import { fansEnabled } from "@/lib/flags";
+import { fansEnabled, landingHref } from "@/lib/flags";
 import { sessionSecret } from "@/lib/secret";
 import { signupSource } from "@/lib/attribution";
 
@@ -18,7 +18,9 @@ function secret() {
   return sessionSecret();
 }
 
-const back = (q: string) => Response.redirect(`${siteOrigin()}/app?gcal=${q}`, 302);
+// The Google Calendar rows live on the You tab, so the connect flow lands
+// back there with its verdict in the query.
+const back = (q: string) => Response.redirect(`${siteOrigin()}/settings?gcal=${q}`, 302);
 const toLogin = (q: string) => Response.redirect(`${siteOrigin()}/?${q}`, 302);
 
 // Persist (or refresh) the calendar connection when a refresh token comes back,
@@ -85,7 +87,7 @@ export async function GET(req: Request) {
     if (tokens.refresh_token) await storeCalendar(user.id, tokens.refresh_token, email);
     await createSession(user.id);
     if (!user.handle) return toLogin(via ? `via=${encodeURIComponent(via)}` : "");
-    return Response.redirect(`${siteOrigin()}${fansEnabled() ? "/feed" : "/app"}`, 302);
+    return Response.redirect(`${siteOrigin()}${fansEnabled() ? await landingHref() : "/app"}`, 302);
   }
 
   // ---- calendar connect flow (started while logged in): sub is the user id.

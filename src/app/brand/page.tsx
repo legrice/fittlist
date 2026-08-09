@@ -7,12 +7,13 @@ import { AppChrome } from "@/components/AppChrome";
 import { BackLink } from "@/components/BackLink";
 import { BrandGuide } from "@/components/BrandGuide";
 import { Icon } from "@/components/Icon";
+import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Brand · fittlist",
-  description: "The fittlist mark, colour, type and voice.",
+  description: "The fittlist mark, color, type and voice.",
 };
 
 // The brand guide. Open to anyone with the link: it's a reference, not a
@@ -34,24 +35,24 @@ export default async function BrandPage() {
   return (
     <section
       className={`screen admin${userId ? " hasnav" : ""}`}
-      data-mode={look === "dark" ? "dark" : undefined}
+      data-mode={lookMode(look)}
     >
       <div className="pad">
         {userId && <AppChrome userId={userId} bar />}
         {userId && (
           <div className="folback">
-            <BackLink className="evback" href="/app?acct=1" label="Back to your account">
-              <Icon name="arrow_back" size={21} />
+            <BackLink className="evback" href="/settings" label="Back to settings">
+              <Icon name="arrow_back" size={23} />
             </BackLink>
           </div>
         )}
         <div className="admintop">
           <div>
             <h1>Brand</h1>
-            <p className="adminsub">The mark, the colour, the type and the words</p>
+            <p className="adminsub">The mark, the color, the type and the words</p>
           </div>
         </div>
-        <BrandGuide mark={brandIcon("#dd6a35")} />
+        <BrandGuide mark={brandIcon("#C2410C")} />
       </div>
     </section>
   );

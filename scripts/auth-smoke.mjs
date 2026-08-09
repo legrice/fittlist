@@ -56,7 +56,7 @@ await p1.getByText("Pick your link.").waitFor();
 await p1.getByPlaceholder("Your name").fill("Nopw Coach");
 await p1.getByRole("button", { name: "Claim it" }).click();
 await skipSetup(p1);
-await p1.getByRole("heading", { name: "Your week is empty" }).waitFor();
+await p1.getByRole("heading", { name: "Your week is wide open" }).waitFor();
 console.log("passwordless account created ok");
 await c1.close();
 
@@ -68,7 +68,7 @@ await p2.goto(BASE + "/");
 await p2.locator(".obloginlink", { hasText: "Already have an account" }).click();
 await p2.getByPlaceholder("you@example.com").fill("nopw@example.com");
 await p2.getByPlaceholder("Password").fill("guessing-123");
-await p2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+await p2.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
 await p2.locator(".sheet .errorcopy", { hasText: /doesn't have a password yet/ }).waitFor();
 await p2.screenshot({ path: OUT + "/shot-nopw-error.png" });
 console.log("passwordless login explains itself ok");
@@ -96,9 +96,9 @@ await p3.goto(BASE + "/");
 await p3.locator(".obloginlink", { hasText: "Already have an account" }).click();
 await p3.getByPlaceholder("you@example.com").fill("nopw@example.com");
 await p3.getByPlaceholder("Password").fill("brand-new-pass-9");
-await p3.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+await p3.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
 await p3.getByRole("button", { name: "Not now" }).click().catch(() => {});
-await p3.waitForURL("**/feed");
+await p3.waitForURL("**/app");
 console.log("recovered password works in a fresh browser ok");
 await c3.close();
 
@@ -112,7 +112,7 @@ await c3.close();
   await ad2.locator(".obloginlink", { hasText: "Already have an account" }).click();
   await ad2.getByPlaceholder("you@example.com").fill("mattlegrice@gmail.com");
   await ad2.getByPlaceholder("Password").fill("admin-pass-123");
-  await ad2.locator(".sheet").getByRole("button", { name: "Log in", exact: true }).click();
+  await ad2.locator(".sheet").getByRole("button", { name: "Sign in", exact: true }).click();
   await ad2.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await ad2.goto(BASE + "/admin");
   await ad2.getByRole("button", { name: "Invites", exact: true }).click();
@@ -137,11 +137,14 @@ await c3.close();
   await fp.getByRole("button", { name: "Claim it" }).click();
   await fp.getByRole("heading", { name: "Add a photo." }).waitFor();
   await skipSetup(fp);
-  await fp.waitForURL("**/feed");
-  await fp.getByText("Nobody yet").waitFor();
-  // and it stuck: going back to / sends them to their week, not to a claim step
+  await fp.waitForURL("**/week");
+  // Their own empty calendar. It was the Following feed's "You're not
+// following anyone" until that screen went: this one is theirs to fill, and
+// it offers both ways to do it.
+await fp.locator(".empty-block", { hasText: "Your week is wide open" }).waitFor();
+  // and it stuck: going back to / sends them to their feed, not a claim step
   await fp.goto(BASE + "/");
-  await fp.waitForURL("**/feed");
+  await fp.waitForURL("**/week");
   if (await fp.getByText("Pick your link.").count())
     fail("a follower should never be asked to claim a URL");
   console.log("follower path ok (asked, not assumed, and it sticks)");

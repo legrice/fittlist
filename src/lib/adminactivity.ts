@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 
@@ -107,4 +107,29 @@ export async function isAdminUser(userId: string): Promise<boolean> {
     .from(schema.users)
     .where(inArray(schema.users.id, [userId]));
   return !!rows[0] && adminEmails().includes(rows[0].email.toLowerCase());
+}
+
+/** Anything new since the admin last opened the activity list? The cheap
+ *  question the header's dot asks on every render: one existence check per
+ *  table the list is built from, with the list's own filters, rather than
+ *  loading the whole feed to count it. */
+export async function adminActivityFreshSince(seenAt: Date | null): Promise<boolean> {
+  const db = await getDb();
+  const since = seenAt ?? new Date(0);
+  const [u, c, st, ev] = await Promise.all([
+    db
+      .select({ id: schema.users.id, email: schema.users.email })
+      .from(schema.users)
+      .where(gt(schema.users.createdAt, since)),
+    db
+      .select({ id: schema.classes.id })
+      .from(schema.classes)
+      .where(and(gt(schema.classes.createdAt, since), eq(schema.classes.isPublic, true)))
+      .limit(1),
+    db.select({ id: schema.studios.id }).from(schema.studios).where(gt(schema.studios.createdAt, since)).limit(1),
+    db.select({ id: schema.events.id }).from(schema.events).where(gt(schema.events.createdAt, since)).limit(1),
+  ]);
+  const adminList = adminEmails();
+  const freshUser = u.some((x) => !adminList.includes(x.email.toLowerCase()));
+  return freshUser || c.length > 0 || st.length > 0 || ev.length > 0;
 }

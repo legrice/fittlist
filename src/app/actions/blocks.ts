@@ -13,7 +13,7 @@ import { getSessionUserId } from "@/lib/session";
 
 export async function blockPerson(blockedId: string): Promise<{ ok: boolean; error?: string }> {
   const userId = await getSessionUserId();
-  if (!userId) return { ok: false, error: "Log in first." };
+  if (!userId) return { ok: false, error: "Sign in first." };
   if (blockedId === userId) return { ok: false, error: "You can't block yourself." };
   const db = await getDb();
   const [them] = await db

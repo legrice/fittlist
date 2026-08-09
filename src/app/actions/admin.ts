@@ -1,9 +1,14 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import type { BookingLink } from "@/db/schema";
+import { storeImage } from "@/lib/storage";
+import { purgeUser } from "@/lib/purge";
+import { PLACEHOLDER_KIND } from "@/lib/roster";
 import { adminEmails, currentAdmin } from "@/lib/admin";
+import { detectProvider } from "@/lib/format";
 import { addNotification } from "@/lib/notify";
 import { sendInviteLink } from "@/lib/invite-link";
 import { normalizeLocation } from "@/lib/location";
@@ -23,6 +28,198 @@ export async function adminMarkActivitySeen(): Promise<{ ok: boolean }> {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** ADMIN — everything the coach's own editor needs to open on somebody
+ *  else's class: the full prefill (the series' days included) and the
+ *  adder's ingredients. The half-editor this replaces edited four fields
+ *  in place; the full form goes through `updateClass`, which carries the
+ *  same acting-as-owner bypass `deleteClass` does, so the save is the
+ *  coach's own save under the coach's own name. Null for a gym's class:
+ *  its rows are rota slots and are managed there. */
+export async function adminClassEditor(classId: string): Promise<{
+  prefill: {
+    name: string;
+    classType: string | null;
+    description: string | null;
+    image: string | null;
+    startTime: string;
+    durationMin: number;
+    studioId: string | null;
+    location: string | null;
+    isPublic: boolean;
+    links: BookingLink[];
+    days: number[];
+    dayOfWeek: number;
+    endsOn: string | null;
+    specificDate: string | null;
+    /** Filled by the caller with the date the sheet was opened on, so the
+     *  delete confirm can offer "just this one". */
+    occurrenceDate: string | null;
+    classId: string;
+  };
+  studios: { id: string; seq: number; slug: string | null; name: string; address: string }[];
+  customTypes: string[];
+} | null> {
+  const admin = await currentAdmin();
+  if (!admin) return null;
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return null;
+  const [owner] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, c.userId));
+  if (!owner || owner.kind === "gym") return null;
+  // A weekly class is one row per weekday sharing a series; the editor's
+  // day pills need the whole set or a save would drop the days not shown.
+  const siblings = c.specificDate
+    ? [c]
+    : await db
+        .select({ dayOfWeek: schema.classes.dayOfWeek })
+        .from(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, c.userId),
+            eq(schema.classes.seriesId, c.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+  const [studioRows, typeRows] = await Promise.all([
+    db.select().from(schema.studios).orderBy(schema.studios.seq),
+    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+  ]);
+  return {
+    prefill: {
+      name: c.name,
+      classType: c.classType,
+      description: c.description,
+      image: c.image,
+      startTime: c.startTime,
+      durationMin: c.durationMin,
+      studioId: c.studioId,
+      location: c.location,
+      isPublic: c.isPublic,
+      links: c.links ?? [],
+      days: [...new Set(siblings.map((s) => s.dayOfWeek))],
+      dayOfWeek: c.dayOfWeek,
+      endsOn: c.endsOn,
+      specificDate: c.specificDate,
+      occurrenceDate: null,
+      classId: c.id,
+    },
+    studios: studioRows.map((s) => ({
+      id: s.id,
+      seq: s.seq,
+      slug: s.slug,
+      name: s.name,
+      address: s.address,
+    })),
+    customTypes: typeRows.map((r) => r.name),
+  };
+}
+
+// Put a picture on any class, from the class sheet. A beta-era power, held by
+// the admin alone: most classes were typed in before pictures existed, and a
+// coach who never opens the editor is not going to add one. It changes a
+// picture and nothing else: no words, no times, nothing a coach would need to
+// be asked about first.
+//
+// The picture lands on every class with this title under the same owner, not
+// just this series: a coach teaching Stretch+ at two studios has two series
+// that are the same class, and a photo on one of them left its twin bare. It
+// also lands on the owner's template (the autofill memory, so re-adding the
+// class brings it back) and on each touched studio's catalog row, so the next
+// person to pull the class in gets it too. It stops at the owner: two coaches
+// can both teach a "Yoga Flow" that are different classes, and one must not
+// inherit the other's photograph.
+export async function adminSetClassImage(
+  classId: string,
+  image: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not allowed." };
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return { ok: false, error: "That class isn't there any more." };
+  const img = await storeImage(image?.trim() || null, "class");
+  const sameTitle = and(
+    eq(schema.classes.userId, c.userId),
+    sql`lower(${schema.classes.name}) = ${c.name.toLowerCase()}`,
+  );
+  const touched = await db
+    .update(schema.classes)
+    .set({ image: img })
+    .where(sameTitle)
+    .returning({ studioId: schema.classes.studioId });
+  await db
+    .update(schema.classTemplates)
+    .set({ image: img })
+    .where(
+      and(
+        eq(schema.classTemplates.userId, c.userId),
+        sql`lower(${schema.classTemplates.name}) = ${c.name.toLowerCase()}`,
+      ),
+    );
+  // Removal clears the catalog too: leaving the old picture there means it
+  // comes straight back on the next pull, which makes Remove a lie.
+  const studioIds = [...new Set(touched.map((t) => t.studioId))].filter(
+    (id): id is string => !!id,
+  );
+  if (studioIds.length) {
+    await db
+      .update(schema.studioClasses)
+      .set({ image: img, updatedAt: new Date() })
+      .where(
+        and(
+          inArray(schema.studioClasses.studioId, studioIds),
+          eq(schema.studioClasses.nameKey, c.name.toLowerCase()),
+        ),
+      );
+  }
+  return { ok: true };
+}
+
+// The same beta-era catalog power as the picture, for the booking door: the
+// admin can hand a class a link only where it has none, because a link the
+// coach set is their word and stays theirs. Same spread as the photo: every
+// same-title class under the owner, and the owner's template, so re-adding
+// the class keeps the door. Fill-the-blanks is the whole contract: a row
+// that already has links is never touched.
+export async function adminSetClassLink(
+  classId: string,
+  rawUrl: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not allowed." };
+  const url = rawUrl.trim();
+  if (!/^https?:\/\/[^\s]+\.[^\s]+/.test(url))
+    return { ok: false, error: "That doesn't look like a link." };
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return { ok: false, error: "That class isn't there any more." };
+  const links = [{ label: detectProvider(url), url }];
+  await db
+    .update(schema.classes)
+    .set({ links })
+    .where(
+      and(
+        eq(schema.classes.userId, c.userId),
+        sql`lower(${schema.classes.name}) = ${c.name.toLowerCase()}`,
+        sql`jsonb_array_length(${schema.classes.links}) = 0`,
+      ),
+    );
+  await db
+    .update(schema.classTemplates)
+    .set({ links })
+    .where(
+      and(
+        eq(schema.classTemplates.userId, c.userId),
+        sql`lower(${schema.classTemplates.name}) = ${c.name.toLowerCase()}`,
+        sql`jsonb_array_length(${schema.classTemplates.links}) = 0`,
+      ),
+    );
+  return { ok: true };
+}
 
 // Rewrite every stored location into the canonical "City, ST".
 //
@@ -192,22 +389,52 @@ export async function adminSendMagicLink(
   return { ok: true, url, emailed: true };
 }
 
-// Hand a studio's page to the people who run it. The first one claims it: from
-// then on the directory's open-to-any-coach rule stops applying and only these
-// people (and an admin) may edit. Adding a second is how an owner and a manager
-// both get the keys without either being able to lock the other out.
-export async function adminAddStudioManager(
-  studioId: string,
-  emailRaw: string,
-): Promise<{ ok: boolean; error?: string }> {
+/** ADMIN — the accounts a query matches, for handing keys by account
+ *  rather than by remembered email: name, handle or email, any of them,
+ *  because whichever one you know is the one you should get to type. The
+ *  gym accounts stay out; a place cannot run a place. */
+export async function adminSearchAccounts(qRaw: string): Promise<
+  { id: string; name: string; handle: string | null; email: string; photo: string | null }[]
+> {
   const admin = await currentAdmin();
-  if (!admin) return { ok: false, error: "Not authorized." };
-  const email = emailRaw.trim().toLowerCase();
-  if (!email) return { ok: false, error: "Enter their email." };
+  if (!admin) return [];
+  const q = qRaw.trim().toLowerCase();
+  if (q.length < 2) return [];
   const db = await getDb();
+  const rows = await db
+    .select({
+      id: schema.users.id,
+      name: schema.users.name,
+      handle: schema.users.handle,
+      email: schema.users.email,
+      photo: schema.users.photoThumb,
+      photoFull: schema.users.photo,
+      kind: schema.users.kind,
+    })
+    .from(schema.users)
+    .where(
+      sql`${schema.users.kind} != 'gym' and (lower(${schema.users.name}) like ${"%" + q + "%"} or lower(coalesce(${schema.users.handle}, '')) like ${"%" + q + "%"} or lower(${schema.users.email}) like ${"%" + q + "%"})`,
+    )
+    .limit(6);
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name.trim() || r.email.split("@")[0],
+    handle: r.handle,
+    email: r.email,
+    photo: r.photo ?? r.photoFull,
+  }));
+}
 
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
-  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+// The keys themselves, shared by both doors below.
+async function handKeys(
+  studioId: string,
+  userId: string,
+  adminId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) return { ok: false, error: "No such account." };
+  if (user.kind === "gym") return { ok: false, error: "A place cannot run a place." };
   const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, studioId));
   if (!studio) return { ok: false, error: "Studio not found." };
 
@@ -224,7 +451,7 @@ export async function adminAddStudioManager(
 
   await db
     .insert(schema.studioManagers)
-    .values({ studioId, userId: user.id, addedByUserId: admin.id });
+    .values({ studioId, userId: user.id, addedByUserId: adminId });
   // Being handed the keys is not something to discover by accident.
   await addNotification(user.id, {
     type: "studio_manager",
@@ -235,6 +462,34 @@ export async function adminAddStudioManager(
   revalidatePath(`/s/${studio.slug ?? studio.id}`);
   revalidatePath("/admin");
   return { ok: true };
+}
+
+/** ADMIN — hand the keys to an account picked from the search above. */
+export async function adminAddStudioManagerById(
+  studioId: string,
+  userId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  return handKeys(studioId, userId, admin.id);
+}
+
+// Hand a studio's page to the people who run it. The first one claims it: from
+// then on the directory's open-to-any-coach rule stops applying and only these
+// people (and an admin) may edit. Adding a second is how an owner and a manager
+// both get the keys without either being able to lock the other out.
+export async function adminAddStudioManager(
+  studioId: string,
+  emailRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await currentAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return { ok: false, error: "Enter their email." };
+  const db = await getDb();
+  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+  if (!user) return { ok: false, error: "Nobody with that email has an account yet." };
+  return handKeys(studioId, user.id, admin.id);
 }
 
 // Give a claimed studio its own account, which is what lets it run a schedule.
@@ -257,7 +512,7 @@ export async function adminEnableStudioSchedule(
     .from(schema.studioManagers)
     .where(eq(schema.studioManagers.studioId, studioId));
   if (!managers.length)
-    return { ok: false, error: "Hand the page to somebody first: a rota needs someone to run it." };
+    return { ok: false, error: "Hand the page to somebody first: a schedule needs someone to run it." };
 
   // An address nobody can receive mail at or sign up with, so the account can
   // never be logged into and never collides with a real person's email.
@@ -321,7 +576,10 @@ export async function adminDeleteStudio(
   }
 
   // studio_classes are just catalog groundwork — safe to clear before removing.
-  // The edit history and the keys go with the studio they describe.
+  // The edit history, the keys and the shift list go with the studio they
+  // describe.
+  await db.delete(schema.studioRotaCoaches).where(eq(schema.studioRotaCoaches.studioId, id));
+  await db.delete(schema.shiftRequests).where(eq(schema.shiftRequests.studioId, id));
   await db.delete(schema.studioManagers).where(eq(schema.studioManagers.studioId, id));
   await db.delete(schema.studioEdits).where(eq(schema.studioEdits.studioId, id));
   await db.delete(schema.studioClasses).where(eq(schema.studioClasses.studioId, id));
@@ -358,102 +616,14 @@ export async function adminDeleteUser(id: string): Promise<{ ok: boolean; error?
   if (u.kind === "gym") {
     return { ok: false, error: "That's a studio's account. Remove the studio instead." };
   }
-
-  // Rows the account owns — delete outright, children before parents.
-  //
-  // Order matters: attendances point at both the account and its classes, and
-  // inquiry messages point at its threads, so those go first or the foreign
-  // keys refuse the delete. Every table with a users FK has to appear here —
-  // miss one and the whole delete fails with a constraint error.
-  const ownClasses = await db
-    .select({ id: schema.classes.id })
-    .from(schema.classes)
-    .where(eq(schema.classes.userId, id));
-  const ownClassIds = ownClasses.map((c) => c.id);
-  // Blocks in both directions: they blocked someone, someone blocked them.
-  await db.delete(schema.blocks).where(eq(schema.blocks.blockerUserId, id));
-  await db.delete(schema.blocks).where(eq(schema.blocks.blockedUserId, id));
-  // Class reports in both directions too: ones they filed, ones about their classes.
-  await db.delete(schema.classReports).where(eq(schema.classReports.reporterUserId, id));
-  await db.delete(schema.classReports).where(eq(schema.classReports.coachUserId, id));
-  await db.delete(schema.studioReports).where(eq(schema.studioReports.reporterUserId, id));
-  await db.delete(schema.followRequests).where(eq(schema.followRequests.trainerUserId, id));
-  await db.delete(schema.followRequests).where(eq(schema.followRequests.requesterUserId, id));
-  // Their own private week entries, and any ask to coach.
-  await db.delete(schema.personalClasses).where(eq(schema.personalClasses.userId, id));
-  await db.delete(schema.coachRequests).where(eq(schema.coachRequests.userId, id));
-  // "Going" marks: theirs, and anyone else's on the classes they taught.
-  await db.delete(schema.attendances).where(eq(schema.attendances.userId, id));
-  if (ownClassIds.length) {
-    await db.delete(schema.attendances).where(inArray(schema.attendances.classId, ownClassIds));
+  // A roster placeholder is a position a studio is holding open, not a
+  // person. Taking it off the roster is what removes it, and that has to go
+  // through the rota so the shifts it holds are reopened rather than orphaned.
+  if (u.kind === PLACEHOLDER_KIND) {
+    return { ok: false, error: "That's a roster placeholder. Remove it from the studio's roster." };
   }
-  const ownThreads = await db
-    .select({ id: schema.inquiryThreads.id })
-    .from(schema.inquiryThreads)
-    .where(eq(schema.inquiryThreads.coachUserId, id));
-  const ownThreadIds = ownThreads.map((t) => t.id);
-  if (ownThreadIds.length) {
-    await db
-      .delete(schema.inquiryMessages)
-      .where(inArray(schema.inquiryMessages.threadId, ownThreadIds));
-  }
-  await db.delete(schema.inquiryThreads).where(eq(schema.inquiryThreads.coachUserId, id));
-  await db.delete(schema.notifications).where(eq(schema.notifications.userId, id));
-  // Notifications ABOUT them, on someone else's feed. De-attributed rather than
-  // deleted: "someone followed your schedule" is still true, it just loses the
-  // face and falls back to the icon.
-  await db
-    .update(schema.notifications)
-    .set({ actorUserId: null })
-    .where(eq(schema.notifications.actorUserId, id));
-  await db.delete(schema.classes).where(eq(schema.classes.userId, id));
-  await db.delete(schema.classTemplates).where(eq(schema.classTemplates.userId, id));
-  // Their followers, and the coaches they themselves followed.
-  await db.delete(schema.subscribers).where(eq(schema.subscribers.trainerUserId, id));
-  await db.delete(schema.subscribers).where(eq(schema.subscribers.userId, id));
-  await db.delete(schema.pageVisits).where(eq(schema.pageVisits.trainerUserId, id));
-  await db.delete(schema.googleConnections).where(eq(schema.googleConnections.userId, id));
-  await db.delete(schema.credentials).where(eq(schema.credentials.userId, id));
-  await db.delete(schema.coachStudios).where(eq(schema.coachStudios.userId, id));
-  await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.userId, id));
-  await db.delete(schema.eventAttendances).where(eq(schema.eventAttendances.userId, id));
-  await db.delete(schema.magicLinks).where(eq(schema.magicLinks.email, u.email));
 
-  // Shared records they created — keep, just drop the attribution FK.
-  // Their shifts come off the rota rather than going with them: the gym owns
-  // those classes, and a coach leaving turns their slots back into open ones
-  // for somebody else to pick up.
-  await db
-    .update(schema.classes)
-    .set({ coachUserId: null })
-    .where(eq(schema.classes.coachUserId, id));
-  await db
-    .update(schema.shiftCovers)
-    .set({ coachUserId: null })
-    .where(eq(schema.shiftCovers.coachUserId, id));
-  await db
-    .update(schema.shiftCovers)
-    .set({ createdByUserId: null })
-    .where(eq(schema.shiftCovers.createdByUserId, id));
-  // Their keys go with them; a page they ran alone returns to the commons
-  // rather than being left locked with nobody holding it.
-  await db.delete(schema.studioManagers).where(eq(schema.studioManagers.userId, id));
-  await db
-    .update(schema.studioManagers)
-    .set({ addedByUserId: null })
-    .where(eq(schema.studioManagers.addedByUserId, id));
-  await db.update(schema.studios).set({ createdByUserId: null }).where(eq(schema.studios.createdByUserId, id));
-  // Their studio edits stay: the edit is a fact about the studio, it just
-  // loses its author.
-  await db.update(schema.studioEdits).set({ editorUserId: null }).where(eq(schema.studioEdits.editorUserId, id));
-  // Events they posted stay too: the expo is still happening.
-  await db.update(schema.events).set({ createdByUserId: null }).where(eq(schema.events.createdByUserId, id));
-  await db.update(schema.studioClasses).set({ createdByUserId: null }).where(eq(schema.studioClasses.createdByUserId, id));
-  await db.update(schema.customClassTypes).set({ createdByUserId: null }).where(eq(schema.customClassTypes.createdByUserId, id));
-  await db.update(schema.invites).set({ invitedByUserId: null }).where(eq(schema.invites.invitedByUserId, id));
-  await db.update(schema.invites).set({ acceptedUserId: null, acceptedAt: null }).where(eq(schema.invites.acceptedUserId, id));
-
-  await db.delete(schema.users).where(eq(schema.users.id, id));
+  await purgeUser(db, id);
   revalidatePath("/admin");
   return { ok: true };
 }

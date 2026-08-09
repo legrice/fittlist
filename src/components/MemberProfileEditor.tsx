@@ -7,6 +7,7 @@ import { claimProfile } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { Icon } from "@/components/Icon";
 import { LocationInput } from "@/components/LocationInput";
+import { shrinkDataUrl } from "@/lib/photo";
 import { slug } from "@/lib/format";
 import { Toast, useToast } from "@/components/Toast";
 
@@ -42,6 +43,7 @@ export function MemberProfileEditor({
   const [pAbout, setPAbout] = useState(about);
   const [pLocation, setPLocation] = useState(location);
   const [pPhoto, setPPhoto] = useState<string | null>(photo);
+  const [pThumb, setPThumb] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
   const [toastMsg, toastOn, toast] = useToast();
@@ -49,11 +51,13 @@ export function MemberProfileEditor({
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
-    if (openOnMount) window.history.replaceState(null, "", "/you");
+    if (openOnMount) window.history.replaceState(null, "", "/settings");
   }, [openOnMount]);
 
-  // Same client-side resize the coach editor uses: a data URL small enough to
-  // live in a row without a blob store behind it.
+  // Not `readPhoto`: this one centre-crops to a square, because a member's
+  // picture is only ever shown in a circle and letting a tall photo through
+  // means a head cropped by CSS instead of by us. The shared helper fits to
+  // the long edge, which is right for everything that fills a width.
   const pickPhoto = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -69,7 +73,10 @@ export function MemberProfileEditor({
         const w = img.width * scale;
         const h = img.height * scale;
         ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-        setPPhoto(canvas.toDataURL("image/jpeg", 0.82));
+        const full = canvas.toDataURL("image/jpeg", 0.82);
+        setPPhoto(full);
+        // The list-size copy shrinks from the same crop.
+        shrinkDataUrl(full, setPThumb);
       };
       img.src = String(reader.result);
     };
@@ -100,6 +107,7 @@ export function MemberProfileEditor({
         about: pAbout,
         location: pLocation,
         photo: pPhoto,
+        photoThumb: pThumb ?? undefined,
         // Contact fields are a coach's, and this sheet doesn't offer them.
         // Empty is the honest value rather than a field left half-set.
         instagram: "",
@@ -118,7 +126,7 @@ export function MemberProfileEditor({
     <>
       <button className="setrow" onClick={() => setOpen(true)}>
         <span className="setrow-ic">
-          <Icon name="account_circle" size={22} />
+          <Icon name="account_circle" size={24} />
         </span>
         <span className="setrow-txt">
           <span className="t">{handle ? "Edit your profile" : "Set up your profile"}</span>
@@ -127,7 +135,7 @@ export function MemberProfileEditor({
           </span>
         </span>
         <span className="setrow-chev">
-          <Icon name="chevron_right" size={20} />
+          <Icon name="chevron_right" size={22} />
         </span>
       </button>
 
@@ -141,7 +149,7 @@ export function MemberProfileEditor({
         >
           <div className="sheet">
             <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={16} />
+              <Icon name="close" size={18} />
             </button>
             <h2>Your profile</h2>
             <p className="lead">

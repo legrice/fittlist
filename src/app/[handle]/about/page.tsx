@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
+import { MemberProfileView } from "@/components/MemberProfileView";
 import { PublicProfileView } from "@/components/PublicProfileView";
 
 export const dynamic = "force-dynamic";
@@ -49,12 +50,23 @@ export default async function AboutPage({ params, searchParams }: Props) {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
-  // A member claims a handle too, and has no coach profile behind it.
-  if (user.kind === "fan") notFound();
 
   const viewerId = await getSessionUserId();
   // Blocked: the page simply isn't there. Same shape as a deleted account, so
   // it says nothing about why.
   if (await isBlocked(user.id, viewerId)) notFound();
+  // A member's page wears the same two-tab shape now, so their /about is the
+  // Info tab rather than a missing page.
+  if (user.kind === "fan") {
+    return (
+      <MemberProfileView
+        user={user}
+        isOwner={viewerId === user.id}
+        viewerId={viewerId}
+        tab="about"
+        from={from}
+      />
+    );
+  }
   return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="about" from={from} />;
 }
