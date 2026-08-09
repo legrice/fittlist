@@ -6002,6 +6002,13 @@ button.ps-card { cursor: pointer; }
 .calpills .catpill { background: var(--paper); border: 1px solid var(--line); }
 .calpills .catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
+/* The Add screen's browse foot: the two ways out when the class you mean
+   is not on the list. */
+.addbrowse-foot { padding: 14px 2px 8px; }
+.addbrowse-foot .btn { width: 100%; margin-top: 10px; }
+.addbrowse-ev { display: block; margin: 12px auto 0; font-size: 13.5px; }
+.addseg { margin: 0 0 14px; }
+
 /* The by-row: the coach and, on Discover, the star that favorites them
    without leaving the class. A class is how you discover a coach. */
 .clspeek-byrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

@@ -112,3 +112,71 @@ export async function discoverPeople(): Promise<DiscoverData> {
 
   return { people, cities, myCity: me.location?.trim() || null };
 }
+
+export type BrowseDay = {
+  iso: string;
+  label: string;
+  items: {
+    classId: string;
+    base: string;
+    iso: string;
+    name: string;
+    hm: string;
+    ap: string;
+    durationMin: number;
+    where: string | null;
+    coachName: string;
+    /** Yours to teach, so there is nothing to save. */
+    own: boolean;
+    saved: boolean;
+  }[];
+};
+
+/**
+ * The Add screen's browse list: the same feed Discover draws, the next
+ * seven days of it, with the viewer's saved state on every row so the
+ * ribbons start right. One builder behind both (buildDiscoverFeed), so
+ * Add can never offer a class Discover would not.
+ */
+export async function addBrowse(): Promise<BrowseDay[] | null> {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  const db = await getDb();
+  const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!me) return null;
+  const { buildDiscoverFeed } = await import("@/lib/discoverfeed");
+  const { fmtDayHeaderRel } = await import("@/lib/format");
+  const feed = await buildDiscoverFeed(userId, me);
+  const last = new Date(Date.parse(`${feed.today}T00:00:00Z`) + 6 * 864e5)
+    .toISOString()
+    .slice(0, 10);
+  const marks = await db
+    .select({ classId: schema.attendances.classId, iso: schema.attendances.occurrenceDate })
+    .from(schema.attendances)
+    .where(eq(schema.attendances.userId, userId));
+  const saved = new Set(marks.map((m) => `${m.classId}|${m.iso}`));
+  const coachName = new Map(feed.rail.map((c) => [c.id, c.name]));
+  const byIso = new Map<string, BrowseDay["items"]>();
+  for (const i of feed.items) {
+    if (i.iso > last) continue;
+    byIso.set(i.iso, [
+      ...(byIso.get(i.iso) ?? []),
+      {
+        classId: i.classId,
+        base: i.base,
+        iso: i.iso,
+        name: i.name,
+        hm: i.hm,
+        ap: i.ap,
+        durationMin: i.durationMin,
+        where: i.where,
+        coachName: coachName.get(i.coachId) ?? "",
+        own: i.coachId === userId,
+        saved: saved.has(`${i.classId}|${i.iso}`),
+      },
+    ]);
+  }
+  return [...byIso.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([iso, items]) => ({ iso, label: fmtDayHeaderRel(iso, feed.today), items }));
+}

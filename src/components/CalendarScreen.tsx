@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { WeekDay as WeekDayData } from "@/lib/week";
+import { AddBrowse } from "@/components/AddBrowse";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import {
   CalSticky,
@@ -81,6 +82,9 @@ export function CalendarScreen({
   // so it resets on arrival.
   const [pill, setPill] = useState<"all" | "saved" | "coaching">("all");
   const [addOpen, setAddOpen] = useState(openAdder);
+  // The plus opens the segmented Add screen, per the brief: Discover (the
+  // browse list with inline Save) leading, I'm coaching one tap away.
+  const [browseOpen, setBrowseOpen] = useState(false);
   // The overlay header's words: the day under it on the list, the month in
   // view on the grid. The grid's label is set from the first render (this
   // month is in view at rest), so the grid gates the bar on scroll depth
@@ -370,11 +374,28 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setAddOpen(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={() => setBrowseOpen(true)}>
           <Icon name="add" size={28} />
         </button>
       )}
 
+      {browseOpen && (
+        <AddBrowse
+          coachSeg
+          onCoaching={() => {
+            setBrowseOpen(false);
+            setAddOpen(true);
+          }}
+          onAddNew={() => {
+            setBrowseOpen(false);
+            setAddOpen(true);
+          }}
+          onClose={() => {
+            setBrowseOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
       {addOpen && (
         <Adder
           studios={studios}

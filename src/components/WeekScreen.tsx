@@ -8,6 +8,7 @@ import {
   type PersonalDetail,
   type PersonalMatch,
 } from "@/app/actions/personal";
+import { AddBrowse } from "@/components/AddBrowse";
 import { Adder, type AdderPrefill } from "@/components/Adder";
 import { Agenda, ClassRow } from "@/components/Agenda";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
@@ -606,53 +607,19 @@ export function WeekScreen({
       {/* Which kind this one is. A class gets the full form; anything else
           gets the same form with the class-shaped parts put away. */}
       {addMenu && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setAddMenu(false);
+        <AddBrowse
+          onClose={() => setAddMenu(false)}
+          onAddNew={() => {
+            setAddMenu(false);
+            setPersonalEvent(false);
+            setAddOpen(true);
           }}
-        >
-          <div className="sheet">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setAddMenu(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Add to your calendar</h2>
-            <div className="settingslist ownermenu">
-              <button
-                className="setrow"
-                onClick={() => {
-                  setAddMenu(false);
-                  setPersonalEvent(false);
-                  setAddOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="bookmark" size={24} /></span>
-                <span className="setrow-txt">
-                  <span className="t">
-                    A class you&rsquo;re going to <span className="addtag">Shared</span>
-                  </span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-              </button>
-              <button
-                className="setrow"
-                onClick={() => {
-                  setAddMenu(false);
-                  setPersonalEvent(true);
-                  setAddOpen(true);
-                }}
-              >
-                <span className="setrow-ic"><Icon name="calendar_today" size={24} /></span>
-                <span className="setrow-txt">
-                  <span className="t">
-                    Anything else <span className="addtag">Private</span>
-                  </span>
-                </span>
-                <span className="setrow-chev"><Icon name="chevron_right" size={22} /></span>
-              </button>
-            </div>
-          </div>
-        </div>
+          onEvent={() => {
+            setAddMenu(false);
+            setPersonalEvent(true);
+            setAddOpen(true);
+          }}
+        />
       )}
       {addOpen && (
         <Adder
