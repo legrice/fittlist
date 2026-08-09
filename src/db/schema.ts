@@ -607,6 +607,13 @@ export const classes = pgTable(
     image: text("image"),
     // false = private (own schedule only, hidden from the public page).
     isPublic: boolean("is_public").notNull().default(true),
+    // RSVP, per the Discover brief: a save the organizer can see. The
+    // mechanism stays attendances; this flag only changes the words (the
+    // ribbon becomes an RSVP button, the count reads "3 RSVP'd") and makes
+    // the roster's names the point rather than an owner-only aside. No
+    // capacity, no waitlist, no check-in: capacity is the line that turns
+    // RSVP into a booking system, and it was cut on purpose.
+    rsvp: boolean("rsvp").notNull().default(false),
     links: jsonb("links").$type<BookingLink[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

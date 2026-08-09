@@ -73,6 +73,13 @@ export type ClassDetail = {
   /** Who marked Going on this occurrence. Owner only: they marked it at this
    *  coach, so the coach can see them; nobody else gets the list. */
   roster: { name: string; photo: string | null; color: string; handle: string | null }[] | null;
+  /** RSVP, per the Discover brief: a save the organizer can see. The flag
+   *  changes the words (the button, the count) and opens the roster to
+   *  whoever leads it; the mechanism stays attendances. */
+  rsvp: boolean;
+  /** How many said yes to this occurrence. Zero draws nothing: never ship
+   *  an empty count. */
+  rsvpCount: number;
   /** A gym's class, seen by somebody who could be on it. Null on a coach's own
    *  class, and for anyone with no standing at the studio. */
   shift: {
@@ -197,6 +204,16 @@ export async function classDetail(
   // member looking at the same sheet sees the count of nobody: the field is
   // null for everyone but the owner.
   let roster: ClassDetail["roster"] = null;
+  let rsvpCount = 0;
+  if (c.rsvp) {
+    const marks = await db
+      .select({ userId: schema.attendances.userId })
+      .from(schema.attendances)
+      .where(
+        and(eq(schema.attendances.classId, c.id), eq(schema.attendances.occurrenceDate, whenIso)),
+      );
+    rsvpCount = new Set(marks.map((m) => m.userId)).size;
+  }
   if (isOwner) {
     const marks = await db
       .select({ userId: schema.attendances.userId })
@@ -347,6 +364,8 @@ export async function classDetail(
     icsHref: `/api/cal/${key}/${c.id}`,
     myHandle,
     canAdd,
+    rsvp: c.rsvp,
+    rsvpCount,
     added,
     addedPublic,
     past,

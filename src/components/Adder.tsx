@@ -39,6 +39,7 @@ export type AdderPrefill = {
   studioId: string | null;
   location?: string | null;
   isPublic?: boolean;
+  rsvp?: boolean;
   links: BookingLink[];
   withWho?: string | null; // personal only: the name they typed for the coach
   days?: number[]; // preselected (edit); empty for duplicate
@@ -244,6 +245,10 @@ export function Adder({
   // rendered), so this is state without a setter: new classes are public, and
   // an edit keeps whatever the class already was.
   const [isPublic] = useState<boolean>(gym ? true : prefill?.isPublic ?? true);
+  // Ask people to RSVP: a save the organizer can see. Coaching only, and
+  // deliberately nothing more (no capacity, no waitlist): capacity is the
+  // line that turns RSVP into a booking system.
+  const [rsvp, setRsvp] = useState<boolean>(prefill?.rsvp ?? false);
   // The rota, on a gym's class. Null on a coach's own.
   const [coachUserId, setCoachUserId] = useState(gym?.coachUserId ?? "");
   const [location, setLocation] = useState(prefill?.location ?? "");
@@ -496,6 +501,7 @@ export function Adder({
         studioId,
         location,
         isPublic,
+        rsvp,
         links,
       };
       // Yours to go to: the same class, written to your plans and to the
@@ -1164,6 +1170,26 @@ export function Adder({
 
 
             {!stepped && whenCard}
+
+            {/* Ask people to RSVP, per the Discover brief: a save the
+                organizer can see. Coaching mode only, and nothing more on
+                purpose: capacity is the line that turns RSVP into a booking
+                system. */}
+            {!gym && !mineOnly && !isEvent && isPublic && (
+              <div className="adder-card">
+                <button className="setrow" onClick={() => setRsvp((v) => !v)} aria-pressed={rsvp} type="button">
+                  <span className="setrow-txt">
+                    <span className="t">Ask people to RSVP</span>
+                    <span className="s">
+                      Saves on this class show you their names, and it says so before they tap.
+                    </span>
+                  </span>
+                  <span className={`switch${rsvp ? " on" : ""}`} aria-hidden="true">
+                    <span className="switch-knob" />
+                  </span>
+                </button>
+              </div>
+            )}
 
             <div className="adder-card">
             <label className="flabel">

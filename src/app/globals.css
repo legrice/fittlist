@@ -6002,6 +6002,11 @@ button.ps-card { cursor: pointer; }
 .calpills .catpill { background: var(--paper); border: 1px solid var(--line); }
 .calpills .catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
+/* RSVP's two lines on the class sheet: the count once somebody is in,
+   and where the name goes, said before the tap. */
+.rsvpcount { font-weight: 600; font-size: 14.5px; margin: 12px 0 0; }
+.rsvpnote { font-size: 13px; color: var(--ol); margin: 10px 0 0; }
+
 /* The Add screen's browse foot: the two ways out when the class you mean
    is not on the list. */
 .addbrowse-foot { padding: 14px 2px 8px; }

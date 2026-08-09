@@ -664,11 +664,27 @@ export function ClassSheet({
             </button>
           )}
 
-          {/* Owner only: who added this occurrence. */}
+          {/* RSVP: the count reads to everyone once somebody is in, and
+              whoever is going is told where their name goes before they
+              tap. Never an empty count. */}
+          {c.rsvp && c.rsvpCount > 0 && !c.roster && (
+            <p className="rsvpcount">
+              {c.rsvpCount} RSVP&rsquo;d
+            </p>
+          )}
+          {c.rsvp && c.canAdd && (
+            <p className="rsvpnote">
+              Your name goes to {c.coachName.split(/\s+/)[0]} when you RSVP.
+            </p>
+          )}
+
+          {/* Owner only: who added this occurrence. On an RSVP class this
+              is the door list, read off a phone; no check-in, no codes. */}
           {c.roster && (
             <div className="classsheet-roster">
               <h3 className="classsheet-roster-h">
-                Going{c.roster.length > 0 ? ` · ${c.roster.length}` : ""}
+                {c.rsvp ? "RSVP'd" : "Going"}
+                {c.roster.length > 0 ? ` · ${c.roster.length}` : ""}
               </h3>
               <Roster people={c.roster} />
             </div>
@@ -730,16 +746,22 @@ export function ClassSheet({
                     className={`ovcta-btn ovcta-save${added ? " on" : ""}`}
                     disabled={pending}
                     aria-pressed={added}
-                    aria-label={added ? "Saved" : "Save to your week"}
+                    aria-label={
+                      c.rsvp
+                        ? added
+                          ? "You RSVP'd"
+                          : "RSVP"
+                        : added
+                          ? "Saved"
+                          : "Save to your week"
+                    }
                     onClick={toggle}
                   >
                     {/* An empty ribbon, then the same ribbon with the tick
-                        cut into it: the glyph the Plans tab wears. It was a
-                        heart, which said "favourite" and meant "I'm going";
-                        the control should look like the place it puts
-                        things. */}
+                        cut into it. On an RSVP class the word changes with
+                        the deal: a save the organizer can see. */}
                     <Icon name={added ? "bookmark_added" : "bookmark"} size={21} />
-                    {!added && "Save"}
+                    {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Save"}
                   </button>
                 )}
               </>

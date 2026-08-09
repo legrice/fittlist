@@ -33,6 +33,8 @@ export type PublishInput = {
   studioId?: string | null; // required for public; optional for private
   location?: string | null; // free-form place for private items with no studio
   isPublic?: boolean; // default true
+  /** Ask people to RSVP: a save the organizer can see. Coaching only. */
+  rsvp?: boolean;
   links: BookingLink[];
 };
 
@@ -115,6 +117,8 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
 
   const db = await getDb();
   const isPublic = input.isPublic !== false; // default public
+  // RSVP is a public-class idea: a private session has nobody to count.
+  const rsvp = isPublic && input.rsvp === true;
   // Public inventory is coach-only. There was no gate here, and beta members
   // used the gap the only way they could: recreating their gyms' real classes
   // to get their own week into the app. They get personal entries for that
@@ -289,6 +293,7 @@ async function save(userId: string, input: PublishInput, replaceClassId?: string
       studioId,
       location,
       isPublic,
+      rsvp,
       links,
     })),
   ).returning({ id: schema.classes.id, dayOfWeek: schema.classes.dayOfWeek });
