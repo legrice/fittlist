@@ -37,7 +37,10 @@ export default async function CalendarPage({
   if (!me) redirect("/");
   // Only somebody who teaches has a calendar. A member landing here has no
   // week of their own to show, so they go where their week actually is.
-  if (me.kind === "fan") redirect("/feed");
+  // A member's calendar is /week: saved classes and their own entries.
+  // Four tabs for everyone now, per the brief, so this door has to land
+  // on a calendar rather than bouncing back to Discover.
+  if (me.kind === "fan") redirect("/week");
 
   const [classRows, studioRows, templateRows, customTypeRows, subRows] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym

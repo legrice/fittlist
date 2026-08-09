@@ -13,12 +13,7 @@ export type NavItem = {
 };
 
 /**
- * Four tabs at most, and Schedule only for somebody who teaches.
- *
- * | Account   | Tabs                                    |
- * | --------- | --------------------------------------- |
- * | Follows   | Following, Share, Profile               |
- * | Teaches   | Following, Schedule, Share, Profile     |
+ * Four tabs for everyone: Discover, Calendar, Share, Profile.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -48,18 +43,15 @@ export function navTabs(
     // your favorite coaches as a rail on top. The route stays /feed; a URL
     // out in the world is not worth breaking for a label.
     { id: "following", href: "/feed", icon: "explore", label: "Discover" },
-    // Only for somebody who coaches: the calendar. "Calendar" again, per
-    // the brief's vocabulary.
-    ...(coach
-      ? [
-          {
-            id: "schedule" as const,
-            href: scheduleHref ?? "/calendar",
-            icon: "calendar_month",
-            label: "Calendar",
-          },
-        ]
-      : []),
+    // Everyone's calendar, per the brief: only your things, saved and
+    // coached, never anything a favorite derived. A coach's is /calendar
+    // and a member's is /week, and each kind's door lands on its own.
+    {
+      id: "schedule",
+      href: coach ? (scheduleHref ?? "/calendar") : "/week",
+      icon: "calendar_month",
+      label: "Calendar",
+    },
     // Everyone's now, by Matt's call: it came off the member's bar while a
     // member had nothing to give, and the hub is where they build the week
     // they're going to before handing it on, so the tab is the way in. One
@@ -88,10 +80,13 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // stay reachable, and light Following, because that is where they open from.
   if (pathname.startsWith("/discover") || pathname.startsWith("/search")) return "following";
   if (pathname.startsWith("/feed")) return "following";
-  // The Calendar tab is a coach's own classes. /week was a member's calendar
-  // and is now a redirect onto Following, because a member has no calendar of
-  // their own: they read the week of the people they follow.
-  if (pathname.startsWith("/calendar") || pathname.startsWith("/app")) return "schedule";
+  // The Calendar tab: a coach's is /calendar (and /app), a member's /week.
+  if (
+    pathname.startsWith("/calendar") ||
+    pathname.startsWith("/app") ||
+    pathname.startsWith("/week")
+  )
+    return "schedule";
   // /you is the old settings screen and is a redirect onto your profile now;
   // /settings is where those rows moved. Both belong to the Profile tab, and
   // the profile itself passes `active` explicitly, because a handle is not a

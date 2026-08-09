@@ -32,14 +32,14 @@ const tabs = async () =>
 // coach's. The Profile tab wears their face rather than a glyph.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 3) fail("a member gets three tabs, got " + t.join());
-if (!t[0].includes("Discover") || !t[1].includes("Share") || t.some((x) => /Calendar/.test(x)))
-  fail("a member's bar is Discover, Share and Profile: " + t.join());
+if (t.length !== 4) fail("everyone gets four tabs, got " + t.join());
+if (!t[0].includes("Discover") || !t[1].includes("Calendar") || !t[2].includes("Share"))
+  fail("the bar is Discover, Calendar, Share, Profile: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
-await p.waitForURL(/\/feed/);
-console.log("a member has no calendar to land on: /calendar sends them to Following");
+await p.waitForURL(/\/week/);
+console.log("a member's /calendar lands on their own week");
 
 // The Share tab opens the hub for a member too now: the Week alone, and
 // the build flow leading because the week starts empty.
@@ -118,11 +118,13 @@ console.log("the Calendar tab opens a real, empty week");
 // Turn it off again: the tab goes, and nothing else is harmed.
 await p.goto(BASE + "/settings");
 await p.locator(".setrow", { hasText: "I teach too" }).click();
-await p.locator(".navtab", { hasText: "Calendar" }).waitFor({ state: "detached", timeout: 15000 });
+// The Calendar tab stays (everyone has one now); only where it points
+// changes, so wait for the bar to settle rather than for a tab to leave.
+await p.waitForTimeout(2500);
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 3 || t.some((x) => /Calendar/.test(x)))
-  fail("turning it off should take Schedule away and leave Share, got " + t.join());
+if (t.length !== 4 || !t[1].includes("Calendar"))
+  fail("turning it off keeps four tabs, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");
