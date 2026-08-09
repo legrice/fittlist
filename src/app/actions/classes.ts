@@ -427,7 +427,28 @@ export async function publishClasses(input: PublishInput): Promise<SaveResult> {
 export async function updateClass(classId: string, input: PublishInput): Promise<SaveResult> {
   const userId = await getSessionUserId();
   if (!userId) return { ok: false, error: "Session expired." };
-  return save(userId, input, classId);
+  const db = await getDb();
+  const [row] = await db
+    .select({ userId: schema.classes.userId })
+    .from(schema.classes)
+    .where(eq(schema.classes.id, classId));
+  if (!row) return { ok: false, error: "Class not found." };
+  if (row.userId !== userId) {
+    // The admin can edit any coach's class with the coach's own editor, the
+    // same acting-as-owner bypass deleteClass carries: everything in save()
+    // keys on the owner, so the template, the catalog write and the Google
+    // sync all land on whose class it is. A gym's is the one refusal: its
+    // rows are one slot each, carrying swaps and marks, and save()'s
+    // delete-and-reinsert is exactly what the rota exists to avoid.
+    if (!(await currentAdmin())) return { ok: false, error: "Class not found." };
+    const [owner] = await db
+      .select({ kind: schema.users.kind })
+      .from(schema.users)
+      .where(eq(schema.users.id, row.userId));
+    if (owner?.kind === "gym")
+      return { ok: false, error: "A gym's class is managed on its rota." };
+  }
+  return save(row.userId, input, classId);
 }
 
 // A repeating class is one row per weekday sharing a template, so deleting is

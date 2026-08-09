@@ -1,8 +1,9 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
+import type { BookingLink } from "@/db/schema";
 import { storeImage } from "@/lib/storage";
 import { purgeUser } from "@/lib/purge";
 import { PLACEHOLDER_KIND } from "@/lib/roster";
@@ -28,6 +29,95 @@ export async function adminMarkActivitySeen(): Promise<{ ok: boolean }> {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** ADMIN — everything the coach's own editor needs to open on somebody
+ *  else's class: the full prefill (the series' days included) and the
+ *  adder's ingredients. The half-editor this replaces edited four fields
+ *  in place; the full form goes through `updateClass`, which carries the
+ *  same acting-as-owner bypass `deleteClass` does, so the save is the
+ *  coach's own save under the coach's own name. Null for a gym's class:
+ *  its rows are rota slots and are managed there. */
+export async function adminClassEditor(classId: string): Promise<{
+  prefill: {
+    name: string;
+    classType: string | null;
+    description: string | null;
+    image: string | null;
+    startTime: string;
+    durationMin: number;
+    studioId: string | null;
+    location: string | null;
+    isPublic: boolean;
+    links: BookingLink[];
+    days: number[];
+    dayOfWeek: number;
+    endsOn: string | null;
+    specificDate: string | null;
+    /** Filled by the caller with the date the sheet was opened on, so the
+     *  delete confirm can offer "just this one". */
+    occurrenceDate: string | null;
+    classId: string;
+  };
+  studios: { id: string; seq: number; slug: string | null; name: string; address: string }[];
+  customTypes: string[];
+} | null> {
+  const admin = await currentAdmin();
+  if (!admin) return null;
+  const db = await getDb();
+  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
+  if (!c) return null;
+  const [owner] = await db
+    .select({ kind: schema.users.kind })
+    .from(schema.users)
+    .where(eq(schema.users.id, c.userId));
+  if (!owner || owner.kind === "gym") return null;
+  // A weekly class is one row per weekday sharing a series; the editor's
+  // day pills need the whole set or a save would drop the days not shown.
+  const siblings = c.specificDate
+    ? [c]
+    : await db
+        .select({ dayOfWeek: schema.classes.dayOfWeek })
+        .from(schema.classes)
+        .where(
+          and(
+            eq(schema.classes.userId, c.userId),
+            eq(schema.classes.seriesId, c.seriesId),
+            isNull(schema.classes.specificDate),
+          ),
+        );
+  const [studioRows, typeRows] = await Promise.all([
+    db.select().from(schema.studios).orderBy(schema.studios.seq),
+    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
+  ]);
+  return {
+    prefill: {
+      name: c.name,
+      classType: c.classType,
+      description: c.description,
+      image: c.image,
+      startTime: c.startTime,
+      durationMin: c.durationMin,
+      studioId: c.studioId,
+      location: c.location,
+      isPublic: c.isPublic,
+      links: c.links ?? [],
+      days: [...new Set(siblings.map((s) => s.dayOfWeek))],
+      dayOfWeek: c.dayOfWeek,
+      endsOn: c.endsOn,
+      specificDate: c.specificDate,
+      occurrenceDate: null,
+      classId: c.id,
+    },
+    studios: studioRows.map((s) => ({
+      id: s.id,
+      seq: s.seq,
+      slug: s.slug,
+      name: s.name,
+      address: s.address,
+    })),
+    customTypes: typeRows.map((r) => r.name),
+  };
+}
+
 // Put a picture on any class, from the class sheet. A beta-era power, held by
 // the admin alone: most classes were typed in before pictures existed, and a
 // coach who never opens the editor is not going to add one. It changes a
@@ -42,49 +132,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // person to pull the class in gets it too. It stops at the owner: two coaches
 // can both teach a "Yoga Flow" that are different classes, and one must not
 // inherit the other's photograph.
-/** ADMIN — repair a reported listing in place: the words, the time, the
- *  length, the room. Every row of the series moves together (one weekly
- *  class is one row per weekday), and it is an UPDATE, never a delete and
- *  reinsert, so Going marks and shift covers are never at risk. The days
- *  and the studio stay the coach's own: those reshape the series, and a
- *  repair is not a rewrite. */
-export async function adminUpdateClass(
-  classId: string,
-  input: {
-    name: string;
-    description: string;
-    startTime: string;
-    durationMin: number;
-    location: string;
-  },
-): Promise<{ ok: boolean; error?: string }> {
-  const admin = await currentAdmin();
-  if (!admin) return { ok: false, error: "Not allowed." };
-  const name = input.name.trim().replace(/\s+/g, " ").slice(0, 80);
-  if (!name) return { ok: false, error: "The class needs a name." };
-  if (!/^\d{2}:\d{2}$/.test(input.startTime)) return { ok: false, error: "Invalid start time." };
-  const durationMin = Math.round(input.durationMin);
-  if (!(durationMin > 0 && durationMin <= 24 * 60)) return { ok: false, error: "Invalid length." };
-  const db = await getDb();
-  const [c] = await db.select().from(schema.classes).where(eq(schema.classes.id, classId));
-  if (!c) return { ok: false, error: "That class isn't there any more." };
-  await db
-    .update(schema.classes)
-    .set({
-      name,
-      description: input.description.trim().slice(0, 500) || null,
-      startTime: input.startTime,
-      durationMin,
-      // Only meaningful where no studio names the place; a studio class's
-      // location is a room or a floor and free text either way.
-      location: input.location.trim().slice(0, 120) || null,
-    })
-    .where(and(eq(schema.classes.userId, c.userId), eq(schema.classes.seriesId, c.seriesId)));
-  revalidatePath("/admin");
-  revalidatePath("/feed");
-  return { ok: true };
-}
-
 export async function adminSetClassImage(
   classId: string,
   image: string | null,

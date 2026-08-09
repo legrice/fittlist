@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { adminSetClassImage, adminSetClassLink, adminUpdateClass } from "@/app/actions/admin";
+import { adminClassEditor, adminSetClassImage, adminSetClassLink } from "@/app/actions/admin";
 import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { deleteClass } from "@/app/actions/classes";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { claimShift, giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { reportClass } from "@/app/actions/reports";
+import { Adder } from "@/components/Adder";
 import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
@@ -82,35 +83,28 @@ export function ClassSheet({
   // The admin's link door, same shape as the photo one: paste, save, done.
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
-  // The admin's repair kit for a reported class: the listing's words, time
-  // and length edited in place, and the way to take the whole thing down.
-  const [editOpen, setEditOpen] = useState(false);
-  const [ed, setEd] = useState({ name: "", description: "", startTime: "", durationMin: 50, location: "" });
+  // The admin's repair kit for a reported class: the coach's own full
+  // editor, opened as the owner, by Matt's call. The half-editor it
+  // replaces changed four fields in place; this one is the whole form,
+  // delete scopes included (this date off, this weekday, the whole set),
+  // which is exactly the Susan case: out of town is one date, gone is all
+  // of them.
+  const [adminAdder, setAdminAdder] = useState<Awaited<
+    ReturnType<typeof adminClassEditor>
+  > | null>(null);
   const [confirmKill, setConfirmKill] = useState(false);
   const openAdminEdit = () => {
-    if (!c) return;
-    setEd({
-      name: c.name,
-      description: c.description ?? "",
-      startTime: c.startRaw,
-      durationMin: c.durationMin,
-      location: c.location ?? "",
-    });
-    setEditOpen(true);
-  };
-  const saveAdminEdit = () => {
     if (!c || pending) return;
     start(async () => {
-      const res = await adminUpdateClass(c.id, ed);
-      if (!res.ok) {
-        toast(res.error ?? "Couldn't save that");
+      const ed = await adminClassEditor(c.id);
+      if (!ed) {
+        toast("That class can't be edited here");
         return;
       }
-      setEditOpen(false);
-      toast("Saved");
-      const fresh = await classDetail(lookupKey, classId, c.whenIso);
-      if (fresh) setC(fresh);
-      onChanged?.(added);
+      // The date this sheet was opened on, so the delete confirm can offer
+      // "just this one".
+      if (!ed.prefill.specificDate) ed.prefill.occurrenceDate = c.whenIso;
+      setAdminAdder(ed);
     });
   };
   const adminKill = () => {
@@ -977,71 +971,41 @@ export function ClassSheet({
           onToast={(m) => toast(m)}
         />
       )}
-      {editOpen && c && (
-        <div
-          className="sheet-scrim"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setEditOpen(false);
+      {adminAdder && c && (
+        <Adder
+          studios={adminAdder.studios}
+          templates={[]}
+          customTypes={adminAdder.customTypes}
+          lastUsed={{
+            startTime: adminAdder.prefill.startTime,
+            durationMin: adminAdder.prefill.durationMin,
+            studioId: adminAdder.prefill.studioId,
           }}
-        >
-          <div className="sheet shpick">
-            <button className="iconbtn sheetclose" aria-label="Close" onClick={() => setEditOpen(false)}>
-              <Icon name="close" size={18} />
-            </button>
-            <h2>Edit class</h2>
-            <p className="lead">
-              A repair, in place: the days and the studio stay the coach&rsquo;s own.
-            </p>
-            <label className="flabel" htmlFor="aeName">Name</label>
-            <input
-              id="aeName"
-              className="editinput"
-              value={ed.name}
-              maxLength={80}
-              onChange={(e) => setEd({ ...ed, name: e.target.value })}
-            />
-            <label className="flabel" htmlFor="aeTime">Starts</label>
-            <input
-              id="aeTime"
-              className="editinput"
-              type="time"
-              value={ed.startTime}
-              onChange={(e) => setEd({ ...ed, startTime: e.target.value })}
-            />
-            <label className="flabel" htmlFor="aeDur">Length <span>· minutes</span></label>
-            <input
-              id="aeDur"
-              className="editinput"
-              type="number"
-              min={10}
-              max={360}
-              value={ed.durationMin}
-              onChange={(e) => setEd({ ...ed, durationMin: Number(e.target.value) })}
-            />
-            <label className="flabel" htmlFor="aeLoc">Room or place <span>· optional</span></label>
-            <input
-              id="aeLoc"
-              className="editinput"
-              value={ed.location}
-              maxLength={120}
-              onChange={(e) => setEd({ ...ed, location: e.target.value })}
-            />
-            <label className="flabel" htmlFor="aeDesc">Description</label>
-            <textarea
-              id="aeDesc"
-              className="abouttext"
-              rows={4}
-              maxLength={500}
-              value={ed.description}
-              onChange={(e) => setEd({ ...ed, description: e.target.value })}
-            />
-            <div className="publishwrap nostick">
-              <button className="btn si" disabled={pending} onClick={saveAdminEdit}>
-                {pending ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
+          subsCount={0}
+          firstPublish={false}
+          prefill={adminAdder.prefill}
+          onClose={() => setAdminAdder(null)}
+          onToast={toast}
+          onPublished={() => {
+            setAdminAdder(null);
+            toast("Saved");
+            start(async () => {
+              // The save deletes and reinserts the series' rows, so this
+              // sheet's class id may be gone; a fresh lookup by the old id
+              // failing just closes onto the page underneath.
+              const fresh = await classDetail(lookupKey, classId, c.whenIso);
+              if (fresh) setC(fresh);
+              else onClose();
+              onChanged?.(added);
+            });
+          }}
+          onDeleted={(msg) => {
+            setAdminAdder(null);
+            toast(msg);
+            onChanged?.(false);
+            onClose();
+          }}
+        />
       )}
       {confirmKill && c && (
         <div

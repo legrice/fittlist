@@ -353,7 +353,10 @@ export async function classDetail(
     roster,
     adminPhoto,
     adminLink,
-    adminEdit: isAdminViewer,
+    // Never on a gym's class: its rows are rota slots (one row per slot,
+    // carrying swaps and marks), and the coach editor's save is a delete
+    // and reinsert. The rota is where a gym's week is managed.
+    adminEdit: isAdminViewer && user.kind !== "gym",
     startRaw: c.startTime,
     shift,
   };
