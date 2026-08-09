@@ -107,6 +107,10 @@ export function ShareHubScreen({
   // (the composer's old doctrine): letting the route fall back to saved
   // prefs would let the chip and the picture disagree.
   const [headline, setHeadline] = useState(savedHeadline);
+  // Off means no headline at all, by Matt's call: the picture is the week
+  // alone. Its own switch rather than an empty field, because an empty
+  // field falls back to the stock words on purpose.
+  const [noHead, setNoHead] = useState(false);
   // The poster's voice, picked by personality: see typefaces.ts.
   const [typeId, setTypeId] = useState<TypeFaceId>("standard");
   // The headline's loudness, in percent. hsize is what the picture reads;
@@ -222,6 +226,7 @@ export function ShareHubScreen({
   const weekImgUrl =
     `/api/story/compose?theme=${themeId}&from=${from}&days=${days}&photo=${photo ? 1 : 0}` +
     `&headline=${encodeURIComponent(headline)}&type=${typeId}&hs=${hsize}&deco=${decoId}` +
+    `&nohead=${noHead ? 1 : 0}` +
     `${hideParam ? `&hide=${encodeURIComponent(hideParam)}` : ""}&v=${bust}-${themeId}`;
   const cardImgUrl = `/api/card/${handle}?theme=${themeId}&v=${bust}-${themeId}`;
   const imgUrl = seg === "week" ? weekImgUrl : cardImgUrl;
@@ -494,7 +499,7 @@ export function ShareHubScreen({
                 <button className="shctrl" onClick={() => setPick("message")}>
                   <span className="shctrl-k">Headline</span>
                   <span className="shctrl-v">
-                    {headline.trim() || (coach ? "Train with me." : "Come with me.")}
+                    {noHead ? "None" : headline.trim() || (coach ? "Train with me." : "Come with me.")}
                   </span>
                 </button>
                 <button className="shctrl" onClick={() => setPick("deco")}>
@@ -687,53 +692,71 @@ export function ShareHubScreen({
             </button>
             <h2>Headline</h2>
             <p className="lead">The words at the top of the picture, how loud, and their voice.</p>
-            <label className="flabel" htmlFor="shMsg">
-              Your words
-            </label>
-            <input
-              id="shMsg"
-              className="editinput"
-              value={headline}
-              maxLength={44}
-              placeholder={coach ? "Train with me." : "Come with me."}
-              onChange={(e) => setHeadline(e.target.value)}
-            />
-            {/* How loud: a slider, by Matt's call, for taking up the room a
-                quiet week leaves. It commits on release rather than per
-                pixel, because every value is a fresh server render. */}
-            <label className="flabel" htmlFor="shSize">
-              Size <span>· {slider}%</span>
-            </label>
-            <input
-              id="shSize"
-              className="shslider"
-              type="range"
-              min={60}
-              max={180}
-              step={5}
-              value={slider}
-              onChange={(e) => setSlider(Number(e.target.value))}
-              onPointerUp={() => setHsize(slider)}
-              onKeyUp={() => setHsize(slider)}
-              onTouchEnd={() => setHsize(slider)}
-            />
-            {/* The voice, as a plain dropdown, by Matt's call: the sheet
-                of sample rows folded in here with the words it dresses. */}
-            <label className="flabel" htmlFor="shFont">
-              Font
-            </label>
-            <select
-              id="shFont"
-              className="typeselect"
-              value={typeId}
-              onChange={(e) => setTypeId(e.target.value as TypeFaceId)}
+            {/* Off means none at all, and the knobs below go with it: a
+                slider for words that aren't there is a control that lies. */}
+            <button
+              className="setrow"
+              aria-pressed={!noHead}
+              onClick={() => setNoHead((v) => !v)}
             >
-              {TYPEFACES.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
+              <span className="setrow-txt">
+                <span className="t">Show a headline</span>
+              </span>
+              <span className={`switch${!noHead ? " on" : ""}`} aria-hidden="true">
+                <span className="switch-knob" />
+              </span>
+            </button>
+            {!noHead && (
+              <>
+                <label className="flabel" htmlFor="shMsg">
+                  Your words
+                </label>
+                <input
+                  id="shMsg"
+                  className="editinput"
+                  value={headline}
+                  maxLength={44}
+                  placeholder={coach ? "Train with me." : "Come with me."}
+                  onChange={(e) => setHeadline(e.target.value)}
+                />
+                {/* How loud: a slider, by Matt's call, for taking up the room a
+                    quiet week leaves. It commits on release rather than per
+                    pixel, because every value is a fresh server render. */}
+                <label className="flabel" htmlFor="shSize">
+                  Size <span>· {slider}%</span>
+                </label>
+                <input
+                  id="shSize"
+                  className="shslider"
+                  type="range"
+                  min={60}
+                  max={180}
+                  step={5}
+                  value={slider}
+                  onChange={(e) => setSlider(Number(e.target.value))}
+                  onPointerUp={() => setHsize(slider)}
+                  onKeyUp={() => setHsize(slider)}
+                  onTouchEnd={() => setHsize(slider)}
+                />
+                {/* The voice, as a plain dropdown, by Matt's call: the sheet
+                    of sample rows folded in here with the words it dresses. */}
+                <label className="flabel" htmlFor="shFont">
+                  Font
+                </label>
+                <select
+                  id="shFont"
+                  className="typeselect"
+                  value={typeId}
+                  onChange={(e) => setTypeId(e.target.value as TypeFaceId)}
+                >
+                  {TYPEFACES.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
             <div className="publishwrap nostick">
               <button className="btn si" onClick={() => setPick(null)}>
                 Done

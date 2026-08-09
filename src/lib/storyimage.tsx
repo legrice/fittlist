@@ -234,6 +234,15 @@ export function renderStory(model: StoryModel) {
             }}
           />
         )}
+        {/* No headline at all is a real choice now (the sheet's switch), and
+            the block goes entirely rather than drawing empty at height: the
+            rows take the room. The face still needs clearing when it is on,
+            since it is absolute and the flow would run under it; the spacer
+            stays under the 246 the route budgets. */}
+        {!line1 && !line2 && photo && (
+          <div style={{ display: "flex", height: px(216) + 22 }} />
+        )}
+        {(line1 || line2) && (
         <div
           style={{
             display: "flex",
@@ -264,6 +273,7 @@ export function renderStory(model: StoryModel) {
               sentence now that the case is the writer's own. */}
           {line2 && <span>{line2}</span>}
         </div>
+        )}
 
         {/* No line under the headline any more: the URL rode here for a
             build and went back to the footer, by Matt's call, under "See

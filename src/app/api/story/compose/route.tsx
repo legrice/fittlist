@@ -48,6 +48,10 @@ export async function GET(req: Request) {
   const byDay = await shareWeek(userId, from, days, hide);
 
   const prefs = me.storyPrefs ?? {};
+  // No headline at all, by Matt's call: a switch in the Headline sheet, so
+  // the picture can be the week alone. Distinct from an empty field, which
+  // falls back, because a blank poster by accident is worse than either.
+  const noHead = qs.get("nohead") === "1";
   // The headline rides the URL so the preview redraws without a round trip;
   // the saved one is the fallback for anything that isn't the composer.
   const typed = qs.get("headline") ?? prefs.headline ?? "";
@@ -70,6 +74,15 @@ export async function GET(req: Request) {
   // extra height would come out of the rows without the sums knowing.
   const hs = Math.max(60, Math.min(180, parseInt(qs.get("hs") ?? "100", 10) || 100)) / 100;
   const hSize = Math.round(size * hs * 1.4);
+  // What the top of the canvas costs. Without a headline the rows take the
+  // room, except the face still needs clearing when it is on: the paint
+  // draws the matching spacer, and 246 stays ahead of the photo's height on
+  // either canvas so the sums never trail the paint.
+  const headH = noHead
+    ? showPhoto
+      ? 246
+      : 0
+    : hSize * 0.98 * (line2 ? 2 : 1) + 78;
 
   const plan = planStory(
     byDay.map(({ day, items }) => ({
@@ -83,15 +96,15 @@ export async function GET(req: Request) {
         who: c.who,
       })),
     })),
-    listBudget(hSize * 0.98 * (line2 ? 2 : 1) + 78, format) / y.rowScale,
+    listBudget(headH, format) / y.rowScale,
   );
 
   return renderStory({
     theme: t,
     style: y,
     format,
-    line1,
-    line2,
+    line1: noHead ? "" : line1,
+    line2: noHead ? "" : line2,
     headlineSize: hSize,
     photo: showPhoto ? me.photo : null,
     plan,
