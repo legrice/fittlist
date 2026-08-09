@@ -4760,12 +4760,15 @@ button.ps-card { cursor: pointer; }
    the state. Follow sits on the step-down cream (an invitation, not a
    demand), and Following inks in, so a list of people you already follow
    reads as settled rather than as a column of asks. */
+/* Outline when it is an offer, ink fill once it is a fact, by Matt's call:
+   the filled beige rest state read as already-done, which is backwards. Same
+   grammar as .btn ghost/si, at pill size. */
 .disfollow {
-  flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: none; cursor: pointer;
-  background: var(--cl-d); color: var(--ink);
+  flex-shrink: 0; padding: 8px 15px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--ink); border: 1px solid var(--ink);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 13px;
 }
-.disfollow.on { background: var(--ink); color: var(--paper); }
+.disfollow.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .disfollow[disabled] { opacity: .55; }
 [data-mode="dark"] .discity.on { background: var(--ink); border-color: var(--ink); color: #191502; }
 
