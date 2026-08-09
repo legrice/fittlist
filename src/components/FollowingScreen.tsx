@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScrollHead, useBandTop, useTopDayLabel } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
@@ -90,6 +91,9 @@ export function FollowingScreen({
   const [focus, setFocus] = useState<string | null>(null);
   const [cat, setCat] = useState<string | null>(null);
   const [peek, setPeek] = useState<PeekClass | null>(null);
+  // A face on the rail opens that coach's fortnight, the peek the v4 tray
+  // carried, back per Matt's call with the star riding its head.
+  const [peekCoach, setPeekCoach] = useState<FeedCoach | null>(null);
   const [find, setFind] = useState(false);
   // The class sheet's copy fallback speaks through this: it was a no-op
   // for a while, so on a browser with no share tray the link was copied
@@ -258,7 +262,7 @@ export function FollowingScreen({
                 key={c.id}
                 className={`trayitem${focus && !on ? " dim" : ""}`}
                 aria-pressed={on}
-                onClick={() => setFocus(on ? null : c.id)}
+                onClick={() => setPeekCoach(c)}
               >
                 <span className={`trayav${on ? " sel" : ""}`}>
                   {c.photo ? (
@@ -386,6 +390,23 @@ export function FollowingScreen({
       </button>
 
       {find && <DiscoverSheet onClose={closeFind} />}
+
+      {peekCoach && (
+        <CoachPeek
+          id={peekCoach.id}
+          name={peekCoach.name}
+          photo={peekCoach.photo}
+          color={peekCoach.color}
+          handle={peekCoach.handle}
+          favorited={favIds.includes(peekCoach.id)}
+          onClose={() => {
+            setPeekCoach(null);
+            // Saves and star flips happened server-side behind the sheet;
+            // closing is where the list catches up.
+            router.refresh();
+          }}
+        />
+      )}
 
       {peek && (
         <ClassPeek

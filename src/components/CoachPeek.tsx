@@ -6,6 +6,7 @@ import { coachPeek, type Peek } from "@/app/actions/peek";
 import { setGoing } from "@/app/actions/going";
 import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
+import { PeekStar } from "@/components/ClassPeek";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { initialOf } from "@/lib/avatar";
 
@@ -27,6 +28,8 @@ export function CoachPeek({
   name,
   photo,
   color,
+  handle,
+  favorited,
   onClose,
 }: {
   id: string;
@@ -35,6 +38,10 @@ export function CoachPeek({
   name: string;
   photo: string | null;
   color: string;
+  /** For the star: favoriting them from their own week, without leaving
+   *  it. Both set is what draws it, so it never opens lying. */
+  handle?: string;
+  favorited?: boolean;
   onClose: () => void;
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
@@ -91,6 +98,9 @@ export function CoachPeek({
               </Link>
             )}
           </div>
+          {handle && favorited !== undefined && (
+            <PeekStar handle={handle} name={name} initial={favorited} />
+          )}
           <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>

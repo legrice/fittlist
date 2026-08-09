@@ -85,7 +85,7 @@ export type PeekClass = {
 /** The star beside the coach's name: favorite them without leaving the
  *  class. The same action the profile pill runs; the peek is just the
  *  moment of intent. */
-function PeekStar({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
+export function PeekStar({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
   const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
   return (
