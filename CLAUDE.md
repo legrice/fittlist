@@ -2187,6 +2187,42 @@ account; no account means no door, and the settings row hides.
 **A `"use server"` file can only export async functions.** A constant in one
 500s every page that imports it.
 
+## The Discover rearrangement (the discover-favorites branch)
+
+The Following-to-Discover brief, built on its own branch and not on main
+until Matt says merge. The change in one paragraph: following is removed;
+you favorite a coach instead, a shortcut to a person rather than a
+subscription that fills a feed. The tab is Discover (route stays /feed):
+classes near you from every listable coach, deduped to one row per class
+(same name, start, place, day, however many accounts list it), category
+pills from the types the list holds, and three-plus classes at one place
+on one day folding into one row that opens the place. The rail on top is
+the favorites alone, soonest class first; tapping a face opens that
+coach's fortnight (CoachPeek) with the favorite star in its head, and the
+class peek carries the same star beside the coach's name, because a class
+is how you discover a coach. `buildDiscoverFeed` in discoverfeed.ts is
+the one builder, shared with the Add screen's browse list.
+
+The vocabulary is two words plus one special case: Saved (you intend to
+go; the ribbon, the toasts), Coaching (you lead it; the calendar pill,
+the attribution), and RSVP (a save the organizer can see: classes.rsvp
+flags it, the mechanism stays attendances, the ribbon becomes an RSVP
+button with "your name goes to whoever runs it" said before the tap, the
+count never ships empty, and the leader reads names, a door list, no
+check-in and no capacity on purpose). Four tabs for everyone: Discover,
+Calendar (a member's is /week, a coach's /calendar, each kind bounced to
+its own), Share, Profile. The coach calendar holds both halves behind
+All/Saved/Coaching pills, every row wearing one attribution slot: the
+coach's chip, Added by you, or You're coaching. Add opens on Discover (a
+browse list with inline Save, the same feed), the coaching form one
+segment away for coaches only. discover-smoke is the branch's suite;
+following-smoke retired with the semantics it tested.
+
+Still open from the brief: the share sheet's Classes shortcuts with
+Coaching/Saved tags (and tagging only coaching rows on the image), and
+the brief's own open items (cancelled saved classes, ending a repeating
+save, push for a favorite's new classes, analytics names).
+
 ## Not yet, and deliberately
 
 Two things are coming that today's shapes should leave room for. Neither is

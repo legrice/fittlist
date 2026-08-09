@@ -37,6 +37,12 @@ const coach = await mk(`dc${stamp}@example.com`, `Drew ${stamp.slice(-3)}`, fals
 const addClass = async (nm, day, t, firstStudio) => {
   await coach.goto(BASE + "/calendar");
   await coach.locator(".wkempty-cta, .wkfab").first().click();
+  // The fab opens the segmented Add screen now; the empty CTA still goes
+  // straight to the form.
+  await coach
+    .locator(".addseg button", { hasText: /coaching/ })
+    .click({ timeout: 4000 })
+    .catch(() => {});
   await coach.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   if (firstStudio) {
     await coach.getByRole("button", { name: "+ New studio" }).click();
