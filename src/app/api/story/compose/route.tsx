@@ -84,6 +84,12 @@ export async function GET(req: Request) {
       : 0
     : hSize * 0.98 * (line2 ? 2 : 1) + 78;
 
+  // "Coaching" on the image, per the brief: tag only the classes you are
+  // coaching and leave the rest bare. Only when the picture actually mixes
+  // the two hats, though: a poster that is all teaching rows (the classic
+  // coach picture) saying Coaching on every line is the tag saying nothing.
+  const flat = byDay.flatMap((d) => d.items);
+  const mixed = flat.some((c) => c.coaching) && flat.some((c) => !c.coaching);
   const plan = planStory(
     byDay.map(({ day, items }) => ({
       day,
@@ -93,7 +99,7 @@ export async function GET(req: Request) {
         // Off keeps a busy week short, which is the whole reason the switch
         // exists; the tiers would have dropped them eventually anyway.
         where: showStudio ? c.where : "",
-        who: c.who,
+        who: mixed && c.coaching ? "Coaching" : c.who,
       })),
     })),
     listBudget(headH, format) / y.rowScale,

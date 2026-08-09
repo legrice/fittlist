@@ -2218,10 +2218,21 @@ browse list with inline Save, the same feed), the coaching form one
 segment away for coaches only. discover-smoke is the branch's suite;
 following-smoke retired with the semantics it tested.
 
-Still open from the brief: the share sheet's Classes shortcuts with
-Coaching/Saved tags (and tagging only coaching rows on the image), and
-the brief's own open items (cancelled saved classes, ending a repeating
-save, push for a favorite's new classes, analytics names).
+The share hub carries both hats now: `shareWeek`'s coach branch loads the
+saved half (marks and personal rows) beside the teaching week, each item
+marked `coaching` or `own`. The Classes sheet tags rows Coaching or Saved
+(coach hub only, and only when both kinds exist at all) and offers the
+brief's shortcuts (All, Coaching only, Saved only) over a range that mixes
+them. Which shortcut is on is derived from the hide set rather than
+stored, which is what makes the brief's rule free: untick a row by hand
+and the shortcut deselects itself. On the image, coaching rows carry
+"Coaching" in the who slot, and only when the picture actually mixes the
+hats: a poster that is all teaching rows stays exactly what it was, and
+saved rows keep the coach's first name, which is a fact rather than a tag.
+
+Still open from the brief: its own open items only (cancelled saved
+classes, ending a repeating save, push for a favorite's new classes,
+analytics names).
 
 ## Not yet, and deliberately
 

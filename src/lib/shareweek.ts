@@ -36,6 +36,10 @@ export type ShareItem = {
   /** One of the member's own entries: the hub offers an edit for these,
    *  and only these, because a mark points at somebody else's class. */
   own?: boolean;
+  /** A class the person leads. The picker tags rows with it, and on the
+   *  image it is the one word a row carries: tag only the classes you are
+   *  coaching, leave the rest bare, per the brief. */
+  coaching?: boolean;
 };
 
 export type ShareDay = { iso: string; day: string; items: ShareItem[] };
@@ -162,9 +166,36 @@ export async function shareWeek(
   } else {
     // The same rows the coach's public page draws, so the picture and the
     // page it points at can't disagree. Shifts ride along exactly when the
-    // coach has said they may.
-    const rows = (await publicSchedule(me)).filter((c) => c.isPublic);
-    const names = await studioNames(rows.map((c) => c.studioId));
+    // coach has said they may. The saved half rides beside them now, per
+    // the brief: a coach's week is both hats, and the picker's shortcuts
+    // are what tell them apart.
+    const [rows, marks, own] = await Promise.all([
+      publicSchedule(me).then((r) => r.filter((c) => c.isPublic)),
+      db.select().from(schema.attendances).where(eq(schema.attendances.userId, userId)),
+      db.select().from(schema.personalClasses).where(eq(schema.personalClasses.userId, userId)),
+    ]);
+    const marked = marks.filter((m) => inRange.has(m.occurrenceDate));
+    const markedRows = marked.length
+      ? (
+          await db
+            .select()
+            .from(schema.classes)
+            .where(inArray(schema.classes.id, [...new Set(marked.map((m) => m.classId))]))
+        ).filter((c) => c.isPublic)
+      : [];
+    const markedById = new Map(markedRows.map((c) => [c.id, c]));
+    const markedCoaches = markedRows.length
+      ? await db
+          .select({ id: schema.users.id, name: schema.users.name })
+          .from(schema.users)
+          .where(inArray(schema.users.id, [...new Set(markedRows.map((c) => c.userId))]))
+      : [];
+    const markedName = new Map(markedCoaches.map((u) => [u.id, u.name.split(/\s+/)[0]]));
+    const names = await studioNames([
+      ...rows.map((c) => c.studioId),
+      ...markedRows.map((c) => c.studioId),
+      ...own.map((p) => p.studioId),
+    ]);
     for (const iso of dates) {
       const dow = dowOf(iso);
       for (const c of rows) {
@@ -177,10 +208,41 @@ export async function shareWeek(
             name: c.name,
             where: (c.studioId && names.get(c.studioId)) || c.location || "",
             who: "",
+            coaching: true,
           },
           c.id,
         );
       }
+      for (const p of own) {
+        if (!runsOn({ ...p, skipDates: [] as string[] }, iso, dow)) continue;
+        put(
+          iso,
+          {
+            time: fmtTime(p.startTime),
+            startTime: p.startTime,
+            name: p.name,
+            where: (p.studioId && names.get(p.studioId)) || p.location || "",
+            who: p.withWho || "",
+            own: true,
+          },
+          p.id,
+        );
+      }
+    }
+    for (const m of marked) {
+      const c = markedById.get(m.classId);
+      if (!c) continue;
+      put(
+        m.occurrenceDate,
+        {
+          time: fmtTime(c.startTime),
+          startTime: c.startTime,
+          name: c.name,
+          where: (c.studioId && names.get(c.studioId)) || c.location || "",
+          who: markedName.get(c.userId) ?? "",
+        },
+        c.id,
+      );
     }
   }
 

@@ -41,6 +41,9 @@ export type HubItem = {
   name: string;
   where: string;
   own?: boolean;
+  /** A class the coach leads, against the saved half riding beside it now:
+   *  the Classes sheet tags the rows and offers the shortcuts on it. */
+  coaching?: boolean;
 };
 
 const short = (iso: string) =>
@@ -219,6 +222,43 @@ export function ShareHubScreen({
     if (coach) return;
     if (items.length > 0 && inRange.length === 0) setFrom(items[0].iso);
   }, [coach, items, inRange.length]);
+
+  // The two hats on one picker, per the brief: a coach's week is the
+  // classes they lead and the ones they saved, and the sheet says which is
+  // which. The tags only draw when both kinds exist at all; a picker that
+  // says Coaching down every row is the tag saying nothing.
+  const twoHats = coach && items.some((it) => it.coaching) && items.some((it) => !it.coaching);
+  // The shortcuts only make sense over a range that actually mixes them:
+  // "Saved only" on a week of teaching rows is a button that blanks the
+  // picture.
+  const mixedRange =
+    twoHats && inRange.some((it) => it.coaching) && inRange.some((it) => !it.coaching);
+  // Which shortcut is on is derived, never stored: All means nothing in
+  // range is hidden, Coaching only means every saved row is hidden and no
+  // coaching one is, Saved only the reverse. Deriving is what makes the
+  // brief's rule free: untick a row by hand and the shortcut deselects
+  // itself, because the state it named stopped being true.
+  const cut = useMemo<null | "all" | "coaching" | "saved">(() => {
+    if (!mixedRange) return null;
+    const hid = inRange.filter((it) => hide.has(it.key));
+    if (hid.length === 0) return "all";
+    const kept = inRange.filter((it) => !hide.has(it.key));
+    if (!kept.length) return null;
+    if (kept.every((it) => it.coaching) && hid.every((it) => !it.coaching)) return "coaching";
+    if (kept.every((it) => !it.coaching) && hid.every((it) => it.coaching)) return "saved";
+    return null;
+  }, [mixedRange, inRange, hide]);
+  const applyCut = (which: "all" | "coaching" | "saved") => {
+    setHide((cur) => {
+      const next = new Set(cur);
+      for (const it of inRange) {
+        const keep = which === "all" || (which === "coaching" ? !!it.coaching : !it.coaching);
+        if (keep) next.delete(it.key);
+        else next.add(it.key);
+      }
+      return next;
+    });
+  };
 
   const hideParam = [...hide].join(",");
   // Both pictures at once now, because both slides are on screen: the
@@ -793,6 +833,29 @@ export function ShareHubScreen({
             <p className="lead">
               Untick one to leave it off the picture. Your calendar keeps it.
             </p>
+            {/* The shortcuts, per the brief: All, Coaching only, Saved only.
+                Only over a range that holds both hats, and never stored:
+                each is a way of setting the ticks, and unticking a row by
+                hand deselects whichever was on. */}
+            {mixedRange && (
+              <div className="shdays shcuts" role="group" aria-label="Show only">
+                {(
+                  [
+                    ["all", "All"],
+                    ["coaching", "Coaching only"],
+                    ["saved", "Saved only"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    className={`shday${cut === id ? " on" : ""}`}
+                    onClick={() => applyCut(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="settingslist shpick-list">
               {inRange.length === 0 && <p className="empty">Nothing in this range yet.</p>}
               {inRange.map((it) => {
@@ -820,7 +883,14 @@ export function ShareHubScreen({
                         {!off && <Icon name="check" size={15} />}
                       </span>
                       <span className="setrow-txt">
-                        <span className="t">{it.name}</span>
+                        <span className="t">
+                          {it.name}
+                          {twoHats && (
+                            <span className={`shpick-tag${it.coaching ? "" : " saved"}`}>
+                              {it.coaching ? "Coaching" : "Saved"}
+                            </span>
+                          )}
+                        </span>
                         <span className="s">
                           {wday(it.iso)}, {short(it.iso)} · {it.time}
                         </span>

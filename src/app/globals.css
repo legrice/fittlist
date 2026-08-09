@@ -4824,6 +4824,20 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; color: var(--ol); cursor: pointer;
 }
 .shpick-editbtn:active { background: var(--shell); }
+/* The Classes sheet's two hats, coach hub only: a member's rows are all
+   saved, and two of three shortcuts would show the same list. The shortcut
+   row reuses the day pills' drawing a size down; the tags wear the calendar
+   chips' own washes (coaching in the brand tint, saved in the quiet grey),
+   so the sheet says a kind the same way the rows do. */
+.shcuts { margin: 0 0 12px; }
+.shcuts .shday { font-size: 13px; height: 38px; padding: 0 4px; }
+.shpick-tag {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  vertical-align: 1px; white-space: nowrap;
+  background: var(--cl); color: var(--ol);
+}
+.shpick-tag:not(.saved) { background: var(--si-tint); color: var(--si-ink); }
 
 /* The member hub's start block: in place of an empty poster, so the one
    button that fixes the emptiness is never below the fold. */
