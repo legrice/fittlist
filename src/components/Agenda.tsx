@@ -155,7 +155,7 @@ export function ClassRow({
   // to carry the name when there is one.
   const who =
     item.kind === "private"
-      ? item.coachName?.trim() || "You added this"
+      ? item.coachName?.trim() || "Added by you"
       : item.coachName?.trim() || "";
   const meta = [
     `${item.hm}${item.ap.toLowerCase()}`,
