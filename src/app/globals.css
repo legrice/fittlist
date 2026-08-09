@@ -6032,7 +6032,15 @@ button.ps-card { cursor: pointer; }
 /* The four dropdown chips, each showing its current value: "Within 1 mile",
    not "Distance", which is what lets one row replace five pills. Active
    chips invert; Clear is dashed and only there when something is set. */
-.fchips .catpill { display: inline-flex; align-items: center; gap: 3px; }
+.fchips .catpill {
+  display: inline-flex; align-items: center; gap: 3px;
+  /* Half-strength white, by Matt's call: the chips are furniture over the
+     list, not the point of the screen, and full white stole the show from
+     the rows. The set chip keeps its full ink fill, which is what makes
+     an answer read against the quiet questions. */
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+}
+.fchips .catpill.on { background: var(--ink); }
 .fchips .catpill .icon { margin-right: -3px; }
 .catpill.fchip-clear {
   background: transparent; border: 1.5px dashed var(--line); color: var(--ol);
