@@ -2198,9 +2198,10 @@ class on your calendar. The tab is Discover (route stays /feed): the
 search door, the This week rail, and Upcoming near you, which is classes
 from every listable coach, deduped to one row per class, open-ended
 rather than bounded to a week, with series collapse: a recurring class
-appears once, at its next occurrence, marked Weekly on the place line
-(collapse runs after the filters, so an evening pick lands on the
-series' next evening date). Every class lists itself; the studio fold
+appears once, at its next occurrence (collapse runs after the filters,
+so an evening pick lands on the series' next evening date; it said
+Weekly on the place line for a build and the tag came off by Matt's
+call). Every class lists itself; the studio fold
 came off by Matt's call and can return the day one gym's Monday drowns
 everything around it. `buildDiscoverFeed` in discoverfeed.ts is the one
 builder, shared with the Add screen's browse list.

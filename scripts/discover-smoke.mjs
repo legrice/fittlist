@@ -89,14 +89,14 @@ if (await m.locator(".fchip-clear").count()) fail("Clear only appears once somet
 if (await m.locator(".daytabs").count()) fail("the date tabs are gone");
 console.log("the landing: door, rail, chips");
 
-// Series collapse: each weekly class once, at its next occurrence, marked
-// Weekly, under a day band.
+// Series collapse: each weekly class once, at its next occurrence, under
+// a day band. No Weekly tag, by Matt's call.
 await m.locator(".dayband").first().waitFor();
 for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift", "Tuesday Flow"]) {
   const n = await m.locator(".clline-nm", { hasText: nm }).count();
   if (n !== 1) fail(`${nm} should list exactly once, got ${n}`);
 }
-if (!(await m.locator(".clline-w", { hasText: "Weekly" }).count())) fail("weekly rows say Weekly");
+if (await m.locator(".clline-w", { hasText: "Weekly" }).count()) fail("the Weekly tag is gone");
 console.log("the open list collapses each series to its next date");
 
 // The time chip: value-showing, and Evening leaves only the six o'clock.

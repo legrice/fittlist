@@ -188,32 +188,28 @@ export function FollowingScreen({
   };
 
   // Filter, then collapse: a recurring class appears once, at its next
-  // occurrence, marked Weekly. Collapse after the filters so an evening
-  // pick lands on the series' next evening date rather than losing the
-  // whole series to a hidden morning one. Without the collapse an
-  // open-ended list is the same class repeating down the feed forever.
+  // occurrence. Collapse after the filters so an evening pick lands on
+  // the series' next evening date rather than losing the whole series to
+  // a hidden morning one. Without the collapse an open-ended list is the
+  // same class repeating down the feed forever. It said Weekly on the
+  // place line for a build and the tag came off by Matt's call; the class
+  // page still says the pattern.
   const days = useMemo(() => {
     const kept = items.filter(passes).sort((a, b) =>
       a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
     );
-    const count = new Map<string, number>();
-    for (const i of kept) {
-      const k = `${i.name.trim().toLowerCase()}|${i.where ?? ""}|${i.mins}`;
-      count.set(k, (count.get(k) ?? 0) + 1);
-    }
     const seen = new Set<string>();
     const rows: (WeekRow & { iso: string })[] = [];
     for (const i of kept) {
       const k = `${i.name.trim().toLowerCase()}|${i.where ?? ""}|${i.mins}`;
       if (seen.has(k)) continue;
       seen.add(k);
-      const weekly = (count.get(k) ?? 0) > 1;
       const c = coachById.get(i.coachId);
       rows.push({
         iso: i.iso,
         key: i.key,
         name: i.name,
-        where: i.where ? `${i.where}${weekly ? " · Weekly" : ""}` : weekly ? "Weekly" : null,
+        where: i.where,
         hm: i.hm,
         ap: i.ap,
         dur: `${i.durationMin} min`,
