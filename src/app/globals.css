@@ -6341,7 +6341,8 @@ button.ps-card { cursor: pointer; }
    while the pill makes the next step feel intentional. */
 .abouthome {
   padding: 22px; border-radius: 22px; background: var(--ink); color: var(--paper);
-  margin-bottom: calc(110px + env(safe-area-inset-bottom));
+  margin-top: 24px;
+  margin-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 .abouthome-mark { display: inline-flex; margin-bottom: 28px; font-size: 17px; }
 .abouthome h2 {
