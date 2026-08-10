@@ -6290,9 +6290,9 @@ button.ps-card { cursor: pointer; }
 }
 .strail::-webkit-scrollbar, .ctrail::-webkit-scrollbar { display: none; }
 .strail { gap: 12px; }
-.strail-item { flex: 0 0 auto; width: 136px; text-decoration: none; }
+.strail-item { flex: 0 0 auto; width: 172px; text-decoration: none; }
 .strail-ph {
-  display: block; width: 136px; height: 94px; border-radius: 14px;
+  display: block; width: 172px; height: 118px; border-radius: 16px;
   overflow: hidden; background: var(--card);
 }
 .strail-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
