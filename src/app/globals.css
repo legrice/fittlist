@@ -6267,6 +6267,8 @@ button.ps-card { cursor: pointer; }
   display: block; margin-top: 7px; font-size: 13.5px; font-weight: 600; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* How far, under the name, only when a granted pin can honestly say. */
+.strail-mi { display: block; margin-top: 1px; font-size: 12px; color: var(--ol); }
 /* Upcoming near you is a rail of event cards, by Matt's call: the date as
    a leaf on the left, the class beside it, the bare ribbon in the corner,
    and the head's arrow the door to the full list on Search. */

@@ -253,6 +253,37 @@ export function FollowingScreen({
   // nothing coming up hides the block entirely.
   const railShows = follows === 0 || myRail.length >= RAIL_MIN_PEOPLE;
 
+  // The viewer's pin, taken silently and only when the browser already
+  // granted it somewhere else: a screen that asks for location on arrival
+  // is a screen people say no to. With it, the studio tiles say how far
+  // and the rail sorts by real miles; without it, the city order stands.
+  const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.permissions
+      ?.query({ name: "geolocation" })
+      .then((p) => {
+        if (p.state !== "granted") return;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => {},
+        );
+      })
+      .catch(() => {
+        // No permissions API: stay quiet rather than prompting.
+      });
+  }, []);
+  const milesTo = (s: NearStudio): number | null =>
+    geo && s.lat != null && s.lng != null
+      ? milesBetween(geo, { lat: s.lat, lng: s.lng })
+      : null;
+  const studiosNear = useMemo(() => {
+    if (!geo) return nearStudios;
+    const d = (s: NearStudio) =>
+      s.lat != null && s.lng != null ? milesBetween(geo, { lat: s.lat, lng: s.lng }) : Infinity;
+    return [...nearStudios].sort((a, b) => d(a) - d(b));
+  }, [nearStudios, geo]);
+
   return (
     <>
       {/* No search bar up here any more, by Matt's call: the magnifier
@@ -430,21 +461,29 @@ export function FollowingScreen({
             </Link>
           </div>
           <div className="strail">
-            {nearStudios.map((s) => (
-              <Link key={s.id} className="strail-item" href={`/s/${s.slug}?from=discover`}>
-                <span className="strail-ph">
-                  {s.photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.photo} alt="" />
-                  ) : (
-                    <span className="strail-ini" style={{ background: s.color }}>
-                      {initialOf(s.name)}
+            {studiosNear.map((s) => {
+              const mi = milesTo(s);
+              return (
+                <Link key={s.id} className="strail-item" href={`/s/${s.slug}?from=discover`}>
+                  <span className="strail-ph">
+                    {s.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.photo} alt="" />
+                    ) : (
+                      <span className="strail-ini" style={{ background: s.color }}>
+                        {initialOf(s.name)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="strail-nm">{s.name}</span>
+                  {mi !== null && (
+                    <span className="strail-mi">
+                      {mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi away
                     </span>
                   )}
-                </span>
-                <span className="strail-nm">{s.name}</span>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
@@ -549,6 +588,17 @@ function SaveCorner({
       {!bare && <span>{on ? "Saved" : "Save"}</span>}
     </button>
   );
+}
+
+/** Miles between two pins, the haversine way, close enough for a rail. */
+function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const rad = (x: number) => (x * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
 /** One row in the banded list: the flat line with Save across from the

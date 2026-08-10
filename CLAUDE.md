@@ -2274,8 +2274,11 @@ neither on a member's, and Follow on every row, unlimited.
 
 Under the schedule, the places and the people, by Matt's call: Studios
 near you as rectangles on a rail (a place is a room, a person is a
-face), the viewer's own city leading, never asking for a pin on
-arrival; then Find friends ("Coaches near you" renamed, by Matt's
+face), the viewer's own city leading. When the browser has already
+granted location somewhere else, the tiles say how far ("1.9 mi away")
+and the rail sorts by real miles, taken silently through the
+permissions API; nothing ever prompts on arrival, and a studio without
+a pin just says nothing. Then Find friends ("Coaches near you" renamed, by Matt's
 call), circles with a Follow pill under each face that isn't already
 followed (Requested at a gated coach, and the pill disappears once
 it's a yes). Both ride `buildDiscoverFeed` (`nearStudios`,
