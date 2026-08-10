@@ -10,6 +10,7 @@ import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
+import { Wordmark } from "@/components/Wordmark";
 import { initialOf } from "@/lib/avatar";
 
 export type FeedCoach = {
@@ -618,7 +619,7 @@ export function FollowingScreen({
             ))}
           </div>
 
-          <div className="cardwrap">
+          <div className="cardwrap home-schedule">
             {/* Why Today isn't the selected tab, said once: the landing
                 skipped ahead to the first day holding anything. */}
             {landed.current !== todayIso && day === landed.current && (
@@ -650,7 +651,7 @@ export function FollowingScreen({
           coaches around you with Follow one tap deep. Your own city leads
           both. Each head's arrow opens Search on that kind's segment. */}
       {nearStudios.length > 0 && (
-        <section className="nearrail">
+        <section className="nearrail home-section">
           <div className="nearhead nearhead-row">
             <span className="nearlbl">Local studios</span>
             <Link className="nearhead-go" href="/search?seg=studios" aria-label="All studios">
@@ -685,7 +686,7 @@ export function FollowingScreen({
         </section>
       )}
       {localCoaches.length > 0 && (
-        <section className="nearrail">
+        <section className="nearrail home-section">
           <div className="nearhead nearhead-row">
             {/* Find friends, by Matt's call: the rail is coaches, and the
                 word is the act it invites. */}
@@ -704,15 +705,16 @@ export function FollowingScreen({
 
       {/* What this is, at the end of the scroll: one paragraph and the
           door to the whole story, with the Contribute ask behind it. */}
-      <section className="abouthome">
-        <h2 className="nearlbl">One place where all of it lives</h2>
+      <section className="abouthome home-section">
+        <Wordmark variant="cloud" className="abouthome-mark" />
+        <h2>One place where all of it lives</h2>
         <p className="abouthome-p">
           FittList is a public record of what&rsquo;s happening in local fitness:
           the classes, the places they happen, and the people leading them.
         </p>
         <Link className="abouthome-go" href="/about">
-          About FittList
-          <Icon name="chevron_right" size={18} />
+          See what we&rsquo;re building
+          <Icon name="arrow_forward" size={18} />
         </Link>
       </section>
 

@@ -12,19 +12,19 @@ import { Toast, useToast } from "@/components/Toast";
 type Swatch = { name: string; token: string; hex: string; note: string; onDark?: boolean };
 
 const CORE: Swatch[] = [
-  { name: "Purple", token: "--si", hex: "#6D45D6", note: "The accent, and every primary action", onDark: true },
+  { name: "Orange", token: "--si", hex: "#C2410C", note: "The accent, and every primary action", onDark: true },
   { name: "Ink", token: "--ink", hex: "#191502", note: "Text, and dark surfaces", onDark: true },
-  { name: "Paper", token: "--paper", hex: "#fcfbfd", note: "The ground everything scrolls on" },
+  { name: "Paper", token: "--paper", hex: "#fdfcf7", note: "The ground everything scrolls on" },
   { name: "Card", token: "--card", hex: "#ffffff", note: "What floats on the paper" },
 ];
 
 const SUPPORTING: Swatch[] = [
-  { name: "Mist", token: "--cl", hex: "#f4f2f8", note: "Headers, tags, quiet fills" },
-  { name: "Mist, down one", token: "--cl-d", hex: "#e9e6f0", note: "Chips that need to read off the page" },
-  { name: "Soft purple", token: "--si-soft", hex: "#eee8ff", note: "A tint of the accent" },
+  { name: "Cream", token: "--cl", hex: "#f7f4ea", note: "Headers, tags, quiet fills" },
+  { name: "Cream, down one", token: "--cl-d", hex: "#e9e1cc", note: "Chips that need to read off the page" },
+  { name: "Soft orange", token: "--si-soft", hex: "#f7e6d6", note: "A tint of the accent" },
   { name: "Sand", token: "--sa", hex: "#d6d1b3", note: "Muted fills" },
-  { name: "Outline", token: "--ol", hex: "#625e6d", note: "Secondary text", onDark: true },
-  { name: "Line", token: "--line", hex: "#dedbe7", note: "Dividers and input borders" },
+  { name: "Outline", token: "--ol", hex: "#6b6555", note: "Secondary text", onDark: true },
+  { name: "Line", token: "--line", hex: "#e6dfcd", note: "Dividers and input borders" },
   { name: "Go", token: "--go", hex: "#3d8b53", note: "On, added, confirmed", onDark: true },
 ];
 
@@ -85,7 +85,7 @@ export function BrandGuide({ mark }: { mark: string }) {
           <div className="brandmark on-ink" dangerouslySetInnerHTML={{ __html: mark.replace(/fill="[^"]*"/, 'fill="#fdfcf7"') }} />
         </div>
         <p className="brandp brandp-tight">
-          White on purple is the app icon. Purple on paper is the header lockup. Paper on ink is
+          White on orange is the app icon. Orange on paper is the header lockup. Paper on ink is
           for dark surfaces and the share images. It is never two colours at once, and never
           outlined.
         </p>

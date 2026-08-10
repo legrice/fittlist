@@ -16,8 +16,8 @@ const esc = (s: string) =>
     .replace(/"/g, "&quot;");
 
 const INK = "#191502";
-const ACCENT = "#6D45D6";
-const MUTED = "#625e6d";
+const ACCENT = "#C2410C";
+const MUTED = "#6b6555";
 const CREAM = "#f4efe1";
 
 export function emailHtml({
