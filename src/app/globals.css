@@ -6202,21 +6202,19 @@ button.ps-card { cursor: pointer; }
    class is, then when in the day it runs. */
 .catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
 
-/* Home's date rail: one day at a time, left to right, by Matt's call.
-   Underline tabs rather than pills, because the row sits over a list and a
-   second row of pills under the filter pills was pills on pills. It pins to
-   the viewport itself while the rails above scroll away. It must not read
+/* Home's date rail: one day at a time in soft pills, left to right. It pins
+   to the viewport itself while the rails above scroll away. It must not read
    `--dayband-top`: Calendar writes its own measured header height there, and
    that document-level value can still be present when someone returns Home. */
 .daytabs {
   position: sticky; top: 0; z-index: 6;
-  display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
   overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
-  margin: 4px -18px 0; padding: 0 10px;
+  margin: 4px -18px 0; padding: 8px 18px 10px;
   /* Bare at rest, solid once pinned, by Matt's call: on the page it sits
      like the chips above it, and the ground appears the moment rows would
      otherwise scroll through it (the screen's own effect writes .stuck). */
-  background: transparent; border-bottom: 1px solid var(--div);
+  background: transparent;
   transition: background-color .15s;
 }
 .daytabs.stuck { background: var(--ground); }
@@ -6236,13 +6234,13 @@ button.ps-card { cursor: pointer; }
 .upcoming-filters { margin-top: 8px; }
 .upcoming-listregion { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .daytab {
-  flex: 0 0 auto; padding: 10px 12px 11px; margin-bottom: -1px;
-  border: none; background: none; cursor: pointer;
-  border-bottom: 2px solid transparent;
+  flex: 0 0 auto; min-height: 34px; padding: 0 14px;
+  border: 1px solid transparent; border-radius: 999px;
+  background: var(--card); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 15px; font-weight: 500; color: var(--ol); white-space: nowrap;
+  font-size: 13.5px; font-weight: 600; color: var(--ol); white-space: nowrap;
 }
-.daytab.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.daytab.on { background: var(--si); color: #fff; }
 /* Why Today isn't selected, said once, in the quiet gray a notice wears. */
 .daynote {
   text-align: center; font-size: 13.5px; color: var(--ol);
