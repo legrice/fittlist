@@ -6040,7 +6040,16 @@ button.ps-card { cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between;
   padding-right: 18px;
 }
-.railhead .nearhead-go { margin-top: 8px; }
+.tray-subhead {
+  margin: 0 18px 2px; color: var(--ol);
+  font-size: 12.5px; font-weight: 600;
+}
+.week-schedule-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding: 13px 0 3px;
+  border-top: 1px solid var(--div);
+  color: var(--ol); font-size: 12.5px; font-weight: 600;
+}
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {

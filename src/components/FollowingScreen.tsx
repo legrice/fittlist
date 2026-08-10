@@ -485,10 +485,8 @@ export function FollowingScreen({
         <div className="tray">
           <div className="railhead">
             <p className="nearlbl railbl">This week</p>
-            <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
-              <Icon name="arrow_forward" size={22} />
-            </Link>
           </div>
+          <p className="tray-subhead">Your circle</p>
           <div className="tray-scroll">
             <button
               className="trayitem"
@@ -561,6 +559,14 @@ export function FollowingScreen({
           The arrow opens the complete version, where the same date rail,
           filters, save state, and peeks carry through without a context
           switch to Search. */}
+      {isHome && (
+        <div className="week-schedule-head">
+          <span>Near you</span>
+          <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
+            <Icon name="arrow_forward" size={22} />
+          </Link>
+        </div>
+      )}
       {items.length === 0 ? (
         <>
           <div className="wkempty">
