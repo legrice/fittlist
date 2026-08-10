@@ -314,6 +314,19 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
+  // Home is a catalog preview rather than a day view: the next eight
+  // occurrences across the window make the inventory visible even when any
+  // one weekday is quiet. The dedicated page keeps the day rail and filters.
+  const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
+    () =>
+      [...shown]
+        .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
+        .slice(0, 8)
+        .map(rowOf),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shown, coachById, favIds],
+  );
+
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
   // the moment rows would otherwise scroll through it.
@@ -553,10 +566,9 @@ export function FollowingScreen({
         </div>
       )}
 
-      {/* Home shows the selected day without filters or an artificial cap.
-          The arrow opens the complete version, where the same date rail,
-          filters, save state, and peeks carry through without a context
-          switch to Search. */}
+      {/* Home previews the next classes across days. The full page owns the
+          date rail and filters, where those controls have enough inventory
+          to narrow rather than making Home look quiet. */}
       {isHome && (
         <div className="week-schedule-head">
           <span className="nearlbl">Discover classes</span>
@@ -632,23 +644,29 @@ export function FollowingScreen({
               therefore lasts exactly as long as the class list beneath it,
               and releases before the studio and people sections begin. */}
           <div className={`home-listregion${isHome ? "" : " upcoming-listregion"}`}>
-            {/* The dates, left to right: one day at a time, the list under
-                them that day alone. */}
-            <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
-              {dayTabs.map((t) => (
-                <button
-                  key={t.iso}
-                  role="tab"
-                  aria-selected={day === t.iso}
-                  className={`daytab${day === t.iso ? " on" : ""}`}
-                  onClick={() => setDay(t.iso)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            {!isHome && (
+              <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
+                {dayTabs.map((t) => (
+                  <button
+                    key={t.iso}
+                    role="tab"
+                    aria-selected={day === t.iso}
+                    className={`daytab${day === t.iso ? " on" : ""}`}
+                    onClick={() => setDay(t.iso)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="cardwrap home-schedule">
+              {isHome ? (
+                <div className="disflat home-next">
+                  {homeRows.map(renderRow(meId, notify, todayIso))}
+                </div>
+              ) : (
+                <>
               {/* Why Today isn't the selected tab, said once: the landing
                   skipped ahead to the first day holding anything. */}
               {landed.current !== todayIso && day === landed.current && (
@@ -670,6 +688,8 @@ export function FollowingScreen({
                 )
               ) : (
                 <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
+              )}
+                </>
               )}
             </div>
           </div>
@@ -945,10 +965,19 @@ function SaveCorner({
  *  own line. A sibling of the row, never a child. Your own class carries
  *  none, because setGoing would refuse it. */
 const renderRow =
-  (meId: string | undefined, notify: (msg: string, hlKey?: string) => void) =>
+  (
+    meId: string | undefined,
+    notify: (msg: string, hlKey?: string) => void,
+    labelFrom?: string,
+  ) =>
   // eslint-disable-next-line react/display-name
   (r: WeekRow & { item: FeedItem }) => (
     <div key={r.key} className="clrow">
+      {labelFrom && (
+        <span className="home-classdate">
+          {r.item.iso === labelFrom ? "Today" : tabLabel(r.item.iso)}
+        </span>
+      )}
       <ClassLine row={r} />
       {r.item.coachId !== meId && (
         <SaveCorner
