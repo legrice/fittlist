@@ -6193,7 +6193,12 @@ button.ps-card { cursor: pointer; }
    title row's own height, no bleed of their own. 40px matches the view
    toggle across from them (34px buttons in 3px of padding), so the row
    reads as one line of controls rather than two sizes fighting. */
-.calbar-pills { margin: 0; padding: 0; overflow: visible; }
+.calbar-pills {
+  margin: 0; padding: 0; overflow: visible;
+  /* The pill text sits optically higher than the view glyphs even though
+     both controls are 40px tall. Two pixels puts their visual centers level. */
+  transform: translateY(2px);
+}
 .calbar-pills .catpill { height: 40px; }
 /* Real section titles, sentence case, by Matt's call: the small tracked
    capitals read as metadata, and a screen of sections deserves headings
