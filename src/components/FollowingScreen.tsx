@@ -525,6 +525,7 @@ export function FollowingScreen({
                     iso={r.item.iso}
                     name={r.item.name}
                     initial={r.item.saved}
+                    onToast={toast}
                   />
                 )}
               </div>
@@ -636,17 +637,20 @@ export function FollowingScreen({
 }
 
 /** The corner ribbon: the one act this list turns on. Optimistic, so the
- *  ribbon fills on the tap rather than the round trip. */
+ *  ribbon fills on the tap rather than the round trip; the toast says
+ *  where the class went, because the calendar is another tab away. */
 function SaveCorner({
   classId,
   iso,
   name,
   initial,
+  onToast,
 }: {
   classId: string;
   iso: string;
   name: string;
   initial: boolean;
+  onToast: (msg: string) => void;
 }) {
   const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -662,6 +666,7 @@ function SaveCorner({
         setOn(!on);
         const res = await setGoing(classId, iso, !on);
         if (!res.ok) setOn(on);
+        else if (!on) onToast("Saved to your calendar");
         setBusy(false);
       }}
     >

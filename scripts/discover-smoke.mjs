@@ -127,6 +127,7 @@ const firstSave = m.locator(".rowsave").first();
 if (!(await firstSave.count())) fail("every row wears Save in the corner");
 await firstSave.click();
 await m.locator(".rowsave.on", { hasText: "Saved" }).first().waitFor();
+await m.locator(".toast.on", { hasText: "Saved to your calendar" }).waitFor();
 await m.locator(".rowsave.on").first().click();
 await m.waitForFunction(() => !document.querySelector(".rowsave.on"), null, { timeout: 10000 });
 console.log("the corner Save fills and empties in place");

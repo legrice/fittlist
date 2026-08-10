@@ -483,6 +483,12 @@ export function ClassPeek({
                     setSavedNow(!on);
                     const res = await setGoing(cls.id, cls.iso, !on);
                     if (!res.ok) setSavedNow(on);
+                    else if (!on)
+                      onToast(
+                        full.rsvp
+                          ? "RSVP’d. It’s on your calendar."
+                          : "Saved to your calendar",
+                      );
                     setSaveBusy(false);
                     onChanged();
                   }}
