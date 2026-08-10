@@ -4367,7 +4367,8 @@ button.ps-card { cursor: pointer; }
 /* A screen that draws the card manages its own bottom clearance: the card has
    to run under the floating bar to the end of the page, so the room the last
    row needs lives inside it, or the shell shows through as a gray band. */
-.screen.hasnav .pad:has(> .cardwrap) {
+.screen.hasnav .pad:has(> .cardwrap),
+.screen.hasnav .pad:has(> .home-listregion) {
   padding-bottom: 0;
   display: flex; flex-direction: column;
 }
@@ -5938,6 +5939,7 @@ button.ps-card { cursor: pointer; }
   /* Tight to the header above: the 8px of air between the bar and the
      circles came down to 2, by Matt's call. */
   margin: 0 -18px; padding: 2px 0 12px;
+  border-bottom: 1px solid var(--line);
 }
 /* The arrows hang level with the circles rather than the labels under them,
    so they read as controls on the faces. `.railarrow` puts its own top at
@@ -6217,6 +6219,7 @@ button.ps-card { cursor: pointer; }
 }
 .daytabs.stuck { background: var(--ground); }
 .daytabs::-webkit-scrollbar { display: none; }
+.home-listregion { position: relative; }
 .daytab {
   flex: 0 0 auto; padding: 10px 12px 11px; margin-bottom: -1px;
   border: none; background: none; cursor: pointer;

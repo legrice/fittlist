@@ -603,45 +603,50 @@ export function FollowingScreen({
             )}
           </div>
 
-          {/* The dates, left to right: one day at a time, the list under
-              them that day alone. */}
-          <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
-            {dayTabs.map((t) => (
-              <button
-                key={t.iso}
-                role="tab"
-                aria-selected={day === t.iso}
-                className={`daytab${day === t.iso ? " on" : ""}`}
-                onClick={() => setDay(t.iso)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {/* The date rail and its rows share a containing block. Sticky
+              therefore lasts exactly as long as the class list beneath it,
+              and releases before the studio and people sections begin. */}
+          <div className="home-listregion">
+            {/* The dates, left to right: one day at a time, the list under
+                them that day alone. */}
+            <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
+              {dayTabs.map((t) => (
+                <button
+                  key={t.iso}
+                  role="tab"
+                  aria-selected={day === t.iso}
+                  className={`daytab${day === t.iso ? " on" : ""}`}
+                  onClick={() => setDay(t.iso)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-          <div className="cardwrap home-schedule">
-            {/* Why Today isn't the selected tab, said once: the landing
-                skipped ahead to the first day holding anything. */}
-            {landed.current !== todayIso && day === landed.current && (
-              <p className="daynote">
-                No classes today, showing{" "}
-                {landed.current === plusDays(todayIso, 1) ? "tomorrow" : tabLabel(landed.current)}
-              </p>
-            )}
-            {dayRows.length === 0 ? (
-              anyFilter ? (
-                // The empty state knows why it is empty: never "nobody has
-                // added classes" when the truth is the filter.
-                <p className="dayempty">
-                  Nothing matches on {day === todayIso ? "today" : tabLabel(day)}. Try widening
-                  the time or distance.
+            <div className="cardwrap home-schedule">
+              {/* Why Today isn't the selected tab, said once: the landing
+                  skipped ahead to the first day holding anything. */}
+              {landed.current !== todayIso && day === landed.current && (
+                <p className="daynote">
+                  No classes today, showing{" "}
+                  {landed.current === plusDays(todayIso, 1) ? "tomorrow" : tabLabel(landed.current)}
                 </p>
+              )}
+              {dayRows.length === 0 ? (
+                anyFilter ? (
+                  // The empty state knows why it is empty: never "nobody has
+                  // added classes" when the truth is the filter.
+                  <p className="dayempty">
+                    Nothing matches on {day === todayIso ? "today" : tabLabel(day)}. Try widening
+                    the time or distance.
+                  </p>
+                ) : (
+                  <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
+                )
               ) : (
-                <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
-              )
-            ) : (
-              <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
-            )}
+                <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
+              )}
+            </div>
           </div>
         </>
       )}
