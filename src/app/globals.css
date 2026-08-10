@@ -6209,7 +6209,8 @@ button.ps-card { cursor: pointer; }
    that document-level value can still be present when someone returns Home. */
 .daytabs {
   position: sticky; top: 0; z-index: 6;
-  display: flex; overflow-x: auto; scrollbar-width: none;
+  display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
   margin: 4px -18px 0; padding: 0 10px;
   /* Bare at rest, solid once pinned, by Matt's call: on the page it sits
      like the chips above it, and the ground appears the moment rows would
