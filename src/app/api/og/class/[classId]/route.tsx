@@ -34,8 +34,8 @@ const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const PAPER = "#faf8f2";
 const INK = "#191502";
-const MUTED = "#6b6555";
-const SI = "#C2410C";
+const MUTED = "#625e6d";
+const SI = "#6D45D6";
 
 export async function GET(
   req: Request,

@@ -41,16 +41,16 @@
      and light are not the same axis, so the hue is unchanged and only the
      lightness moved; a lift that also desaturated would have traded drab for
      grey, which is the other way to lose the brand. */
-  --cl: #f7f4ea;           /* warm cream — headers, tags, accents */
-  --cl-d: #efe9db;         /* one step down: chips that need to read off the page */
-  --paper: #fdfcf7;        /* the content card: a breath off white */
+  --cl: #f4f2f8;           /* cool off-white — headers, tags, accents */
+  --cl-d: #e9e6f0;         /* one step down: chips that need to read off the page */
+  --paper: #fcfbfd;        /* the content card: a breath off white */
   /* The screen behind the card. The app reads as two layers: the header
      (and whatever else is chrome) sits on this quiet warm gray, and the
      content rides the paper with rounded top corners over it. It merged
      onto the paper for a build and came back apart, by Matt's call: one
      surface needed a drawn edge to say where content starts, and the two
      tones say it without one. */
-  --shell: #f0eee8;
+  --shell: #eeedf2;
   /* The outline the view toggle wears. It went nearly ink for a build and
      stepped back to this wash, by Matt's call: worth the try, but the
      black frames shouted on every row. The class boxes wore it too until
@@ -62,13 +62,13 @@
      is something to look at, and a flat page had nothing. The ground
      stays warm (#f1efe9, from the cool #eef0f1) so the fade settles into
      its own family rather than bridging a clash. */
-  --grad-top: #f8dcc6;
-  --grad-mid: #f3e6db;
-  --ground: #8b5cf6;
+  --grad-top: #eee9ff;
+  --grad-mid: #f0eef7;
+  --ground: #f0eff4;
   --card: #ffffff;         /* white cards float on the cream */
   --ink: #191502;          /* warm charcoal - text + dark surfaces */
-  --ol: #6b6555;           /* warm muted secondary text */
-  --line: #e6ddc8;         /* warm cream input borders and light edges */
+  --ol: #625e6d;           /* cool muted secondary text */
+  --line: #dedbe7;         /* cool input borders and light edges */
   /* The rule between rows, and its weight, as two tokens.
      They were one: every divider in the app was a 1px `--line`, the same
      hairline an input border wears, and a list of classes read as text
@@ -81,7 +81,7 @@
      the type a weight lighter, the page read as ruled paper. Colour is what
      separates a divider from an edge here, not thickness. The token stays
      because one number for every rule in the app is worth having. */
-  --div: #d4c8ab;
+  --div: #cbc6d8;
   /* The day bands. The page's own ground, so the band reads as nothing but a
      date over a rule, which is what it should be: it was `--cl` (a bar), then
      a tint a shade off the paper, and it is the paper now.
@@ -93,9 +93,9 @@
   --band: var(--paper);
   --divw: 1px;
   --rule: #191502;         /* charcoal hairline rules */
-  --si: #C2410C;           /* the brand orange, everywhere it appears */
-  --si-tint: #F7E3DA;      /* pale brand wash: tinted CTAs, selected tabs */
-  --si-ink: #C2410C;       /* brand text/icons sitting on the wash */
+  --si: #6D45D6;           /* the brand purple, everywhere it appears */
+  --si-tint: #EEE8FF;      /* pale brand wash: tinted CTAs, selected tabs */
+  --si-ink: #5B35C2;       /* brand text/icons sitting on the wash */
 
   /* What a row is to you, said as the colour of the bar down its left. One
      token per relationship and nothing else in the app introduces another:
@@ -107,7 +107,7 @@
      competing with the three that carry meaning made the week read as a
      paint chart. */
   --rel-saved: var(--ink);
-  --rel-coaching: #C2410C;
+  --rel-coaching: #6D45D6;
   --rel-personal: #0C8BC2;
   --rel-personal-bg: #D1F3FF;
   --rel-personal-ink: #0B3B4F;
@@ -115,7 +115,7 @@
      record without an owner and the colour should not promise otherwise. */
   --rel-added: #ACACAC;
   --go: #3d8b53;           /* "on" green for switches */
-  --si-soft: #f7e6d6;
+  --si-soft: #eee8ff;
   --sa: #d6d1b3;
   --yellow: #f5f200;
   --radius: 16px;
@@ -1031,7 +1031,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   content: ""; position: absolute; left: 4px; top: 5px; bottom: 5px; width: 3px;
   border-radius: 2px; background: currentColor;
 }
-.daygrid-ev.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.daygrid-ev.ev-coaching { background: rgba(109, 69, 214, .14); color: #5b35c2; }
 .daygrid-ev.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
 .daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 [data-mode="dark"] .daygrid-ev.ev-coaching { color: #f09062; }
@@ -1235,7 +1235,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   font-weight: 600; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
 }
-.monthpill.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
+.monthpill.ev-coaching { background: rgba(109, 69, 214, .14); color: #5b35c2; }
 .monthpill.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
 .monthpill.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
@@ -1537,8 +1537,8 @@ button.bl-band { cursor: pointer; }
    peach info bar. Opt-in per trainer via [data-theme="poster"].
    ============================================================ */
 [data-theme="poster"] {
-  --pg-ground: #191502; --pg-cream: #f4efe1; --pg-day: #C2410C;
-  --pg-green: #C2410C; --pg-peach: #edddc0;
+  --pg-ground: #191502; --pg-cream: #f4efe1; --pg-day: #6D45D6;
+  --pg-green: #6D45D6; --pg-peach: #e8e0fa;
 }
 /* app chrome: light cream fill (matches the sheets); hide the classic appbar */
 [data-theme="poster"].appshell, [data-theme="poster"] .stage { background: var(--paper); }
@@ -3962,23 +3962,21 @@ button.ps-card { cursor: pointer; }
   --paper: #14120d;
   --shell: #0c0b07;
   --edge: color-mix(in srgb, var(--ink) 18%, transparent);
-  --grad-top: #2a2014;
-  --grad-mid: #1c1913;
-  /* Warm like the light ground: the cool #16171a had the same clash with
-     the warm dark surfaces that the light side's cool gray had. */
-  --ground: #17150f;
-  --si-tint: #3f2413;
-  --si-ink: #f0a071;
-  --card: #211c13;
+  --grad-top: #241d38;
+  --grad-mid: #1b1824;
+  --ground: #15131a;
+  --si-tint: #2d2347;
+  --si-ink: #c5b2ff;
+  --card: #211e27;
   --ink: #f3efe3;
-  --ol: #a89f8a;
-  --line: #35301f;
-  --div: #4a4330;
+  --ol: #aaa4b5;
+  --line: #37323f;
+  --div: #4b4455;
   --band: var(--paper);
-  --cl: #272115;
-  --cl-d: #322b1b;
-  --sa: #3d3826;
-  --si-soft: #3a2a1c;
+  --cl: #28242f;
+  --cl-d: #332e3c;
+  --sa: #3d3747;
+  --si-soft: #2d2347;
   --soft-shadow: 0 1px 2px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.5);
   --soft-shadow-lg: 0 2px 8px rgba(0,0,0,.55), 0 14px 30px rgba(0,0,0,.6);
   background: var(--paper);
