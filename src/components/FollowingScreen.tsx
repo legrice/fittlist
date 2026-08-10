@@ -640,7 +640,7 @@ export function FollowingScreen({
                     </span>
                     <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
                     <span className="yourweek-check" aria-label="Added to your week">
-                      <Icon name="check" size={18} />
+                      <Icon name="check" size={14} />
                     </span>
                   </div>
                 ))}
@@ -996,7 +996,11 @@ function SaveCorner({
         setBusy(false);
       }}
     >
-      <Icon name={on ? "check" : "add_circle"} size={20} />
+      {on ? (
+        <span className="added-dot"><Icon name="check" size={14} /></span>
+      ) : (
+        <Icon name="add_circle" size={20} />
+      )}
       {!bare && <span>{on ? "Added" : "Add"}</span>}
     </button>
   );
