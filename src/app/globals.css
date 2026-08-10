@@ -6949,11 +6949,6 @@ a.clspeek-by:active { opacity: .6; }
 .shprev-sq { height: auto; width: min(100%, 440px); aspect-ratio: 1; }
 .shcta {
   margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
-  /* Sticky over the scroll, by Matt's call: the hub runs long (the poster,
-     the swatches, the control chips) and the one loud call was below the
-     fold. It rides above the docked tab bar, the same clearance the
-     profile's floating button keeps. */
-  position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 5;
 }
 .shcta .btn { width: 100%; }
 .shcta .btn.si { box-shadow: 0 4px 16px rgba(17, 17, 17, .18); }
