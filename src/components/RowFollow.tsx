@@ -68,11 +68,11 @@ export function RowFollow({
         className={`disfollow${following || requested ? " on" : ""}`}
         disabled={pending}
         aria-label={
-          following ? `Unfavorite ${name}` : requested ? `Cancel your ask to favorite ${name}` : `Favorite ${name}`
+          following ? `Unfollow ${name}` : requested ? `Cancel your follow request to ${name}` : `Follow ${name}`
         }
         onClick={toggle}
       >
-        {following ? "Favorited" : requested ? "Requested" : "Favorite"}
+        {following ? "Following" : requested ? "Requested" : "Follow"}
       </button>
       <FollowHint name={first} on={hint} onClose={() => setHint(false)} />
     </>

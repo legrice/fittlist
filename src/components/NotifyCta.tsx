@@ -62,10 +62,10 @@ export function NotifyCta({
   // Requested survives it (approve-first still gates who may favorite).
   const label = account
     ? following
-      ? "Favorited"
+      ? "Following"
       : requested
         ? "Requested"
-        : "Favorite"
+        : "Follow"
     : subscribed
       ? "On the list"
       : "Subscribe";

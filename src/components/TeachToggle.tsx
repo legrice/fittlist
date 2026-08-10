@@ -49,7 +49,7 @@ export function TeachToggle({ on: initial, canTurnOn }: { on: boolean; canTurnOn
           <span className="s">
             {on
               ? "The Coaching pill is on your Calendar, and people can find you on Discover."
-              : "Adds coaching to your Calendar and Add screens, and lists you so people can favorite you."}
+              : "Adds coaching to your Calendar and Add screens, and lists you so people can follow you."}
           </span>
         </span>
         <span className={`switch${on ? " on" : ""}`} aria-hidden="true">
