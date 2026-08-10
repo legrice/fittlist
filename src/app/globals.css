@@ -6155,7 +6155,7 @@ button.ps-card { cursor: pointer; }
   display: block;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 22px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15;
-  color: var(--ink); margin-bottom: 10px;
+  color: var(--ink); margin-bottom: 14px;
 }
 .catpills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px 4px; }
 .catpills::-webkit-scrollbar { display: none; }
