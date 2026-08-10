@@ -168,7 +168,7 @@ export function StudioRow({ studio: st, from }: { studio: DirStudio; from: strin
           <span className="nm">{st.name}</span>
           {st.hasSchedule && <span className="kindtag kindtag-sm">Schedule</span>}
         </span>
-        <span className="disrow-sub">{st.address}</span>
+        <span className="disrow-sub">{st.types.slice(0, 3).join(" · ") || "Fitness studio"}</span>
       </span>
       <span className="disrow-chev">
         <Icon name="chevron_right" size={20} />
