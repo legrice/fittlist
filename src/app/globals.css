@@ -6049,9 +6049,10 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
 .rowsave.on { color: var(--go); }
-/* The bottom line clears the control instead of the name. */
-.disflat .clrow .clline-nm { padding-right: 0; }
-.disflat .clrow .clline-by { max-width: calc(100% - 84px); }
+/* Home's icon-only ribbon sits across from the class name. The name clears
+   its hit area; the coach line below gets the full card width again. */
+.disflat .clrow .clline-nm { padding-right: 38px; }
+.disflat .clrow .clline-by { max-width: none; }
 
 /* The four dropdown chips, each showing its current value: "Within 1 mile",
    not "Distance", which is what lets one row replace five pills. Active
@@ -7298,7 +7299,11 @@ a.clspeek-by:active { opacity: .6; }
   grid-template-columns: 64px 1fr; column-gap: 10px;
   min-height: 112px; padding: 14px; border-bottom: 0;
 }
-.disflat .rowsave { right: 14px; bottom: 13px; }
+.disflat .rowsave {
+  top: 10px; right: 10px; bottom: auto;
+  width: 36px; height: 36px; padding: 0;
+  justify-content: center;
+}
 
 /* The Following tab on a profile: the directory's own rows, so a person
    reads the same way everywhere. A touch of top air before the first

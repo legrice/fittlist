@@ -883,6 +883,7 @@ const renderRow =
           name={r.item.name}
           initial={r.item.saved}
           onToast={notify}
+          bare
         />
       )}
     </div>
