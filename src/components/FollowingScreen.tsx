@@ -483,10 +483,6 @@ export function FollowingScreen({
           week. You lead it, wearing your own face, and Add ends it. */}
       {isHome && (
         <div className="tray">
-          <div className="railhead">
-            <p className="nearlbl railbl">This week</p>
-          </div>
-          <p className="tray-subhead">Your circle</p>
           <div className="tray-scroll">
             <button
               className="trayitem"
@@ -561,7 +557,7 @@ export function FollowingScreen({
           switch to Search. */}
       {isHome && (
         <div className="week-schedule-head">
-          <span>Near you</span>
+          <span className="nearlbl">Upcoming near you</span>
           <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
             <Icon name="arrow_forward" size={22} />
           </Link>

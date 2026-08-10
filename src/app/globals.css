@@ -6036,20 +6036,12 @@ button.ps-card { cursor: pointer; }
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
-.railhead {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-right: 18px;
-}
-.tray-subhead {
-  margin: 0 18px 2px; color: var(--ol);
-  font-size: 12.5px; font-weight: 600;
-}
 .week-schedule-head {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 8px; padding: 13px 0 3px;
+  margin-top: 8px; padding: 18px 0 3px;
   border-top: 1px solid var(--div);
-  color: var(--ol); font-size: 12.5px; font-weight: 600;
 }
+.week-schedule-head .nearlbl { margin: 0; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {
