@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import type { Viewport } from "next";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
@@ -16,6 +17,11 @@ import { SaveEducation } from "@/components/SaveEducation";
 import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
+
+// Safari tints its browser chrome from theme-color. The tabbed app ends in a
+// white navigation surface, so matching that color removes the beige seam
+// between the site bar and Safari's own bottom controls.
+export const viewport: Viewport = { themeColor: "#ffffff" };
 
 // The shell the tabbed screens share: header, content, tab bar.
 //
