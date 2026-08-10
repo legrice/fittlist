@@ -6033,7 +6033,7 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
 }
 .yourweek-row {
-  display: grid; grid-template-columns: auto 54px minmax(0, 1fr) auto;
+  display: grid; grid-template-columns: 74px minmax(0, 1fr) auto;
   align-items: center; gap: 10px; min-height: 70px; padding: 11px 13px;
   color: var(--ink); text-decoration: none;
 }
@@ -6043,6 +6043,7 @@ button.ps-card { cursor: pointer; }
   font-size: 11px; font-weight: 600;
 }
 .yourweek-date.today { background: var(--si-tint); color: var(--si-ink); }
+.yourweek-when { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .yourweek-time { font-size: 13.5px; font-weight: 600; }
 .yourweek-copy { min-width: 0; }
 .yourweek-copy strong, .yourweek-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

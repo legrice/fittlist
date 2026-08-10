@@ -609,10 +609,12 @@ export function FollowingScreen({
             <div className="yourweek-list">
               {yourWeek.map((item) => (
                 <Link key={item.key} className="yourweek-row" href="/calendar">
-                  <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
-                    {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
+                  <span className="yourweek-when">
+                    <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
+                      {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
+                    </span>
+                    <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
                   </span>
-                  <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
                   <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
                   <Icon name="chevron_right" size={18} />
                 </Link>
