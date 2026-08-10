@@ -74,7 +74,7 @@ export function PlanSheet({
         onToast(res.error ?? "Couldn't remove that");
         return;
       }
-      onRemoved("Removed from your calendar");
+      onRemoved("Removed from your week");
     });
   };
 

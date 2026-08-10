@@ -232,7 +232,7 @@ export function WeekScreen({
       }
       // One of your own is off your calendar; a Going mark is off a list you
       // can add back to. Same X, two different things gone.
-      toast(personalId ? "Removed from your calendar" : "Removed from your plans");
+      toast(personalId ? "Removed from your week" : "Removed from your plans");
       router.refresh();
     });
   };

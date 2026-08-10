@@ -67,7 +67,7 @@ export function ClassCardActions({
           aria-pressed={on}
           onClick={toggle}
         >
-          <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
+          <Icon name={on ? "check_circle" : "add_circle"} size={22} />
           <span className="evcard-add-t">{on ? "Added" : "Add"}</span>
         </button>
       )}
@@ -76,7 +76,7 @@ export function ClassCardActions({
       <div className={`favtoast listadded${justAdded ? " on" : ""}`} aria-hidden={!justAdded}>
         {justAdded && (
           <>
-            <Icon name="bookmark_added" size={18} />
+            <Icon name="check_circle" size={18} />
             <span className="favtoast-t">Added {name}. Followers can see it.</span>
             {/* See it lands on the week with this occurrence marked, so the
                 note hands over to the thing itself rather than to a list to

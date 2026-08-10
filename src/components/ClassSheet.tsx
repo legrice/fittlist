@@ -480,7 +480,7 @@ export function ClassSheet({
             </button>
             <h2>Add a booking link</h2>
             <p className="lead">
-              It lands on every {c.name} under this coach, and on their saved class, so it
+              It lands on every {c.name} under this coach, and on their added class, so it
               stays when the class is re-added. Only classes with no link are touched.
             </p>
             <label className="flabel" htmlFor="alUrl">The booking page</label>
@@ -553,7 +553,7 @@ export function ClassSheet({
           {c.classType && <span className="evtype classoverlay-type">{c.classType}</span>}
           <h2 className="classoverlay-nm">{c.name}</h2>
           {/* Whose class it is, as a face and a name, and a way to them: from
-              the feed or your saves this is often the first time you meet a
+              the feed or your week this is often the first time you meet a
               coach, and their name is the natural next tap.
 
               A gym is never the name here: it is a place rather than a person,
@@ -754,16 +754,16 @@ export function ClassSheet({
                           ? "You RSVP'd"
                           : "RSVP"
                         : added
-                          ? "Saved"
-                          : "Save to your week"
+                          ? "Added to your week"
+                          : "Add to your week"
                     }
                     onClick={toggle}
                   >
                     {/* An empty ribbon, then the same ribbon with the tick
                         cut into it. On an RSVP class the word changes with
                         the deal: a save the organizer can see. */}
-                    <Icon name={added ? "bookmark_added" : "bookmark"} size={21} />
-                    {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Save"}
+                    <Icon name={added ? "check_circle" : "add_circle"} size={21} />
+                    {c.rsvp ? (added ? "" : "RSVP") : added ? "" : "Add"}
                   </button>
                 )}
               </>
@@ -1092,8 +1092,8 @@ export function ClassSheet({
           It names that list, because the list has a name and it is the tab
           they will look for it on. */}
       <div className={`favtoast${favOn ? " on" : ""}`} aria-hidden={!favOn}>
-        <Icon name="bookmark_added" size={18} />
-        <span className="favtoast-t">Saved. Followers can see it.</span>
+        <Icon name="check_circle" size={18} />
+        <span className="favtoast-t">Added to your week. Followers can see it.</span>
         <Link
           className="favtoast-link"
           href={c ? `/week?hl=${encodeURIComponent(`${c.id}.${c.whenIso}`)}` : "/week"}

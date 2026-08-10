@@ -186,7 +186,7 @@ export function CoachPeek({
                       </span>
                       {!self && on && (
                         <span className="peekrow-tags">
-                          <span className="peektag peektag-you">You saved this too</span>
+                          <span className="peektag peektag-you">In your week too</span>
                         </span>
                       )}
                     </Link>
@@ -194,10 +194,10 @@ export function CoachPeek({
                       <button
                         className={`peekadd${on ? " on" : ""}`}
                         onClick={() => save(it.classId, it.iso, !on)}
-                        aria-label={on ? `Saved: ${it.name}` : `Save ${it.name}`}
+                        aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
                       >
-                        <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                        <span>{on ? "Saved" : "Save"}</span>
+                        <Icon name={on ? "check_circle" : "add_circle"} size={22} />
+                        <span>{on ? "Added" : "Add"}</span>
                       </button>
                     )}
                   </div>
@@ -217,7 +217,7 @@ export function CoachPeek({
         ))}
 
         {!self && peek && peek.days.length > 0 && (
-          <p className="peekfoot">Ribbon anything here to put it on your own week.</p>
+          <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
       </div>
     </div>

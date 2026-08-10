@@ -196,7 +196,7 @@ export function CalendarScreen({
                     setRemoveSaved({ classId: i.classId, iso: i.iso, name: i.name })
                   }
                 >
-                  <Icon name="bookmark_added" size={20} />
+                  <Icon name="check_circle" size={20} />
                 </button>
               ) : undefined,
               // A personal entry opens its own sheet (edit, share, remove);
@@ -278,7 +278,7 @@ export function CalendarScreen({
                   className={`catpill${pill === k ? " on" : ""}`}
                   onClick={() => setPill(k)}
                 >
-                  {k === "all" ? "All" : k === "saved" ? "Saved" : "Coaching"}
+                  {k === "all" ? "All" : k === "saved" ? "Added" : "Coaching"}
                 </button>
               ))}
             </div>
@@ -466,8 +466,8 @@ export function CalendarScreen({
           }}
         >
           <div className="sheet confirmsheet">
-            <h2>Remove {removeSaved.name}?</h2>
-            <p className="lead">This class will be removed from your calendar.</p>
+            <h2>Remove {removeSaved.name} from your week?</h2>
+            <p className="lead">This class will be removed from your week.</p>
             <div className="publishwrap nostick">
               <button
                 className="btn si"
@@ -481,7 +481,7 @@ export function CalendarScreen({
                     return;
                   }
                   setRemoveSaved(null);
-                  toast("Removed from your calendar");
+                  toast("Removed from your week");
                   router.refresh();
                 }}
               >

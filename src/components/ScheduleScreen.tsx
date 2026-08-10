@@ -686,7 +686,7 @@ export function ScheduleScreen({
                               aria-label={`Added ${p.name}. Tap to remove it from your schedule.`}
                               onClick={() => removeGoing(p)}
                             >
-                              <Icon name="bookmark_added" size={22} />
+                              <Icon name="check_circle" size={22} />
                               <span className="evcard-add-t">Added</span>
                             </button>
                           )}
@@ -853,7 +853,7 @@ export function ScheduleScreen({
                   setPersonalOpen(true);
                 }}
               >
-                <span className="setrow-ic"><Icon name="bookmark" size={24} /></span>
+                <span className="setrow-ic"><Icon name="add_circle" size={24} /></span>
                 <span className="setrow-txt">
                   <span className="t">
                     A class you&rsquo;re going to <span className="addtag">Shared</span>
@@ -1140,7 +1140,7 @@ export function ScheduleScreen({
       <div className={`favtoast listadded${removed ? " on" : ""}`} aria-hidden={!removed}>
         {removed && (
           <>
-            <Icon name="bookmark" size={18} />
+            <Icon name="add_circle" size={18} />
             <span className="favtoast-t">Removed {removed.name} from your schedule</span>
             <button className="favtoast-link" onClick={undoRemove}>
               Undo

@@ -637,8 +637,8 @@ export function FollowingScreen({
             </Link>
           ) : (
             <div className="yourweek-empty">
-              <span className="yourweek-empty-icon"><Icon name="bookmark" size={22} /></span>
-              <span><strong>Start building your week</strong><small>Save any class below to create a calendar you can share.</small></span>
+              <span className="yourweek-empty-icon"><Icon name="add_circle" size={22} /></span>
+              <span><strong>Start building your week</strong><small>Add any class below to create a calendar you can share.</small></span>
             </div>
           )}
         </section>
@@ -984,7 +984,7 @@ function SaveCorner({
     <button
       className={`rowsave${on ? " on" : ""}${bare ? " bare" : ""}`}
       aria-pressed={on}
-      aria-label={on ? `Saved: ${name}` : `Save ${name}`}
+      aria-label={on ? `Added to your week: ${name}` : `Add ${name} to your week`}
       disabled={busy}
       onClick={async () => {
         if (busy) return;
@@ -994,13 +994,13 @@ function SaveCorner({
         if (!res.ok) setOn(on);
         else if (!on) {
           announceSaved(classId, iso);
-          onToast("Saved to your calendar", `${classId}.${iso}`);
+          onToast("Added to your week", `${classId}.${iso}`);
         }
         setBusy(false);
       }}
     >
-      <Icon name={on ? "bookmark_added" : "bookmark"} size={20} />
-      {!bare && <span>{on ? "Saved" : "Save"}</span>}
+      <Icon name={on ? "check_circle" : "add_circle"} size={20} />
+      {!bare && <span>{on ? "Added" : "Add"}</span>}
     </button>
   );
 }

@@ -103,10 +103,10 @@ export function AddBrowse({
                     <button
                       className={`peekadd${on ? " on" : ""}`}
                       onClick={() => save(it.classId, it.iso, !on)}
-                      aria-label={on ? `Saved: ${it.name}` : `Save ${it.name}`}
+                      aria-label={on ? `Added to your week: ${it.name}` : `Add ${it.name} to your week`}
                     >
-                      <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                      <span>{on ? "Saved" : "Save"}</span>
+                      <Icon name={on ? "check_circle" : "add_circle"} size={22} />
+                      <span>{on ? "Added" : "Add"}</span>
                     </button>
                   )}
                 </div>

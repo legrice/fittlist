@@ -86,7 +86,7 @@ export function AppHeader({
             alone, and it says Notifications). */}
         <HeaderIconLink
           label="Messages"
-          icon="chat_bubble"
+          icon="forum"
           href="/inbox"
           match="/inbox"
         />

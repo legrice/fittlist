@@ -857,7 +857,7 @@ export function ShareHubScreen({
               Untick one to leave it off the picture. Your calendar keeps it.
             </p>
             {/* Which hat, never both, by Matt's call: the picture is the
-                classes you coach or the ones you saved, and the segment
+                classes you coach or the ones you added, and the segment
                 picks. The other hat's rows leave the list as well as the
                 picture, so the ticks below are a within-hat choice. */}
             {twoHats && (
@@ -865,7 +865,7 @@ export function ShareHubScreen({
                 {(
                   [
                     ["coaching", "Coaching"],
-                    ["saved", "Saved"],
+                    ["saved", "Added"],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -908,7 +908,7 @@ export function ShareHubScreen({
                         <span className="shpick-titleline">
                           <span className="t">{it.name}</span>
                           <span className={`shclass-tag ${it.coaching ? "coaching" : "saved"}`}>
-                            {it.coaching ? "Coaching" : "Saved"}
+                            {it.coaching ? "Coaching" : "Added"}
                           </span>
                         </span>
                         <span className="s">
@@ -966,7 +966,7 @@ export function ShareHubScreen({
           onToast={toast}
           onPublished={() => {
             setAddOpen(false);
-            toast("Saved to your week");
+            toast("Added to your week");
             refreshWeek();
           }}
           onDeleted={(msg) => {
@@ -1032,7 +1032,7 @@ export function ShareHubScreen({
                   setMatchBusy(false);
                   setMatch(null);
                   if (res.ok) {
-                    toast("Saved to your week");
+                    toast("Added to your week");
                     refreshWeek();
                   } else {
                     toast(res.error ?? "Couldn't add it");

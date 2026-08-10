@@ -437,7 +437,7 @@ export function ClassPeek({
           {full?.canAdd &&
             (() => {
               const on = savedNow ?? full.added;
-              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Saved" : "Save";
+              const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Added" : "Add";
               return (
                 <button
                   className={`clsfull-btn save${on ? " on" : ""}`}
@@ -453,7 +453,7 @@ export function ClassPeek({
                       onToast(
                         full.rsvp
                           ? "RSVP’d. It’s on your calendar."
-                          : "Saved to your calendar",
+                          : "Added to your week",
                         `${cls.id}.${cls.iso}`,
                       );
                     }
@@ -461,6 +461,9 @@ export function ClassPeek({
                     onChanged();
                   }}
                 >
+                  {!full.rsvp && (
+                    <Icon name={on ? "check_circle" : "add_circle"} size={20} />
+                  )}
                   {word}
                 </button>
               );

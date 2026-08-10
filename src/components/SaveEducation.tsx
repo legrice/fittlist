@@ -47,9 +47,9 @@ export function SaveEducation({ shareHref }: { shareHref: string }) {
     >
       <div className="sheet confirmsheet saveeducation">
         <span className="saveeducation-icon" aria-hidden="true">
-          <Icon name="bookmark_added" size={24} />
+          <Icon name="check_circle" size={24} />
         </span>
-        <h2>Saved to your calendar</h2>
+        <h2>Added to your week</h2>
         <p className="lead">
           It&rsquo;s now part of your week. Open Calendar to see it there, or share your
           updated week with friends.

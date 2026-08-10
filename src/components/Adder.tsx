@@ -1181,7 +1181,7 @@ export function Adder({
                   <span className="setrow-txt">
                     <span className="t">Ask people to RSVP</span>
                     <span className="s">
-                      Saves on this class show you their names, and it says so before they tap.
+                      Adds on this class show you their names, and it says so before they tap.
                     </span>
                   </span>
                   <span className={`switch${rsvp ? " on" : ""}`} aria-hidden="true">
