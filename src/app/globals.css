@@ -4375,8 +4375,7 @@ button.ps-card { cursor: pointer; }
 /* A screen that draws the card manages its own bottom clearance: the card has
    to run under the floating bar to the end of the page, so the room the last
    row needs lives inside it, or the shell shows through as a gray band. */
-.screen.hasnav .pad:has(> .cardwrap),
-.screen.hasnav .pad:has(> .home-listregion) {
+.screen.hasnav .pad:has(> .cardwrap) {
   padding-bottom: 0;
   display: flex; flex-direction: column;
 }
@@ -6392,13 +6391,9 @@ button.ps-card { cursor: pointer; }
    person's fresh week wears. It needs no New badge: you made the change. */
 .youwrap { position: relative; display: block; }
 
-/* Home has one section rhythm. The schedule used to carry the bottom-nav
-   clearance even though three more sections followed it, which left a blank
-   screen between the final class and Local studios. The clearance belongs at
-   the real end of Home; every section before it gets the same 32px breath. */
+/* Home has one section rhythm. Its final class list now gets the shell's
+   normal bottom-nav clearance; there are no unrelated rails after it. */
 .home-schedule { padding-bottom: 0; }
-.home-section { margin-top: 32px; }
-.home-section .nearhead { padding-top: 0; }
 .home-shareprompt {
   display: grid; grid-template-columns: minmax(0, 1fr) 112px;
   align-items: center; gap: 16px; padding: 20px;

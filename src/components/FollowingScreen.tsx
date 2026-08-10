@@ -11,7 +11,6 @@ import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
 import { announceSaved } from "@/components/SaveEducation";
-import { initialOf } from "@/lib/avatar";
 
 export type FeedCoach = {
   id: string;
@@ -127,15 +126,14 @@ type Filters = {
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
 
 /**
- * Home: the This week rail, then three rails of what's around you.
+ * Home: the people you keep up with, your week, and classes you can add.
  *
  * The faces are the people you follow who actually have something coming
  * up, soonest first, each circle a name and a ring: solid orange when
  * their week changed since you last opened it, bare once seen. Under them
- * Upcoming near you is a single-day preview (every listable coach's
- * classes, whether or not you follow anybody), then the studios and the
- * coaches around you. Its arrow opens the complete filtered class browser;
- * the other rails still open Search on their matching segment.
+ * The class preview includes every listable coach, whether or not you follow
+ * them, and opens the complete filtered class browser. Home deliberately
+ * stops there: its job is to help someone build and share a week.
  */
 export function FollowingScreen({
   items,
@@ -149,7 +147,6 @@ export function FollowingScreen({
   weekPreview = [],
   meKind,
   meFace,
-  nearStudios,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -384,17 +381,6 @@ export function FollowingScreen({
   // Hide the rail rather than draw it dead: following nobody keeps the
   // teaching state (ghosts and one line), following only people with
   // nothing coming up hides the block entirely.
-
-  const milesTo = (s: NearStudio): number | null =>
-    geo && s.lat != null && s.lng != null
-      ? milesBetween(geo, { lat: s.lat, lng: s.lng })
-      : null;
-  const studiosNear = useMemo(() => {
-    // The server deliberately puts photographed studios first and shuffles
-    // each group. A location pin enriches the distance label but should not
-    // undo that visual ordering.
-    return nearStudios;
-  }, [nearStudios]);
 
   const pickDist = (v: Filters["dist"], close: boolean) => {
     if (v !== "any" && !geo && typeof navigator !== "undefined" && navigator.geolocation) {
@@ -772,50 +758,6 @@ export function FollowingScreen({
             </div>
           </div>
         </>
-      )}
-
-      {/* Under the schedule, the places and the people, by Matt's call:
-          the studios closest to you as rectangles on a rail, then the
-          coaches around you with Follow one tap deep. Your own city leads
-          both. Each head's arrow opens Search on that kind's segment. */}
-      {isHome && nearStudios.length > 0 && (
-        <section className="nearrail home-section">
-          <div className="nearhead nearhead-row">
-            <span className="nearlbl">Local studios</span>
-            <Link className="nearhead-go home-seeall" href="/search?seg=studios">
-              See all
-            </Link>
-          </div>
-          <div className="strail">
-            {studiosNear.map((s) => {
-              const mi = milesTo(s);
-              const shownMiles = mi ?? s.approxMiles;
-              const typeLabel = s.types.slice(0, 2).join(" · ");
-              return (
-                <Link key={s.id} className="strail-item" href={`/s/${s.slug}?from=discover`}>
-                  <span className="strail-ph">
-                    {s.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.photo} alt="" />
-                    ) : (
-                      <span className="strail-ini" style={{ background: s.color }}>
-                        {initialOf(s.name)}
-                      </span>
-                    )}
-                  </span>
-                  <span className="strail-nm">{s.name}</span>
-                  {typeLabel && <span className="strail-types">{typeLabel}</span>}
-                  {shownMiles !== null && (
-                    <span className="strail-mi">
-                      {mi === null ? "About " : ""}
-                      {shownMiles < 10 ? shownMiles.toFixed(1) : Math.round(shownMiles)} mi away
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
       )}
 
       {/* No floating search circle either: the Search tab took the act.
