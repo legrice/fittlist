@@ -731,18 +731,26 @@ export function FollowingScreen({
               : "/calendar"
           }
         >
-          <span className="home-shareprompt-icon" aria-hidden="true">
-            <Icon name={hasCalendar ? "north_east" : "calendar_today"} size={22} />
-          </span>
           <span className="home-shareprompt-copy">
-            <strong>{hasCalendar ? "Share your calendar" : "Build your calendar"}</strong>
+            <strong>{hasCalendar ? "Your week, ready to share" : "Build a week worth sharing"}</strong>
             <span>
               {hasCalendar
-                ? "Send your updated week to friends."
-                : "Add a class you coach or save one you want to take, then share your week."}
+                ? "Post your calendar to Instagram or save it as a photo."
+                : "Add or save a class, then turn your calendar into a shareable story."}
+            </span>
+            <span className="home-shareprompt-action">
+              {hasCalendar ? "Share your week" : "Build your calendar"}
+              <Icon name="arrow_forward" size={17} />
             </span>
           </span>
-          <Icon name="arrow_forward" size={22} />
+          <span className="home-shareprompt-visual" aria-hidden="true">
+            <span className="home-shareprompt-story">
+              <i />
+              <b>MY WEEK</b>
+              <em /><em /><em />
+            </span>
+            <span className="home-shareprompt-instagram"><i /></span>
+          </span>
         </Link>
       )}
 
