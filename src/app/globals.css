@@ -4837,20 +4837,13 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; color: var(--ol); cursor: pointer;
 }
 .shpick-editbtn:active { background: var(--shell); }
-/* The Classes sheet's two hats, coach hub only: a member's rows are all
-   saved, and two of three shortcuts would show the same list. The shortcut
-   row reuses the day pills' drawing a size down; the tags wear the calendar
-   chips' own washes (coaching in the brand tint, saved in the quiet grey),
-   so the sheet says a kind the same way the rows do. */
+/* The Classes sheet's hat segment, coach hub only: Coaching or Saved,
+   never both on one picture, by Matt's call, so the row is a two-way
+   pick reusing the day pills' drawing a size down. A member's rows are
+   all saved and get no segment. The per-row tags went with the mixing:
+   a list that is all one hat has nothing to tell apart. */
 .shcuts { margin: 0 0 12px; }
 .shcuts .shday { font-size: 13px; height: 38px; padding: 0 4px; }
-.shpick-tag {
-  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-  vertical-align: 1px; white-space: nowrap;
-  background: var(--cl); color: var(--ol);
-}
-.shpick-tag:not(.saved) { background: var(--si-tint); color: var(--si-ink); }
 
 /* The member hub's start block: in place of an empty poster, so the one
    button that fixes the emptiness is never below the fold. */
@@ -5956,7 +5949,9 @@ button.ps-card { cursor: pointer; }
      and a 6px box-shadow ring on the first circle was being cut off at the top
      and along the left edge. Six for the ring, and the horizontal 18 already
      clears it at the start of the rail. */
-  display: flex; gap: 18px; overflow-x: auto; padding: 6px 18px;
+  /* 12, down from 18, by Matt's call: the circles read as one row of
+     people rather than islands. */
+  display: flex; gap: 12px; overflow-x: auto; padding: 6px 18px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .tray-scroll::-webkit-scrollbar { display: none; }
@@ -6018,7 +6013,11 @@ button.ps-card { cursor: pointer; }
    circle is a name and a ring, per the updates brief: no captions, no
    badges, no next-class times. */
 .trayav-ring { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
-.trayav-ring.seen { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--line); }
+/* Seen wears nothing, by Matt's call: the grey ring on the warm gradient
+   read as a drop shadow, and no ring already says "nothing new" better
+   than a quiet one. The class stays on the element so the suite can tell
+   seen from never-ringed. */
+.trayav-ring.seen { box-shadow: none; }
 /* You, leading the rail: your own face, by Matt's call (it was a dashed
    arrow door for a build). No ring, because the ring means somebody
    else's week changed and yours cannot surprise you. */
@@ -6160,7 +6159,7 @@ button.ps-card { cursor: pointer; }
    the day headings' left edge. The old 18px inset put the whole block a
    gutter deeper than the list it headed. The top padding is the section
    break: sections need a breath between them, by Matt's call. */
-.nearhead { padding: 34px 0 2px; }
+.nearhead { padding: 26px 0 2px; }
 /* The segment standing where the word Calendar stood: the pills at the
    title row's own height, no bleed of their own. 40px matches the view
    toggle across from them (34px buttons in 3px of padding), so the row

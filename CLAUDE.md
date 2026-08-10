@@ -2227,9 +2227,10 @@ behind it holds something, a class they coach or one they are going to
 inside the fortnight, and the person whose next thing is soonest leads.
 Each circle is a name and a ring and nothing else, no captions, no
 badges. The ring is the freshness signal: brand orange when their week
-changed since you last opened it, grey once seen (`subscribers.peekedAt`,
+changed since you last opened it, bare once seen (`subscribers.peekedAt`,
 written when the peek opens, because the ring's promise is kept the
-moment somebody is looking). A rail with nobody on it hides entirely
+moment somebody is looking; it was a grey ring, which read as a drop
+shadow on the warm gradient, by Matt's call). A rail with nobody on it hides entirely
 (the addendum says below about three; the floor is one until density
 earns three, or the feature buries itself). You lead the rail, your own
 face labelled You (no ring, because your week cannot surprise you), a
@@ -2329,17 +2330,18 @@ offer a row the search would not (the block rules and `discoverable`
 are kept once); the one difference is the directory's quality bar comes
 back for coaches, because this is a list nobody asked for.
 
-The share hub carries both hats now: `shareWeek`'s coach branch loads the
-saved half (marks and personal rows) beside the teaching week, each item
-marked `coaching` or `own`. The Classes sheet tags rows Coaching or Saved
-(coach hub only, and only when both kinds exist at all) and offers the
-brief's shortcuts (All, Coaching only, Saved only) over a range that mixes
-them. Which shortcut is on is derived from the hide set rather than
-stored, which is what makes the brief's rule free: untick a row by hand
-and the shortcut deselects itself. On the image, coaching rows carry
-"Coaching" in the who slot, and only when the picture actually mixes the
-hats: a poster that is all teaching rows stays exactly what it was, and
-saved rows keep the coach's first name, which is a fact rather than a tag.
+The share hub loads both hats and never mixes them on one picture, by
+Matt's call: `shareWeek`'s coach branch loads the saved half (marks and
+personal rows) beside the teaching week, each item marked `coaching` or
+`own`, and the Classes sheet is a two-way segment (Coaching, Saved)
+rather than the old All / only / only shortcuts. The hat folds the other
+kind's in-range rows into the hide set the image, the count chip and the
+week-as-text all read (`effHide`), and the sheet lists only the hat in
+front of you, so the ticks stay a within-hat choice; the per-row tags
+went with the mixing, because a list that is all one hat has nothing to
+tell apart. A member has one hat and no segment. The image's "Coaching"
+who-slot tag only ever drew on a mixed picture, so it now never draws;
+saved rows keep the coach's first name, a fact rather than a tag.
 
 `discoverspec.md` predates the addendum and is superseded where they
 disagree (it says favorite and star; the word is Follow and there are no
