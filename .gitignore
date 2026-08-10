@@ -13,3 +13,6 @@ nav-*.png
 loc-*.png
 # where the test suites tell you to log the server, so it lands in the repo root
 server.log
+planedit-*.png
+filt-*.png
+nav-*.png
