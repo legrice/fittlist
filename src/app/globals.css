@@ -7310,7 +7310,7 @@ a.clspeek-by:active { opacity: .6; }
    line under it. */
 /* The two second-line captions share a margin, because they share a row:
    the length under the time, the studio under the name. */
-.clline-dur { font-size: 13px; color: var(--ol); margin-top: 2px; }
+.clline-dur { font-size: 13px; line-height: 1.1; color: var(--ol); margin-top: -1px; }
 .clline-t {
   display: flex; align-items: baseline; gap: 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -7375,7 +7375,7 @@ a.clspeek-by:active { opacity: .6; }
 /* The studio, with a pin. The glyph is what stops it reading as a second line
    of the class name at a glance. */
 .clline-w {
-  display: flex; align-items: center; gap: 5px; margin-top: 2px;
+  display: flex; align-items: center; gap: 5px; margin-top: -1px; line-height: 1.1;
   font-size: 15px; color: var(--ol); min-width: 0;
 }
 .clline-w .icon { flex-shrink: 0; color: var(--ol); }
