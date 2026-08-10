@@ -6042,7 +6042,7 @@ button.ps-card { cursor: pointer; }
 .railbl { margin: 16px 18px 8px; }
 .week-schedule-head {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 8px; padding: 18px 0 3px;
+  margin-top: 4px; padding: 15px 0 3px;
 }
 .week-schedule-head .nearlbl { margin: 0; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
