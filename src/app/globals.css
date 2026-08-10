@@ -6659,7 +6659,7 @@ button.ps-card { cursor: pointer; }
    over whatever scrolled under it, photo and prose alike. Doubled selector
    on purpose: .clspeek-x is later in this file, and its inline-flex made
    margin-left: auto mean nothing. */
-/* One sticky row for both corners: the overflow dots left, close right,
+/* One sticky row for both corners: close left, overflow dots right,
    by Matt's call. It pulls its own height back so the photo starts where
    it always did, and both circles float over whatever scrolls under. */
 .clsfull-toprow {
