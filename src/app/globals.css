@@ -6017,7 +6017,7 @@ button.ps-card { cursor: pointer; }
 /* At the page gutter: the tray bleeds to the screen edge, so the label
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
-.railbl { margin: 22px 18px 8px; }
+.railbl { margin: 16px 18px 8px; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {
@@ -6141,7 +6141,7 @@ button.ps-card { cursor: pointer; }
    the day headings' left edge. The old 18px inset put the whole block a
    gutter deeper than the list it headed. The top padding is the section
    break: sections need a breath between them, by Matt's call. */
-.nearhead { padding: 40px 0 2px; }
+.nearhead { padding: 34px 0 2px; }
 /* The segment standing where the word Calendar stood: the pills at the
    title row's own height, no bleed of their own. 40px matches the view
    toggle across from them (34px buttons in 3px of padding), so the row
