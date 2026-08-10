@@ -299,8 +299,8 @@ export function FollowingScreen({
     return out;
   }, [items, todayIso]);
 
-  // One row mapping. No duration on this list, by Matt's call: the length
-  // is the class page's fact, and the left column is the clock alone.
+  // One row mapping. Duration sits beneath the time on the same grid row as
+  // the studio, so both secondary facts can be compared without another line.
   const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
     const c = coachById.get(i.coachId);
     return {
@@ -310,6 +310,7 @@ export function FollowingScreen({
       where: i.where,
       hm: i.hm,
       ap: i.ap,
+      dur: `${i.durationMin} min`,
       coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
       onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
     };
