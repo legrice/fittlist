@@ -6364,6 +6364,23 @@ button.ps-card { cursor: pointer; }
 .home-schedule { padding-bottom: 0; }
 .home-section { margin-top: 32px; }
 .home-section .nearhead { padding-top: 0; }
+.home-shareprompt {
+  display: grid; grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center; gap: 13px; padding: 17px 16px;
+  border-radius: 18px; background: var(--si-tint); color: var(--ink);
+  text-decoration: none;
+}
+.home-shareprompt-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 999px;
+  background: var(--card); color: var(--si);
+}
+.home-shareprompt-copy { min-width: 0; }
+.home-shareprompt-copy strong { display: block; font-size: 16px; font-weight: 600; }
+.home-shareprompt-copy > span {
+  display: block; margin-top: 3px; color: var(--ol);
+  font-size: 13px; line-height: 1.35;
+}
 
 /* The About block closes Home as a small piece of brand, not another loose
    heading and paragraph. Its contrast gives the long mixed feed a clear end,

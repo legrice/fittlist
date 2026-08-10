@@ -38,6 +38,7 @@ export default async function UpcomingPage() {
       }}
       nearStudios={[]}
       localCoaches={[]}
+      hasCalendar={false}
     />
   );
 }

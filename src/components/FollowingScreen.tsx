@@ -153,6 +153,7 @@ export function FollowingScreen({
   meFace,
   nearStudios,
   localCoaches,
+  hasCalendar = false,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -177,6 +178,8 @@ export function FollowingScreen({
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
   localCoaches: LocalCoach[];
+  /** Chooses between building an empty calendar and sharing a populated one. */
+  hasCalendar?: boolean;
   /** Home is a single-day preview; Upcoming is the dedicated filtered browser. */
   mode?: "home" | "upcoming";
 }) {
@@ -731,6 +734,33 @@ export function FollowingScreen({
           </div>
         </section>
       )}
+
+      {isHome && (
+        <Link
+          className="home-shareprompt home-section"
+          href={
+            hasCalendar
+              ? meKind === "coach"
+                ? "/coachshare"
+                : "/membershare"
+              : "/calendar"
+          }
+        >
+          <span className="home-shareprompt-icon" aria-hidden="true">
+            <Icon name={hasCalendar ? "north_east" : "calendar_today"} size={22} />
+          </span>
+          <span className="home-shareprompt-copy">
+            <strong>{hasCalendar ? "Share your calendar" : "Build your calendar"}</strong>
+            <span>
+              {hasCalendar
+                ? "Send your updated week to friends."
+                : "Add a class you coach or save one you want to take, then share your week."}
+            </span>
+          </span>
+          <Icon name="arrow_forward" size={22} />
+        </Link>
+      )}
+
       {isHome && localCoaches.length > 0 && (
         <section className="nearrail home-section">
           <div className="nearhead nearhead-row">

@@ -37,6 +37,7 @@ export default async function DiscoverPage() {
       }}
       nearStudios={feed.nearStudios}
       localCoaches={feed.localCoaches}
+      hasCalendar={feed.hasCalendar}
     />
   );
 }
