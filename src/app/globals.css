@@ -6039,7 +6039,6 @@ button.ps-card { cursor: pointer; }
 .week-schedule-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 8px; padding: 18px 0 3px;
-  border-top: 1px solid var(--div);
 }
 .week-schedule-head .nearlbl { margin: 0; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
