@@ -164,53 +164,55 @@ export function CoachPeek({
             {d.items.map((it) => {
               const key = `${it.classId}|${it.iso}`;
               const on = marks[key] ?? it.saved;
-              return (
-                // The swipe came with the merged week it used to live on. It
-                // belongs here for the same reason the rail does: saving is
-                // the act this release turns on, and the cheapest version of
-                // it is one drag without aiming at a button.
-                <SwipeGoing key={key} going={on} onToggle={() => save(it.classId, it.iso, !on)}>
-                {/* A class opens as a sheet from a list and as a page from a
-                    link, and a peek is a list. Left as a bare href the row
-                    navigated, which threw the peek away.
-
-                    Inside the swipe, not around it: both catch the click in
-                    the capture phase, so the outer one goes first. */}
+              // A class opens as a sheet from a list and as a page from a
+              // link, and a peek is a list. Left as a bare href the row
+              // navigated, which threw the peek away.
+              const row = (
                 <ClassOpener handle="">
-                <div className="peekrow">
-                  <Link
-                    className="peekrow-go"
-                    href={`/${it.base}/${it.classId}?d=${it.iso}`}
-                    data-cid={it.classId}
-                    data-d={it.iso}
-                    data-base={it.base}
-                  >
-                    <span className="peekrow-nm">{it.name}</span>
-                    <span className="peekrow-sub">
-                      {it.hm}
-                      <span className="peekrow-ap">{it.ap.toLowerCase()}</span> &middot;{" "}
-                      {it.durationMin} min
-                      {it.where ? ` · ${it.where}` : ""}
-                    </span>
-                    {/* Which hat, and the overlap: the tags only draw when
-                        they have something to say. */}
-                    {(it.coaching || on) && (
-                      <span className="peekrow-tags">
-                        {it.coaching && <span className="peektag">Coaching</span>}
-                        {on && <span className="peektag peektag-you">You saved this too</span>}
+                  <div className="peekrow">
+                    <Link
+                      className="peekrow-go"
+                      href={`/${it.base}/${it.classId}?d=${it.iso}`}
+                      data-cid={it.classId}
+                      data-d={it.iso}
+                      data-base={it.base}
+                    >
+                      <span className="peekrow-nm">{it.name}</span>
+                      <span className="peekrow-sub">
+                        {it.hm}
+                        <span className="peekrow-ap">{it.ap.toLowerCase()}</span> &middot;{" "}
+                        {it.durationMin} min
+                        {it.where ? ` · ${it.where}` : ""}
                       </span>
+                      {(it.coaching || (!self && on)) && (
+                        <span className="peekrow-tags">
+                          {it.coaching && <span className="peektag">Coaching</span>}
+                          {!self && on && (
+                            <span className="peektag peektag-you">You saved this too</span>
+                          )}
+                        </span>
+                      )}
+                    </Link>
+                    {!self && (
+                      <button
+                        className={`peekadd${on ? " on" : ""}`}
+                        onClick={() => save(it.classId, it.iso, !on)}
+                        aria-label={on ? `Saved: ${it.name}` : `Save ${it.name}`}
+                      >
+                        <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
+                        <span>{on ? "Saved" : "Save"}</span>
+                      </button>
                     )}
-                  </Link>
-                  <button
-                    className={`peekadd${on ? " on" : ""}`}
-                    onClick={() => save(it.classId, it.iso, !on)}
-                    aria-label={on ? `Saved: ${it.name}` : `Save ${it.name}`}
-                  >
-                    <Icon name={on ? "bookmark_added" : "bookmark"} size={22} />
-                    <span>{on ? "Saved" : "Save"}</span>
-                  </button>
-                </div>
+                  </div>
                 </ClassOpener>
+              );
+              if (self) return <div key={key}>{row}</div>;
+              return (
+                // Saving belongs to somebody else's week. Your own peek is
+                // already the destination, so it carries neither swipe nor
+                // a second Save action.
+                <SwipeGoing key={key} going={on} onToggle={() => save(it.classId, it.iso, !on)}>
+                  {row}
                 </SwipeGoing>
               );
             })}
