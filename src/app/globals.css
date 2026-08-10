@@ -6026,46 +6026,6 @@ button.ps-card { cursor: pointer; }
   border: 1.5px dashed var(--line); align-self: flex-start; margin-top: 0;
 }
 .trayhint { margin: 6px 18px 2px; font-size: 12.5px; color: var(--ol); }
-.home-yourweek { margin-top: 22px; }
-.yourweek-list {
-  overflow: hidden; border-radius: 16px; background: var(--card);
-  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
-}
-.yourweek-row {
-  display: grid; grid-template-columns: 74px minmax(0, 1fr) auto;
-  align-items: center; gap: 10px; min-height: 70px; padding: 11px 13px;
-  color: var(--ink); text-decoration: none; scroll-margin-top: 18px;
-}
-.yourweek-row.just-added { animation: week-added 1.8s ease-out; }
-.yourweek-row:target { background: var(--si-tint); }
-@keyframes week-added {
-  0%, 38% { background: var(--si-tint); }
-  100% { background: transparent; }
-}
-.yourweek-row + .yourweek-row { border-top: 1px solid var(--div); }
-.yourweek-date {
-  padding: 3px 8px; border-radius: 999px; background: var(--shell); color: var(--ol);
-  font-size: 11px; font-weight: 600;
-}
-.yourweek-date.today { background: var(--si-tint); color: var(--si-ink); }
-.yourweek-when { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-.yourweek-time { font-size: 13.5px; font-weight: 600; }
-.yourweek-copy { min-width: 0; }
-.yourweek-copy strong, .yourweek-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.yourweek-copy strong { font-size: 15px; }
-.yourweek-copy small { margin-top: 3px; color: var(--ol); font-size: 12.5px; }
-.yourweek-check {
-  display: grid; place-items: center; width: 20px; height: 20px;
-  border-radius: 999px; background: var(--ink); color: var(--card);
-}
-.yourweek-empty {
-  display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px;
-  padding: 16px; border-radius: 18px; background: var(--card); color: var(--ink); text-decoration: none;
-}
-.yourweek-empty-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 999px; background: var(--si-tint); color: var(--si); }
-.yourweek-empty strong, .yourweek-empty small { display: block; }
-.yourweek-empty strong { font-size: 16px; }
-.yourweek-empty small { margin-top: 3px; color: var(--ol); font-size: 12.5px; line-height: 1.35; }
 /* Near you: the label and the category pills between the rail and the list. */
 /* ---------- The This week rail, the filter chips, the peek's follow ---------- */
 /* The ring is the freshness signal and the whole message: solid brand when
@@ -6102,10 +6062,6 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
 .rowsave.on { background: none; color: var(--ink); }
-.added-dot {
-  display: grid; place-items: center; width: 20px; height: 20px;
-  border-radius: 999px; background: var(--ink); color: var(--card);
-}
 /* Home's icon-only ribbon sits across from the class name. The name clears
    its hit area; the coach line below gets the full card width again. */
 .disflat .clrow .clline-nm { padding-right: 38px; }
@@ -6414,7 +6370,6 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 7px 20px rgba(25, 21, 2, .06);
   text-decoration: none;
 }
-.home-shareprompt-bottom { margin-top: 30px; }
 .home-shareprompt-copy { min-width: 0; }
 .home-shareprompt-copy strong { display: block; font-size: 20px; line-height: 1.08; font-weight: 600; }
 .home-shareprompt-copy > span {

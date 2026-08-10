@@ -13,7 +13,6 @@ import { AppHeader } from "@/components/AppHeader";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import { InvitesBanner } from "@/components/InvitesBanner";
 import { NavBar } from "@/components/NavBar";
-import { SaveEducation } from "@/components/SaveEducation";
 import { lookMode } from "@/lib/darkmode";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +95,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
         profileHref={profileHref}
         face={face}
       />
-      <SaveEducation shareHref={isCoach ? "/coachshare" : "/membershare"} />
       {askFeedback && <FeedbackPrompt hostName={askFeedback.name.trim() || "We"} />}
     </section>
   );

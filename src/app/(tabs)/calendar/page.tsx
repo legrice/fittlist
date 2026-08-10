@@ -36,12 +36,9 @@ export default async function CalendarPage({
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
-  // Only somebody who teaches has a calendar. A member landing here has no
-  // week of their own to show, so they go where their week actually is.
-  // A member's calendar is /week: saved classes and their own entries.
-  // Four tabs for everyone now, per the brief, so this door has to land
-  // on a calendar rather than bouncing back to Discover.
-  if (me.kind === "fan") redirect("/week");
+  // Only somebody who teaches has a calendar. Members follow published
+  // calendars rather than maintaining a second one inside FittList.
+  if (me.kind === "fan") redirect("/feed");
 
   const [classRows, studioRows, templateRows, customTypeRows, subRows] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym

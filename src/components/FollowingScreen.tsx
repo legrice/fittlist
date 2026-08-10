@@ -3,14 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { setGoing } from "@/app/actions/going";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
-import { announceSaved } from "@/components/SaveEducation";
 
 export type FeedCoach = {
   id: string;
@@ -36,15 +34,6 @@ export type RailPerson = {
   fresh: boolean;
   /** When their next thing is, for the soonest-first order. */
   nextAt: string;
-};
-
-export type YourWeekPreview = {
-  key: string;
-  iso: string;
-  name: string;
-  hm: string;
-  ap: string;
-  where: string | null;
 };
 
 /** A tile on the Studios near you rail: a rectangle, because a place is a
@@ -126,14 +115,12 @@ type Filters = {
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
 
 /**
- * Home: the people you keep up with, your week, and classes you can add.
+ * Following: the coaches you keep up with and their combined schedule.
  *
  * The faces are the people you follow who actually have something coming
  * up, soonest first, each circle a name and a ring: solid orange when
  * their week changed since you last opened it, bare once seen. Under them
- * The class preview includes every listable coach, whether or not you follow
- * them, and opens the complete filtered class browser. Home deliberately
- * stops there: its job is to help someone build and share a week.
+ * Discovery stays behind its own door; this screen is the value of a follow.
  */
 export function FollowingScreen({
   items,
@@ -144,7 +131,6 @@ export function FollowingScreen({
   todayIso,
   meId,
   myRail,
-  weekPreview = [],
   meKind,
   meFace,
   mode = "home",
@@ -162,8 +148,6 @@ export function FollowingScreen({
    *  mark on your own class and a button that fails is worse than none. */
   meId?: string;
   myRail: RailPerson[];
-  /** Saved and personal calendar entries; coaching entries already live in items. */
-  weekPreview?: YourWeekPreview[];
   /** Where the You circle points: the hub is per kind. */
   meKind: "coach" | "member";
   /** The viewer's own face, leading the rail: your circle is you, not a
@@ -172,7 +156,7 @@ export function FollowingScreen({
   /** The rails under the schedule, by Matt's call: the places and the
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
-  /** Home is a single-day preview; Upcoming is the dedicated filtered browser. */
+  /** Following is the combined schedule; Upcoming is the filtered browser. */
   mode?: "home" | "upcoming";
 }) {
   const isHome = mode === "home";
@@ -195,15 +179,6 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [findIntro, setFindIntro] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
-  const [addedReceipt, setAddedReceipt] = useState<{ key: string } | null>(null);
-  const [highlightKey, setHighlightKey] = useState<string | null>(null);
-  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Optimistic membership for this visit. Adding from the catalog should
-  // visibly move the occurrence into Your week without a route refresh.
-  const [goingOverrides, setGoingOverrides] = useState<Record<string, boolean>>({});
-  const isAdded = (item: FeedItem) => goingOverrides[item.key] ?? item.saved;
-  const changeGoing = (key: string, on: boolean) =>
-    setGoingOverrides((current) => ({ ...current, [key]: on }));
   // A save lights your own circle rather than toasting, by Matt's call:
   // the ring goes brand and a New badge rides your face, the same signal a
   // followed person's fresh week sends. Tapping it lands on the Share
@@ -228,20 +203,6 @@ export function FollowingScreen({
       return;
     }
     toast(msg);
-  };
-  const notifyAdded = (item: FeedItem) => {
-    try {
-      localStorage.setItem("fl-you-new", "1");
-    } catch {
-      // Private mode: the receipt and row highlight still work this visit.
-    }
-    setYouFresh(true);
-    const day = item.iso === todayIso ? "today" : weekdayName(item.iso);
-    setAddedReceipt({ key: item.key });
-    setHighlightKey(item.key);
-    toast(`Added to ${day}`);
-    if (highlightTimer.current) clearTimeout(highlightTimer.current);
-    highlightTimer.current = setTimeout(() => setHighlightKey(null), 4200);
   };
   const router = useRouter();
 
@@ -343,49 +304,17 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  const weekEnds = plusDays(todayIso, 6);
-
-  // Home recommends only classes that can land in the seven-day plan shown
-  // directly above. The full browser can look further ahead.
+  // Following is a readable combined schedule, not a builder. Twelve gives a
+  // useful near-term view while the complete discovery browser can go wider.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () =>
       [...shown]
-        .filter((i) => i.iso >= todayIso && i.iso <= weekEnds)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-        .slice(0, 6)
+        .slice(0, 12)
         .map(rowOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, coachById, favIds, todayIso, weekEnds],
+    [shown, coachById, favIds],
   );
-
-  const yourWeek = useMemo(() => {
-    const own =
-      meKind === "coach"
-        ? items
-            .filter((i) => i.coachId === meId)
-            .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }))
-        : [];
-    const seen = new Set<string>();
-    const newlyAdded = items
-      .filter((i) => i.coachId !== meId && isAdded(i))
-      .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }));
-    return [
-      ...weekPreview.filter((i) => goingOverrides[i.key] !== false),
-      ...newlyAdded,
-      ...own,
-    ]
-      // Your week is the seven-day plan starting today, not a small preview
-      // that quietly spills into later weeks when this one is sparse.
-      .filter((i) => i.iso >= todayIso && i.iso <= weekEnds)
-      .sort((a, b) => a.iso.localeCompare(b.iso) || a.hm.localeCompare(b.hm))
-      .filter((i) => {
-        const key = `${i.iso}|${i.name}|${i.hm}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, 12);
-  }, [items, meId, meKind, weekPreview, goingOverrides, todayIso]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -524,7 +453,7 @@ export function FollowingScreen({
       {!isHome && (
         <header className="upcoming-head">
           <Link className="upcoming-back" href="/feed">
-            <Icon name="arrow_back" size={20} /> Home
+            <Icon name="arrow_back" size={20} /> Following
           </Link>
           <h1>Upcoming near you</h1>
           <p>Browse classes by day, time, distance, type, or place.</p>
@@ -615,54 +544,14 @@ export function FollowingScreen({
         </div>
       )}
 
-      {isHome && (
-        <section className="home-yourweek">
-          <div className="nearhead nearhead-row">
-            <span className="nearlbl">Your week</span>
-            {yourWeek.length > 0 && (
-              <Link className="nearhead-go home-seeall" href="/calendar">View calendar</Link>
-            )}
-          </div>
-          {yourWeek.length > 0 ? (
-            <>
-              <div className="yourweek-list">
-                {yourWeek.map((item) => (
-                  <div
-                    id={weekDomId(item.key)}
-                    key={item.key}
-                    className={`yourweek-row${highlightKey === item.key ? " just-added" : ""}`}
-                  >
-                    <span className="yourweek-when">
-                      <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
-                        {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
-                      </span>
-                      <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
-                    </span>
-                    <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
-                    <span className="yourweek-check" aria-label="Added to your week">
-                      <Icon name="check" size={14} />
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="yourweek-empty">
-              <span className="yourweek-empty-icon"><Icon name="add_circle" size={22} /></span>
-              <span><strong>Start building your week</strong><small>Add any class below to create a calendar you can share.</small></span>
-            </div>
-          )}
-        </section>
-      )}
-
       {/* Home previews the next classes across days. The full page owns the
           date rail and filters, where those controls have enough inventory
           to narrow rather than making Home look quiet. */}
       {isHome && (
         <div className="week-schedule-head">
-          <span className="nearlbl">Add to your week</span>
+          <span className="nearlbl">Upcoming from your coaches</span>
           <Link className="nearhead-go home-seeall" href="/upcoming">
-            Discover all
+            Discover classes
           </Link>
         </div>
       )}
@@ -677,14 +566,15 @@ export function FollowingScreen({
               width={356}
               height={600}
             />
-            <h2 className="wkempty-t">Nothing near you yet</h2>
+            <h2 className="wkempty-t">{isHome ? "Nothing from your coaches yet" : "Nothing near you yet"}</h2>
             <p className="wkempty-b">
-              Classes show up here as coaches list them. Find people to follow in the
-              meantime; their week shows up at the top.
+              {isHome
+                ? "Follow coaches to combine their upcoming classes in one schedule."
+                : "Classes show up here as coaches list them. Try broadening your filters."}
             </p>
             {isHome && (
               <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-                Find people
+                Find coaches
               </button>
             )}
           </div>
@@ -752,7 +642,7 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="disflat home-next">
-                  {homeRows.map(renderRow(meId, notifyAdded, isAdded, changeGoing, todayIso))}
+                  {homeRows.map(renderRow(todayIso))}
                 </div>
               ) : (
                 <>
@@ -776,34 +666,13 @@ export function FollowingScreen({
                   <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
                 )
               ) : (
-                <div className="disflat">{dayRows.map(renderRow(meId, notifyAdded, isAdded, changeGoing))}</div>
+                <div className="disflat">{dayRows.map(renderRow())}</div>
               )}
                 </>
               )}
             </div>
           </div>
         </>
-      )}
-
-      {isHome && yourWeek.length > 0 && (
-        <Link
-          className="home-shareprompt home-shareprompt-bottom"
-          href={meKind === "coach" ? "/coachshare" : "/membershare"}
-        >
-          <span className="home-shareprompt-copy">
-            <strong>Your week, ready to share</strong>
-            <span>Post your calendar to Instagram or save it as a photo.</span>
-            <span className="home-shareprompt-action">
-              Share your week <Icon name="arrow_forward" size={17} />
-            </span>
-          </span>
-          <span className="home-shareprompt-visual" aria-hidden="true">
-            <span className="home-shareprompt-story">
-              <i /><b>MY WEEK</b><em /><em /><em />
-            </span>
-            <span className="home-shareprompt-instagram"><i /></span>
-          </span>
-        </Link>
       )}
 
       {/* No floating search circle either: the Search tab took the act.
@@ -823,7 +692,7 @@ export function FollowingScreen({
             </span>
             <h2>Keep up with your coaches</h2>
             <p className="lead">
-              Follow coaches to keep their upcoming classes at the top of Home.
+              Follow coaches to combine their upcoming classes on Following.
             </p>
             <div className="publishwrap nostick">
               <button
@@ -838,7 +707,7 @@ export function FollowingScreen({
                   setFind(true);
                 }}
               >
-                Find people
+                Find coaches
               </button>
             </div>
             <button className="confirm-keep" onClick={() => setFindIntro(false)}>
@@ -928,6 +797,7 @@ export function FollowingScreen({
           photo={peekPerson.photo}
           color={peekPerson.color}
           self={peekPerson.id === meId}
+          scheduleOnly
           shareHref={meKind === "coach" ? "/coachshare" : "/membershare"}
           onClose={() => {
             setPeekPerson(null);
@@ -939,84 +809,23 @@ export function FollowingScreen({
       )}
 
       {peek && (
-        <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={notify} onChanged={() => {}} />
+        <ClassPeek
+          cls={peek}
+          onClose={() => setPeek(null)}
+          onToast={notify}
+          onChanged={() => {}}
+          allowWeekAdd={false}
+        />
       )}
-      <Toast
-        msg={toastMsg}
-        on={toastOn}
-        action={
-          addedReceipt
-            ? { label: "View in your week", href: `#${weekDomId(addedReceipt.key)}` }
-            : null
-        }
-      />
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }
 
-/** The corner ribbon: the one act this list turns on. Optimistic, so the
- *  ribbon fills on the tap rather than the round trip; the toast says
- *  where the class went, because the calendar is another tab away. */
-function SaveCorner({
-  classId,
-  iso,
-  name,
-  on,
-  onAdded,
-  onChange,
-  bare = false,
-}: {
-  classId: string;
-  iso: string;
-  name: string;
-  on: boolean;
-  onAdded: () => void;
-  onChange: (on: boolean) => void;
-  /** The glyph alone, for the rail's compact card: the aria-label still
-   *  says the word. */
-  bare?: boolean;
-}) {
-  const [busy, setBusy] = useState(false);
-  return (
-    <button
-      className={`rowsave${on ? " on" : ""}${bare ? " bare" : ""}`}
-      aria-pressed={on}
-      aria-label={on ? `Added to your week: ${name}` : `Add ${name} to your week`}
-      disabled={busy}
-      onClick={async () => {
-        if (busy) return;
-        setBusy(true);
-        onChange(!on);
-        const res = await setGoing(classId, iso, !on);
-        if (!res.ok) onChange(on);
-        else if (!on) {
-          announceSaved(classId, iso);
-          onAdded();
-        }
-        setBusy(false);
-      }}
-    >
-      {on ? (
-        <span className="added-dot"><Icon name="check" size={14} /></span>
-      ) : (
-        <Icon name="add_circle" size={20} />
-      )}
-      {!bare && <span>{on ? "Added" : "Add"}</span>}
-    </button>
-  );
-}
-
-/** One row: the flat containerless line with Save across from the coach's
- *  own line. A sibling of the row, never a child. Your own class carries
- *  none, because setGoing would refuse it. */
+/** One chronological class row. Following and discovery are reading surfaces;
+ * booking and RSVP live in the class detail rather than a calendar toggle. */
 const renderRow =
-  (
-    meId: string | undefined,
-    notifyAdded: (item: FeedItem) => void,
-    isAdded: (item: FeedItem) => boolean,
-    changeGoing: (key: string, on: boolean) => void,
-    labelFrom?: string,
-  ) =>
+  (labelFrom?: string) =>
   // eslint-disable-next-line react/display-name
   (r: WeekRow & { item: FeedItem }) => (
     <div key={r.key} className="clrow">
@@ -1026,17 +835,6 @@ const renderRow =
         </span>
       )}
       <ClassLine row={r} />
-      {r.item.coachId !== meId && (
-        <SaveCorner
-          classId={r.item.classId}
-          iso={r.item.iso}
-          name={r.item.name}
-          on={isAdded(r.item)}
-          onAdded={() => notifyAdded(r.item)}
-          onChange={(on) => changeGoing(r.item.key, on)}
-          bare
-        />
-      )}
     </div>
   );
 
@@ -1047,17 +845,6 @@ const plusDays = (iso: string, n: number) =>
 function tabLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
-}
-
-function weekdayName(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    weekday: "long",
-    timeZone: "UTC",
-  });
-}
-
-function weekDomId(key: string): string {
-  return `your-week-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 /** Miles between two pins, the haversine way, close enough for a rail. */

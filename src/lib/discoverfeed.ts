@@ -227,16 +227,14 @@ export async function buildDiscoverFeed(
 
   // The This week rail: the people you follow who actually have something
   // to share, by Matt's call. A face is only there when tapping it opens
-  // onto a week with something on it, either classes they coach or classes
-  // they are going to, and the person whose next thing is soonest leads.
-  // The ring stays the freshness signal: their newest public act (a class
-  // listed, a class saved) being newer than your last peek.
+  // onto a published coaching schedule. Private attendance is not part of
+  // the relationship; the person teaching soonest leads.
   const peekedByTrainer = new Map(followRows.map((r) => [r.trainerUserId, r.peekedAt]));
   const followedUsers = followed.length
     ? await db.select().from(schema.users).where(inArray(schema.users.id, followed))
     : [];
   const followedCoaches = followedUsers.filter((u) => u.kind !== "fan" && u.kind !== "gym");
-  const [theirClasses, theirMarks, theirSchedules] = await Promise.all([
+  const [theirClasses, theirSchedules] = await Promise.all([
     followed.length
       ? db
           .select({ userId: schema.classes.userId, createdAt: schema.classes.createdAt })
@@ -244,41 +242,20 @@ export async function buildDiscoverFeed(
           .where(and(inArray(schema.classes.userId, followed), eq(schema.classes.isPublic, true)))
           .orderBy(desc(schema.classes.createdAt))
       : Promise.resolve([]),
-    followed.length
-      ? db
-          .select({
-            userId: schema.attendances.userId,
-            occurrenceDate: schema.attendances.occurrenceDate,
-            createdAt: schema.attendances.createdAt,
-          })
-          .from(schema.attendances)
-          .where(
-            and(
-              inArray(schema.attendances.userId, followed),
-              eq(schema.attendances.isPublic, true),
-            ),
-          )
-          .orderBy(desc(schema.attendances.createdAt))
-      : Promise.resolve([]),
     followedCoaches.length ? publicSchedules(followedCoaches) : Promise.resolve([]),
   ]);
   const activityAt = new Map<string, number>();
-  for (const r of [...theirClasses, ...theirMarks]) {
+  for (const r of theirClasses) {
     const at = r.createdAt?.getTime() ?? 0;
     if (at > (activityAt.get(r.userId) ?? 0)) activityAt.set(r.userId, at);
   }
-  // When their next thing is: the soonest teaching occurrence or the
-  // soonest saved date inside the peek's own fortnight. No entry means the
-  // face stays off the rail, because a circle that opens onto an empty
-  // week teaches people to stop tapping circles.
+  // When their next teaching occurrence is. No entry means the face stays
+  // off the rail, because a circle that opens empty teaches people to stop.
   const nextAt = new Map<string, string>();
   const consider = (userId: string, at: string) => {
     const had = nextAt.get(userId);
     if (!had || at < had) nextAt.set(userId, at);
   };
-  const lastRail = new Date(Date.parse(`${today}T00:00:00Z`) + (RAIL_AHEAD_DAYS - 1) * 864e5)
-    .toISOString()
-    .slice(0, 10);
   const publicTheirs = theirSchedules.filter((c) => c.isPublic);
   for (let n = 0; n < RAIL_AHEAD_DAYS; n++) {
     const d = new Date(Date.parse(`${today}T00:00:00Z`) + n * 864e5);
@@ -290,10 +267,6 @@ export async function buildDiscoverFeed(
       if (occurrenceEnded(iso, c.startTime, c.durationMin)) continue;
       consider(c.ownerUserId, `${iso}T${String(timeToMinutes(c.startTime)).padStart(4, "0")}`);
     }
-  }
-  for (const m of theirMarks) {
-    if (m.occurrenceDate >= today && m.occurrenceDate <= lastRail)
-      consider(m.userId, `${m.occurrenceDate}T9999`);
   }
   const myRail: RailPerson[] = followedCoaches
     .filter((u) => nextAt.has(u.id))

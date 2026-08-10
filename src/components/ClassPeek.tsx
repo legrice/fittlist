@@ -114,6 +114,7 @@ export function ClassPeek({
   onShare,
   onChanged,
   onToast,
+  allowWeekAdd = true,
 }: {
   cls: PeekClass;
   onClose: () => void;
@@ -123,6 +124,9 @@ export function ClassPeek({
   onShare?: () => void;
   onChanged: () => void;
   onToast: (msg: string, hlKey?: string) => void;
+  /** Reading/discovery surfaces keep RSVP but do not ask members to maintain
+   * a second calendar. Calendar-owned surfaces may still opt into Add. */
+  allowWeekAdd?: boolean;
 }) {
   const router = useRouter();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -434,7 +438,7 @@ export function ClassPeek({
               {loading ? "Opening…" : "Manage shift"}
             </button>
           )}
-          {full?.canAdd &&
+          {full?.canAdd && (full.rsvp || allowWeekAdd) &&
             (() => {
               const on = savedNow ?? full.added;
               const word = full.rsvp ? (on ? "RSVP’d" : "RSVP") : on ? "Added" : "Add";

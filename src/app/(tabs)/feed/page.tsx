@@ -5,7 +5,6 @@ import { getSessionUserId } from "@/lib/session";
 import { buildDiscoverFeed } from "@/lib/discoverfeed";
 import { avatarColor } from "@/lib/avatar";
 import { FollowingScreen } from "@/components/FollowingScreen";
-import { myWeek } from "@/lib/week";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +18,14 @@ export default async function DiscoverPage() {
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
 
-  const [feed, weekDays] = await Promise.all([buildDiscoverFeed(userId, me), myWeek(userId)]);
+  const feed = await buildDiscoverFeed(userId, me);
+  const followed = new Set(feed.favIds);
+  const followingItems = feed.items.filter(
+    (item) => followed.has(item.coachId) || (me.kind !== "fan" && item.coachId === userId),
+  );
   return (
     <FollowingScreen
-      items={feed.items}
+      items={followingItems}
       coaches={feed.rail}
       favIds={feed.favIds}
       cats={feed.cats}
@@ -30,16 +33,6 @@ export default async function DiscoverPage() {
       todayIso={feed.today}
       meId={userId}
       myRail={feed.myRail}
-      weekPreview={weekDays.flatMap((day) => day.items).map((item) => ({
-        // Match the discovery occurrence key so an optimistic Add/Remove on
-        // Home can update this preview immediately without another fetch.
-        key: `${item.classId}|${item.iso}`,
-        iso: item.iso,
-        name: item.name,
-        hm: item.hm,
-        ap: item.ap,
-        where: item.where,
-      }))}
       meKind={me.kind === "fan" ? "member" : "coach"}
       meFace={{
         photo: me.photoThumb ?? me.photo,

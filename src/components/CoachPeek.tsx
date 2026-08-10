@@ -31,6 +31,7 @@ export function CoachPeek({
   photo,
   color,
   self = false,
+  scheduleOnly = false,
   shareHref,
   onClose,
 }: {
@@ -42,6 +43,9 @@ export function CoachPeek({
   color: string;
   /** Your own face uses this same week sheet, but swaps Follow for Share. */
   self?: boolean;
+  /** Following is about a coach's published schedule, not classes they have
+   * privately added for themselves. */
+  scheduleOnly?: boolean;
   shareHref?: string;
   onClose: () => void;
 }) {
@@ -91,6 +95,15 @@ export function CoachPeek({
     }
     setFollowBusy(false);
   };
+
+  const visibleDays = peek
+    ? peek.days
+        .map((day) => ({
+          ...day,
+          items: scheduleOnly ? day.items.filter((item) => item.coaching) : day.items,
+        }))
+        .filter((day) => day.items.length > 0)
+    : [];
 
   return (
     <div
@@ -150,7 +163,7 @@ export function CoachPeek({
 
         {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
 
-        {peek && !peek.days.length && (
+        {peek && !visibleDays.length && (
           <p className="peekempty">
             {peek.gated
               ? `Follow ${name} to see their week.`
@@ -158,7 +171,7 @@ export function CoachPeek({
           </p>
         )}
 
-        {peek?.days.map((d) => (
+        {visibleDays.map((d) => (
           <div key={d.iso} className="peekday">
             <p className="peekday-h">{d.label}</p>
             {d.items.map((it) => {
@@ -190,7 +203,7 @@ export function CoachPeek({
                         </span>
                       )}
                     </Link>
-                    {!self && (
+                    {!self && !scheduleOnly && (
                       <button
                         className={`peekadd${on ? " on" : ""}`}
                         onClick={() => save(it.classId, it.iso, !on)}
@@ -203,7 +216,7 @@ export function CoachPeek({
                   </div>
                 </ClassOpener>
               );
-              if (self) return <div key={key}>{row}</div>;
+              if (self || scheduleOnly) return <div key={key}>{row}</div>;
               return (
                 // Saving belongs to somebody else's week. Your own peek is
                 // already the destination, so it carries neither swipe nor
@@ -216,7 +229,7 @@ export function CoachPeek({
           </div>
         ))}
 
-        {!self && peek && peek.days.length > 0 && (
+        {!self && !scheduleOnly && peek && visibleDays.length > 0 && (
           <p className="peekfoot">Add anything here to put it on your own week.</p>
         )}
       </div>

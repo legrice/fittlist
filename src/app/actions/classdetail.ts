@@ -173,15 +173,17 @@ export async function classDetail(
     })();
   const whenIso = fits ? asked! : nextIso;
 
-  // Already run: there's nothing to add. A shared link carries its date, so an
+  // Already run: there's nothing to RSVP to. A shared link carries its date, so an
   // old one opens on the day it named, and that day can be behind us.
   const past = occurrenceEnded(whenIso, c.startTime, c.durationMin);
   // Teaching it isn't attending it. The class belongs to the gym, so the owner
   // test alone would offer the coach on the rota a button that setGoing then
   // refuses; a button that fails is worse than no button.
   const teaching = !!viewerId && c.coachUserId === viewerId;
+  // Attendance is an organizer-facing RSVP, not a general-purpose member
+  // calendar. Ordinary classes keep their booking door and share controls.
   const canAdd =
-    !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
+    c.rsvp && !isOwner && !teaching && !!viewerId && c.isPublic && !past && (await fansVisible());
   let added = false;
   let addedPublic: boolean | null = null;
   if (canAdd) {

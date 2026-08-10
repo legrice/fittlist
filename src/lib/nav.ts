@@ -13,7 +13,7 @@ export type NavItem = {
 };
 
 /**
- * Four tabs for everyone: Discover, Calendar, Share, Profile.
+ * Four tabs at most, with Calendar reserved for somebody who teaches.
  *
  * This is the simplification the whole build is named for. The app had grown
  * a screen for every idea anybody had, and the answer is not a better bottom
@@ -38,20 +38,15 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    // Home, by Matt's call: the screen became rails (your people, what's
-    // upcoming, the studios and coaches around you) and Discover stopped
-    // naming it. The route stays /feed; a URL out in the world is not
-    // worth breaking for a label.
-    { id: "following", href: "/feed", icon: "home", label: "Home" },
-    // Everyone's calendar, per the brief: only your things, saved and
-    // coached, never anything a favorite derived. A coach's is /calendar
-    // and a member's is /week, and each kind's door lands on its own.
-    {
-      id: "schedule",
-      href: coach ? (scheduleHref ?? "/calendar") : "/week",
-      icon: "calendar_month",
-      label: "Calendar",
-    },
+    { id: "following", href: "/feed", icon: "group", label: "Following" },
+    ...(coach
+      ? [{
+          id: "schedule" as const,
+          href: scheduleHref ?? "/calendar",
+          icon: "calendar_month",
+          label: "Calendar",
+        }]
+      : []),
     // Search left the bar, by Matt's call: the magnifier lives in the
     // header's corner now, and the same glyph in two places on one screen
     // was two doors to one room. /search itself is unchanged.
@@ -85,12 +80,8 @@ export function activeTab(pathname: string, active?: NavTab): NavTab {
   // Search is its own tab now, by Matt's call.
   if (pathname.startsWith("/search")) return "search";
   if (pathname.startsWith("/feed")) return "following";
-  // The Calendar tab: a coach's is /calendar (and /app), a member's /week.
-  if (
-    pathname.startsWith("/calendar") ||
-    pathname.startsWith("/app") ||
-    pathname.startsWith("/week")
-  )
+  // Calendar is a coach tool. /week is retained only as an old address.
+  if (pathname.startsWith("/calendar") || pathname.startsWith("/app"))
     return "schedule";
   // /you is the old settings screen and is a redirect onto your profile now;
   // /settings is where those rows moved. Both belong to the Profile tab, and

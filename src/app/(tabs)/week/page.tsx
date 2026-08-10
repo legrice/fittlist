@@ -77,10 +77,10 @@ export default async function WeekPage({
       }
     : { startTime: "18:00", durationMin: 60, studioId: null };
 
-  // A coach's calendar is /app, and everything here is merged into it now:
-  // /week is the member's Schedule tab, and a coach landing on an old link is
-  // sent to their own.
+  // /week is an old member-calendar address. Coaches keep their publishing
+  // calendar; members return to the schedules they follow.
   if (me && me.kind !== "fan") redirect(hl ? `/app?hl=${encodeURIComponent(hl)}` : "/app");
+  if (me?.kind === "fan") redirect("/feed");
 
   return (
     <WeekScreen
