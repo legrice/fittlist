@@ -39,6 +39,15 @@ export type RailPerson = {
   nextAt: string;
 };
 
+export type YourWeekPreview = {
+  key: string;
+  iso: string;
+  name: string;
+  hm: string;
+  ap: string;
+  where: string | null;
+};
+
 /** A tile on the Studios near you rail: a rectangle, because a place is a
  *  room and a person is a face. Closest first, as honestly as we can say
  *  it: the viewer's own city leads on the server, and the rail re-sorts by
@@ -137,6 +146,7 @@ export function FollowingScreen({
   todayIso,
   meId,
   myRail,
+  weekPreview = [],
   meKind,
   meFace,
   nearStudios,
@@ -156,6 +166,8 @@ export function FollowingScreen({
    *  mark on your own class and a button that fails is worse than none. */
   meId?: string;
   myRail: RailPerson[];
+  /** Saved and personal calendar entries; coaching entries already live in items. */
+  weekPreview?: YourWeekPreview[];
   /** Where the You circle points: the hub is per kind. */
   meKind: "coach" | "member";
   /** The viewer's own face, leading the rail: your circle is you, not a
@@ -326,6 +338,25 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [shown, coachById, favIds],
   );
+
+  const yourWeek = useMemo(() => {
+    const own =
+      meKind === "coach"
+        ? items
+            .filter((i) => i.coachId === meId)
+            .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }))
+        : [];
+    const seen = new Set<string>();
+    return [...weekPreview, ...own]
+      .sort((a, b) => a.iso.localeCompare(b.iso) || a.hm.localeCompare(b.hm))
+      .filter((i) => {
+        const key = `${i.iso}|${i.name}|${i.hm}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 5);
+  }, [items, meId, meKind, weekPreview]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -564,6 +595,40 @@ export function FollowingScreen({
             </p>
           )}
         </div>
+      )}
+
+      {isHome && (
+        <section className="home-yourweek">
+          <div className="nearhead nearhead-row">
+            <span className="nearlbl">Your week</span>
+            {yourWeek.length > 0 && (
+              <Link className="nearhead-go home-seeall" href="/calendar">View calendar</Link>
+            )}
+          </div>
+          {yourWeek.length > 0 ? (
+            <div className="yourweek-rail">
+              {yourWeek.map((item) => (
+                <Link key={item.key} className="yourweek-card" href="/calendar">
+                  <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
+                    {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
+                  </span>
+                  <strong>{item.name}</strong>
+                  <span>{item.hm}{item.ap.toLowerCase()}{item.where ? ` · ${item.where}` : ""}</span>
+                </Link>
+              ))}
+              <Link className="yourweek-card yourweek-more" href="/calendar">
+                <Icon name="calendar_today" size={22} />
+                <strong>View your calendar</strong>
+              </Link>
+            </div>
+          ) : (
+            <Link className="yourweek-empty" href="/upcoming">
+              <span className="yourweek-empty-icon"><Icon name="bookmark" size={22} /></span>
+              <span><strong>Build your week</strong><small>Save classes to create a calendar you can share.</small></span>
+              <span className="yourweek-empty-action">Discover classes <Icon name="arrow_forward" size={16} /></span>
+            </Link>
+          )}
+        </section>
       )}
 
       {/* Home previews the next classes across days. The full page owns the
@@ -974,7 +1039,7 @@ const renderRow =
   (r: WeekRow & { item: FeedItem }) => (
     <div key={r.key} className="clrow">
       {labelFrom && (
-        <span className="home-classdate">
+        <span className={`home-classdate${r.item.iso === labelFrom ? " today" : ""}`}>
           {r.item.iso === labelFrom ? "Today" : tabLabel(r.item.iso)}
         </span>
       )}
