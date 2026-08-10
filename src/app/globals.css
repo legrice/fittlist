@@ -6443,6 +6443,10 @@ button.ps-card { cursor: pointer; }
 .nearhead-row .nearlbl { margin-bottom: 0; }
 .nearhead-row { margin-bottom: 12px; }
 .nearhead-go { display: inline-flex; align-items: center; color: var(--ink); padding: 4px 0 4px 12px; }
+.home-seeall {
+  color: var(--ol); font-size: 12.5px; font-weight: 600;
+  text-decoration: none;
+}
 
 /* Match the social rail above: a person keeps the same visual scale wherever
    their face appears on Home. */

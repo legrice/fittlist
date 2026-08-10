@@ -575,8 +575,8 @@ export function FollowingScreen({
       {isHome && (
         <div className="week-schedule-head">
           <span className="nearlbl">Discover classes</span>
-          <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
-            <Icon name="arrow_forward" size={22} />
+          <Link className="nearhead-go home-seeall" href="/upcoming">
+            See all
           </Link>
         </div>
       )}
@@ -699,8 +699,8 @@ export function FollowingScreen({
         <section className="nearrail home-section">
           <div className="nearhead nearhead-row">
             <span className="nearlbl">Local studios</span>
-            <Link className="nearhead-go" href="/search?seg=studios" aria-label="All studios">
-              <Icon name="arrow_forward" size={22} />
+            <Link className="nearhead-go home-seeall" href="/search?seg=studios">
+              See all
             </Link>
           </div>
           <div className="strail">
@@ -767,8 +767,8 @@ export function FollowingScreen({
             {/* Find friends, by Matt's call: the rail is coaches, and the
                 word is the act it invites. */}
             <span className="nearlbl">Find friends</span>
-            <Link className="nearhead-go" href="/search?seg=people" aria-label="All coaches and members">
-              <Icon name="arrow_forward" size={22} />
+            <Link className="nearhead-go home-seeall" href="/search?seg=people">
+              See all
             </Link>
           </div>
           <div className="ctrail">
