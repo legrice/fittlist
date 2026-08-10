@@ -6034,7 +6034,13 @@ button.ps-card { cursor: pointer; }
 .yourweek-row {
   display: grid; grid-template-columns: 74px minmax(0, 1fr) auto;
   align-items: center; gap: 10px; min-height: 70px; padding: 11px 13px;
-  color: var(--ink); text-decoration: none;
+  color: var(--ink); text-decoration: none; scroll-margin-top: 18px;
+}
+.yourweek-row.just-added { animation: week-added 1.8s ease-out; }
+.yourweek-row:target { background: var(--si-tint); }
+@keyframes week-added {
+  0%, 38% { background: var(--si-tint); }
+  100% { background: transparent; }
 }
 .yourweek-row + .yourweek-row { border-top: 1px solid var(--div); }
 .yourweek-date {

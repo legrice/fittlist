@@ -195,6 +195,9 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [findIntro, setFindIntro] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
+  const [addedReceipt, setAddedReceipt] = useState<{ key: string } | null>(null);
+  const [highlightKey, setHighlightKey] = useState<string | null>(null);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Optimistic membership for this visit. Adding from the catalog should
   // visibly move the occurrence into Your week without a route refresh.
   const [goingOverrides, setGoingOverrides] = useState<Record<string, boolean>>({});
@@ -225,6 +228,20 @@ export function FollowingScreen({
       return;
     }
     toast(msg);
+  };
+  const notifyAdded = (item: FeedItem) => {
+    try {
+      localStorage.setItem("fl-you-new", "1");
+    } catch {
+      // Private mode: the receipt and row highlight still work this visit.
+    }
+    setYouFresh(true);
+    const day = item.iso === todayIso ? "today" : weekdayName(item.iso);
+    setAddedReceipt({ key: item.key });
+    setHighlightKey(item.key);
+    toast(`Added to ${day}`);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightKey(null), 4200);
   };
   const router = useRouter();
 
@@ -326,15 +343,19 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Home's catalog is the next six occurrences across the week.
+  const weekEnds = plusDays(todayIso, 6);
+
+  // Home recommends only classes that can land in the seven-day plan shown
+  // directly above. The full browser can look further ahead.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () =>
       [...shown]
+        .filter((i) => i.iso >= todayIso && i.iso <= weekEnds)
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .slice(0, 6)
         .map(rowOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, coachById, favIds],
+    [shown, coachById, favIds, todayIso, weekEnds],
   );
 
   const yourWeek = useMemo(() => {
@@ -348,7 +369,6 @@ export function FollowingScreen({
     const newlyAdded = items
       .filter((i) => i.coachId !== meId && isAdded(i))
       .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }));
-    const weekEnds = plusDays(todayIso, 6);
     return [
       ...weekPreview.filter((i) => goingOverrides[i.key] !== false),
       ...newlyAdded,
@@ -607,7 +627,11 @@ export function FollowingScreen({
             <>
               <div className="yourweek-list">
                 {yourWeek.map((item) => (
-                  <div key={item.key} className="yourweek-row">
+                  <div
+                    id={weekDomId(item.key)}
+                    key={item.key}
+                    className={`yourweek-row${highlightKey === item.key ? " just-added" : ""}`}
+                  >
                     <span className="yourweek-when">
                       <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
                         {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
@@ -728,7 +752,7 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="disflat home-next">
-                  {homeRows.map(renderRow(meId, notify, isAdded, changeGoing, todayIso))}
+                  {homeRows.map(renderRow(meId, notifyAdded, isAdded, changeGoing, todayIso))}
                 </div>
               ) : (
                 <>
@@ -752,7 +776,7 @@ export function FollowingScreen({
                   <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
                 )
               ) : (
-                <div className="disflat">{dayRows.map(renderRow(meId, notify, isAdded, changeGoing))}</div>
+                <div className="disflat">{dayRows.map(renderRow(meId, notifyAdded, isAdded, changeGoing))}</div>
               )}
                 </>
               )}
@@ -917,7 +941,15 @@ export function FollowingScreen({
       {peek && (
         <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={notify} onChanged={() => {}} />
       )}
-      <Toast msg={toastMsg} on={toastOn} />
+      <Toast
+        msg={toastMsg}
+        on={toastOn}
+        action={
+          addedReceipt
+            ? { label: "View in your week", href: `#${weekDomId(addedReceipt.key)}` }
+            : null
+        }
+      />
     </>
   );
 }
@@ -930,7 +962,7 @@ function SaveCorner({
   iso,
   name,
   on,
-  onToast,
+  onAdded,
   onChange,
   bare = false,
 }: {
@@ -938,7 +970,7 @@ function SaveCorner({
   iso: string;
   name: string;
   on: boolean;
-  onToast: (msg: string, hlKey?: string) => void;
+  onAdded: () => void;
   onChange: (on: boolean) => void;
   /** The glyph alone, for the rail's compact card: the aria-label still
    *  says the word. */
@@ -959,7 +991,7 @@ function SaveCorner({
         if (!res.ok) onChange(on);
         else if (!on) {
           announceSaved(classId, iso);
-          onToast("Added to your week", `${classId}.${iso}`);
+          onAdded();
         }
         setBusy(false);
       }}
@@ -976,7 +1008,7 @@ function SaveCorner({
 const renderRow =
   (
     meId: string | undefined,
-    notify: (msg: string, hlKey?: string) => void,
+    notifyAdded: (item: FeedItem) => void,
     isAdded: (item: FeedItem) => boolean,
     changeGoing: (key: string, on: boolean) => void,
     labelFrom?: string,
@@ -996,7 +1028,7 @@ const renderRow =
           iso={r.item.iso}
           name={r.item.name}
           on={isAdded(r.item)}
-          onToast={notify}
+          onAdded={() => notifyAdded(r.item)}
           onChange={(on) => changeGoing(r.item.key, on)}
           bare
         />
@@ -1011,6 +1043,17 @@ const plusDays = (iso: string, n: number) =>
 function tabLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+}
+
+function weekdayName(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "UTC",
+  });
+}
+
+function weekDomId(key: string): string {
+  return `your-week-${key.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 /** Miles between two pins, the haversine way, close enough for a rail. */
