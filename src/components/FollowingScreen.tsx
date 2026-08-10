@@ -559,7 +559,7 @@ export function FollowingScreen({
           switch to Search. */}
       {isHome && (
         <div className="week-schedule-head">
-          <span className="nearlbl">Upcoming near you</span>
+          <span className="nearlbl">Discover classes</span>
           <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
             <Icon name="arrow_forward" size={22} />
           </Link>
