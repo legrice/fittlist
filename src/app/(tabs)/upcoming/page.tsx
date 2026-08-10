@@ -8,7 +8,7 @@ import { FollowingScreen } from "@/components/FollowingScreen";
 
 export const dynamic = "force-dynamic";
 
-// The complete class browser behind Home's short Upcoming preview. It uses
+// The complete class browser behind Home's single-day Upcoming preview. It uses
 // the same feed builder and the same interactive list, so filters, saves and
 // proximity never disagree between the two surfaces.
 export default async function UpcomingPage() {

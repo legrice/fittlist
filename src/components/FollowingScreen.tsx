@@ -134,7 +134,7 @@ const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any"
  * The faces are the people you follow who actually have something coming
  * up, soonest first, each circle a name and a ring: solid orange when
  * their week changed since you last opened it, bare once seen. Under them
- * Upcoming near you is a short daily preview (every listable coach's
+ * Upcoming near you is a single-day preview (every listable coach's
  * classes, whether or not you follow anybody), then the studios and the
  * coaches around you. Its arrow opens the complete filtered class browser;
  * the other rails still open Search on their matching segment.
@@ -176,12 +176,12 @@ export function FollowingScreen({
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
   localCoaches: LocalCoach[];
-  /** Home is a short preview; Upcoming is the dedicated filtered browser. */
+  /** Home is a single-day preview; Upcoming is the dedicated filtered browser. */
   mode?: "home" | "upcoming";
 }) {
   const isHome = mode === "home";
   // The containerless list lands on today or the first day that holds
-  // anything. Home keeps only the date rail and a short result preview;
+  // anything. Home keeps only the date rail and the selected day's results;
   // the dedicated Upcoming view adds the four value-showing filter chips.
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
@@ -322,7 +322,6 @@ export function FollowingScreen({
     return list.map(rowOf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
-  const visibleDayRows = isHome ? dayRows.slice(0, 4) : dayRows;
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -554,7 +553,7 @@ export function FollowingScreen({
         </div>
       )}
 
-      {/* Home gives this list just enough depth to preview the selected day.
+      {/* Home shows the selected day without filters or an artificial cap.
           The arrow opens the complete version, where the same date rail,
           filters, save state, and peeks carry through without a context
           switch to Search. */}
@@ -670,7 +669,7 @@ export function FollowingScreen({
                   <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
                 )
               ) : (
-                <div className="disflat">{visibleDayRows.map(renderRow(meId, notify))}</div>
+                <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
               )}
             </div>
           </div>
