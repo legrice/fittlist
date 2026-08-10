@@ -91,34 +91,66 @@ await m.locator(".trayitem", { hasText: "You" }).first().waitFor();
 if (!(await m.locator(".trayav-you .trayav-ini, .trayav-you img").count()))
   fail("the You circle wears the viewer's own face");
 
-// Upcoming near you is the stacked leaf cards, by Matt's call: one card
-// per occurrence, full width, the date on its leaf, no bands and no
-// filters. The head's arrow is the door to Search's Classes segment.
+// Upcoming near you is the containerless list with the date rail and
+// the filters, back by Matt's call: one day at a time behind the tabs,
+// the four value-showing chips over them.
 await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
-if (await m.locator(".fchips").count()) fail("the filter chips stayed off");
-if (await m.locator(".daytabs").count()) fail("the date tabs stayed off");
-await m.locator(".upstack .uprail-card").first().waitFor();
-if (!(await m.locator(".uprail-date .uprail-dom").count())) fail("every card wears its date leaf");
-for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift", "Tuesday Flow"])
-  if (!(await m.locator(".uprail-nm", { hasText: nm }).count())) fail(nm + " must list itself");
-console.log("the landing: corner search, the faces, the stacked cards");
+if ((await m.locator(".fchips .catpill").count()) !== 5)
+  fail("the leading Filters chip plus the four questions");
+if (await m.locator(".fchip-clear").count()) fail("Clear only appears once something is set");
+await m.locator(".daytabs .daytab", { hasText: "Today" }).waitFor();
+await m.locator(".disflat .clline-nm").first().waitFor();
+console.log("the landing: corner search, the faces, the date rail and the chips");
 
-// The bare ribbon on a card saves in place. No toast, by Matt's call:
-// the save lights your own circle at the top of the rail instead, brand
-// ring plus a New badge on your face.
-const firstSave = m.locator(".uprail-card .rowsave").first();
-if (!(await firstSave.count())) fail("every card wears the bare ribbon");
+// The leading chip opens everything at once and stays open while you set
+// it; picking inside marks the chip with the count.
+await m.locator(".fchip-lead").click();
+await m.locator(".fsheet h2", { hasText: "Filters" }).waitFor();
+await m.locator(".fsec-h", { hasText: "Time of day" }).waitFor();
+await m.locator(".fopt", { hasText: "Morning, before 11" }).click();
+if (!(await m.locator(".fsheet").count())) fail("the everything sheet stays open on a pick");
+await m.locator(".fsheet-foot .btn.si", { hasText: "Done" }).click();
+await m.locator(".fchip-lead.on", { hasText: "1" }).waitFor();
+await m.locator(".fchip-clear").click();
+console.log("the leading chip opens all filters and wears the count");
+
+// The time chip: value-showing, and Evening narrows the selected day.
+await m.locator(".daytabs .daytab", { hasText: /Mon|Today/ }).first().click();
+await m.locator(".fchips .catpill", { hasText: "Any time" }).click();
+await m.locator(".fopt", { hasText: "Evening, after 4" }).click();
+await m.locator(".clline-nm", { hasText: "Dusk Lift" }).first().waitFor();
+if (await m.locator(".clline-nm", { hasText: "Dawn Lift" }).count()) fail("Evening drops the 6am");
+if (!(await m.locator(".fchips .catpill.on", { hasText: "Evening" }).count()))
+  fail("the chip says its value and inverts");
+await m.locator(".fchip-clear").click();
+console.log("the time chip narrows and Clear resets");
+
+// The places sheet stays open while you tick.
+await m.locator(".fchips .catpill", { hasText: "All places" }).click();
+await m.locator(".fopt", { hasText: "Drew Gym" }).click();
+if (!(await m.locator(".fsheet").count())) fail("the places sheet stays open to multi-select");
+await m.locator(".fsheet .publishwrap .btn", { hasText: "Done" }).click();
+if (!(await m.locator(".fchips .catpill.on", { hasText: "Drew Gym" }).count()))
+  fail("the places chip names the pick");
+await m.locator(".fchip-clear").click();
+console.log("the places chip multi-selects with the sheet open");
+
+// The ribbon on a row saves in place. No toast, by Matt's call: the save
+// lights your own circle at the top of the rail instead, brand ring plus
+// a New badge on your face.
+const firstSave = m.locator(".rowsave").first();
+if (!(await firstSave.count())) fail("every row wears Save across from the coach line");
 await firstSave.click();
-await m.locator(".uprail-card .rowsave.on").first().waitFor();
+await m.locator(".rowsave.on", { hasText: "Saved" }).first().waitFor();
 if (await m.locator(".toast.on", { hasText: "Saved" }).count())
   fail("a save lights the ring, never toasts, by Matt's call");
 await m.locator(".trayav-you.trayav-ring").waitFor();
 await m.locator(".younew", { hasText: "New" }).waitFor();
-await m.locator(".uprail-card .rowsave.on").first().click();
-await m.waitForFunction(() => !document.querySelector(".uprail-card .rowsave.on"), null, {
+await m.locator(".rowsave.on").first().click();
+await m.waitForFunction(() => !document.querySelector(".rowsave.on"), null, {
   timeout: 10000,
 });
-console.log("the card ribbon fills in place and lights the You ring");
+console.log("the row ribbon fills in place and lights the You ring");
 
 // Under the schedule: the studios as rectangles, closest first, and the
 // coaches with Follow one tap deep, by Matt's call. Every head's arrow
@@ -140,11 +172,12 @@ await m.goBack();
 // The search page draws day bands too now, so wait for Home itself.
 await m.waitForURL(/\/feed/);
 await m.locator(".trayav-you").waitFor();
+await m.locator(".disflat .clline-nm").first().waitFor();
 console.log("the rails under the schedule, each arrow landing on its segment");
 
 // The class peek: Follow (no star), and Save in the footer. Scoped to the
 // sheet, because the Coaches near you rail behind it carries Follow too.
-await m.locator(".uprail-nm", { hasText: "Dusk Lift" }).first().click();
+await m.locator(".disflat .clline-nm", { hasText: "Dusk Lift" }).first().click();
 await m.locator(".clsfull .peekfollow", { hasText: "Follow" }).waitFor();
 if (await m.locator(".peekstar").count()) fail("no stars anywhere");
 await m.locator(".clsfull .peekfollow").click();
@@ -217,8 +250,11 @@ console.log("People near you: segment, tags, Follow on every row");
 // puts the ring out. The About block ends the scroll, and the page
 // behind it carries the Contribute sheet.
 await m.goto(BASE + "/feed");
-await m.locator(".upstack .uprail-card").first().waitFor();
-await m.locator(".uprail-card .rowsave:not(.on)").first().click();
+await m.locator(".disflat .clline-nm").first().waitFor();
+// Today's rows are all saved by this point in the walk; the tabs show one
+// day at a time, so step to tomorrow for an unsaved ribbon.
+await m.locator(".daytabs .daytab").nth(1).click();
+await m.locator(".rowsave:not(.on)").first().click();
 await m.locator(".trayav-you.trayav-ring").waitFor();
 await m.locator(".trayitem", { hasText: "You" }).first().click();
 await m.waitForURL(/\/membershare/);
@@ -226,7 +262,7 @@ await m.locator(".shareintro h2", { hasText: "Your week lives here" }).waitFor()
 await m.locator(".shareintro .btn", { hasText: "Continue" }).click();
 if (await m.locator(".shareintro").count()) fail("Continue closes the intro");
 await m.goto(BASE + "/feed");
-await m.locator(".upstack .uprail-card").first().waitFor();
+await m.locator(".disflat .clline-nm").first().waitFor();
 if (await m.locator(".younew").count()) fail("arriving on the Share screen puts the ring out");
 await m.locator(".abouthome-go", { hasText: "About FittList" }).click();
 await m.waitForURL(/\/about/);

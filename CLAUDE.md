@@ -2199,14 +2199,19 @@ Matt's call, route stays /feed, `home` glyph): the This week rail, then
 three rails of what's around you, each head carrying a bare right-arrow
 door (`.nearhead-go`, no words, by Matt's call) onto /search with that
 kind's segment already picked (`?seg=classes|studios|people`). Upcoming
-near you is the stacked leaf cards, by Matt's call, after the flat
-banded list and the horizontal rail each had a build: one full-width
-card per occurrence (`.upstack`), the date as a leaf on the left
-(Today tinted brand), the class, time, place and coach beside it, the
-bare ribbon in the corner. The leaf carries the date, so no bands.
-The cards are every listable coach's classes, deduped to one row per
-class, opening the class peek on tap; your own carry no ribbon because
-setGoing would refuse the mark. A save never toasts, by Matt's call: it lights your
+near you is the containerless list with the date rail and the filters,
+by Matt's call, and this is its settled shape after the banded scroll,
+the horizontal cards and the stacked cards each had a build: the four
+value-showing chips (the tune lead chip opening everything at once,
+time, distance, type, places, Clear when anything is set), the date
+tabs (Today, then "Tue 11" on, landing on the first day holding
+anything with the daynote saying so, solid ground only once pinned),
+and one day at a time as the flat `ClassLine` rows with Save across
+from the coach line. The rows are every listable coach's classes,
+deduped to one row per class, opening the class peek on tap; your own
+carry no Save because setGoing would refuse the mark. The distance
+filter is what asks for the browser pin, never arrival; a pin already
+granted elsewhere is read silently for the studio tiles either way. A save never toasts, by Matt's call: it lights your
 own circle at the top instead, the brand ring plus a New badge on your
 face (`fl-you-new` in localStorage, so it survives navigation), and
 tapping it lands on the Share screen, which clears the ring on arrival
