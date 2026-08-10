@@ -333,7 +333,7 @@ export function FollowingScreen({
     () =>
       [...shown]
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-        .slice(0, 8)
+        .slice(0, 6)
         .map(rowOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [shown, coachById, favIds],
@@ -355,7 +355,7 @@ export function FollowingScreen({
         seen.add(key);
         return true;
       })
-      .slice(0, 5);
+      .slice(0, 3);
   }, [items, meId, meKind, weekPreview]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
@@ -606,27 +606,23 @@ export function FollowingScreen({
             )}
           </div>
           {yourWeek.length > 0 ? (
-            <div className="yourweek-rail">
+            <div className="yourweek-list">
               {yourWeek.map((item) => (
-                <Link key={item.key} className="yourweek-card" href="/calendar">
+                <Link key={item.key} className="yourweek-row" href="/calendar">
                   <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
                     {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
                   </span>
-                  <strong>{item.name}</strong>
-                  <span>{item.hm}{item.ap.toLowerCase()}{item.where ? ` · ${item.where}` : ""}</span>
+                  <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
+                  <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
+                  <Icon name="chevron_right" size={18} />
                 </Link>
               ))}
-              <Link className="yourweek-card yourweek-more" href="/calendar">
-                <Icon name="calendar_today" size={22} />
-                <strong>View your calendar</strong>
-              </Link>
             </div>
           ) : (
-            <Link className="yourweek-empty" href="/upcoming">
+            <div className="yourweek-empty">
               <span className="yourweek-empty-icon"><Icon name="bookmark" size={22} /></span>
-              <span><strong>Build your week</strong><small>Save classes to create a calendar you can share.</small></span>
-              <span className="yourweek-empty-action">Discover classes <Icon name="arrow_forward" size={16} /></span>
-            </Link>
+              <span><strong>Start building your week</strong><small>Save any class below to create a calendar you can share.</small></span>
+            </div>
           )}
         </section>
       )}
@@ -636,9 +632,9 @@ export function FollowingScreen({
           to narrow rather than making Home look quiet. */}
       {isHome && (
         <div className="week-schedule-head">
-          <span className="nearlbl">Discover classes</span>
+          <span className="nearlbl">Add to your week</span>
           <Link className="nearhead-go home-seeall" href="/upcoming">
-            See all
+            Discover all
           </Link>
         </div>
       )}
