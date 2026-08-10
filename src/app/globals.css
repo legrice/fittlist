@@ -6222,6 +6222,19 @@ button.ps-card { cursor: pointer; }
 .daytabs.stuck { background: var(--ground); }
 .daytabs::-webkit-scrollbar { display: none; }
 .home-listregion { position: relative; }
+.upcoming-head { padding: 12px 0 6px; }
+.upcoming-back {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-bottom: 22px; color: var(--ol); text-decoration: none;
+  font-size: 13.5px; font-weight: 600;
+}
+.upcoming-head h1 {
+  margin: 0; font-size: 28px; line-height: 1.08; font-weight: 600;
+  letter-spacing: -.012em;
+}
+.upcoming-head p { margin: 8px 0 18px; font-size: 14.5px; color: var(--ol); }
+.upcoming-filters { margin-top: 8px; }
+.upcoming-listregion { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .daytab {
   flex: 0 0 auto; padding: 10px 12px 11px; margin-bottom: -1px;
   border: none; background: none; cursor: pointer;

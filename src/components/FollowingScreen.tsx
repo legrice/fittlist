@@ -136,10 +136,10 @@ const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any"
  * The faces are the people you follow who actually have something coming
  * up, soonest first, each circle a name and a ring: solid orange when
  * their week changed since you last opened it, bare once seen. Under them
- * Upcoming near you is a rail of event cards (every listable coach's
+ * Upcoming near you is a short daily preview (every listable coach's
  * classes, whether or not you follow anybody), then the studios and the
- * coaches around you. Each head's arrow opens Search on that kind's
- * segment; the full browsable list lives there now.
+ * coaches around you. Its arrow opens the complete filtered class browser;
+ * the other rails still open Search on their matching segment.
  */
 export function FollowingScreen({
   items,
@@ -154,6 +154,7 @@ export function FollowingScreen({
   meFace,
   nearStudios,
   localCoaches,
+  mode = "home",
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
@@ -177,10 +178,13 @@ export function FollowingScreen({
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
   localCoaches: LocalCoach[];
+  /** Home is a short preview; Upcoming is the dedicated filtered browser. */
+  mode?: "home" | "upcoming";
 }) {
-  // The containerless list with the date rail and the filters, back by
-  // Matt's call: one day at a time behind the tabs, landing on today or
-  // the first day that holds anything, four value-showing chips over it.
+  const isHome = mode === "home";
+  // The containerless list lands on today or the first day that holds
+  // anything. Home keeps only the date rail and a short result preview;
+  // the dedicated Upcoming view adds the four value-showing filter chips.
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
   const [day, setDay] = useState<string>(() => {
@@ -319,6 +323,7 @@ export function FollowingScreen({
     return list.map(rowOf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
+  const visibleDayRows = isHome ? dayRows.slice(0, 4) : dayRows;
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -466,6 +471,15 @@ export function FollowingScreen({
 
   return (
     <>
+      {!isHome && (
+        <header className="upcoming-head">
+          <Link className="upcoming-back" href="/feed">
+            <Icon name="arrow_back" size={20} /> Home
+          </Link>
+          <h1>Upcoming near you</h1>
+          <p>Browse classes by day, time, distance, type, or place.</p>
+        </header>
+      )}
       {/* No search bar up here any more, by Matt's call: the magnifier
           lives in the header's corner, right of the bell, and the rail
           leads the screen. */}
@@ -473,7 +487,7 @@ export function FollowingScreen({
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their
           week. You lead it, wearing your own face, and Add ends it. */}
-      {railShows && (
+      {isHome && railShows && (
         <div className="tray">
           <p className="nearlbl railbl">This week</p>
           <div className="tray-scroll">
@@ -530,16 +544,17 @@ export function FollowingScreen({
         </div>
       )}
 
-      {/* Upcoming near you is a rail of event cards now, by Matt's call:
-          the date as a leaf on the left, the class beside it, the arrow in
-          the head the door to the full browsable list (Search's Classes
-          segment). The filters and the date tabs went with the vertical
-          list; both live in git at the commit that replaced them. */}
+      {/* Home gives this list just enough depth to preview the selected day.
+          The arrow opens the complete version, where the same date rail,
+          filters, save state, and peeks carry through without a context
+          switch to Search. */}
       {items.length === 0 ? (
         <>
-          <div className="nearhead nearhead-row">
-            <span className="nearlbl">Upcoming near you</span>
-          </div>
+          {isHome && (
+            <div className="nearhead nearhead-row">
+              <span className="nearlbl">Upcoming near you</span>
+            </div>
+          )}
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -554,59 +569,65 @@ export function FollowingScreen({
               Classes show up here as coaches list them. Find people to follow in the
               meantime; their week shows up at the top.
             </p>
-            <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
-              Find people
-            </button>
+            {isHome && (
+              <button className="btn si wkempty-cta" onClick={() => setFind(true)}>
+                Find people
+              </button>
+            )}
           </div>
         </>
       ) : (
         <>
-          <div className="nearhead nearhead-row">
-            <span className="nearlbl">Upcoming near you</span>
-            <Link className="nearhead-go" href="/search?seg=classes" aria-label="All upcoming classes">
-              <Icon name="arrow_forward" size={22} />
-            </Link>
-          </div>
+          {isHome && (
+            <div className="nearhead nearhead-row">
+              <span className="nearlbl">Upcoming near you</span>
+              <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
+                <Icon name="arrow_forward" size={22} />
+              </Link>
+            </div>
+          )}
           {/* The four chips say their current value, which is what lets one
               row replace five pills; the leading chip opens everything at
               once wearing the count of what is set. */}
-          <div className="catpills fchips">
-            <button
-              className={`catpill fchip-lead${activeCount ? " on" : ""}`}
-              aria-label={`Filters${activeCount ? `, ${activeCount} set` : ""}`}
-              onClick={() => setSheet("all")}
-            >
-              <Icon name="tune" size={17} />
-              {activeCount > 0 && <span>{activeCount}</span>}
-            </button>
-            {(
-              [
-                ["time", f.time !== "any"],
-                ["dist", f.dist !== "any"],
-                ["cat", f.cat !== "any"],
-                ["place", f.place !== "any"],
-              ] as const
-            ).map(([k, on]) => (
+          {!isHome && (
+            <div className="catpills fchips upcoming-filters">
               <button
-                key={k}
-                className={`catpill${on ? " on" : ""}`}
-                aria-pressed={on}
-                onClick={() => setSheet(k)}
+                className={`catpill fchip-lead${activeCount ? " on" : ""}`}
+                aria-label={`Filters${activeCount ? `, ${activeCount} set` : ""}`}
+                onClick={() => setSheet("all")}
               >
-                {chipLabel(k)} <Icon name="expand_more" size={16} />
+                <Icon name="tune" size={17} />
+                {activeCount > 0 && <span>{activeCount}</span>}
               </button>
-            ))}
-            {anyFilter && (
-              <button className="catpill fchip-clear" onClick={() => setF(NO_FILTERS)}>
-                Clear
-              </button>
-            )}
-          </div>
+              {(
+                [
+                  ["time", f.time !== "any"],
+                  ["dist", f.dist !== "any"],
+                  ["cat", f.cat !== "any"],
+                  ["place", f.place !== "any"],
+                ] as const
+              ).map(([k, on]) => (
+                <button
+                  key={k}
+                  className={`catpill${on ? " on" : ""}`}
+                  aria-pressed={on}
+                  onClick={() => setSheet(k)}
+                >
+                  {chipLabel(k)} <Icon name="expand_more" size={16} />
+                </button>
+              ))}
+              {anyFilter && (
+                <button className="catpill fchip-clear" onClick={() => setF(NO_FILTERS)}>
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
 
           {/* The date rail and its rows share a containing block. Sticky
               therefore lasts exactly as long as the class list beneath it,
               and releases before the studio and people sections begin. */}
-          <div className="home-listregion">
+          <div className={`home-listregion${isHome ? "" : " upcoming-listregion"}`}>
             {/* The dates, left to right: one day at a time, the list under
                 them that day alone. */}
             <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
@@ -644,7 +665,7 @@ export function FollowingScreen({
                   <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
                 )
               ) : (
-                <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
+                <div className="disflat">{visibleDayRows.map(renderRow(meId, notify))}</div>
               )}
             </div>
           </div>
@@ -655,7 +676,7 @@ export function FollowingScreen({
           the studios closest to you as rectangles on a rail, then the
           coaches around you with Follow one tap deep. Your own city leads
           both. Each head's arrow opens Search on that kind's segment. */}
-      {nearStudios.length > 0 && (
+      {isHome && nearStudios.length > 0 && (
         <section className="nearrail home-section">
           <div className="nearhead nearhead-row">
             <span className="nearlbl">Local studios</span>
@@ -690,7 +711,7 @@ export function FollowingScreen({
           </div>
         </section>
       )}
-      {localCoaches.length > 0 && (
+      {isHome && localCoaches.length > 0 && (
         <section className="nearrail home-section">
           <div className="nearhead nearhead-row">
             {/* Find friends, by Matt's call: the rail is coaches, and the
@@ -710,22 +731,24 @@ export function FollowingScreen({
 
       {/* What this is, at the end of the scroll: one paragraph and the
           door to the whole story, with the Contribute ask behind it. */}
-      <section className="abouthome home-section">
-        <Wordmark variant="cloud" className="abouthome-mark" />
-        <h2>One place where all of it lives</h2>
-        <p className="abouthome-p">
-          FittList is a public record of what&rsquo;s happening in local fitness:
-          the classes, the places they happen, and the people leading them.
-        </p>
-        <Link className="abouthome-go" href="/about">
-          See what we&rsquo;re building
-          <Icon name="arrow_forward" size={18} />
-        </Link>
-      </section>
+      {isHome && (
+        <section className="abouthome home-section">
+          <Wordmark variant="cloud" className="abouthome-mark" />
+          <h2>One place where all of it lives</h2>
+          <p className="abouthome-p">
+            FittList is a public record of what&rsquo;s happening in local fitness:
+            the classes, the places they happen, and the people leading them.
+          </p>
+          <Link className="abouthome-go" href="/about">
+            See what we&rsquo;re building
+            <Icon name="arrow_forward" size={18} />
+          </Link>
+        </section>
+      )}
 
       {/* No floating search circle either: the Search tab took the act.
           People near you stays one tap away behind the rail's Add. */}
-      {find && <DiscoverSheet onClose={closeFind} />}
+      {isHome && find && <DiscoverSheet onClose={closeFind} />}
 
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
