@@ -59,17 +59,6 @@ export type NearStudio = {
 
 /** A circle on the Coaches near you rail, the viewer's own follow state
  *  riding along so the pill under the face starts right. */
-export type LocalCoach = {
-  id: string;
-  handle: string;
-  name: string;
-  photo: string | null;
-  color: string;
-  following: boolean;
-  requested: boolean;
-  local: boolean;
-};
-
 export type FeedItem = {
   key: string;
   /** Which of the three weeks it falls in, decided on the server. */
@@ -151,7 +140,6 @@ export function FollowingScreen({
   meKind,
   meFace,
   nearStudios,
-  localCoaches,
   hasCalendar = false,
   mode = "home",
 }: {
@@ -176,7 +164,6 @@ export function FollowingScreen({
   /** The rails under the schedule, by Matt's call: the places and the
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
-  localCoaches: LocalCoach[];
   /** Chooses between building an empty calendar and sharing a populated one. */
   hasCalendar?: boolean;
   /** Home is a single-day preview; Upcoming is the dedicated filtered browser. */
@@ -759,24 +746,6 @@ export function FollowingScreen({
         </Link>
       )}
 
-      {isHome && localCoaches.length > 0 && (
-        <section className="nearrail home-section">
-          <div className="nearhead nearhead-row">
-            {/* Find friends, by Matt's call: the rail is coaches, and the
-                word is the act it invites. */}
-            <span className="nearlbl">Coaches</span>
-            <Link className="nearhead-go home-seeall" href="/search?seg=people">
-              See all
-            </Link>
-          </div>
-          <div className="ctrail">
-            {localCoaches.map((c) => (
-              <CoachNear key={c.id} c={c} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* No floating search circle either: the Search tab took the act.
           People near you stays one tap away behind the rail's Add. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
@@ -1004,57 +973,6 @@ function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: nu
     Math.sin(dLat / 2) ** 2 +
     Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-}
-
-/** One circle on the Coaches near you rail: the face opens their page, and
- *  the pill under it follows without leaving the list. The pill only draws
- *  while there is something to do: followed means no pill, and Requested is
- *  the cancel, the way it is everywhere else. */
-function CoachNear({ c }: { c: LocalCoach }) {
-  const [state, setState] = useState<"off" | "following" | "requested">(
-    c.following ? "following" : c.requested ? "requested" : "off",
-  );
-  const [busy, setBusy] = useState(false);
-  const tap = async () => {
-    if (busy || state === "following") return;
-    setBusy(true);
-    if (state === "off") {
-      const { followTrainer } = await import("@/app/actions/subscribe");
-      const res = await followTrainer(c.handle);
-      if (res.ok) setState(res.requested ? "requested" : "following");
-    } else {
-      const { unfollowTrainer } = await import("@/app/actions/subscribe");
-      const res = await unfollowTrainer(c.handle);
-      if (res.ok) setState("off");
-    }
-    setBusy(false);
-  };
-  return (
-    <div className="ctrail-item">
-      <Link className="ctrail-go" href={`/${c.handle}?from=discover`}>
-        <span className="trayav ctrail-av">
-          {c.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.photo} alt="" />
-          ) : (
-            <span className="trayav-ini" style={{ background: c.color }}>
-              {initials(c.name)}
-            </span>
-          )}
-        </span>
-        <span className="trayitem-nm">{c.name.split(/\s+/)[0]}</span>
-      </Link>
-      {state !== "following" && (
-        <button
-          className={`peekfollow ctrail-fl${state === "requested" ? " on" : ""}`}
-          disabled={busy}
-          onClick={tap}
-        >
-          {state === "requested" ? "Requested" : "Follow"}
-        </button>
-      )}
-    </div>
-  );
 }
 
 /** The tapped occurrence, as the sheet wants it. Somebody else's class, so it

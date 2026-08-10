@@ -7,7 +7,6 @@ import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso, WEEKS_AHE
 import type {
   FeedCoach,
   FeedItem,
-  LocalCoach,
   NearStudio,
   RailPerson,
 } from "@/components/FollowingScreen";
@@ -33,7 +32,6 @@ export type DiscoverFeed = {
   /** The rails under the schedule: every studio, the viewer's city first,
    *  and every listable coach with the viewer's follow state riding along. */
   nearStudios: NearStudio[];
-  localCoaches: LocalCoach[];
   /** Whether Home can honestly offer Share rather than Build your calendar. */
   hasCalendar: boolean;
 };
@@ -49,7 +47,7 @@ export async function buildDiscoverFeed(
   const db = await getDb();
   // By email, the way every other follow lookup does it: somebody who followed
   // before signing in still counts once the address has an account.
-  const [followRows, hidden, askRows, personalRows, ownClassRows] = await Promise.all([
+  const [followRows, hidden, personalRows, ownClassRows] = await Promise.all([
     db
       .select({
         trainerUserId: schema.subscribers.trainerUserId,
@@ -58,12 +56,6 @@ export async function buildDiscoverFeed(
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     hiddenFrom(userId),
-    // Pending asks at gated coaches, so the rail's pill can say Requested
-    // rather than offering a Follow that would double-file the ask.
-    db
-      .select({ trainerUserId: schema.followRequests.trainerUserId })
-      .from(schema.followRequests)
-      .where(eq(schema.followRequests.requesterUserId, userId)),
     db
       .select({ specificDate: schema.personalClasses.specificDate, endsOn: schema.personalClasses.endsOn })
       .from(schema.personalClasses)
@@ -404,30 +396,6 @@ export async function buildDiscoverFeed(
   // Coaches near you: every listable coach, your city first, then whoever
   // teaches soonest, with the viewer's follow state riding along so the
   // pill under each face starts right.
-  const requestedSet = new Set(askRows.map((r) => r.trainerUserId));
-  const myLoc = (me.location ?? "").trim().toLowerCase();
-  const localCoaches: LocalCoach[] = coaches
-    .filter((c) => c.id !== userId)
-    .map((c) => ({
-      id: c.id,
-      handle: c.handle!,
-      name: c.name.trim() || c.email.split("@")[0],
-      photo: c.photoThumb ?? c.photo,
-      color: avatarColor(c),
-      following: favSet.has(c.id),
-      requested: requestedSet.has(c.id),
-      local: !!myLoc && (c.location ?? "").trim().toLowerCase() === myLoc,
-    }))
-    .sort((a, b) => {
-      if (a.local !== b.local) return a.local ? -1 : 1;
-      const x = soonest.get(a.id);
-      const y = soonest.get(b.id);
-      if (x && y && x !== y) return x < y ? -1 : 1;
-      if (x && !y) return -1;
-      if (!x && y) return 1;
-      return a.name.localeCompare(b.name);
-    });
-
   return {
     items,
     rail,
@@ -437,7 +405,6 @@ export async function buildDiscoverFeed(
     today,
     myRail,
     nearStudios,
-    localCoaches,
     hasCalendar,
   };
 }

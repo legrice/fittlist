@@ -36,7 +36,6 @@ export default async function DiscoverPage() {
         color: avatarColor(me),
       }}
       nearStudios={feed.nearStudios}
-      localCoaches={feed.localCoaches}
       hasCalendar={feed.hasCalendar}
     />
   );
