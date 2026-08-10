@@ -76,9 +76,11 @@ const m = await mk(`dm${stamp}@example.com`, `Demi ${stamp.slice(-3)}`, true);
 const tabs = (await m.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 if (!tabs[0].includes("Discover")) fail("Discover leads the bar: " + tabs.join("|"));
 
-// The landing: the search bar on top (a door to the Search tab's screen),
-// the teaching rail (following nobody), the chips, and the date tabs.
-await m.locator(".dissearch-door").waitFor();
+// The landing: the magnifier in the header's corner right of the bell (the
+// search bar came off the top, by Matt's call), the teaching rail
+// (following nobody), the chips, and the rails under the schedule.
+if (await m.locator(".dissearch-door").count()) fail("Discover's search bar came off");
+await m.locator('.brandbar-actions [aria-label="Search"]').waitFor();
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");
@@ -90,6 +92,15 @@ await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
 if ((await m.locator(".fchips .catpill").count()) !== 5)
   fail("the leading Filters chip plus the four questions");
 if (await m.locator(".fchip-clear").count()) fail("Clear only appears once something is set");
+
+// Under the schedule: the studios as rectangles, closest first, and the
+// coaches with Follow one tap deep, by Matt's call.
+await m.locator(".nearlbl", { hasText: "Studios near you" }).waitFor();
+await m.locator(".strail-item", { hasText: "Drew Gym" }).first().waitFor();
+await m.locator(".nearlbl", { hasText: "Coaches near you" }).waitFor();
+const drewNear = m.locator(".ctrail-item", { hasText: "Drew" }).first();
+await drewNear.locator(".ctrail-fl", { hasText: "Follow" }).waitFor();
+console.log("the rails under the schedule: studios, then coaches with Follow");
 
 // The leading chip opens everything at once and stays open while you set
 // it; picking inside marks the chip with the count.
@@ -145,12 +156,13 @@ if (!(await m.locator(".fchips .catpill.on", { hasText: "Drew Gym" }).count()))
 await m.locator(".fchip-clear").click();
 console.log("the places chip multi-selects with the sheet open");
 
-// The class peek: Follow (no star), and Save in the footer.
+// The class peek: Follow (no star), and Save in the footer. Scoped to the
+// sheet, because the Coaches near you rail behind it carries Follow too.
 await m.locator(".clline-nm", { hasText: "Dusk Lift" }).first().click();
-await m.locator(".peekfollow", { hasText: "Follow" }).waitFor();
+await m.locator(".clsfull .peekfollow", { hasText: "Follow" }).waitFor();
 if (await m.locator(".peekstar").count()) fail("no stars anywhere");
-await m.locator(".peekfollow").click();
-await m.locator(".peekfollow.on", { hasText: "Following" }).waitFor();
+await m.locator(".clsfull .peekfollow").click();
+await m.locator(".clsfull .peekfollow.on", { hasText: "Following" }).waitFor();
 await m.locator(".clsfull-btn.save", { hasText: "Save" }).click();
 await m.locator(".clsfull-btn.save.on", { hasText: "Saved" }).waitFor();
 await m.locator(".clsfull-x").click();

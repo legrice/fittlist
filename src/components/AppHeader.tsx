@@ -19,6 +19,7 @@ export function AppHeader({
   adminActivity = false,
   adminActivityNew = false,
   find = false,
+  search = false,
   home = "/week",
   nav,
 }: {
@@ -39,6 +40,10 @@ export function AppHeader({
   /** The magnifier, opening the directory as a sheet. Off in the shell with
    *  no member side at all, where there is nobody to find. */
   find?: boolean;
+  /** The magnifier as a door to /search, right of the bell, by Matt's
+   *  call: Discover's search bar came off and the corner is where the act
+   *  moved. */
+  search?: boolean;
   /** Where the wordmark goes. The Following tab for anyone with the member
       side, the schedule for a coach who doesn't have it yet. */
   home?: string;
@@ -83,6 +88,9 @@ export function AppHeader({
           match="/updates"
           badge={unread > 0 ? <span className="inboxdot">{unread > 9 ? "9+" : unread}</span> : undefined}
         />
+        {search && (
+          <HeaderIconLink label="Search" icon="search" href="/search" match="/search" />
+        )}
         {settings && (
           <HeaderIconLink
             className="settingsbtn"

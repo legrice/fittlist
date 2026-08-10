@@ -4,7 +4,13 @@ import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
 import { classAddress, publicSchedules } from "@/lib/coachweek";
 import { clockParts, occurrenceEnded, runsOn, timeToMinutes, todayIso, WEEKS_AHEAD, weekDates } from "@/lib/format";
-import type { FeedCoach, FeedItem, RailPerson } from "@/components/FollowingScreen";
+import type {
+  FeedCoach,
+  FeedItem,
+  LocalCoach,
+  NearStudio,
+  RailPerson,
+} from "@/components/FollowingScreen";
 
 // The Discover feed, built once for everything that shows it: the tab's
 // page, and the Add screen's browse list. Classes near you from every
@@ -24,6 +30,10 @@ export type DiscoverFeed = {
    *  each carrying the freshness ring's state. Only people whose week was
    *  touched in the last seven days make it on at all. */
   myRail: RailPerson[];
+  /** The rails under the schedule: every studio, the viewer's city first,
+   *  and every listable coach with the viewer's follow state riding along. */
+  nearStudios: NearStudio[];
+  localCoaches: LocalCoach[];
 };
 
 /** How far ahead a face has to have something for the rail to carry it:
@@ -32,12 +42,12 @@ const RAIL_AHEAD_DAYS = 14;
 
 export async function buildDiscoverFeed(
   userId: string,
-  me: { email: string; kind: string; handle: string | null },
+  me: { email: string; kind: string; handle: string | null; location?: string | null },
 ): Promise<DiscoverFeed> {
   const db = await getDb();
   // By email, the way every other follow lookup does it: somebody who followed
   // before signing in still counts once the address has an account.
-  const [followRows, hidden] = await Promise.all([
+  const [followRows, hidden, askRows] = await Promise.all([
     db
       .select({
         trainerUserId: schema.subscribers.trainerUserId,
@@ -46,6 +56,12 @@ export async function buildDiscoverFeed(
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     hiddenFrom(userId),
+    // Pending asks at gated coaches, so the rail's pill can say Requested
+    // rather than offering a Follow that would double-file the ask.
+    db
+      .select({ trainerUserId: schema.followRequests.trainerUserId })
+      .from(schema.followRequests)
+      .where(eq(schema.followRequests.requesterUserId, userId)),
   ]);
   const followed = followRows
     .map((r) => r.trainerUserId)
@@ -306,5 +322,62 @@ export async function buildDiscoverFeed(
     // next thing is nearest.
     .sort((a, b) => (a.nextAt < b.nextAt ? -1 : a.nextAt > b.nextAt ? 1 : 0));
 
-  return { items, rail, favIds: [...favSet], cats, follows: followed.length, today, myRail };
+  // Studios near you: every studio in the directory, the viewer's own city
+  // leading. "Closest" without asking for a pin on arrival: the city on
+  // their account is the honest first cut, and the screen re-sorts by real
+  // distance once the distance filter has already earned geolocation.
+  const allStudios = await db.select().from(schema.studios).orderBy(schema.studios.name);
+  const myCity = (me.location ?? "").split(",")[0].trim().toLowerCase();
+  const nearStudios: NearStudio[] = allStudios
+    .map((s) => ({
+      id: s.id,
+      slug: s.slug ?? s.id,
+      name: s.name,
+      photo: s.photo,
+      color: avatarColor({ id: s.id }),
+      lat: s.lat ?? null,
+      lng: s.lng ?? null,
+      local: !!myCity && s.address.toLowerCase().includes(myCity),
+    }))
+    // Stable, so name order holds inside each half.
+    .sort((a, b) => Number(b.local) - Number(a.local));
+
+  // Coaches near you: every listable coach, your city first, then whoever
+  // teaches soonest, with the viewer's follow state riding along so the
+  // pill under each face starts right.
+  const requestedSet = new Set(askRows.map((r) => r.trainerUserId));
+  const myLoc = (me.location ?? "").trim().toLowerCase();
+  const localCoaches: LocalCoach[] = coaches
+    .filter((c) => c.id !== userId)
+    .map((c) => ({
+      id: c.id,
+      handle: c.handle!,
+      name: c.name.trim() || c.email.split("@")[0],
+      photo: c.photoThumb ?? c.photo,
+      color: avatarColor(c),
+      following: favSet.has(c.id),
+      requested: requestedSet.has(c.id),
+      local: !!myLoc && (c.location ?? "").trim().toLowerCase() === myLoc,
+    }))
+    .sort((a, b) => {
+      if (a.local !== b.local) return a.local ? -1 : 1;
+      const x = soonest.get(a.id);
+      const y = soonest.get(b.id);
+      if (x && y && x !== y) return x < y ? -1 : 1;
+      if (x && !y) return -1;
+      if (!x && y) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  return {
+    items,
+    rail,
+    favIds: [...favSet],
+    cats,
+    follows: followed.length,
+    today,
+    myRail,
+    nearStudios,
+    localCoaches,
+  };
 }

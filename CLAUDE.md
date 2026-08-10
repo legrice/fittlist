@@ -2195,9 +2195,13 @@ on main until Matt says merge. The change in one paragraph: there is one
 relationship word, Follow, for coaches and members alike, no stars
 anywhere, and following someone lets you see their week and never puts a
 class on your calendar. The tab is Discover (route stays /feed): the
-search door, the This week rail, and Upcoming near you, which is classes
-from every listable coach, never only the people you follow, deduped to
-one row per class. How the days present depends on how much they hold
+This week rail, Upcoming near you (classes from every listable coach,
+never only the people you follow, deduped to one row per class), and
+under the schedule two more rails, Studios near you and Coaches near
+you. The search bar led the screen for a build and came off, by Matt's
+call: the magnifier sits in the app header, right of the bell
+(`AppHeader`'s `search` prop, a door to /search), knowingly alongside
+the Search tab. How the days present depends on how much they hold
 (`DENSE_DAY` in FollowingScreen): while no day exceeds ten listings the
 list is one scroll of banded days (the same DayBand grammar the
 calendars wear), because a two-week-old app's whole inventory fits on a
@@ -2268,6 +2272,17 @@ People near you (the rail's Add, and the search fab) is where coaches
 and members are told apart, because there it is useful: an Everyone /
 Coaches only segment, a Coach tag and next-class time on coach rows,
 neither on a member's, and Follow on every row, unlimited.
+
+Under the schedule, the places and the people, by Matt's call: Studios
+near you as rectangles on a rail (a place is a room, a person is a
+face), closest first, which means the viewer's own city leads on the
+server and the rail re-sorts by real miles only once the distance
+filter has already earned geolocation, never asking for a pin on
+arrival; then Coaches near you as circles with a Follow pill under
+each face that isn't already followed (Requested at a gated coach, and
+the pill disappears once it's a yes). Both ride `buildDiscoverFeed`
+(`nearStudios`, `localCoaches`), so the block rules and `discoverable`
+are kept once.
 
 The vocabulary is four terms, each with one job: Follow (a person whose
 week you can see), Saved (you intend to go; the ribbon, the toasts),

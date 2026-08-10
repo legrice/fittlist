@@ -68,10 +68,11 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
             (await adminActivityFreshSince(me.adminActivityAt))
           }
           home={landing}
-          // No magnifier and no gear up here any more, by Matt's call: as
-          // the app fills in, everything you act on lives in the bottom
-          // bar. Search is a tab, and settings are the circle on your own
-          // profile. The header is identity and the bell.
+          // The magnifier is back in the corner, right of the bell, by
+          // Matt's call: Discover's search bar came off and the corner is
+          // where the act moved. No gear: settings are the circle on your
+          // own profile.
+          search
           nav={{ coach: isCoach, scheduleHref, profileHref }}
         />
         {invitesLeft !== 0 && <InvitesBanner />}

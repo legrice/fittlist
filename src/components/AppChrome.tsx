@@ -82,10 +82,11 @@ export async function AppChrome({
       // the bare editable schedule: a page with no identity that read as
       // showing up at random.
       home={fans ? await landingHref() : "/app"}
-      // No magnifier and no gear, by Matt's call: Search is a tab and
-      // settings are the circle on your own profile. The gear survives only
-      // where there is no member side at all: the coaches-only mode has no
-      // tab bar, so it is the one door to the account.
+      // The magnifier rides right of the bell wherever the member side
+      // exists, by Matt's call. The gear survives only where there is no
+      // member side at all: the coaches-only mode has no tab bar, so it is
+      // the one door to the account.
+      search={fans}
       settings={fans ? undefined : "/settings"}
       adminActivity={isAdmin}
       adminActivityNew={isAdmin && (await adminActivityFreshSince(me.adminActivityAt))}

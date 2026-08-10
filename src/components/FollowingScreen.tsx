@@ -11,6 +11,7 @@ import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, DayBand, initials, type WeekRow } from "@/components/WeekView";
+import { initialOf } from "@/lib/avatar";
 
 export type FeedCoach = {
   id: string;
@@ -36,6 +37,34 @@ export type RailPerson = {
   fresh: boolean;
   /** When their next thing is, for the soonest-first order. */
   nextAt: string;
+};
+
+/** A tile on the Studios near you rail: a rectangle, because a place is a
+ *  room and a person is a face. Closest first, as honestly as we can say
+ *  it: the viewer's own city leads on the server, and the rail re-sorts by
+ *  real distance once the distance filter has already earned the pin. */
+export type NearStudio = {
+  id: string;
+  slug: string;
+  name: string;
+  photo: string | null;
+  color: string;
+  lat: number | null;
+  lng: number | null;
+  local: boolean;
+};
+
+/** A circle on the Coaches near you rail, the viewer's own follow state
+ *  riding along so the pill under the face starts right. */
+export type LocalCoach = {
+  id: string;
+  handle: string;
+  name: string;
+  photo: string | null;
+  color: string;
+  following: boolean;
+  requested: boolean;
+  local: boolean;
 };
 
 export type FeedItem = {
@@ -126,6 +155,8 @@ export function FollowingScreen({
   myRail,
   meKind,
   meFace,
+  nearStudios,
+  localCoaches,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
@@ -145,6 +176,10 @@ export function FollowingScreen({
   /** The viewer's own face, leading the rail: your circle is you, not a
    *  glyph, by Matt's call. */
   meFace: { photo: string | null; name: string; color: string };
+  /** The rails under the schedule, by Matt's call: the places and the
+   *  people around you, with Follow one tap deep. */
+  nearStudios: NearStudio[];
+  localCoaches: LocalCoach[];
 }) {
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
@@ -292,6 +327,16 @@ export function FollowingScreen({
     };
   }, [dense]);
 
+  // Studios closest first: the server already led with the viewer's own
+  // city, and once the distance filter has earned a real pin the rail
+  // re-sorts by miles. Never asked for on arrival.
+  const studiosNear = useMemo(() => {
+    if (!geo) return nearStudios;
+    const d = (s: NearStudio) =>
+      s.lat != null && s.lng != null ? milesBetween(geo, { lat: s.lat, lng: s.lng }) : Infinity;
+    return [...nearStudios].sort((a, b) => d(a) - d(b));
+  }, [nearStudios, geo]);
+
   // The selected day's rows, for the date-rail mode.
   const dayRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
     const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
@@ -423,16 +468,9 @@ export function FollowingScreen({
 
   return (
     <>
-      {/* The search bar leads, back by Matt's call: Home is where the
-          looking starts, and the bar is drawn as the field it opens. It is
-          a door to the Search tab's own screen, not a second search. */}
-      <div className="dissearchrow dishome-search">
-        <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
-          <Icon name="search" size={21} className="dissearch-ic" />
-          <span className="dissearch-ph">Find classes, coaches, and studios near you</span>
-        </Link>
-      </div>
-
+      {/* No search bar up here any more, by Matt's call: the magnifier
+          lives in the header's corner, right of the bell, and the rail
+          leads the screen. */}
       {/* This week: the people you follow with something coming up, soonest
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their
@@ -607,6 +645,47 @@ export function FollowingScreen({
           ))
         )}
       </div>
+
+      {/* Under the schedule, the places and the people, by Matt's call:
+          the studios closest to you as rectangles on a rail, then the
+          coaches around you with Follow one tap deep. Your own city leads
+          both; a real pin re-sorts the studios by miles. */}
+      {studiosNear.length > 0 && (
+        <section className="nearrail">
+          <div className="nearhead">
+            <span className="nearlbl">Studios near you</span>
+          </div>
+          <div className="strail">
+            {studiosNear.map((s) => (
+              <Link key={s.id} className="strail-item" href={`/s/${s.slug}?from=discover`}>
+                <span className="strail-ph">
+                  {s.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.photo} alt="" />
+                  ) : (
+                    <span className="strail-ini" style={{ background: s.color }}>
+                      {initialOf(s.name)}
+                    </span>
+                  )}
+                </span>
+                <span className="strail-nm">{s.name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      {localCoaches.length > 0 && (
+        <section className="nearrail">
+          <div className="nearhead">
+            <span className="nearlbl">Coaches near you</span>
+          </div>
+          <div className="ctrail">
+            {localCoaches.map((c) => (
+              <CoachNear key={c.id} c={c} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* No floating search circle either: the Search tab took the act.
           People near you stays one tap away behind the rail's Add. */}
@@ -792,6 +871,57 @@ const plusDays = (iso: string, n: number) =>
 function tabLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+}
+
+/** One circle on the Coaches near you rail: the face opens their page, and
+ *  the pill under it follows without leaving the list. The pill only draws
+ *  while there is something to do: followed means no pill, and Requested is
+ *  the cancel, the way it is everywhere else. */
+function CoachNear({ c }: { c: LocalCoach }) {
+  const [state, setState] = useState<"off" | "following" | "requested">(
+    c.following ? "following" : c.requested ? "requested" : "off",
+  );
+  const [busy, setBusy] = useState(false);
+  const tap = async () => {
+    if (busy || state === "following") return;
+    setBusy(true);
+    if (state === "off") {
+      const { followTrainer } = await import("@/app/actions/subscribe");
+      const res = await followTrainer(c.handle);
+      if (res.ok) setState(res.requested ? "requested" : "following");
+    } else {
+      const { unfollowTrainer } = await import("@/app/actions/subscribe");
+      const res = await unfollowTrainer(c.handle);
+      if (res.ok) setState("off");
+    }
+    setBusy(false);
+  };
+  return (
+    <div className="ctrail-item">
+      <Link className="ctrail-go" href={`/${c.handle}?from=discover`}>
+        <span className="trayav ctrail-av">
+          {c.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={c.photo} alt="" />
+          ) : (
+            <span className="trayav-ini" style={{ background: c.color }}>
+              {initials(c.name)}
+            </span>
+          )}
+        </span>
+        <span className="trayitem-nm">{c.name.split(/\s+/)[0]}</span>
+      </Link>
+      {state !== "following" && (
+        <button
+          className={`peekfollow ctrail-fl${state === "requested" ? " on" : ""}`}
+          disabled={busy}
+          onClick={tap}
+        >
+          {state === "requested" ? "Requested" : "Follow"}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** Miles between two pins, the haversine way, close enough for a filter. */
