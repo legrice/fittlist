@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { getSessionUserId } from "@/lib/session";
 import { buildDiscoverFeed } from "@/lib/discoverfeed";
+import { avatarColor } from "@/lib/avatar";
 import { FollowingScreen } from "@/components/FollowingScreen";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,11 @@ export default async function DiscoverPage() {
       meId={userId}
       myRail={feed.myRail}
       meKind={me.kind === "fan" ? "member" : "coach"}
+      meFace={{
+        photo: me.photoThumb ?? me.photo,
+        name: me.name ?? "",
+        color: avatarColor(me),
+      }}
     />
   );
 }

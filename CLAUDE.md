@@ -2231,8 +2231,9 @@ changed since you last opened it, grey once seen (`subscribers.peekedAt`,
 written when the peek opens, because the ring's promise is kept the
 moment somebody is looking). A rail with nobody on it hides entirely
 (the addendum says below about three; the floor is one until density
-earns three, or the feature buries itself). Your week leads the rail, a
-dashed circle into the Share tab, and Add ends it, into People near you.
+earns three, or the feature buries itself). You lead the rail, your own
+face labelled You (no ring, because your week cannot surprise you), a
+door into the Share tab, and Add ends it, into People near you.
 Tapping a circle opens the peek: their week as a live calendar, header
 carrying "Week of" and Follow / Following, everything they coach (a
 Coaching tag, the one place coach and member differ) plus everything

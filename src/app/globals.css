@@ -6013,12 +6013,10 @@ button.ps-card { cursor: pointer; }
    badges, no next-class times. */
 .trayav-ring { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--si); }
 .trayav-ring.seen { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--line); }
-/* Your week, leading the rail: dashed like Add, because both are doors
-   rather than people. */
-.trayav-you {
-  display: flex; align-items: center; justify-content: center;
-  background: var(--card); border: 1.5px dashed var(--line); color: var(--ol);
-}
+/* You, leading the rail: your own face, by Matt's call (it was a dashed
+   arrow door for a build). No ring, because the ring means somebody
+   else's week changed and yours cannot surprise you. */
+.trayav-you { background: var(--card); }
 /* At the page gutter: the tray bleeds to the screen edge, so the label
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */

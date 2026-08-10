@@ -125,6 +125,7 @@ export function FollowingScreen({
   meId,
   myRail,
   meKind,
+  meFace,
 }: {
   items: FeedItem[];
   coaches: FeedCoach[];
@@ -139,8 +140,11 @@ export function FollowingScreen({
    *  mark on your own class and a button that fails is worse than none. */
   meId?: string;
   myRail: RailPerson[];
-  /** Where the Your week circle points: the hub is per kind. */
+  /** Where the You circle points: the hub is per kind. */
   meKind: "coach" | "member";
+  /** The viewer's own face, leading the rail: your circle is you, not a
+   *  glyph, by Matt's call. */
+  meFace: { photo: string | null; name: string; color: string };
 }) {
   const [f, setF] = useState<Filters>(NO_FILTERS);
   const [sheet, setSheet] = useState<null | "all" | "time" | "dist" | "cat" | "place">(null);
@@ -403,16 +407,23 @@ export function FollowingScreen({
       {/* This week: the people you follow with something coming up, soonest
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their
-          week. Your week leads it and Add ends it. */}
+          week. You lead it, wearing your own face, and Add ends it. */}
       {railShows && (
         <div className="tray">
           <p className="nearlbl railbl">This week</p>
           <div className="tray-scroll">
             <Link className="trayitem" href={meKind === "coach" ? "/coachshare" : "/membershare"}>
               <span className="trayav trayav-you">
-                <Icon name="arrow_outward" size={22} />
+                {meFace.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={meFace.photo} alt="" />
+                ) : (
+                  <span className="trayav-ini" style={{ background: meFace.color }}>
+                    {initials(meFace.name)}
+                  </span>
+                )}
               </span>
-              <span className="trayitem-nm">Your week</span>
+              <span className="trayitem-nm">You</span>
             </Link>
             {myRail.map((p) => (
               <button key={p.id} className="trayitem" onClick={() => setPeekPerson(p)}>

@@ -82,7 +82,10 @@ await m.locator(".dissearch-door").waitFor();
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");
-await m.locator(".trayitem", { hasText: "Your week" }).waitFor();
+// The leading circle is your own face and the word You, by Matt's call.
+await m.locator(".trayitem", { hasText: "You" }).first().waitFor();
+if (!(await m.locator(".trayav-you .trayav-ini, .trayav-you img").count()))
+  fail("the You circle wears the viewer's own face");
 await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
 if ((await m.locator(".fchips .catpill").count()) !== 5)
   fail("the leading Filters chip plus the four questions");
