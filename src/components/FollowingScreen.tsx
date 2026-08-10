@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
@@ -164,12 +164,29 @@ export function FollowingScreen({
   const [peekPerson, setPeekPerson] = useState<RailPerson | null>(null);
   const [find, setFind] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
-  // The save toast carries "See it": the calendar the class landed on is a
-  // tab away, and the link points at the exact occurrence (?hl lights it).
-  const [toastGo, setToastGo] = useState<string | null>(null);
-  const calHref = meKind === "coach" ? "/calendar" : "/week";
+  // A save lights your own circle rather than toasting, by Matt's call:
+  // the ring goes brand and a New badge rides your face, the same signal a
+  // followed person's fresh week sends. Tapping it lands on the Share
+  // screen, where the saved class now lives. localStorage carries it
+  // across navigations; the Share screen clears it on arrival.
+  const [youFresh, setYouFresh] = useState(false);
+  useEffect(() => {
+    try {
+      setYouFresh(!!localStorage.getItem("fl-you-new"));
+    } catch {
+      // Private mode: the ring just doesn't persist.
+    }
+  }, []);
   const notify = (msg: string, hlKey?: string) => {
-    setToastGo(hlKey ? `${calHref}?hl=${encodeURIComponent(hlKey)}` : null);
+    if (hlKey) {
+      try {
+        localStorage.setItem("fl-you-new", "1");
+      } catch {
+        // Private mode: the ring still lights for this visit.
+      }
+      setYouFresh(true);
+      return;
+    }
     toast(msg);
   };
   const router = useRouter();
@@ -209,15 +226,18 @@ export function FollowingScreen({
           <p className="nearlbl railbl">This week</p>
           <div className="tray-scroll">
             <Link className="trayitem" href={meKind === "coach" ? "/coachshare" : "/membershare"}>
-              <span className="trayav trayav-you">
-                {meFace.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={meFace.photo} alt="" />
-                ) : (
-                  <span className="trayav-ini" style={{ background: meFace.color }}>
-                    {initials(meFace.name)}
-                  </span>
-                )}
+              <span className="youwrap">
+                <span className={`trayav trayav-you${youFresh ? " trayav-ring" : ""}`}>
+                  {meFace.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={meFace.photo} alt="" />
+                  ) : (
+                    <span className="trayav-ini" style={{ background: meFace.color }}>
+                      {initials(meFace.name)}
+                    </span>
+                  )}
+                </span>
+                {youFresh && <span className="younew">New</span>}
               </span>
               <span className="trayitem-nm">You</span>
             </Link>
@@ -374,7 +394,9 @@ export function FollowingScreen({
       {localCoaches.length > 0 && (
         <section className="nearrail">
           <div className="nearhead nearhead-row">
-            <span className="nearlbl">Coaches near you</span>
+            {/* Find friends, by Matt's call: the rail is coaches, and the
+                word is the act it invites. */}
+            <span className="nearlbl">Find friends</span>
             <Link className="nearhead-go" href="/search?seg=people" aria-label="All coaches and members">
               <Icon name="arrow_forward" size={22} />
             </Link>
@@ -386,6 +408,20 @@ export function FollowingScreen({
           </div>
         </section>
       )}
+
+      {/* What this is, at the end of the scroll: one paragraph and the
+          door to the whole story, with the Contribute ask behind it. */}
+      <section className="abouthome">
+        <h2 className="nearlbl">One place where all of it lives</h2>
+        <p className="abouthome-p">
+          FittList is a public record of what&rsquo;s happening in local fitness:
+          the classes, the places they happen, and the people leading them.
+        </p>
+        <Link className="abouthome-go" href="/about">
+          About FittList
+          <Icon name="chevron_right" size={18} />
+        </Link>
+      </section>
 
       {/* No floating search circle either: the Search tab took the act.
           People near you stays one tap away behind the rail's Add. */}
@@ -409,11 +445,7 @@ export function FollowingScreen({
       {peek && (
         <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={notify} onChanged={() => {}} />
       )}
-      <Toast
-        msg={toastMsg}
-        on={toastOn}
-        action={toastGo ? { label: "See it", href: toastGo } : null}
-      />
+      <Toast msg={toastMsg} on={toastOn} />
     </>
   );
 }

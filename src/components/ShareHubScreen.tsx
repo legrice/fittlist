@@ -191,6 +191,23 @@ export function ShareHubScreen({
     router.refresh();
   };
 
+  // The first landing after a save explains the screen once, by Matt's
+  // call: saving lights your circle on Home rather than toasting, the
+  // circle lands here, and this says why. `fl-you-new` is the lit ring
+  // (cleared on arrival, because arriving is what the ring asked for);
+  // `fl-share-intro` means the explanation has been given and never
+  // repeats.
+  const [intro, setIntro] = useState(false);
+  useEffect(() => {
+    try {
+      const fresh = localStorage.getItem("fl-you-new");
+      if (fresh) localStorage.removeItem("fl-you-new");
+      if (fresh && !localStorage.getItem("fl-share-intro")) setIntro(true);
+    } catch {
+      // Private mode: no ring was stored, so there is nothing to explain.
+    }
+  }, []);
+
   useEffect(() => {
     setCanShareFiles(
       typeof navigator !== "undefined" &&
@@ -1011,6 +1028,30 @@ export function ShareHubScreen({
         </div>
       )}
 
+      {intro && (
+        <div className="sheet-scrim">
+          <div className="sheet confirmsheet shareintro">
+            <h2>Your week lives here</h2>
+            <p className="lead">
+              Everything you save lands on this picture. Share it as a story, a
+              link or a QR code, and the people you train with can come along.
+            </p>
+            <button
+              className="btn si"
+              onClick={() => {
+                try {
+                  localStorage.setItem("fl-share-intro", "1");
+                } catch {
+                  // Private mode: it may show once more, which is survivable.
+                }
+                setIntro(false);
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
       <Toast msg={toastMsg} on={toastOn} />
     </>
   );

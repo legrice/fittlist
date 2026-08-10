@@ -6305,6 +6305,31 @@ button.ps-card { cursor: pointer; }
   position: absolute; top: 10px; right: 10px; bottom: auto; padding: 4px;
 }
 
+/* Your circle, lit by your own save, by Matt's call: the same brand ring
+   a followed person's fresh week wears, plus a New badge riding the
+   bottom edge of your face. The wrapper exists because .trayav clips. */
+.youwrap { position: relative; display: block; }
+.younew {
+  position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+  background: var(--si); color: #fff;
+  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px; border: 2px solid var(--paper);
+  white-space: nowrap; pointer-events: none;
+}
+
+/* The About block at the end of Home, and the page behind it. */
+.abouthome { margin-top: 30px; padding-top: 4px; }
+.abouthome-p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.55; color: var(--ol); }
+.abouthome-go {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 14.5px; font-weight: 600; color: var(--ink); text-decoration: none;
+}
+.aboutpage { max-width: 560px; }
+.aboutpage h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 18px 0 6px; }
+.aboutpage p { margin: 14px 0; font-size: 15.5px; line-height: 1.6; color: var(--ink); }
+.about-one { font-weight: 600; font-size: 17px; }
+.contribute-cta { width: 100%; margin-top: 22px; }
+
 /* A rail head is the label and its arrow: the door to the same kind on
    Search, a plain right arrow by Matt's call, no words. */
 .nearhead-row { display: flex; align-items: center; justify-content: space-between; }

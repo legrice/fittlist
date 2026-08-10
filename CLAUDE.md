@@ -2205,9 +2205,14 @@ and coach beside it, and the bare ribbon in the corner (the same
 SaveCorner, `bare`), capped at `UPCOMING_RAIL` because a rail is a
 taste and the arrow is the whole list. The cards are still every
 listable coach's classes, deduped to one row per class, still opening
-the class peek on tap, still toasting "Saved to your calendar" with a
-See it that lands highlighted (`?hl=`); your own carry no ribbon
-because setGoing would refuse the mark. The vertical banded list, the
+the class peek on tap; your own carry no ribbon because setGoing would
+refuse the mark. A save never toasts, by Matt's call: it lights your
+own circle at the top instead, the brand ring plus a New badge on your
+face (`fl-you-new` in localStorage, so it survives navigation), and
+tapping it lands on the Share screen, which clears the ring on arrival
+and explains itself exactly once (`fl-share-intro`, a modal with
+Continue): the saved class is on the picture, and that is the loop the
+signal teaches. The vertical banded list, the
 date tabs (`DENSE_DAY`) and the four filter chips went with the rail
 and live in git at the commit that replaced them; the full browsable
 list is Search's Classes segment now. The search bar led the screen for
@@ -2267,14 +2272,21 @@ neither on a member's, and Follow on every row, unlimited.
 
 Under the schedule, the places and the people, by Matt's call: Studios
 near you as rectangles on a rail (a place is a room, a person is a
-face), closest first, which means the viewer's own city leads on the
-server and the rail re-sorts by real miles only once the distance
-filter has already earned geolocation, never asking for a pin on
-arrival; then Coaches near you as circles with a Follow pill under
-each face that isn't already followed (Requested at a gated coach, and
-the pill disappears once it's a yes). Both ride `buildDiscoverFeed`
-(`nearStudios`, `localCoaches`), so the block rules and `discoverable`
-are kept once.
+face), the viewer's own city leading, never asking for a pin on
+arrival; then Find friends ("Coaches near you" renamed, by Matt's
+call), circles with a Follow pill under each face that isn't already
+followed (Requested at a gated coach, and the pill disappears once
+it's a yes). Both ride `buildDiscoverFeed` (`nearStudios`,
+`localCoaches`), so the block rules and `discoverable` are kept once.
+
+Home ends on what this is: an About block (one paragraph and a door to
+/about, which carries the public-record manifesto) and, at the end of
+that page, Contribute: a sheet with the three ways in (add a class,
+add a studio, which is the same adder because naming a new studio on a
+class is what makes its page exist, and handing fittlist to a coach
+via the native share). The header splits messages from notifications,
+the way YouTube does, by Matt's call: the chat bubble opens Updates'
+Messages tab, the bell the notifications, the magnifier /search.
 
 The vocabulary is four terms, each with one job: Follow (a person whose
 week you can see), Saved (you intend to go; the ribbon, the toasts),

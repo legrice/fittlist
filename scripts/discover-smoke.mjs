@@ -81,6 +81,8 @@ if (!tabs[0].includes("Home")) fail("Home leads the bar: " + tabs.join("|"));
 // (following nobody), and the three rails.
 if (await m.locator(".dissearch-door").count()) fail("Home's search bar came off");
 await m.locator('.brandbar-actions [aria-label="Search"]').waitFor();
+// Messages and notifications are two doors, the way YouTube splits them.
+await m.locator('.brandbar-actions [aria-label="Messages"]').waitFor();
 await m.locator(".railbl", { hasText: "This week" }).waitFor();
 await m.locator(".trayhint").waitFor();
 if ((await m.locator(".trayav-ghost").count()) !== 2) fail("a bare rail gets two ghosts");
@@ -101,24 +103,29 @@ for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift", "Tuesday Flow"])
 if (!(await m.locator(".uprail-date .uprail-dom").count())) fail("every card wears its date leaf");
 console.log("the landing: corner search, the faces, the Upcoming rail");
 
-// The bare ribbon on a card saves in place, and the toast carries See it.
+// The bare ribbon on a card saves in place. No toast, by Matt's call:
+// the save lights your own circle at the top of the rail instead, brand
+// ring plus a New badge on your face.
 const firstSave = m.locator(".uprail-card .rowsave").first();
 if (!(await firstSave.count())) fail("every card wears the bare ribbon");
 await firstSave.click();
 await m.locator(".uprail-card .rowsave.on").first().waitFor();
-await m.locator(".toast.on", { hasText: "Saved to your calendar" }).waitFor();
+if (await m.locator(".toast.on", { hasText: "Saved" }).count())
+  fail("a save lights the ring, never toasts, by Matt's call");
+await m.locator(".trayav-you.trayav-ring").waitFor();
+await m.locator(".younew", { hasText: "New" }).waitFor();
 await m.locator(".uprail-card .rowsave.on").first().click();
 await m.waitForFunction(() => !document.querySelector(".uprail-card .rowsave.on"), null, {
   timeout: 10000,
 });
-console.log("the card ribbon fills and empties in place");
+console.log("the card ribbon fills in place and lights the You ring");
 
 // Under the schedule: the studios as rectangles, closest first, and the
 // coaches with Follow one tap deep, by Matt's call. Every head's arrow
 // lands on Search with that kind's segment already picked.
 await m.locator(".nearlbl", { hasText: "Studios near you" }).waitFor();
 await m.locator(".strail-item", { hasText: "Drew Gym" }).first().waitFor();
-await m.locator(".nearlbl", { hasText: "Coaches near you" }).waitFor();
+await m.locator(".nearlbl", { hasText: "Find friends" }).waitFor();
 const drewNear = m.locator(".ctrail-item", { hasText: "Drew" }).first();
 await drewNear.locator(".ctrail-fl", { hasText: "Follow" }).waitFor();
 if ((await m.locator(".nearhead-go").count()) !== 3) fail("three rails, three arrows");
@@ -200,14 +207,36 @@ await kaiRow.locator(".peekfollow", { hasText: "Follow" }).click();
 await kaiRow.locator(".peekfollow.on", { hasText: "Following" }).waitFor();
 console.log("People near you: segment, tags, Follow on every row");
 
-// The save toast carries See it, landing on the calendar with the row lit.
+// The lit ring is a door: tapping You lands on the Share screen, the
+// first landing explains it once with Continue, and arriving is what
+// puts the ring out. The About block ends the scroll, and the page
+// behind it carries the Contribute sheet.
 await m.goto(BASE + "/feed");
 await m.locator(".uprail-card").first().waitFor();
 await m.locator(".uprail-card .rowsave:not(.on)").first().click();
-await m.locator(".toast-act", { hasText: "See it" }).click();
-await m.waitForURL(/\/week\?hl=/);
+await m.locator(".trayav-you.trayav-ring").waitFor();
+await m.locator(".trayitem", { hasText: "You" }).first().click();
+await m.waitForURL(/\/membershare/);
+await m.locator(".shareintro h2", { hasText: "Your week lives here" }).waitFor();
+await m.locator(".shareintro .btn", { hasText: "Continue" }).click();
+if (await m.locator(".shareintro").count()) fail("Continue closes the intro");
+await m.goto(BASE + "/feed");
+await m.locator(".uprail-card").first().waitFor();
+if (await m.locator(".younew").count()) fail("arriving on the Share screen puts the ring out");
+await m.locator(".abouthome-go", { hasText: "About FittList" }).click();
+await m.waitForURL(/\/about/);
+await m.locator(".aboutpage h1", { hasText: "What FittList is" }).waitFor();
+await m.locator(".contribute-cta", { hasText: "Contribute" }).click();
+await m.locator(".contribsheet .setrow", { hasText: "Add a class" }).waitFor();
+await m.locator(".contribsheet .setrow", { hasText: "Add a studio" }).waitFor();
+await m.locator(".contribsheet .setrow", { hasText: "Share fittlist with a coach" }).waitFor();
+await m.locator(".contribsheet .sheetclose").click();
+console.log("the ring is the door: Share intro, then out; About and Contribute stand");
+
+// The saved class is real: it sits on the member's own week.
+await m.goto(BASE + "/week");
 await m.locator(".clline[data-cid]").first().waitFor();
-console.log("See it lands on the calendar");
+console.log("the save landed on the calendar");
 
 await b.close();
 console.log("ALL DISCOVER CHECKS PASSED");

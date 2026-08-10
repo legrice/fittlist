@@ -81,6 +81,16 @@ export function AppHeader({
             badge={adminActivityNew ? <span className="actnewdot" aria-hidden="true" /> : undefined}
           />
         )}
+        {/* Messages and notifications are two doors now, by Matt's call,
+            the way YouTube splits them: the chat bubble opens the Messages
+            tab of Updates, the bell the notifications. `match` points at
+            /inbox so the icon lights on an open thread. */}
+        <HeaderIconLink
+          label="Messages"
+          icon="chat_bubble"
+          href="/updates?tab=messages"
+          match="/inbox"
+        />
         <HeaderIconLink
           label={`Updates${unread ? `, ${unread} unread` : ""}`}
           icon="notifications"
