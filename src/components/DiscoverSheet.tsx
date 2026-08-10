@@ -39,9 +39,6 @@ const MIN = 2;
  */
 export function DiscoverSheet({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<DiscoverData | null>(null);
-  // Everyone or Coaches only: the one place coaches and members are told
-  // apart, because here it is useful. The updates brief's segment.
-  const [who, setWho] = useState<"all" | "coach">("all");
   const [q, setQ] = useState("");
   const [people, setPeople] = useState<DirPerson[]>([]);
   const [studios, setStudios] = useState<DirStudio[]>([]);
@@ -106,7 +103,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="sheet sheet-full dissheet">
         <div className="adderhead">
-          <h2>People near you</h2>
+          <h2>Coaches near you</h2>
           <button className="iconbtn sheetclose adderclose" aria-label="Close" onClick={onClose}>
             <Icon name="close" size={18} />
           </button>
@@ -148,7 +145,7 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
               {people.length > 0 && (
                 <div className="srchsec">
                   <h2 className="srchhead">
-                    People <span>{people.length}</span>
+                    Coaches <span>{people.length}</span>
                   </h2>
                   <div className="dislist dislist-bare">
                     {people.map((p) => (
@@ -184,25 +181,15 @@ export function DiscoverSheet({ onClose }: { onClose: () => void }) {
             {/* The one place coach and member rows differ: a Coach tag and
                 a next-class line on theirs, nothing on a member's. Follow
                 on every row, unlimited. */}
-            <div className="modetoggle addseg whoseg">
-              <button aria-pressed={who === "all"} onClick={() => setWho("all")}>
-                Everyone
-              </button>
-              <button aria-pressed={who === "coach"} onClick={() => setWho("coach")}>
-                Coaches only
-              </button>
-            </div>
             <p className="whoseg-sub">
-              Follow as many as you like. Their week shows up first on Discover.
+              Follow as many as you like. Their classes show up first on Home.
             </p>
             <div className="nearlist">
-              {data.people
-                .filter((p) => who === "all" || p.kind === "coach")
-                .map((p) => (
+              {data.people.map((p) => (
                   <PeopleRow key={p.id} p={p} />
                 ))}
               {data.people.length === 0 && (
-                <p className="dissheet-wait">Nobody listed near you yet.</p>
+                <p className="dissheet-wait">No coaches listed near you yet.</p>
               )}
             </div>
           </>

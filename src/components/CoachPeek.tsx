@@ -184,12 +184,9 @@ export function CoachPeek({
                         {it.durationMin} min
                         {it.where ? ` · ${it.where}` : ""}
                       </span>
-                      {(it.coaching || (!self && on)) && (
+                      {!self && on && (
                         <span className="peekrow-tags">
-                          {it.coaching && <span className="peektag">Coaching</span>}
-                          {!self && on && (
-                            <span className="peektag peektag-you">You saved this too</span>
-                          )}
+                          <span className="peektag peektag-you">You saved this too</span>
                         </span>
                       )}
                     </Link>

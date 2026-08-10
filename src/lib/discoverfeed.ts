@@ -321,7 +321,7 @@ export async function buildDiscoverFeed(
     if (m.occurrenceDate >= today && m.occurrenceDate <= lastRail)
       consider(m.userId, `${m.occurrenceDate}T9999`);
   }
-  const myRail: RailPerson[] = followedUsers
+  const myRail: RailPerson[] = followedCoaches
     .filter((u) => nextAt.has(u.id))
     .map((u) => {
       const peeked = peekedByTrainer.get(u.id)?.getTime() ?? 0;
@@ -424,7 +424,7 @@ export async function buildDiscoverFeed(
     rail,
     favIds: [...favSet],
     cats,
-    follows: followed.length,
+    follows: followedCoaches.length,
     today,
     myRail,
     nearStudios,

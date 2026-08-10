@@ -116,7 +116,7 @@ async function runSearch(
   // is not a category, and searching free chips for a category word only works
   // by coincidence.
   const matched = allRows
-    .filter((r) => !hidden.has(r.id) && r.id !== userId && r.name.trim())
+    .filter((r) => !hidden.has(r.id) && r.id !== userId && r.kind !== "fan" && r.kind !== "gym" && r.name.trim())
     .filter(
       (r) =>
         needle.length < MIN ||
@@ -158,22 +158,20 @@ async function runSearch(
     // profile). A named search skips it, because you asked for this person.
     .filter(
       (r) =>
-        !browse ||
-        r.kind === "fan" ||
-        !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
+        !browse || !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
     )
     .map((r) => ({
       id: r.id,
       handle: r.handle!,
       name: r.name,
-      kind: (r.kind === "fan" ? "member" : "coach") as "coach" | "member",
+      kind: "coach" as const,
       photo: r.photoThumb ?? r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
       requested: requested.has(r.id),
-      availability: r.kind === "fan" ? null : r.availability,
+      availability: r.availability,
       disciplines: r.disciplines,
       color: avatarColor(r),
     }))

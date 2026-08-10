@@ -246,7 +246,7 @@ export function SearchScreen({
                 className={nearSeg === "people" ? "sel" : ""}
                 onClick={() => setNearSeg("people")}
               >
-                People
+                Coaches
               </button>
               <button
                 type="button"
@@ -273,7 +273,7 @@ export function SearchScreen({
                   ))}
                 </div>
               ) : (
-                <p className="peekempty">Nobody listed near you yet.</p>
+                <p className="peekempty">No coaches listed near you yet.</p>
               )
             ) : nearSeg === "studios" ? (
               near.studios.length ? (
@@ -302,7 +302,7 @@ export function SearchScreen({
           {people.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">
-                People <span>{people.length}</span>
+                Coaches <span>{people.length}</span>
               </h2>
               <div className="dislist dislist-bare">
                 {people.map((p) => (

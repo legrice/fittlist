@@ -52,7 +52,9 @@ export async function discoverPeople(): Promise<DiscoverData> {
       .from(schema.followRequests)
       .where(eq(schema.followRequests.requesterUserId, userId)),
   ]);
-  const rows = everyone.filter((r) => !!r.handle && r.discoverable && !hidden.has(r.id));
+  const rows = everyone.filter(
+    (r) => !!r.handle && r.discoverable && r.kind !== "fan" && r.kind !== "gym" && !hidden.has(r.id),
+  );
 
   // Their own classes plus the shifts each has chosen to show, so the count
   // matches what opening their page actually shows.
@@ -102,27 +104,23 @@ export async function discoverPeople(): Promise<DiscoverData> {
     // The quality bar is a coach's: their page has to be worth opening (a
     // schedule, or enough profile). A member's row is just the person, which
     // is all it claims to be.
-    .filter((r) =>
-      r.kind === "fan"
-        ? !!r.name.trim()
-        : !!r.name.trim() && !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
-    )
+    .filter((r) => !!r.name.trim() && !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()))
     .filter((r) => r.id !== userId)
     .map((r) => ({
       id: r.id,
       handle: r.handle!,
       name: r.name,
-      kind: (r.kind === "fan" ? "member" : "coach") as "coach" | "member",
+      kind: "coach" as const,
       photo: r.photo,
       title: r.title ?? "",
       location: r.location?.trim() ?? "",
       classesThisWeek: weekCount.get(r.id) ?? 0,
       following: following.has(r.id),
       requested: requested.has(r.id),
-      availability: r.kind === "fan" ? null : r.availability,
+      availability: r.availability,
       disciplines: r.disciplines,
       color: avatarColor(r),
-      next: r.kind === "fan" ? null : (soonest.get(r.id) ?? null),
+      next: soonest.get(r.id) ?? null,
     }))
     // Newest first: the list doubles as "who just joined", and the fresh face
     // at the top is the reason to keep opening it.

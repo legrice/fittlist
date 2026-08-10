@@ -491,7 +491,7 @@ export function FollowingScreen({
       {isHome && (
         <div className="tray">
           <div className="tray-scroll">
-            <button
+            {meKind === "coach" && <button
               className="trayitem"
               onClick={() => {
                 if (!meId) return;
@@ -519,7 +519,7 @@ export function FollowingScreen({
                 </span>
               </span>
               <span className="trayitem-nm">You</span>
-            </button>
+            </button>}
             {myRail.map((p) => (
               <button key={p.id} className="trayitem" onClick={() => setPeekPerson(p)}>
                 <span className={`trayav trayav-ring${p.fresh ? "" : " seen"}`}>
@@ -560,8 +560,7 @@ export function FollowingScreen({
           </div>
           {follows === 0 && (
             <p className="trayhint">
-              Follow the coaches you go to most and the friends you train with. Their week
-              shows up here.
+              Follow the coaches you go to most. Their upcoming classes show up here.
             </p>
           )}
         </div>
@@ -765,7 +764,7 @@ export function FollowingScreen({
           <div className="nearhead nearhead-row">
             {/* Find friends, by Matt's call: the rail is coaches, and the
                 word is the act it invites. */}
-            <span className="nearlbl">Find friends</span>
+            <span className="nearlbl">Coaches</span>
             <Link className="nearhead-go home-seeall" href="/search?seg=people">
               See all
             </Link>
@@ -793,10 +792,9 @@ export function FollowingScreen({
             <span className="circleeducation-icon" aria-hidden="true">
               <Icon name="group" size={24} />
             </span>
-            <h2>See what your people are doing</h2>
+            <h2>Keep up with your coaches</h2>
             <p className="lead">
-              Follow friends and coaches to peek at the classes they&rsquo;re coaching and
-              the classes they&rsquo;ve saved to their week.
+              Follow coaches to keep their upcoming classes at the top of Home.
             </p>
             <div className="publishwrap nostick">
               <button

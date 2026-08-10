@@ -6523,8 +6523,13 @@ button.ps-card { cursor: pointer; }
   font-size: 15px; font-weight: 500; color: var(--ink); margin: 0 0 8px;
   padding-bottom: 8px; border-bottom: 1px solid var(--line);
 }
-.peekrow { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
-.peekrow + .peekrow { border-top: 1px solid var(--line); }
+.peekday { display: flex; flex-direction: column; gap: 10px; }
+.peekrow {
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  border-radius: 16px; background: var(--card);
+  box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 5px 14px rgba(25, 21, 2, .045);
+}
+.peekrow + .peekrow { border-top: 0; }
 .peekrow-go { flex: 1 1 auto; min-width: 0; display: block; text-decoration: none; }
 .peekrow-nm { display: block; font-size: 16px; font-weight: 600; color: var(--ink); }
 .peekrow-sub { display: block; font-size: 13.5px; color: var(--ol); margin-top: 2px; }
@@ -7002,7 +7007,7 @@ a.clspeek-by:active { opacity: .6; }
 .shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .shclass-tag {
   flex: 0 0 auto; padding: 3px 7px; border-radius: 999px;
-  font-size: 10px; font-weight: 700; letter-spacing: .045em; text-transform: uppercase;
+  font-size: 10px; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
 }
 .shclass-tag.coaching { background: color-mix(in srgb, var(--si) 13%, transparent); color: var(--si); }
 .shclass-tag.saved { background: var(--ink); color: var(--card); }
@@ -7459,7 +7464,7 @@ a.clspeek-by:active { opacity: .6; }
    logo, a step smaller than the old title row's 34. */
 .caltitle { font-size: 30px; padding: 2px 0 10px; }
 .info-page-action { display: inline-flex; width: auto; margin-top: 12px; text-decoration: none; }
-.aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
 .info-page-note a { color: inherit; font-weight: 600; }
 /* List and Month, as one control rather than two buttons: they are two ways of
