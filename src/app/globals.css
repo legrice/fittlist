@@ -1576,7 +1576,15 @@ button.bl-band { cursor: pointer; }
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
+.brandbar-leading { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
+.headermenu-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; margin-left: -6px; padding: 0;
+  border: none; border-radius: 999px; background: transparent; color: var(--ink);
+}
+.headermenu-btn:active { background: var(--cl); }
+.headermenu-sheet { padding-top: 30px; }
 .calbar-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; line-height: 1;
   color: var(--ink); margin: 24px 0;
@@ -6240,6 +6248,7 @@ button.ps-card { cursor: pointer; }
   transition: background-color .15s;
 }
 .daytabs.stuck { background: var(--ground); }
+.week-schedule-head + .home-listregion .daytabs { padding-bottom: 6px; }
 .daytabs::-webkit-scrollbar { display: none; }
 .home-listregion { position: relative; }
 .upcoming-head { padding: 12px 0 6px; }
@@ -6863,6 +6872,7 @@ a.clspeek-by:active { opacity: .6; }
    what makes the poster's own colours read. The marker class is on the
    hub's cardwrap because the gradient lives on the layout's .screen. */
 .screen.hasnav:has(.shpage) { background: var(--ground); }
+.cardwrap.shpage { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 /* One row that scrolls off the edge, by Matt's call: four pills wrapped
    to a second line at 390px, and a rail reads better than a stack. Safe
    centred, also by his call, so the row sits in the middle of the window
@@ -6988,6 +6998,14 @@ a.clspeek-by:active { opacity: .6; }
 .qrcard .qrurl { color: var(--ol); margin-bottom: 0; }
 /* The pickers behind Dates and Classes: a scrolling list of rows and a Done. */
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
+.shpick-titleline { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.shclass-tag {
+  flex: 0 0 auto; padding: 3px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: .045em; text-transform: uppercase;
+}
+.shclass-tag.coaching { background: color-mix(in srgb, var(--si) 13%, transparent); color: var(--si); }
+.shclass-tag.saved { background: var(--ink); color: var(--card); }
 .shdays { display: flex; gap: 8px; margin: 6px 0 4px; }
 .shday {
   /* Unselected is white with no outline, by Matt's call: the orange fill
@@ -7439,7 +7457,11 @@ a.clspeek-by:active { opacity: .6; }
 }
 /* The word above the segment, by Matt's call: its own line under the
    logo, a step smaller than the old title row's 34. */
-.caltitle { font-size: 26px; padding: 2px 0 10px; }
+.caltitle { font-size: 30px; padding: 2px 0 10px; }
+.info-page-action { display: inline-flex; width: auto; margin-top: 12px; text-decoration: none; }
+.aboutpage .about-kicker { margin-bottom: 8px; color: var(--ol); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.info-page-note { margin-top: 24px; font-size: 14px; color: var(--ol); }
+.info-page-note a { color: inherit; font-weight: 600; }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. Light all over, by
    Matt's call: the edge is the input border rather than ink, and the current

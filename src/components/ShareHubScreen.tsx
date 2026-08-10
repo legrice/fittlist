@@ -880,7 +880,12 @@ export function ShareHubScreen({
                         {!off && <Icon name="check" size={15} />}
                       </span>
                       <span className="setrow-txt">
-                        <span className="t">{it.name}</span>
+                        <span className="shpick-titleline">
+                          <span className="t">{it.name}</span>
+                          <span className={`shclass-tag ${it.coaching ? "coaching" : "saved"}`}>
+                            {it.coaching ? "Coaching" : "Saved"}
+                          </span>
+                        </span>
                         <span className="s">
                           {wday(it.iso)}, {short(it.iso)} · {it.time}
                         </span>

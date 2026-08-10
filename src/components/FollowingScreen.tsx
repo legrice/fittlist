@@ -10,7 +10,6 @@ import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
-import { Wordmark } from "@/components/Wordmark";
 import { announceSaved } from "@/components/SaveEducation";
 import { initialOf } from "@/lib/avatar";
 
@@ -776,23 +775,6 @@ export function FollowingScreen({
               <CoachNear key={c.id} c={c} />
             ))}
           </div>
-        </section>
-      )}
-
-      {/* What this is, at the end of the scroll: one paragraph and the
-          door to the whole story, with the Contribute ask behind it. */}
-      {isHome && (
-        <section className="abouthome home-section">
-          <Wordmark variant="cloud" className="abouthome-mark" />
-          <h2>One place where all of it lives</h2>
-          <p className="abouthome-p">
-            FittList is a public record of what&rsquo;s happening in local fitness:
-            the classes, the places they happen, and the people leading them.
-          </p>
-          <Link className="abouthome-go" href="/about">
-            See what we&rsquo;re building
-            <Icon name="arrow_forward" size={18} />
-          </Link>
         </section>
       )}
 

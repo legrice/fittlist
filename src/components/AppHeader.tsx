@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HeaderFind } from "@/components/HeaderFind";
 import { HeaderIconLink } from "@/components/HeaderIconLink";
 import { HeaderNav } from "@/components/HeaderNav";
+import { HeaderMenu } from "@/components/HeaderMenu";
 import { SettingsGear } from "@/components/SettingsGear";
 import { Wordmark } from "@/components/Wordmark";
 import type { NavTab } from "@/lib/nav";
@@ -22,6 +23,7 @@ export function AppHeader({
   search = false,
   home = "/week",
   nav,
+  menu = false,
 }: {
   unread?: number;
   /** Settings, as a gear that navigates. Only for the coaches-only shell,
@@ -51,13 +53,16 @@ export function AppHeader({
    *  a bottom bar. Pass it wherever the bottom bar renders and omit it where
    *  it doesn't, so the two agree about whether this screen has tabs at all. */
   nav?: { coach?: boolean; active?: NavTab; scheduleHref?: string; profileHref?: string };
+  menu?: boolean;
 }) {
   return (
     <div className="brandbar">
-      <Link className="brandbar-home" href={home} aria-label="Home">
-        {/* The beta tag came off at a hundred users, by Matt's call. */}
-        <Wordmark variant="ink" />
-      </Link>
+      <div className="brandbar-leading">
+        {menu && <HeaderMenu />}
+        <Link className="brandbar-home" href={home} aria-label="Home">
+          <Wordmark variant="ink" />
+        </Link>
+      </div>
       {nav && (
         <HeaderNav
           coach={nav.coach}
