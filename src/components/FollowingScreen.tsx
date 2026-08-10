@@ -510,7 +510,6 @@ export function FollowingScreen({
                     </span>
                   )}
                 </span>
-                {youFresh && <span className="younew">New</span>}
               </span>
               <span className="trayitem-nm">You</span>
             </button>

@@ -6334,17 +6334,9 @@ button.ps-card { cursor: pointer; }
   position: absolute; top: 10px; right: 10px; bottom: auto; padding: 4px;
 }
 
-/* Your circle, lit by your own save, by Matt's call: the same brand ring
-   a followed person's fresh week wears, plus a New badge riding the
-   bottom edge of your face. The wrapper exists because .trayav clips. */
+/* Your circle is lit by your own save with the same brand ring a followed
+   person's fresh week wears. It needs no New badge: you made the change. */
 .youwrap { position: relative; display: block; }
-.younew {
-  position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-  background: var(--si); color: #fff;
-  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
-  padding: 2px 8px; border-radius: 999px; border: 2px solid var(--paper);
-  white-space: nowrap; pointer-events: none;
-}
 
 /* Home has one section rhythm. The schedule used to carry the bottom-nav
    clearance even though three more sections followed it, which left a blank
