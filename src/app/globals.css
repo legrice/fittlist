@@ -5939,6 +5939,7 @@ button.ps-card { cursor: pointer; }
   /* Tight to the header above: the 8px of air between the bar and the
      circles came down to 2, by Matt's call. */
   margin: 0 -18px; padding: 2px 0 8px;
+  border-bottom: 0; box-shadow: none;
 }
 /* The arrows hang level with the circles rather than the labels under them,
    so they read as controls on the faces. `.railarrow` puts its own top at
