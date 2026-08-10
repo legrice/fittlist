@@ -164,12 +164,15 @@ if (await m.locator(".trayitem", { hasText: "Kai" }).count()) fail("a week never
 if (await m.locator(".trayitem-next").count()) fail("no captions under the circles");
 console.log("the ring is lit before the peek");
 
-// The peek: Week of, the overlap said at the top, Coaching tags, the
-// You-saved-this-too marker, and the ribbon footer.
+// The peek: the stacked head (the name clear of the close row, View
+// profile and Following under the face, no Week of line and no overlap
+// count), Coaching tags, the You-saved-this-too marker, the ribbon footer.
 await m.locator(".trayitem", { hasText: "Drew" }).click();
-await m.locator(".peekhead-wk", { hasText: "Week of" }).waitFor();
-await m.locator(".peeksheet .peekfollow.on", { hasText: "Following" }).waitFor();
-await m.locator(".peeklead", { hasText: "You have 1 of these on your week." }).waitFor();
+await m.locator(".peekhead-stack .peekhead-nm", { hasText: "Drew" }).waitFor();
+if (await m.locator(".peekhead-wk").count()) fail("the Week of line came off, by Matt's call");
+if (await m.locator(".peeklead").count()) fail("the overlap count came off, by Matt's call");
+await m.locator(".peekacts .peekview", { hasText: "View profile" }).waitFor();
+await m.locator(".peekacts .peekfollow.on", { hasText: "Following" }).waitFor();
 if (!(await m.locator(".peektag", { hasText: "Coaching" }).count())) fail("coached rows tag Coaching");
 if (!(await m.locator(".peektag-you", { hasText: "You saved this too" }).count()))
   fail("the overlap marker draws on the saved row");

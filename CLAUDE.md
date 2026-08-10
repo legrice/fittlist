@@ -2234,13 +2234,15 @@ moment somebody is looking). A rail with nobody on it hides entirely
 earns three, or the feature buries itself). You lead the rail, your own
 face labelled You (no ring, because your week cannot surprise you), a
 door into the Share tab, and Add ends it, into People near you.
-Tapping a circle opens the peek: their week as a live calendar, header
-carrying "Week of" and Follow / Following, everything they coach (a
-Coaching tag, the one place coach and member differ) plus everything
-they saved, with "You saved this too" on any row you share and "You have
-N of these on your week" leading the sheet. The overlap marker is the
-point: it is how "you're going to that, I'm going to that" happens
-without anyone declaring anything beyond a save. The saved half rides
+Tapping a circle opens the peek: their week as a live calendar under a
+stacked head, by Matt's call: close alone in the corner, the face, the
+name on its own line clear of the close row, and View profile and
+Follow / Following as pills under both (no "Week of" line and no "You
+have N of these" count; the rows are the answer). Everything they coach
+(a Coaching tag, the one place coach and member differ) plus everything
+they saved, with "You saved this too" on any row you share. The overlap
+marker is the point: it is how "you're going to that, I'm going to
+that" happens without anyone declaring anything beyond a save. The saved half rides
 behind `canSeeWeek` and `attendances.isPublic`; personal rows never
 reach it.
 

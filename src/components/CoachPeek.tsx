@@ -93,9 +93,14 @@ export function CoachPeek({
       }}
     >
       <div className="sheet sheet-full peeksheet">
-        {/* The face and the name are the heading, "Week of <date>" under
-            them, and Follow across from both. */}
-        <div className="peekhead">
+        {/* The head stacks, by Matt's call: close alone in the corner, then
+            the face, the name on its own line under it, and the two pills
+            (View profile, Follow) under both. No "Week of" line and no
+            overlap count up here; the rows themselves are the answer. */}
+        <div className="peekhead peekhead-stack">
+          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={18} />
+          </button>
           <span className="peekav">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -106,43 +111,31 @@ export function CoachPeek({
               </span>
             )}
           </span>
-          <div className="peekhead-txt">
-            <h2 className="peekhead-nm">{name}</h2>
-            {peek && <p className="peekhead-wk">{peek.weekOf}</p>}
-          </div>
-          {peek?.handle && follow !== null && (
-            <button
-              className={`peekfollow${follow !== "off" ? " on" : ""}`}
-              aria-pressed={follow !== "off"}
-              disabled={followBusy}
-              onClick={toggleFollow}
-            >
-              {follow === "following" ? "Following" : follow === "requested" ? "Requested" : "Follow"}
-            </button>
+          <h2 className="peekhead-nm">{name}</h2>
+          {peek?.handle && (
+            <div className="peekacts">
+              <Link className="peekfollow peekview" href={`/${peek.handle}`}>
+                View profile
+              </Link>
+              {follow !== null && (
+                <button
+                  className={`peekfollow${follow !== "off" ? " on" : ""}`}
+                  aria-pressed={follow !== "off"}
+                  disabled={followBusy}
+                  onClick={toggleFollow}
+                >
+                  {follow === "following"
+                    ? "Following"
+                    : follow === "requested"
+                      ? "Requested"
+                      : "Follow"}
+                </button>
+              )}
+            </div>
           )}
-          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
-          </button>
         </div>
 
-        {/* Their page, one line under the head: the pill took the spot the
-            link had, and both belong here. */}
-        {peek?.handle && (
-          <Link className="peekhead-go peekhead-pg" href={`/${peek.handle}`}>
-            See their page
-            <Icon name="chevron_right" size={18} />
-          </Link>
-        )}
-
         {missing && <p className="peekempty">That schedule isn&rsquo;t available.</p>}
-
-        {/* The overlap, said once at the top: it is the thing this sheet
-            exists to surface. */}
-        {peek && peek.shared > 0 && (
-          <p className="peeklead">
-            You have {peek.shared} of these on your week.
-          </p>
-        )}
 
         {peek && !peek.days.length && (
           <p className="peekempty">

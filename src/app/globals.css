@@ -6084,11 +6084,19 @@ button.ps-card { cursor: pointer; }
   font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
 .peekfollow.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.peekhead-wk { margin: 2px 0 0; font-size: 13px; color: var(--ol); }
-.peekhead-pg { display: inline-flex; margin: -8px 0 12px; }
-/* The overlap, said once at the top, and the footer that teaches the
-   ribbon: both quiet, because the rows are the content. */
-.peeklead { margin: 0 0 10px; font-size: 13.5px; color: var(--ol); }
+/* The person peek's stacked head, by Matt's call: close alone in the
+   corner, the face, the name on its own line clear of the close row, and
+   the two pills under both. View profile wears the follow pill's own
+   outline, because the pair reads as one row of equals. */
+/* Doubled selector on purpose: .peekhead's own flex is declared later in
+   the file, and at equal specificity the later rule wins. */
+.peekhead.peekhead-stack { position: relative; display: block; }
+.peekhead-stack .peekclose { position: absolute; top: 0; right: 0; }
+.peekhead-stack .peekhead-nm { margin: 14px 0 0; }
+.peekacts { display: flex; gap: 8px; margin: 12px 0 2px; }
+.peekview { display: inline-flex; align-items: center; text-decoration: none; }
+/* The footer that teaches the ribbon: quiet, because the rows are the
+   content. */
 .peekfoot { margin: 14px 0 4px; font-size: 12.5px; color: var(--ol); }
 /* Which hat a row is, and the overlap marker: Coaching in the quiet gray,
    You saved this too in the brand's own ink, because the overlap is the
@@ -6246,13 +6254,6 @@ button.ps-card { cursor: pointer; }
   color: #fff; font-size: 22px; font-weight: 600;
 }
 .peekhead-nm { font-size: 19px; font-weight: 600; margin: 0; }
-/* No underline on any of it. The app underlines a bare link by default, which
-   is right in prose and wrong on a list: a column of underlined class names
-   over underlined sub-lines reads as a page of hyperlinks rather than a week. */
-.peekhead-go {
-  display: inline-flex; align-items: center; gap: 2px; margin-top: 2px;
-  font-size: 13.5px; font-weight: 600; color: var(--si); text-decoration: none;
-}
 .peekempty { font-size: 14px; line-height: 1.5; color: var(--ol); margin: 8px 0 0; }
 
 .peekday { margin-top: 18px; }
