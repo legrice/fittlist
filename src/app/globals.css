@@ -6199,14 +6199,14 @@ button.ps-card { cursor: pointer; }
    class is, then when in the day it runs. */
 .catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
 
-/* Discover's date rail: one day at a time, left to right, by Matt's call.
+/* Home's date rail: one day at a time, left to right, by Matt's call.
    Underline tabs rather than pills, because the row sits over a list and a
-   second row of pills under the filter pills was pills on pills. It pins
-   under the header (`--dayband-top`, the same measured number the day bands
-   read, published by the screen's own useBandTop call) while the rail above
-   scrolls away, so the day you are reading is always named. */
+   second row of pills under the filter pills was pills on pills. It pins to
+   the viewport itself while the rails above scroll away. It must not read
+   `--dayband-top`: Calendar writes its own measured header height there, and
+   that document-level value can still be present when someone returns Home. */
 .daytabs {
-  position: sticky; top: var(--dayband-top, 0px); z-index: 6;
+  position: sticky; top: 0; z-index: 6;
   display: flex; overflow-x: auto; scrollbar-width: none;
   margin: 4px -18px 0; padding: 0 10px;
   /* Bare at rest, solid once pinned, by Matt's call: on the page it sits
