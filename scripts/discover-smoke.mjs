@@ -133,11 +133,14 @@ if ((await m.locator(".nearhead-go").count()) !== 3) fail("three rails, three ar
 await m.locator('.nearhead-go[href="/search?seg=classes"]').click();
 await m.waitForURL(/\/search\?seg=classes/);
 await m.locator(".srchseg button.sel", { hasText: "Classes" }).waitFor();
-// The list wears Home's own card grammar: one card per occurrence, the
-// date on its leaf, by Matt's call.
-await m.locator(".upstack-card .uprail-dom").first().waitFor();
+// The list wears Home's own grammar: the banded days and the flat rows,
+// by Matt's call.
+await m.locator(".srchsec .dayband").first().waitFor();
+await m.locator(".srchsec .clline-nm").first().waitFor();
 await m.goBack();
-await m.locator(".dayband").first().waitFor();
+// The search page draws day bands too now, so wait for Home itself.
+await m.waitForURL(/\/feed/);
+await m.locator(".trayav-you").waitFor();
 console.log("the rails under the schedule, each arrow landing on its segment");
 
 // The class peek: Follow (no star), and Save in the footer. Scoped to the

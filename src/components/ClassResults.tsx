@@ -1,15 +1,37 @@
 "use client";
 
 import { ClassOpener } from "@/components/ClassOpener";
+import { ClassLine, DayBand } from "@/components/WeekView";
 import type { DirClass } from "@/lib/discoverclasses";
 
+/** One day, one band: the grouped shape every schedule in the app takes.
+ *  It lives here rather than beside DirClass because this is the only thing
+ *  that groups them, and `discoverclasses` reaches the database: importing a
+ *  value from it into a client component drags pg into the browser bundle. */
+function groupClassDays(classes: DirClass[]): { iso: string; items: DirClass[] }[] {
+  const byIso = new Map<string, DirClass[]>();
+  for (const c of classes) {
+    const arr = byIso.get(c.iso) ?? [];
+    arr.push(c);
+    byIso.set(c.iso, arr);
+  }
+  return [...byIso.entries()].map(([iso, items]) => ({ iso, items }));
+}
+
+/** "Today, Aug 9", then the date: the same words Home's bands use. */
+function bandLabel(iso: string, today: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  if (iso === today) return `Today, ${md}`;
+  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  return `${wd}, ${md}`;
+}
+
 /**
- * A list of dated class occurrences, in Home's own card grammar: the date
- * as a leaf on the left, the class, time, place and coach beside it, one
- * card per occurrence. It wore the old evcard rows and day headings for a
- * while; the leaf carries the date now, so the headings had nothing left
- * to say. Search draws it, and anything else that lists occurrences
- * should draw it too rather than a second copy.
+ * A list of dated class occurrences, in Home's own list grammar, by Matt's
+ * call: the banded days and the flat rows, so Search's Classes segment and
+ * the screen it came from read as one app. Search draws it, and anything
+ * else that lists occurrences should draw it too rather than a second copy.
  */
 export function ClassResults({
   classes,
@@ -22,40 +44,39 @@ export function ClassResults({
 }) {
   return (
     <ClassOpener handle="">
-      <div className="upstack">
-        {classes.map((c) => {
-          const d = new Date(`${c.iso}T00:00:00Z`);
-          const dow =
-            c.iso === todayIso
-              ? "Today"
-              : d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-          return (
-            <a
-              key={`${c.classId}|${c.iso}`}
-              className="uprail-go upstack-card"
-              href={`/${c.base}/${c.classId}?d=${c.iso}&from=${from}`}
-              data-cid={c.classId}
-              data-d={c.iso}
-              data-base={c.base}
-            >
-              <span className={`uprail-date${c.iso === todayIso ? " today" : ""}`}>
-                <span className="uprail-dow">{dow}</span>
-                <span className="uprail-dom">{d.getUTCDate()}</span>
-              </span>
-              <span className="uprail-txt">
-                <span className="uprail-nm">{c.name}</span>
-                <span className="uprail-sub">
-                  {c.hm}
-                  {c.ap.toLowerCase()}
-                  {c.where ? ` · ${c.where}` : ""}
-                </span>
-                {c.coachName && (
-                  <span className="uprail-who">{c.coachName.split(/\s+/)[0]}</span>
-                )}
-              </span>
-            </a>
-          );
-        })}
+      <div className="cardwrap">
+        {groupClassDays(classes).map((d) => (
+          <section key={d.iso} className="dayblock">
+            <DayBand label={bandLabel(d.iso, todayIso)} today={d.iso === todayIso} />
+            <div className="disflat">
+              {d.items.map((c) => (
+                <div key={`${c.classId}|${c.iso}`} className="clrow">
+                  <ClassLine
+                    row={{
+                      key: `${c.classId}|${c.iso}`,
+                      name: c.name,
+                      where: c.where,
+                      hm: c.hm,
+                      ap: c.ap,
+                      coach: c.coachName
+                        ? {
+                            id: c.classId,
+                            name: c.coachName,
+                            color: c.coachColor,
+                            photo: c.coachPhoto,
+                          }
+                        : null,
+                      href: `/${c.base}/${c.classId}?d=${c.iso}&from=${from}`,
+                      classId: c.classId,
+                      iso: c.iso,
+                      base: c.base,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </ClassOpener>
   );

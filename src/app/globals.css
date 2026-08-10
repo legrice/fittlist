@@ -2072,14 +2072,13 @@ button.ps-card { cursor: pointer; }
 
 /* Inbox button in the schedule header */
 .brandbar-actions { display: flex; align-items: center; gap: 6px; }
-/* The white circle, by Matt's call: with the magnifier and the gear gone
-   the corner is down to the bell, and one circled control reads as a
-   button where a bare glyph read as decoration. (Three circles once read
-   as three different controls; there are not three any more.) */
+/* Bare glyphs again, by Matt's call: the corner holds four controls now
+   (pulse, chat, bell, magnifier) and four white circles read as a row of
+   buttons fighting the wordmark. The circle had its turn while the bell
+   stood alone. */
 .brandbar-actions .iconbtn {
   width: 38px; height: 38px; border-radius: 999px;
-  background: var(--card); border: 0; color: var(--ink);
-  box-shadow: 0 1px 4px rgba(17, 17, 17, .08);
+  background: none; border: 0; color: var(--ink);
   /* the unread badge overhangs — don't let .iconbtn's clip cut it */
   overflow: visible;
 }
@@ -3464,10 +3463,10 @@ button.ps-card { cursor: pointer; }
   content: ""; position: absolute; inset: 0 0 -30px; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
 }
-/* The corner controls keep their ink on the photo, by Matt's call: the
-   circles are white now, and a white glyph on a white circle is a blank
-   disc. The wordmark alone goes white up there. */
-.pub-hero .brandbar-actions .iconbtn { color: var(--ink); }
+/* White glyphs on the hero, by Matt's call: the circles came off the
+   header everywhere, so the bare icons go white with the wordmark, over
+   a photo and over the no-photo colour hero alike. */
+.pub-hero .brandbar-actions .iconbtn { color: #fff; }
 /* A stranger's bar rides the photo the same way the app header does: pinned
    at the top with the scrim inside it, the lockup in white (the --wm-ink
    and --wm-mark the shell already set), and its margin dropped so the head's
@@ -6335,12 +6334,6 @@ button.ps-card { cursor: pointer; }
 .aboutpage p { margin: 14px 0; font-size: 15.5px; line-height: 1.6; color: var(--ink); }
 .about-one { font-weight: 600; font-size: 17px; }
 .contribute-cta { width: 100%; margin-top: 22px; }
-
-/* The same card, stacked: Search's Classes list wears Home's grammar, by
-   Matt's call, one full-width card per occurrence with the leaf carrying
-   the date, so the day headings had nothing left to say. */
-.upstack { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.upstack-card { width: 100%; text-decoration: none; }
 
 /* A rail head is the label and its arrow: the door to the same kind on
    Search, a plain right arrow by Matt's call, no words. */

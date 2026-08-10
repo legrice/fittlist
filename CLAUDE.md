@@ -2358,13 +2358,16 @@ is `searchAll`'s own body run with no needle, so browsing can never
 offer a row the search would not (the block rules and `discoverable`
 are kept once); the one difference is the directory's quality bar comes
 back for coaches, because this is a list nobody asked for. The Classes
-list (browse and results alike) wears Home's own card grammar
-(`ClassResults` renders `.upstack` of the same leaf cards), by Matt's
-call: the leaf carries the date, so the day headings had nothing left
-to say. And a quiet segment or pill is white with no outline
+list (browse and results alike) wears Home's own list grammar
+(`ClassResults` renders the banded days and the flat `ClassLine`
+rows), by Matt's call, so Search and the screen it came from read as
+one app; it was the leaf cards for a build, and the old evcard rows
+before that. And a quiet segment or pill is white with no outline
 everywhere, by Matt's call (`.modetoggle`, `.shday`, `.calpills`): the
 fill is the edge, and the inked or orange answer is what reads as
-picked.
+picked. The header's icons are bare glyphs again (the white circles
+came off when the corner grew to four controls), white over a profile's
+hero, photo or colour alike.
 
 The share hub loads both hats and never mixes them on one picture, by
 Matt's call: `shareWeek`'s coach branch loads the saved half (marks and
