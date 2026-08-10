@@ -609,38 +609,40 @@ export function FollowingScreen({
             )}
           </div>
           {yourWeek.length > 0 ? (
-            <div className="yourweek-list">
-              {yourWeek.map((item) => (
-                <Link key={item.key} className="yourweek-row" href="/calendar">
-                  <span className="yourweek-when">
-                    <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
-                      {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
+            <>
+              <div className="yourweek-list">
+                {yourWeek.map((item) => (
+                  <Link key={item.key} className="yourweek-row" href="/calendar">
+                    <span className="yourweek-when">
+                      <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
+                        {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
+                      </span>
+                      <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
                     </span>
-                    <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
+                    <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
+                    <Icon name="chevron_right" size={18} />
+                  </Link>
+                ))}
+              </div>
+              <Link
+                className="home-shareprompt yourweek-share"
+                href={meKind === "coach" ? "/coachshare" : "/membershare"}
+              >
+                <span className="home-shareprompt-copy">
+                  <strong>Your week, ready to share</strong>
+                  <span>Post your calendar to Instagram or save it as a photo.</span>
+                  <span className="home-shareprompt-action">
+                    Share your week <Icon name="arrow_forward" size={17} />
                   </span>
-                  <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
-                  <Icon name="chevron_right" size={18} />
-                </Link>
-              ))}
-            </div>
-            <Link
-              className="home-shareprompt yourweek-share"
-              href={meKind === "coach" ? "/coachshare" : "/membershare"}
-            >
-              <span className="home-shareprompt-copy">
-                <strong>Your week, ready to share</strong>
-                <span>Post your calendar to Instagram or save it as a photo.</span>
-                <span className="home-shareprompt-action">
-                  Share your week <Icon name="arrow_forward" size={17} />
                 </span>
-              </span>
-              <span className="home-shareprompt-visual" aria-hidden="true">
-                <span className="home-shareprompt-story">
-                  <i /><b>MY WEEK</b><em /><em /><em />
+                <span className="home-shareprompt-visual" aria-hidden="true">
+                  <span className="home-shareprompt-story">
+                    <i /><b>MY WEEK</b><em /><em /><em />
+                  </span>
+                  <span className="home-shareprompt-instagram"><i /></span>
                 </span>
-                <span className="home-shareprompt-instagram"><i /></span>
-              </span>
-            </Link>
+              </Link>
+            </>
           ) : (
             <div className="yourweek-empty">
               <span className="yourweek-empty-icon"><Icon name="add_circle" size={22} /></span>
