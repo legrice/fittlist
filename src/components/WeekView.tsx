@@ -177,7 +177,10 @@ export function ClassLine({ row }: { row: WeekRow }) {
     );
   if (!row.onTap) return <div className="clline">{inner}</div>;
   return (
-    <button className="clline" onClick={row.onTap}>
+    // The data keys ride the button too, when the row has them: the landing
+    // highlight (?hl) finds a row by them, and a row that opens a sheet
+    // instead of navigating is still the row the highlight means.
+    <button className="clline" onClick={row.onTap} data-cid={row.classId} data-d={row.iso}>
       {inner}
     </button>
   );

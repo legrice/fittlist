@@ -160,6 +160,14 @@ export function FollowingScreen({
   // people say no to.
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
+  // The save toast carries "See it": the calendar the class landed on is a
+  // tab away, and the link points at the exact occurrence (?hl lights it).
+  const [toastGo, setToastGo] = useState<string | null>(null);
+  const calHref = meKind === "coach" ? "/calendar" : "/week";
+  const notify = (msg: string, hlKey?: string) => {
+    setToastGo(hlKey ? `${calHref}?hl=${encodeURIComponent(hlKey)}` : null);
+    toast(msg);
+  };
   const router = useRouter();
 
   // The date tabs pin under the app header. `--dayband-top` lives on
@@ -525,7 +533,7 @@ export function FollowingScreen({
                     iso={r.item.iso}
                     name={r.item.name}
                     initial={r.item.saved}
-                    onToast={toast}
+                    onToast={notify}
                   />
                 )}
               </div>
@@ -629,9 +637,13 @@ export function FollowingScreen({
       )}
 
       {peek && (
-        <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={toast} onChanged={() => {}} />
+        <ClassPeek cls={peek} onClose={() => setPeek(null)} onToast={notify} onChanged={() => {}} />
       )}
-      <Toast msg={toastMsg} on={toastOn} />
+      <Toast
+        msg={toastMsg}
+        on={toastOn}
+        action={toastGo ? { label: "See it", href: toastGo } : null}
+      />
     </>
   );
 }
@@ -650,7 +662,7 @@ function SaveCorner({
   iso: string;
   name: string;
   initial: boolean;
-  onToast: (msg: string) => void;
+  onToast: (msg: string, hlKey?: string) => void;
 }) {
   const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -666,7 +678,7 @@ function SaveCorner({
         setOn(!on);
         const res = await setGoing(classId, iso, !on);
         if (!res.ok) setOn(on);
-        else if (!on) onToast("Saved to your calendar");
+        else if (!on) onToast("Saved to your calendar", `${classId}.${iso}`);
         setBusy(false);
       }}
     >

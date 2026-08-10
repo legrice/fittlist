@@ -16,6 +16,7 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
@@ -135,6 +136,10 @@ export function CalendarScreen({
           const where = st?.name ?? c.location ?? null;
           return {
             key: `${c.id}|${iso}`,
+            // The landing highlight (?hl from a save toast's See it, or an
+            // add note) finds rows by these keys.
+            classId: c.id,
+            iso,
             name: c.name,
             where,
             hm: t.hm,
@@ -153,6 +158,8 @@ export function CalendarScreen({
           ? []
           : (savedByIso.get(iso) ?? []).map((i) => ({
               key: `sv|${i.personal ? i.id : i.classId}|${i.iso}`,
+              classId: i.personal ? undefined : i.classId,
+              iso: i.iso,
               name: i.name,
               where: i.where,
               hm: i.hm,
@@ -213,6 +220,8 @@ export function CalendarScreen({
 
   return (
     <>
+      {/* "See it" from a save toast lands here with ?hl: light the row. */}
+      <HighlightOnLand />
       {/* The card starts right under the app header, and the title and the
           view switch are the first things inside it. */}
       <div className="cardwrap">

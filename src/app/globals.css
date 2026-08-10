@@ -1361,6 +1361,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   transition: opacity .2s, transform .2s; z-index: 60; white-space: nowrap;
 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* A toast carrying a link has to be tappable; the bare kind stays inert
+   so it never blocks the list under it. */
+.toast.has-act.on { pointer-events: auto; }
+.toast-act { color: #fff; text-decoration: underline; margin-left: 12px; font-weight: 600; }
+[data-mode="dark"] .toast-act { color: #191502; }
 .empty { color: var(--ol); font-size: 13px; padding: 14px 0; }
 
 /* app shell - the stage is the scroll container, not the body */

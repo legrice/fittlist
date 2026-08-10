@@ -15,10 +15,29 @@ export function useToast(): [string, boolean, (msg: string) => void] {
   return [msg, on, show];
 }
 
-export function Toast({ msg, on }: { msg: string; on: boolean }) {
+export function Toast({
+  msg,
+  on,
+  action,
+}: {
+  msg: string;
+  on: boolean;
+  /** One link riding the toast, like "See it" after a save: the note is
+   *  transient, so the way to the thing it names has to be in it. */
+  action?: { label: string; href: string } | null;
+}) {
   return (
-    <div className={`toast${on ? " on" : ""}`} role="status" aria-live="polite">
+    <div
+      className={`toast${on ? " on" : ""}${action ? " has-act" : ""}`}
+      role="status"
+      aria-live="polite"
+    >
       {msg}
+      {action && (
+        <a className="toast-act" href={action.href}>
+          {action.label}
+        </a>
+      )}
     </div>
   );
 }

@@ -210,5 +210,15 @@ await kaiRow.locator(".peekfollow", { hasText: "Follow" }).click();
 await kaiRow.locator(".peekfollow.on", { hasText: "Following" }).waitFor();
 console.log("People near you: segment, tags, Follow on every row");
 
+// The save toast carries See it, landing on the calendar with the row lit.
+await m.goto(BASE + "/feed");
+await m.locator(".daytabs").waitFor();
+await pickDay(m, (p) => p.locator(".rowsave:not(.on)").count());
+await m.locator(".rowsave:not(.on)").first().click();
+await m.locator(".toast-act", { hasText: "See it" }).click();
+await m.waitForURL(/\/week\?hl=/);
+await m.locator(".clline[data-cid]").first().waitFor();
+console.log("See it lands on the calendar");
+
 await b.close();
 console.log("ALL DISCOVER CHECKS PASSED");

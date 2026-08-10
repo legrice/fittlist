@@ -157,7 +157,7 @@ export function ClassPeek({
   /** Somebody else's: hand the picture on. */
   onShare?: () => void;
   onChanged: () => void;
-  onToast: (msg: string) => void;
+  onToast: (msg: string, hlKey?: string) => void;
 }) {
   const router = useRouter();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -488,6 +488,7 @@ export function ClassPeek({
                         full.rsvp
                           ? "RSVP’d. It’s on your calendar."
                           : "Saved to your calendar",
+                        `${cls.id}.${cls.iso}`,
                       );
                     setSaveBusy(false);
                     onChanged();
