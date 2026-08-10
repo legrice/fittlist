@@ -961,7 +961,7 @@ body.sheet-open .appshell .stage { overflow: hidden; }
    a switch per kind, each row wearing its colour as a dot. */
 .kindfilter-dot { display: inline-block; width: 12px; height: 12px; border-radius: 999px; }
 .kindfilter-coaching { background: var(--si); }
-.kindfilter-added { background: var(--go); }
+.kindfilter-added { background: var(--ink); }
 .kindfilter-private { background: #3b82cc; }
 /* A kind you have none of. Not a switch, because a filter over nothing can
    only hide nothing; one line saying what would be there and one word to put
@@ -1032,10 +1032,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   border-radius: 2px; background: currentColor;
 }
 .daygrid-ev.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
-.daygrid-ev.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
+.daygrid-ev.ev-added { background: var(--cl); color: var(--ink); }
 .daygrid-ev.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 [data-mode="dark"] .daygrid-ev.ev-coaching { color: #f09062; }
-[data-mode="dark"] .daygrid-ev.ev-added { color: #7dc493; }
+[data-mode="dark"] .daygrid-ev.ev-added { color: var(--ink); }
 [data-mode="dark"] .daygrid-ev.ev-private { color: #85b8e8; }
 .daygrid-evnm {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -1236,11 +1236,11 @@ body.sheet-open .appshell .stage { overflow: hidden; }
   text-overflow: ellipsis;
 }
 .monthpill.ev-coaching { background: rgba(221, 106, 53, .16); color: #b4502a; }
-.monthpill.ev-added { background: rgba(61, 139, 83, .16); color: #2e6b40; }
+.monthpill.ev-added { background: var(--cl); color: var(--ink); }
 .monthpill.ev-private { background: rgba(59, 130, 204, .16); color: #2a63a3; }
 .monthmore { font-size: 10px; font-weight: 600; color: var(--ol); text-align: center; }
 [data-mode="dark"] .monthpill.ev-coaching { color: #f09062; }
-[data-mode="dark"] .monthpill.ev-added { color: #7dc493; }
+[data-mode="dark"] .monthpill.ev-added { color: var(--ink); }
 [data-mode="dark"] .monthpill.ev-private { color: #85b8e8; }
 /* The two persistent doors: Today bottom left (back to now) and Add bottom
    right, in the brand orange. Share is not down here; it sits in the header's
@@ -2351,7 +2351,7 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; justify-content: center;
   color: #fff; font-size: 9px; font-weight: 600;
 }
-.weekrow-alsotxt { font-size: 12px; font-weight: 600; color: var(--go); }
+.weekrow-alsotxt { font-size: 12px; font-weight: 600; color: var(--ink); }
 
 /* One of your own, opened. Same overlay a public class wears; what it says
    under the name is a name somebody typed rather than an account. */
@@ -2595,17 +2595,17 @@ button.ps-card { cursor: pointer; }
 /* The add is the point of the sheet, so it gets the footer to itself and Share
    sits under it as the quieter second thing. */
 .classsheet-do { display: flex; flex-direction: column; }
-/* Same pill as the profile's actions, and the same green yes as Following: one
-   language for "this is done" across the app. */
+/* Save follows the same binary language as Follow: outline before the act,
+   solid ink once it belongs to you. */
 .classsheet-add {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
   padding: 15px 22px; border-radius: 999px; cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 15px;
-  background: var(--ink); color: var(--paper); border: 1px solid var(--ink);
+  background: var(--card); color: var(--ink); border: 1px solid var(--ink);
   transition: transform .08s;
 }
 .classsheet-add:active { transform: scale(.97); }
-.classsheet-add.on { background: var(--go); color: #fff; border-color: var(--go); }
+.classsheet-add.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .classsheet-add[disabled] { opacity: .6; }
 /* The owner's Edit, dressed as the sheet's one action; it's a link, so the
    underline has to be told no. */
@@ -3617,8 +3617,8 @@ button.ps-card { cursor: pointer; }
 .evcta-inner { max-width: 660px; margin: 0 auto; }
 .evctanote { margin: 0 0 9px; font-size: 12px; color: var(--ol); text-align: center; }
 .evctabtn { border-radius: 999px; padding: 15px 18px; font-size: 15px; }
-/* Marked: the same green the row tag and the swipe use. */
-.evctabtn.on { background: var(--go); color: #fff; }
+/* Marked: the same solid ink as Following. */
+.evctabtn.on { background: var(--ink); color: var(--paper); }
 @media (min-width: 940px) {
   [data-theme="poster"].pub { flex-direction: column; }
   [data-theme="poster"] .pubhero { position: static; width: auto; }
@@ -4331,7 +4331,7 @@ button.ps-card { cursor: pointer; }
 /* The row slides left, so the action is revealed against the right edge. */
 .swipeact {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end;
-  gap: 8px; padding: 0 18px; background: var(--go); color: #fff;
+  gap: 8px; padding: 0 18px; background: var(--ink); color: var(--paper);
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 14px;
   /* The label sits at the right edge and the panel grows leftwards from it, so
      nothing wraps or clips as the row is dragged. */
@@ -4573,11 +4573,11 @@ button.ps-card { cursor: pointer; }
 .swatch.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
 
 /* Marks a class you're going to, in the week of the coaches you follow. */
-/* Sits at the top of the time column, level with the coach's name. Green,
-   because it's the same yes the swipe gives. */
+/* Sits at the top of the time column, level with the coach's name. Ink,
+   matching every other active save state. */
 .ps-goingtag {
   align-self: flex-end; margin-bottom: 3px; padding: 2px 8px; border-radius: 999px;
-  background: var(--go); color: #fff; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--ink); color: var(--paper); font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600; font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   white-space: nowrap;
 }
@@ -5502,7 +5502,7 @@ button.ps-card { cursor: pointer; }
   font-size: 13px; color: var(--ol); line-height: 1.35;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.hm-also { color: var(--go); font-weight: 600; }
+.hm-also { color: var(--ink); font-weight: 600; }
 .hm-emptywrap { margin-top: 10px; }
 .hm-empty {
   background: var(--card); border: 1.5px dashed rgba(25, 21, 2, .22); border-radius: 16px;
@@ -6045,8 +6045,7 @@ button.ps-card { cursor: pointer; }
   margin-top: 4px; padding: 15px 0 3px;
 }
 .week-schedule-head .nearlbl { margin: 0; }
-/* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
-   and its word, filling to the going green. */
+/* Save in the row's corner, not a dots menu, by Matt's call. */
 .rowsave {
   /* Across from the coach's line, not the name's, by Matt's call: the
      class name gets the whole width to breathe, and Save shares the
@@ -6056,7 +6055,7 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; cursor: pointer; padding: 4px 0 4px 8px;
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
-.rowsave.on { color: var(--go); }
+.rowsave.on { color: var(--ink); }
 /* Home's icon-only ribbon sits across from the class name. The name clears
    its hit area; the coach line below gets the full card width again. */
 .disflat .clrow .clline-nm { padding-right: 38px; }
@@ -6168,11 +6167,13 @@ button.ps-card { cursor: pointer; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* Save in the peek's footer: the going green, because green is what a yes
-   wears everywhere. Saved flips to the quiet outline so the loud state is
-   the offer, not the receipt. */
-.clsfull-btn.save { background: var(--go); color: #fff; }
-.clsfull-btn.save.on { background: var(--card); color: var(--go); box-shadow: inset 0 0 0 1.5px var(--go); }
+/* Save in the peek's footer uses the same outline-to-ink transition as
+   Follow and Following. */
+.clsfull-btn.save {
+  background: var(--card); color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.clsfull-btn.save.on { background: var(--ink); color: var(--paper); box-shadow: none; }
 .clspeek-rsvpnote { margin: 10px 0 0; font-size: 12.5px; color: var(--ol); }
 
 /* At the page gutter, like everything else: the label and the chips share
@@ -7298,7 +7299,7 @@ a.clspeek-by:active { opacity: .6; }
 }
 .clline-tag-coaching { background: var(--si-tint); color: var(--si-ink); }
 .clline-tag-personal { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
-.clline-tag-saved { background: rgba(61, 139, 83, .14); color: var(--go); }
+.clline-tag-saved { background: var(--ink); color: var(--paper); }
 /* A saved class still names its coach, one line below its relationship badge. */
 .clline-tag + .clline-by { grid-row: 4; }
 
