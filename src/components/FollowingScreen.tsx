@@ -49,8 +49,11 @@ export type NearStudio = {
   name: string;
   photo: string | null;
   color: string;
+  types: string[];
   lat: number | null;
   lng: number | null;
+  /** A city-center estimate until the viewer grants an exact browser pin. */
+  approxMiles: number | null;
   local: boolean;
 };
 
@@ -688,6 +691,8 @@ export function FollowingScreen({
           <div className="strail">
             {studiosNear.map((s) => {
               const mi = milesTo(s);
+              const shownMiles = mi ?? s.approxMiles;
+              const typeLabel = s.types.slice(0, 2).join(" · ");
               return (
                 <Link key={s.id} className="strail-item" href={`/s/${s.slug}?from=discover`}>
                   <span className="strail-ph">
@@ -701,9 +706,11 @@ export function FollowingScreen({
                     )}
                   </span>
                   <span className="strail-nm">{s.name}</span>
-                  {mi !== null && (
+                  {typeLabel && <span className="strail-types">{typeLabel}</span>}
+                  {shownMiles !== null && (
                     <span className="strail-mi">
-                      {mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi away
+                      {mi === null ? "About " : ""}
+                      {shownMiles < 10 ? shownMiles.toFixed(1) : Math.round(shownMiles)} mi away
                     </span>
                   )}
                 </Link>

@@ -360,8 +360,11 @@ export async function buildDiscoverFeed(
       name: s.name,
       photo: s.photo,
       color: avatarColor({ id: s.id }),
+      types: s.types,
       lat: s.lat ?? null,
       lng: s.lng ?? null,
+      approxMiles:
+        center && s.lat != null && s.lng != null ? milesFromCenter(s.lat, s.lng) : null,
       local,
     }))
     // Your city first, then miles from its centre, then the name for the
