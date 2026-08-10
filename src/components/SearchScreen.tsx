@@ -72,7 +72,15 @@ function writeRecent(hit: RecentHit): RecentHit[] {
   return next;
 }
 
-export function SearchScreen({ todayIso }: { todayIso: string }) {
+export function SearchScreen({
+  todayIso,
+  initialSeg,
+}: {
+  todayIso: string;
+  /** Which Nearby segment to land on: Home's rail arrows carry it
+   *  (?seg=classes and friends), so the door opens onto the kind it named. */
+  initialSeg?: "people" | "studios" | "classes";
+}) {
   // The classes draw the app's day bands, and they pin under the header.
   // Every list that wears .callist has to say where that is or it guesses.
   useBandTop();
@@ -91,7 +99,9 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     studios: DirStudio[];
     classes: DirClass[];
   } | null>(null);
-  const [nearSeg, setNearSeg] = useState<"people" | "studios" | "classes">("people");
+  const [nearSeg, setNearSeg] = useState<"people" | "studios" | "classes">(
+    initialSeg ?? "people",
+  );
   const box = useRef<HTMLInputElement>(null);
   // Each keystroke starts a request; only the newest one is allowed to write
   // its answer to the screen, or a slow "st" lands after "stacey" and the

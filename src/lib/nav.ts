@@ -38,11 +38,11 @@ export function navTabs(
   profileHref?: string,
 ): NavItem[] {
   return [
-    // Discover, per the Following-to-Discover brief: the tab stopped being
-    // a feed of the people you follow and became classes near you, with
-    // your favorite coaches as a rail on top. The route stays /feed; a URL
-    // out in the world is not worth breaking for a label.
-    { id: "following", href: "/feed", icon: "explore", label: "Discover" },
+    // Home, by Matt's call: the screen became rails (your people, what's
+    // upcoming, the studios and coaches around you) and Discover stopped
+    // naming it. The route stays /feed; a URL out in the world is not
+    // worth breaking for a label.
+    { id: "following", href: "/feed", icon: "home", label: "Home" },
     // Everyone's calendar, per the brief: only your things, saved and
     // coached, never anything a favorite derived. A coach's is /calendar
     // and a member's is /week, and each kind's door lands on its own.

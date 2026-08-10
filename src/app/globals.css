@@ -6263,6 +6263,55 @@ button.ps-card { cursor: pointer; }
   display: block; margin-top: 7px; font-size: 13.5px; font-weight: 600; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* Upcoming near you is a rail of event cards, by Matt's call: the date as
+   a leaf on the left, the class beside it, the bare ribbon in the corner,
+   and the head's arrow the door to the full list on Search. */
+.uprail {
+  display: flex; gap: 10px; overflow-x: auto; margin: 0 -18px; padding: 4px 18px 6px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.uprail::-webkit-scrollbar { display: none; }
+.uprail-card { position: relative; flex: 0 0 auto; width: 250px; }
+.uprail-go {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--card); border: 0; border-radius: 16px; padding: 12px;
+  text-align: left; cursor: pointer; font-family: inherit;
+}
+.uprail-date {
+  flex: 0 0 auto; width: 54px; height: 58px; border-radius: 12px; background: var(--cl);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+.uprail-date.today { background: var(--si-tint); }
+.uprail-date.today .uprail-dow, .uprail-date.today .uprail-dom { color: var(--si-ink); }
+.uprail-dow {
+  font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ol);
+}
+.uprail-dom { font-size: 20px; font-weight: 600; color: var(--ink); line-height: 1; }
+.uprail-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.uprail-nm {
+  font-size: 15px; font-weight: 600; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* The ribbon rides the corner; the name stops short of it. */
+  padding-right: 22px;
+}
+.uprail-sub, .uprail-who {
+  font-size: 12.5px; color: var(--ol);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* The bare ribbon in the card's corner: the same control as everywhere,
+   the word carried by the label alone at this size. */
+.uprail-card .rowsave.bare {
+  position: absolute; top: 10px; right: 10px; bottom: auto; padding: 4px;
+}
+
+/* A rail head is the label and its arrow: the door to the same kind on
+   Search, a plain right arrow by Matt's call, no words. */
+.nearhead-row { display: flex; align-items: center; justify-content: space-between; }
+.nearhead-row .nearlbl { margin-bottom: 0; }
+.nearhead-row { margin-bottom: 12px; }
+.nearhead-go { display: inline-flex; align-items: center; color: var(--ink); padding: 4px 0 4px 12px; }
+
 .ctrail { gap: 14px; }
 .ctrail-item {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;

@@ -2194,36 +2194,28 @@ where they disagree, the addendum wins), built on its own branch and not
 on main until Matt says merge. The change in one paragraph: there is one
 relationship word, Follow, for coaches and members alike, no stars
 anywhere, and following someone lets you see their week and never puts a
-class on your calendar. The tab is Discover (route stays /feed): the
-This week rail, Upcoming near you (classes from every listable coach,
-never only the people you follow, deduped to one row per class), and
-under the schedule two more rails, Studios near you and Coaches near
-you. The search bar led the screen for a build and came off, by Matt's
-call: the magnifier sits in the app header, right of the bell
-(`AppHeader`'s `search` prop, a door to /search), knowingly alongside
-the Search tab. How the days present depends on how much they hold
-(`DENSE_DAY` in FollowingScreen): while no day exceeds ten listings the
-list is one scroll of banded days (the same DayBand grammar the
-calendars wear), because a two-week-old app's whole inventory fits on a
-screen and tabs over that little are furniture; the date rail of
-underline tabs (Today, then "Mon 10" on, landing on the first day
-holding anything with the note naming the actual day it landed on,
-"tomorrow" only when it really is tomorrow) returns the day any single
-day crosses that line. Both paths are built and tested; the tabs are
-simply dark at today's volume. Every class lists itself; the studio fold
-came off and can return the day one gym's Monday drowns everything
-around it. Each row's one control is Save, ribbon and word filling to
-the going green, not a dots menu, by Matt's call, and it sits across
-from the *coach* line rather than the name line, so the class name gets
-the full width to breathe (`.rowsave` bottom-anchored, the coach line
-reserving its width); the rows carry no duration, by Matt's call. The
-row's saved state loads with the feed so the ribbons start right, and
-your own rows carry none because setGoing would refuse the mark.
-Saving toasts "Saved to your calendar" with a See it link that lands
-highlighted (`?hl=`). `buildDiscoverFeed` in
-discoverfeed.ts is the one builder, shared with the Add screen's browse
-list. Everything on the screen sits on the one 18px gutter: the rail
-label, the section label, the chips, the tabs and the rows.
+class on your calendar. The tab is Home (it was Discover; renamed by
+Matt's call, route stays /feed, `home` glyph): the This week rail, then
+three rails of what's around you, each head carrying a bare right-arrow
+door (`.nearhead-go`, no words, by Matt's call) onto /search with that
+kind's segment already picked (`?seg=classes|studios|people`). Upcoming
+near you is a rail of event cards now (`.uprail`), by Matt's call: the
+date as a leaf on the left (Today tinted brand), the class, time, place
+and coach beside it, and the bare ribbon in the corner (the same
+SaveCorner, `bare`), capped at `UPCOMING_RAIL` because a rail is a
+taste and the arrow is the whole list. The cards are still every
+listable coach's classes, deduped to one row per class, still opening
+the class peek on tap, still toasting "Saved to your calendar" with a
+See it that lands highlighted (`?hl=`); your own carry no ribbon
+because setGoing would refuse the mark. The vertical banded list, the
+date tabs (`DENSE_DAY`) and the four filter chips went with the rail
+and live in git at the commit that replaced them; the full browsable
+list is Search's Classes segment now. The search bar led the screen for
+a build and came off too: the magnifier sits in the app header, right
+of the bell (`AppHeader`'s `search` prop), knowingly alongside the
+Search tab. `buildDiscoverFeed` in discoverfeed.ts is the one builder,
+shared with the Add screen's browse list. Everything on the screen sits
+on the one 18px gutter.
 
 The rail is This week: the people you follow who actually have something
 to share, by Matt's call, meaning a face is only there when the peek
@@ -2291,7 +2283,8 @@ save the organizer can see: classes.rsvp flags it, the mechanism stays
 attendances, the ribbon becomes an RSVP button with "your name goes to
 whoever runs it" said before the tap, the count never ships empty, and
 the leader reads names, a door list, no check-in and no capacity on
-purpose). Five tabs for everyone, by Matt's call: Discover,
+purpose). Five tabs for everyone, by Matt's call: Home (Discover
+renamed),
 Calendar (a member's is /week, a coach's /calendar, each kind bounced to
 its own), Search (its own place as the app fills in; the magnifier left
 the header and Home's search bar with it, one act one door), Share,
