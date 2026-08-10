@@ -362,11 +362,11 @@ export function FollowingScreen({
       ? milesBetween(geo, { lat: s.lat, lng: s.lng })
       : null;
   const studiosNear = useMemo(() => {
-    if (!geo) return nearStudios;
-    const d = (s: NearStudio) =>
-      s.lat != null && s.lng != null ? milesBetween(geo, { lat: s.lat, lng: s.lng }) : Infinity;
-    return [...nearStudios].sort((a, b) => d(a) - d(b));
-  }, [nearStudios, geo]);
+    // The server deliberately puts photographed studios first and shuffles
+    // each group. A location pin enriches the distance label but should not
+    // undo that visual ordering.
+    return nearStudios;
+  }, [nearStudios]);
 
   const pickDist = (v: Filters["dist"], close: boolean) => {
     if (v !== "any" && !geo && typeof navigator !== "undefined" && navigator.geolocation) {

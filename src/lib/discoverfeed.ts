@@ -370,6 +370,15 @@ export async function buildDiscoverFeed(
       Math.cos(rad(center.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
     return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
+  // A daily, deterministic shuffle: the rail feels assorted rather than
+  // alphabetical, but it does not jump around during a visit or hydrate in a
+  // different order on the client. Photos lead because they make the rail
+  // useful while the studio library is still being filled in.
+  const shuffleRank = (id: string) => {
+    let hash = 2166136261;
+    for (const ch of `${today}|${id}`) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
+    return hash >>> 0;
+  };
   const nearStudios: NearStudio[] = withLocal
     .map(({ s, local }) => ({
       id: s.id,
@@ -384,12 +393,12 @@ export async function buildDiscoverFeed(
         center && s.lat != null && s.lng != null ? milesFromCenter(s.lat, s.lng) : null,
       local,
     }))
-    // Your city first, then miles from its centre, then the name for the
-    // rows no pin can place. Stable, so name order holds where it must.
+    // Image first, then local relevance, then the stable daily shuffle.
     .sort(
       (a, b) =>
+        Number(!!b.photo) - Number(!!a.photo) ||
         Number(b.local) - Number(a.local) ||
-        milesFromCenter(a.lat, a.lng) - milesFromCenter(b.lat, b.lng),
+        shuffleRank(a.id) - shuffleRank(b.id),
     );
 
   // Coaches near you: every listable coach, your city first, then whoever
