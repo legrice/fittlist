@@ -93,14 +93,17 @@ export function CoachPeek({
       }}
     >
       <div className="sheet sheet-full peeksheet">
+        {/* A direct child of the scrolling sheet so sticky can hold it for
+            the full week. Inside the short header it was constrained to the
+            header and disappeared as soon as the dates began. */}
+        <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={18} />
+        </button>
         {/* The head stacks, by Matt's call: close alone in the corner, then
             the face, the name on its own line under it, and the two pills
             (View profile, Follow) under both. No "Week of" line and no
             overlap count up here; the rows themselves are the answer. */}
         <div className="peekhead peekhead-stack">
-          <button className="iconbtn sheetclose peekclose" aria-label="Close" onClick={onClose}>
-            <Icon name="close" size={18} />
-          </button>
           <span className="peekav">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element

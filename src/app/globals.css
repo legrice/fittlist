@@ -6434,8 +6434,14 @@ button.ps-card { cursor: pointer; }
 
 /* The peek. A bottom sheet rather than the class overlay: this is a list you
    skim and act on several times before closing, and the overlay's shape says
-   one thing, whole screen. */
-.peeksheet { padding-top: 18px; }
+   one thing, whole screen. `.sheet.sheet-full` normally removes top padding;
+   the doubled selector wins that specificity and restores a real top inset. */
+.sheet.peeksheet { padding-top: 24px; }
+.sheet.peeksheet > .peekclose {
+  position: sticky; top: 14px; z-index: 7;
+  display: flex; margin: 0 0 -38px auto;
+  box-shadow: 0 3px 12px rgba(25, 21, 2, .12);
+}
 .peekhead { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; }
 .peekhead-txt { flex: 1 1 auto; min-width: 0; }
 .peekclose { flex: 0 0 auto; position: static; }
