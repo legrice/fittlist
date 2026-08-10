@@ -6427,18 +6427,20 @@ button.ps-card { cursor: pointer; }
 .nearhead-row { margin-bottom: 12px; }
 .nearhead-go { display: inline-flex; align-items: center; color: var(--ink); padding: 4px 0 4px 12px; }
 
-/* 10, down from 14, by Matt's call: the faces read as one row of people. */
-.ctrail { gap: 10px; }
+/* Match the social rail above: a person keeps the same visual scale wherever
+   their face appears on Home. */
+.ctrail { gap: 12px; }
 .ctrail-item {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  width: 80px;
+  width: 88px;
 }
 .ctrail-go {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   text-decoration: none;
 }
-.ctrail-av { width: 64px; height: 64px; }
-.ctrail-av .trayav-ini { font-size: 24px; }
+.ctrail-av { width: 82px; height: 82px; }
+.ctrail-av .trayav-ini { font-size: 28px; }
+.ctrail .trayitem-nm { max-width: 84px; }
 .ctrail-fl { padding: 6px 12px; font-size: 12.5px; }
 
 /* The Add screen's browse foot: the two ways out when the class you mean
