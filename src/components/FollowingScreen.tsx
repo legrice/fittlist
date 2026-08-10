@@ -472,7 +472,10 @@ export function FollowingScreen({
         {/* Why Today isn't the selected tab, said once: the landing skipped
             ahead to the first day holding anything. */}
         {landed.current !== todayIso && day === landed.current && (
-          <p className="daynote">No classes today, showing {tabLabel(landed.current)}</p>
+          <p className="daynote">
+            No classes today, showing{" "}
+            {landed.current === plusDays(todayIso, 1) ? "tomorrow" : tabLabel(landed.current)}
+          </p>
         )}
 
         {dayRows.length === 0 ? (
