@@ -132,7 +132,9 @@ if ((await m.locator(".nearhead-go").count()) !== 3) fail("three rails, three ar
 await m.locator('.nearhead-go[href="/search?seg=classes"]').click();
 await m.waitForURL(/\/search\?seg=classes/);
 await m.locator(".srchseg button.sel", { hasText: "Classes" }).waitFor();
-await m.locator(".dirclass, .peekempty, .callist, .clsday").first().waitFor().catch(() => {});
+// The list wears Home's own card grammar: one card per occurrence, the
+// date on its leaf, by Matt's call.
+await m.locator(".upstack-card .uprail-dom").first().waitFor();
 await m.goBack();
 await m.locator(".uprail-card").first().waitFor();
 console.log("the rails under the schedule, each arrow landing on its segment");

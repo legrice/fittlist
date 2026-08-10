@@ -1,33 +1,15 @@
 "use client";
 
-import { Agenda, ClassRow } from "@/components/Agenda";
 import { ClassOpener } from "@/components/ClassOpener";
-import { fmtDayHeaderRel } from "@/lib/format";
 import type { DirClass } from "@/lib/discoverclasses";
 
-/** One day, one heading: the grouped shape every schedule in the app takes.
- *  It lives here rather than beside DirClass because this is the only thing
- *  that groups them, and `discoverclasses` reaches the database: importing a
- *  value from it into a client component drags pg into the browser bundle. */
-function groupClassDays(classes: DirClass[]): { iso: string; items: DirClass[] }[] {
-  const byIso = new Map<string, DirClass[]>();
-  for (const c of classes) {
-    const arr = byIso.get(c.iso) ?? [];
-    arr.push(c);
-    byIso.set(c.iso, arr);
-  }
-  return [...byIso.entries()].map(([iso, items]) => ({ iso, items }));
-}
-
 /**
- * A list of dated class occurrences, day by day.
- *
- * Discover's Classes half and the search screen both draw this, so it is one
- * component rather than two that started identical: the ribbon has to mean
- * here exactly what it means on a profile, and a second copy would drift
- * where nobody was looking. The only thing the caller chooses is the `from`
- * token, because that is the one honest difference between them: which list
- * a class was opened out of, and therefore where its back control returns.
+ * A list of dated class occurrences, in Home's own card grammar: the date
+ * as a leaf on the left, the class, time, place and coach beside it, one
+ * card per occurrence. It wore the old evcard rows and day headings for a
+ * while; the leaf carries the date now, so the headings had nothing left
+ * to say. Search draws it, and anything else that lists occurrences
+ * should draw it too rather than a second copy.
  */
 export function ClassResults({
   classes,
@@ -40,33 +22,41 @@ export function ClassResults({
 }) {
   return (
     <ClassOpener handle="">
-      <Agenda
-        className="callist"
-        today={todayIso}
-        days={groupClassDays(classes).map((d) => ({
-          iso: d.iso,
-          label: fmtDayHeaderRel(d.iso, todayIso),
-          items: d.items.map((c) => ({
-            key: `${c.classId}|${c.iso}`,
-            name: c.name,
-            hm: c.hm,
-            ap: c.ap,
-            durationMin: c.durationMin,
-            where: c.where,
-            coachName: c.coachName,
-            coachPhoto: c.coachPhoto,
-            coachColor: c.coachColor,
-            href: `/${c.base}/${c.classId}?d=${c.iso}&from=${from}`,
-            classId: c.classId,
-            iso: c.iso,
-            base: c.base,
-          })),
-        }))}
-        // No ribbon. It put a class in your plans, and plans are gone: a
-        // member reads the week of the people they follow and has no calendar
-        // to add anything to.
-        row={(item) => <ClassRow item={item} />}
-      />
+      <div className="upstack">
+        {classes.map((c) => {
+          const d = new Date(`${c.iso}T00:00:00Z`);
+          const dow =
+            c.iso === todayIso
+              ? "Today"
+              : d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+          return (
+            <a
+              key={`${c.classId}|${c.iso}`}
+              className="uprail-go upstack-card"
+              href={`/${c.base}/${c.classId}?d=${c.iso}&from=${from}`}
+              data-cid={c.classId}
+              data-d={c.iso}
+              data-base={c.base}
+            >
+              <span className={`uprail-date${c.iso === todayIso ? " today" : ""}`}>
+                <span className="uprail-dow">{dow}</span>
+                <span className="uprail-dom">{d.getUTCDate()}</span>
+              </span>
+              <span className="uprail-txt">
+                <span className="uprail-nm">{c.name}</span>
+                <span className="uprail-sub">
+                  {c.hm}
+                  {c.ap.toLowerCase()}
+                  {c.where ? ` · ${c.where}` : ""}
+                </span>
+                {c.coachName && (
+                  <span className="uprail-who">{c.coachName.split(/\s+/)[0]}</span>
+                )}
+              </span>
+            </a>
+          );
+        })}
+      </div>
     </ClassOpener>
   );
 }

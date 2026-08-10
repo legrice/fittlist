@@ -682,7 +682,10 @@ body.sheet-open .appshell .stage { overflow: hidden; }
 }
 .modetoggle { display: flex; gap: 6px; margin-top: 8px; }
 .modetoggle button {
-  flex: 1; padding: 11px 0; border: 1px solid var(--line); border-radius: 999px;
+  /* Unselected is white with no outline, by Matt's call: the fill is the
+     edge, and on a white sheet the quiet options read as plain words
+     beside the one inked answer. */
+  flex: 1; padding: 11px 0; border: none; background: var(--card); border-radius: 999px;
   font-size: 12px; font-weight: 600; color: var(--ink);
 }
 .modetoggle button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -6193,7 +6196,8 @@ button.ps-card { cursor: pointer; }
 }
 .catpill.on { background: var(--ink); color: var(--paper); }
 .calpills { padding: 2px 18px 10px; }
-.calpills .catpill { background: var(--paper); border: 1px solid var(--line); }
+/* Unselected is white with no outline, by Matt's call. */
+.calpills .catpill { background: var(--card); border: none; }
 /* The hairline between the two filter axes on Discover's rail: what the
    class is, then when in the day it runs. */
 .catpill-div { flex-shrink: 0; width: 1px; height: 22px; margin: 7px 3px; background: var(--div); }
@@ -6329,6 +6333,12 @@ button.ps-card { cursor: pointer; }
 .aboutpage p { margin: 14px 0; font-size: 15.5px; line-height: 1.6; color: var(--ink); }
 .about-one { font-weight: 600; font-size: 17px; }
 .contribute-cta { width: 100%; margin-top: 22px; }
+
+/* The same card, stacked: Search's Classes list wears Home's grammar, by
+   Matt's call, one full-width card per occurrence with the leaf carrying
+   the date, so the day headings had nothing left to say. */
+.upstack { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.upstack-card { width: 100%; text-decoration: none; }
 
 /* A rail head is the label and its arrow: the door to the same kind on
    Search, a plain right arrow by Matt's call, no words. */
@@ -6870,12 +6880,14 @@ a.clspeek-by:active { opacity: .6; }
 .shpick-list { max-height: 42vh; overflow-y: auto; overscroll-behavior: contain; }
 .shdays { display: flex; gap: 8px; margin: 6px 0 4px; }
 .shday {
-  flex: 1; height: 42px; border-radius: 12px; border: 1px solid var(--line);
-  background: transparent; color: var(--ink); cursor: pointer;
+  /* Unselected is white with no outline, by Matt's call: the orange fill
+     is what marks the answer. */
+  flex: 1; height: 42px; border-radius: 12px; border: none;
+  background: var(--card); color: var(--ink); cursor: pointer;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 15.5px; font-weight: 600;
 }
-.shday.on { background: var(--si); border-color: var(--si); color: #fff; }
+.shday.on { background: var(--si); color: #fff; }
 /* The Today preset in the Dates sheet: the shday's own drawing at its
    natural width, above the dropdown it saves a trip through. */
 .shtoday { flex: 0 0 auto; padding: 0 18px; margin: 4px 0 12px; }
