@@ -173,6 +173,8 @@ export function ClassPeek({
   // before that.
   const [savedNow, setSavedNow] = useState<boolean | null>(null);
   const [saveBusy, setSaveBusy] = useState(false);
+  // The overflow behind the top-left dots: Share, and whatever joins it.
+  const [more, setMore] = useState(false);
 
   // The rota's own controls, loaded from the same place the depth is: whether
   // this date can be given up, and who it can be handed to, are the gym's
@@ -353,9 +355,17 @@ export function ClassPeek({
             away on a scroll, and the one way off a sheet has to stay under
             the thumb the whole way down. The photograph follows, running to
             the sheet's own top edge, and slides under the circle. */}
-        <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
-          <Icon name="close" size={20} />
-        </button>
+        {/* The corners: the overflow left, close right, one sticky row, by
+            Matt's call. Share lives behind the dots now rather than in the
+            footer, which belongs to the acts (Save, Book). */}
+        <div className="clsfull-toprow">
+          <button className="clspeek-x clsfull-more" aria-label="More" onClick={() => setMore(true)}>
+            <Icon name="more_horiz" size={20} />
+          </button>
+          <button className="clspeek-x clsfull-x" aria-label="Close" onClick={onClose}>
+            <Icon name="close" size={20} />
+          </button>
+        </div>
         {full?.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="clsfull-photo" src={full.image} alt="" />
@@ -457,13 +467,10 @@ export function ClassPeek({
           <p className="clspeek-rsvpnote">Your name goes to whoever runs it when you RSVP.</p>
         )}
 
-        {/* The footer, pinned to the sheet's bottom edge: Share in ink on
-            the left, Save (or RSVP) in the going green when the class can
-            be saved, Book when it has a booking door. */}
+        {/* The footer, pinned to the sheet's bottom edge: the acts only.
+            Save (or RSVP) in the going green when the class can be saved,
+            Book when it has a booking door; Share moved behind the dots. */}
         <div className="clsfull-cta">
-          <button className="clsfull-btn dark" onClick={share}>
-            Share
-          </button>
           {cls.mine && cls.shift && (
             <button className="clsfull-btn manage" onClick={openManage}>
               {loading ? "Opening…" : "Manage shift"}
@@ -505,6 +512,46 @@ export function ClassPeek({
           )}
         </div>
       </div>
+
+      {/* The overflow, behind the top-left dots: Share for now, and the
+          slot every future one-off action goes in rather than the footer. */}
+      {more && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.target === e.currentTarget) setMore(false);
+          }}
+        >
+          <div className="sheet clspeek">
+            <span className="clspeek-grab" aria-hidden="true" />
+            <div className="clspeek-head">
+              <div className="clspeek-titles">
+                <h2 className="clspeek-nm">{cls.name}</h2>
+              </div>
+              <button className="clspeek-x" aria-label="Close" onClick={() => setMore(false)}>
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+            <div className="settingslist">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setMore(false);
+                  share();
+                }}
+              >
+                <span className="setrow-txt">
+                  <span className="t">Share</span>
+                </span>
+                <span className="setrow-ic">
+                  <Icon name="arrow_outward" size={20} />
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* The booking doors, as a sheet: Book brings up the options rather
           than jumping to somebody else's site unannounced, and each row says

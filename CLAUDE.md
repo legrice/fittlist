@@ -2197,15 +2197,26 @@ anywhere, and following someone lets you see their week and never puts a
 class on your calendar. The tab is Discover (route stays /feed): the
 search door, the This week rail, and Upcoming near you, which is classes
 from every listable coach, never only the people you follow, deduped to
-one row per class, one day at a time behind a date rail of underline
-tabs (Today, then "Mon 10" on, back by Matt's call after the open-ended
-scroll tried and lost; landing skips to the first day holding anything
-and says so in one line). Every class lists itself; the studio fold came
-off and can return the day one gym's Monday drowns everything around it.
-Each row's one control is Save in the corner, ribbon and word filling to
-the going green, not a dots menu, by Matt's call: the row's saved state
-loads with the feed so the ribbons start right, and your own rows carry
-none because setGoing would refuse the mark. `buildDiscoverFeed` in
+one row per class. How the days present depends on how much they hold
+(`DENSE_DAY` in FollowingScreen): while no day exceeds ten listings the
+list is one scroll of banded days (the same DayBand grammar the
+calendars wear), because a two-week-old app's whole inventory fits on a
+screen and tabs over that little are furniture; the date rail of
+underline tabs (Today, then "Mon 10" on, landing on the first day
+holding anything with the note naming the actual day it landed on,
+"tomorrow" only when it really is tomorrow) returns the day any single
+day crosses that line. Both paths are built and tested; the tabs are
+simply dark at today's volume. Every class lists itself; the studio fold
+came off and can return the day one gym's Monday drowns everything
+around it. Each row's one control is Save, ribbon and word filling to
+the going green, not a dots menu, by Matt's call, and it sits across
+from the *coach* line rather than the name line, so the class name gets
+the full width to breathe (`.rowsave` bottom-anchored, the coach line
+reserving its width); the rows carry no duration, by Matt's call. The
+row's saved state loads with the feed so the ribbons start right, and
+your own rows carry none because setGoing would refuse the mark.
+Saving toasts "Saved to your calendar" with a See it link that lands
+highlighted (`?hl=`). `buildDiscoverFeed` in
 discoverfeed.ts is the one builder, shared with the Add screen's browse
 list. Everything on the screen sits on the one 18px gutter: the rail
 label, the section label, the chips, the tabs and the rows.
@@ -2242,7 +2253,12 @@ question in one sheet that stays open while you answer them. Time is before 11, 
 pin, or a viewer without one, passes rather than vanishing); type is the
 categories the list holds; places multi-selects with the sheet staying
 open. The empty state knows why it is empty: filters active says so with
-a clear button, never "nobody has added classes here".
+a clear button, never "nobody has added classes here". Every filter
+sheet ends on a sticky foot (`.publishwrap fsheet-foot`): Done, and
+Clear filters whenever anything is set, so the way out and the way off
+are visible without a scroll, from whichever sheet you're standing in.
+The single-question sheets and the everything sheet render one shared
+set of option rows, so they cannot drift.
 
 People near you (the rail's Add, and the search fab) is where coaches
 and members are told apart, because there it is useful: an Everyone /
@@ -2276,10 +2292,22 @@ attribution stacked beside them, a hairline between rows), the boxes
 are gone, and Discover's rows are the calendar's exactly, the coach's
 small face included, by Matt's call. The member week's rows moved off
 `Agenda`/`ClassRow` onto the same `ClassLine`, which grew `href` and an
-`extra` slot for the also-going line. Add opens on Discover (a browse
-list with inline Save, the same feed), the coaching form one segment
-away for coaches only. discover-smoke is the branch's suite;
+`extra` slot for the also-going line. A coach's Add asks which act
+first: the fab opens a two-row chooser (Discover classes, which is the
+whole browse sheet, and Add a class I'm coaching, the publishing form),
+replacing the segment that used to ride the browse sheet's head; a
+member's Add goes straight to browsing, because one answer is not a
+question. The browse sheet's own "+ Add a class that isn't here" rides
+a sticky `.publishwrap` foot, so the way to add what isn't listed is
+never a full scroll away. discover-smoke is the branch's suite;
 following-smoke retired with the semantics it tested.
+
+The class detail sheet's chrome is two corners and one act: close top
+right, a dots overflow top left (`.clsfull-toprow`, sticky, both
+circles riding the scroll together), and Share lives behind the dots
+rather than in the bottom CTAs, by Matt's call, so the footer is the
+acts themselves: Save (green, full width, RSVP-aware wording), Book
+when there's a door, Manage shift when the date is yours.
 
 A member's hub is the full sheet now, by Matt's call: Week, Profile, QR
 code and Text, the same four segments a coach gets, because the week they

@@ -10,7 +10,7 @@ import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
+import { ClassLine, DayBand, initials, type WeekRow } from "@/components/WeekView";
 
 export type FeedCoach = {
   id: string;
@@ -100,6 +100,10 @@ type Filters = {
   place: "any" | string[];
 };
 const NO_FILTERS: Filters = { time: "any", dist: "any", cat: "any", place: "any" };
+
+/** When the date rail earns its place: the busiest day holding more than
+ *  this many classes. Under it the whole horizon scrolls as one list. */
+const DENSE_DAY = 10;
 
 /**
  * Discover: the search door, the This week rail, and Upcoming near you.
@@ -227,24 +231,55 @@ export function FollowingScreen({
     return out;
   }, [items, todayIso]);
 
-  // The selected day's rows, flat, each carrying its Save in the corner.
+  // One row mapping for both list modes. No duration on this list, by
+  // Matt's call: the length is the class page's fact, and the left column
+  // is the clock alone.
+  const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
+    const c = coachById.get(i.coachId);
+    return {
+      item: i,
+      key: i.key,
+      name: i.name,
+      where: i.where,
+      hm: i.hm,
+      ap: i.ap,
+      coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
+      onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
+    };
+  };
+
+  // Two list modes, decided by density, by Matt's call: while no day holds
+  // more than about ten classes, the whole horizon scrolls as one banded
+  // list, because tabs over a thin inventory are doors to near-empty
+  // rooms. The date rail takes over the day a single day outgrows a
+  // screen.
+  const dense = useMemo(() => {
+    const per = new Map<string, number>();
+    for (const i of items) per.set(i.iso, (per.get(i.iso) ?? 0) + 1);
+    return Math.max(0, ...per.values()) > DENSE_DAY;
+  }, [items]);
+
+  // The selected day's rows, for the date-rail mode.
   const dayRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
     const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
-    return list.map((i) => {
-      const c = coachById.get(i.coachId);
-      return {
-        item: i,
-        key: i.key,
-        name: i.name,
-        where: i.where,
-        hm: i.hm,
-        ap: i.ap,
-        dur: `${i.durationMin} min`,
-        coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
-        onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-      };
-    });
+    return list.map(rowOf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
+
+  // Every day at once, banded, for the scroll mode.
+  const dayGroups = useMemo(() => {
+    const kept = [...shown].sort((a, b) =>
+      a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
+    );
+    const byIso = new Map<string, FeedItem[]>();
+    for (const i of kept) byIso.set(i.iso, [...(byIso.get(i.iso) ?? []), i]);
+    return [...byIso.entries()].map(([iso, list]) => ({
+      iso,
+      label: bandLabel(iso, todayIso),
+      rows: list.map(rowOf),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, coachById, favIds, todayIso]);
 
   // Hide the rail rather than draw it dead: following nobody keeps the
   // teaching state (ghosts and one line), following only people with
@@ -459,40 +494,43 @@ export function FollowingScreen({
         </div>
       </div>
 
-      {/* The dates, left to right: one day at a time beats a three-week
-          scroll. The row pins under the header while the list under it
-          changes in place. */}
-      <div className="daytabs" role="tablist" aria-label="Day">
-        {dayTabs.map((t) => (
-          <button
-            key={t.iso}
-            role="tab"
-            aria-selected={day === t.iso}
-            className={`daytab${day === t.iso ? " on" : ""}`}
-            onClick={() => setDay(t.iso)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {/* The dates, left to right, only once a single day is busy enough
+          to need them: tabs over a thin inventory are doors to near-empty
+          rooms, so the whole horizon scrolls until then, by Matt's call. */}
+      {dense && (
+        <div className="daytabs" role="tablist" aria-label="Day">
+          {dayTabs.map((t) => (
+            <button
+              key={t.iso}
+              role="tab"
+              aria-selected={day === t.iso}
+              className={`daytab${day === t.iso ? " on" : ""}`}
+              onClick={() => setDay(t.iso)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="cardwrap">
         {/* Why Today isn't the selected tab, said once: the landing skipped
-            ahead to the first day holding anything. */}
-        {landed.current !== todayIso && day === landed.current && (
+            ahead to the first day holding anything. Tabs mode only; the
+            scroll's first band already names its own date. */}
+        {dense && landed.current !== todayIso && day === landed.current && (
           <p className="daynote">
             No classes today, showing{" "}
             {landed.current === plusDays(todayIso, 1) ? "tomorrow" : tabLabel(landed.current)}
           </p>
         )}
 
-        {dayRows.length === 0 ? (
+        {(dense ? dayRows.length === 0 : dayGroups.length === 0) ? (
           anyFilter ? (
             // The empty state knows why it is empty: never "nobody has
             // added classes" when the truth is the filter.
             <p className="dayempty">
-              Nothing matches on {day === todayIso ? "today" : tabLabel(day)}. Try widening
-              the time or distance.
+              Nothing matches{dense ? ` on ${day === todayIso ? "today" : tabLabel(day)}` : ""}.
+              Try widening the time or distance.
             </p>
           ) : items.length === 0 ? (
             <div className="wkempty">
@@ -518,27 +556,15 @@ export function FollowingScreen({
               Nothing on {day === todayIso ? "today" : tabLabel(day)}.
             </p>
           )
+        ) : dense ? (
+          <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
         ) : (
-          <div className="disflat">
-            {dayRows.map((r) => (
-              <div key={r.key} className="clrow">
-                <ClassLine row={r} />
-                {/* Save in the corner, not a dots menu, by Matt's call: the
-                    one act this list turns on is the row's one control. A
-                    sibling of the row, never a child. Your own class
-                    carries none, because setGoing would refuse it. */}
-                {r.item.coachId !== meId && (
-                  <SaveCorner
-                    classId={r.item.classId}
-                    iso={r.item.iso}
-                    name={r.item.name}
-                    initial={r.item.saved}
-                    onToast={notify}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+          dayGroups.map((d) => (
+            <section key={d.iso} className="dayblock">
+              <DayBand label={d.label} today={d.iso === todayIso} />
+              <div className="disflat">{d.rows.map(renderRow(meId, notify))}</div>
+            </section>
+          ))
         )}
       </div>
 
@@ -599,24 +625,25 @@ export function FollowingScreen({
                 </>
               )}
             </div>
-            {(sheet === "place" || sheet === "all") && (
-              <div className="publishwrap nostick fsheet-foot">
-                <button className="btn si" onClick={() => setSheet(null)}>
-                  Done
+            {/* Every filter sheet ends the same way, and the footer is
+                sticky so Done and the way out of every filter are on
+                screen the whole scroll, by Matt's call. */}
+            <div className="publishwrap fsheet-foot">
+              <button className="btn si" onClick={() => setSheet(null)}>
+                Done
+              </button>
+              {anyFilter && (
+                <button
+                  className="btn ghost"
+                  onClick={() => {
+                    setF(NO_FILTERS);
+                    setSheet(null);
+                  }}
+                >
+                  Clear filters
                 </button>
-                {sheet === "all" && anyFilter && (
-                  <button
-                    className="btn ghost"
-                    onClick={() => {
-                      setF(NO_FILTERS);
-                      setSheet(null);
-                    }}
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -686,6 +713,36 @@ function SaveCorner({
       <span>{on ? "Saved" : "Save"}</span>
     </button>
   );
+}
+
+/** One row, in either list mode: the flat line with Save across from the
+ *  coach's own line. A sibling of the row, never a child. Your own class
+ *  carries none, because setGoing would refuse it. */
+const renderRow =
+  (meId: string | undefined, notify: (msg: string, hlKey?: string) => void) =>
+  // eslint-disable-next-line react/display-name
+  (r: WeekRow & { item: FeedItem }) => (
+    <div key={r.key} className="clrow">
+      <ClassLine row={r} />
+      {r.item.coachId !== meId && (
+        <SaveCorner
+          classId={r.item.classId}
+          iso={r.item.iso}
+          name={r.item.name}
+          initial={r.item.saved}
+          onToast={notify}
+        />
+      )}
+    </div>
+  );
+
+/** "Today, Aug 9", then the date: the same words the calendars use. */
+function bandLabel(iso: string, today: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  if (iso === today) return `Today, ${md}`;
+  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+  return `${wd}, ${md}`;
 }
 
 const plusDays = (iso: string, n: number) =>

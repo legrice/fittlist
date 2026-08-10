@@ -6026,14 +6026,18 @@ button.ps-card { cursor: pointer; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {
-  position: absolute; top: 14px; right: 0; z-index: 2;
+  /* Across from the coach's line, not the name's, by Matt's call: the
+     class name gets the whole width to breathe, and Save shares the
+     quietest line on the row. */
+  position: absolute; bottom: 15px; right: 0; z-index: 2;
   display: inline-flex; align-items: center; gap: 4px;
   border: none; background: none; cursor: pointer; padding: 4px 0 4px 8px;
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
 .rowsave.on { color: var(--go); }
-/* The name clears the corner control's wider footprint here. */
-.disflat .clrow .clline-nm { padding-right: 84px; }
+/* The bottom line clears the control instead of the name. */
+.disflat .clrow .clline-nm { padding-right: 0; }
+.disflat .clrow .clline-by { max-width: calc(100% - 84px); }
 
 /* The four dropdown chips, each showing its current value: "Within 1 mile",
    not "Distance", which is what lets one row replace five pills. Active
@@ -6408,9 +6412,14 @@ button.ps-card { cursor: pointer; }
    over whatever scrolled under it, photo and prose alike. Doubled selector
    on purpose: .clspeek-x is later in this file, and its inline-flex made
    margin-left: auto mean nothing. */
-.clspeek-x.clsfull-x {
+/* One sticky row for both corners: the overflow dots left, close right,
+   by Matt's call. It pulls its own height back so the photo starts where
+   it always did, and both circles float over whatever scrolls under. */
+.clsfull-toprow {
   position: sticky; top: 2px; z-index: 6;
-  display: flex; margin-left: auto; margin-bottom: -42px;
+  display: flex; justify-content: space-between; margin-bottom: -42px;
+}
+.clsfull-toprow .clspeek-x {
   width: 42px; height: 42px; background: var(--card);
   box-shadow: 0 4px 14px rgba(25, 21, 2, .18);
 }

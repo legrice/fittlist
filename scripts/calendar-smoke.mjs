@@ -53,16 +53,12 @@ console.log("an empty calendar is its own CTA, and carries no other control");
 const add = async (nm, day, t, studio) => {
   await p.goto(BASE + "/calendar");
   await p.locator(".wkempty-cta, .wkfab").first().click();
-  // The fab opens the segmented Add screen now (the empty CTA still goes
-  // straight to the form); the coaching segment is the old door.
-  const seg = p.locator(".addseg button", { hasText: /coaching/ });
-  if (await seg.count().then((n) => n > 0).catch(() => false)) await seg.click();
-  else {
-    await p
-      .locator(".addseg button", { hasText: /coaching/ })
-      .click({ timeout: 3000 })
-      .catch(() => {});
-  }
+  // The fab asks which act first now (the empty CTA still goes straight
+  // to the form); "Add a class I'm coaching" is the door.
+  await p
+    .locator(".setrow", { hasText: /coaching/ })
+    .click({ timeout: 3000 })
+    .catch(() => {});
   await p.locator(".stepline", { hasText: "Choose the studio" }).waitFor();
   // The list waits for typing: type it, tap it.
   await p.getByLabel("Search studios").fill(studio);
@@ -245,8 +241,13 @@ await p.waitForTimeout(400);
   if (!(await p.locator(".clspeek-btn", { hasText: "Cancel this date" }).count()))
     fail("expected Cancel this date");
   if (!(await p.locator(".clspeek-del").count())) fail("expected the quiet delete");
-  // Your own footer is Share alone: there is nothing for you to book.
-  if (!(await p.locator(".clsfull-btn.dark").count())) fail("expected the ink Share");
+  // Share lives behind the top-left dots now, by Matt's call: the footer
+  // is the acts alone, and your own class has none to offer.
+  if (await p.locator(".clsfull-btn.dark").count()) fail("Share left the footer for the dots");
+  if (!(await p.locator(".clsfull-more").count())) fail("expected the overflow dots top left");
+  await p.locator(".clsfull-more").click();
+  await p.locator(".setrow", { hasText: "Share" }).waitFor();
+  await p.locator(".sheet", { hasText: "Share" }).locator(".clspeek-x").last().click();
   if (await p.locator(".clsfull-btn.book").count()) fail("no Book on your own class");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-sheet.png" });

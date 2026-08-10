@@ -114,7 +114,9 @@ export function AddBrowse({
         ))}
 
         {days && (
-          <div className="addbrowse-foot">
+          // publishwrap: the sheet's own sticky footer, so the way to add
+          // what isn't listed is never a full scroll away, by Matt's call.
+          <div className="addbrowse-foot publishwrap">
             <p className="durnote">
               Can&rsquo;t find it? Add it and it shows up here for everyone else too.
             </p>

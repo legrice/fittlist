@@ -103,6 +103,10 @@ export function CalendarScreen({
   // one-shape bug the doctrine warns about.
   const [plan, setPlan] = useState<string | null>(null);
   const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
+  // The plus asks which act first, by Matt's call: two CTAs, Discover
+  // classes (the browse sheet whole) or the publishing form, instead of a
+  // browse screen with the form one segment away.
+  const [addMenu, setAddMenu] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -387,18 +391,58 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setBrowseOpen(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={() => setAddMenu(true)}>
           <Icon name="add" size={28} />
         </button>
       )}
 
+      {addMenu && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAddMenu(false);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Add to your calendar</h2>
+            <div className="settingslist">
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setBrowseOpen(true);
+                }}
+              >
+                <span className="setrow-txt">
+                  <span className="t">Discover classes</span>
+                  <span className="s">Browse what is on near you and save the ones you are going to.</span>
+                </span>
+                <span className="setrow-ic">
+                  <Icon name="explore" size={20} />
+                </span>
+              </button>
+              <button
+                className="setrow"
+                onClick={() => {
+                  setAddMenu(false);
+                  setAddOpen(true);
+                }}
+              >
+                <span className="setrow-txt">
+                  <span className="t">Add a class I&rsquo;m coaching</span>
+                  <span className="s">Goes on your public schedule and the place&rsquo;s page.</span>
+                </span>
+                <span className="setrow-ic">
+                  <Icon name="add" size={20} />
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {browseOpen && (
         <AddBrowse
-          coachSeg
-          onCoaching={() => {
-            setBrowseOpen(false);
-            setAddOpen(true);
-          }}
           onAddNew={() => {
             setBrowseOpen(false);
             setAddOpen(true);
