@@ -3461,7 +3461,10 @@ button.ps-card { cursor: pointer; }
   content: ""; position: absolute; inset: 0 0 -30px; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, rgba(25, 21, 2, .5), rgba(25, 21, 2, 0));
 }
-.pub-hero .brandbar-actions .iconbtn { color: #fff; }
+/* The corner controls keep their ink on the photo, by Matt's call: the
+   circles are white now, and a white glyph on a white circle is a blank
+   disc. The wordmark alone goes white up there. */
+.pub-hero .brandbar-actions .iconbtn { color: var(--ink); }
 /* A stranger's bar rides the photo the same way the app header does: pinned
    at the top with the scrim inside it, the lockup in white (the --wm-ink
    and --wm-mark the shell already set), and its margin dropped so the head's
@@ -4756,6 +4759,9 @@ button.ps-card { cursor: pointer; }
    heading only exists when the section has something in it, so a search that
    only finds studios says "Studios" once and nothing about people. */
 .srchsec + .srchsec { margin-top: 26px; }
+/* The idle screen's Nearby segment: the sheet's own three-way toggle, with
+   room under it before the list starts. */
+.srchseg { margin: 6px 0 14px; }
 .srchhead {
   display: flex; align-items: baseline; gap: 8px; margin: 0 0 2px;
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
@@ -6042,11 +6048,9 @@ button.ps-card { cursor: pointer; }
    chips invert; Clear is dashed and only there when something is set. */
 .fchips .catpill {
   display: inline-flex; align-items: center; gap: 3px;
-  /* Half-strength white, by Matt's call: the chips are furniture over the
-     list, not the point of the screen, and full white stole the show from
-     the rows. The set chip keeps its full ink fill, which is what makes
-     an answer read against the quiet questions. */
-  background: color-mix(in srgb, var(--card) 50%, transparent);
+  /* Full white again, by Matt's call: the half-strength fill tried for a
+     build read as disabled rather than quiet. */
+  background: var(--card);
 }
 .fchips .catpill.on { background: var(--ink); }
 .fchips .catpill .icon { margin-right: -3px; }
@@ -6196,7 +6200,9 @@ button.ps-card { cursor: pointer; }
   position: sticky; top: var(--dayband-top, 0px); z-index: 6;
   display: flex; overflow-x: auto; scrollbar-width: none;
   margin: 4px -18px 0; padding: 0 10px;
-  background: var(--band); border-bottom: 1px solid var(--div);
+  /* Solid, by Matt's call: the tabs shell sets --band transparent, and a
+     pinned row the list scrolls through is unreadable. */
+  background: var(--ground); border-bottom: 1px solid var(--div);
 }
 .daytabs::-webkit-scrollbar { display: none; }
 .daytab {
@@ -6703,8 +6709,16 @@ a.clspeek-by:active { opacity: .6; }
   background: var(--cl);
 }
 .shprev-sq { height: auto; width: min(100%, 440px); aspect-ratio: 1; }
-.shcta { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.shcta {
+  margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
+  /* Sticky over the scroll, by Matt's call: the hub runs long (the poster,
+     the swatches, the control chips) and the one loud call was below the
+     fold. It rides above the docked tab bar, the same clearance the
+     profile's floating button keeps. */
+  position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 5;
+}
 .shcta .btn { width: 100%; }
+.shcta .btn.si { box-shadow: 0 4px 16px rgba(17, 17, 17, .18); }
 /* The save is this screen's one loud call, and the concept paints it brand:
    the rest of the app's .btn.si went ink in the orange retreat, so the hub
    says it locally. */

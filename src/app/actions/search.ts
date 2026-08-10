@@ -52,7 +52,36 @@ export async function searchAll(
   const needle = query.trim().toLowerCase();
   const locNeedle = loc.trim().toLowerCase();
   if (needle.length < MIN && locNeedle.length < MIN) return empty;
+  return runSearch(userId, needle, locNeedle, false);
+}
 
+/**
+ * The idle screen's Nearby lists: the same three halves with no question
+ * asked, behind the People / Studios / Classes segment. One body with
+ * searchAll rather than a loader per kind, so browsing can never offer a
+ * row the search would not (the block rules and `discoverable` are kept
+ * once). Browsing does bring back the quality bar the search skips: a
+ * coach on a list nobody asked for has to be worth opening.
+ */
+export async function searchBrowse(): Promise<{
+  people: DirPerson[];
+  studios: DirStudio[];
+  classes: DirClass[];
+}> {
+  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
+  const userId = await getSessionUserId();
+  if (!userId) return empty;
+  if (!(await fansVisible())) return empty;
+  return runSearch(userId, "", "", true);
+}
+
+async function runSearch(
+  userId: string,
+  needle: string,
+  locNeedle: string,
+  browse: boolean,
+): Promise<{ people: DirPerson[]; studios: DirStudio[]; classes: DirClass[] }> {
+  const empty = { people: [] as DirPerson[], studios: [] as DirStudio[], classes: [] as DirClass[] };
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) return empty;
@@ -124,6 +153,15 @@ export async function searchAll(
   // always the one you meant, and everything else keeps its name order.
   const rank = (name: string) => (name.toLowerCase().startsWith(needle) ? 0 : 1);
   const people: DirPerson[] = matched
+    // Browsing gets the directory's quality bar back: a coach's row on a
+    // list nobody asked for has to be worth opening (a schedule, or enough
+    // profile). A named search skips it, because you asked for this person.
+    .filter(
+      (r) =>
+        !browse ||
+        r.kind === "fan" ||
+        !!(weekCount.get(r.id) || r.title?.trim() || r.about?.trim()),
+    )
     .map((r) => ({
       id: r.id,
       handle: r.handle!,
@@ -164,7 +202,7 @@ export async function searchAll(
   // fix is the same one named on buildDiscoverClasses: query the range
   // instead of expanding it.
   let classes: DirClass[] = [];
-  if (needle.length >= MIN) {
+  if (needle.length >= MIN || browse) {
     const gyms = await db.select().from(schema.users).where(eq(schema.users.kind, "gym"));
     const gymIds = gyms.map((g) => g.id);
     const [gymRows, marks] = await Promise.all([
@@ -186,7 +224,9 @@ export async function searchAll(
     // occurrences: a weekly class is many occurrences and one description, and
     // matching it fourteen times is the same answer fourteen times.
     const hit = new Map<string, boolean>();
-    for (const c of [...allClassRows, ...gymRows]) hit.set(c.id, classMatches(c, needle));
+    if (!browse) {
+      for (const c of [...allClassRows, ...gymRows]) hit.set(c.id, classMatches(c, needle));
+    }
     classes = buildDiscoverClasses({
       viewerId: userId,
       owners: [...listable, ...gyms],
@@ -196,7 +236,7 @@ export async function searchAll(
       studios: studioRows,
       marks,
     })
-      .filter((c) => hit.get(c.classId))
+      .filter((c) => browse || hit.get(c.classId))
       // A cap, said out loud: a common word over a fortnight is a lot of
       // occurrences, and a search is an answer rather than a schedule.
       .slice(0, CLASS_LIMIT);

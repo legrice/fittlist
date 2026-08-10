@@ -2316,7 +2316,18 @@ A member's hub is the full sheet now, by Matt's call: Week, Profile, QR
 code and Text, the same four segments a coach gets, because the week they
 build there is a real thing to share and their card and code always were.
 The one member state without the segments is the start block, whose whole
-job is the first add.
+job is the first add. The hub's one loud call (`.shcta`) rides sticky
+above the tab bar, by Matt's call: the hub runs long (the poster, the
+swatches, the chips) and Share was below the fold.
+
+The Search tab browses before it is asked anything, by Matt's call: the
+box on top, Recent under it (the rows you tapped, not the strings you
+typed, `fl-recent-searches` as before), then Nearby as a People /
+Studios / Classes segment with that kind's list below. `searchBrowse()`
+is `searchAll`'s own body run with no needle, so browsing can never
+offer a row the search would not (the block rules and `discoverable`
+are kept once); the one difference is the directory's quality bar comes
+back for coaches, because this is a list nobody asked for.
 
 The share hub carries both hats now: `shareWeek`'s coach branch loads the
 saved half (marks and personal rows) beside the teaching week, each item

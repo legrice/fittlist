@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { searchAll } from "@/app/actions/search";
+import { searchAll, searchBrowse } from "@/app/actions/search";
 import { PersonRow, StudioRow, type DirPerson, type DirStudio } from "@/components/DirectoryRows";
 import { ClassResults } from "@/components/ClassResults";
 import { useBandTop } from "@/components/CalendarBits";
@@ -83,6 +83,15 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState("");
   const [recent, setRecent] = useState<RecentHit[]>([]);
+  // The idle screen's Nearby lists, behind the People / Studios / Classes
+  // segment: the box is for a question, and before one is typed the screen
+  // browses, by Matt's call. Loaded once on arrival.
+  const [near, setNear] = useState<{
+    people: DirPerson[];
+    studios: DirStudio[];
+    classes: DirClass[];
+  } | null>(null);
+  const [nearSeg, setNearSeg] = useState<"people" | "studios" | "classes">("people");
   const box = useRef<HTMLInputElement>(null);
   // Each keystroke starts a request; only the newest one is allowed to write
   // its answer to the screen, or a slow "st" lands after "stacey" and the
@@ -97,6 +106,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
     box.current?.focus();
     const t = setTimeout(() => box.current?.focus(), 300);
     setRecent(readRecents());
+    searchBrowse().then(setNear);
     try {
       // The place field is gone for now, and its recents with it.
       localStorage.removeItem("fl-recent-locations");
@@ -136,6 +146,25 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
   const nothing =
     !short && !busy && asked === q.trim() && !people.length && !studios.length && !classes.length;
 
+  // A tap on any row is what writes Recent: not the string in the box, the
+  // row it led to. The anchor's own href says which one, and the browse
+  // lists remember the same way the results do.
+  const remember =
+    (ppl: DirPerson[], sts: DirStudio[]) => (e: MouseEvent<HTMLDivElement>) => {
+      const a = (e.target as HTMLElement).closest("a");
+      if (!a) return;
+      const m = (a.getAttribute("href") ?? "").match(/^\/(s\/[^/?]+|[^/?]+)(?:\?|$)/);
+      if (!m) return;
+      const base = m[1];
+      if (base.startsWith("s/")) {
+        const st = sts.find((x) => `s/${x.slug}` === base);
+        if (st) setRecent(writeRecent({ t: "s", name: st.name, base }));
+      } else {
+        const p = ppl.find((x) => x.handle === base);
+        if (p) setRecent(writeRecent({ t: "p", name: p.name, base }));
+      }
+    };
+
   return (
     <>
       <div className="dissearchrow">
@@ -146,16 +175,10 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             className="dissearch-in"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            // Deliberately narrower than what this screen answers: it still
-            // returns Studios and Classes as their own headed sections, and
-            // still matches a town and a discipline. Discover is one list of
-            // coaches now, so its door promising three halves sent people
-            // looking for two that are not on the screen they came from, and
-            // the door and this field have to say the same words or they are
-            // two doors. Under-promising is the safe side of that trade: the
-            // other sections are a bonus when they land rather than a promise
-            // that goes unmet. Widen it the day Discover carries them again.
-            placeholder="Search coaches by name"
+            // The same words as Discover's door: the door and this field
+            // have to agree or they are two doors, and the idle screen now
+            // browses all three kinds under the Nearby segment.
+            placeholder="Search coaches, classes, studios"
             aria-label="Search fittlist"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -169,64 +192,103 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
       </div>
 
       {short ? (
-        recent.length > 0 ? (
-          <div className="srchsec">
-            <h2 className="srchhead">
-              Recent
+        // Nothing typed yet: what you found before, then the neighborhood.
+        // Recent first because it is yours; Nearby below it as a triple
+        // segment (People, Studios, Classes) with that kind's list under
+        // it, by Matt's call, so the screen browses before it is asked
+        // anything.
+        <>
+          {recent.length > 0 && (
+            <div className="srchsec">
+              <h2 className="srchhead">
+                Recent
+                <button
+                  type="button"
+                  className="srchclear"
+                  onClick={() => {
+                    setRecent([]);
+                    try {
+                      localStorage.removeItem(RECENT_KEY);
+                    } catch {
+                      // Nothing to clear is the state they asked for anyway.
+                    }
+                  }}
+                >
+                  Clear
+                </button>
+              </h2>
+              {recent.map((r) => (
+                <Link key={r.base} className="recentrow" href={`/${r.base}?from=search`}>
+                  <Icon name={r.t === "s" ? "place" : "account_circle"} size={19} />
+                  {r.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          <div
+            className="srchsec"
+            onClickCapture={remember(near?.people ?? [], near?.studios ?? [])}
+          >
+            <h2 className="srchhead">Nearby</h2>
+            <div className="modetoggle srchseg">
               <button
                 type="button"
-                className="srchclear"
-                onClick={() => {
-                  setRecent([]);
-                  try {
-                    localStorage.removeItem(RECENT_KEY);
-                  } catch {
-                    // Nothing to clear is the state they asked for anyway.
-                  }
-                }}
+                className={nearSeg === "people" ? "sel" : ""}
+                onClick={() => setNearSeg("people")}
               >
-                Clear
+                People
               </button>
-            </h2>
-            {recent.map((r) => (
-              <Link key={r.base} className="recentrow" href={`/${r.base}?from=search`}>
-                <Icon name={r.t === "s" ? "place" : "account_circle"} size={19} />
-                {r.name}
-              </Link>
-            ))}
+              <button
+                type="button"
+                className={nearSeg === "studios" ? "sel" : ""}
+                onClick={() => setNearSeg("studios")}
+              >
+                Studios
+              </button>
+              <button
+                type="button"
+                className={nearSeg === "classes" ? "sel" : ""}
+                onClick={() => setNearSeg("classes")}
+              >
+                Classes
+              </button>
+            </div>
+            {!near ? (
+              <p className="peekempty">Looking around&hellip;</p>
+            ) : nearSeg === "people" ? (
+              near.people.length ? (
+                <div className="dislist dislist-bare">
+                  {near.people.map((p) => (
+                    <PersonRow key={p.id} person={p} from="search" />
+                  ))}
+                </div>
+              ) : (
+                <p className="peekempty">Nobody listed near you yet.</p>
+              )
+            ) : nearSeg === "studios" ? (
+              near.studios.length ? (
+                <div className="dislist dislist-bare">
+                  {near.studios.map((st) => (
+                    <StudioRow key={st.id} studio={st} from="search" />
+                  ))}
+                </div>
+              ) : (
+                <p className="peekempty">No studios listed yet.</p>
+              )
+            ) : near.classes.length ? (
+              <ClassResults classes={near.classes} todayIso={todayIso} from="search" />
+            ) : (
+              <p className="peekempty">Nothing listed for the next couple of weeks yet.</p>
+            )}
           </div>
-        ) : (
-          // No door back to Discover: the way in is Discover's own box now,
-          // so offering to open it from here is a circle.
-          <div className="empty-block">
-            <h2>Search fittlist</h2>
-            <p>Find a coach, a member or a studio by name. A city or a handle works too.</p>
-          </div>
-        )
+        </>
       ) : nothing ? (
         <div className="empty-block">
           <h2>Nothing matches that</h2>
           <p>Try another name, a town, or the link somebody gave you.</p>
         </div>
       ) : (
-        // A tap on any result is what writes Recent: not the string in the
-        // box, the row it led to. The anchor's own href says which one.
-        <div
-          onClickCapture={(e) => {
-            const a = (e.target as HTMLElement).closest("a");
-            if (!a) return;
-            const m = (a.getAttribute("href") ?? "").match(/^\/(s\/[^/?]+|[^/?]+)(?:\?|$)/);
-            if (!m) return;
-            const base = m[1];
-            if (base.startsWith("s/")) {
-              const st = studios.find((x) => `s/${x.slug}` === base);
-              if (st) setRecent(writeRecent({ t: "s", name: st.name, base }));
-            } else {
-              const p = people.find((x) => x.handle === base);
-              if (p) setRecent(writeRecent({ t: "p", name: p.name, base }));
-            }
-          }}
-        >
+        <div onClickCapture={remember(people, studios)}>
           {people.length > 0 && (
             <div className="srchsec">
               <h2 className="srchhead">
