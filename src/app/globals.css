@@ -6146,9 +6146,14 @@ button.ps-card { cursor: pointer; }
    reads as one line of controls rather than two sizes fighting. */
 .calbar-pills { margin: 0; padding: 0; overflow: visible; }
 .calbar-pills .catpill { height: 40px; }
+/* Real section titles, sentence case, by Matt's call: the small tracked
+   capitals read as metadata, and a screen of sections deserves headings
+   the way a booking app draws them. */
 .nearlbl {
-  display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ol); margin-bottom: 10px;
+  display: block;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 22px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15;
+  color: var(--ink); margin-bottom: 10px;
 }
 .catpills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px 4px; }
 .catpills::-webkit-scrollbar { display: none; }
