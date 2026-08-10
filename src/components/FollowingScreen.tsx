@@ -320,17 +320,37 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // Home is a catalog preview rather than a day view: the next eight
-  // occurrences across the window make the inventory visible even when any
-  // one weekday is quiet. The dedicated page keeps the day rail and filters.
+  // A deliberately short social layer: one upcoming class per followed
+  // coach, so Home shows useful opportunities rather than an activity log.
+  // Until member attendance is exposed by the feed loader, coaching is the
+  // honest social signal available here.
+  const socialRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
+    const followed = new Set(favIds);
+    const usedCoaches = new Set<string>();
+    return [...shown]
+      .filter((i) => i.coachId !== meId && followed.has(i.coachId))
+      .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
+      .filter((i) => {
+        if (usedCoaches.has(i.coachId)) return false;
+        usedCoaches.add(i.coachId);
+        return true;
+      })
+      .slice(0, 3)
+      .map(rowOf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, favIds, meId, coachById]);
+
+  // Home's broader catalog follows the social preview. Don't repeat those
+  // same occurrences immediately below it; the next six keep the page varied.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () =>
       [...shown]
+        .filter((i) => !socialRows.some((r) => r.key === i.key))
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .slice(0, 6)
         .map(rowOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, coachById, favIds],
+    [shown, socialRows, coachById, favIds],
   );
 
   const yourWeek = useMemo(() => {
@@ -627,6 +647,43 @@ export function FollowingScreen({
               <span><strong>Start building your week</strong><small>Add any class below to create a calendar you can share.</small></span>
             </div>
           )}
+        </section>
+      )}
+
+      {isHome && socialRows.length > 0 && (
+        <section className="home-social">
+          <div className="nearhead nearhead-row">
+            <span className="nearlbl">With your people</span>
+          </div>
+          <div className="socialplan-list">
+            {socialRows.map((r) => {
+              const coach = coachById.get(r.item.coachId);
+              return (
+                <article key={r.key} className="socialplan-item">
+                  <p className="socialplan-context">
+                    <span className="socialplan-face" aria-hidden="true">
+                      {coach?.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={coach.photo} alt="" />
+                      ) : (
+                        <span style={{ background: coach?.color }}>{initials(coach?.name ?? "Coach")}</span>
+                      )}
+                    </span>
+                    <span>
+                      {r.item.saved ? (
+                        <>You&rsquo;re joining <strong>{coach?.name ?? "a coach you follow"}</strong></>
+                      ) : (
+                        <><strong>{coach?.name ?? "A coach you follow"}</strong> is coaching this week</>
+                      )}
+                    </span>
+                  </p>
+                  <div className="disflat socialplan-card">
+                    {renderRow(meId, notify, todayIso)(r)}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </section>
       )}
 
