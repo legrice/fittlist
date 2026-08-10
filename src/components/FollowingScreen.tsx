@@ -394,7 +394,7 @@ export function FollowingScreen({
       {nearStudios.length > 0 && (
         <section className="nearrail">
           <div className="nearhead nearhead-row">
-            <span className="nearlbl">Studios near you</span>
+            <span className="nearlbl">Local studios</span>
             <Link className="nearhead-go" href="/search?seg=studios" aria-label="All studios">
               <Icon name="arrow_forward" size={22} />
             </Link>

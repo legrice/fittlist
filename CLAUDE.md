@@ -2270,9 +2270,10 @@ and members are told apart, because there it is useful: an Everyone /
 Coaches only segment, a Coach tag and next-class time on coach rows,
 neither on a member's, and Follow on every row, unlimited.
 
-Under the schedule, the places and the people, by Matt's call: Studios
-near you as rectangles on a rail (a place is a room, a person is a
-face), closest first without asking anybody for a pin: the viewer's
+Under the schedule, the places and the people, by Matt's call: Local
+studios ("Studios near you" renamed, by Matt's call) as rectangles on
+a rail (a place is a room, a person is a face), closest first without
+asking anybody for a pin: the viewer's
 city leads, and inside it the rail sorts by miles from the city's own
 centre, guessed honestly as the average of its pinned studios. When
 the browser has already

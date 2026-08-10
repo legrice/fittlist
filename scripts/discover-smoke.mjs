@@ -123,7 +123,7 @@ console.log("the card ribbon fills in place and lights the You ring");
 // Under the schedule: the studios as rectangles, closest first, and the
 // coaches with Follow one tap deep, by Matt's call. Every head's arrow
 // lands on Search with that kind's segment already picked.
-await m.locator(".nearlbl", { hasText: "Studios near you" }).waitFor();
+await m.locator(".nearlbl", { hasText: "Local studios" }).waitFor();
 await m.locator(".strail-item", { hasText: "Drew Gym" }).first().waitFor();
 await m.locator(".nearlbl", { hasText: "Find friends" }).waitFor();
 const drewNear = m.locator(".ctrail-item", { hasText: "Drew" }).first();
