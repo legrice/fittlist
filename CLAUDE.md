@@ -2291,6 +2291,13 @@ followed (Requested at a gated coach, and the pill disappears once
 it's a yes). Both ride `buildDiscoverFeed` (`nearStudios`,
 `localCoaches`), so the block rules and `discoverable` are kept once.
 
+The shell is flat warm gray now (`--ground`), by Matt's call, gradient
+gone on the tabs screens and the logged-out landing alike: the screens
+carry real imagery (heroes, studio tiles, faces), and the fade was
+colour competing with colour. The calendar's segment reads All,
+Coaching, Saved, and the picked pill fills brand orange
+(`.calpills .catpill.on`).
+
 Info leads every person's profile, by Matt's call: the bare handle
 lands on who this is, and Schedule is one pill over at
 /{handle}/schedule (which now serves members too, since their Schedule

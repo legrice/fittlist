@@ -109,8 +109,8 @@ await p.locator(".clline").first().waitFor();
   if (!(await p.locator(".caltitle", { hasText: "Calendar" }).count()))
     fail("the word Calendar rides above the segment");
   const pills = (await p.locator(".calbar-pills .catpill").allInnerTexts()).map((t) => t.trim());
-  if (pills.join("|") !== "All|Saved|Coaching")
-    fail("the segment reads All | Saved | Coaching, got " + pills.join("|"));
+  if (pills.join("|") !== "All|Coaching|Saved")
+    fail("the segment reads All | Coaching | Saved, got " + pills.join("|"));
   console.log("Add floats at", Math.round(fbox.x) + "," + Math.round(fbox.y), "| the segment holds the title row");
 }
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-cal-week.png" });

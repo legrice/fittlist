@@ -252,7 +252,7 @@ export function CalendarScreen({
         <div className="calbar">
           {!bare && (
             <div className="catpills calpills calbar-pills" role="tablist" aria-label="Which of your things">
-              {(["all", "saved", "coaching"] as const).map((k) => (
+              {(["all", "coaching", "saved"] as const).map((k) => (
                 <button
                   key={k}
                   role="tab"

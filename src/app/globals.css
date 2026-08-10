@@ -137,21 +137,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--si); outlin
 a { color: inherit; }
 
 .screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--shell); }
-/* The tabs shell is the Health treatment: the warmth runs essentially
-   the first viewport and scrolls away with the page into the warm gray,
-   and nothing pins; the overlay header (.scrollhead) is the only thing
-   that stays. It went flat gray for a moment and came back, by Matt's
-   call both times: the fade is something to look at. The cards sit
-   flat on it (no shadows), because the fade is the depth. */
+/* Flat warm gray, by Matt's call, third swing of this pendulum and the
+   reason is new: the screens carry real imagery now (heroes, studio
+   tiles, faces), and the fade was colour competing with colour. The
+   ground steps back and the content is the warmth. */
 .screen.hasnav {
-  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+  background: var(--ground);
   --band: transparent;
 }
 .screen.hasnav .brandbar { background: transparent; position: static; }
-/* The logged-out landing wears the same fade, by Matt's call: the first
-   thing anybody sees and the app they sign into are one surface. */
+/* The logged-out landing matches the app it signs into, by Matt's call:
+   one surface, and that surface is flat now. */
 .screen.ob {
-  background: linear-gradient(180deg, var(--grad-top) 0px, var(--grad-mid) 34vh, var(--ground) 100vh);
+  background: var(--ground);
 }
 .screen.hasnav .dayband { position: static; }
 /* The overlay header replaces the pinned chrome, so a landing only has to
@@ -6235,7 +6233,8 @@ button.ps-card { cursor: pointer; }
 /* A quiet day is a line, not a screenful: the tabs right above it are the
    way to a louder one. */
 .dayempty { text-align: center; font-size: 14.5px; color: var(--ol); padding: 46px 0; }
-.calpills .catpill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* The picked one goes brand orange, by Matt's call. */
+.calpills .catpill.on { background: var(--si); border-color: var(--si); color: #fff; }
 
 /* RSVP's two lines on the class sheet: the count once somebody is in,
    and where the name goes, said before the tap. */
