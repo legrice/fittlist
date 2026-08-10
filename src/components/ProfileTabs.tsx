@@ -167,7 +167,10 @@ export function ProfileTabs({
         {t.label}
       </Link>
     );
-    if (!t.info) return <Fragment key={t.key}>{link}</Fragment>;
+    // The info dot only rides its tab while that tab is the one you are
+    // on, by Matt's call: pinned to an unselected pill it read as a stray
+    // control that fell out of the row.
+    if (!t.info || tab !== t.key) return <Fragment key={t.key}>{link}</Fragment>;
     return (
       <span key={t.key} className={`pubtab-pair${tab === t.key ? " sel" : ""}`}>
         {link}

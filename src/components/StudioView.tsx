@@ -18,6 +18,7 @@ import { CommunityNote } from "@/components/CommunityNote";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { StudioMenu } from "@/components/StudioMenu";
+import { StudioPhotoCta } from "@/components/StudioPhotoCta";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { StudioSchedule, type StudioDay } from "@/components/StudioSchedule";
 import { Wordmark } from "@/components/Wordmark";
@@ -281,9 +282,27 @@ export async function StudioView({
 
   const base = `/s/${s.slug ?? s.id}`;
 
+  // What the editor needs, once: the dots menu and the hero's photo button
+  // open the same editor over the same row.
+  const editProps = {
+    id: s.id,
+    name: s.name,
+    address: s.address,
+    types: s.types,
+    about: s.about ?? "",
+    photo: s.photo,
+    contactEmail: s.contactEmail ?? "",
+    phone: s.phone ?? "",
+    website: s.website ?? "",
+    instagram: s.instagram ?? "",
+  };
+
   return (
     <div
-      className={`pub profile${signedIn ? " hasnav" : ""}${s.photo ? " pub-hero" : ""}`}
+      // pub-hero whether or not there is a photo, by Matt's call: a
+      // no-photo studio wears its colour as the same full-bleed hero, so
+      // the two pages are one page.
+      className={`pub profile${signedIn ? " hasnav" : ""} pub-hero`}
       data-mode={await viewerLook()}
     >
       <div className="profwrap">
@@ -314,33 +333,21 @@ export async function StudioView({
           title=""
           location={s.address}
           // The same full-bleed hero a coach's page wears, by Matt's call:
-          // one design for every profile. A photo-less studio keeps the
-          // coloured banner below, because a place has no face to fall back
-          // to a circle of.
+          // one design for every profile, photo or not. Without a photo the
+          // hero fills with the studio's own colour (the same one its
+          // directory row derives), the name overlays it in white exactly
+          // as it would a photograph, and the photo button offers anyone
+          // allowed through the editor the way to fix the emptiness: a
+          // coach who teaches there is exactly who has a picture of the
+          // room.
           heroPhoto={s.photo}
-          // A studio's photo is a place, not a face, so it comes as the wide
-          // rectangle its old page led with: a circle crops a room down to a
-          // porthole, and the rectangle is also what tells a studio apart
-          // from a person at a glance. No photo keeps the coloured circle
-          // face; a full-width empty rectangle is a wall.
-          avatar={
-            /* One layout whether or not there is a photo: the banner space
-               is always there, filled by the picture or by the studio's own
-               colour (the same one its directory row derives), so a page
-               without a photo is not a different page. */
-            <span className="profbanner-wrap">
-              {s.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="profbanner" src={s.photo} alt={s.name} />
-              ) : (
-                <span
-                  className="profbanner profbanner-empty"
-                  style={{ background: avatarColor({ id: s.id }) }}
-                  aria-hidden="true"
-                />
-              )}
-            </span>
+          heroColor={avatarColor({ id: s.id })}
+          heroCta={
+            canEdit && !s.photo ? <StudioPhotoCta studio={editProps} /> : undefined
           }
+          // The hero always renders (photo or colour), so the circle-avatar
+          // slot has nothing to draw: a place has no face.
+          avatar={null}
           backTo={backTo}
           // Above the name on every skin, hero and banner alike; the white
           // pill already reads over a photograph.
@@ -353,18 +360,7 @@ export async function StudioView({
               canEdit={canEdit}
               claimed={access.claimed}
               signedIn={signedIn}
-              studio={{
-                id: s.id,
-                name: s.name,
-                address: s.address,
-                types: s.types,
-                about: s.about ?? "",
-                photo: s.photo,
-                contactEmail: s.contactEmail ?? "",
-                phone: s.phone ?? "",
-                website: s.website ?? "",
-                instagram: s.instagram ?? "",
-              }}
+              studio={editProps}
             />
           }
           actions={

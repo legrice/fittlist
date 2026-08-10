@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
-import { landingHref } from "@/lib/flags";
 import { invitesBannerCount } from "@/app/actions/invites";
 import { feedbackHost, feedbackPromptDue } from "@/lib/feedback";
 import { adminEmails } from "@/lib/admin";
@@ -35,11 +34,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // In parallel: these are independent, and this layout runs on every tab
   // switch, so awaiting them one by one stacked four round trips onto every
   // tap of the bar.
-  const [unread, promptDue, invitesLeft, landing] = await Promise.all([
+  const [unread, promptDue, invitesLeft] = await Promise.all([
     unreadNotifications(userId),
     feedbackPromptDue(userId),
     invitesBannerCount(),
-    landingHref(),
   ]);
   // "How is it going?", once they have been here long enough to know.
   const askFeedback = promptDue ? await feedbackHost() : null;
@@ -67,7 +65,10 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
             adminEmails().includes(me.email.toLowerCase()) &&
             (await adminActivityFreshSince(me.adminActivityAt))
           }
-          home={landing}
+          // The wordmark goes Home, by Matt's call: /feed is the front
+          // door for everyone now, whatever landingHref answers for
+          // sign-in.
+          home="/feed"
           // The magnifier is back in the corner, right of the bell, by
           // Matt's call: Discover's search bar came off and the corner is
           // where the act moved. No gear: settings are the circle on your

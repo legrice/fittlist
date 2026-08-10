@@ -6329,10 +6329,30 @@ button.ps-card { cursor: pointer; }
   display: inline-flex; align-items: center; gap: 2px;
   font-size: 14.5px; font-weight: 600; color: var(--ink); text-decoration: none;
 }
-.aboutpage { max-width: 560px; }
-.aboutpage h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 18px 0 6px; }
-.aboutpage p { margin: 14px 0; font-size: 15.5px; line-height: 1.6; color: var(--ink); }
-.about-one { font-weight: 600; font-size: 17px; }
+/* Editorial and spacious, per the copy's own styling notes: typography
+   and air make the hierarchy, nothing is boxed or bolded mid-paragraph.
+   Two hero statements bookend the page; the sections are plain headers;
+   the closing lines sit a step down from them. */
+.aboutpage { max-width: 560px; padding-bottom: 26px; }
+.aboutpage h1 {
+  font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -.01em;
+  margin: 26px 0 18px;
+}
+.aboutpage h2 {
+  font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -.005em;
+  margin: 44px 0 12px;
+}
+.aboutpage h3 {
+  font-size: 16.5px; line-height: 1.4; font-weight: 600;
+  margin: 26px 0 4px;
+}
+.aboutpage h3 + h3 { margin-top: 14px; }
+.aboutpage p { margin: 14px 0; font-size: 15.5px; line-height: 1.65; color: var(--ink); }
+.about-one {
+  font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -.01em;
+  margin: 44px 0 18px;
+}
+.aboutpage p.about-one { font-size: 30px; line-height: 1.15; }
 .contribute-cta { width: 100%; margin-top: 22px; }
 
 /* A rail head is the label and its arrow: the door to the same kind on

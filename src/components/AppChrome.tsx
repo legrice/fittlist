@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { adminEmails } from "@/lib/admin";
 import { adminActivityFreshSince } from "@/lib/adminactivity";
 import { avatarColor } from "@/lib/avatar";
-import { fansVisible, landingHref } from "@/lib/flags";
+import { fansVisible } from "@/lib/flags";
 import { unreadNotifications } from "@/lib/notify";
 import { AppHeader } from "@/components/AppHeader";
 import { NavBar } from "@/components/NavBar";
@@ -77,11 +77,10 @@ export async function AppChrome({
   const header = (
     <AppHeader
       unread={unread}
-      // The logo goes to the landing tab for everyone with the member side.
-      // It used to send a coach to /app, which since the one-shell change is
-      // the bare editable schedule: a page with no identity that read as
-      // showing up at random.
-      home={fans ? await landingHref() : "/app"}
+      // The logo goes Home, by Matt's call: /feed is the front door for
+      // everyone with the member side, whatever landingHref answers for
+      // sign-in.
+      home={fans ? "/feed" : "/app"}
       // The magnifier rides right of the bell wherever the member side
       // exists, by Matt's call. The gear survives only where there is no
       // member side at all: the coaches-only mode has no tab bar, so it is

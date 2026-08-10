@@ -231,7 +231,7 @@ await m.locator(".dayband").first().waitFor();
 if (await m.locator(".younew").count()) fail("arriving on the Share screen puts the ring out");
 await m.locator(".abouthome-go", { hasText: "About FittList" }).click();
 await m.waitForURL(/\/about/);
-await m.locator(".aboutpage h1", { hasText: "What FittList is" }).waitFor();
+await m.locator(".aboutpage h1", { hasText: "public record" }).first().waitFor();
 await m.locator(".contribute-cta", { hasText: "Contribute" }).click();
 await m.locator(".contribsheet .setrow", { hasText: "Add a class" }).waitFor();
 await m.locator(".contribsheet .setrow", { hasText: "Add a studio" }).waitFor();

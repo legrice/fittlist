@@ -2284,9 +2284,26 @@ followed (Requested at a gated coach, and the pill disappears once
 it's a yes). Both ride `buildDiscoverFeed` (`nearStudios`,
 `localCoaches`), so the block rules and `discoverable` are kept once.
 
+A studio's page wears the same full-bleed hero a person's does, photo
+or not, by Matt's call: without a photo the hero fills with the
+studio's own colour, the name and address overlay it in white, and the
+header's white wordmark and icons ride it exactly as they ride a
+photograph. The old coloured banner-with-name-below is gone. The colour
+hero carries the same white photo button a person's does (`herocta`),
+offered to anyone allowed through the editor (`StudioPhotoCta`, the
+commons rule: a coach who teaches there is exactly who has a picture of
+the room), opening the ordinary studio editor behind the same word
+about care the dots give. The community info dot only rides the
+Schedule tab while that tab is selected: pinned to an unselected pill
+it read as a stray control. And the wordmark goes to /feed for everyone
+with the member side: Home is the front door, whatever `landingHref`
+answers for sign-in.
+
 Home ends on what this is: an About block (one paragraph and a door to
-/about, which carries the public-record manifesto) and, at the end of
-that page, Contribute: a sheet with the three ways in (add a class,
+/about, which carries Matt's manifesto copy word for word, in his own
+hierarchy: hero statements top and bottom, plain section headers, the
+closing lines a step down, typography and spacing doing all the work,
+nothing boxed) and, at the end of that page, Contribute: a sheet with the three ways in (add a class,
 add a studio, which is the same adder because naming a new studio on a
 class is what makes its page exist, and handing fittlist to a coach
 via the native share). The header splits messages from notifications,
