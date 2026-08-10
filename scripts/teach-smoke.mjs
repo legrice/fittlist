@@ -27,19 +27,18 @@ await p.waitForURL("**/feed");
 const tabs = async () =>
   (await p.locator(".navtab").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
 
-// Five tabs for everyone, by Matt's call: Home (Discover renamed, by
-// Matt's call), then Calendar, Search, Share, and Profile wearing the
-// viewer's face.
+// Four tabs for everyone, by Matt's call: Home, Calendar, Share, and
+// Profile wearing the viewer's face. Search left the bar for the
+// header's corner.
 let t = await tabs();
 console.log("member tabs:", t.join(" | "));
-if (t.length !== 5) fail("everyone gets five tabs, got " + t.join());
+if (t.length !== 4) fail("everyone gets four tabs, got " + t.join());
 if (
   !t[0].includes("Home") ||
   !t[1].includes("Calendar") ||
-  !t[2].includes("Search") ||
-  !t[3].includes("Share")
+  !t[2].includes("Share")
 )
-  fail("the bar is Home, Calendar, Search, Share, Profile: " + t.join());
+  fail("the bar is Home, Calendar, Share, Profile: " + t.join());
 if (!(await p.locator(".navtab[data-tab='you'] .navface-initial, .navtab[data-tab='you'] .navface-photo").count()))
   fail("the Profile tab should wear the viewer's face");
 await p.goto(BASE + "/calendar");
@@ -113,8 +112,8 @@ if (!(await row.locator(".switch.on").count())) fail("the switch should read on"
 // plainly not worked; router.refresh() has to reach the whole shell.
 t = await tabs();
 console.log("after turning it on:", t.join(" | "));
-if (t.length !== 5 || !t[0].includes("Home") || !t[1].includes("Calendar") || !t[2].includes("Search") || !t[3].includes("Share"))
-  fail("expected Home, Calendar, Search, Share, got " + t.join());
+if (t.length !== 4 || !t[0].includes("Home") || !t[1].includes("Calendar") || !t[2].includes("Share"))
+  fail("expected Home, Calendar, Share, got " + t.join());
 await p.screenshot({ path: (process.env.SMOKE_OUT ?? ".") + "/shot-teach-on.png" });
 
 // ...and the calendar is real: it loads, and offers the first class.
@@ -131,8 +130,8 @@ await p.locator(".setrow", { hasText: "I coach classes" }).click();
 await p.waitForTimeout(2500);
 t = await tabs();
 console.log("after turning it off:", t.join(" | "));
-if (t.length !== 5 || !t[1].includes("Calendar"))
-  fail("turning it off keeps five tabs, got " + t.join());
+if (t.length !== 4 || !t[1].includes("Calendar"))
+  fail("turning it off keeps four tabs, got " + t.join());
 
 await b.close();
 console.log("ALL TEACH CHECKS PASSED");

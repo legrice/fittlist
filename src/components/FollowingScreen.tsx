@@ -9,7 +9,7 @@ import { CoachPeek } from "@/components/CoachPeek";
 import { DiscoverSheet } from "@/components/DiscoverSheet";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
-import { ClassLine, DayBand, initials, type WeekRow } from "@/components/WeekView";
+import { initials } from "@/components/WeekView";
 import { initialOf } from "@/lib/avatar";
 
 export type FeedCoach = {
@@ -108,14 +108,6 @@ export type FeedItem = {
  *  density and takes the peek with it. Raise it when density does. */
 const RAIL_MIN_PEOPLE = 1;
 
-/** How many cards the Upcoming rail draws: a taste, not the list. The
- *  arrow in the head opens the whole thing on Search's Classes segment. */
-const UPCOMING_RAIL = 12;
-
-/** When the horizon outgrows a vertical list and the rail takes over, by
- *  Matt's call: the banded list until it grows too long, then the cards. */
-const LIST_MAX = 30;
-
 /**
  * Home: the This week rail, then three rails of what's around you.
  *
@@ -202,51 +194,14 @@ export function FollowingScreen({
 
   const coachById = useMemo(() => new Map(coaches.map((c) => [c.id, c])), [coaches]);
 
-  // The rail's cards: the next things near you, in time order, capped
-  // because a rail is a taste and the arrow is the whole list.
-  const upcoming = useMemo(() => {
-    const kept = [...items].sort((a, b) =>
-      a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
-    );
-    return kept.slice(0, UPCOMING_RAIL);
-  }, [items]);
-
-  // The vertical list until it grows too long, by Matt's call: a small
-  // horizon reads best as the banded days, and the compact card rail
-  // takes over once the whole thing stops fitting a scroll.
-  const rail = items.length > LIST_MAX;
-
-  // One row mapping for the banded list. No duration on this list, by
-  // Matt's call: the length is the class page's fact, and the left column
-  // is the clock alone.
-  const rowOf = (i: FeedItem): WeekRow & { item: FeedItem } => {
-    const c = coachById.get(i.coachId);
-    return {
-      item: i,
-      key: i.key,
-      name: i.name,
-      where: i.where,
-      hm: i.hm,
-      ap: i.ap,
-      coach: c ? { id: c.id, name: c.name, color: c.color, photo: c.photo } : null,
-      onTap: () => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId))),
-    };
-  };
-
-  // Every day at once, banded.
-  const dayGroups = useMemo(() => {
-    const kept = [...items].sort((a, b) =>
-      a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1,
-    );
-    const byIso = new Map<string, FeedItem[]>();
-    for (const i of kept) byIso.set(i.iso, [...(byIso.get(i.iso) ?? []), i]);
-    return [...byIso.entries()].map(([iso, list]) => ({
-      iso,
-      label: bandLabel(iso, todayIso),
-      rows: list.map(rowOf),
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, coachById, favIds, todayIso]);
+  // The cards, in time order: one presentation now, by Matt's call, the
+  // stacked leaf cards, so the leaf carries the date and no bands are
+  // needed.
+  const upcoming = useMemo(
+    () =>
+      [...items].sort((a, b) => (a.iso === b.iso ? a.mins - b.mins : a.iso < b.iso ? -1 : 1)),
+    [items],
+  );
 
   // Hide the rail rather than draw it dead: following nobody keeps the
   // teaching state (ghosts and one line), following only people with
@@ -387,64 +342,48 @@ export function FollowingScreen({
               <Icon name="arrow_forward" size={22} />
             </Link>
           </div>
-          {rail ? (
-            // The horizon outgrew a scroll: the compact cards, a taste,
-            // the arrow the whole list.
-            <div className="uprail">
-              {upcoming.map((i) => {
-                const c = coachById.get(i.coachId);
-                const d = new Date(`${i.iso}T00:00:00Z`);
-                const dow =
-                  i.iso === todayIso
-                    ? "Today"
-                    : d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-                return (
-                  <div key={i.key} className="uprail-card">
-                    <button
-                      className="uprail-go"
-                      onClick={() => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId)))}
-                    >
-                      <span className={`uprail-date${i.iso === todayIso ? " today" : ""}`}>
-                        <span className="uprail-dow">{dow}</span>
-                        <span className="uprail-dom">{d.getUTCDate()}</span>
+          <div className="upstack">
+            {upcoming.map((i) => {
+              const c = coachById.get(i.coachId);
+              const d = new Date(`${i.iso}T00:00:00Z`);
+              const dow =
+                i.iso === todayIso
+                  ? "Today"
+                  : d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+              return (
+                <div key={i.key} className="uprail-card">
+                  <button
+                    className="uprail-go"
+                    onClick={() => setPeek(peekOf(i, c ?? null, favIds.includes(i.coachId)))}
+                  >
+                    <span className={`uprail-date${i.iso === todayIso ? " today" : ""}`}>
+                      <span className="uprail-dow">{dow}</span>
+                      <span className="uprail-dom">{d.getUTCDate()}</span>
+                    </span>
+                    <span className="uprail-txt">
+                      <span className="uprail-nm">{i.name}</span>
+                      <span className="uprail-sub">
+                        {i.hm}
+                        {i.ap.toLowerCase()}
+                        {i.where ? ` · ${i.where}` : ""}
                       </span>
-                      <span className="uprail-txt">
-                        <span className="uprail-nm">{i.name}</span>
-                        <span className="uprail-sub">
-                          {i.hm}
-                          {i.ap.toLowerCase()}
-                          {i.where ? ` · ${i.where}` : ""}
-                        </span>
-                        {c && <span className="uprail-who">{c.name.split(/\s+/)[0]}</span>}
-                      </span>
-                    </button>
-                    {i.coachId !== meId && (
-                      <SaveCorner
-                        classId={i.classId}
-                        iso={i.iso}
-                        name={i.name}
-                        initial={i.saved}
-                        onToast={notify}
-                        bare
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            // The previous list style, back by Matt's call: the banded
-            // days, one flat row per class, Save across from the coach's
-            // line.
-            <div className="cardwrap">
-              {dayGroups.map((d) => (
-                <section key={d.iso} className="dayblock">
-                  <DayBand label={d.label} today={d.iso === todayIso} />
-                  <div className="disflat">{d.rows.map(renderRow(meId, notify))}</div>
-                </section>
-              ))}
-            </div>
-          )}
+                      {c && <span className="uprail-who">{c.name.split(/\s+/)[0]}</span>}
+                    </span>
+                  </button>
+                  {i.coachId !== meId && (
+                    <SaveCorner
+                      classId={i.classId}
+                      iso={i.iso}
+                      name={i.name}
+                      initial={i.saved}
+                      onToast={notify}
+                      bare
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
 
@@ -599,36 +538,6 @@ function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: nu
     Math.sin(dLat / 2) ** 2 +
     Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 3958.8 * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-}
-
-/** One row in the banded list: the flat line with Save across from the
- *  coach's own line. A sibling of the row, never a child. Your own class
- *  carries none, because setGoing would refuse it. */
-const renderRow =
-  (meId: string | undefined, notify: (msg: string, hlKey?: string) => void) =>
-  // eslint-disable-next-line react/display-name
-  (r: WeekRow & { item: FeedItem }) => (
-    <div key={r.key} className="clrow">
-      <ClassLine row={r} />
-      {r.item.coachId !== meId && (
-        <SaveCorner
-          classId={r.item.classId}
-          iso={r.item.iso}
-          name={r.item.name}
-          initial={r.item.saved}
-          onToast={notify}
-        />
-      )}
-    </div>
-  );
-
-/** "Today, Aug 9", then the date: the same words the calendars use. */
-function bandLabel(iso: string, today: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-  if (iso === today) return `Today, ${md}`;
-  const wd = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-  return `${wd}, ${md}`;
 }
 
 /** One circle on the Coaches near you rail: the face opens their page, and

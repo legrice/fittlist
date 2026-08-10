@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
+import { MemberProfileView } from "@/components/MemberProfileView";
 import { PublicProfileView } from "@/components/PublicProfileView";
 
 export const dynamic = "force-dynamic";
@@ -43,19 +44,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// /{handle}/schedule, kept alive: it was the shareable schedule link before the
-// schedule became the bare handle, and links in the wild don't get to break.
+// /{handle}/schedule is the Schedule pill's own address now that Info
+// leads the bare handle, by Matt's call, and it was the shareable schedule
+// link long before that, so it serves both kinds.
 export default async function SchedulePage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { from } = await searchParams;
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
-  // A member claims a handle too, and has no schedule behind it. /{handle}
-  // already routes them to their own page; this one has nothing to show.
-  if (user.kind === "fan") notFound();
 
   const viewerId = await getSessionUserId();
   if (await isBlocked(user.id, viewerId)) notFound();
+  // A member's Schedule pill points here too now, so the page renders
+  // their view rather than refusing the kind.
+  if (user.kind === "fan") {
+    return (
+      <MemberProfileView
+        user={user}
+        isOwner={viewerId === user.id}
+        viewerId={viewerId}
+        tab="schedule"
+        from={from}
+      />
+    );
+  }
   return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="schedule" from={from} />;
 }

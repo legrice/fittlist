@@ -6277,6 +6277,10 @@ button.ps-card { cursor: pointer; }
 }
 .uprail::-webkit-scrollbar { display: none; }
 .uprail-card { position: relative; flex: 0 0 auto; width: 250px; }
+/* Stacked, by Matt's call: the same leaf card at full width, one per
+   occurrence down the page. The leaf carries the date, so no bands. */
+.upstack { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+.upstack .uprail-card { width: 100%; }
 .uprail-go {
   display: flex; align-items: center; gap: 12px; width: 100%;
   background: var(--card); border: 0; border-radius: 16px; padding: 12px;
@@ -6353,7 +6357,13 @@ button.ps-card { cursor: pointer; }
   margin: 44px 0 18px;
 }
 .aboutpage p.about-one { font-size: 30px; line-height: 1.15; }
-.contribute-cta { width: 100%; margin-top: 22px; }
+/* Sticky above the tab bar, by Matt's call: the page is long and the ask
+   is the point, so it rides the scroll the way the hub's Share does. */
+.contribute-cta {
+  width: 100%; margin-top: 22px;
+  position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 5;
+  box-shadow: 0 4px 16px rgba(17, 17, 17, .18);
+}
 
 /* A rail head is the label and its arrow: the door to the same kind on
    Search, a plain right arrow by Matt's call, no words. */
@@ -6362,10 +6372,11 @@ button.ps-card { cursor: pointer; }
 .nearhead-row { margin-bottom: 12px; }
 .nearhead-go { display: inline-flex; align-items: center; color: var(--ink); padding: 4px 0 4px 12px; }
 
-.ctrail { gap: 14px; }
+/* 10, down from 14, by Matt's call: the faces read as one row of people. */
+.ctrail { gap: 10px; }
 .ctrail-item {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  width: 88px;
+  width: 80px;
 }
 .ctrail-go {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -7306,6 +7317,9 @@ a.clspeek-by:active { opacity: .6; }
   margin: 0; font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
   font-size: 34px; font-weight: 600; letter-spacing: -.012em; color: var(--ink);
 }
+/* The word above the segment, by Matt's call: its own line under the
+   logo, a step smaller than the old title row's 34. */
+.caltitle { font-size: 26px; padding: 2px 0 10px; }
 /* List and Month, as one control rather than two buttons: they are two ways of
    looking at one thing, and a segment is what says so. Light all over, by
    Matt's call: the edge is the input border rather than ink, and the current

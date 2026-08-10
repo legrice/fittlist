@@ -157,10 +157,11 @@ export async function MemberProfileView({
           base={`/${user.handle ?? ""}`}
           tab={tab}
           tabs={[
-            // The tab names what's behind it: a built week says Schedule,
+            // Info leads, by Matt's call, same as a coach's page. The tab
+            // after it names what's behind it: a built week says Schedule,
             // and until there is one the coaches they follow are the page.
-            { key: "schedule", label: week.length ? "Schedule" : "Following" },
             { key: "about", label: "Info" },
+            { key: "schedule", label: week.length ? "Schedule" : "Following" },
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a

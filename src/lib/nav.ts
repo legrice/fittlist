@@ -52,11 +52,9 @@ export function navTabs(
       icon: "calendar_month",
       label: "Calendar",
     },
-    // Search is a tab now, by Matt's call: as the app fills in, everything
-    // you act on lives in the bottom bar, and finding things earns a place
-    // of its own rather than a field on Home. The magnifier left the
-    // header and Home's search bar with it: one act, one door.
-    { id: "search", href: "/search", icon: "search", label: "Search" },
+    // Search left the bar, by Matt's call: the magnifier lives in the
+    // header's corner now, and the same glyph in two places on one screen
+    // was two doors to one room. /search itself is unchanged.
     // Everyone's now, by Matt's call: it came off the member's bar while a
     // member had nothing to give, and the hub is where they build the week
     // they're going to before handing it on, so the tab is the way in. One

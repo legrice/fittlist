@@ -328,8 +328,33 @@ export async function buildDiscoverFeed(
   // distance once the distance filter has already earned geolocation.
   const allStudios = await db.select().from(schema.studios).orderBy(schema.studios.name);
   const myCity = (me.location ?? "").split(",")[0].trim().toLowerCase();
-  const nearStudios: NearStudio[] = allStudios
-    .map((s) => ({
+  // Closest first without asking anybody for a pin, by Matt's call: the
+  // viewer's city has a centre we can honestly guess (the average of its
+  // own pinned studios), and distance from it beats the alphabet. The
+  // client still re-sorts by the real pin when the browser has one.
+  const withLocal = allStudios.map((s) => ({
+    s,
+    local: !!myCity && s.address.toLowerCase().includes(myCity),
+  }));
+  const pinsHome = withLocal.filter((x) => x.local && x.s.lat != null && x.s.lng != null);
+  const center = pinsHome.length
+    ? {
+        lat: pinsHome.reduce((t, x) => t + x.s.lat!, 0) / pinsHome.length,
+        lng: pinsHome.reduce((t, x) => t + x.s.lng!, 0) / pinsHome.length,
+      }
+    : null;
+  const rad = (x: number) => (x * Math.PI) / 180;
+  const milesFromCenter = (lat: number | null, lng: number | null): number => {
+    if (!center || lat == null || lng == null) return Number.MAX_SAFE_INTEGER;
+    const dLat = rad(lat - center.lat);
+    const dLng = rad(lng - center.lng);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(rad(center.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
+    return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+  const nearStudios: NearStudio[] = withLocal
+    .map(({ s, local }) => ({
       id: s.id,
       slug: s.slug ?? s.id,
       name: s.name,
@@ -337,10 +362,15 @@ export async function buildDiscoverFeed(
       color: avatarColor({ id: s.id }),
       lat: s.lat ?? null,
       lng: s.lng ?? null,
-      local: !!myCity && s.address.toLowerCase().includes(myCity),
+      local,
     }))
-    // Stable, so name order holds inside each half.
-    .sort((a, b) => Number(b.local) - Number(a.local));
+    // Your city first, then miles from its centre, then the name for the
+    // rows no pin can place. Stable, so name order holds where it must.
+    .sort(
+      (a, b) =>
+        Number(b.local) - Number(a.local) ||
+        milesFromCenter(a.lat, a.lng) - milesFromCenter(b.lat, b.lng),
+    );
 
   // Coaches near you: every listable coach, your city first, then whoever
   // teaches soonest, with the viewer's follow state riding along so the

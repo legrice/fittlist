@@ -246,12 +246,11 @@ export function CalendarScreen({
           because two screens working it out separately is how they end up
           disagreeing by a few pixels nobody can explain. */}
       <CalSticky>
+        {/* The word is back above the segment, by Matt's call: Calendar
+            under the logo, then the pills as the row of controls. */}
+        <h1 className="calbar-t caltitle">Calendar</h1>
         <div className="calbar">
-          {/* The All / Saved / Coaching segment where the word "Calendar"
-              stood, by Matt's call: the tab under your thumb already says
-              which screen this is, and the segment is the one control the
-              title row owed a coach. */}
-          {!bare ? (
+          {!bare && (
             <div className="catpills calpills calbar-pills" role="tablist" aria-label="Which of your things">
               {(["all", "saved", "coaching"] as const).map((k) => (
                 <button
@@ -265,8 +264,6 @@ export function CalendarScreen({
                 </button>
               ))}
             </div>
-          ) : (
-            <h1 className="calbar-t">Calendar</h1>
           )}
           {/* Two glyphs rather than two words. A list and a month grid both
               draw themselves in an icon better than they name themselves: the

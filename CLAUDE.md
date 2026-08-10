@@ -2199,16 +2199,14 @@ Matt's call, route stays /feed, `home` glyph): the This week rail, then
 three rails of what's around you, each head carrying a bare right-arrow
 door (`.nearhead-go`, no words, by Matt's call) onto /search with that
 kind's segment already picked (`?seg=classes|studios|people`). Upcoming
-near you is the banded vertical list while the horizon is small
-(`LIST_MAX` in FollowingScreen), back by Matt's call: the flat rows
-with Save across from the coach line, because a small horizon reads
-best as the days themselves. Past that line the compact card rail
-takes over (`.uprail`): the date as a leaf on the left (Today tinted
-brand), the class beside it, the bare ribbon in the corner, capped at
-`UPCOMING_RAIL` because a rail is a taste and the arrow is the whole
-list. Either shape is every listable coach's classes, deduped to one
-row per class, opening the class peek on tap; your own rows carry no
-ribbon because setGoing would refuse the mark. A save never toasts, by Matt's call: it lights your
+near you is the stacked leaf cards, by Matt's call, after the flat
+banded list and the horizontal rail each had a build: one full-width
+card per occurrence (`.upstack`), the date as a leaf on the left
+(Today tinted brand), the class, time, place and coach beside it, the
+bare ribbon in the corner. The leaf carries the date, so no bands.
+The cards are every listable coach's classes, deduped to one row per
+class, opening the class peek on tap; your own carry no ribbon because
+setGoing would refuse the mark. A save never toasts, by Matt's call: it lights your
 own circle at the top instead, the brand ring plus a New badge on your
 face (`fl-you-new` in localStorage, so it survives navigation), and
 tapping it lands on the Share screen, which clears the ring on arrival
@@ -2274,7 +2272,10 @@ neither on a member's, and Follow on every row, unlimited.
 
 Under the schedule, the places and the people, by Matt's call: Studios
 near you as rectangles on a rail (a place is a room, a person is a
-face), the viewer's own city leading. When the browser has already
+face), closest first without asking anybody for a pin: the viewer's
+city leads, and inside it the rail sorts by miles from the city's own
+centre, guessed honestly as the average of its pinned studios. When
+the browser has already
 granted location somewhere else, the tiles say how far ("1.9 mi away")
 and the rail sorts by real miles, taken silently through the
 permissions API; nothing ever prompts on arrival, and a studio without
@@ -2283,6 +2284,14 @@ call), circles with a Follow pill under each face that isn't already
 followed (Requested at a gated coach, and the pill disappears once
 it's a yes). Both ride `buildDiscoverFeed` (`nearStudios`,
 `localCoaches`), so the block rules and `discoverable` are kept once.
+
+Info leads every person's profile, by Matt's call: the bare handle
+lands on who this is, and Schedule is one pill over at
+/{handle}/schedule (which now serves members too, since their Schedule
+pill points there). The coach calendar says its own name again: the
+word Calendar rides above the All/Saved/Coaching segment
+(`.caltitle`), under the logo. And the About page's Contribute call is
+sticky above the tab bar, the way the hub's Share is.
 
 A studio's page wears the same full-bleed hero a person's does, photo
 or not, by Matt's call: without a photo the hero fills with the
@@ -2321,12 +2330,12 @@ save the organizer can see: classes.rsvp flags it, the mechanism stays
 attendances, the ribbon becomes an RSVP button with "your name goes to
 whoever runs it" said before the tap, the count never ships empty, and
 the leader reads names, a door list, no check-in and no capacity on
-purpose). Five tabs for everyone, by Matt's call: Home (Discover
-renamed),
-Calendar (a member's is /week, a coach's /calendar, each kind bounced to
-its own), Search (its own place as the app fills in; the magnifier left
-the header and Home's search bar with it, one act one door), Share,
-Profile. The Profile tab lands on your public page, and settings are a
+purpose). Four tabs for everyone, by Matt's call: Home (Discover
+renamed), Calendar (a member's is /week, a coach's /calendar, each kind
+bounced to its own), Share, Profile. Search had a tab for a stretch and
+left the bar: the header's magnifier is the one door to /search now,
+and the same glyph in two places on one screen was two doors to one
+room. The Profile tab lands on your public page, and settings are a
 white circle in the corner the back button takes on somebody else's page
 (`SettingsGear corner` in the `profback` slot); the header thinned to
 the wordmark and the bell. The coach calendar holds both halves behind

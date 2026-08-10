@@ -468,8 +468,12 @@ export async function PublicProfileView({
           base={`/${handle}`}
           tab={tab}
           tabs={[
-            { key: "schedule", label: "Schedule" },
+            // Info leads, by Matt's call: the bare handle lands on who this
+            // is, and the schedule is one pill over. The first tab's href is
+            // the base, so /{handle} is Info now and /{handle}/schedule the
+            // calendar, both of which already resolved.
             { key: "about", label: "Info" },
+            { key: "schedule", label: "Schedule" },
             ...(studios ? [{ key: "studios", label: "Studios" }] : []),
             { key: "following", label: "Following" },
           ]}

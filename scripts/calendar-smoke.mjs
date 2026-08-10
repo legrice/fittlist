@@ -105,7 +105,9 @@ await p.locator(".clline").first().waitFor();
   const fbox = await fab.boundingBox();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
-  if (await p.locator(".calbar-t").count()) fail("the word Calendar gave its spot to the segment");
+  // The word is back above the segment, by Matt's call.
+  if (!(await p.locator(".caltitle", { hasText: "Calendar" }).count()))
+    fail("the word Calendar rides above the segment");
   const pills = (await p.locator(".calbar-pills .catpill").allInnerTexts()).map((t) => t.trim());
   if (pills.join("|") !== "All|Saved|Coaching")
     fail("the segment reads All | Saved | Coaching, got " + pills.join("|"));
@@ -310,7 +312,10 @@ if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab 
   if (await p.locator(".usericon").count()) fail("the header carries no avatar");
   // And the schedule is the calendar's own rows, not a second design for one
   // list. No Teaching/Going segment either: going marks are gone, so the
-  // other half can only ever be empty.
+  // other half can only ever be empty. Info leads the page now, by Matt's
+  // call, so the rows live one pill over.
+  await p.locator(".pubtab", { hasText: "Schedule" }).click();
+  await p.locator(".pub .clline-nm").first().waitFor();
   if (await p.locator(".seg", { hasText: "Teaching" }).count())
     fail("the Teaching/Going segment should be gone");
   const names = (await p.locator(".pub .clline-nm").allInnerTexts()).map((t) => t.trim());
@@ -389,13 +394,12 @@ await p.goto(BASE + "/settings");
 await p.locator(".acctstats .acctstat", { hasText: "Followers" }).waitFor();
 
 // The Share tab is a place now: it lands on the hub screen with the bar
-// still underneath. Search is a tab of its own, by Matt's call, and the
-// header's magnifier left with the move: one act, one door.
+// still underneath. Search left the bar, by Matt's call: the magnifier in
+// the header's corner is the one door.
 await p.goto(BASE + "/calendar");
-if (!(await p.locator('.navtab[data-tab="search"]').count()))
-  fail("Search should be a tab in the bar");
-if (await p.locator(".findbtn:visible").count())
-  fail("the header magnifier is gone: Search is the tab");
+if (await p.locator('.navtab[data-tab="search"]').count())
+  fail("Search left the bar: the header magnifier is the door");
+await p.locator('.brandbar-actions [aria-label="Search"]').waitFor();
 await p.locator('.navtab[data-tab="share"]').click();
 await p.waitForURL(/\/coachshare/);
 if (!(await p.locator(".navtab").count())) fail("the hub keeps the tab bar: it is a tab's screen");
@@ -480,11 +484,11 @@ if (await p.locator(".shedit").count()) fail("the editor link should be gone");
 if (!(await p.locator(".shcta .btn", { hasText: "Share" }).count() + await p.locator(".shcta a", { hasText: "Save" }).count()))
   fail("the week segment should offer its image");
 console.log("the Share tab lands on the hub, and the hub is the whole screen");
-// The Search tab opens the search screen, tab lit.
+// The header magnifier opens the search screen.
 await p.goto(BASE + "/calendar");
-await p.locator('.navtab[data-tab="search"]').click();
+await p.locator('.brandbar-actions [aria-label="Search"]').click();
 await p.waitForURL(/\/search/);
-console.log("the Search tab opens the search screen");
+console.log("the header magnifier opens the search screen");
 await p.goto(BASE + "/calendar");
 await p.locator(".dayblock").first().waitFor();
 
