@@ -83,42 +83,6 @@ export type PeekClass = {
 /** The by-line: their face and their name, and a door to their week when they
  *  have a page. A coach with no handle is a gym's account, which is a place
  *  rather than a person and has nothing to open. */
-/** Follow, beside the coach's name: the same action the profile pill runs;
- *  the peek is just the moment of intent. It was a star for a build, and the
- *  updates brief ended that: one relationship word, Follow, no stars
- *  anywhere. Requested is what a gated account answers with. */
-export function PeekFollow({ handle, name, initial }: { handle: string; name: string; initial: boolean }) {
-  const [state, setState] = useState<"off" | "following" | "requested">(
-    initial ? "following" : "off",
-  );
-  const [busy, setBusy] = useState(false);
-  return (
-    <button
-      className={`peekfollow${state !== "off" ? " on" : ""}`}
-      disabled={busy}
-      aria-pressed={state !== "off"}
-      aria-label={state === "off" ? `Follow ${name}` : `Unfollow ${name}`}
-      onClick={async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (busy) return;
-        setBusy(true);
-        const { followTrainer, unfollowTrainer } = await import("@/app/actions/subscribe");
-        if (state === "off") {
-          const res = await followTrainer(handle);
-          if (res.ok) setState(res.requested ? "requested" : "following");
-        } else {
-          const res = await unfollowTrainer(handle);
-          if (res.ok) setState("off");
-        }
-        setBusy(false);
-      }}
-    >
-      {state === "following" ? "Following" : state === "requested" ? "Requested" : "Follow"}
-    </button>
-  );
-}
-
 function CoachBy({ coach }: { coach: NonNullable<PeekClass["coach"]> }) {
   const face = (
     <>
@@ -377,13 +341,6 @@ export function ClassPeek({
         {cls.coach && (
           <span className="clspeek-byrow">
             <CoachBy coach={cls.coach} />
-            {cls.coach.handle && cls.coach.favorited !== undefined && (
-              <PeekFollow
-                handle={cls.coach.handle}
-                name={cls.coach.name}
-                initial={cls.coach.favorited}
-              />
-            )}
           </span>
         )}
 
