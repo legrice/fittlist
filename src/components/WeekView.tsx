@@ -63,6 +63,8 @@ export type WeekRow = {
    *  add to calendar, report. A sibling of the row, never a child, so the
    *  row link stays a link. */
   menu?: Omit<ClassRowMenuProps, "name">;
+  /** A sibling action in the row's corner, kept outside the row button. */
+  corner?: ReactNode;
 };
 
 export type WeekDayRows = {
@@ -108,10 +110,11 @@ export function DayList({ days }: { days: WeekDayRows[] }) {
           <DayBand label={d.label} today={d.today} />
           <div className="dayrows">
             {d.rows.map((r) =>
-              r.menu ? (
+              r.menu || r.corner ? (
                 <div key={r.key} className="clrow">
                   <ClassLine row={r} />
-                  <ClassRowMenu {...r.menu} name={r.name} />
+                  {r.menu && <ClassRowMenu {...r.menu} name={r.name} />}
+                  {r.corner}
                 </div>
               ) : (
                 <ClassLine key={r.key} row={r} />

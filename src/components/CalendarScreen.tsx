@@ -16,6 +16,7 @@ import {
   type MonthCellItem,
 } from "@/components/CalendarBits";
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
+import { setGoing } from "@/app/actions/going";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
 import { PlanSheet } from "@/components/PlanSheet";
@@ -107,6 +108,12 @@ export function CalendarScreen({
   // classes (the browse sheet whole) or the publishing form, instead of a
   // browse screen with the form one segment away.
   const [addMenu, setAddMenu] = useState(false);
+  const [removeSaved, setRemoveSaved] = useState<null | {
+    classId: string;
+    iso: string;
+    name: string;
+  }>(null);
+  const [removingSaved, setRemovingSaved] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -181,6 +188,17 @@ export function CalendarScreen({
                   : null,
               tag: i.personal ? "Added by you" : "Saved",
               tagTone: i.personal ? ("personal" as const) : ("saved" as const),
+              corner: !i.personal ? (
+                <button
+                  className="rowsave bare on calendar-save"
+                  aria-label={`Remove ${i.name} from your calendar`}
+                  onClick={() =>
+                    setRemoveSaved({ classId: i.classId, iso: i.iso, name: i.name })
+                  }
+                >
+                  <Icon name="bookmark_added" size={20} />
+                </button>
+              ) : undefined,
               // A personal entry opens its own sheet (edit, share, remove);
               // a mark opens the class page it points at.
               onTap: i.personal
@@ -436,6 +454,47 @@ export function CalendarScreen({
                 </span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {removeSaved && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !removingSaved) setRemoveSaved(null);
+          }}
+        >
+          <div className="sheet confirmsheet">
+            <h2>Remove {removeSaved.name}?</h2>
+            <p className="lead">This class will be removed from your calendar.</p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                disabled={removingSaved}
+                onClick={async () => {
+                  setRemovingSaved(true);
+                  const res = await setGoing(removeSaved.classId, removeSaved.iso, false);
+                  setRemovingSaved(false);
+                  if (!res.ok) {
+                    toast("Couldn’t remove that class");
+                    return;
+                  }
+                  setRemoveSaved(null);
+                  toast("Removed from your calendar");
+                  router.refresh();
+                }}
+              >
+                {removingSaved ? "Removing…" : "Remove it"}
+              </button>
+            </div>
+            <button
+              className="confirm-keep"
+              disabled={removingSaved}
+              onClick={() => setRemoveSaved(null)}
+            >
+              Keep it
+            </button>
           </div>
         </div>
       )}
