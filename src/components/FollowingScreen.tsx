@@ -348,11 +348,15 @@ export function FollowingScreen({
     const newlyAdded = items
       .filter((i) => i.coachId !== meId && isAdded(i))
       .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }));
+    const weekEnds = plusDays(todayIso, 6);
     return [
       ...weekPreview.filter((i) => goingOverrides[i.key] !== false),
       ...newlyAdded,
       ...own,
     ]
+      // Your week is the seven-day plan starting today, not a small preview
+      // that quietly spills into later weeks when this one is sparse.
+      .filter((i) => i.iso >= todayIso && i.iso <= weekEnds)
       .sort((a, b) => a.iso.localeCompare(b.iso) || a.hm.localeCompare(b.hm))
       .filter((i) => {
         const key = `${i.iso}|${i.name}|${i.hm}`;
@@ -360,8 +364,8 @@ export function FollowingScreen({
         seen.add(key);
         return true;
       })
-      .slice(0, 3);
-  }, [items, meId, meKind, weekPreview, goingOverrides]);
+      .slice(0, 12);
+  }, [items, meId, meKind, weekPreview, goingOverrides, todayIso]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
