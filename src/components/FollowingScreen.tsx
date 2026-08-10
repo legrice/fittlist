@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setGoing } from "@/app/actions/going";
@@ -263,6 +263,35 @@ export function FollowingScreen({
     return Math.max(0, ...per.values()) > DENSE_DAY;
   }, [items]);
 
+  // The date rail only wears a ground once it is actually pinned, by
+  // Matt's call: at rest it sits on the page like the chips above it, and
+  // the solid appears the moment rows would otherwise scroll through it.
+  // Same drawing useStuck does, but against the rail's own sticky offset
+  // (--dayband-top) rather than the window's top.
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!dense) return undefined;
+    const el = tabsRef.current;
+    if (!el) return undefined;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const top = parseFloat(getComputedStyle(el).top) || 0;
+      el.classList.toggle("stuck", el.getBoundingClientRect().top <= top + 1);
+    };
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [dense]);
+
   // The selected day's rows, for the date-rail mode.
   const dayRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
     const list = shown.filter((i) => i.iso === day).sort((a, b) => a.mins - b.mins);
@@ -400,7 +429,7 @@ export function FollowingScreen({
       <div className="dissearchrow dishome-search">
         <Link className="dissearch dissearch-door" href="/search" aria-label="Search fittlist">
           <Icon name="search" size={21} className="dissearch-ic" />
-          <span className="dissearch-ph">Search coaches, classes, studios</span>
+          <span className="dissearch-ph">Find classes, coaches, and studios near you</span>
         </Link>
       </div>
 
@@ -509,7 +538,7 @@ export function FollowingScreen({
           to need them: tabs over a thin inventory are doors to near-empty
           rooms, so the whole horizon scrolls until then, by Matt's call. */}
       {dense && (
-        <div className="daytabs" role="tablist" aria-label="Day">
+        <div ref={tabsRef} className="daytabs" role="tablist" aria-label="Day">
           {dayTabs.map((t) => (
             <button
               key={t.iso}

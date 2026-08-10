@@ -178,7 +178,7 @@ export function SearchScreen({ todayIso }: { todayIso: string }) {
             // The same words as Discover's door: the door and this field
             // have to agree or they are two doors, and the idle screen now
             // browses all three kinds under the Nearby segment.
-            placeholder="Search coaches, classes, studios"
+            placeholder="Find classes, coaches, and studios near you"
             aria-label="Search fittlist"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus

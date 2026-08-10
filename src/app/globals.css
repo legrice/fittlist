@@ -4659,6 +4659,11 @@ button.ps-card { cursor: pointer; }
      left the whole app scrolled sideways. */
   font-family: inherit; font-size: 16px; color: var(--ink);
 }
+/* The placeholder alone steps down to the door's 15px so the full sentence
+   fits 390px; the input's own 16px stays, because the iOS zoom rule reads
+   the input, not the placeholder. */
+.dissearch-in::placeholder { font-size: 15px;
+}
 .dissearch-in::placeholder { color: var(--ol); }
 .dissearch-x {
   flex-shrink: 0; display: flex; border: none; background: none; padding: 4px; cursor: pointer;
@@ -5118,8 +5123,12 @@ button.ps-card { cursor: pointer; }
    of one line of placeholder and reads as an afterthought. */
 .dissearch-door { text-decoration: none; }
 .dissearch-ph {
-  flex: 1; font-size: 16px; color: var(--ol); padding: 15px 0;
+  flex: 1; font-size: 15px; color: var(--ol); padding: 15px 0;
   font-family: inherit; text-align: left;
+  /* One line, always: a door that wraps grows taller than the field it
+     is drawn as. At 15px the full sentence fits 390px; anything narrower
+     ellipsizes rather than folding. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* Recent finds: rows of what you tapped before (the person or place itself,
@@ -6199,10 +6208,13 @@ button.ps-card { cursor: pointer; }
   position: sticky; top: var(--dayband-top, 0px); z-index: 6;
   display: flex; overflow-x: auto; scrollbar-width: none;
   margin: 4px -18px 0; padding: 0 10px;
-  /* Solid, by Matt's call: the tabs shell sets --band transparent, and a
-     pinned row the list scrolls through is unreadable. */
-  background: var(--ground); border-bottom: 1px solid var(--div);
+  /* Bare at rest, solid once pinned, by Matt's call: on the page it sits
+     like the chips above it, and the ground appears the moment rows would
+     otherwise scroll through it (the screen's own effect writes .stuck). */
+  background: transparent; border-bottom: 1px solid var(--div);
+  transition: background-color .15s;
 }
+.daytabs.stuck { background: var(--ground); }
 .daytabs::-webkit-scrollbar { display: none; }
 .daytab {
   flex: 0 0 auto; padding: 10px 12px 11px; margin-bottom: -1px;
