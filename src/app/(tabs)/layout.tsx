@@ -76,7 +76,6 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
           // door for everyone now, whatever landingHref answers for
           // sign-in.
           home="/feed"
-          menu
           // The magnifier is back in the corner, right of the bell, by
           // Matt's call: Discover's search bar came off and the corner is
           // where the act moved. No gear: settings are the circle on your

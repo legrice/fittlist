@@ -1576,15 +1576,7 @@ button.bl-band { cursor: pointer; }
 }
 .ps-none { color: #928b78; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .brandbar .wordmark { font-size: 23px; }
-.brandbar-leading { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .brandbar-home { display: inline-flex; align-items: center; text-decoration: none; }
-.headermenu-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; margin-left: -6px; padding: 0;
-  border: none; border-radius: 999px; background: transparent; color: var(--ink);
-}
-.headermenu-btn:active { background: var(--cl); }
-.headermenu-sheet { padding-top: 30px; }
 .calbar-title {
   font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -.012em; line-height: 1;
   color: var(--ink); margin: 24px 0;
