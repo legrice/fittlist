@@ -6934,7 +6934,7 @@ a.clspeek-by:active { opacity: .6; }
    call: the picture is the label, so the word "Colors" came off. `safe
    center` keeps the row scrollable when sixteen swatches overflow; plain
    center would clip the left end off the scroller. */
-.shcolors { display: flex; align-items: center; margin-top: 4px; min-width: 0; }
+.shcolors { display: flex; align-items: center; margin-top: 0; min-width: 0; }
 .shcolors-row {
   flex: 1; display: flex; gap: 8px; overflow-x: auto; padding: 2px;
   margin: -2px 0; scrollbar-width: none;
@@ -7021,10 +7021,11 @@ a.clspeek-by:active { opacity: .6; }
    so the swipe lands anywhere on the row. */
 .shslides {
   display: flex; gap: 14px; align-items: flex-start;
-  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
   /* The bottom padding is the shadow's room: the scroller clips anything
      past its box, and the previews' 30px blur was cut square at 4px. */
-  margin: 6px calc(50% - 50vw) 0; padding: 12px max(7vw, calc(50vw - 280px)) 12px;
+  margin: 6px calc(50% - 50vw) 0; padding: 12px max(7vw, calc(50vw - 280px)) 8px;
+  transition: height .18s ease;
   -webkit-overflow-scrolling: touch;
 }
 .shslides::-webkit-scrollbar { display: none; }
