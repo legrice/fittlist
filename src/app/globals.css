@@ -7303,14 +7303,13 @@ a.clspeek-by:active { opacity: .6; }
 .clline-tag {
   margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--ink);
 }
-.clline-tag-coaching, .clline-tag-personal, .clline-tag-saved {
+.clline-tag-coaching, .clline-tag-personal {
   margin-top: 7px; padding: 3px 9px; border-radius: 999px;
   font-size: 11px; line-height: 1.2;
 }
 .clline-tag-coaching { background: var(--si-tint); color: var(--si-ink); }
 .clline-tag-personal { background: var(--rel-personal-bg); color: var(--rel-personal-ink); }
-.clline-tag-saved { background: var(--ink); color: var(--paper); }
-/* A saved class still names its coach, one line below its relationship badge. */
+/* A tagged class that also names a coach puts the person one line below. */
 .clline-tag + .clline-by { grid-row: 4; }
 
 /* Calendar uses the same soft cards as Home while preserving its continuous

@@ -186,8 +186,8 @@ export function CalendarScreen({
                 !i.personal && i.coachName
                   ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
                   : null,
-              tag: i.personal ? "Added by you" : "Saved",
-              tagTone: i.personal ? ("personal" as const) : ("saved" as const),
+              tag: i.personal ? "Added by you" : undefined,
+              tagTone: i.personal ? ("personal" as const) : undefined,
               corner: !i.personal ? (
                 <button
                   className="rowsave bare on calendar-save"
