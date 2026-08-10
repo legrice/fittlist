@@ -7,6 +7,7 @@ import { classDetail, type ClassDetail } from "@/app/actions/classdetail";
 import { setGoing } from "@/app/actions/going";
 import { giveUpShift, sendShiftTo } from "@/app/actions/gym";
 import { Icon } from "@/components/Icon";
+import { announceSaved } from "@/components/SaveEducation";
 
 /**
  * A class, tapped.
@@ -447,13 +448,15 @@ export function ClassPeek({
                     setSavedNow(!on);
                     const res = await setGoing(cls.id, cls.iso, !on);
                     if (!res.ok) setSavedNow(on);
-                    else if (!on)
+                    else if (!on) {
+                      announceSaved(cls.id, cls.iso);
                       onToast(
                         full.rsvp
                           ? "RSVP’d. It’s on your calendar."
                           : "Saved to your calendar",
                         `${cls.id}.${cls.iso}`,
                       );
+                    }
                     setSaveBusy(false);
                     onChanged();
                   }}

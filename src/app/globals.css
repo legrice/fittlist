@@ -2136,6 +2136,14 @@ button.ps-card { cursor: pointer; }
 }
 .dellink:active { opacity: .6; }
 .confirmsheet { max-width: 460px; }
+.saveeducation-icon, .circleeducation-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; margin-bottom: 16px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+}
+.saveeducation h2, .circleeducation h2 { margin-top: 0; }
+.saveeducation-actions { display: flex; flex-direction: column; gap: 8px; }
+.saveeducation-actions .btn { text-decoration: none; text-align: center; }
 /* What leaves, before the question is asked. A list of consequences after the
    fact is a list nobody read. */
 .dellist { margin: 10px 0 14px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }

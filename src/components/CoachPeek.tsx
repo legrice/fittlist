@@ -8,6 +8,7 @@ import { ClassOpener } from "@/components/ClassOpener";
 import { Icon } from "@/components/Icon";
 import { SwipeGoing } from "@/components/SwipeGoing";
 import { initialOf } from "@/lib/avatar";
+import { announceSaved } from "@/components/SaveEducation";
 
 /**
  * One person's week, opened from their circle, and the place you save from.
@@ -72,6 +73,7 @@ export function CoachPeek({
       // Put it back if the server disagreed. No toast: the sheet is still
       // open and the ribbon flipping back is the message.
       if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
+      else if (on) announceSaved(classId, iso);
     });
   };
 

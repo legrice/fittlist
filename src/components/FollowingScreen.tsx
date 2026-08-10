@@ -11,6 +11,7 @@ import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
 import { ClassLine, initials, type WeekRow } from "@/components/WeekView";
 import { Wordmark } from "@/components/Wordmark";
+import { announceSaved } from "@/components/SaveEducation";
 import { initialOf } from "@/lib/avatar";
 
 export type FeedCoach = {
@@ -197,6 +198,7 @@ export function FollowingScreen({
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [peekPerson, setPeekPerson] = useState<RailPerson | null>(null);
   const [find, setFind] = useState(false);
+  const [findIntro, setFindIntro] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
   // A save lights your own circle rather than toasting, by Matt's call:
   // the ring goes brand and a New badge rides your face, the same signal a
@@ -531,7 +533,17 @@ export function FollowingScreen({
                 <span className="trayitem-nm">{p.name.split(/\s+/)[0]}</span>
               </button>
             ))}
-            <button className="trayitem" onClick={() => setFind(true)}>
+            <button
+              className="trayitem"
+              onClick={() => {
+                try {
+                  if (localStorage.getItem("fl-circle-intro-seen")) setFind(true);
+                  else setFindIntro(true);
+                } catch {
+                  setFindIntro(true);
+                }
+              }}
+            >
               <span className="trayav trayav-add">
                 <Icon name="add" size={28} />
               </span>
@@ -758,6 +770,45 @@ export function FollowingScreen({
           People near you stays one tap away behind the rail's Add. */}
       {isHome && find && <DiscoverSheet onClose={closeFind} />}
 
+      {isHome && findIntro && (
+        <div
+          className="sheet-scrim"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFindIntro(false);
+          }}
+        >
+          <div className="sheet confirmsheet circleeducation">
+            <span className="circleeducation-icon" aria-hidden="true">
+              <Icon name="group" size={24} />
+            </span>
+            <h2>See what your people are doing</h2>
+            <p className="lead">
+              Follow friends and coaches to peek at the classes they&rsquo;re coaching and
+              the classes they&rsquo;ve saved to their week.
+            </p>
+            <div className="publishwrap nostick">
+              <button
+                className="btn si"
+                onClick={() => {
+                  try {
+                    localStorage.setItem("fl-circle-intro-seen", "1");
+                  } catch {
+                    // The explanation simply returns next time in private mode.
+                  }
+                  setFindIntro(false);
+                  setFind(true);
+                }}
+              >
+                Find people
+              </button>
+            </div>
+            <button className="confirm-keep" onClick={() => setFindIntro(false)}>
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* The filter sheets. The places one stays open while you tick,
           because multi-select through a closing sheet is miserable. */}
       {sheet && (
@@ -890,7 +941,10 @@ function SaveCorner({
         setOn(!on);
         const res = await setGoing(classId, iso, !on);
         if (!res.ok) setOn(on);
-        else if (!on) onToast("Saved to your calendar", `${classId}.${iso}`);
+        else if (!on) {
+          announceSaved(classId, iso);
+          onToast("Saved to your calendar", `${classId}.${iso}`);
+        }
         setBusy(false);
       }}
     >

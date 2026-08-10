@@ -5,6 +5,7 @@ import Link from "next/link";
 import { addBrowse, type BrowseDay } from "@/app/actions/discover";
 import { setGoing } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
+import { announceSaved } from "@/components/SaveEducation";
 
 // The Add screen's Discover half, per the brief: a browsable list of the
 // classes near you with an inline Save on each row, and the way to add one
@@ -43,6 +44,7 @@ export function AddBrowse({
     start(async () => {
       const res = await setGoing(classId, iso, on);
       if (!res.ok) setMarks((m) => ({ ...m, [key]: !on }));
+      else if (on) announceSaved(classId, iso);
     });
   };
 

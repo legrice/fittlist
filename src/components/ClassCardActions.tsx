@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { setGoing, setGoingVisibility } from "@/app/actions/going";
 import { Icon } from "@/components/Icon";
 import { Toast, useToast } from "@/components/Toast";
+import { announceSaved } from "@/components/SaveEducation";
 
 // The corner of a class row on a profile: the Add ribbon, for a member
 // looking at somebody else's class. A sibling of the row, never a child,
@@ -48,7 +49,7 @@ export function ClassCardActions({
         setOn(!next);
         setJustAdded(false);
         toast(res.error ?? "Something went wrong");
-      }
+      } else if (next) announceSaved(classId, iso);
     });
   };
 

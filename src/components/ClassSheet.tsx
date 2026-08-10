@@ -12,6 +12,7 @@ import { Adder } from "@/components/Adder";
 import { AgendaAvatar } from "@/components/Agenda";
 import { Icon } from "@/components/Icon";
 import { ShareCardSheet } from "@/components/ShareCardSheet";
+import { announceSaved } from "@/components/SaveEducation";
 import { readPhoto } from "@/lib/photo";
 import { Roster } from "@/components/Roster";
 import { Toast, useToast } from "@/components/Toast";
@@ -217,6 +218,7 @@ export function ClassSheet({
       }
       onChanged?.(next);
       if (next) {
+        announceSaved(c.id, c.whenIso);
         // A fresh mark is public, which is what setGoing writes; the row
         // below has to agree with the row that was just created rather than
         // with whatever the last mark on this class said.
