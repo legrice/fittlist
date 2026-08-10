@@ -2199,14 +2199,16 @@ Matt's call, route stays /feed, `home` glyph): the This week rail, then
 three rails of what's around you, each head carrying a bare right-arrow
 door (`.nearhead-go`, no words, by Matt's call) onto /search with that
 kind's segment already picked (`?seg=classes|studios|people`). Upcoming
-near you is a rail of event cards now (`.uprail`), by Matt's call: the
-date as a leaf on the left (Today tinted brand), the class, time, place
-and coach beside it, and the bare ribbon in the corner (the same
-SaveCorner, `bare`), capped at `UPCOMING_RAIL` because a rail is a
-taste and the arrow is the whole list. The cards are still every
-listable coach's classes, deduped to one row per class, still opening
-the class peek on tap; your own carry no ribbon because setGoing would
-refuse the mark. A save never toasts, by Matt's call: it lights your
+near you is the banded vertical list while the horizon is small
+(`LIST_MAX` in FollowingScreen), back by Matt's call: the flat rows
+with Save across from the coach line, because a small horizon reads
+best as the days themselves. Past that line the compact card rail
+takes over (`.uprail`): the date as a leaf on the left (Today tinted
+brand), the class beside it, the bare ribbon in the corner, capped at
+`UPCOMING_RAIL` because a rail is a taste and the arrow is the whole
+list. Either shape is every listable coach's classes, deduped to one
+row per class, opening the class peek on tap; your own rows carry no
+ribbon because setGoing would refuse the mark. A save never toasts, by Matt's call: it lights your
 own circle at the top instead, the brand ring plus a New badge on your
 face (`fl-you-new` in localStorage, so it survives navigation), and
 tapping it lands on the Share screen, which clears the ring on arrival
@@ -2285,8 +2287,12 @@ that page, Contribute: a sheet with the three ways in (add a class,
 add a studio, which is the same adder because naming a new studio on a
 class is what makes its page exist, and handing fittlist to a coach
 via the native share). The header splits messages from notifications,
-the way YouTube does, by Matt's call: the chat bubble opens Updates'
-Messages tab, the bell the notifications, the magnifier /search.
+the way YouTube does, by Matt's call, and they are two whole screens:
+the chat bubble opens /inbox (`MessagesScreen`, the threads alone), the
+bell /updates (notifications alone, and the screen says Notifications),
+the magnifier /search. The Updates segment went with the second door;
+`/updates?tab=messages` redirects to /inbox for the links out in the
+world.
 
 The vocabulary is four terms, each with one job: Follow (a person whose
 week you can see), Saved (you intend to go; the ribbon, the toasts),

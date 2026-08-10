@@ -91,34 +91,35 @@ await m.locator(".trayitem", { hasText: "You" }).first().waitFor();
 if (!(await m.locator(".trayav-you .trayav-ini, .trayav-you img").count()))
   fail("the You circle wears the viewer's own face");
 
-// Upcoming near you is a rail of event cards now, by Matt's call: the
-// date leaf, no filters, no date tabs, and the head's arrow the door to
-// Search's Classes segment.
+// Upcoming near you is the banded vertical list again while the horizon
+// is small, by Matt's call: the flat rows, no filters, no date tabs; the
+// card rail returns past LIST_MAX. The head's arrow is the door to
+// Search's Classes segment either way.
 await m.locator(".nearlbl", { hasText: "Upcoming near you" }).waitFor();
-if (await m.locator(".fchips").count()) fail("the filter chips came off with the vertical list");
-if (await m.locator(".daytabs").count()) fail("the date tabs came off with the vertical list");
-await m.locator(".uprail-card").first().waitFor();
+if (await m.locator(".fchips").count()) fail("the filter chips stayed off");
+if (await m.locator(".daytabs").count()) fail("the date tabs stayed off");
+await m.locator(".dayband").first().waitFor();
+if (await m.locator(".uprail-card").count()) fail("the card rail waits for a long horizon");
 for (const nm of ["Dawn Lift", "Noon Lift", "Dusk Lift", "Tuesday Flow"])
-  if (!(await m.locator(".uprail-nm", { hasText: nm }).count())) fail(nm + " must ride the rail");
-if (!(await m.locator(".uprail-date .uprail-dom").count())) fail("every card wears its date leaf");
-console.log("the landing: corner search, the faces, the Upcoming rail");
+  if (!(await m.locator(".clline-nm", { hasText: nm }).count())) fail(nm + " must list itself");
+console.log("the landing: corner search, the faces, the banded list");
 
-// The bare ribbon on a card saves in place. No toast, by Matt's call:
-// the save lights your own circle at the top of the rail instead, brand
-// ring plus a New badge on your face.
-const firstSave = m.locator(".uprail-card .rowsave").first();
-if (!(await firstSave.count())) fail("every card wears the bare ribbon");
+// The ribbon on a row saves in place. No toast, by Matt's call: the save
+// lights your own circle at the top of the rail instead, brand ring plus
+// a New badge on your face.
+const firstSave = m.locator(".rowsave").first();
+if (!(await firstSave.count())) fail("every row wears Save across from the coach line");
 await firstSave.click();
-await m.locator(".uprail-card .rowsave.on").first().waitFor();
+await m.locator(".rowsave.on", { hasText: "Saved" }).first().waitFor();
 if (await m.locator(".toast.on", { hasText: "Saved" }).count())
   fail("a save lights the ring, never toasts, by Matt's call");
 await m.locator(".trayav-you.trayav-ring").waitFor();
 await m.locator(".younew", { hasText: "New" }).waitFor();
-await m.locator(".uprail-card .rowsave.on").first().click();
-await m.waitForFunction(() => !document.querySelector(".uprail-card .rowsave.on"), null, {
+await m.locator(".rowsave.on").first().click();
+await m.waitForFunction(() => !document.querySelector(".rowsave.on"), null, {
   timeout: 10000,
 });
-console.log("the card ribbon fills in place and lights the You ring");
+console.log("the row ribbon fills in place and lights the You ring");
 
 // Under the schedule: the studios as rectangles, closest first, and the
 // coaches with Follow one tap deep, by Matt's call. Every head's arrow
@@ -136,12 +137,12 @@ await m.locator(".srchseg button.sel", { hasText: "Classes" }).waitFor();
 // date on its leaf, by Matt's call.
 await m.locator(".upstack-card .uprail-dom").first().waitFor();
 await m.goBack();
-await m.locator(".uprail-card").first().waitFor();
+await m.locator(".dayband").first().waitFor();
 console.log("the rails under the schedule, each arrow landing on its segment");
 
 // The class peek: Follow (no star), and Save in the footer. Scoped to the
 // sheet, because the Coaches near you rail behind it carries Follow too.
-await m.locator(".uprail-nm", { hasText: "Dusk Lift" }).first().click();
+await m.locator(".clline-nm", { hasText: "Dusk Lift" }).first().click();
 await m.locator(".clsfull .peekfollow", { hasText: "Follow" }).waitFor();
 if (await m.locator(".peekstar").count()) fail("no stars anywhere");
 await m.locator(".clsfull .peekfollow").click();
@@ -214,8 +215,8 @@ console.log("People near you: segment, tags, Follow on every row");
 // puts the ring out. The About block ends the scroll, and the page
 // behind it carries the Contribute sheet.
 await m.goto(BASE + "/feed");
-await m.locator(".uprail-card").first().waitFor();
-await m.locator(".uprail-card .rowsave:not(.on)").first().click();
+await m.locator(".dayband").first().waitFor();
+await m.locator(".rowsave:not(.on)").first().click();
 await m.locator(".trayav-you.trayav-ring").waitFor();
 await m.locator(".trayitem", { hasText: "You" }).first().click();
 await m.waitForURL(/\/membershare/);
@@ -223,7 +224,7 @@ await m.locator(".shareintro h2", { hasText: "Your week lives here" }).waitFor()
 await m.locator(".shareintro .btn", { hasText: "Continue" }).click();
 if (await m.locator(".shareintro").count()) fail("Continue closes the intro");
 await m.goto(BASE + "/feed");
-await m.locator(".uprail-card").first().waitFor();
+await m.locator(".dayband").first().waitFor();
 if (await m.locator(".younew").count()) fail("arriving on the Share screen puts the ring out");
 await m.locator(".abouthome-go", { hasText: "About FittList" }).click();
 await m.waitForURL(/\/about/);

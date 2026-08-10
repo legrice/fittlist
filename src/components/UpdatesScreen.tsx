@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Icon } from "@/components/Icon";
 
-// The Updates screen behind the header bell: one place for everything that
-// happened — a Notifications feed and the Messages (private-session) inbox,
-// switched by a segmented toggle.
+// Two screens now, by Matt's call, the way the header splits them: the bell
+// opens Notifications (this file's UpdatesScreen, notifications alone), the
+// chat bubble opens Messages (MessagesScreen at /inbox, threads alone). They
+// shared one screen behind a segmented toggle for a while, and the toggle
+// went with the second door: a screen named by its icon should hold exactly
+// what the icon promises.
 
 type Notif = {
   id: string;
@@ -72,48 +74,26 @@ function fmt(d: Date | string) {
 
 export function UpdatesScreen({
   notifications,
-  threads,
-  initialTab,
   header,
 }: {
   notifications: Notif[];
-  threads: Thread[];
-  initialTab: "notifications" | "messages";
   /** The app header, built on the server and handed down. */
   header?: React.ReactNode;
 }) {
-  const [tab, setTab] = useState<"notifications" | "messages">(initialTab);
-
-  const pick = (t: "notifications" | "messages") => {
-    setTab(t);
-    // Keep the URL shareable/back-button friendly without a navigation.
-    window.history.replaceState(null, "", t === "messages" ? "/updates?tab=messages" : "/updates");
-  };
-
   return (
     <div className="pad">
       {header}
       <div className="admintop pagetop">
         <div>
-          <h1>Updates</h1>
-          <p className="adminsub">Follows, requests, and messages</p>
+          <h1>Notifications</h1>
+          <p className="adminsub">Follows, requests, and what changed</p>
         </div>
         <Link className="iconbtn acctclose" aria-label="Close" href="/week">
           <Icon name="close" size={20} />
         </Link>
       </div>
 
-      <div className="seg updateseg">
-        <button className={tab === "notifications" ? "sel" : ""} onClick={() => pick("notifications")}>
-          Notifications
-        </button>
-        <button className={tab === "messages" ? "sel" : ""} onClick={() => pick("messages")}>
-          Messages
-        </button>
-      </div>
-
-      {tab === "notifications" ? (
-        notifications.length === 0 ? (
+      {notifications.length === 0 ? (
           <p className="adminempty" style={{ marginTop: 24 }}>
             Nothing yet. When someone follows your schedule, you&rsquo;ll see it here.
           </p>
@@ -162,8 +142,34 @@ export function UpdatesScreen({
               );
             })}
           </div>
-        )
-      ) : threads.length === 0 ? (
+        )}
+    </div>
+  );
+}
+
+/** The Messages screen behind the header's chat bubble, at /inbox: the
+ *  threads alone, nothing else wearing the name. */
+export function MessagesScreen({
+  threads,
+  header,
+}: {
+  threads: Thread[];
+  header?: React.ReactNode;
+}) {
+  return (
+    <div className="pad">
+      {header}
+      <div className="admintop pagetop">
+        <div>
+          <h1>Messages</h1>
+          <p className="adminsub">Private sessions and questions</p>
+        </div>
+        <Link className="iconbtn acctclose" aria-label="Close" href="/week">
+          <Icon name="close" size={20} />
+        </Link>
+      </div>
+
+      {threads.length === 0 ? (
         <p className="adminempty" style={{ marginTop: 24 }}>
           No messages yet. When someone requests a private session, it lands here.
         </p>
