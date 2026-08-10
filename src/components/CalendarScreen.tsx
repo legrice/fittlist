@@ -156,11 +156,10 @@ export function CalendarScreen({
             hm: t.hm,
             ap: t.ap,
             dur: `${c.durationMin} min`,
-            // An assigned shift says so above the name: which hat this row
-            // is comes before what the class is.
-            // The one attribution slot, per the brief: which hat comes
-            // before what the class is.
-            tag: c.shift ? "Shift" : "You\u2019re coaching",
+            // Coaching is a warm relationship badge whether the class is
+            // yours or an assigned shift; the detail sheet explains which.
+            tag: "Coaching",
+            tagTone: "coaching" as const,
             onTap: () => setPeek(peekOf(c, iso, where, st?.slug ? `/s/${st.slug}` : null, handle)),
           };
         });
@@ -180,7 +179,8 @@ export function CalendarScreen({
                 !i.personal && i.coachName
                   ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
                   : null,
-              tag: i.personal ? "Added by you" : undefined,
+              tag: i.personal ? "Added by you" : "Saved",
+              tagTone: i.personal ? ("personal" as const) : ("saved" as const),
               // A personal entry opens its own sheet (edit, share, remove);
               // a mark opens the class page it points at.
               onTap: i.personal
@@ -335,7 +335,9 @@ export function CalendarScreen({
         // reading "nothing coming up" is already looking.
         <WeekEmpty first={false} title="" body="" cta="Add a class" onCta={() => setAddOpen(true)} />
       ) : (
-        <DayList days={days} />
+        <div className="calendar-cardlist">
+          <DayList days={days} />
+        </div>
       )}
       </div>
 

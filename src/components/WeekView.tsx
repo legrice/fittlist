@@ -45,6 +45,8 @@ export type WeekRow = {
   /** A word above the name saying which kind of yours this is: "Shift" on a
    *  date a gym has you on. Which hat comes before what the class is. */
   tag?: string;
+  /** Optional relationship color for compact ownership badges. */
+  tagTone?: "coaching" | "personal" | "saved";
   /** What tapping does. Every row opens a sheet over the list rather than
    *  navigating: the list you came from is the thing you want back. */
   onTap?: () => void;
@@ -136,7 +138,11 @@ export function ClassLine({ row }: { row: WeekRow }) {
           at the same hour, by Matt's call: each is its own box now, and a
           box with a blank time column read as a box missing something
           rather than as a second thing at six. */}
-      {row.tag && <span className="clline-tag">{row.tag}</span>}
+      {row.tag && (
+        <span className={`clline-tag${row.tagTone ? ` clline-tag-${row.tagTone}` : ""}`}>
+          {row.tag}
+        </span>
+      )}
       {row.coach && (
         <span className="clline-by">
           <span className="clline-av" style={{ background: row.coach.color }}>
