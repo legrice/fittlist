@@ -37,7 +37,6 @@ export default async function UpcomingPage() {
         color: avatarColor(me),
       }}
       nearStudios={[]}
-      hasCalendar={false}
     />
   );
 }

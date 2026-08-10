@@ -150,7 +150,6 @@ export function FollowingScreen({
   meKind,
   meFace,
   nearStudios,
-  hasCalendar = false,
   mode = "home",
 }: {
   items: FeedItem[];
@@ -176,8 +175,6 @@ export function FollowingScreen({
   /** The rails under the schedule, by Matt's call: the places and the
    *  people around you, with Follow one tap deep. */
   nearStudios: NearStudio[];
-  /** Chooses between building an empty calendar and sharing a populated one. */
-  hasCalendar?: boolean;
   /** Home is a single-day preview; Upcoming is the dedicated filtered browser. */
   mode?: "home" | "upcoming";
 }) {
@@ -620,6 +617,24 @@ export function FollowingScreen({
                 </Link>
               ))}
             </div>
+            <Link
+              className="home-shareprompt yourweek-share"
+              href={meKind === "coach" ? "/coachshare" : "/membershare"}
+            >
+              <span className="home-shareprompt-copy">
+                <strong>Your week, ready to share</strong>
+                <span>Post your calendar to Instagram or save it as a photo.</span>
+                <span className="home-shareprompt-action">
+                  Share your week <Icon name="arrow_forward" size={17} />
+                </span>
+              </span>
+              <span className="home-shareprompt-visual" aria-hidden="true">
+                <span className="home-shareprompt-story">
+                  <i /><b>MY WEEK</b><em /><em /><em />
+                </span>
+                <span className="home-shareprompt-instagram"><i /></span>
+              </span>
+            </Link>
           ) : (
             <div className="yourweek-empty">
               <span className="yourweek-empty-icon"><Icon name="bookmark" size={22} /></span>
@@ -801,40 +816,6 @@ export function FollowingScreen({
             })}
           </div>
         </section>
-      )}
-
-      {isHome && (
-        <Link
-          className="home-shareprompt home-section"
-          href={
-            hasCalendar
-              ? meKind === "coach"
-                ? "/coachshare"
-                : "/membershare"
-              : "/calendar"
-          }
-        >
-          <span className="home-shareprompt-copy">
-            <strong>{hasCalendar ? "Your week, ready to share" : "Build a week worth sharing"}</strong>
-            <span>
-              {hasCalendar
-                ? "Post your calendar to Instagram or save it as a photo."
-                : "Add or save a class, then turn your calendar into a shareable story."}
-            </span>
-            <span className="home-shareprompt-action">
-              {hasCalendar ? "Share your week" : "Build your calendar"}
-              <Icon name="arrow_forward" size={17} />
-            </span>
-          </span>
-          <span className="home-shareprompt-visual" aria-hidden="true">
-            <span className="home-shareprompt-story">
-              <i />
-              <b>MY WEEK</b>
-              <em /><em /><em />
-            </span>
-            <span className="home-shareprompt-instagram"><i /></span>
-          </span>
-        </Link>
       )}
 
       {/* No floating search circle either: the Search tab took the act.

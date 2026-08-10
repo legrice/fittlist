@@ -6406,6 +6406,7 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 7px 20px rgba(25, 21, 2, .06);
   text-decoration: none;
 }
+.yourweek-share { margin-top: 10px; }
 .home-shareprompt-copy { min-width: 0; }
 .home-shareprompt-copy strong { display: block; font-size: 20px; line-height: 1.08; font-weight: 600; }
 .home-shareprompt-copy > span {

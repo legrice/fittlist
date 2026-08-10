@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, isNull, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { avatarColor } from "@/lib/avatar";
 import { hiddenFrom } from "@/lib/blocks";
@@ -32,8 +32,6 @@ export type DiscoverFeed = {
   /** The rails under the schedule: every studio, the viewer's city first,
    *  and every listable coach with the viewer's follow state riding along. */
   nearStudios: NearStudio[];
-  /** Whether Home can honestly offer Share rather than Build your calendar. */
-  hasCalendar: boolean;
 };
 
 /** How far ahead a face has to have something for the rail to carry it:
@@ -47,7 +45,7 @@ export async function buildDiscoverFeed(
   const db = await getDb();
   // By email, the way every other follow lookup does it: somebody who followed
   // before signing in still counts once the address has an account.
-  const [followRows, hidden, personalRows, ownClassRows] = await Promise.all([
+  const [followRows, hidden] = await Promise.all([
     db
       .select({
         trainerUserId: schema.subscribers.trainerUserId,
@@ -56,14 +54,6 @@ export async function buildDiscoverFeed(
       .from(schema.subscribers)
       .where(and(eq(schema.subscribers.email, me.email), isNull(schema.subscribers.optedOutAt))),
     hiddenFrom(userId),
-    db
-      .select({ specificDate: schema.personalClasses.specificDate, endsOn: schema.personalClasses.endsOn })
-      .from(schema.personalClasses)
-      .where(eq(schema.personalClasses.userId, userId)),
-    db
-      .select({ specificDate: schema.classes.specificDate, endsOn: schema.classes.endsOn })
-      .from(schema.classes)
-      .where(or(eq(schema.classes.userId, userId), eq(schema.classes.coachUserId, userId))),
   ]);
   const followed = followRows
     .map((r) => r.trainerUserId)
@@ -156,14 +146,6 @@ export async function buildDiscoverFeed(
       }
     }
   }
-  const hasUpcomingPersonal = personalRows.some(
-    (p) => (p.specificDate ? p.specificDate >= today : !p.endsOn || p.endsOn >= today),
-  );
-  const hasUpcomingCoaching = ownClassRows.some(
-    (c) => (c.specificDate ? c.specificDate >= today : !c.endsOn || c.endsOn >= today),
-  );
-  const hasCalendar = hasUpcomingPersonal || hasUpcomingCoaching || items.some((i) => i.saved);
-
   // One class, one row, however many accounts list it. A studio's listing
   // and the coach's own, or two coaches co-listing a slot, are the same
   // class in the reader's terms: same name, same start, same place, same
@@ -405,6 +387,5 @@ export async function buildDiscoverFeed(
     today,
     myRail,
     nearStudios,
-    hasCalendar,
   };
 }
