@@ -195,6 +195,12 @@ export function FollowingScreen({
   const [find, setFind] = useState(false);
   const [findIntro, setFindIntro] = useState(false);
   const [toastMsg, toastOn, toast] = useToast();
+  // Optimistic membership for this visit. Adding from the catalog should
+  // visibly move the occurrence into Your week without a route refresh.
+  const [goingOverrides, setGoingOverrides] = useState<Record<string, boolean>>({});
+  const isAdded = (item: FeedItem) => goingOverrides[item.key] ?? item.saved;
+  const changeGoing = (key: string, on: boolean) =>
+    setGoingOverrides((current) => ({ ...current, [key]: on }));
   // A save lights your own circle rather than toasting, by Matt's call:
   // the ring goes brand and a New badge rides your face, the same signal a
   // followed person's fresh week sends. Tapping it lands on the Share
@@ -320,37 +326,15 @@ export function FollowingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, day, coachById, favIds]);
 
-  // A deliberately short social layer: one upcoming class per followed
-  // coach, so Home shows useful opportunities rather than an activity log.
-  // Until member attendance is exposed by the feed loader, coaching is the
-  // honest social signal available here.
-  const socialRows: (WeekRow & { item: FeedItem })[] = useMemo(() => {
-    const followed = new Set(favIds);
-    const usedCoaches = new Set<string>();
-    return [...shown]
-      .filter((i) => i.coachId !== meId && followed.has(i.coachId))
-      .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
-      .filter((i) => {
-        if (usedCoaches.has(i.coachId)) return false;
-        usedCoaches.add(i.coachId);
-        return true;
-      })
-      .slice(0, 3)
-      .map(rowOf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shown, favIds, meId, coachById]);
-
-  // Home's broader catalog follows the social preview. Don't repeat those
-  // same occurrences immediately below it; the next six keep the page varied.
+  // Home's catalog is the next six occurrences across the week.
   const homeRows: (WeekRow & { item: FeedItem })[] = useMemo(
     () =>
       [...shown]
-        .filter((i) => !socialRows.some((r) => r.key === i.key))
         .sort((a, b) => a.iso.localeCompare(b.iso) || a.mins - b.mins)
         .slice(0, 6)
         .map(rowOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, socialRows, coachById, favIds],
+    [shown, coachById, favIds],
   );
 
   const yourWeek = useMemo(() => {
@@ -361,7 +345,14 @@ export function FollowingScreen({
             .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }))
         : [];
     const seen = new Set<string>();
-    return [...weekPreview, ...own]
+    const newlyAdded = items
+      .filter((i) => i.coachId !== meId && isAdded(i))
+      .map((i) => ({ key: i.key, iso: i.iso, name: i.name, hm: i.hm, ap: i.ap, where: i.where }));
+    return [
+      ...weekPreview.filter((i) => goingOverrides[i.key] !== false),
+      ...newlyAdded,
+      ...own,
+    ]
       .sort((a, b) => a.iso.localeCompare(b.iso) || a.hm.localeCompare(b.hm))
       .filter((i) => {
         const key = `${i.iso}|${i.name}|${i.hm}`;
@@ -370,7 +361,7 @@ export function FollowingScreen({
         return true;
       })
       .slice(0, 3);
-  }, [items, meId, meKind, weekPreview]);
+  }, [items, meId, meKind, weekPreview, goingOverrides]);
 
   // The date rail only wears a ground once it is actually pinned: at rest
   // it sits on the page like the chips above it, and the solid appears
@@ -612,7 +603,7 @@ export function FollowingScreen({
             <>
               <div className="yourweek-list">
                 {yourWeek.map((item) => (
-                  <Link key={item.key} className="yourweek-row" href="/calendar">
+                  <div key={item.key} className="yourweek-row">
                     <span className="yourweek-when">
                       <span className={`yourweek-date${item.iso === todayIso ? " today" : ""}`}>
                         {item.iso === todayIso ? "Today" : tabLabel(item.iso)}
@@ -620,28 +611,12 @@ export function FollowingScreen({
                       <span className="yourweek-time">{item.hm}{item.ap.toLowerCase()}</span>
                     </span>
                     <span className="yourweek-copy"><strong>{item.name}</strong><small>{item.where}</small></span>
-                    <Icon name="chevron_right" size={18} />
-                  </Link>
+                    <span className="yourweek-check" aria-label="Added to your week">
+                      <Icon name="check" size={18} />
+                    </span>
+                  </div>
                 ))}
               </div>
-              <Link
-                className="home-shareprompt yourweek-share"
-                href={meKind === "coach" ? "/coachshare" : "/membershare"}
-              >
-                <span className="home-shareprompt-copy">
-                  <strong>Your week, ready to share</strong>
-                  <span>Post your calendar to Instagram or save it as a photo.</span>
-                  <span className="home-shareprompt-action">
-                    Share your week <Icon name="arrow_forward" size={17} />
-                  </span>
-                </span>
-                <span className="home-shareprompt-visual" aria-hidden="true">
-                  <span className="home-shareprompt-story">
-                    <i /><b>MY WEEK</b><em /><em /><em />
-                  </span>
-                  <span className="home-shareprompt-instagram"><i /></span>
-                </span>
-              </Link>
             </>
           ) : (
             <div className="yourweek-empty">
@@ -649,43 +624,6 @@ export function FollowingScreen({
               <span><strong>Start building your week</strong><small>Add any class below to create a calendar you can share.</small></span>
             </div>
           )}
-        </section>
-      )}
-
-      {isHome && socialRows.length > 0 && (
-        <section className="home-social">
-          <div className="nearhead nearhead-row">
-            <span className="nearlbl">With your people</span>
-          </div>
-          <div className="socialplan-list">
-            {socialRows.map((r) => {
-              const coach = coachById.get(r.item.coachId);
-              return (
-                <article key={r.key} className="socialplan-item">
-                  <p className="socialplan-context">
-                    <span className="socialplan-face" aria-hidden="true">
-                      {coach?.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={coach.photo} alt="" />
-                      ) : (
-                        <span style={{ background: coach?.color }}>{initials(coach?.name ?? "Coach")}</span>
-                      )}
-                    </span>
-                    <span>
-                      {r.item.saved ? (
-                        <>You&rsquo;re joining <strong>{coach?.name ?? "a coach you follow"}</strong></>
-                      ) : (
-                        <><strong>{coach?.name ?? "A coach you follow"}</strong> is coaching this week</>
-                      )}
-                    </span>
-                  </p>
-                  <div className="disflat socialplan-card">
-                    {renderRow(meId, notify, todayIso)(r)}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
         </section>
       )}
 
@@ -786,7 +724,7 @@ export function FollowingScreen({
             <div className="cardwrap home-schedule">
               {isHome ? (
                 <div className="disflat home-next">
-                  {homeRows.map(renderRow(meId, notify, todayIso))}
+                  {homeRows.map(renderRow(meId, notify, isAdded, changeGoing, todayIso))}
                 </div>
               ) : (
                 <>
@@ -810,13 +748,34 @@ export function FollowingScreen({
                   <p className="dayempty">Nothing on {day === todayIso ? "today" : tabLabel(day)}.</p>
                 )
               ) : (
-                <div className="disflat">{dayRows.map(renderRow(meId, notify))}</div>
+                <div className="disflat">{dayRows.map(renderRow(meId, notify, isAdded, changeGoing))}</div>
               )}
                 </>
               )}
             </div>
           </div>
         </>
+      )}
+
+      {isHome && yourWeek.length > 0 && (
+        <Link
+          className="home-shareprompt home-shareprompt-bottom"
+          href={meKind === "coach" ? "/coachshare" : "/membershare"}
+        >
+          <span className="home-shareprompt-copy">
+            <strong>Your week, ready to share</strong>
+            <span>Post your calendar to Instagram or save it as a photo.</span>
+            <span className="home-shareprompt-action">
+              Share your week <Icon name="arrow_forward" size={17} />
+            </span>
+          </span>
+          <span className="home-shareprompt-visual" aria-hidden="true">
+            <span className="home-shareprompt-story">
+              <i /><b>MY WEEK</b><em /><em /><em />
+            </span>
+            <span className="home-shareprompt-instagram"><i /></span>
+          </span>
+        </Link>
       )}
 
       {/* No floating search circle either: the Search tab took the act.
@@ -966,20 +925,21 @@ function SaveCorner({
   classId,
   iso,
   name,
-  initial,
+  on,
   onToast,
+  onChange,
   bare = false,
 }: {
   classId: string;
   iso: string;
   name: string;
-  initial: boolean;
+  on: boolean;
   onToast: (msg: string, hlKey?: string) => void;
+  onChange: (on: boolean) => void;
   /** The glyph alone, for the rail's compact card: the aria-label still
    *  says the word. */
   bare?: boolean;
 }) {
-  const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
   return (
     <button
@@ -990,9 +950,9 @@ function SaveCorner({
       onClick={async () => {
         if (busy) return;
         setBusy(true);
-        setOn(!on);
+        onChange(!on);
         const res = await setGoing(classId, iso, !on);
-        if (!res.ok) setOn(on);
+        if (!res.ok) onChange(on);
         else if (!on) {
           announceSaved(classId, iso);
           onToast("Added to your week", `${classId}.${iso}`);
@@ -1000,7 +960,7 @@ function SaveCorner({
         setBusy(false);
       }}
     >
-      <Icon name={on ? "check_circle" : "add_circle"} size={20} />
+      <Icon name={on ? "check" : "add_circle"} size={20} />
       {!bare && <span>{on ? "Added" : "Add"}</span>}
     </button>
   );
@@ -1013,6 +973,8 @@ const renderRow =
   (
     meId: string | undefined,
     notify: (msg: string, hlKey?: string) => void,
+    isAdded: (item: FeedItem) => boolean,
+    changeGoing: (key: string, on: boolean) => void,
     labelFrom?: string,
   ) =>
   // eslint-disable-next-line react/display-name
@@ -1029,8 +991,9 @@ const renderRow =
           classId={r.item.classId}
           iso={r.item.iso}
           name={r.item.name}
-          initial={r.item.saved}
+          on={isAdded(r.item)}
           onToast={notify}
+          onChange={(on) => changeGoing(r.item.key, on)}
           bare
         />
       )}

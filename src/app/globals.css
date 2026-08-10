@@ -6048,6 +6048,10 @@ button.ps-card { cursor: pointer; }
 .yourweek-copy strong, .yourweek-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yourweek-copy strong { font-size: 15px; }
 .yourweek-copy small { margin-top: 3px; color: var(--ol); font-size: 12.5px; }
+.yourweek-check {
+  display: grid; place-items: center; width: 30px; height: 30px;
+  border-radius: 999px; background: var(--ink); color: var(--card);
+}
 .yourweek-empty {
   display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px;
   padding: 16px; border-radius: 18px; background: var(--card); color: var(--ink); text-decoration: none;
@@ -6056,23 +6060,6 @@ button.ps-card { cursor: pointer; }
 .yourweek-empty strong, .yourweek-empty small { display: block; }
 .yourweek-empty strong { font-size: 16px; }
 .yourweek-empty small { margin-top: 3px; color: var(--ol); font-size: 12.5px; line-height: 1.35; }
-.home-social { margin-top: 26px; }
-.socialplan-list { display: flex; flex-direction: column; gap: 14px; }
-.socialplan-context {
-  display: flex; align-items: center; gap: 8px; margin: 0 0 7px 4px;
-  color: var(--ol); font-size: 13px; line-height: 1.25;
-}
-.socialplan-context strong { color: var(--ink); font-weight: 600; }
-.socialplan-face {
-  flex: 0 0 auto; width: 24px; height: 24px; overflow: hidden;
-  border-radius: 999px; background: var(--cl);
-}
-.socialplan-face img, .socialplan-face > span {
-  display: grid; place-items: center; width: 100%; height: 100%; object-fit: cover;
-  color: white; font-size: 8px; font-weight: 600;
-}
-.socialplan-card { margin-top: 0; }
-
 /* Near you: the label and the category pills between the rail and the list. */
 /* ---------- The This week rail, the filter chips, the peek's follow ---------- */
 /* The ring is the freshness signal and the whole message: solid brand when
@@ -6108,7 +6095,7 @@ button.ps-card { cursor: pointer; }
   border: none; background: none; cursor: pointer; padding: 4px 0 4px 8px;
   font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
 }
-.rowsave.on { color: var(--ink); }
+.rowsave.on { border-radius: 999px; background: var(--ink); color: var(--card); }
 /* Home's icon-only ribbon sits across from the class name. The name clears
    its hit area; the coach line below gets the full card width again. */
 .disflat .clrow .clline-nm { padding-right: 38px; }
@@ -6417,7 +6404,7 @@ button.ps-card { cursor: pointer; }
   box-shadow: 0 1px 2px rgba(25, 21, 2, .05), 0 7px 20px rgba(25, 21, 2, .06);
   text-decoration: none;
 }
-.yourweek-share { margin-top: 10px; }
+.home-shareprompt-bottom { margin-top: 30px; }
 .home-shareprompt-copy { min-width: 0; }
 .home-shareprompt-copy strong { display: block; font-size: 20px; line-height: 1.08; font-weight: 600; }
 .home-shareprompt-copy > span {

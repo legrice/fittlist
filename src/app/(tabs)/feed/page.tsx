@@ -31,7 +31,9 @@ export default async function DiscoverPage() {
       meId={userId}
       myRail={feed.myRail}
       weekPreview={weekDays.flatMap((day) => day.items).map((item) => ({
-        key: item.id,
+        // Match the discovery occurrence key so an optimistic Add/Remove on
+        // Home can update this preview immediately without another fetch.
+        key: `${item.classId}|${item.iso}`,
         iso: item.iso,
         name: item.name,
         hm: item.hm,
