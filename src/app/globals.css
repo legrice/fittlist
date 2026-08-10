@@ -5951,20 +5951,20 @@ button.ps-card { cursor: pointer; }
 .tray-scroll::-webkit-scrollbar { display: none; }
 .trayitem {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  width: 86px; background: none; border: 0; padding: 0; cursor: pointer;
+  width: 78px; background: none; border: 0; padding: 0; cursor: pointer;
   text-decoration: none;
 }
-/* 80: up from 72 by Matt's call (the faces can carry more of the screen),
-   back down a step from 86 by the same voice. Three and a half fit 390px,
-   which still says the row scrolls. */
+/* 72: it went up to 80 for a build and came back down a step, by Matt's
+   call, so the circles read as a rail over the list rather than the list.
+   Four fit 390px with a fifth peeking, which still says the row scrolls. */
 .trayav {
-  position: relative; display: block; width: 80px; height: 80px; border-radius: 999px;
+  position: relative; display: block; width: 72px; height: 72px; border-radius: 999px;
   overflow: hidden; background: var(--card);
 }
 .trayav img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .trayav-ini {
   display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
-  color: #fff; font-size: 32px; font-weight: 600;
+  color: #fff; font-size: 28px; font-weight: 600;
 }
 /* Classes up since you last looked. The ring is the most important pixel on
    the screen, because it is the only thing that says the tray is worth a tap
@@ -5976,7 +5976,7 @@ button.ps-card { cursor: pointer; }
 }
 .trayitem-nm {
   font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none;
-  max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Discover's rail furniture: the label row over the faces, the next-class
    caption under each, the dashed ghosts that give a bare rail its shape,
@@ -6017,7 +6017,7 @@ button.ps-card { cursor: pointer; }
 /* At the page gutter: the tray bleeds to the screen edge, so the label
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
-.railbl { margin: 14px 18px 8px; }
+.railbl { margin: 22px 18px 8px; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {
@@ -6141,7 +6141,7 @@ button.ps-card { cursor: pointer; }
    the day headings' left edge. The old 18px inset put the whole block a
    gutter deeper than the list it headed. The top padding is the section
    break: sections need a breath between them, by Matt's call. */
-.nearhead { padding: 30px 0 2px; }
+.nearhead { padding: 40px 0 2px; }
 /* The segment standing where the word Calendar stood: the pills at the
    title row's own height, no bleed of their own. 40px matches the view
    toggle across from them (34px buttons in 3px of padding), so the row
