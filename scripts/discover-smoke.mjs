@@ -188,7 +188,12 @@ await m.locator(".peekclose").click();
 console.log("the peek: live rows, tags, the overlap");
 
 // Seen: the ring goes grey once the week has been opened.
-await m.locator(".trayav-ring.seen").waitFor({ timeout: 15000 });
+try {
+  await m.locator(".trayav-ring.seen").waitFor({ timeout: 15000 });
+} catch (e) {
+  await m.screenshot({ path: "/tmp/claude-0/-home-user-fittlist/f5c2d228-192a-574b-90ee-b3d90eac7295/scratchpad/ring-fail.png" });
+  throw e;
+}
 console.log("the ring goes out on the peek, not the close");
 
 // People near you: the segment, the Coach tag and next time, Follow rows.

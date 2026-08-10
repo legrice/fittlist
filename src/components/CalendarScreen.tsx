@@ -18,6 +18,7 @@ import {
 import { ClassPeek, type PeekClass } from "@/components/ClassPeek";
 import { HighlightOnLand } from "@/components/HighlightOnLand";
 import { Icon } from "@/components/Icon";
+import { PlanSheet } from "@/components/PlanSheet";
 import { Toast, useToast } from "@/components/Toast";
 import { DayList, WeekEmpty, type WeekDayRows } from "@/components/WeekView";
 import { clockParts, dayBandLabel, occurrenceEnded, runsOn, timeToMinutes } from "@/lib/format";
@@ -96,6 +97,12 @@ export function CalendarScreen({
   // The tapped occurrence, and the editor it can open onto.
   const [peek, setPeek] = useState<PeekClass | null>(null);
   const [edit, setEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
+  // A personal entry on the coach's calendar opens its own sheet, the same
+  // PlanSheet the member week uses: this capability shipped member-side
+  // only once before and the row sat dead here, which is the exact
+  // one-shape bug the doctrine warns about.
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planEdit, setPlanEdit] = useState<{ id: string; prefill: AdderPrefill } | null>(null);
   const [toastMsg, toastOn, toast] = useToast();
 
   const studioById = useMemo(() => new Map(studios.map((s) => [s.id, s])), [studios]);
@@ -170,8 +177,10 @@ export function CalendarScreen({
                   ? { id: i.classId, name: i.coachName, color: i.coachColor, photo: i.coachPhoto }
                   : null,
               tag: i.personal ? "Added by you" : undefined,
+              // A personal entry opens its own sheet (edit, share, remove);
+              // a mark opens the class page it points at.
               onTap: i.personal
-                ? undefined
+                ? () => setPlan(i.id)
                 : () => router.push(`/${i.handle}/${i.classId}?d=${i.iso}`),
             }));
       const coachingRows = pill === "saved" ? [] : rows;
@@ -216,7 +225,9 @@ export function CalendarScreen({
 
   // Whether this account has anything at all, not whether the next eight weeks
   // do: the empty state offers the thing to do only when there is nothing.
-  const bare = classes.length === 0;
+  // Both halves count: a coach with no classes of their own yet but a saved
+  // week got the empty screen for a build, which hid the rows they had.
+  const bare = classes.length === 0 && !savedDays.some((d) => d.items.length > 0);
 
   return (
     <>
@@ -452,6 +463,64 @@ export function CalendarScreen({
           }}
           onDeleted={(msg) => {
             setEdit(null);
+            toast(msg);
+            router.refresh();
+          }}
+        />
+      )}
+      {plan && (
+        <PlanSheet
+          id={plan}
+          onClose={() => setPlan(null)}
+          onToast={toast}
+          onRemoved={(msg) => {
+            setPlan(null);
+            toast(msg);
+            router.refresh();
+          }}
+          onEdit={(p) => {
+            setPlan(null);
+            setPlanEdit({
+              id: p.id,
+              prefill: {
+                name: p.name,
+                classType: p.classType,
+                description: p.description,
+                image: p.image,
+                startTime: p.startTime,
+                durationMin: p.durationMin,
+                studioId: p.studioId,
+                location: p.location,
+                withWho: p.withWho,
+                links: p.links,
+                days: [p.dayOfWeek],
+                dayOfWeek: p.dayOfWeek,
+                endsOn: p.endsOn,
+                specificDate: p.specificDate,
+              },
+            });
+          }}
+        />
+      )}
+      {planEdit && (
+        <Adder
+          studios={studios}
+          templates={templates}
+          customTypes={customTypes}
+          lastUsed={lastUsed}
+          subsCount={0}
+          firstPublish={false}
+          personal={{ canCoach: false, editId: planEdit.id }}
+          prefill={planEdit.prefill}
+          onClose={() => setPlanEdit(null)}
+          onToast={toast}
+          onPublished={() => {
+            setPlanEdit(null);
+            toast("Saved");
+            router.refresh();
+          }}
+          onDeleted={(msg) => {
+            setPlanEdit(null);
             toast(msg);
             router.refresh();
           }}
