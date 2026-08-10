@@ -104,11 +104,6 @@ export type FeedItem = {
   saved: boolean;
 };
 
-/** The brief says hide the rail below about three people; the floor here is
- *  one, because three hides the rail for nearly every account at current
- *  density and takes the peek with it. Raise it when density does. */
-const RAIL_MIN_PEOPLE = 1;
-
 const TIMES = [
   ["any", "Any time"],
   ["am", "Morning, before 11"],
@@ -354,7 +349,6 @@ export function FollowingScreen({
   // Hide the rail rather than draw it dead: following nobody keeps the
   // teaching state (ghosts and one line), following only people with
   // nothing coming up hides the block entirely.
-  const railShows = follows === 0 || myRail.length >= RAIL_MIN_PEOPLE;
 
   const milesTo = (s: NearStudio): number | null =>
     geo && s.lat != null && s.lng != null
@@ -487,11 +481,30 @@ export function FollowingScreen({
           first, no captions and no badges. A circle is a name and a ring,
           the ring is the freshness signal, and tapping one opens their
           week. You lead it, wearing your own face, and Add ends it. */}
-      {isHome && railShows && (
+      {isHome && (
         <div className="tray">
-          <p className="nearlbl railbl">This week</p>
+          <div className="railhead">
+            <p className="nearlbl railbl">This week</p>
+            <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
+              <Icon name="arrow_forward" size={22} />
+            </Link>
+          </div>
           <div className="tray-scroll">
-            <Link className="trayitem" href={meKind === "coach" ? "/coachshare" : "/membershare"}>
+            <button
+              className="trayitem"
+              onClick={() => {
+                if (!meId) return;
+                setPeekPerson({
+                  id: meId,
+                  name: meFace.name,
+                  handle: null,
+                  photo: meFace.photo,
+                  color: meFace.color,
+                  fresh: youFresh,
+                  nextAt: todayIso,
+                });
+              }}
+            >
               <span className="youwrap">
                 <span className={`trayav trayav-you${youFresh ? " trayav-ring" : ""}`}>
                   {meFace.photo ? (
@@ -506,7 +519,7 @@ export function FollowingScreen({
                 {youFresh && <span className="younew">New</span>}
               </span>
               <span className="trayitem-nm">You</span>
-            </Link>
+            </button>
             {myRail.map((p) => (
               <button key={p.id} className="trayitem" onClick={() => setPeekPerson(p)}>
                 <span className={`trayav trayav-ring${p.fresh ? "" : " seen"}`}>
@@ -550,11 +563,6 @@ export function FollowingScreen({
           switch to Search. */}
       {items.length === 0 ? (
         <>
-          {isHome && (
-            <div className="nearhead nearhead-row">
-              <span className="nearlbl">Upcoming near you</span>
-            </div>
-          )}
           <div className="wkempty">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -578,14 +586,6 @@ export function FollowingScreen({
         </>
       ) : (
         <>
-          {isHome && (
-            <div className="nearhead nearhead-row">
-              <span className="nearlbl">Upcoming near you</span>
-              <Link className="nearhead-go" href="/upcoming" aria-label="All upcoming classes">
-                <Icon name="arrow_forward" size={22} />
-              </Link>
-            </div>
-          )}
           {/* The four chips say their current value, which is what lets one
               row replace five pills; the leading chip opens everything at
               once wearing the count of what is set. */}
@@ -829,6 +829,8 @@ export function FollowingScreen({
           name={peekPerson.name}
           photo={peekPerson.photo}
           color={peekPerson.color}
+          self={peekPerson.id === meId}
+          shareHref={meKind === "coach" ? "/coachshare" : "/membershare"}
           onClose={() => {
             setPeekPerson(null);
             // The ring went out and follows may have flipped behind the

@@ -29,6 +29,8 @@ export function CoachPeek({
   name,
   photo,
   color,
+  self = false,
+  shareHref,
   onClose,
 }: {
   id: string;
@@ -37,6 +39,9 @@ export function CoachPeek({
   name: string;
   photo: string | null;
   color: string;
+  /** Your own face uses this same week sheet, but swaps Follow for Share. */
+  self?: boolean;
+  shareHref?: string;
   onClose: () => void;
 }) {
   const [peek, setPeek] = useState<Peek | null>(null);
@@ -100,9 +105,8 @@ export function CoachPeek({
           <Icon name="close" size={18} />
         </button>
         {/* The head stacks, by Matt's call: close alone in the corner, then
-            the face, the name on its own line under it, and the two pills
-            (View profile, Follow) under both. No "Week of" line and no
-            overlap count up here; the rows themselves are the answer. */}
+            the face, the name on its own line under it, and two actions
+            below. Your own sheet swaps Follow for Share your week. */}
         <div className="peekhead peekhead-stack">
           <span className="peekav">
             {photo ? (
@@ -120,7 +124,11 @@ export function CoachPeek({
               <Link className="peekfollow peekview" href={`/${peek.handle}`}>
                 View profile
               </Link>
-              {follow !== null && (
+              {self && shareHref ? (
+                <Link className="peekfollow on" href={shareHref}>
+                  Share your week
+                </Link>
+              ) : follow !== null ? (
                 <button
                   className={`peekfollow${follow !== "off" ? " on" : ""}`}
                   aria-pressed={follow !== "off"}
@@ -133,7 +141,7 @@ export function CoachPeek({
                       ? "Requested"
                       : "Follow"}
                 </button>
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -207,7 +215,7 @@ export function CoachPeek({
           </div>
         ))}
 
-        {peek && peek.days.length > 0 && (
+        {!self && peek && peek.days.length > 0 && (
           <p className="peekfoot">Ribbon anything here to put it on your own week.</p>
         )}
       </div>

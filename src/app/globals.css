@@ -5938,8 +5938,7 @@ button.ps-card { cursor: pointer; }
   position: relative;
   /* Tight to the header above: the 8px of air between the bar and the
      circles came down to 2, by Matt's call. */
-  margin: 0 -18px; padding: 2px 0 12px;
-  border-bottom: 1px solid var(--line);
+  margin: 0 -18px; padding: 2px 0 8px;
 }
 /* The arrows hang level with the circles rather than the labels under them,
    so they read as controls on the faces. `.railarrow` puts its own top at
@@ -6037,6 +6036,11 @@ button.ps-card { cursor: pointer; }
    pads back in to line up with everything else on the screen. The top
    margin is the section break under the search bar. */
 .railbl { margin: 16px 18px 8px; }
+.railhead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-right: 18px;
+}
+.railhead .nearhead-go { margin-top: 8px; }
 /* Save in the row's corner, not a dots menu, by Matt's call: the ribbon
    and its word, filling to the going green. */
 .rowsave {
