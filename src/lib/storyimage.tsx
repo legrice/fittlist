@@ -134,6 +134,13 @@ export function renderStory(model: StoryModel) {
     layout === "party" ? 24 : layout === "neon" ? 20 : layout === "brutalist" ? 22 : layout === "split" ? 18 : m.gap;
   const timeW = layout === "brutalist" ? 150 : m.timeW;
   const detailW = y.stackTime ? 908 - rowPadX * 2 : 908 - rowPadX * 2 - timeW - rowGap;
+  const swissDays =
+    plan.tier === 3
+      ? plan.summary.map(({ day, entries }) => ({
+          day,
+          rows: entries.map((entry) => ({ time: entry.times, name: entry.name, sub: "" })),
+        }))
+      : plan.days;
 
   return new ImageResponse(
     (
@@ -144,7 +151,7 @@ export function renderStory(model: StoryModel) {
           display: "flex",
           flexDirection: "column",
           background: t.bg,
-          color: t.fg,
+          color: layout === "swiss" ? t.accent : t.fg,
           padding: `${pad.top}px ${pad.side}px ${pad.bottom}px`,
           fontFamily: "Delight",
         }}
@@ -275,7 +282,7 @@ export function renderStory(model: StoryModel) {
             fontFamily: guest ? `'${guest.family}', 'Delight'` : "Delight",
             fontStyle: guest?.italic ? "italic" : "normal",
             textTransform: y.upper ? "uppercase" : "none",
-            color: layout === "neon" ? t.accent : t.fg,
+            color: layout === "neon" || layout === "swiss" ? t.accent : t.fg,
             marginBottom: px(78),
             maxWidth: photo ? 646 : 908,
             ...(layout === "split"
@@ -283,6 +290,16 @@ export function renderStory(model: StoryModel) {
               : {}),
             ...(layout === "brutalist"
               ? { borderBottomWidth: 9, borderBottomStyle: "solid", borderBottomColor: t.fg, paddingBottom: 12 }
+              : {}),
+            ...(layout === "swiss"
+              ? {
+                  maxWidth: photo ? 646 : 908,
+                  borderBottomWidth: 3,
+                  borderBottomStyle: "solid",
+                  borderBottomColor: t.accent,
+                  paddingBottom: 18,
+                  marginBottom: px(54),
+                }
               : {}),
           }}
         >
@@ -307,6 +324,89 @@ export function renderStory(model: StoryModel) {
 
         {empty ? (
           <div style={{ display: "flex", color: t.faint, fontSize: px(44) }}>{emptyLine}</div>
+        ) : layout === "swiss" ? (
+          <div style={{ display: "flex", flexWrap: "wrap", width: 908 }}>
+            {swissDays.map(({ day, rows }, di) => (
+              <div
+                key={day}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  width: 302,
+                  minHeight: px(250),
+                  padding: `0 ${di % 3 === 2 ? 0 : 18}px ${px(26)}px ${di % 3 === 0 ? 0 : 18}px`,
+                  marginBottom: px(34),
+                  borderLeftWidth: di % 3 === 0 ? 0 : 3,
+                  borderLeftStyle: "solid",
+                  borderLeftColor: t.accent,
+                }}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    fontSize: px(24),
+                    fontWeight: 600,
+                    lineHeight: 1,
+                    marginBottom: px(24),
+                  }}
+                >
+                  {day}
+                </span>
+                {rows.length === 0 ? (
+                  <span style={{ display: "flex", fontSize: px(28), color: t.faint }}>Open</span>
+                ) : (
+                  rows.map((row, ri) => (
+                    <div
+                      key={`${day}-${ri}`}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        paddingTop: ri === 0 ? 0 : px(18),
+                        marginTop: ri === 0 ? 0 : px(18),
+                        borderTopWidth: ri === 0 ? 0 : 2,
+                        borderTopStyle: "solid",
+                        borderTopColor: t.accent,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          fontSize: px(38),
+                          fontWeight: 700,
+                          lineHeight: 0.96,
+                          letterSpacing: -1,
+                        }}
+                      >
+                        {row.name}
+                      </span>
+                      {row.sub && (
+                        <span style={{ display: "flex", fontSize: px(23), lineHeight: 1.1, marginTop: px(10) }}>
+                          {row.sub}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          display: "flex",
+                          fontSize: px(24),
+                          fontWeight: 600,
+                          lineHeight: 1.1,
+                          marginTop: px(7),
+                        }}
+                      >
+                        {row.time}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+            {plan.moreDays > 0 && (
+              <div style={{ display: "flex", width: 908, fontSize: px(28), borderTop: `3px solid ${t.accent}`, paddingTop: px(16) }}>
+                + {plan.moreDays} more {plan.moreDays === 1 ? "day" : "days"} at {url}
+              </div>
+            )}
+          </div>
         ) : plan.tier === 3 ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
             {plan.summary.map(({ day, entries }) => (
@@ -610,6 +710,9 @@ export function renderStory(model: StoryModel) {
             ...(layout === "brutalist"
               ? { borderTopWidth: 7, borderTopStyle: "solid", borderTopColor: t.fg, paddingTop: 18 }
               : {}),
+            ...(layout === "swiss"
+              ? { borderTopWidth: 3, borderTopStyle: "solid", borderTopColor: t.accent, paddingTop: 18 }
+              : {}),
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -628,7 +731,7 @@ export function renderStory(model: StoryModel) {
                 fontFamily: "Delight",
                 fontWeight: 800,
                 fontSize: px(50),
-                color: t.fg,
+                color: layout === "swiss" ? t.accent : t.fg,
                 letterSpacing: -2,
               }}
             >

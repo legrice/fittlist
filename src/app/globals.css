@@ -7067,6 +7067,14 @@ a.clspeek-by:active { opacity: .6; }
   height: 8px; border: 1.5px solid var(--ink); background: var(--card);
   box-shadow: 2px 2px 0 var(--si); opacity: 1;
 }
+.layoutmini-swiss {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  border-radius: 0; background: #f0372f; color: #111;
+}
+.layoutmini-swiss > span {
+  width: auto; height: 100%; border-left: 2px solid currentColor;
+  background: transparent; opacity: 1;
+}
 .shpick-titleline { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .shpick-titleline > .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .shclass-tag {

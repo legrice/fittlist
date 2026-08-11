@@ -173,7 +173,7 @@ export const STORY_THEMES: Record<StoryThemeId, StoryTheme> = {
  * deliberately different structures rather than minor typographic presets:
  * the classic open list, a split timetable, playful cards, neon outlines and
  * a heavy brutalist stack. */
-export type StoryStyleId = "plain" | "split" | "party" | "neon" | "brutalist";
+export type StoryStyleId = "plain" | "split" | "party" | "neon" | "brutalist" | "swiss";
 
 export type StoryStyle = {
   label: string;
@@ -287,6 +287,21 @@ export const STORY_STYLES: Record<StoryStyleId, StoryStyle> = {
     stackTime: false,
     dayTrack: 0,
     rowScale: 1.38,
+  },
+  swiss: {
+    label: "Swiss clock",
+    description: "Editorial week grid with strong rules",
+    layout: "swiss",
+    headline: 1,
+    name: 1,
+    upper: false,
+    align: "left",
+    rule: "none",
+    chip: false,
+    radius: 0,
+    stackTime: false,
+    dayTrack: 0,
+    rowScale: 1.34,
   },
 };
 

@@ -466,14 +466,14 @@ await p.locator(".shseg-pill", { hasText: "Week" }).click();
   const srcMsg = await p.locator(".shprev-week").getAttribute("src");
   if (!/Fall%20schedule%20is%20live/.test(srcMsg ?? ""))
     fail("the message should reach the picture: " + srcMsg);
-  // Layout is a real structural choice again: five visibly distinct paints,
+  // Layout is a real structural choice again: six visibly distinct paints,
   // all accepted by the image route, and the chosen id rides the preview URL.
   await p.locator(".shctrl", { hasText: "Layout" }).click();
   const layoutIds = await p.locator(".layoutpick").evaluateAll((els) =>
     els.map((e) => e.getAttribute("data-layout")),
   );
-  if (layoutIds.join("|") !== "plain|split|party|neon|brutalist")
-    fail("expected five share layouts, got " + layoutIds.join("|"));
+  if (layoutIds.join("|") !== "plain|split|party|neon|brutalist|swiss")
+    fail("expected six share layouts, got " + layoutIds.join("|"));
   for (const id of layoutIds) {
     const r = await p.request.get(`${BASE}/api/story/compose?style=${id}&days=3`);
     if (!r.ok()) fail(`${id} layout does not render: ${r.status()}`);
