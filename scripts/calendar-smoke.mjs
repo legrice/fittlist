@@ -103,8 +103,8 @@ await p.locator(".clline").first().waitFor();
   if (fbox.x < 300 || fbox.y < 500) fail(`the Add FAB sits bottom right, got ${fbox.x},${fbox.y}`);
   if (await p.locator(".calbar-share").count()) fail("the Share arrow is gone from the title row");
   // The title and view controls share one row.
-  if (!(await p.locator(".caltitle", { hasText: "Your schedule" }).count()))
-    fail("Your schedule sits across from the view controls");
+  if (!(await p.locator(".caltitle", { hasText: "Schedule" }).count()))
+    fail("Schedule sits across from the filter and view controls");
   const titleBox = await p.locator(".caltitle").boundingBox();
   const toggleBox = await p.locator(".calbar .calseg").boundingBox();
   const titleMid = titleBox.y + titleBox.height / 2;
