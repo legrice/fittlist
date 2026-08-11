@@ -49,7 +49,7 @@ export default async function TabsLayout({ children }: { children: React.ReactNo
   // because a coach's calendar was /app and a member had their own at /week;
   // a member has no calendar at all, so there is nothing to fork on and the
   // tab is not drawn for them in the first place.
-  const scheduleHref = isCoach ? "/calendar" : "/week";
+  const scheduleHref = "/calendar";
   // Profile opens your page, which is your handle. /you redirects there and is
   // the fallback for an account still mid-signup with no handle to point at.
   const profileHref = me.handle ? `/${me.handle}` : "/you";

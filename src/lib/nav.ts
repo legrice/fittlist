@@ -43,7 +43,7 @@ export function navTabs(
     { id: "search", href: "/search", icon: "search", label: "Discover" },
     {
       id: "schedule" as const,
-      href: scheduleHref ?? (coach ? "/calendar" : "/week"),
+      href: scheduleHref ?? "/calendar",
       icon: "calendar_month",
       label: "Schedule",
     },

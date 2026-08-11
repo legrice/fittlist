@@ -1,12 +1,5 @@
-import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { getDb, schema } from "@/db";
-import { CAL_PAST_DAYS, todayIso } from "@/lib/format";
 import { getSessionUserId } from "@/lib/session";
-import type { LastUsed, StudioDto, TemplateDto } from "@/lib/types";
-import { myCircles } from "@/lib/circles";
-import { myWeek } from "@/lib/week";
-import { WeekScreen } from "@/components/WeekScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -31,66 +24,8 @@ export default async function WeekPage({
   const { hl, add } = await searchParams;
   const userId = await getSessionUserId();
   if (!userId) redirect("/");
-  const db = await getDb();
-  const [days, circles, studioRows, templateRows, customTypeRows, [me]] = await Promise.all([
-    // The past window rides along because the Month grid draws its dimmed
-    // past days from it; the List itself starts at today and stops there.
-    myWeek(userId, { pastDays: CAL_PAST_DAYS }),
-    // The faces across the top. A follow puts one here and nothing else, so
-    // this query is the whole visible consequence of following somebody.
-    myCircles(userId),
-    db.select().from(schema.studios).orderBy(schema.studios.seq),
-    db
-      .select()
-      .from(schema.classTemplates)
-      .where(eq(schema.classTemplates.userId, userId))
-      .orderBy(desc(schema.classTemplates.updatedAt)),
-    db.select({ name: schema.customClassTypes.name }).from(schema.customClassTypes),
-    db.select().from(schema.users).where(eq(schema.users.id, userId)),
-  ]);
-
-  const studios: StudioDto[] = studioRows.map((s) => ({
-    id: s.id,
-    seq: s.seq,
-    slug: s.slug,
-    name: s.name,
-    address: s.address,
-  }));
-  const templates: TemplateDto[] = templateRows.map((t) => ({
-    name: t.name,
-    classType: t.classType,
-    description: t.description,
-    image: t.image,
-    startTime: t.startTime,
-    durationMin: t.durationMin,
-    studioId: t.studioId,
-    location: t.location,
-    withWho: t.withWho,
-    isPublic: t.isPublic,
-    links: t.links,
-  }));
-  const lastUsed: LastUsed = templates.length
-    ? {
-        startTime: templates[0].startTime,
-        durationMin: templates[0].durationMin,
-        studioId: templates[0].studioId,
-      }
-    : { startTime: "18:00", durationMin: 60, studioId: null };
-
-  // Coaches keep their publishing calendar. Members live here again: the
-  // classes they add are a real calendar people were actively missing.
-  if (me && me.kind !== "fan") redirect(hl ? `/app?hl=${encodeURIComponent(hl)}` : "/app");
-
-  return (
-    <WeekScreen
-      days={days}
-      circles={circles}
-      todayIso={todayIso()}
-      studios={studios}
-      templates={templates}
-      customTypes={customTypeRows.map((r) => r.name)}
-      lastUsed={lastUsed}
-      autoOpenAdder={add === "1"}
-    />
-  );
+  const params = new URLSearchParams();
+  if (hl) params.set("hl", hl);
+  if (add) params.set("add", add);
+  redirect(`/calendar${params.size ? `?${params.toString()}` : ""}`);
 }

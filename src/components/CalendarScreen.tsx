@@ -62,6 +62,7 @@ export function CalendarScreen({
   subsCount,
   savedDays = [],
   openAdder = false,
+  member = false,
 }: {
   /** Your own handle: the base your classes' detail loads from, so the sheet
    *  can show the photograph and the About you wrote, and Share has a URL. */
@@ -77,16 +78,19 @@ export function CalendarScreen({
   lastUsed: LastUsed;
   subsCount: number;
   savedDays?: WeekDayData[];
+  /** Members use this exact calendar too, but every row is attending. They
+   *  have no relationship filter and Add opens the catalog directly. */
+  member?: boolean;
   /** Land with the adder up: `/calendar?add=1`, which is /app's old parameter
    *  carried through its redirect. */
   openAdder?: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<View>("list");
-  const [kind, setKind] = useState<"all" | "coaching" | "added">("all");
-  const [addChoice, setAddChoice] = useState(openAdder);
+  const [kind, setKind] = useState<"all" | "coaching" | "added">(member ? "added" : "all");
+  const [addChoice, setAddChoice] = useState(openAdder && !member);
   const [addOpen, setAddOpen] = useState(false);
-  const [browseOpen, setBrowseOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(openAdder && member);
   const [personalAdd, setPersonalAdd] = useState(false);
   const [gone, setGone] = useState<Record<string, boolean>>({});
   const [removeConfirm, setRemoveConfirm] = useState<{
@@ -252,6 +256,10 @@ export function CalendarScreen({
   // eight weeks do: the empty state offers the thing to do only when there is
   // nothing on their coaching calendar.
   const bare = classes.length === 0 && savedDays.every((day) => day.items.length === 0);
+  const openAdd = () => {
+    if (member) setBrowseOpen(true);
+    else setAddChoice(true);
+  };
 
   return (
     <>
@@ -278,14 +286,14 @@ export function CalendarScreen({
               screen reader. */}
           {!bare && (
             <div className="calbar-tools">
-              <label className="calfilter">
+              {!member && <label className="calfilter">
                 <select aria-label="Show schedule" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
                   <option value="all">All</option>
                   <option value="coaching">Coaching</option>
                   <option value="added">Attending</option>
                 </select>
                 <Icon name="expand_more" size={17} />
-              </label>
+              </label>}
               <div className="calseg" role="tablist" aria-label="Schedule view">
                 <button
                   role="tab"
@@ -330,10 +338,16 @@ export function CalendarScreen({
       {bare ? (
         <WeekEmpty
           first
-          title="Your schedule is empty"
-          body="Put the classes you teach up here. That is the whole app: your week, at one link, kept current."
-          cta="Add a class"
-          onCta={() => setAddChoice(true)}
+          title={member ? "Nothing added yet" : "Your schedule is empty"}
+          body={member ? "Follow a coach or add a class." : "Put the classes you teach up here. That is the whole app: your week, at one link, kept current."}
+          cta={member ? undefined : "Add a class"}
+          onCta={member ? undefined : openAdd}
+          actions={member ? (
+            <div className="calendar-empty-actions">
+              <Link className="btn ghost" href="/search">Find a coach</Link>
+              <button className="btn si" type="button" onClick={openAdd}>Add a class</button>
+            </div>
+          ) : undefined}
         />
       ) : view === "month" ? (
         <MonthScroll
@@ -362,7 +376,7 @@ export function CalendarScreen({
       ) : (
         <div className="calendar-cardlist">
           <DayList days={days} />
-          {kind === "added" && <Link className="calendar-attending-share" href="/share">Share your week</Link>}
+          {kind === "added" && <Link className="calendar-attending-share" href={member ? "/membershare" : "/coachshare"}>Share your week</Link>}
         </div>
       )}
       </div>
@@ -416,7 +430,7 @@ export function CalendarScreen({
           as Following's search: adding is what somebody opens this screen
           to do, and the title row's corner belongs to Share now. */}
       {!bare && !(kind === "added" && days.length === 0) && (
-        <button className="wkfab" aria-label="Add a class" onClick={() => setAddChoice(true)}>
+        <button className="wkfab" aria-label="Add a class" onClick={openAdd}>
           <Icon name="add" size={28} />
         </button>
       )}
@@ -464,7 +478,7 @@ export function CalendarScreen({
           lastUsed={lastUsed}
           subsCount={subsCount}
           firstPublish={bare}
-          personal={personalAdd ? { canCoach: true } : undefined}
+          personal={personalAdd ? { canCoach: !member } : undefined}
           onClose={() => {
             setAddOpen(false);
             setPersonalAdd(false);

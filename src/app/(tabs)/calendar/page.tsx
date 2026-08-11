@@ -37,9 +37,7 @@ export default async function CalendarPage({
   const db = await getDb();
   const [me] = await db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!me) redirect("/");
-  // Only somebody who teaches has a calendar. Members follow published
-  // calendars rather than maintaining a second one inside FittList.
-  if (me.kind === "fan") redirect(hl ? `/week?hl=${encodeURIComponent(hl)}` : "/week");
+  const member = me.kind === "fan";
 
   const [classRows, studioRows, templateRows, customTypeRows, subRows] = await Promise.all([
     // The same loader the coach shell used: their own classes with the gym
@@ -128,6 +126,7 @@ export default async function CalendarPage({
       lastUsed={lastUsed}
       subsCount={subRows.length}
       openAdder={add === "1"}
+      member={member}
     />
   );
 }
