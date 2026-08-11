@@ -3595,16 +3595,6 @@ button.ps-card { cursor: pointer; }
 .pubtab-pair.sel { border-radius: 0; background: transparent; }
 .pubtab-pair.sel .pubtab.sel { background: transparent; }
 .pubtab-info { padding-top: 13px; padding-bottom: 11px; }
-.prof-overflow-trigger { cursor: pointer; }
-.prof-overflow-pop {
-  position: absolute; top: 46px; right: 0; z-index: 10;
-  width: 170px; padding: 6px; border-radius: 14px;
-  background: var(--card); color: var(--ink); box-shadow: 0 12px 35px rgba(17,17,17,.2);
-}
-.prof-overflow-pop button {
-  width: 100%; display: flex; align-items: center; gap: 9px; padding: 11px;
-  border: 0; background: transparent; color: inherit; font: 600 14px 'Delight', 'Helvetica Neue', Arial, sans-serif;
-}
 .profile-anchor-section {
   scroll-margin-top: calc(var(--dayband-top, 72px) + 12px);
 }

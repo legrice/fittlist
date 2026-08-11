@@ -354,17 +354,7 @@ export async function StudioView({
           // Above the name on every skin, hero and banner alike; the white
           // pill already reads over a photograph.
           badges={<VerifiedBadge studioId={s.id} name={s.name} verified={access.claimed} />}
-          ownerTop={
-            /* Everything you can do with a studio, behind one set of dots:
-               share, suggest, report, and for coaches the edit. */
-            <StudioMenu
-              slug={s.slug ?? ""}
-              canEdit={canEdit}
-              claimed={access.claimed}
-              signedIn={signedIn}
-              studio={editProps}
-            />
-          }
+          ownerTop={null}
           actions={
             /* Nothing to offer, no row: an empty pills row still spends its
                margin, which read as stray space between the address and the
@@ -389,6 +379,13 @@ export async function StudioView({
                 />
               )}
               <ProfileShare path={base} name={s.name} pill />
+              <StudioMenu
+                slug={s.slug ?? ""}
+                canEdit={canEdit}
+                claimed={access.claimed}
+                signedIn={signedIn}
+                studio={editProps}
+              />
             </div>
           }
         >

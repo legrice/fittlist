@@ -16,7 +16,6 @@ import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
-import { ProfileOverflow } from "@/components/ProfileOverflow";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -189,7 +188,7 @@ export async function MemberProfileView({
           badges={null}
           // Settings lives in the shared app header; floating it here as well
           // made the owner's page carry two doors to the same place.
-          ownerTop={<ProfileOverflow path={`/${user.handle ?? ""}`} name={name} />}
+          ownerTop={null}
           actions={
             isOwner && user.handle ? (
               <MemberProfileActions handle={user.handle} />

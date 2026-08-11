@@ -25,7 +25,6 @@ import { ProfileTabs, type ProfileTab } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
-import { ProfileOverflow } from "@/components/ProfileOverflow";
 import { Wordmark } from "@/components/Wordmark";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -581,7 +580,7 @@ export async function PublicProfileView({
           // The gear lives in the shared app header. Floating it on the photo
           // read as loose furniture; the stable header position is easier to
           // find and reach. The slot stays for a studio's dots.
-          ownerTop={<ProfileOverflow path={`/${handle}`} name={user.name} />}
+          ownerTop={null}
           badges={null}
           // The sticky bar's Follow: the same control, smaller, so someone
           // three weeks deep in a schedule can say yes without climbing back.
