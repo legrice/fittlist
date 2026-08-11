@@ -6,6 +6,7 @@ import { siteOrigin } from "@/lib/format";
 import { isBlocked } from "@/lib/blocks";
 import { getSessionUserId } from "@/lib/session";
 import { PublicProfileView } from "@/components/PublicProfileView";
+import { MemberProfileView } from "@/components/MemberProfileView";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) return { title: "fittlist" };
-  const title = `Where ${user.name} coaches · fittlist`;
-  const description = `The studios and spaces where ${user.name} coaches.`;
+  const title = `${user.name}'s places · fittlist`;
+  const description = `The fitness places connected to ${user.name}.`;
   const url = `${siteOrigin()}/${handle}/studios`;
   // Every URL a coach's page answers to carries the same card. It's the same
   // person whichever section you were sent to.
@@ -49,12 +50,20 @@ export default async function StudiosPage({ params, searchParams }: Props) {
   const db = await getDb();
   const [user] = await db.select().from(schema.users).where(eq(schema.users.handle, handle));
   if (!user) notFound();
-  // A member claims a handle too, and has no coach profile behind it.
-  if (user.kind === "fan") notFound();
-
   const viewerId = await getSessionUserId();
   // Blocked: the page simply isn't there. Same shape as a deleted account, so
   // it says nothing about why.
   if (await isBlocked(user.id, viewerId)) notFound();
+  if (user.kind === "fan") {
+    return (
+      <MemberProfileView
+        user={user}
+        isOwner={viewerId === user.id}
+        viewerId={viewerId}
+        tab="studios"
+        from={from}
+      />
+    );
+  }
   return <PublicProfileView user={user} isOwner={viewerId === user.id} tab="studios" from={from} />;
 }

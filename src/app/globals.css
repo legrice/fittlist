@@ -1979,6 +1979,14 @@ button.ps-card { cursor: pointer; }
 /* Studios: the places a coach is associated with, as its own tab. First
    thing on the page, so the sibling gap moves inside, between rows. */
 .profstudios { margin-top: 8px; }
+.profile-studio-group + .profile-studio-group { margin-top: 28px; }
+.profile-studio-group-title {
+  margin: 0 0 12px;
+  font-family: 'Delight', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
 /* The gap between one section of a profile and the next. About used to
    override it to 4px, from when it was bare text rather than a labelled
    section; the Teaches chips then ran straight into the About heading with

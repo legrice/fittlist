@@ -16,6 +16,7 @@ import { MemberProfileActions } from "@/components/MemberProfileActions";
 import { ProfileTabs } from "@/components/ProfileTabs";
 import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
+import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 
 // A member's public profile. Deliberately not the coach page: there's no
 // schedule behind it, nothing to book, and nobody to email. It's who they are,
@@ -41,10 +42,11 @@ export async function MemberProfileView({
   /** Following leads (the coaches they follow), About is the bio. The
    *  key stays "schedule" because the bare handle is that tab's route and
    *  the word in the URL is not worth breaking links over. */
-  tab?: "schedule" | "about";
+  tab?: "schedule" | "about" | "studios";
   from?: string;
 }) {
   const name = user.name.trim() || user.email.split("@")[0];
+  const db = await getDb();
 
   // Members can follow members. Same table as following a coach, and it buys
   // less on purpose: nothing lands in your week, nothing public changes. Its
@@ -52,7 +54,6 @@ export async function MemberProfileView({
   // and Your week says they're going too.
   let follow: { following: boolean; requested: boolean } | null = null;
   if (viewerId && !isOwner && user.handle && (await fansVisible())) {
-    const db = await getDb();
     const [viewer] = await db
       .select({ email: schema.users.email })
       .from(schema.users)
@@ -89,6 +90,20 @@ export async function MemberProfileView({
   // The coaches they follow: the page's first tab now, in place of the
   // shared week.
   const firstName = name.split(/\s+/)[0];
+  const visitedStudios = (
+    await db
+      .select({ studio: schema.studios })
+      .from(schema.studioEndorsements)
+      .innerJoin(schema.studios, eq(schema.studioEndorsements.targetStudioId, schema.studios.id))
+      .where(
+        and(
+          eq(schema.studioEndorsements.endorserUserId, user.id),
+          eq(schema.studioEndorsements.trait, "been_here"),
+        ),
+      )
+  )
+    .map((row) => row.studio)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // The week they built on the Share tab, by Matt's call: the classes they
   // marked and the dated entries they typed land here and nowhere else
@@ -156,6 +171,7 @@ export async function MemberProfileView({
           tabs={[
             { key: "schedule", label: "Schedule" },
             { key: "about", label: "Info" },
+            ...(visitedStudios.length ? [{ key: "studios", label: "Studios" }] : []),
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
              there is one, the person's own colour when there isn't, so a
@@ -241,6 +257,15 @@ export async function MemberProfileView({
             <p>{firstName} hasn&rsquo;t added anything to their info yet.</p>
           </div>
         </section>
+        {visitedStudios.length > 0 && (
+          <section id="profile-studios" className="profile-anchor-section">
+            <h2 className="profile-section-title">Studios</h2>
+            <div className="profile-studio-group">
+              <h3 className="profile-studio-group-title">Places I&rsquo;ve been</h3>
+              <ProfileStudioRail studios={visitedStudios} />
+            </div>
+          </section>
+        )}
         </ProfileTabs>
       </div>
     </div>

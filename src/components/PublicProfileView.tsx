@@ -7,7 +7,6 @@ import { getSessionUserId } from "@/lib/session";
 import { clockParts, fmtDayHeaderRel, occurrenceEnded, runsOn, timeToMinutes, todayIso } from "@/lib/format";
 import { avatarColor } from "@/lib/avatar";
 import { backToFor } from "@/lib/nav";
-import { studioPath } from "@/lib/studio";
 import { classAddress, publicSchedule } from "@/lib/coachweek";
 
 import { AgendaAvatar } from "@/components/Agenda";
@@ -26,6 +25,7 @@ import { PublicTopBar } from "@/components/PublicTopBar";
 import { ProfileShare } from "@/components/ProfileShare";
 import { ProfileEndorsements } from "@/components/ProfileEndorsements";
 import { ProfileInfoEmpty } from "@/components/ProfileInfoEmpty";
+import { ProfileStudioRail } from "@/components/ProfileStudioRail";
 import { Wordmark } from "@/components/Wordmark";
 
 // A continuous forward window, long enough that even a one-class-a-week
@@ -140,12 +140,22 @@ export async function PublicProfileView({
   // local load check, and can't be: dev runs PGlite, a single-connection
   // embedded Postgres that serializes what a pooled one overlaps. The win
   // is three round trips becoming one on production's pool.
-  const [allClassRows, pickedRows, fansOn] = await Promise.all([
+  const [allClassRows, pickedRows, visitedStudioRows, fansOn] = await Promise.all([
     publicSchedule(user),
     db
       .select({ studioId: schema.coachStudios.studioId })
       .from(schema.coachStudios)
       .where(eq(schema.coachStudios.userId, user.id)),
+    db
+      .select({ studio: schema.studios })
+      .from(schema.studioEndorsements)
+      .innerJoin(schema.studios, eq(schema.studioEndorsements.targetStudioId, schema.studios.id))
+      .where(
+        and(
+          eq(schema.studioEndorsements.endorserUserId, user.id),
+          eq(schema.studioEndorsements.trait, "been_here"),
+        ),
+      ),
     fansVisible(),
   ]);
   const classRows = allClassRows.filter((c) => c.isPublic);
@@ -158,6 +168,9 @@ export async function PublicProfileView({
   const studioById = new Map(studioRows.map((s) => [s.id, s]));
   // Studios/spaces this coach is associated with, derived from where they coach.
   const coachStudios = [...studioRows].sort((a, b) => a.name.localeCompare(b.name));
+  const visitedStudios = visitedStudioRows
+    .map((row) => row.studio)
+    .sort((a, b) => a.name.localeCompare(b.name));
   const endorsementRows = await db
     .select({ trait: schema.profileEndorsements.trait, endorserUserId: schema.profileEndorsements.endorserUserId })
     .from(schema.profileEndorsements)
@@ -247,34 +260,7 @@ export async function PublicProfileView({
   // Studios got their own tab: "where do they teach" is a question people
   // come with, and it was buried at the bottom of About. The heading stays
   // off, because the tab that got you here already says it.
-  const studios =
-    coachStudios.length > 0 ? (
-      <div className="strail profile-studio-rail">
-        {coachStudios.map((s) => (
-          <Link key={s.id} className="strail-item" href={studioPath(s)}>
-            <span className="strail-ph">
-              {s.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.photo} alt="" />
-              ) : (
-                <span className="strail-ini" style={{ background: avatarColor({ id: s.id }) }} aria-hidden="true">
-                  {(s.name.trim().charAt(0) || "?").toUpperCase()}
-                </span>
-              )}
-            </span>
-            <span className="strail-nm">{s.name}</span>
-            {s.types.length > 0 && (
-              <span className="strail-types">{s.types.slice(0, 2).join(" · ")}</span>
-            )}
-            {s.address && (
-              <span className="strail-mi">
-                {s.address.split(",").slice(0, 2).join(",")}
-              </span>
-            )}
-          </Link>
-        ))}
-      </div>
-    ) : null;
+  const studios = coachStudios.length > 0 || visitedStudios.length > 0;
 
   // How to reach them is a thing you do, not a section you read, so it lives
   // behind the Contact pill in the header rather than in a tab of its own.
@@ -612,7 +598,18 @@ export async function PublicProfileView({
           {studios ? (
             <section id="profile-studios" className="profile-anchor-section">
               <h2 className="profile-section-title">Studios</h2>
-              {studios}
+              {coachStudios.length > 0 && (
+                <div className="profile-studio-group">
+                  <h3 className="profile-studio-group-title">Places I coach</h3>
+                  <ProfileStudioRail studios={coachStudios} />
+                </div>
+              )}
+              {visitedStudios.length > 0 && (
+                <div className="profile-studio-group">
+                  <h3 className="profile-studio-group-title">Places I&rsquo;ve been</h3>
+                  <ProfileStudioRail studios={visitedStudios} />
+                </div>
+              )}
             </section>
           ) : null}
         </ProfileTabs>
