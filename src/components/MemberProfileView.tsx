@@ -40,7 +40,7 @@ export async function MemberProfileView({
   /** Signed in, a member profile is an app screen like any other, so it gets
    *  the header and the tabs. This was the one page that didn't. */
   viewerId?: string | null;
-  /** Following leads (the coaches they follow), Info is the about. The
+  /** Following leads (the coaches they follow), About is the bio. The
    *  key stays "schedule" because the bare handle is that tab's route and
    *  the word in the URL is not worth breaking links over. */
   tab?: "schedule" | "about";
@@ -157,10 +157,10 @@ export async function MemberProfileView({
           base={`/${user.handle ?? ""}`}
           tab={tab}
           tabs={[
-            // Info leads, by Matt's call, same as a coach's page. The tab
+            // About leads, by Matt's call, same as a coach's page. The tab
             // after it names what's behind it: a built week says Schedule,
             // and until there is one the coaches they follow are the page.
-            { key: "about", label: "Info" },
+            { key: "about", label: "About" },
             { key: "schedule", label: week.length ? "Schedule" : "Following" },
           ]}
           /* The coach page's full-bleed hero, by Matt's call: the photo when
@@ -221,7 +221,7 @@ export async function MemberProfileView({
             )
           }
         >
-        {/* Info: who they are, and honestly nothing more. Most members
+        {/* About: who they are, and honestly nothing more. Most members
             haven't written it yet, and the empty state says so without
             making the page feel unfinished. */}
         {tab === "about" &&

@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// /{handle}/schedule is the Schedule pill's own address now that Info
+// /{handle}/schedule is the Schedule pill's own address now that About
 // leads the bare handle, by Matt's call, and it was the shareable schedule
 // link long before that, so it serves both kinds.
 export default async function SchedulePage({ params, searchParams }: Props) {

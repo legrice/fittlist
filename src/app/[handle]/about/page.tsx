@@ -56,7 +56,7 @@ export default async function AboutPage({ params, searchParams }: Props) {
   // it says nothing about why.
   if (await isBlocked(user.id, viewerId)) notFound();
   // A member's page wears the same two-tab shape now, so their /about is the
-  // Info tab rather than a missing page.
+  // About tab rather than a missing page.
   if (user.kind === "fan") {
     return (
       <MemberProfileView

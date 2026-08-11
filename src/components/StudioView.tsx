@@ -242,7 +242,7 @@ export async function StudioView({
   // one that gets slower without anybody noticing.
   // Every studio page wears the same three tabs now, whatever it holds:
   // Schedule leads (it is what the link is for, and an empty one is the
-  // pitch), Info is the categories and the words, Coaches is who teaches
+  // pitch), About is the categories and the words, Coaches is who teaches
   // here. One layout to learn, however small the studio.
   const tab: StudioTab = wanted === "auto" ? "schedule" : wanted;
   const show = (section: StudioTab) => tab === section;
@@ -326,7 +326,7 @@ export async function StudioView({
               // this page ask the badge's does.
               info: community ? <CommunityNote studioId={s.id} name={s.name} /> : undefined,
             },
-            { key: "about", label: "Info" },
+            { key: "about", label: "About" },
             { key: "coaches", label: "Coaches" },
           ]}
           name={s.name}

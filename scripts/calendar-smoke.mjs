@@ -24,7 +24,7 @@ await p.getByRole("button", { name: "Not now" }).click().catch(() => {});
 await p.getByText("Pick your link.").waitFor();
 await p.getByPlaceholder("Your name").fill("Rae Bell");
 await p.getByRole("button", { name: "Claim it" }).click();
-// Fill the profile rather than skipping it, so the Info tab has two sections
+// Fill the profile rather than skipping it, so the About tab has two sections
 // and a meta line with both halves: the spacing checks below need something
 // to measure, and against an empty profile they pass by having nothing to
 // look at, which is the quietest way for a check to stop meaning anything.
@@ -313,7 +313,7 @@ if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab 
   if (await p.locator(".usericon").count()) fail("the header carries no avatar");
   // And the schedule is the calendar's own rows, not a second design for one
   // list. No Teaching/Going segment either: going marks are gone, so the
-  // other half can only ever be empty. Info leads the page now, by Matt's
+  // other half can only ever be empty. About leads the page now, by Matt's
   // call, so the rows live one pill over.
   await p.locator(".pubtab", { hasText: "Schedule" }).click();
   await p.locator(".pub .clline-nm").first().waitFor();
@@ -324,7 +324,7 @@ if (!(await p.locator(".navtab").count())) fail("your own profile keeps the tab 
   if (!names.length) fail("the profile should draw the calendar's rows");
   if (await p.locator(".pub .ps-event").count()) fail("the old card row should be gone");
 }
-// The Info tab's spacing. Both of these were long-standing and both were a
+// The About tab's spacing. Both of these were long-standing and both were a
 // missing rule rather than a wrong number: About overrode the section gap to
 // 4px, from when it was bare text rather than a labelled section, so the
 // Teaches chips ran straight into its heading; and `.profmeta` had no rule at

@@ -659,8 +659,8 @@ await page.goto(BASE + "/matt/about");
 if (await page.locator(".profshare").count()) fail("the profile share button should be gone");
 if (await page.locator(".profacts .followpill").count())
   fail("the owner has nobody to follow on their own page");
-await expect(page.locator(".pubtab", { hasText: "Info" }).isVisible(), "Info tab present");
-await expect(page.locator(".pubtab.sel", { hasText: "Info" }).isVisible(), "Info tab active on /about");
+await expect(page.locator(".pubtab", { hasText: "About" }).isVisible(), "About tab present");
+await expect(page.locator(".pubtab.sel", { hasText: "About" }).isVisible(), "About tab active on /about");
 // Schedule leads: it's the thing the page exists to surface.
 {
   const order = await page.locator(".pubtab").allInnerTexts();
@@ -2528,7 +2528,7 @@ await page.getByRole("button", { name: "Save studio" }).click();
 await page.getByText("Studio updated").waitFor();
 // The commons built this page a week: matt's public class here gives the
 // unclaimed studio a community schedule, so the page wears tabs and the
-// About content lives behind Info.
+// About content lives behind About.
 await page.goto(BASE + "/s/ironbound-strength");
 await page.locator(".pubtab.sel", { hasText: "Schedule" }).waitFor();
 await page.locator(".pubtab-info").waitFor();
@@ -2713,7 +2713,7 @@ await page.locator(".pubtab.sel").waitFor();
     fail("tabs should link to " + want.join(", ") + ", got " + hrefs.join(", "));
   // Landing on a section URL renders that section and only that section.
   await page.goto(BASE + "/matt/about");
-  await page.locator(".pubtab.sel", { hasText: "Info" }).waitFor();
+  await page.locator(".pubtab.sel", { hasText: "About" }).waitFor();
   await page.locator(".profabout").waitFor();
   if (await page.locator(".ps-event").count())
     fail("the about URL should not carry the schedule");
