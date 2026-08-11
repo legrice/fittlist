@@ -6848,15 +6848,16 @@ button.ps-card { cursor: pointer; }
 .addbrowse-ev { display: block; margin: 12px auto 0; font-size: 13.5px; }
 .addrole-sheet { max-width: 420px; }
 .addrole-sheet h2 { margin: 4px 42px 4px 0; }
-.addrole-seg {
+.addrole-actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  margin-top: 20px; padding: 4px; border-radius: 999px; background: var(--cl);
+  margin-top: 20px;
 }
-.addrole-seg button {
-  min-height: 46px; border: 0; border-radius: 999px; background: var(--card); color: var(--ink);
+.addrole-actions button {
+  min-height: 48px; border: 0; border-radius: 14px; background: var(--cl); color: var(--ink);
   font: 600 15px 'Delight', 'Helvetica Neue', Arial, sans-serif; cursor: pointer;
 }
-.addrole-seg button:first-child { background: var(--ink); color: var(--paper); }
+.addrole-actions button:first-child { background: var(--ink); color: var(--paper); }
+.addrole-actions button:active { transform: scale(.98); }
 
 /* The by-row: the coach and, on Discover, the star that favorites them
    without leaving the class. A class is how you discover a coach. */

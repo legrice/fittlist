@@ -417,7 +417,7 @@ export function CalendarScreen({
             </button>
             <h2 id="addrole-title">Add a class</h2>
             <p className="lead">Are you coaching or attending?</p>
-            <div className="addrole-seg" role="group" aria-label="How are you joining this class?">
+            <div className="addrole-actions" role="group" aria-label="How are you joining this class?">
               <button onClick={() => {
                 setAddChoice(false);
                 setPersonalAdd(false);
